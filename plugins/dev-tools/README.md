@@ -21,7 +21,7 @@ The dev-tools plugin provides essential developer utilities for maintaining code
 ### Prerequisites
 
 **Required:**
-- **Claude Code CLI** (version 1.0.0 or later)
+- **Claude Code CLI** (version 1.0.33 or later - required for plugin support)
   ```bash
   # Verify installation
   claude --version
@@ -46,22 +46,28 @@ The dev-tools plugin provides essential developer utilities for maintaining code
 
 Load the plugin directly from the file system using either method:
 
-**Option 1: From Repository Root**
+**Option 1: From Repository Root (Interactive)**
 ```bash
 # Navigate to the repository root
 cd /path/to/agentics
 
-# Load the plugin with relative path
+# Load the plugin with relative path (starts interactive session)
 claude --plugin-dir ./plugins/dev-tools
+
+# Once Claude responds, you can type commands like:
+# /dev-tools:format src/index.ts
+# Or ask: "Can you review this code for issues?"
 ```
 
-**Option 2: From Plugin Directory**
+**Option 2: From Plugin Directory (Interactive)**
 ```bash
 # Navigate to the plugin directory
 cd /path/to/agentics/plugins/dev-tools
 
-# Load the plugin from current directory
+# Load the plugin from current directory (starts interactive session)
 claude --plugin-dir .
+
+# Then use the commands in the Claude session
 ```
 
 **Option 3: Using Absolute Path**
@@ -70,33 +76,51 @@ claude --plugin-dir .
 claude --plugin-dir /full/path/to/agentics/plugins/dev-tools
 ```
 
+**Option 4: Direct Prompt Execution**
+```bash
+# Provide a prompt directly without entering interactive mode
+claude --plugin-dir ./plugins/dev-tools "Format the file src/index.ts"
+
+# Or pipe commands
+echo "Review the code in src/utils.js" | claude --plugin-dir ./plugins/dev-tools
+```
+
 ### Verify Installation
 
 After loading the plugin, verify both commands and skills work:
 
 **Verify Command:**
 ```bash
-# In Claude, run:
+# Start the plugin in interactive mode:
+claude --plugin-dir ./plugins/dev-tools
+
+# Once in the Claude interactive session, run:
 /dev-tools:format
 
 # Expected behavior:
 # - Lists available formatters if no file specified
 # - Shows helpful message about formatter availability
+
+# Or test with direct prompt:
+claude --plugin-dir ./plugins/dev-tools "List available formatters"
 ```
 
 **Verify Skill:**
 ```bash
-# In Claude, ask:
+# In the Claude interactive session, ask:
 "Can you review this code for issues?"
 
 # Expected behavior:
 # - The code-review skill should activate automatically
 # - Claude will provide structured code review feedback
+
+# Or test with direct prompt:
+claude --plugin-dir ./plugins/dev-tools "Review the code in src/index.js for issues"
 ```
 
 You can also verify the command appears in the help:
 ```bash
-# In Claude, run:
+# In the Claude interactive session, run:
 /help
 
 # You should see /dev-tools:format in the available commands list
@@ -224,26 +248,33 @@ This plugin demonstrates:
 
 ### Manual Testing
 
-1. **Load the plugin:**
+1. **Load the plugin (starts interactive session):**
    ```bash
    claude --plugin-dir ./plugins/dev-tools
    ```
 
-2. **Test format command:**
+2. **Test format command in the Claude session:**
    ```
-   # Create a test file
+   # Create a test file first (in a separate terminal)
    echo "function test(){console.log('hello')}" > test.js
 
-   # Format it
+   # In Claude session, format it
    /dev-tools:format test.js
 
-   # Verify formatting was applied
+   # Check the result (in separate terminal)
    cat test.js
    ```
 
-3. **Test code-review skill:**
+3. **Or test with direct prompt:**
+   ```bash
+   echo "function test(){console.log('hello')}" > test.js
+   claude --plugin-dir ./plugins/dev-tools "Format the file test.js"
+   cat test.js
    ```
-   # Ask Claude to review some code
+
+4. **Test code-review skill:**
+   ```
+   # In Claude session, ask Claude to review some code
    "Can you review this function for issues?"
    [Paste some code]
 
@@ -349,6 +380,25 @@ Make sure your request clearly indicates code review intent:
 - ✅ "Is this secure?"
 - ❌ "What does this do?" (analysis, not review)
 
+### "Input must be provided" Error
+
+**Symptom:** Error message: `Error: Input must be provided either through stdin or as a prompt argument when using --print`
+
+**Solutions:**
+1. Try providing a prompt directly:
+   ```bash
+   claude --plugin-dir ./plugins/dev-tools "List available commands"
+   ```
+2. Or pipe a command:
+   ```bash
+   echo "Format my code" | claude --plugin-dir ./plugins/dev-tools
+   ```
+3. Verify your Claude Code version: `claude --version` (need 1.0.33+)
+4. Check plugin.json is valid JSON:
+   ```bash
+   cat .claude-plugin/plugin.json | jq
+   ```
+
 ## Contributing
 
 This is an example plugin for testing purposes. For improvements:
@@ -385,7 +435,10 @@ SOFTWARE.
 
 ## Resources
 
-- [Claude Code Plugin Documentation](https://github.com/anthropics/claude-code)
+- [Claude Code Documentation](https://code.claude.com/docs/en)
+- [Create Plugins Guide](https://code.claude.com/docs/en/plugins)
+- [Plugins Reference](https://code.claude.com/docs/en/plugins-reference)
+- [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
 - [Prettier Documentation](https://prettier.io/docs/en/index.html)
 - [Black Documentation](https://black.readthedocs.io/)
 - [Agentics Marketplace API](../../docs/api.md)

@@ -15,7 +15,7 @@ The agentics project provides:
 
 ### Required
 
-- **Claude Code CLI** (version 1.0.0 or later)
+- **Claude Code CLI** (version 1.0.33 or later - required for plugin support)
   ```bash
   # Verify installation
   claude --version
@@ -73,16 +73,22 @@ If you want to test the example plugins locally, no dependencies are required be
    ```bash
    # Test with hello-world plugin
    claude --plugin-dir ./plugins/hello-world
+
+   # This starts an interactive Claude Code session.
+   # Once Claude responds, you can type your slash commands:
+   # /hello-world:greet
+   # /hello-world:greet Alice
    ```
 
 3. **Verify the plugin loaded:**
    ```bash
-   # In Claude, list available commands:
-   # /help
+   # In the Claude interactive session, list available commands:
+   /help
+
    # You should see /hello-world:greet in the list
    ```
 
-**Note:** You can test plugins immediately without installing any dependencies. The `--plugin-dir` flag loads plugins directly from your local filesystem.
+**Note:** You can test plugins immediately without installing any dependencies. The `--plugin-dir` flag loads plugins directly from your local filesystem and starts an interactive session.
 
 ### For Marketplace API Developers
 
@@ -116,8 +122,9 @@ If you want to develop or test the marketplace API (currently in progress):
 The Claude Code CLI is not installed or not in your PATH.
 
 **Solution:**
-- Install Claude Code from the official source
+- Install Claude Code from the official source: https://code.claude.com/docs/en/installation
 - Verify installation: `claude --version`
+- Ensure you have version 1.0.33 or later (required for plugin support)
 - On macOS/Linux: Ensure `~/.local/bin` or the installation directory is in your PATH
 - On Windows: Use WSL2 and follow Linux installation steps
 
@@ -142,6 +149,23 @@ The plugin directory or files may not be readable.
 - Make directory readable: `chmod -R +r ./plugins/hello-world`
 - Ensure you own the files: `chown -R $USER:$USER ./plugins/`
 
+#### "Input must be provided" error with --plugin-dir
+
+You see an error like: `Error: Input must be provided either through stdin or as a prompt argument when using --print`
+
+**Solution:**
+- This error can occur if Claude Code can't start the interactive session properly
+- Try providing a prompt directly:
+  ```bash
+  claude --plugin-dir ./plugins/hello-world "List available commands"
+  ```
+- Or pipe a command:
+  ```bash
+  echo "Run /hello-world:greet" | claude --plugin-dir ./plugins/hello-world
+  ```
+- Verify your Claude Code version supports plugins: `claude --version` (need 1.0.33+)
+- Check plugin.json is valid JSON: `cat plugins/hello-world/.claude-plugin/plugin.json | jq`
+
 ## Usage Guide
 
 ### For Plugin Users
@@ -151,12 +175,15 @@ The plugin directory or files may not be readable.
 Test individual plugins by loading them directly:
 
 ```bash
-# Test hello-world plugin
+# Test hello-world plugin (starts interactive session)
 claude --plugin-dir ./plugins/hello-world
 
-# In Claude, run:
+# Once in the Claude session, you can run:
 # /hello-world:greet
 # /hello-world:greet Alice
+
+# Or provide a prompt directly:
+claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
 ```
 
 #### Multiple Plugin Testing
@@ -164,12 +191,15 @@ claude --plugin-dir ./plugins/hello-world
 Load multiple plugins simultaneously by specifying multiple `--plugin-dir` flags:
 
 ```bash
-# Load both plugins at once
+# Load both plugins at once (starts interactive session)
 claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 
-# In Claude, you can now use commands from both plugins:
+# Once in the Claude session, you can use commands from both plugins:
 # /hello-world:greet
 # /dev-tools:format src/index.ts
+
+# Or provide a prompt directly:
+claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Format my code"
 ```
 
 #### Commands vs Skills
@@ -296,11 +326,14 @@ EOF
 Test plugins locally before adding to the marketplace:
 
 ```bash
-# Test plugin directly
+# Test plugin directly (starts interactive session)
 claude --plugin-dir ./plugins/my-plugin
 
-# In Claude, invoke your command
+# Once in the Claude session, invoke your command:
 # /my-plugin:my-command
+
+# Or provide a prompt directly:
+claude --plugin-dir ./plugins/my-plugin "Run /my-plugin:my-command"
 ```
 
 ### Registering Plugins in Marketplace
@@ -375,8 +408,11 @@ curl -X POST http://localhost:3000/api/v1/marketplaces/agentics-test/sync
 
 ## Resources
 
-- [Claude Code Documentation](https://github.com/anthropics/claude-code)
-- [Claude Code Plugin Guide](https://docs.anthropic.com/claude-code/plugins)
+- [Claude Code Documentation](https://code.claude.com/docs/en)
+- [Create Plugins Guide](https://code.claude.com/docs/en/plugins)
+- [Plugins Reference](https://code.claude.com/docs/en/plugins-reference)
+- [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
+- [Discover Plugins](https://code.claude.com/docs/en/discover-plugins)
 - [Plugin Development Best Practices](./plugins/README.md)
 
 ## License

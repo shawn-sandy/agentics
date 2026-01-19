@@ -70,15 +70,24 @@ The `marketplace-data/.claude-plugin/marketplace.json` defines:
 Test plugins directly without the marketplace API:
 
 ```bash
-# Load a single plugin
+# Load a single plugin (starts interactive Claude session)
 claude --plugin-dir ./plugins/hello-world
 
-# Then in Claude:
+# Once Claude responds in the interactive session, type your commands:
 # /hello-world:greet Alice
 
-# Load multiple plugins simultaneously
+# Alternative: Provide prompt directly
+claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
+
+# Load multiple plugins simultaneously (starts interactive session)
 claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
+
+# Once in the session, use commands from either plugin:
+# /hello-world:greet
+# /dev-tools:format src/index.ts
 ```
+
+**Note:** The `--plugin-dir` flag either starts an interactive Claude Code session where you can type commands, or you can provide a prompt as a command-line argument for direct execution.
 
 ### Creating New Example Plugins
 
@@ -106,8 +115,14 @@ Instructions for Claude on how to execute this command.
 Use \$ARGUMENTS to access user input.
 EOF
 
-# 4. Test the plugin
+# 4. Test the plugin (starts interactive session)
 claude --plugin-dir ./plugins/my-plugin
+
+# In the Claude session, try your command:
+# /my-plugin:my-command
+
+# Or test with direct prompt:
+claude --plugin-dir ./plugins/my-plugin "Run /my-plugin:my-command"
 ```
 
 ### Registering Plugins in Test Marketplace
@@ -294,3 +309,15 @@ When creating or modifying plugins:
 - **Multi-Component:** `plugins/dev-tools/` - Command + skill working together
 - **Marketplace Config:** `marketplace-data/.claude-plugin/marketplace.json` - Plugin registry
 - **Valid Test Fixture:** `tests/fixtures/valid-plugin/` - Validation reference
+
+## Official Documentation Resources
+
+Always refer to the official Claude Code documentation for the latest information:
+
+- **Main Documentation:** https://code.claude.com/docs/en
+- **Plugin Creation:** https://code.claude.com/docs/en/plugins
+- **Plugin Reference:** https://code.claude.com/docs/en/plugins-reference
+- **Plugin Marketplaces:** https://code.claude.com/docs/en/plugin-marketplaces
+- **Discover Plugins:** https://code.claude.com/docs/en/discover-plugins
+
+**Minimum Claude Code Version Required:** 1.0.33 or later (for plugin support)

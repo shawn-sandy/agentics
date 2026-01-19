@@ -16,7 +16,7 @@ The hello-world plugin is intentionally simple, containing only the essential co
 
 ### Prerequisites
 
-- **Claude Code CLI** (version 1.0.0 or later)
+- **Claude Code CLI** (version 1.0.33 or later - required for plugin support)
   ```bash
   # Verify installation
   claude --version
@@ -27,22 +27,28 @@ The hello-world plugin is intentionally simple, containing only the essential co
 
 Load the plugin directly from the file system using either method:
 
-**Option 1: From Repository Root**
+**Option 1: From Repository Root (Interactive)**
 ```bash
 # Navigate to the repository root
 cd /path/to/agentics
 
-# Load the plugin with relative path
+# Load the plugin with relative path (starts interactive session)
 claude --plugin-dir ./plugins/hello-world
+
+# Once Claude responds, you can type commands like:
+# /hello-world:greet
+# /hello-world:greet Alice
 ```
 
-**Option 2: From Plugin Directory**
+**Option 2: From Plugin Directory (Interactive)**
 ```bash
 # Navigate to the plugin directory
 cd /path/to/agentics/plugins/hello-world
 
-# Load the plugin from current directory
+# Load the plugin from current directory (starts interactive session)
 claude --plugin-dir .
+
+# Then use the commands in the Claude session
 ```
 
 **Option 3: Using Absolute Path**
@@ -51,21 +57,36 @@ claude --plugin-dir .
 claude --plugin-dir /full/path/to/agentics/plugins/hello-world
 ```
 
+**Option 4: Direct Prompt Execution**
+```bash
+# Provide a prompt directly without entering interactive mode
+claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
+
+# Or pipe commands
+echo "Run /hello-world:greet" | claude --plugin-dir ./plugins/hello-world
+```
+
 ### Verify Installation
 
 After loading the plugin, verify it's working:
 
 ```bash
-# In Claude, run:
+# Start the plugin in interactive mode:
+claude --plugin-dir ./plugins/hello-world
+
+# Once in the Claude interactive session, run:
 /hello-world:greet
 
 # Expected output:
 # A friendly greeting message introducing the hello-world plugin
+
+# Or test with direct prompt:
+claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
 ```
 
 You can also verify the command appears in the help:
 ```bash
-# In Claude, run:
+# In the Claude interactive session, run:
 /help
 
 # You should see /hello-world:greet in the available commands list
@@ -134,19 +155,24 @@ This plugin demonstrates:
 
 ### Manual Testing
 
-1. Load the plugin:
+1. Load the plugin (starts interactive session):
    ```bash
    claude --plugin-dir ./plugins/hello-world
    ```
 
-2. Test the command:
+2. Once in the Claude session, test the command:
    ```
    /hello-world:greet
    /hello-world:greet TestUser
    ```
 
-3. Verify:
-   - Command appears in available commands list
+3. Or test with direct prompt:
+   ```bash
+   claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet TestUser"
+   ```
+
+4. Verify:
+   - Command appears in available commands list (use `/help`)
    - Greeting is friendly and informative
    - Arguments are handled correctly
 
@@ -230,9 +256,28 @@ This plugin demonstrates:
 
 **Solutions:**
 1. Check Claude Code CLI version: `claude --version`
-2. Ensure you're using a recent version that supports plugins
+2. Ensure you're using version 1.0.33 or later (required for plugin support)
 3. Verify the plugin manifest uses compatible features
 4. Check Claude Code documentation for version-specific plugin requirements
+
+### "Input must be provided" Error
+
+**Symptom:** Error message: `Error: Input must be provided either through stdin or as a prompt argument when using --print`
+
+**Solutions:**
+1. Try providing a prompt directly:
+   ```bash
+   claude --plugin-dir ./plugins/hello-world "List available commands"
+   ```
+2. Or pipe a command:
+   ```bash
+   echo "Run /hello-world:greet" | claude --plugin-dir ./plugins/hello-world
+   ```
+3. Verify your Claude Code version: `claude --version` (need 1.0.33+)
+4. Check plugin.json is valid JSON:
+   ```bash
+   cat .claude-plugin/plugin.json | jq
+   ```
 
 ### Quick Test Script Not Working
 
@@ -309,6 +354,9 @@ SOFTWARE.
 
 ## Resources
 
-- [Claude Code Plugin Documentation](https://github.com/anthropics/claude-code)
+- [Claude Code Documentation](https://code.claude.com/docs/en)
+- [Create Plugins Guide](https://code.claude.com/docs/en/plugins)
+- [Plugins Reference](https://code.claude.com/docs/en/plugins-reference)
+- [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
 - [Agentics Marketplace API](../../docs/api.md)
 - [Plugin Development Guide](../README.md)

@@ -11,12 +11,14 @@ If the user provides a name in $ARGUMENTS, greet them by name. Otherwise, use a 
 ## Examples
 
 **With name:**
+
 ```
-User: /hello-world:greet Alice
+User: 
 Response: Hello, Alice! I'm the hello-world plugin, a minimal example from the agentics marketplace testing suite. I'm here to demonstrate basic plugin structure and functionality.
 ```
 
 **Without name:**
+
 ```
 User: /hello-world:greet
 Response: Hello! I'm the hello-world plugin, a minimal example from the agentics marketplace testing suite. I demonstrate the basic structure of a Claude Code plugin with a simple command.
