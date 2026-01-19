@@ -1,0 +1,31 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agentics-test",
+  "version": "1.0.0",
+  "description": "Test marketplace for agentics plugin development",
+  "owner": {
+    "name": "Agentics Project"
+  },
+  "plugins": [
+    {
+      "name": "hello-world",
+      "version": "1.0.0",
+      "description": "A minimal example plugin for testing the marketplace",
+      "source": "../plugins/hello-world",
+      "category": "learning",
+      "tags": ["example", "tutorial", "minimal"]
+    },
+    {
+      "name": "dev-tools",
+      "version": "1.0.0",
+      "description": "Developer productivity tools for code formatting and review",
+      "source": "../plugins/dev-tools",
+      "category": "development",
+      "tags": ["development", "code-quality", "formatting"],
+      "components": {
+        "commands": ["format"],
+        "skills": ["code-review"]
+      }
+    }
+  ]
+}

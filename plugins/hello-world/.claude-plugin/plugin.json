@@ -1,0 +1,10 @@
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "description": "A minimal example plugin for testing the marketplace",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "category": "learning"
+}

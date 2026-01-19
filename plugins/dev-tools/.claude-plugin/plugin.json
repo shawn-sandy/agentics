@@ -1,0 +1,10 @@
+{
+  "name": "dev-tools",
+  "version": "1.0.0",
+  "description": "Developer productivity tools for code formatting and review",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "category": "development"
+}

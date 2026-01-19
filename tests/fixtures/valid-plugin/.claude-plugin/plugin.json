@@ -1,0 +1,11 @@
+{
+  "name": "test-valid-plugin",
+  "version": "1.0.0",
+  "description": "A valid plugin fixture for unit testing",
+  "author": {
+    "name": "Test Author",
+    "email": "test@example.com"
+  },
+  "license": "MIT",
+  "category": "testing"
+}
