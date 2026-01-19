@@ -23,13 +23,39 @@ A multi-component plugin showcasing commands and skills working together.
 
 ## Testing Plugins Locally
 
+### Prerequisites Check
+
+Before testing plugins, verify your setup:
+
+1. **Verify Claude Code CLI is installed:**
+   ```bash
+   claude --version
+   # Should output version 1.0.0 or later
+   ```
+
+2. **Verify working directory:**
+   ```bash
+   pwd
+   # Should show the agentics repository root
+   # Expected: /path/to/agentics
+   ```
+
+3. **List available plugins:**
+   ```bash
+   ls -la plugins/
+   # Should show hello-world/ and dev-tools/ directories
+   ```
+
 ### Using --plugin-dir
 
 Test individual plugins directly with Claude Code:
 
 ```bash
-# Test hello-world plugin
+# Option 1: From repository root (relative path)
 claude --plugin-dir ./plugins/hello-world
+
+# Option 2: From anywhere (absolute path)
+claude --plugin-dir /full/path/to/agentics/plugins/hello-world
 
 # In Claude, run:
 # /hello-world:greet
@@ -52,6 +78,40 @@ Load both plugins simultaneously:
 ```bash
 claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 ```
+
+### Troubleshooting
+
+#### Plugin not found
+
+**Error:** "Plugin directory does not exist" or similar
+
+**Solutions:**
+- Verify the path exists: `ls -la ./plugins/hello-world`
+- Check you're in the repository root: `pwd`
+- Use absolute path instead: `claude --plugin-dir /full/path/to/plugins/hello-world`
+- Ensure `.claude-plugin/plugin.json` exists in the plugin directory
+
+#### Command not recognized
+
+**Error:** Command doesn't appear in `/help` or "Unknown command" message
+
+**Solutions:**
+- Verify the plugin loaded successfully (check Claude's startup output)
+- Check command file exists: `ls -la plugins/hello-world/commands/`
+- Ensure command file has `.md` extension
+- Verify YAML frontmatter has `description` field
+- Try restarting Claude with `--plugin-dir` flag
+
+#### Skill not activating
+
+**Error:** Natural language request doesn't trigger skill
+
+**Solutions:**
+- Check skill description matches your request intent
+- Verify skill file location: `plugins/plugin-name/skills/skill-name/SKILL.md`
+- Ensure YAML frontmatter has both `name` and `description` fields
+- Try being more explicit in your request
+- Use the exact phrasing from skill description for testing
 
 ## Plugin Structure
 

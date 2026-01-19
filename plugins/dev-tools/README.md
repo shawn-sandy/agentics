@@ -18,15 +18,93 @@ The dev-tools plugin provides essential developer utilities for maintaining code
 
 ## Installation
 
+### Prerequisites
+
+**Required:**
+- **Claude Code CLI** (version 1.0.0 or later)
+  ```bash
+  # Verify installation
+  claude --version
+  ```
+- **Git** (optional, for cloning the repository)
+
+**Optional (for formatting functionality):**
+- **Prettier** - For JavaScript/TypeScript/JSON/CSS/HTML formatting
+  ```bash
+  npm install -g prettier
+  # Verify: prettier --version
+  ```
+- **Black** or **autopep8** - For Python formatting
+  ```bash
+  pip install black
+  # Verify: black --version
+  ```
+
+**Note:** The plugin works without the formatters installed. The format command will detect available formatters and provide helpful messages if they're missing.
+
 ### Local Testing
 
-Load the plugin directly from the file system:
+Load the plugin directly from the file system using either method:
 
+**Option 1: From Repository Root**
 ```bash
+# Navigate to the repository root
+cd /path/to/agentics
+
+# Load the plugin with relative path
 claude --plugin-dir ./plugins/dev-tools
 ```
 
-### Via Marketplace (when available)
+**Option 2: From Plugin Directory**
+```bash
+# Navigate to the plugin directory
+cd /path/to/agentics/plugins/dev-tools
+
+# Load the plugin from current directory
+claude --plugin-dir .
+```
+
+**Option 3: Using Absolute Path**
+```bash
+# Load from anywhere using absolute path
+claude --plugin-dir /full/path/to/agentics/plugins/dev-tools
+```
+
+### Verify Installation
+
+After loading the plugin, verify both commands and skills work:
+
+**Verify Command:**
+```bash
+# In Claude, run:
+/dev-tools:format
+
+# Expected behavior:
+# - Lists available formatters if no file specified
+# - Shows helpful message about formatter availability
+```
+
+**Verify Skill:**
+```bash
+# In Claude, ask:
+"Can you review this code for issues?"
+
+# Expected behavior:
+# - The code-review skill should activate automatically
+# - Claude will provide structured code review feedback
+```
+
+You can also verify the command appears in the help:
+```bash
+# In Claude, run:
+/help
+
+# You should see /dev-tools:format in the available commands list
+```
+
+### Via Marketplace (Planned)
+
+When the marketplace API is complete, installation will be simplified:
 
 ```bash
 agentics install dev-tools

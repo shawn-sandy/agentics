@@ -14,15 +14,66 @@ The hello-world plugin is intentionally simple, containing only the essential co
 
 ## Installation
 
+### Prerequisites
+
+- **Claude Code CLI** (version 1.0.0 or later)
+  ```bash
+  # Verify installation
+  claude --version
+  ```
+- **Git** (optional, for cloning the repository)
+
 ### Local Testing
 
-Load the plugin directly from the file system:
+Load the plugin directly from the file system using either method:
 
+**Option 1: From Repository Root**
 ```bash
+# Navigate to the repository root
+cd /path/to/agentics
+
+# Load the plugin with relative path
 claude --plugin-dir ./plugins/hello-world
 ```
 
-### Via Marketplace (when available)
+**Option 2: From Plugin Directory**
+```bash
+# Navigate to the plugin directory
+cd /path/to/agentics/plugins/hello-world
+
+# Load the plugin from current directory
+claude --plugin-dir .
+```
+
+**Option 3: Using Absolute Path**
+```bash
+# Load from anywhere using absolute path
+claude --plugin-dir /full/path/to/agentics/plugins/hello-world
+```
+
+### Verify Installation
+
+After loading the plugin, verify it's working:
+
+```bash
+# In Claude, run:
+/hello-world:greet
+
+# Expected output:
+# A friendly greeting message introducing the hello-world plugin
+```
+
+You can also verify the command appears in the help:
+```bash
+# In Claude, run:
+/help
+
+# You should see /hello-world:greet in the available commands list
+```
+
+### Via Marketplace (Planned)
+
+When the marketplace API is complete, installation will be simplified:
 
 ```bash
 agentics install hello-world

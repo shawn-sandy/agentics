@@ -11,6 +11,37 @@ The agentics project provides:
 - **Test Marketplace** - Local marketplace for testing and development
 - **CLI Tools** - Command-line utilities for plugin management (planned)
 
+## Prerequisites
+
+### Required
+
+- **Claude Code CLI** (version 1.0.0 or later)
+  ```bash
+  # Verify installation
+  claude --version
+  ```
+
+### Optional (For API Development)
+
+- **Node.js** (version 18.0.0 or later)
+  ```bash
+  # Verify installation
+  node --version
+  ```
+- **npm** or **yarn** package manager
+
+### Platform Support
+
+- **macOS** 12.0 or later
+- **Linux** (Ubuntu 20.04+ or equivalent)
+- **Windows** (WSL2 recommended for best compatibility)
+
+### Optional Tools
+
+- **Git** - For cloning the repository
+- **curl** - For API testing
+- **jq** - For JSON parsing and formatting in examples
+
 ## Project Structure
 
 ```
@@ -26,11 +57,98 @@ agentics/
 └── README.md                     # This file
 ```
 
-## Quick Start
+## Installation
 
-### Using Example Plugins
+### For Plugin Users (Testing Example Plugins)
 
-Test the example plugins directly with Claude Code:
+If you want to test the example plugins locally, no dependencies are required beyond Claude Code CLI.
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/agentics.git
+   cd agentics
+   ```
+
+2. **Load a plugin directly:**
+   ```bash
+   # Test with hello-world plugin
+   claude --plugin-dir ./plugins/hello-world
+   ```
+
+3. **Verify the plugin loaded:**
+   ```bash
+   # In Claude, list available commands:
+   # /help
+   # You should see /hello-world:greet in the list
+   ```
+
+**Note:** You can test plugins immediately without installing any dependencies. The `--plugin-dir` flag loads plugins directly from your local filesystem.
+
+### For Marketplace API Developers
+
+If you want to develop or test the marketplace API (currently in progress):
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/agentics.git
+   cd agentics
+   ```
+
+2. **Install dependencies (when API is implemented):**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   # API will be available at http://localhost:3000
+   ```
+
+**Note:** The marketplace API is currently in development. Plugins work independently and can be tested without the API using the `--plugin-dir` method above.
+
+### Troubleshooting
+
+#### "claude: command not found"
+
+The Claude Code CLI is not installed or not in your PATH.
+
+**Solution:**
+- Install Claude Code from the official source
+- Verify installation: `claude --version`
+- On macOS/Linux: Ensure `~/.local/bin` or the installation directory is in your PATH
+- On Windows: Use WSL2 and follow Linux installation steps
+
+#### Plugin not loading
+
+The plugin directory may not exist or the path is incorrect.
+
+**Solution:**
+- Verify the path exists: `ls -la ./plugins/hello-world`
+- Use absolute paths if relative paths aren't working:
+  ```bash
+  claude --plugin-dir /full/path/to/agentics/plugins/hello-world
+  ```
+- Check that `.claude-plugin/plugin.json` exists in the plugin directory
+
+#### Permission errors
+
+The plugin directory or files may not be readable.
+
+**Solution:**
+- Check file permissions: `ls -la ./plugins/hello-world`
+- Make directory readable: `chmod -R +r ./plugins/hello-world`
+- Ensure you own the files: `chown -R $USER:$USER ./plugins/`
+
+## Usage Guide
+
+### For Plugin Users
+
+#### Single Plugin Testing
+
+Test individual plugins by loading them directly:
 
 ```bash
 # Test hello-world plugin
@@ -41,18 +159,43 @@ claude --plugin-dir ./plugins/hello-world
 # /hello-world:greet Alice
 ```
 
-```bash
-# Test dev-tools plugin
-claude --plugin-dir ./plugins/dev-tools
+#### Multiple Plugin Testing
 
-# In Claude, run:
+Load multiple plugins simultaneously by specifying multiple `--plugin-dir` flags:
+
+```bash
+# Load both plugins at once
+claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
+
+# In Claude, you can now use commands from both plugins:
+# /hello-world:greet
 # /dev-tools:format src/index.ts
-# Or ask: "Can you review this code for issues?"
 ```
 
-### Using the Marketplace API
+#### Commands vs Skills
 
-(API implementation in progress)
+**Commands** require explicit invocation using the `/plugin:command` syntax:
+```bash
+# Explicit command invocation
+/dev-tools:format src/index.ts
+```
+
+**Skills** activate automatically based on your request:
+```bash
+# Just ask naturally - the code-review skill will activate automatically
+"Can you review this code for issues?"
+"Check this file for bugs"
+```
+
+**Tip:** Use `/help` in Claude to see all available commands from loaded plugins.
+
+### For API Developers
+
+**Prerequisites:** Ensure you've completed the [installation steps for API developers](#for-marketplace-api-developers) before proceeding.
+
+**Note:** The marketplace API is currently in progress. The examples below represent the planned functionality.
+
+#### Using the Marketplace API (In Progress)
 
 1. **Start the API server:**
    ```bash

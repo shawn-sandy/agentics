@@ -6,6 +6,110 @@ This directory contains the test marketplace configuration for the agentics plug
 
 The test marketplace (`agentics-test`) is a local marketplace that references example plugins in the `plugins/` directory. It demonstrates how marketplaces organize and distribute Claude Code plugins.
 
+## Installation
+
+### Prerequisites
+
+Your setup requirements depend on what you want to do:
+
+**For Testing Plugins (No API needed):**
+- **Claude Code CLI** (version 1.0.0 or later)
+  ```bash
+  # Verify installation
+  claude --version
+  ```
+
+**For API Development/Testing:**
+- **Claude Code CLI** (version 1.0.0 or later)
+- **Node.js** (version 18.0.0 or later)
+  ```bash
+  # Verify installation
+  node --version
+  ```
+- **npm** or **yarn** package manager
+- **Git** (for cloning the repository)
+- **curl** and **jq** (optional, for API testing)
+
+### Setup for Direct Plugin Testing
+
+If you just want to test the example plugins without the marketplace API:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/agentics.git
+   cd agentics
+   ```
+
+2. **Load a plugin directly:**
+   ```bash
+   # Test hello-world plugin
+   claude --plugin-dir ./plugins/hello-world
+
+   # In Claude, run:
+   # /hello-world:greet
+   ```
+
+**Note:** You don't need the marketplace API to test plugins. The API is only needed for testing marketplace discovery and distribution workflows.
+
+### Setup for Marketplace API Testing
+
+If you want to test the marketplace API (currently in development):
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/agentics.git
+   cd agentics
+   ```
+
+2. **Install dependencies (when API is implemented):**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Start the API server:**
+   ```bash
+   npm run dev
+   # API will be available at http://localhost:3000
+   ```
+
+4. **Verify API is running:**
+   ```bash
+   curl http://localhost:3000/api/v1/marketplaces
+   # Should return marketplace list (may be empty initially)
+   ```
+
+**Note:** The marketplace API is currently in development. See the [Using the Test Marketplace](#using-the-test-marketplace) section for API workflow examples.
+
+### Verify Marketplace Configuration
+
+To verify the marketplace configuration is valid:
+
+1. **Check marketplace.json exists:**
+   ```bash
+   ls -la marketplace-data/.claude-plugin/marketplace.json
+   ```
+
+2. **Validate JSON syntax:**
+   ```bash
+   cat marketplace-data/.claude-plugin/marketplace.json | jq .
+   # Should output formatted JSON without errors
+   ```
+
+3. **Verify plugin source paths:**
+   ```bash
+   # From repository root, check that plugins exist
+   ls -la plugins/hello-world/.claude-plugin/plugin.json
+   ls -la plugins/dev-tools/.claude-plugin/plugin.json
+   ```
+
+4. **Test a plugin directly:**
+   ```bash
+   # Load and test to ensure plugins work
+   claude --plugin-dir ./plugins/hello-world
+   ```
+
 ## Marketplace Structure
 
 ```
