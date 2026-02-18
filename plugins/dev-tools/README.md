@@ -11,6 +11,7 @@ The dev-tools plugin provides essential developer utilities for maintaining code
 ### Commands
 
 - **`/dev-tools:format`** - Format code files or directories using language-appropriate tools (Prettier, Black, etc.)
+- **`/dev-tools:plan-review`** - Review a plan and interview the user about technical implementation, trade-offs, UI/UX concerns, edge cases, and best practices
 
 ### Skills
 
@@ -46,43 +47,40 @@ The dev-tools plugin provides essential developer utilities for maintaining code
 
 Load the plugin directly from the file system using either method:
 
-**Option 1: From Repository Root (Interactive)**
+**Option 1: From any project folder (recommended)**
 ```bash
-# Navigate to the repository root
-cd /path/to/agentics
-
-# Load the plugin with relative path (starts interactive session)
-claude --plugin-dir ./plugins/dev-tools
+# Load the plugin using the absolute path from any directory
+claude --plugin-dir ~/devbox/agentics/plugins/dev-tools
 
 # Once Claude responds, you can type commands like:
 # /dev-tools:format src/index.ts
+# /dev-tools:plan-review path/to/plan.md
 # Or ask: "Can you review this code for issues?"
 ```
 
-**Option 2: From Plugin Directory (Interactive)**
+**Option 2: From Repository Root**
 ```bash
-# Navigate to the plugin directory
-cd /path/to/agentics/plugins/dev-tools
+# Navigate to the repository root
+cd ~/devbox/agentics
 
-# Load the plugin from current directory (starts interactive session)
-claude --plugin-dir .
-
-# Then use the commands in the Claude session
+# Load the plugin with relative path (starts interactive session)
+claude --plugin-dir ./plugins/dev-tools
 ```
 
-**Option 3: Using Absolute Path**
+**Option 3: Register the marketplace (persistent)**
 ```bash
-# Load from anywhere using absolute path
-claude --plugin-dir /full/path/to/agentics/plugins/dev-tools
+# Register once, then install — available everywhere
+/plugin marketplace add ~/devbox/agentics/marketplace-data
+/plugin install dev-tools@agentics-test
 ```
 
 **Option 4: Direct Prompt Execution**
 ```bash
 # Provide a prompt directly without entering interactive mode
-claude --plugin-dir ./plugins/dev-tools "Format the file src/index.ts"
+claude --plugin-dir ~/devbox/agentics/plugins/dev-tools "Format the file src/index.ts"
 
 # Or pipe commands
-echo "Review the code in src/utils.js" | claude --plugin-dir ./plugins/dev-tools
+echo "Review the code in src/utils.js" | claude --plugin-dir ~/devbox/agentics/plugins/dev-tools
 ```
 
 ### Verify Installation
@@ -181,7 +179,8 @@ dev-tools/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest
 ├── commands/
-│   └── format.md                # Format command
+│   ├── format.md                # Format command
+│   └── plan-review.md           # Plan review command
 ├── skills/
 │   └── code-review/
 │       └── SKILL.md             # Code review skill
@@ -215,6 +214,19 @@ Formats code files or directories using language-specific formatters.
 **Requirements:**
 - Prettier (for JS/TS/JSON/CSS/HTML)
 - Black or autopep8 (for Python)
+
+### Command: plan-review
+
+**File:** `commands/plan-review.md`
+**Invocation:** `/dev-tools:plan-review [path-to-plan]`
+
+Reads a plan and conducts a structured interview using the AskUserQuestion tool across five dimensions: technical implementation, trade-offs, UI/UX concerns, edge cases, and best practices. Asks 1–2 focused questions per dimension, then summarizes key decisions, open items, and recommended next steps.
+
+**Examples:**
+```
+/dev-tools:plan-review docs/migration-plan.md
+/dev-tools:plan-review architecture/api-redesign.md
+```
 
 ### Skill: code-review
 
@@ -308,7 +320,7 @@ This plugin is registered in the agentics-test marketplace at `marketplace-data/
   "category": "development",
   "tags": ["development", "code-quality", "formatting"],
   "components": {
-    "commands": ["format"],
+    "commands": ["format", "plan-review"],
     "skills": ["code-review"]
   }
 }

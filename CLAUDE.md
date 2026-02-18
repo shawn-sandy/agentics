@@ -63,13 +63,45 @@ The `marketplace-data/.claude-plugin/marketplace.json` defines:
 4. Scans component directories (`commands/`, `skills/`, etc.)
 5. Indexes metadata for search/retrieval
 
-## Development Workflows
+## Local Development Path
 
-### Testing Example Plugins
+The canonical path to this repository on the development machine is:
 
-Test plugins directly without the marketplace API:
+```
+~/devbox/agentics
+```
+
+### Testing Plugins from Any Project Folder
+
+Use the absolute path to load plugins from any working directory:
 
 ```bash
+# Load a single plugin from anywhere
+claude --plugin-dir ~/devbox/agentics/plugins/hello-world
+
+# Load dev-tools (includes format, plan-review commands + code-review skill)
+claude --plugin-dir ~/devbox/agentics/plugins/dev-tools
+
+# Load multiple plugins simultaneously
+claude --plugin-dir ~/devbox/agentics/plugins/hello-world --plugin-dir ~/devbox/agentics/plugins/dev-tools
+```
+
+### Register the Marketplace (Persistent)
+
+Register once so plugins are available without specifying paths each time:
+
+```bash
+/plugin marketplace add ~/devbox/agentics/marketplace-data
+/plugin install dev-tools@agentics-test
+```
+
+### Testing from the Repository Root
+
+If you are already in the agentics directory, relative paths also work:
+
+```bash
+cd ~/devbox/agentics
+
 # Load a single plugin (starts interactive Claude session)
 claude --plugin-dir ./plugins/hello-world
 
@@ -85,6 +117,7 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 # Once in the session, use commands from either plugin:
 # /hello-world:greet
 # /dev-tools:format src/index.ts
+# /dev-tools:plan-review path/to/plan.md
 ```
 
 **Note:** The `--plugin-dir` flag either starts an interactive Claude Code session where you can type commands, or you can provide a prompt as a command-line argument for direct execution.

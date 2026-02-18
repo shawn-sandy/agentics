@@ -23,7 +23,7 @@
       "category": "development",
       "tags": ["development", "code-quality", "formatting"],
       "components": {
-        "commands": ["format"],
+        "commands": ["format", "plan-review"],
         "skills": ["code-review"]
       }
     }
