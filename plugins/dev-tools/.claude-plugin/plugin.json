@@ -1,7 +1,7 @@
 {
   "name": "dev-tools",
-  "version": "1.0.0",
-  "description": "Developer productivity tools for code formatting and review",
+  "version": "1.1.0",
+  "description": "Developer productivity tools for code formatting, review, and CLAUDE.md optimization",
   "author": {
     "name": "Agentics Project"
   },
