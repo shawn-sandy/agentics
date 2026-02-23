@@ -76,6 +76,9 @@ agentics/
 ## Verification
 
 ```bash
+# 0. Remove the old marketplace registration first
+/plugin marketplace remove agentics-test
+
 # 1. Validate the marketplace from the new location
 claude plugin validate .
 
@@ -86,4 +89,28 @@ claude plugin validate .
 /plugin install hello-world@agentics-test
 /plugin install dev-tools@agentics-test
 ```
+
+---
+
+## Interview Summary
+
+### Key Decisions Confirmed
+
+- **Re-registration** — Add `/plugin marketplace remove agentics-test` + re-add to the Verification section
+- **File move strategy** — Use `git mv` to preserve `marketplace.json` blame/log history
+- **Three-Layer Structure** — Redefine layers in `CLAUDE.md` as: `plugins/` (source code) · `.claude-plugin/` (marketplace manifest) · `tests/` (fixtures)
+- **Version bump** — Bump `marketplace.json` from `1.0.0` → `1.1.0` to signal the structural change
+
+### Open Risks & Concerns
+
+- **Latent validation error** — `../plugins/...` source paths currently violate the `Path traversal not allowed` rule. The refactor fixes this, but it should be called out in the plan as a correctness fix, not just a housekeeping path update.
+- **README merge ambiguity** — `marketplace-data/README.md` is ~457 lines covering API integration, curl examples, and troubleshooting. "Merge unique content" needs a clearer instruction: merge only usage/registration sections, and discard API-futures content.
+
+### Recommended Next Steps
+
+1. Add to Step 3: note that `./plugins/...` also resolves the existing `Path traversal not allowed` validator error
+2. Add to Step 4: specify what to merge from `marketplace-data/README.md` — usage and registration sections only; discard API speculation and troubleshooting boilerplate
+3. Add to Step 5 (file move): use `git mv` for the manifest move
+4. Add to Step 6: bump `marketplace.json` version to `1.1.0`
+5. Verification already updated with `/plugin marketplace remove agentics-test` before re-adding
 
