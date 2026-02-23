@@ -255,26 +255,61 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Form
    curl http://localhost:3000/api/v1/plugins
    ```
 
-## Example Plugins
+## Plugins
 
-### hello-world
+### hello-world `v1.0.0`
 
-A minimal viable plugin demonstrating basic plugin structure.
+A minimal example plugin demonstrating basic plugin structure.
 
-**Features:**
-- Single slash command: `/hello-world:greet`
-- Demonstrates argument handling
-- Clean, well-documented code
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/hello-world:greet` | Greet the user with a friendly message |
+
+```bash
+claude --plugin-dir ./plugins/hello-world
+# /hello-world:greet
+# /hello-world:greet Alice
+```
 
 [View Plugin Documentation](./plugins/hello-world/README.md)
 
-### dev-tools
+---
 
-A multi-component plugin showcasing commands and skills working together.
+### dev-tools `v1.1.0`
 
-**Features:**
-- Command: `/dev-tools:format` - Format code files
-- Skill: `code-review` - Automatically review code for issues
+Developer productivity tools for code formatting, review, and CLAUDE.md optimization.
+
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/dev-tools:format` | Format code in the current file or directory |
+| `/dev-tools:plan-review` | Review a plan and interview the user about implementation, trade-offs, and edge cases |
+| `/dev-tools:plan-interview` | Stress-test a plan with a structured interview across technical, UX, and edge-case domains |
+
+**Skills** (activate automatically based on your request):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `code-review` | Review code, check for bugs, or analyze code quality |
+| `plan-interview` | Stress-test, validate, critique, or find gaps in a plan |
+| `claude-md-optimizer` | Optimize, audit, or clean up a CLAUDE.md file — also activates when Claude is ignoring instructions |
+
+```bash
+claude --plugin-dir ./plugins/dev-tools
+
+# Commands (explicit invocation):
+# /dev-tools:format src/index.ts
+# /dev-tools:plan-review path/to/plan.md
+# /dev-tools:plan-interview path/to/plan.md
+
+# Skills (activate automatically):
+# "Review this code for issues"
+# "Audit my CLAUDE.md"
+# "Stress-test this plan"
+```
 
 [View Plugin Documentation](./plugins/dev-tools/README.md)
 
@@ -371,9 +406,11 @@ curl -X POST http://localhost:3000/api/v1/marketplaces/agentics-test/sync
 ## Roadmap
 
 ### Current Features
-- ✅ Example plugin implementations (hello-world, dev-tools)
+- ✅ Example plugin implementations (hello-world, dev-tools v1.1.0)
 - ✅ Test marketplace configuration
 - ✅ Plugin structure documentation
+- ✅ dev-tools: format, plan-review, plan-interview commands
+- ✅ dev-tools: code-review, plan-interview, claude-md-optimizer skills
 
 ### In Progress
 - 🚧 Marketplace API implementation
