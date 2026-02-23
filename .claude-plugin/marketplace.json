@@ -21,11 +21,7 @@
       "description": "Developer productivity tools for code formatting, review, and CLAUDE.md optimization",
       "source": "./plugins/dev-tools",
       "category": "development",
-      "tags": ["development", "code-quality", "formatting"],
-      "components": {
-        "commands": ["format", "plan-review", "plan-interview"],
-        "skills": ["code-review", "claude-md-optimizer"]
-      }
+      "tags": ["development", "code-quality", "formatting"]
     }
   ]
 }
