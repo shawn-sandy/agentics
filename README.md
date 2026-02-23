@@ -46,12 +46,11 @@ The agentics project provides:
 
 ```
 agentics/
+├── .claude-plugin/
+│   └── marketplace.json          # Marketplace manifest
 ├── plugins/                      # Example plugins for testing
 │   ├── hello-world/              # Minimal example plugin
 │   └── dev-tools/                # Multi-component plugin
-├── marketplace-data/             # Test marketplace configuration
-│   └── .claude-plugin/
-│       └── marketplace.json      # Marketplace manifest
 ├── tests/
 │   └── fixtures/                 # Test plugin fixtures
 └── README.md                     # This file
@@ -315,14 +314,13 @@ claude --plugin-dir ./plugins/dev-tools
 
 ## Test Marketplace
 
-The `marketplace-data/` directory contains a test marketplace configuration that references the example plugins. This marketplace is used for:
+The `.claude-plugin/marketplace.json` at the project root defines the `agentics-test` marketplace, which references the example plugins. Register it once to make all plugins installable by name:
 
-- Testing marketplace API functionality
-- Demonstrating marketplace structure
-- Providing reference implementation
-- End-to-end integration testing
-
-[View Marketplace Documentation](./marketplace-data/README.md)
+```bash
+/plugin marketplace add ~/devbox/agentics
+/plugin install hello-world@agentics-test
+/plugin install dev-tools@agentics-test
+```
 
 ## Development
 
@@ -373,7 +371,7 @@ claude --plugin-dir ./plugins/my-plugin "Run /my-plugin:my-command"
 
 ### Registering Plugins in Marketplace
 
-Add your plugin to `marketplace-data/.claude-plugin/marketplace.json`:
+Add your plugin to `.claude-plugin/marketplace.json`:
 
 ```json
 {
@@ -383,7 +381,7 @@ Add your plugin to `marketplace-data/.claude-plugin/marketplace.json`:
       "name": "my-plugin",
       "version": "1.0.0",
       "description": "My test plugin",
-      "source": "../plugins/my-plugin",
+      "source": "./plugins/my-plugin",
       "category": "development",
       "tags": ["testing"]
     }
@@ -391,16 +389,9 @@ Add your plugin to `marketplace-data/.claude-plugin/marketplace.json`:
 }
 ```
 
-Then resync the marketplace:
-
-```bash
-curl -X POST http://localhost:3000/api/v1/marketplaces/agentics-test/sync
-```
-
 ## Documentation
 
 - [Plugin Directory](./plugins/README.md) - Plugin development guide and examples
-- [Marketplace Documentation](./marketplace-data/README.md) - Marketplace setup and API usage
 - [Test Fixtures](./tests/fixtures/README.md) - Testing utilities and fixtures
 
 ## Roadmap

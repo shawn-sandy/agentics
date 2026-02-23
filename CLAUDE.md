@@ -18,11 +18,11 @@ Currently, the repository focuses on plugin examples. The marketplace API implem
 
 ```
 plugins/              → Plugin source code (what users install)
-marketplace-data/     → Marketplace metadata (how plugins are discovered)
+.claude-plugin/       → Marketplace metadata (how plugins are discovered)
 tests/fixtures/       → Test data for validation logic
 ```
 
-**Key Insight:** Plugins are **referenced** by marketplaces, not embedded in them. The `marketplace.json` file contains metadata that points to plugin directories via relative paths (`source: "../plugins/hello-world"`). This allows:
+**Key Insight:** Plugins are **referenced** by marketplaces, not embedded in them. The `marketplace.json` file contains metadata that points to plugin directories via relative paths (`source: "./plugins/hello-world"`). This allows:
 - Same plugin to be in multiple marketplaces with different metadata
 - Plugin versioning independent of marketplace versioning
 - Local development without duplicating plugin code
@@ -51,7 +51,7 @@ plugin-name/
 
 ### Marketplace Manifest Structure
 
-The `marketplace-data/.claude-plugin/marketplace.json` defines:
+The `.claude-plugin/marketplace.json` at the project root defines:
 - Marketplace identity (name, version, owner)
 - Plugin registry (array of plugin entries with source paths)
 - Plugin metadata (categories, tags, component lists)
@@ -91,7 +91,7 @@ claude --plugin-dir ~/devbox/agentics/plugins/hello-world --plugin-dir ~/devbox/
 Register once so plugins are available without specifying paths each time:
 
 ```bash
-/plugin marketplace add ~/devbox/agentics/marketplace-data
+/plugin marketplace add ~/devbox/agentics
 /plugin install dev-tools@agentics-test
 ```
 
@@ -160,7 +160,7 @@ claude --plugin-dir ./plugins/my-plugin "Run /my-plugin:my-command"
 
 ### Registering Plugins in Test Marketplace
 
-After creating a plugin, register it in `marketplace-data/.claude-plugin/marketplace.json`:
+After creating a plugin, register it in `.claude-plugin/marketplace.json`:
 
 ```json
 {
@@ -169,7 +169,7 @@ After creating a plugin, register it in `marketplace-data/.claude-plugin/marketp
       "name": "my-plugin",
       "version": "1.0.0",
       "description": "Brief description",
-      "source": "../plugins/my-plugin",
+      "source": "./plugins/my-plugin",
       "category": "development",
       "tags": ["relevant", "tags"]
     }
@@ -340,7 +340,7 @@ When creating or modifying plugins:
 
 - **Minimal Plugin:** `plugins/hello-world/` - Single command, basic structure
 - **Multi-Component:** `plugins/dev-tools/` - Command + skill working together
-- **Marketplace Config:** `marketplace-data/.claude-plugin/marketplace.json` - Plugin registry
+- **Marketplace Config:** `.claude-plugin/marketplace.json` - Plugin registry
 - **Valid Test Fixture:** `tests/fixtures/valid-plugin/` - Validation reference
 
 ## Official Documentation Resources
