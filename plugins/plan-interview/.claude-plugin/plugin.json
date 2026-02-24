@@ -7,6 +7,6 @@
   },
   "license": "MIT",
   "keywords": ["planning", "interview", "stress-test", "architecture"],
-  "homepage": "https://code.claude.com/docs/en/plugins",
-  "repository": "https://github.com/shawnsandy/agentics"
+  "homepage": "https://github.com/shawn-sandy/agentics/plugins/plan-interview",
+  "repository": "https://github.com/shawn-sandy/agentics"
 }

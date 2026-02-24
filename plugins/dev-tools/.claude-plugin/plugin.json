@@ -7,6 +7,6 @@
   },
   "license": "MIT",
   "keywords": ["formatting", "code-quality", "prettier", "eslint"],
-  "homepage": "https://code.claude.com/docs/en/plugins",
-  "repository": "https://github.com/shawnsandy/agentics"
+  "homepage": "https://github.com/shawn-sandy/agentics/plugins/dev-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
 }

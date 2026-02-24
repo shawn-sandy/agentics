@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a **marketplace system for Claude Code plugins**. The repository contains example plugins and marketplace infrastructure for testing plugin discovery, distribution, and installation.
 
 **Two distinct purposes:**
+
 1. **Example Plugins** — Reference implementations in `plugins/` demonstrating Claude Code plugin structure
 2. **Marketplace Infrastructure** — (Planned) API and CLI for discovering and serving these plugins
 
@@ -40,6 +41,7 @@ plugin-name/
 ```
 
 **Component Types:**
+
 - **Commands** — Explicit invocation via `/plugin:command` syntax
 - **Skills** — Automatic activation when user intent matches frontmatter `description`
 - **Agents** — Long-running autonomous subprocesses
@@ -50,6 +52,7 @@ plugin-name/
 `.claude-plugin/marketplace.json` defines marketplace identity, plugin registry, and metadata.
 
 **Discovery Flow:**
+
 1. API reads `marketplace.json`
 2. Follows each `source` path to parse `plugin.json`
 3. Scans component directories (`commands/`, `skills/`, etc.)
@@ -94,15 +97,21 @@ claude --plugin-dir ~/devbox/agentics/plugins/hello-world \
 ## Modular Rules
 
 Detailed patterns are in `.claude/rules/`:
+
 - `plugin-patterns.md` — Command/skill patterns, progressive disclosure, pitfalls (scoped to `plugins/**`)
 - `marketplace.md` — Categories, tagging, versioning, registration
 - `testing.md` — Test fixture guidelines (scoped to `tests/**`)
 
+## Special instructions
+
+- The homepage should point to the plugin's own GitHub source directory so users can browse the plugin code and docs directly.
+- Always include plans in the commits for any plugin changes, even if the change is small. This ensures that the rationale and context for the change are documented and can be reviewed by others.
+
 ## Official Documentation
 
-- **Main Docs:** https://code.claude.com/docs/en
-- **Plugin Creation:** https://code.claude.com/docs/en/plugins
-- **Plugin Reference:** https://code.claude.com/docs/en/plugins-reference
-- **Plugin Marketplaces:** https://code.claude.com/docs/en/plugin-marketplaces
+- **Main Docs:** <https://code.claude.com/docs/en>
+- **Plugin Creation:** <https://code.claude.com/docs/en/plugins>
+- **Plugin Reference:** <https://code.claude.com/docs/en/plugins-reference>
+- **Plugin Marketplaces:** <https://code.claude.com/docs/en/plugin-marketplaces>
 
 **Minimum Claude Code Version:** 1.0.33 or later
