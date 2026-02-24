@@ -34,8 +34,8 @@ Optimize the CLAUDE.md at ~/myproject/CLAUDE.md
 
 ### What the skill does
 
-1. Resolves the target file (explicit path → `$PWD/CLAUDE.md` → `~/.claude/CLAUDE.md`)
-2. Measures line count, instruction count, and sections
+1. Resolves the target file (explicit path → `$PWD/CLAUDE.md` → `$PWD/.claude/CLAUDE.md` → `~/.claude/CLAUDE.md`)
+2. Measures line count, instruction count, sections, and `@import` references
 3. Scores 6 dimensions (Instruction Budget, Section Quality, 80% Rule, Progressive Disclosure, Safety & Hygiene, Structure)
 4. Reports a scored audit with grade (Optimized / Functional / Needs work / Rewrite)
 5. Optionally generates and writes an optimized version
