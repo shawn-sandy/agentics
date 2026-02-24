@@ -4,7 +4,6 @@ argument-hint: [plan-file-path] - omit to auto-detect from IDE or ~/.claude/plan
 allowed-tools: Read, Glob, AskUserQuestion, Write, Edit
 ---
 
-<!-- Synced with: ~/.claude/skills/plan-interview/SKILL.md — keep both files in sync -->
 
 # /plan-interview
 
@@ -177,4 +176,3 @@ After presenting the summary, ask the user:
 ---
 
 Arguments: $ARGUMENTS
-
