@@ -47,7 +47,7 @@ plugin-name/
 
 ### Marketplace Manifest Structure
 
-`marketplace.json` at project root defines marketplace identity, plugin registry, and metadata.
+`.claude-plugin/marketplace.json` defines marketplace identity, plugin registry, and metadata.
 
 **Discovery Flow:**
 1. API reads `marketplace.json`
