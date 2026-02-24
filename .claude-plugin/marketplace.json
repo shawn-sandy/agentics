@@ -1,39 +1,80 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "1.1.0",
-  "description": "Tools for agentic agents, including a hello world plugin and developer productivity tools",
+  "version": "2.0.0",
+  "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
-    "name": "Agentics Project"
-  },
-  "author": {
     "name": "Agentics Team",
-    "contact": "shawnsandy04@gmail.com"
+    "email": "shawnsandy04@gmail.com"
+  },
+  "metadata": {
+    "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization"
   },
   "plugins": [
     {
       "name": "hello-world",
-      "version": "1.0.0",
-      "description": "A minimal example plugin for testing the marketplace",
       "source": "./plugins/hello-world",
+      "version": "1.0.0",
+      "description": "A minimal example plugin demonstrating the basic structure of Claude Code plugins",
       "category": "learning",
-      "tags": [
-        "example",
-        "tutorial",
-        "minimal"
-      ]
+      "tags": ["example", "tutorial", "minimal", "getting-started"],
+      "keywords": ["example", "tutorial", "minimal", "getting-started"],
+      "homepage": "https://code.claude.com/docs/en/plugins",
+      "repository": "https://github.com/shawnsandy/agentics",
+      "license": "MIT",
+      "author": { "name": "Agentics Project" }
     },
     {
       "name": "dev-tools",
-      "version": "1.1.0",
-      "description": "Developer productivity tools for code formatting, review, and CLAUDE.md optimization",
       "source": "./plugins/dev-tools",
+      "version": "2.0.0",
+      "description": "Code formatting for JavaScript, TypeScript, Python, CSS, HTML, and Markdown",
       "category": "development",
-      "tags": [
-        "development",
-        "code-quality",
-        "formatting"
-      ]
+      "tags": ["formatting", "code-quality", "prettier", "eslint"],
+      "keywords": ["formatting", "code-quality", "prettier", "eslint"],
+      "homepage": "https://code.claude.com/docs/en/plugins",
+      "repository": "https://github.com/shawnsandy/agentics",
+      "license": "MIT",
+      "author": { "name": "Agentics Project" }
+    },
+    {
+      "name": "claude-md-optimizer",
+      "source": "./plugins/claude-md-optimizer",
+      "version": "1.0.0",
+      "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
+      "category": "development",
+      "tags": ["claude-md", "configuration", "optimization", "best-practices"],
+      "keywords": ["claude-md", "configuration", "optimization", "best-practices"],
+      "homepage": "https://code.claude.com/docs/en/plugins",
+      "repository": "https://github.com/shawnsandy/agentics",
+      "license": "MIT",
+      "author": { "name": "Agentics Project" }
+    },
+    {
+      "name": "code-review",
+      "source": "./plugins/code-review",
+      "version": "1.0.0",
+      "description": "Systematic code review across quality, bugs, security, and best practices",
+      "category": "development",
+      "tags": ["code-quality", "review", "security", "best-practices"],
+      "keywords": ["code-quality", "review", "security", "best-practices"],
+      "homepage": "https://code.claude.com/docs/en/plugins",
+      "repository": "https://github.com/shawnsandy/agentics",
+      "license": "MIT",
+      "author": { "name": "Agentics Project" }
+    },
+    {
+      "name": "plan-interview",
+      "source": "./plugins/plan-interview",
+      "version": "1.0.0",
+      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
+      "category": "development",
+      "tags": ["planning", "interview", "stress-test", "architecture"],
+      "keywords": ["planning", "interview", "stress-test", "architecture"],
+      "homepage": "https://code.claude.com/docs/en/plugins",
+      "repository": "https://github.com/shawnsandy/agentics",
+      "license": "MIT",
+      "author": { "name": "Agentics Project" }
     }
   ]
 }

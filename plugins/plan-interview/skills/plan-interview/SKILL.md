@@ -4,7 +4,7 @@ description: Conducts a structured multi-round interview to stress-test implemen
 version: 0.2.0
 ---
 
-<!-- Synced with: ~/.claude/commands/plan-interview.md — keep both files in sync -->
+<!-- Synced with: commands/plan-interview.md — keep both files in sync -->
 
 # Plan Interview
 
