@@ -8,18 +8,43 @@ This directory contains example plugins for testing the agentics marketplace API
 A minimal viable plugin demonstrating basic plugin structure. Perfect for understanding the fundamentals of Claude Code plugin development.
 
 **Components:**
-- Command: `/hello-world:greet` - Simple greeting command
+- Command: `/hello-world:greet [name]` - Simple greeting command
 
 **Use case:** Learning plugin basics, testing plugin loading
 
 ### dev-tools
-A multi-component plugin showcasing commands and skills working together.
+A commands-focused plugin demonstrating explicit invocation and plan file handling.
 
 **Components:**
-- Command: `/dev-tools:format` - Format code files
-- Skill: `code-review` - Review code for issues
+- Command: `/dev-tools:format [path]` - Format code files using the appropriate formatter
+- Command: `/dev-tools:plan-interview [plan-file-path]` - Structured plan stress-test interview
 
-**Use case:** Understanding multi-component plugins, testing skills integration
+**Use case:** Understanding command plugins, formatter delegation, plan file resolution
+
+### code-review
+A skill-only plugin that activates automatically when the user asks to review code.
+
+**Components:**
+- Skill: `code-review` - Review code across quality, bugs, security, and best practices
+
+**Use case:** Understanding skill-only plugins, automatic activation patterns
+
+### plan-interview
+A plugin combining a command and a skill for the same underlying capability.
+
+**Components:**
+- Command: `/plan-interview:plan-interview [plan-file-path]` - Explicit plan interview invocation
+- Skill: `plan-interview` - Auto-activates on stress-test/validate/interview requests
+
+**Use case:** Understanding command + skill co-location for the same feature
+
+### claude-md-optimizer
+A skill-only plugin that audits and optimizes CLAUDE.md files.
+
+**Components:**
+- Skill: `claude-md-optimizer` - Audit CLAUDE.md files against best practices
+
+**Use case:** Understanding skills with broad activation criteria and multi-step output
 
 ## Testing Plugins Locally
 
@@ -229,20 +254,20 @@ Skills are invoked automatically when their description matches user intent.
 
 ## Integration with Marketplace
 
-These plugins are referenced in `marketplace-data/.claude-plugin/marketplace.json` for marketplace API testing. The marketplace system:
+These plugins are referenced in `.claude-plugin/marketplace.json` for marketplace API testing. The marketplace system:
 
-1. **Discovers** plugins from marketplace.json
+1. **Discovers** plugins from marketplace.json via `source` path references
 2. **Indexes** plugin metadata and components
 3. **Serves** plugin information via API
 4. **Enables** installation via CLI
 
-See `marketplace-data/README.md` for marketplace setup instructions.
+See the [root README](../README.md) for marketplace registration and usage.
 
 ## Resources
 
-- [Claude Code Plugin Documentation](https://github.com/anthropics/claude-code)
-- [Plugin Development Guide](https://docs.anthropic.com/claude-code/plugins)
-- [Marketplace API Documentation](../docs/api.md)
+- [Claude Code Plugin Documentation](https://code.claude.com/docs/en/plugins)
+- [Plugins Reference](https://code.claude.com/docs/en/plugins-reference)
+- [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
 
 ## Contributing
 

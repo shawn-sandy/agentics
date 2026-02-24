@@ -209,6 +209,6 @@ describe('Marketplace API', () => {
 
 ## Resources
 
-- [Plugin Schema](../../docs/plugin-schema.md)
-- [Validation Rules](../../docs/validation.md)
-- [Testing Guide](../../docs/testing.md)
+- [Plugin Structure Reference](../../plugins/hello-world/README.md)
+- [Marketplace Configuration](../../.claude-plugin/marketplace.json)
+- [Claude Code Plugins Reference](https://code.claude.com/docs/en/plugins-reference)
