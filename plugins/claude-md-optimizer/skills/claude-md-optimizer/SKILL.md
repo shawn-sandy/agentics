@@ -13,10 +13,11 @@ Audit and optimize a CLAUDE.md file against Claude Code best practices. Follow a
 Determine which CLAUDE.md to audit using this priority order:
 
 1. Explicit path in `$ARGUMENTS` (if provided)
-2. `$PWD/CLAUDE.md` (project-level file in the current directory)
-3. `~/.claude/CLAUDE.md` (global user-level file)
+2. `$PWD/CLAUDE.md` (primary project location)
+3. `$PWD/.claude/CLAUDE.md` (alternate project location, checked if primary absent)
+4. `~/.claude/CLAUDE.md` (global user-level)
 
-Tell the user which file will be audited before continuing. If neither file exists and no argument was given, stop and ask the user to provide a path.
+Tell the user which file will be audited before continuing. If none of the four locations has a file and no argument was given, stop and ask the user to provide a path.
 
 If a path was given but the file does not exist, stop and report the error clearly.
 
@@ -30,8 +31,9 @@ Read the target file in full, then collect these metrics:
 - **Instruction count (estimated)** — count verb-starting bullet points, numbered directives, and bolded imperatives (e.g., `**Always**`, `**Never**`). Acknowledge a ±30–50 variance in your estimate.
 - **Section inventory** — list every `##` heading present
 - **Sensitive data scan** — flag any matches for: `sk-`, `ghp_`, `AKIA`, `xoxb-`, `-----BEGIN`, or a label followed by a long alphanumeric string (e.g., `TOKEN=abc123...`). Report matches verbatim so the user can verify.
+- **Import scan** — detect any `@path/to/file` references in the file. List each one found. Note that imported content counts toward effective instruction load but is not visible in the raw line count.
 
-Report all four metrics before proceeding to Step 3.
+Report all five metrics before proceeding to Step 3.
 
 ---
 
@@ -80,7 +82,10 @@ Flag content that violates this rule:
 
 ### Dimension 4 — Progressive Disclosure (max 2)
 
-Check whether complex, reference, or rarely-needed content is delegated to separate files (e.g., `docs/architecture.md`, `CONTRIBUTING.md`) and merely referenced from CLAUDE.md rather than embedded in full.
+Check whether complex, reference, or rarely-needed content is delegated outside CLAUDE.md rather than embedded in full. Claude Code supports two delegation mechanisms:
+
+- **`.claude/rules/*.md`** — loaded automatically by Claude Code; can be path-scoped with `paths:` frontmatter to activate only for matching files
+- **External docs** (e.g., `docs/architecture.md`, `CONTRIBUTING.md`) — referenced via `@import` or a plain link
 
 - Complex content properly delegated = 2
 - Some delegation but file is still bloated = 1
@@ -102,7 +107,7 @@ Check for three hygiene issues:
 
 - Clear `##` heading hierarchy (no flat walls of text)
 - No instruction bleeding across sections
-- `CLAUDE.md.local` pattern mentioned or considered (for machine-specific or personal overrides)
+- `CLAUDE.local.md` pattern mentioned or considered (for machine-specific or personal overrides; Claude Code auto-adds it to `.gitignore`)
 - No stale or contradictory instructions
 
 - All criteria met = 2
@@ -227,8 +232,11 @@ For a 6/12 "Needs work" file:
 
 - A shorter CLAUDE.md is almost always better than a longer one.
 - If Claude is ignoring instructions, the most common cause is context overflow from a bloated CLAUDE.md — not missing instructions.
-- The `CLAUDE.md.local` pattern lets individual developers add machine-specific instructions without modifying the shared file.
-- Global (`~/.claude/CLAUDE.md`) and project-level (`./CLAUDE.md`) files are both loaded; their combined instruction count matters.
+- The `CLAUDE.local.md` pattern lets individual developers add machine-specific instructions without modifying the shared file. Claude Code auto-adds it to `.gitignore`.
+- Memory load order: project rules → project memory → user memory → project local (`CLAUDE.local.md`). Combined instruction count across all loaded files is what matters.
+- Use `/init` to bootstrap a starter CLAUDE.md from codebase context when starting a new project.
+- Use `@path/to/file` import syntax to reference external docs from CLAUDE.md without embedding their full content.
+- Use `.claude/rules/*.md` for modular, topic-scoped rules; add `paths:` frontmatter to activate a rule only for matching file paths.
 
 ---
 
