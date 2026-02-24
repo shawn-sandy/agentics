@@ -10,7 +10,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 
 | Component | Type | Invocation |
 |-----------|------|-----------|
-| `plan-interview` | Command | `/plan-interview [plan-file-path]` |
+| `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
 
 ## Usage
@@ -18,9 +18,9 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 ### Command (explicit invocation)
 
 ```
-/plan-interview                                   # auto-detects latest plan
-/plan-interview ~/.claude/plans/my-feature.md     # specific plan file
-/plan-interview docs/plans/refactor-plan.md       # project-relative path
+/plan-interview:plan-interview                                   # auto-detects latest plan
+/plan-interview:plan-interview ~/.claude/plans/my-feature.md     # specific plan file
+/plan-interview:plan-interview docs/plans/refactor-plan.md       # project-relative path
 ```
 
 ### Skill (automatic activation)

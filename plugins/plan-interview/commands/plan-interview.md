@@ -5,15 +5,15 @@ allowed-tools: Read, Glob, AskUserQuestion, Write, Edit
 ---
 
 
-# /plan-interview
+# /plan-interview:plan-interview
 
 Stress-test a plan through a structured conversational interview before implementation begins.
 
 ## Usage
 
 ```
-/plan-interview                                        # auto-detects from IDE or latest in ~/.claude/plans/
-/plan-interview ~/.claude/plans/my-feature.md          # use a specific plan file
+/plan-interview:plan-interview                                        # auto-detects from IDE or latest in ~/.claude/plans/
+/plan-interview:plan-interview ~/.claude/plans/my-feature.md          # use a specific plan file
 ```
 
 ## Instructions
