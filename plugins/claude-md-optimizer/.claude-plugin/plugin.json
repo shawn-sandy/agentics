@@ -6,7 +6,12 @@
     "name": "Agentics Project"
   },
   "license": "MIT",
-  "keywords": ["claude-md", "configuration", "optimization", "best-practices"],
+  "keywords": [
+    "claude-md",
+    "configuration",
+    "optimization",
+    "best-practices"
+  ],
   "homepage": "https://code.claude.com/docs/en/plugins",
   "repository": "https://github.com/shawnsandy/agentics"
 }
