@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0] - 2026-02-24
+
+### Added
+
+- New skill `path-rules-advisor`: analyzes project and CLAUDE.md to recommend and generate path-specific rule files in `.claude/rules/`
+- Supports direct creation via `$ARGUMENTS` (path pattern + description) or analysis mode (no argument)
+
 ## [1.1.0] - 2026-02-24
 
 ### Added
