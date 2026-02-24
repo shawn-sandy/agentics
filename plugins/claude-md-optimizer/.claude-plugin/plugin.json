@@ -1,12 +1,12 @@
 {
-  "name": "hello-world",
+  "name": "claude-md-optimizer",
   "version": "1.0.0",
-  "description": "A minimal example plugin demonstrating the basic structure of Claude Code plugins",
+  "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
   "author": {
     "name": "Agentics Project"
   },
   "license": "MIT",
-  "keywords": ["example", "tutorial", "minimal", "getting-started"],
+  "keywords": ["claude-md", "configuration", "optimization", "best-practices"],
   "homepage": "https://code.claude.com/docs/en/plugins",
   "repository": "https://github.com/shawnsandy/agentics"
 }

@@ -1,9 +1,12 @@
 {
   "name": "dev-tools",
-  "version": "1.1.0",
-  "description": "Developer productivity tools for code formatting, review, and CLAUDE.md optimization",
+  "version": "2.0.0",
+  "description": "Code formatting for JavaScript, TypeScript, Python, CSS, HTML, and Markdown",
   "author": {
     "name": "Agentics Project"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": ["formatting", "code-quality", "prettier", "eslint"],
+  "homepage": "https://code.claude.com/docs/en/plugins",
+  "repository": "https://github.com/shawnsandy/agentics"
 }
