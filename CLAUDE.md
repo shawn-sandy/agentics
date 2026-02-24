@@ -66,16 +66,29 @@ claude --plugin-dir ~/devbox/agentics/plugins/hello-world
 # Load multiple plugins
 claude --plugin-dir ~/devbox/agentics/plugins/hello-world --plugin-dir ~/devbox/agentics/plugins/dev-tools
 
+# Load all plugins
+claude --plugin-dir ~/devbox/agentics/plugins/hello-world \
+  --plugin-dir ~/devbox/agentics/plugins/dev-tools \
+  --plugin-dir ~/devbox/agentics/plugins/claude-md-optimizer \
+  --plugin-dir ~/devbox/agentics/plugins/code-review \
+  --plugin-dir ~/devbox/agentics/plugins/plan-interview
+
 # Register marketplace persistently
 /plugin marketplace add ~/devbox/agentics
 /plugin install dev-tools@agentics-kit
+/plugin install claude-md-optimizer@agentics-kit
+/plugin install code-review@agentics-kit
+/plugin install plan-interview@agentics-kit
 ```
 
 ## Reference Implementations
 
 - **Minimal Plugin:** `plugins/hello-world/` — Single command, basic structure
-- **Multi-Component:** `plugins/dev-tools/` — Commands + skills working together
-- **Marketplace Config:** `.claude-plugin/marketplace.json` — Plugin registry example
+- **Commands Only:** `plugins/dev-tools/` — Formatting commands (skills extracted in v2.0)
+- **Skills Only:** `plugins/claude-md-optimizer/` — Auto-activated CLAUDE.md auditing skill
+- **Skills Only:** `plugins/code-review/` — Auto-activated code review skill
+- **Mixed (commands + skills):** `plugins/plan-interview/` — Plan interview command and skill
+- **Marketplace Config:** `.claude-plugin/marketplace.json` — Plugin registry (agentics-kit v2.0.0)
 - **Valid Test Fixture:** `tests/fixtures/valid-plugin/` — Validation reference
 
 ## Modular Rules
