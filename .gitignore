@@ -1,6 +1,9 @@
 # User-specific Claude Code configuration
 .claude/settings.local.json
 
+# Claude Code local overrides
+.claude.md.local
+
 # Node.js
 node_modules/
 npm-debug.log*

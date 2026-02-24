@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Marketplace system for Claude Code plugins.** Contains example plugins and marketplace infrastructure for testing plugin discovery, distribution, and installation.
 
 Two distinct purposes:
+
 1. **Example Plugins** — Reference implementations in `plugins/` demonstrating Claude Code plugin structure
 2. **Marketplace Infrastructure** — (Planned) API and CLI for discovering and serving these plugins
 
@@ -19,7 +20,7 @@ Two distinct purposes:
 
 ## Repository Structure
 
-```
+```plaintext
 plugins/              → Plugin source code (what users install)
 .claude-plugin/       → Marketplace metadata (marketplace.json)
 tests/fixtures/       → Test data for validation logic
@@ -54,6 +55,7 @@ claude --plugin-dir ~/devbox/agentics/plugins/<name>
 ## Modular Rules
 
 Detailed patterns in `.claude/rules/`:
+
 - `plugin-patterns.md` — command/skill patterns, progressive disclosure, pitfalls (scoped to `plugins/**`)
 - `marketplace.md` — categories, tagging, versioning, registration
 - `testing.md` — test fixture guidelines (scoped to `tests/**`)
