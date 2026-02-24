@@ -10,6 +10,23 @@ implementation begins.
 
 ## Instructions
 
+### Step 0 — Create progress todos
+
+Before doing any other work, use `TodoWrite` to create todos for each step of this interview. This gives the user visibility into progress and ensures no step is skipped.
+
+Create the following todos (all starting with `status: "pending"`):
+
+- Step 2: Read and analyze the plan
+- Step 3a: Round 1 — Technical & Trade-offs
+- Step 3b: Round 2a — UI/UX & Flows (if applicable)
+- Step 3c: Round 2b — Accessibility & Semantic (if applicable)
+- Step 3d: Round 3 — Edge Cases & Best Practices (if applicable)
+- Step 4: Surface out-of-scope concerns & complexity check
+- Step 5: Compile and present review summary
+- Step 6: Offer to save findings
+
+Mark each todo `status: "completed"` as you finish that step.
+
 ### Step 1 — Resolve the plan file
 
 Use the first match from this priority order:
