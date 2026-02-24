@@ -16,6 +16,8 @@ The dev-tools plugin provides essential developer utilities for maintaining code
 ### Skills
 
 - **`code-review`** - Automatically activated code review skill that analyzes code for bugs, security issues, and best practices
+- **`claude-md-optimizer`** - Audits and optimizes `CLAUDE.md` files against Claude Code best practices; also activates when Claude appears to be ignoring instructions
+- **`plan-interview`** - Stress-tests implementation plans through structured multi-round interviews before coding begins
 
 ## Installation
 
@@ -182,8 +184,12 @@ dev-tools/
 │   ├── format.md                # Format command
 │   └── plan-review.md           # Plan review command
 ├── skills/
-│   └── code-review/
-│       └── SKILL.md             # Code review skill
+│   ├── code-review/
+│   │   └── SKILL.md             # Code review skill
+│   ├── claude-md-optimizer/
+│   │   └── SKILL.md             # CLAUDE.md audit skill
+│   └── plan-interview/
+│       └── SKILL.md             # Plan interview skill
 └── README.md                    # This file
 ```
 
@@ -245,6 +251,41 @@ Provides comprehensive code review covering:
 - "Check for bugs"
 - "Is this secure?"
 - "Any improvements you'd suggest?"
+
+### Skill: claude-md-optimizer
+
+**File:** `skills/claude-md-optimizer/SKILL.md`
+**Activation:** Automatic when user asks to audit/optimize a CLAUDE.md, or reports Claude ignoring instructions
+
+Audits a `CLAUDE.md` file against best practices using a 6-dimension scoring system (max 12 points):
+
+1. **Instruction Budget** — ~100–150 instructions fit Claude's context; overflow causes silent failures
+2. **Section Quality** — presence of 5 key sections (overview, stack, commands, structure, conventions)
+3. **80% Rule Compliance** — only content relevant to 80%+ of sessions belongs in the file
+4. **Progressive Disclosure** — complex content delegated to separate files, not embedded inline
+5. **Safety & Hygiene** — no secrets, no linter-replaceable rules, no inferrable content
+6. **Structure & Navigability** — clear heading hierarchy, no contradictions
+
+**Activation Examples:**
+- "Optimize my CLAUDE.md"
+- "Audit my CLAUDE.md"
+- "Claude is ignoring my instructions"
+
+### Skill: plan-interview
+
+**File:** `skills/plan-interview/SKILL.md`
+**Activation:** Automatic when user asks to stress-test, interview, validate, or find gaps in a plan
+
+Conducts a structured 1–3 round interview to surface risks before implementation:
+
+- **Round 1** (always) — Technical trade-offs, architecture decisions, integration concerns
+- **Round 2a/2b** (medium/complex plans, or any plan with UI) — UX flows, accessibility, WCAG 2.1 AA
+- **Round 3** (complex plans) — Edge cases, regression risks, best practices
+
+**Activation Examples:**
+- "Stress-test this plan"
+- "Interview my plan"
+- "Find gaps in this plan before I start coding"
 
 ## Development
 
