@@ -1,9 +1,7 @@
 ---
 name: plan-interview
-description: Conducts a structured multi-round interview to stress-test implementation plans before coding begins, surfacing risks across technical trade-offs, UX/accessibility, and edge cases. This skill should be used when the user asks to stress-test, interview, validate, critique, or find gaps and risks in a plan. Not intended for quick plan approval or sign-off requests.
+description: Use when the user asks to stress-test, validate, critique, or find gaps and risks in an implementation plan.
 ---
-
-<!-- Synced with: commands/plan-interview.md — keep both files in sync -->
 
 # Plan Interview
 
