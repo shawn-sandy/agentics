@@ -1,7 +1,6 @@
 ---
 name: claude-md-optimizer
-description: Audit and optimize a CLAUDE.md file against Claude Code best practices. Use when the user asks to optimize, improve, audit, review, clean up, or analyze a CLAUDE.md file. Also activate when the user reports Claude ignoring instructions or behaving inconsistently — these are symptoms of a poorly structured CLAUDE.md.
-version: 1.0.0
+description: Use when the user asks to audit, optimize, review, clean up, or improve a CLAUDE.md file. Also use when Claude is ignoring instructions, behaving inconsistently, or the CLAUDE.md appears bloated or overloaded.
 ---
 
 Audit and optimize a CLAUDE.md file against Claude Code best practices. Follow all six steps in order. Do not skip steps or combine them.
@@ -228,21 +227,9 @@ For a 6/12 "Needs work" file:
 
 ---
 
-## Tips
+## Notes
 
-- A shorter CLAUDE.md is almost always better than a longer one.
-- If Claude is ignoring instructions, the most common cause is context overflow from a bloated CLAUDE.md — not missing instructions.
-- The `CLAUDE.local.md` pattern lets individual developers add machine-specific instructions without modifying the shared file. Claude Code auto-adds it to `.gitignore`.
-- Memory load order: project rules → project memory → user memory → project local (`CLAUDE.local.md`). Combined instruction count across all loaded files is what matters.
-- Use `/init` to bootstrap a starter CLAUDE.md from codebase context when starting a new project.
-- Use `@path/to/file` import syntax to reference external docs from CLAUDE.md without embedding their full content.
-- Use `.claude/rules/*.md` for modular, topic-scoped rules; add `paths:` frontmatter to activate a rule only for matching file paths.
-
----
-
-## Scope boundaries
-
-- Audit only the file specified. Do not scan the entire project unless asked.
-- Do not rewrite the file without explicit confirmation (Steps 5 and 6 are opt-in).
-- Do not add instructions that were not in the original file, except for missing section stubs.
-- This skill evaluates CLAUDE.md structure and content — it does not validate plugin manifests, commands, or other Claude Code configuration files.
+- A shorter CLAUDE.md is almost always better than a longer one. Context overflow — not missing instructions — is the most common cause of Claude ignoring directives.
+- Memory load order: project rules → project memory → user memory → `CLAUDE.local.md`. Combined instruction count across all loaded files is what matters.
+- Use `@path/to/file` import syntax to reference external docs without embedding their full content. Use `.claude/rules/*.md` for modular, path-scoped rules.
+- Audit only the file specified. Do not scan the entire project unless asked. Steps 5 and 6 are opt-in — do not rewrite the file without explicit confirmation.
