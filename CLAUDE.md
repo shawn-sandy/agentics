@@ -40,7 +40,7 @@ claude --plugin-dir ~/devbox/agentics/plugins/<name>
 /plugin install <plugin-name>@agentics-kit
 ```
 
-> Machine-specific paths (e.g. absolute local paths) belong in `.claude.md.local`, not here.
+> Machine-specific paths (e.g. absolute local paths) belong in `CLAUDE.local.md`, not here.
 
 ## Reference Implementations
 
