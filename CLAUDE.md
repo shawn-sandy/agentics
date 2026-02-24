@@ -79,7 +79,7 @@ Use the absolute path to load plugins from any working directory:
 # Load a single plugin from anywhere
 claude --plugin-dir ~/devbox/agentics/plugins/hello-world
 
-# Load dev-tools (includes format, plan-review commands + code-review skill)
+# Load dev-tools (includes format, plan-interview commands + code-review, claude-md-optimizer, plan-interview skills)
 claude --plugin-dir ~/devbox/agentics/plugins/dev-tools
 
 # Load multiple plugins simultaneously
@@ -92,7 +92,7 @@ Register once so plugins are available without specifying paths each time:
 
 ```bash
 /plugin marketplace add ~/devbox/agentics
-/plugin install dev-tools@agentics-test
+/plugin install dev-tools@agentics-kit
 ```
 
 ### Testing from the Repository Root
@@ -117,46 +117,14 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 # Once in the session, use commands from either plugin:
 # /hello-world:greet
 # /dev-tools:format src/index.ts
-# /dev-tools:plan-review path/to/plan.md
+# /dev-tools:plan-interview path/to/plan.md
 ```
 
 **Note:** The `--plugin-dir` flag either starts an interactive Claude Code session where you can type commands, or you can provide a prompt as a command-line argument for direct execution.
 
 ### Creating New Example Plugins
 
-```bash
-# 1. Create plugin structure
-mkdir -p plugins/my-plugin/.claude-plugin
-mkdir -p plugins/my-plugin/commands
-
-# 2. Create plugin.json manifest (required fields: name, version, description)
-cat > plugins/my-plugin/.claude-plugin/plugin.json <<EOF
-{
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "description": "Brief description"
-}
-EOF
-
-# 3. Create a command (optional)
-cat > plugins/my-plugin/commands/my-command.md <<EOF
----
-description: What this command does
----
-
-Instructions for Claude on how to execute this command.
-Use \$ARGUMENTS to access user input.
-EOF
-
-# 4. Test the plugin (starts interactive session)
-claude --plugin-dir ./plugins/my-plugin
-
-# In the Claude session, try your command:
-# /my-plugin:my-command
-
-# Or test with direct prompt:
-claude --plugin-dir ./plugins/my-plugin "Run /my-plugin:my-command"
-```
+Follow the Plugin Structure and Plugin Component Patterns sections below. Then register the plugin in `.claude-plugin/marketplace.json`.
 
 ### Registering Plugins in Test Marketplace
 
@@ -293,17 +261,6 @@ See `plugins/dev-tools/README.md` for multi-component example.
 - File paths use backticks: `path/to/file`
 - Directory trees use code blocks with no language specifier
 - Keep lists simple (no excessive nesting)
-
-## Future API Integration Notes
-
-When the marketplace API is implemented, it will:
-
-1. **Register marketplaces** via POST to `/api/v1/marketplaces`
-2. **Sync marketplaces** via POST to `/api/v1/marketplaces/:id/sync` (discovers plugins)
-3. **List plugins** via GET to `/api/v1/plugins` (with search/filter)
-4. **Get plugin details** via GET to `/api/v1/plugins/:id@:marketplace`
-
-The example plugins serve as test data for these API operations.
 
 ## Common Pitfalls
 
