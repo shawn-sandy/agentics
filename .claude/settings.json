@@ -5,5 +5,5 @@
             "Bash(git -C /Users/shawnsandy/devbox/agentics ls-files)"
         ]
     },
-    "plansDirectory": ".claude/plans"
+    "plansDirectory": "docs/plans"
 }
