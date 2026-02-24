@@ -17,12 +17,7 @@
       "version": "1.0.0",
       "description": "A minimal example plugin demonstrating the basic structure of Claude Code plugins",
       "category": "learning",
-      "tags": ["example", "tutorial", "minimal", "getting-started"],
-      "keywords": ["example", "tutorial", "minimal", "getting-started"],
-      "homepage": "https://code.claude.com/docs/en/plugins",
-      "repository": "https://github.com/shawnsandy/agentics",
-      "license": "MIT",
-      "author": { "name": "Agentics Project" }
+      "tags": ["example", "tutorial", "minimal", "getting-started"]
     },
     {
       "name": "dev-tools",
@@ -30,12 +25,7 @@
       "version": "2.0.0",
       "description": "Code formatting for JavaScript, TypeScript, Python, CSS, HTML, and Markdown",
       "category": "development",
-      "tags": ["formatting", "code-quality", "prettier", "eslint"],
-      "keywords": ["formatting", "code-quality", "prettier", "eslint"],
-      "homepage": "https://code.claude.com/docs/en/plugins",
-      "repository": "https://github.com/shawnsandy/agentics",
-      "license": "MIT",
-      "author": { "name": "Agentics Project" }
+      "tags": ["formatting", "code-quality", "prettier", "eslint"]
     },
     {
       "name": "claude-md-optimizer",
@@ -43,12 +33,7 @@
       "version": "1.0.0",
       "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
       "category": "development",
-      "tags": ["claude-md", "configuration", "optimization", "best-practices"],
-      "keywords": ["claude-md", "configuration", "optimization", "best-practices"],
-      "homepage": "https://code.claude.com/docs/en/plugins",
-      "repository": "https://github.com/shawnsandy/agentics",
-      "license": "MIT",
-      "author": { "name": "Agentics Project" }
+      "tags": ["claude-md", "configuration", "optimization", "best-practices"]
     },
     {
       "name": "code-review",
@@ -56,12 +41,7 @@
       "version": "1.0.0",
       "description": "Systematic code review across quality, bugs, security, and best practices",
       "category": "development",
-      "tags": ["code-quality", "review", "security", "best-practices"],
-      "keywords": ["code-quality", "review", "security", "best-practices"],
-      "homepage": "https://code.claude.com/docs/en/plugins",
-      "repository": "https://github.com/shawnsandy/agentics",
-      "license": "MIT",
-      "author": { "name": "Agentics Project" }
+      "tags": ["code-quality", "review", "security", "best-practices"]
     },
     {
       "name": "plan-interview",
@@ -69,12 +49,7 @@
       "version": "1.0.0",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
-      "tags": ["planning", "interview", "stress-test", "architecture"],
-      "keywords": ["planning", "interview", "stress-test", "architecture"],
-      "homepage": "https://code.claude.com/docs/en/plugins",
-      "repository": "https://github.com/shawnsandy/agentics",
-      "license": "MIT",
-      "author": { "name": "Agentics Project" }
+      "tags": ["planning", "interview", "stress-test", "architecture"]
     }
   ]
 }
