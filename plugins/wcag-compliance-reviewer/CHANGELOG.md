@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-02-25
+
+### Changed
+
+- `SKILL.md` — replaced H1 title with H2 (frontmatter `name` serves as machine-readable title)
+- `SKILL.md` — added 12-entry table of contents (file is 318 lines, over the >100-line threshold)
+- `SKILL.md` — added `Follow these steps exactly.` to Review Process preamble (freedom level now explicit)
+
 ## [1.0.0] - 2026-02-24
 
 ### Added
