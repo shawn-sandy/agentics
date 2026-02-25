@@ -3,11 +3,21 @@ name: reviewing-skills
 description: Reviews SKILL.md files against Anthropic's official Claude Code skill authoring best practices. Use when the user asks to review, audit, score, or check the quality of a SKILL.md file specifically — not CLAUDE.md, commands, or general markdown. Triggers on phrases like "review my skill", "audit this skill", "check skill quality", "score my SKILL.md", or "does this skill follow best practices".
 ---
 
-# Skill Reviewer
+## Skill Reviewer
 
 ## Overview
 
 Performs a structured, scored audit of SKILL.md files against Anthropic's official Claude Code skill authoring best practices. Produces a scored report across 5 quality dimensions and optionally generates a corrected version.
+
+Follow these steps exactly.
+
+## Table of Contents
+
+- [Step 1: Resolve Target SKILL.md](#step-1-resolve-target-skillmd)
+- [Step 2: Read and Measure](#step-2-read-and-measure)
+- [Step 2b: Determine Guidelines Source](#step-2b-determine-guidelines-source)
+- [Steps 3–6: Audit, Score, Report, and Optionally Fix](#steps-36-audit-score-report-and-optionally-fix)
+- [Quick Reference Checklist](#quick-reference-checklist)
 
 ---
 
