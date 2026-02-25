@@ -86,6 +86,19 @@ Check whether complex, reference, or rarely-needed content is delegated outside 
 - **`.claude/rules/*.md`** — loaded automatically by Claude Code; can be path-scoped with `paths:` frontmatter to activate only for matching files
 - **External docs** (e.g., `docs/architecture.md`, `CONTRIBUTING.md`) — referenced via `@import` or a plain link
 
+**Path-scoped rule format** (official docs: <https://code.claude.com/docs/en/memory>):
+
+```md
+---
+paths:
+  - "src/api/**/*.ts"
+  - "tests/**"
+---
+```
+
+Brace expansion is supported: `src/**/*.{ts,tsx}`, `{src,lib}/**/*.ts`.
+Use `paths:` only when the rule truly applies to specific file types — avoid over-scoping.
+
 - Complex content properly delegated = 2
 - Some delegation but file is still bloated = 1
 - Everything is inline, file is very long = 0
@@ -155,6 +168,8 @@ After the table:
 2. **Per-dimension findings** — one bullet per dimension with specific observations
 3. **Top 3 recommendations** — the highest-impact changes, in order
 
+> When Progressive Disclosure scores 0 or 1, include as a Top 3 item: "Use Step 5's rule-file generation to break path-specific content into `.claude/rules/` files."
+
 ---
 
 ## Step 5 — Offer an optimized version
@@ -164,10 +179,42 @@ Ask the user: "Would you like me to generate an optimized version of this file i
 If the user says yes, generate the optimized content **in a code block in the chat** (do not write to disk yet). Apply these transformations:
 
 - Remove any credentials or secrets (replace with `[REDACTED - move to .env]`)
-- Move 80%-rule violations to a `## Suggested Move to Separate Files` block at the bottom, with a note explaining why each was removed
+- Extract 80%-rule violations and path-specific content — these will be offered as `.claude/rules/` files below, not embedded in the CLAUDE.md output
 - Condense padded or overly verbose sections (summarize rather than reproduce)
 - Add stub headings for any missing key sections from Dimension 2
 - Do not invent new content — preserve the user's intent and wording where possible
+
+**Offer to generate `.claude/rules/` files:**
+
+For each section removed as an 80%-rule violation or path-specific content:
+1. Show the proposed rule file in a code block with `paths:` frontmatter:
+
+```md
+---
+paths:
+  - "<glob>"
+---
+
+# <Descriptive Title>
+
+- Rule bullet 1
+- Rule bullet 2
+- Rule bullet 3
+```
+
+2. Check if `.claude/rules/` exists. If not, ask: "The `.claude/rules/` directory does not exist. Should I create it?"
+3. Ask: "Should I write this to `.claude/rules/<name>.md`?" Wait for explicit confirmation before writing each file.
+
+**After the CLAUDE.md code block, show a separate callout:**
+
+---
+**To make this optimizer always available in your project**, add the following to your CLAUDE.md
+(replace `<plugin-dir>` with the path passed to `--plugin-dir` when loading this plugin):
+
+```md
+@<plugin-dir>/skills/claude-md-optimizer/SKILL.md
+```
+---
 
 If the user says no, stop here.
 
@@ -231,5 +278,6 @@ For a 6/12 "Needs work" file:
 
 - A shorter CLAUDE.md is almost always better than a longer one. Context overflow — not missing instructions — is the most common cause of Claude ignoring directives.
 - Memory load order: project rules → project memory → user memory → `CLAUDE.local.md`. Combined instruction count across all loaded files is what matters.
-- Use `@path/to/file` import syntax to reference external docs without embedding their full content. Use `.claude/rules/*.md` for modular, path-scoped rules.
+- Use `@path/to/file` import syntax to reference external docs without embedding their full content. Use `.claude/rules/*.md` for modular, path-scoped rules. Official reference: <https://code.claude.com/docs/en/memory>
+- To make this optimizer always available in a project, add `@<plugin-dir>/skills/claude-md-optimizer/SKILL.md` to the project's CLAUDE.md (replace `<plugin-dir>` with the actual `--plugin-dir` path).
 - Audit only the file specified. Do not scan the entire project unless asked. Steps 5 and 6 are opt-in — do not rewrite the file without explicit confirmation.
