@@ -3,15 +3,31 @@ name: wcag-compliance-reviewer
 description: Review HTML/CSS and React/TypeScript code for WCAG 2.1 Level AA accessibility compliance. Use when the user asks to review code for accessibility, check WCAG compliance, identify accessibility issues, or audit components/pages for a11y standards. Applicable for code reviews, component development, and accessibility testing.
 ---
 
-# WCAG 2.1 AA Compliance Reviewer
+## WCAG 2.1 AA Compliance Reviewer
 
 ## Overview
 
 Review code changes for WCAG 2.1 Level AA accessibility compliance in HTML/CSS and React/TypeScript components. This skill identifies violations, provides specific fixes, and recommends automated testing approaches.
 
+## Table of Contents
+
+- [Review Process](#review-process)
+  - [1. Determine WCAG Version and Source](#1-determine-wcag-version-and-source)
+  - [2. Initial Assessment](#2-initial-assessment)
+  - [3. Load Relevant References](#3-load-relevant-references)
+  - [4. Systematic Review by WCAG Principle](#4-systematic-review-by-wcag-principle)
+  - [5. Categorize Issues by Severity](#5-categorize-issues-by-severity)
+  - [6. Provide Specific Fixes](#6-provide-specific-fixes)
+  - [7. Recommend Testing Approach](#7-recommend-testing-approach)
+  - [8. Summary Output Format](#8-summary-output-format)
+- [Quick Reference Checklist](#quick-reference-checklist)
+- [Code Examples for Common Patterns](#code-examples-for-common-patterns)
+- [Using the Automated Checker Script](#using-the-automated-checker-script)
+- [Resources](#resources)
+
 ## Review Process
 
-Follow this structured approach when reviewing code for accessibility:
+Follow these steps exactly when reviewing code for accessibility.
 
 ### 1. Determine WCAG Version and Source
 
@@ -261,8 +277,8 @@ Use this for rapid reviews:
 ### Accessible Modal
 ```tsx
 // ✅ Good - Focus trap and restoration
-<div 
-  role="dialog" 
+<div
+  role="dialog"
   aria-modal="true"
   aria-labelledby="modal-title"
 >
@@ -276,8 +292,8 @@ Use this for rapid reviews:
 ```tsx
 // ✅ Good - Associated error, proper ARIA
 <label htmlFor="email">Email:</label>
-<input 
-  type="email" 
+<input
+  type="email"
   id="email"
   aria-invalid={!!error}
   aria-describedby={error ? "email-error" : undefined}
