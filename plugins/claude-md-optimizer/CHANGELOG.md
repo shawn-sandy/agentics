@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0] - 2026-02-24
+
+### Added
+
+- Step 5: Offers to generate `.claude/rules/` files for each section extracted during optimization
+- Step 5: Shows `@import` callout (after the CLAUDE.md block) for referencing the optimizer in any project
+- Step 5: Checks for `.claude/rules/` directory existence; prompts to create if missing
+- Dimension 4: Added `paths:` frontmatter glob examples and brace expansion patterns from official docs
+- Step 4: Added standing recommendation to use Step 5 rule-file generation when Progressive Disclosure scores ≤ 1
+- path-rules-advisor: Added brace expansion examples within Rule file format section
+- Notes: Added official memory docs URL and self-referencing `@import` usage tip
+
+### Changed
+
+- Step 5: Removed `## Suggested Move to Separate Files` block — replaced by rule-file offer flow
+
 ## [1.2.0] - 2026-02-24
 
 ### Added

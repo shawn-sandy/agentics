@@ -207,6 +207,18 @@ paths:
 - Rule bullet 3
 ```
 
+**Brace expansion** (from official docs: <https://code.claude.com/docs/en/memory>):
+
+```md
+---
+paths:
+  - "src/**/*.{ts,tsx}"
+  - "{src,lib}/**/*.ts"
+---
+```
+
+This expands to match multiple extensions or directories in a single rule.
+
 - The `paths:` frontmatter causes Claude Code to activate this rule file only when working with matching files
 - Use double quotes around glob patterns in the YAML frontmatter
 - Title should be human-readable and describe the scope (e.g., "API Endpoint Rules", "Test File Standards")

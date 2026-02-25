@@ -1,6 +1,6 @@
 {
   "name": "claude-md-optimizer",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
   "author": {
     "name": "Agentics Project"
