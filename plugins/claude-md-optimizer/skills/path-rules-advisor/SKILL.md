@@ -3,13 +3,20 @@ name: path-rules-advisor
 description: Use when the user wants to create path-specific rules, add rules for specific file types or directories, organize Claude rules by file type, or check whether the current project needs path-specific rules in .claude/rules/.
 ---
 
-Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by `$ARGUMENTS`.
+Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by the user's message.
+
+## Table of Contents
+
+- [Mode A — Argument provided](#mode-a--argument-provided)
+- [Mode B — No argument (analysis mode)](#mode-b--no-argument-analysis-mode)
+- [Rule file format](#rule-file-format)
+- [Notes](#notes)
 
 ---
 
 ## Mode A — Argument provided
 
-Use this mode when `$ARGUMENTS` is non-empty.
+Use this mode when the user provides an argument in their message.
 
 **Argument format:** `<glob-pattern> - <rule description>`
 
@@ -21,7 +28,7 @@ The ` - ` (space-hyphen-space) separates the glob pattern from the rule descript
 
 **Step 1 — Parse the argument**
 
-Split `$ARGUMENTS` on the first ` - `. Left side = glob pattern. Right side = rule description.
+Split the argument on the first ` - `. Left side = glob pattern. Right side = rule description.
 
 If no ` - ` separator is found, stop and ask the user to re-enter in the format:
 `<glob-pattern> - <rule description>`
@@ -93,14 +100,14 @@ Wait for explicit confirmation. Do not write the file until confirmed. After wri
 
 ## Mode B — No argument (analysis mode)
 
-Use this mode when `$ARGUMENTS` is empty.
+Use this mode when the user provides no argument.
 
 **Step 1 — Resolve the CLAUDE.md target**
 
 Use the same priority order as the `claude-md-optimizer` skill:
 
-1. `$PWD/CLAUDE.md`
-2. `$PWD/.claude/CLAUDE.md`
+1. `CLAUDE.md` in the current working directory
+2. `.claude/CLAUDE.md` in the current working directory
 3. `~/.claude/CLAUDE.md`
 
 Tell the user which file will be analyzed. If none found, report that no CLAUDE.md was located and offer to proceed with project structure analysis only.

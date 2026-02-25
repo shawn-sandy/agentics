@@ -1,9 +1,20 @@
 ---
-name: claude-md-optimizer
+name: md-optimizer
 description: Use when the user asks to audit, optimize, review, clean up, or improve a CLAUDE.md file. Also use when Claude is ignoring instructions, behaving inconsistently, or the CLAUDE.md appears bloated or overloaded.
 ---
 
 Audit and optimize a CLAUDE.md file against Claude Code best practices. Follow all six steps in order. Do not skip steps or combine them.
+
+## Table of Contents
+
+- [Step 1 — Resolve the target file](#step-1--resolve-the-target-file)
+- [Step 2 — Read and measure](#step-2--read-and-measure)
+- [Step 3 — Run the 6-dimension audit](#step-3--run-the-6-dimension-audit)
+- [Step 4 — Present the scored report](#step-4--present-the-scored-report)
+- [Step 5 — Offer an optimized version](#step-5--offer-an-optimized-version)
+- [Step 6 — Offer to write the optimized file](#step-6--offer-to-write-the-optimized-file)
+- [Example audit output](#example-audit-output)
+- [Notes](#notes)
 
 ---
 
@@ -11,9 +22,9 @@ Audit and optimize a CLAUDE.md file against Claude Code best practices. Follow a
 
 Determine which CLAUDE.md to audit using this priority order:
 
-1. Explicit path in `$ARGUMENTS` (if provided)
-2. `$PWD/CLAUDE.md` (primary project location)
-3. `$PWD/.claude/CLAUDE.md` (alternate project location, checked if primary absent)
+1. Explicit path provided in the user's message (if present)
+2. `CLAUDE.md` in the current working directory (primary project location)
+3. `.claude/CLAUDE.md` in the current working directory (alternate, checked if primary absent)
 4. `~/.claude/CLAUDE.md` (global user-level)
 
 Tell the user which file will be audited before continuing. If none of the four locations has a file and no argument was given, stop and ask the user to provide a path.
