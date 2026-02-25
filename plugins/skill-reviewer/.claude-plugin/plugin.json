@@ -1,6 +1,6 @@
 {
   "name": "skill-reviewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Review SKILL.md files against Anthropic's official Claude Code skill authoring best practices",
   "author": { "name": "Agentics Project" },
   "license": "MIT",
