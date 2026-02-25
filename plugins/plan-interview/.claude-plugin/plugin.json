@@ -6,7 +6,12 @@
     "name": "Agentics Project"
   },
   "license": "MIT",
-  "keywords": ["planning", "interview", "stress-test", "architecture"],
-  "homepage": "https://github.com/shawn-sandy/agentics/plugins/plan-interview",
+  "keywords": [
+    "planning",
+    "interview",
+    "stress-test",
+    "architecture"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/plan-interview",
   "repository": "https://github.com/shawn-sandy/agentics"
 }

@@ -7,6 +7,6 @@
   },
   "license": "MIT",
   "keywords": ["example", "tutorial", "minimal", "getting-started"],
-  "homepage": "https://github.com/shawn-sandy/agentics/plugins/hello-world",
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/hello-world",
   "repository": "https://github.com/shawn-sandy/agentics"
 }
