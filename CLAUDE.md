@@ -62,7 +62,7 @@ Detailed patterns in `.claude/rules/`:
 
 ## Conventions
 
-- Plugin Homepage URLs must point to the plugin's specific directory in the repository, not the repository root, for example <https://github.com/shawn-sandy/agentics/tree/main/plugins/{plugin-name}>.
+- Plugin Homepage URLs must point to the plugin's specific directory in the repository, not the repository root, for example `https://github.com/shawn-sandy/agentics/tree/main/plugins/{plugin-name}`.
 - Always include the plan file in commits for plugin changes, even minor ones.
 - `version` in `marketplace.json` must exactly match `version` in the plugin's `plugin.json`.
 - Component types: **Commands** (invoked via `/plugin:name`), **Skills** (auto-activated by intent), **Agents** (subprocesses), **Hooks** (event-driven).
