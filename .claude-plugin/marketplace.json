@@ -50,6 +50,14 @@
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
       "tags": ["planning", "interview", "stress-test", "architecture"]
+    },
+    {
+      "name": "wcag-compliance-reviewer",
+      "source": "./plugins/wcag-compliance-reviewer",
+      "version": "1.0.0",
+      "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.1 Level AA accessibility compliance",
+      "category": "security",
+      "tags": ["accessibility", "wcag", "a11y", "wcag-2.1", "aria", "color-contrast", "screen-reader", "compliance-audit"]
     }
   ]
 }
