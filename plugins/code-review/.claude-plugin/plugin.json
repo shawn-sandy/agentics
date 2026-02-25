@@ -7,6 +7,6 @@
   },
   "license": "MIT",
   "keywords": ["code-quality", "review", "security", "best-practices"],
-  "homepage": "https://github.com/shawn-sandy/agentics/plugins/code-review",
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/code-review",
   "repository": "https://github.com/shawn-sandy/agentics"
 }
