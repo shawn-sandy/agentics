@@ -1,6 +1,6 @@
 ---
 name: claude-md-optimizer
-description: Use when the user asks to audit, optimize, review, clean up, or improve a CLAUDE.md file. Also use when Claude is ignoring instructions, behaving inconsistently, or the CLAUDE.md appears bloated or overloaded.
+description: Use when the user asks to audit, optimize, review, check, analyze, clean up, or improve a CLAUDE.md file. Also use when Claude is ignoring instructions, behaving inconsistently, or the CLAUDE.md appears bloated or overloaded.
 ---
 
 Audit and optimize a CLAUDE.md file against Claude Code best practices. Follow all six steps in order. Do not skip steps or combine them.
@@ -27,7 +27,7 @@ If a path was given but the file does not exist, stop and report the error clear
 Read the target file in full, then collect these metrics:
 
 - **Line count** — total lines in the file
-- **Instruction count (estimated)** — count verb-starting bullet points, numbered directives, and bolded imperatives (e.g., `**Always**`, `**Never**`). Acknowledge a ±30–50 variance in your estimate.
+- **Instruction count (estimated)** — count verb-starting bullet points, numbered directives, and bolded imperatives (e.g., `**Always**`, `**Never**`). Count top-level bullets only (not nested sub-bullets). Ignore content inside code blocks. Count each numbered step as one instruction. Acknowledge a ±30–50 variance in your estimate.
 - **Section inventory** — list every `##` heading present
 - **Sensitive data scan** — flag any matches for: `sk-`, `ghp_`, `AKIA`, `xoxb-`, `-----BEGIN`, or a label followed by a long alphanumeric string (e.g., `TOKEN=abc123...`). Report matches verbatim so the user can verify.
 - **Import scan** — detect any `@path/to/file` references in the file. List each one found. Note that imported content counts toward effective instruction load but is not visible in the raw line count.
@@ -42,7 +42,7 @@ Score each dimension 0, 1, or 2. Maximum score: 12.
 
 ### Dimension 1 — Instruction Budget (max 2)
 
-Claude Code allocates roughly 150–200 slots of its context for system-level instructions. Claude itself consumes ~50. This leaves ~100–150 for project instructions.
+Shorter CLAUDE.md files perform better. Every instruction competes for context alongside system prompts, auto-memory, and project rules. Overstuffed files risk Claude deprioritizing or silently ignoring directives.
 
 | Estimated instruction count | Score |
 |-----------------------------|-------|
@@ -84,7 +84,7 @@ Flag content that violates this rule:
 Check whether complex, reference, or rarely-needed content is delegated outside CLAUDE.md rather than embedded in full. Claude Code supports two delegation mechanisms:
 
 - **`.claude/rules/*.md`** — loaded automatically by Claude Code; can be path-scoped with `paths:` frontmatter to activate only for matching files
-- **External docs** (e.g., `docs/architecture.md`, `CONTRIBUTING.md`) — referenced via `@import` or a plain link
+- **External docs** (e.g., `docs/architecture.md`, `CONTRIBUTING.md`) — referenced via `@path/to/file` import syntax or a plain link
 
 **Path-scoped rule format** (official docs: <https://code.claude.com/docs/en/memory>):
 
@@ -102,6 +102,8 @@ Use `paths:` only when the rule truly applies to specific file types — avoid o
 - Complex content properly delegated = 2
 - Some delegation but file is still bloated = 1
 - Everything is inline, file is very long = 0
+
+> **D3 vs D4:** Dimension 3 evaluates content relevance — whether rarely-needed content exists in the file at all. Dimension 4 evaluates structural delegation — whether content that IS relevant to most sessions but is long, complex, or reference-heavy is properly broken out into `.claude/rules/` or external docs. A deployment runbook fails D3 (irrelevant to 80% of sessions). A 50-line API conventions guide that applies to every session may pass D3 but fail D4 if it isn't delegated.
 
 ### Dimension 5 — Safety and Hygiene (max 2)
 
@@ -178,7 +180,7 @@ Ask the user: "Would you like me to generate an optimized version of this file i
 
 If the user says yes, generate the optimized content **in a code block in the chat** (do not write to disk yet). Apply these transformations:
 
-- Remove any credentials or secrets (replace with `[REDACTED - move to .env]`)
+- Remove any credentials or secrets (replace with `[REDACTED - move to .env]`). If any secrets were redacted, show the user suggested `.env` entries with the extracted values before offering to write the optimized file to disk.
 - Extract 80%-rule violations and path-specific content — these will be offered as `.claude/rules/` files below, not embedded in the CLAUDE.md output
 - Condense padded or overly verbose sections (summarize rather than reproduce)
 - Add stub headings for any missing key sections from Dimension 2
@@ -205,17 +207,6 @@ paths:
 2. Check if `.claude/rules/` exists. If not, ask: "The `.claude/rules/` directory does not exist. Should I create it?"
 3. Ask: "Should I write this to `.claude/rules/<name>.md`?" Wait for explicit confirmation before writing each file.
 
-**After the CLAUDE.md code block, show a separate callout:**
-
----
-**To make this optimizer always available in your project**, add the following to your CLAUDE.md
-(replace `<plugin-dir>` with the path passed to `--plugin-dir` when loading this plugin):
-
-```md
-@<plugin-dir>/skills/claude-md-optimizer/SKILL.md
-```
----
-
 If the user says no, stop here.
 
 ---
@@ -235,7 +226,7 @@ For a 6/12 "Needs work" file:
 ```
 ## CLAUDE.md Audit Report
 
-**File:** /Users/alice/projects/myapp/CLAUDE.md
+**File:** ~/projects/myapp/CLAUDE.md
 **Lines:** 210 | **Estimated instructions:** 185 ± 40
 
 ### Scores
@@ -277,7 +268,7 @@ For a 6/12 "Needs work" file:
 ## Notes
 
 - A shorter CLAUDE.md is almost always better than a longer one. Context overflow — not missing instructions — is the most common cause of Claude ignoring directives.
-- Memory load order: project rules → project memory → user memory → `CLAUDE.local.md`. Combined instruction count across all loaded files is what matters.
-- Use `@path/to/file` import syntax to reference external docs without embedding their full content. Use `.claude/rules/*.md` for modular, path-scoped rules. Official reference: <https://code.claude.com/docs/en/memory>
-- To make this optimizer always available in a project, add `@<plugin-dir>/skills/claude-md-optimizer/SKILL.md` to the project's CLAUDE.md (replace `<plugin-dir>` with the actual `--plugin-dir` path).
+- Memory hierarchy (highest to lowest priority): managed policy → project memory (`./CLAUDE.md`) → project rules (`.claude/rules/*.md`) → user memory (`~/.claude/CLAUDE.md`) → project local (`CLAUDE.local.md`) → auto memory. More specific instructions take precedence over broader ones. Combined instruction count across all loaded files is what matters.
+- Use `@path/to/file` import syntax in CLAUDE.md to reference external docs without embedding their full content. Use `.claude/rules/*.md` for modular, path-scoped rules. Official reference: <https://code.claude.com/docs/en/memory>
+- To make this optimizer always available, install the plugin: `/plugin install claude-md-optimizer@agentics-kit` or load locally with `claude --plugin-dir <path-to-plugin>`.
 - Audit only the file specified. Do not scan the entire project unless asked. Steps 5 and 6 are opt-in — do not rewrite the file without explicit confirmation.

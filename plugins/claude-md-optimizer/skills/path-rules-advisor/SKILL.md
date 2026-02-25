@@ -1,6 +1,6 @@
 ---
 name: path-rules-advisor
-description: Use when the user wants to create path-specific rules, add rules for specific file types or directories, organize Claude rules by file type, or check whether the current project needs path-specific rules in .claude/rules/.
+description: Use when the user wants to create, extract, or move path-specific `.claude/rules/` rule files for Claude Code, add rules for specific file types or directories, organize Claude rules by file type, or check whether the current project needs path-specific rules in .claude/rules/.
 ---
 
 Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by `$ARGUMENTS`.
@@ -21,9 +21,11 @@ The ` - ` (space-hyphen-space) separates the glob pattern from the rule descript
 
 **Step 1 — Parse the argument**
 
-Split `$ARGUMENTS` on the first ` - `. Left side = glob pattern. Right side = rule description.
+Extract the glob pattern and rule description from `$ARGUMENTS`. When invoked via `/path-rules-advisor`, split on the first ` - ` (space-hyphen-space). When auto-activated by Claude from natural language, extract the glob pattern and description from the user's intent — the raw `$ARGUMENTS` may contain surrounding natural language.
 
-If no ` - ` separator is found, stop and ask the user to re-enter in the format:
+Left side = glob pattern. Right side = rule description.
+
+If no glob pattern or description can be identified, stop and ask the user to provide them in the format:
 `<glob-pattern> - <rule description>`
 
 Example: `src/api/**/*.ts - All endpoints must validate input`
@@ -180,10 +182,10 @@ After writing each rule file, ask once:
 
 "Should I remove this content from CLAUDE.md and replace it with a reference to `.claude/rules/<name>.md`?"
 
-If confirmed, replace the extracted section in CLAUDE.md with:
+If confirmed, replace the extracted section in CLAUDE.md with a reference bullet:
 
 ```markdown
-# See .claude/rules/<name>.md
+- See `.claude/rules/<name>.md` for [topic] rules
 ```
 
 If the user declines, leave CLAUDE.md unchanged.

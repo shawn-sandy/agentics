@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.4.0] - 2026-02-25
+
+### Fixed
+
+- Dimension 1: Removed unverifiable "instruction slot" numbers; reframed context paragraph around general context management principles
+- Notes: Corrected memory hierarchy to match official Claude Code docs (managed policy → project memory → project rules → user memory → project local → auto memory)
+- Dimension 4: Replaced incorrect `@import` keyword with correct `@path/to/file` import syntax
+- Notes: Replaced `@import` self-reference advice with proper plugin installation guidance
+- path-rules-advisor: Fixed Mode B Step 7 replacement format from H1 heading to bullet reference
+
+### Changed
+
+- Step 5: Removed promotional self-reference callout from optimization workflow (moved install guidance to Notes)
+- README: Added `path-rules-advisor` skill to Skills table with activation triggers and usage examples for both modes
+- Skill descriptions: Broadened activation triggers — added "check" and "analyze" to claude-md-optimizer; added "extract" and "move" to path-rules-advisor
+- path-rules-advisor Mode A Step 1: Added handling for natural-language `$ARGUMENTS` from intent-based activation
+- Step 2: Clarified instruction counting methodology (top-level bullets only, ignore code blocks)
+- Step 5: Added `.env` extraction guidance when secrets are redacted
+
+### Added
+
+- Dimension 3/4: Added clarifying note distinguishing D3 (content relevance) from D4 (structural delegation)
+- Keywords: Added "audit" and "rules" to plugin.json for better discoverability
+
 ## [1.3.0] - 2026-02-24
 
 ### Added
