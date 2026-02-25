@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -58,6 +58,14 @@
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.1 Level AA accessibility compliance",
       "category": "security",
       "tags": ["accessibility", "wcag", "a11y", "wcag-2.1", "aria", "color-contrast", "screen-reader", "compliance-audit"]
+    },
+    {
+      "name": "skill-reviewer",
+      "source": "./plugins/skill-reviewer",
+      "version": "1.0.0",
+      "description": "Review SKILL.md files against Anthropic's official Claude Code skill authoring best practices",
+      "category": "development",
+      "tags": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "claude-code"]
     }
   ]
 }
