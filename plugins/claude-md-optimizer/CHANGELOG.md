@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0] - 2026-02-25
+
+### Fixed
+
+- `claude-md-optimizer` skill: renamed `name` from `claude-md-optimizer` to `md-optimizer` — the `claude` substring is reserved and prohibited in skill names (breaking: skill reference changes from `claude-md-optimizer:claude-md-optimizer` to `claude-md-optimizer:md-optimizer`)
+- `claude-md-optimizer` skill: replaced `$ARGUMENTS` and `$PWD` variable references in Step 1 with prose descriptions — these variables only expand in command files, not skills
+- `path-rules-advisor` skill: replaced all `$ARGUMENTS` and `$PWD` variable references with prose descriptions for the same reason
+- Both skills: added Table of Contents (required for files exceeding 100 lines)
+
 ## [1.3.0] - 2026-02-24
 
 ### Added
