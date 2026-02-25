@@ -47,7 +47,7 @@ This plan creates a new plugin `skill-reviewer` with a single skill `reviewing-s
    - **Frontmatter:** `name: reviewing-skills`, description in third person with "Use when..." trigger phrasing; add "...for SKILL.md files specifically — not CLAUDE.md, commands, or general markdown" to prevent activation collision with `plugin-dev:skill-reviewer`
    - **Step 1:** Resolve target SKILL.md — check user's message for explicit path first; fall back to conversation context; ask if still unclear. Do NOT use `$ARGUMENTS`/`$PWD` (command-only variables not available in skills)
    - **Step 2:** Read and measure (line count, frontmatter fields, body lines, reference files detected)
-   - **Step 2b:** Determine guidelines source — default to `references/best-practices.md`; fetch live from `https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices` when user says "use latest", "check official docs", or "fetch from platform"; if live fetch fails, fall back to static reference silently and note the failure in output
+   - **Step 2b:** Determine guidelines source — default to `references/best-practices.md`; fetch live from `https://code.claude.com/docs/en/agents-and-tools/agent-skills/best-practices` when user says "use latest", "check official docs", or "fetch from platform"; if live fetch fails, fall back to static reference silently and note the failure in output
    - **Delegate to `references/audit-steps.md`** for Steps 3-6 (keeps SKILL.md body under 150 lines)
    - **Quick Reference Checklist** inline at bottom of SKILL.md
 

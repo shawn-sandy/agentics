@@ -128,7 +128,7 @@ Claude Code resolves reference paths relative to the skill directory. Nested pat
 
 ### Table of Contents
 
-Files exceeding 100 lines must have a TOC immediately after the title or overview section. TOC format:
+Files at or exceeding 100 lines must have a TOC immediately after the title or overview section. TOC format:
 
 ```markdown
 ## Table of Contents

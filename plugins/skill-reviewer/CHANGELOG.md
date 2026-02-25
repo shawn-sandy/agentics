@@ -11,7 +11,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 ### Changed
 
 - `SKILL.md` — replaced H1 title with H2 (frontmatter `name` serves as machine-readable title)
-- `SKILL.md` — added table of contents (file is 101 lines, over the >100-line threshold)
+- `SKILL.md` — added table of contents (file was at the 100-line threshold; TOC required at ≥100 lines)
 - `SKILL.md` — added `Follow these steps exactly.` to Overview (freedom level now explicit)
 
 ## [1.0.0] - 2026-02-25

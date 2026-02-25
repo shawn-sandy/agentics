@@ -1,9 +1,7 @@
 ---
 name: reviewing-skills
-description: Reviews SKILL.md files against Anthropic's official Claude Code skill authoring best practices. Use when the user asks to review, audit, score, or check the quality of a SKILL.md file specifically — not CLAUDE.md, commands, or general markdown. Triggers on phrases like "review my skill", "audit this skill", "check skill quality", "score my SKILL.md", or "does this skill follow best practices".
+description: Reviews SKILL.md files against Anthropic's official Claude Code skill authoring best practices. Use when the user asks to review, audit, score, or check the quality of a SKILL.md file specifically — not CLAUDE.md, commands, or general markdown. Use when the user says "review my skill", "audit this skill", "check skill quality", "score my SKILL.md", or "does this skill follow best practices".
 ---
-
-## Skill Reviewer
 
 ## Overview
 
@@ -49,7 +47,7 @@ Note the presence or absence of:
 - `name:` field
 - `description:` field
 - "Use when..." trigger phrase in description
-- Table of contents (for files >100 lines)
+- Table of contents (for files ≥100 lines)
 
 ---
 
@@ -62,7 +60,7 @@ Note the presence or absence of:
 
 Live fetch URL:
 ```
-https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+https://code.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
 ```
 
 If live fetch fails: fall back to `references/best-practices.md` silently and note the failure in the audit output under a "Guidelines Source" line.
@@ -95,12 +93,12 @@ Use this for rapid pre-audit assessment:
 **Body**
 - [ ] Total lines <500
 - [ ] No Windows-style paths (`\`)
-- [ ] No time-sensitive content ("as of 2024", "currently", "recently")
+- [ ] No time-sensitive platform-state content ("as of 2024", "currently", "recently added")
 - [ ] No first/second person in frontmatter description
 - [ ] Consistent terminology throughout
 
 **Structure**
-- [ ] Table of contents present (if >100 lines)
+- [ ] Table of contents present (if ≥100 lines)
 - [ ] Reference files at depth ≤1 (no `references/sub/file.md`)
 - [ ] Freedom level stated or implied
 

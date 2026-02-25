@@ -43,7 +43,7 @@ Apply the criteria from `references/best-practices.md` when evaluating each dime
 | Line count | <500 lines total | Warning if 400–499; Error if ≥500 |
 | Terminology | Consistent terms used throughout | Warning if inconsistent |
 | Concrete examples | At least one concrete example or code block where relevant | Suggestion if absent |
-| No time-sensitive content | No phrases like "as of 2024", "currently", "recently", "new in version X" | Warning |
+| No time-sensitive platform-state content | No phrases like "as of 2024", "currently", "recently added", "new in version X" | Warning |
 | No first/second person in body instructions | Prefer imperative ("Read the file") over "You should read" | Suggestion |
 
 **Scoring:**
@@ -60,7 +60,7 @@ Apply the criteria from `references/best-practices.md` when evaluating each dime
 | Check | Requirement | Severity |
 |-------|-------------|----------|
 | Reference depth | Reference files must be at depth ≤1 (`references/file.md` — no subdirectories) | Error if violated |
-| TOC presence | Files >100 lines must have a table of contents | Warning if absent |
+| TOC presence | Files ≥100 lines must have a table of contents | Warning if absent |
 | Freedom level | Skill indicates how strictly to follow it (rigid vs. flexible) | Suggestion if absent |
 | Heading hierarchy | Headings use H2/H3 logically; no skipped levels | Warning if violated |
 
@@ -118,7 +118,7 @@ Present the audit results in this format:
 # Skill Audit Report
 
 **File:** `path/to/SKILL.md`
-**Guidelines Source:** [Static: references/best-practices.md | Live fetch: platform.claude.com | Fallback: live fetch failed, used static]
+**Guidelines Source:** [Static: references/best-practices.md | Live fetch: code.claude.com | Fallback: live fetch failed, used static]
 **Total Lines:** N
 
 ## Scores
