@@ -1,13 +1,13 @@
 ---
 name: wcag-compliance-reviewer
-description: Reviews HTML/CSS and React/TypeScript code for WCAG 2.1 Level AA accessibility compliance. Use when the user asks to review code for accessibility, check WCAG compliance, identify accessibility issues, or audit components/pages for a11y standards. Applicable for code reviews, component development, and accessibility testing.
+description: Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance. Use when the user asks to review code for accessibility, check WCAG compliance, identify accessibility issues, or audit components/pages for a11y standards. Applicable for code reviews, component development, and accessibility testing.
 ---
 
-## WCAG 2.1 AA Compliance Reviewer
+## WCAG 2.2 AA Compliance Reviewer
 
 ## Overview
 
-Review code changes for WCAG 2.1 Level AA accessibility compliance in HTML/CSS and React/TypeScript components. This skill identifies violations, provides specific fixes, and recommends automated testing approaches.
+Review code changes for WCAG 2.2 Level AA accessibility compliance in HTML/CSS and React/TypeScript components. This skill identifies violations, provides specific fixes, and recommends automated testing approaches. Also covers all WCAG 2.1 and 2.0 criteria.
 
 ## Table of Contents
 
@@ -31,18 +31,20 @@ Follow these steps exactly when reviewing code for accessibility.
 
 ### 1. Determine WCAG Version and Source
 
-**Default:** Use WCAG 2.1 AA from static reference (`references/wcag-aa-guidelines.md`)
+**Default:** Use WCAG 2.2 AA from static reference (`references/wcag-aa-guidelines.md`)
 
 **Fetch from W3C website if:**
-- User asks for "latest guidelines"
-- User specifies WCAG 2.2 or asks "what's new in WCAG 2.2"
+- User asks for "latest guidelines" (to check for versions beyond 2.2)
 - User requests "official W3C guidelines" or "pull from the website"
-- Uncertain whether guidelines have been updated
+- Uncertain whether guidelines have been updated beyond 2.2
+
+**Use WCAG 2.1 instead if:**
+- User explicitly specifies WCAG 2.1
+- Project requirements mandate 2.1 compliance only
 
 **Example user phrases that trigger web fetch:**
 - "Check against the latest WCAG standards"
 - "Use the current W3C guidelines"
-- "Review with WCAG 2.2"
 - "Pull the official accessibility guidelines"
 
 ### 2. Initial Assessment
@@ -62,30 +64,30 @@ Based on the code type and complexity, load the appropriate reference files:
 Choose one of these approaches based on user request:
 
 **Option A: Use static reference (default, faster)**
-- `references/wcag-aa-guidelines.md` - Complete WCAG 2.1 AA success criteria
+- `references/wcag-aa-guidelines.md` - Complete WCAG 2.2 AA success criteria (includes all 2.1 criteria)
 - Use when user doesn't specifically request latest/live guidelines
 
 **Option B: Fetch from official W3C website**
 
 Use when user:
 - Explicitly asks for "latest" or "current" guidelines
-- Asks to check against WCAG 2.2 or newer version
+- Asks to check against a version beyond 2.2
 - Wants to verify against official source
 - Says "pull from the website" or similar
 
 Fetch using web_fetch:
 ```
-WCAG 2.1 AA Quick Reference:
-https://www.w3.org/WAI/WCAG21/quickref/?versions=2.1&levels=a,aa
-
-WCAG 2.2 AA Quick Reference (newer):
+WCAG 2.2 AA Quick Reference:
 https://www.w3.org/WAI/WCAG22/quickref/?versions=2.2&levels=a,aa
-
-Understanding WCAG 2.1:
-https://www.w3.org/WAI/WCAG21/Understanding/
 
 Understanding WCAG 2.2:
 https://www.w3.org/WAI/WCAG22/Understanding/
+
+WCAG 2.1 AA Quick Reference (older version):
+https://www.w3.org/WAI/WCAG21/quickref/?versions=2.1&levels=a,aa
+
+Understanding WCAG 2.1:
+https://www.w3.org/WAI/WCAG21/Understanding/
 ```
 
 After fetching, combine official guidelines with code examples from `references/common-violations.md`
@@ -114,6 +116,9 @@ Review code against the four WCAG principles in this order:
 4. Verify no keyboard traps exist (2.1.2)
 5. Check skip links or landmarks for navigation (2.4.1)
 6. Verify descriptive link text (2.4.4)
+7. Check focused elements are not obscured by sticky headers/footers (2.4.11) — NEW in 2.2
+8. Verify all drag interactions have single-pointer alternatives (2.5.7) — NEW in 2.2
+9. Check touch/pointer targets are at least 24×24 CSS pixels (2.5.8) — NEW in 2.2
 
 **C. Understandable (Priority: Medium)**
 1. Check lang attribute on html element (3.1.1)
@@ -121,12 +126,16 @@ Review code against the four WCAG principles in this order:
 3. Check error identification and suggestions (3.3.1, 3.3.3)
 4. Verify consistent navigation patterns (3.2.3)
 5. Check no context changes on focus/input (3.2.1, 3.2.2)
+6. Check help mechanisms appear in consistent relative order across pages (3.2.6) — NEW in 2.2
+7. Verify previously-entered information is auto-populated in multi-step processes (3.3.7) — NEW in 2.2
+8. Verify authentication does not require cognitive function tests (3.3.8) — NEW in 2.2
 
 **D. Robust (Priority: Medium)**
-1. Verify semantic HTML or proper ARIA (4.1.2)
-2. Check ARIA attributes are valid (4.1.2)
-3. Verify status messages use ARIA live regions (4.1.3)
-4. Check all interactive elements have accessible names (4.1.2)
+1. ~~Parsing (4.1.1)~~ — Removed in WCAG 2.2; no longer required
+2. Verify semantic HTML or proper ARIA (4.1.2)
+3. Check ARIA attributes are valid (4.1.2)
+4. Verify status messages use ARIA live regions (4.1.3)
+5. Check all interactive elements have accessible names (4.1.2)
 
 ### 5. Categorize Issues by Severity
 
@@ -138,6 +147,9 @@ Review code against the four WCAG principles in this order:
 - Invalid ARIA attributes
 - Missing focus indicators
 - Missing lang attribute
+- Touch/pointer targets smaller than 24×24 CSS pixels (2.5.8)
+- Focused element entirely hidden behind sticky content (2.4.11)
+- Authentication requiring cognitive function tests without alternative (3.3.8)
 
 **Warnings (Should Fix):**
 - Positive tabindex values
@@ -145,12 +157,16 @@ Review code against the four WCAG principles in this order:
 - Links without descriptive text
 - Potential color-only indicators
 - Missing autocomplete on user data inputs
+- Drag-only interactions without single-pointer alternative (2.5.7)
+- Previously entered information not auto-populated in multi-step forms (3.3.7)
+- Help mechanisms in inconsistent order across pages (3.2.6)
 
 **Recommendations (Best Practices):**
 - Use semantic HTML over ARIA when possible
 - Add descriptive page titles
 - Implement skip links
 - Use ARIA landmarks consistently
+- Note: 4.1.1 Parsing was removed in WCAG 2.2 — valid HTML is still best practice but no longer a compliance requirement
 
 ### 6. Provide Specific Fixes
 
@@ -264,6 +280,14 @@ Use this for rapid reviews:
 - [ ] Loading states indicated
 - [ ] Error messages clear and helpful
 
+**WCAG 2.2 New Criteria:**
+- [ ] Touch/pointer targets at least 24×24 CSS pixels (2.5.8)
+- [ ] Drag interactions have single-pointer alternatives (2.5.7)
+- [ ] Focused elements not obscured by sticky headers/footers (2.4.11)
+- [ ] Help mechanisms in same relative order across pages (3.2.6)
+- [ ] Previously entered info auto-populated in multi-step processes (3.3.7)
+- [ ] Authentication does not require cognitive function tests (3.3.8)
+
 ## Code Examples for Common Patterns
 
 ### Accessible Button with Icon
@@ -328,6 +352,6 @@ This performs static analysis to catch common issues like:
 - `check_wcag.py` - Automated accessibility checker for HTML/CSS/React/TypeScript files
 
 ### references/
-- `wcag-aa-guidelines.md` - Complete WCAG 2.1 Level AA success criteria organized by principle
+- `wcag-aa-guidelines.md` - Complete WCAG 2.2 Level AA success criteria organized by principle
 - `common-violations.md` - Common accessibility violations with before/after code examples for HTML/CSS and React/TypeScript
 - `testing-guide.md` - Automated testing tools, setup instructions, and manual testing checklists

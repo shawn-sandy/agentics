@@ -14,6 +14,12 @@ This document provides common accessibility violations in HTML/CSS and React/Typ
 8. [Interactive Elements](#interactive-elements)
 9. [React/TypeScript Specific](#reacttypescript-specific)
 10. [Dynamic Content](#dynamic-content)
+11. [Target Size (WCAG 2.5.8)](#target-size-wcag-258--new-in-22)
+12. [Focus Not Obscured (WCAG 2.4.11)](#focus-not-obscured-wcag-2411--new-in-22)
+13. [Dragging Movements (WCAG 2.5.7)](#dragging-movements-wcag-257--new-in-22)
+14. [Accessible Authentication (WCAG 3.3.8)](#accessible-authentication-wcag-338--new-in-22)
+15. [Redundant Entry (WCAG 3.3.7)](#redundant-entry-wcag-337--new-in-22)
+16. [Consistent Help (WCAG 3.2.6)](#consistent-help-wcag-326--new-in-22)
 
 ---
 
@@ -1078,4 +1084,393 @@ Usage:
   <TrashIcon aria-hidden="true" />
   <span className="sr-only">Delete item</span>
 </button>
+```
+
+---
+
+## Target Size (WCAG 2.5.8) — NEW in 2.2
+
+### ❌ Target too small
+
+```css
+/* Bad - icon button only 16x16 */
+.icon-btn {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+}
+```
+
+```tsx
+// Bad - React
+<button
+  onClick={handleClose}
+  style={{ width: 16, height: 16, padding: 0 }}
+>
+  <CloseIcon />
+</button>
+```
+
+### ✅ Target meets minimum 24×24 CSS pixels
+
+```css
+/* Good - meets minimum with padding */
+.icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+}
+
+/* Also acceptable - exactly 24px with no adjacent targets overlapping */
+.icon-btn {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 4px;
+}
+```
+
+```tsx
+// Good - React with proper sizing
+<button
+  onClick={handleClose}
+  aria-label="Close dialog"
+  style={{ minWidth: 44, minHeight: 44 }}
+>
+  <CloseIcon aria-hidden="true" />
+</button>
+```
+
+### ❌ Standalone link styled too small
+
+```html
+<!-- Bad - standalone link too small to tap -->
+<a href="/settings" style="font-size: 10px; padding: 2px;">Settings</a>
+```
+
+### ✅ Adequate sizing for standalone targets
+
+```html
+<!-- Good - adequate padding creates sufficient target area -->
+<a href="/settings" style="padding: 8px; display: inline-block;">Settings</a>
+```
+
+---
+
+## Focus Not Obscured (WCAG 2.4.11) — NEW in 2.2
+
+### ❌ Focused element hidden behind sticky header
+
+```css
+/* Bad - sticky header obscures focused elements when scrolling */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+}
+
+/* No scroll-padding to account for sticky header */
+html {
+  scroll-behavior: smooth;
+}
+```
+
+### ✅ Scroll padding accounts for sticky content
+
+```css
+/* Good - scroll-padding prevents focus from being hidden */
+html {
+  scroll-padding-top: 80px; /* sticky header height + buffer */
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+}
+```
+
+### ❌ Cookie banner obscures focused content
+
+```html
+<!-- Bad - fixed banner covers bottom of page, hiding focused elements -->
+<div class="cookie-banner" style="position: fixed; bottom: 0; width: 100%; height: 80px; z-index: 999;">
+  Accept cookies?
+</div>
+```
+
+### ✅ Ensure focused elements remain visible
+
+```html
+<!-- Good - page has bottom padding to prevent banner overlap -->
+<style>
+  body { padding-bottom: 100px; } /* space for cookie banner */
+  html { scroll-padding-bottom: 100px; }
+</style>
+<div class="cookie-banner" style="position: fixed; bottom: 0; width: 100%; z-index: 999;">
+  Accept cookies?
+  <button>Accept</button>
+  <button>Decline</button>
+</div>
+```
+
+```tsx
+// Good - React: dismiss non-essential overlays on keyboard navigation
+const CookieBanner = () => {
+  const [visible, setVisible] = useState(true);
+
+  if (!visible) return null;
+
+  return (
+    <div role="complementary" aria-label="Cookie consent"
+      style={{ position: 'fixed', bottom: 0, width: '100%' }}>
+      <p>We use cookies to improve your experience.</p>
+      <button onClick={() => setVisible(false)}>Accept</button>
+      <button onClick={() => setVisible(false)}>Decline</button>
+    </div>
+  );
+};
+```
+
+---
+
+## Dragging Movements (WCAG 2.5.7) — NEW in 2.2
+
+### ❌ Drag-only reordering
+
+```tsx
+// Bad - no single-pointer alternative to drag
+const SortableList = ({ items }: { items: Item[] }) => (
+  <ul>
+    {items.map(item => (
+      <li
+        key={item.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, item.id)}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, item.id)}
+      >
+        {item.name}
+      </li>
+    ))}
+  </ul>
+);
+```
+
+### ✅ Drag with move up/down buttons
+
+```tsx
+// Good - buttons as single-pointer alternative
+const SortableList = ({ items }: { items: Item[] }) => (
+  <ul>
+    {items.map((item, index) => (
+      <li
+        key={item.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, item.id)}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, item.id)}
+      >
+        <span>{item.name}</span>
+        <button
+          aria-label={`Move ${item.name} up`}
+          onClick={() => moveItem(index, index - 1)}
+          disabled={index === 0}
+        >
+          ↑
+        </button>
+        <button
+          aria-label={`Move ${item.name} down`}
+          onClick={() => moveItem(index, index + 1)}
+          disabled={index === items.length - 1}
+        >
+          ↓
+        </button>
+      </li>
+    ))}
+  </ul>
+);
+```
+
+### ❌ Drag-only slider
+
+```html
+<!-- Bad - slider only works via drag -->
+<div class="slider-track">
+  <div class="slider-handle" onmousedown="startDrag(event)"></div>
+</div>
+```
+
+### ✅ Slider with native input or click alternative
+
+```html
+<!-- Good - native range input handles all input modalities -->
+<label for="volume">Volume:</label>
+<input type="range" id="volume" min="0" max="100" value="50">
+```
+
+---
+
+## Accessible Authentication (WCAG 3.3.8) — NEW in 2.2
+
+### ❌ CAPTCHA requiring text transcription
+
+```html
+<!-- Bad - requires transcribing distorted text (cognitive function test) -->
+<div class="captcha">
+  <img src="/captcha-image" alt="Type the characters you see">
+  <input type="text" name="captcha" placeholder="Enter CAPTCHA text">
+</div>
+```
+
+### ✅ Authentication without cognitive tests
+
+```html
+<!-- Good - allows password managers via autocomplete -->
+<form>
+  <label for="email">Email:</label>
+  <input type="email" id="email" autocomplete="username">
+
+  <label for="password">Password:</label>
+  <input type="password" id="password" autocomplete="current-password">
+</form>
+
+<!-- Good - WebAuthn / passkey (no cognitive test) -->
+<button type="button" onclick="startWebAuthn()">Sign in with passkey</button>
+
+<!-- Good - third-party auth -->
+<button type="button" onclick="handleOAuth()">Sign in with Google</button>
+```
+
+### ❌ Password field with paste disabled
+
+```html
+<!-- Bad - prevents password managers from filling credentials -->
+<input type="password" onpaste="return false;">
+```
+
+### ✅ Password manager friendly
+
+```html
+<!-- Good - paste allowed, autocomplete supports password managers -->
+<label for="password">Password:</label>
+<input type="password" id="password" autocomplete="current-password">
+```
+
+```tsx
+// Good - React with verification code support
+<label htmlFor="code">Verification code (sent to your email):</label>
+<input
+  type="text"
+  id="code"
+  autoComplete="one-time-code"
+  inputMode="numeric"
+/>
+```
+
+---
+
+## Redundant Entry (WCAG 3.3.7) — NEW in 2.2
+
+### ❌ Re-entering information across steps
+
+```tsx
+// Bad - user must re-type shipping address for billing
+// Step 1 collected shipping address, Step 2 asks again from scratch
+const BillingStep = () => (
+  <form>
+    <h2>Billing Address</h2>
+    <input type="text" placeholder="Street address" />
+    <input type="text" placeholder="City" />
+    <input type="text" placeholder="State" />
+    <input type="text" placeholder="ZIP code" />
+  </form>
+);
+```
+
+### ✅ Auto-populate or provide selection
+
+```tsx
+// Good - checkbox to reuse shipping address
+const BillingStep = ({ shippingAddress }: { shippingAddress: Address }) => {
+  const [useSameAddress, setUseSameAddress] = useState(false);
+  const [billing, setBilling] = useState<Address>({});
+
+  return (
+    <form>
+      <h2>Billing Address</h2>
+      <label>
+        <input
+          type="checkbox"
+          checked={useSameAddress}
+          onChange={(e) => {
+            setUseSameAddress(e.target.checked);
+            if (e.target.checked) setBilling(shippingAddress);
+          }}
+        />
+        Same as shipping address
+      </label>
+      {!useSameAddress && (
+        <>
+          <label htmlFor="billing-street">Street:</label>
+          <input type="text" id="billing-street" value={billing.street || ''} onChange={handleChange} />
+          {/* remaining fields */}
+        </>
+      )}
+    </form>
+  );
+};
+```
+
+---
+
+## Consistent Help (WCAG 3.2.6) — NEW in 2.2
+
+### ❌ Help in different positions on different pages
+
+```html
+<!-- Page 1: help link in header -->
+<header>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/help">Help</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<!-- Page 2: help link moved to footer only -->
+<footer>
+  <a href="/help">Help</a>
+</footer>
+```
+
+### ✅ Help in consistent relative order
+
+```html
+<!-- Good - help appears in same relative order on every page -->
+<header>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/help">Help</a>  <!-- Always last in nav -->
+  </nav>
+</header>
+```
+
+```tsx
+// Good - React layout component ensures consistent help placement
+const Layout = ({ children }: { children: React.ReactNode }) => (
+  <>
+    <header>
+      <Nav />
+      <a href="/help">Help</a>  {/* Always in header, after nav */}
+    </header>
+    <main>{children}</main>
+    <footer>
+      <a href="/help">Help</a>  {/* Always in footer, first link */}
+      <a href="/contact">Contact Us</a>
+    </footer>
+  </>
+);
 ```

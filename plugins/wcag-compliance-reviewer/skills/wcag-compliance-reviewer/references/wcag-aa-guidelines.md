@@ -198,10 +198,10 @@ User interface components and navigation must be operable.
 - Default browser focus rings acceptable
 - Custom focus indicators must have 3:1 contrast ratio
 
-**2.4.11 Focus Appearance (Level AA)** — NEW in WCAG 2.2
-- Keyboard focus indicator must have minimum area (perimeter of component × 2 CSS px)
-- Contrast ratio of at least 3:1 between focused and unfocused states
-- Contrast ratio of at least 3:1 against adjacent colors
+**2.4.11 Focus Not Obscured (Minimum) (Level AA)** — NEW in WCAG 2.2
+- When a user interface component receives keyboard focus, it must be at least partially visible
+- Must not be entirely hidden behind author-created content such as sticky headers, sticky footers, or non-modal dialogs
+- Ensures keyboard users can always see where their focus is
 
 ### 2.5 Input Modalities
 
@@ -334,7 +334,7 @@ Content must be robust enough to be interpreted by a wide variety of user agents
 1. **Color contrast** - Text must have 4.5:1 ratio (3:1 for large text)
 2. **Keyboard access** - All interactive elements keyboard operable
 3. **Focus indicators** - Visible focus states required
-4. **Focus appearance** - Focus indicator: 3:1 contrast, minimum area (perimeter × 2px) — NEW in 2.2
+4. **Focus not obscured** - Focused element at least partially visible, not hidden by sticky content — NEW in 2.2
 5. **Alt text** - Images need descriptive alternatives
 6. **Form labels** - All inputs must be labeled
 7. **Heading structure** - Logical heading hierarchy

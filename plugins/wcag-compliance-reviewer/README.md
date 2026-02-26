@@ -1,10 +1,10 @@
-# WCAG 2.1 AA Compliance Reviewer
+# WCAG 2.2 AA Compliance Reviewer
 
-A Claude Code skill for reviewing HTML/CSS and React/TypeScript code for WCAG 2.1 Level AA accessibility compliance. Identifies violations, provides specific fixes, and recommends automated testing approaches.
+A Claude Code skill for reviewing HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance. Identifies violations, provides specific fixes, and recommends automated testing approaches.
 
 ## Overview
 
-The WCAG Compliance Reviewer performs systematic accessibility audits of web code to ensure compliance with WCAG 2.1 Level AA standards. It provides specific code fixes, categorizes issues by severity, and recommends appropriate testing tools based on code complexity.
+The WCAG Compliance Reviewer performs systematic accessibility audits of web code to ensure compliance with WCAG 2.2 Level AA standards. It provides specific code fixes, categorizes issues by severity, and recommends appropriate testing tools based on code complexity. Also covers all WCAG 2.1 and 2.0 criteria.
 
 This skill is applicable for code reviews, component development, and accessibility testing in both vanilla HTML/CSS and React/TypeScript projects.
 
@@ -44,7 +44,7 @@ claude --plugin-dir /path/to/agentics/plugins/wcag-compliance-reviewer
 Invoke this skill when you need to:
 
 - Review code for accessibility compliance
-- Check WCAG 2.1 Level AA compliance
+- Check WCAG 2.2 Level AA compliance
 - Identify accessibility issues in components
 - Audit pages or applications for a11y standards
 - Get specific fixes for accessibility violations
@@ -54,13 +54,12 @@ Invoke this skill when you need to:
 
 ### Step 1: Determine WCAG Version and Source
 
-**Default:** Use WCAG 2.1 AA from static reference (`references/wcag-aa-guidelines.md`)
+**Default:** Use WCAG 2.2 AA from static reference (`references/wcag-aa-guidelines.md`)
 
 **Fetch from W3C website if:**
-- User asks for "latest guidelines"
-- User specifies WCAG 2.2 or newer
+- User asks for "latest guidelines" (to check for versions beyond 2.2)
 - User requests "official W3C guidelines"
-- Uncertain whether guidelines have been updated
+- Uncertain whether guidelines have been updated beyond 2.2
 
 ### Step 2: Initial Assessment
 
@@ -75,11 +74,11 @@ Identify code characteristics:
 **WCAG Guidelines Source (choose one):**
 
 **Option A: Static Reference (default, faster)**
-- `references/wcag-aa-guidelines.md` - Complete WCAG 2.1 AA success criteria
+- `references/wcag-aa-guidelines.md` - Complete WCAG 2.2 AA success criteria (includes all 2.1 criteria)
 
 **Option B: Fetch from W3C**
-- WCAG 2.1 Quick Reference: https://www.w3.org/WAI/WCAG21/quickref/?versions=2.1&levels=a,aa
 - WCAG 2.2 Quick Reference: https://www.w3.org/WAI/WCAG22/quickref/?versions=2.2&levels=a,aa
+- WCAG 2.1 Quick Reference (older): https://www.w3.org/WAI/WCAG21/quickref/?versions=2.1&levels=a,aa
 
 **Always load:**
 - `references/common-violations.md` - Code examples and fixes
@@ -102,6 +101,9 @@ Identify code characteristics:
 - No keyboard traps (2.1.2)
 - Skip links or landmarks for navigation (2.4.1)
 - Descriptive link text (2.4.4)
+- Focused elements not obscured by sticky headers/footers (2.4.11) — NEW in 2.2
+- Drag interactions have single-pointer alternatives (2.5.7) — NEW in 2.2
+- Touch/pointer targets at least 24×24 CSS pixels (2.5.8) — NEW in 2.2
 
 **C. Understandable (Priority: Medium)**
 - Lang attribute on html element (3.1.1)
@@ -109,8 +111,12 @@ Identify code characteristics:
 - Error identification and suggestions (3.3.1, 3.3.3)
 - Consistent navigation patterns (3.2.3)
 - No context changes on focus/input (3.2.1, 3.2.2)
+- Help mechanisms in consistent relative order across pages (3.2.6) — NEW in 2.2
+- Previously entered info auto-populated in multi-step processes (3.3.7) — NEW in 2.2
+- Authentication does not require cognitive function tests (3.3.8) — NEW in 2.2
 
 **D. Robust (Priority: Medium)**
+- ~~Parsing (4.1.1)~~ — Removed in WCAG 2.2; no longer required
 - Semantic HTML or proper ARIA (4.1.2)
 - Valid ARIA attributes (4.1.2)
 - Status messages use ARIA live regions (4.1.3)
@@ -126,12 +132,18 @@ Identify code characteristics:
 - Invalid ARIA attributes
 - Missing focus indicators
 - Missing lang attribute
+- Touch/pointer targets smaller than 24×24 CSS pixels (2.5.8)
+- Focused element entirely hidden behind sticky content (2.4.11)
+- Authentication requiring cognitive function tests without alternative (3.3.8)
 
 **Warnings (Should Fix):**
 - Positive tabindex values
 - autoFocus usage
 - Links without descriptive text
 - Potential color-only indicators
+- Drag-only interactions without single-pointer alternative (2.5.7)
+- Previously entered information not auto-populated in multi-step forms (3.3.7)
+- Help mechanisms in inconsistent order across pages (3.2.6)
 
 **Recommendations (Best Practices):**
 - Use semantic HTML over ARIA
@@ -244,6 +256,14 @@ Why: Screen readers announce "logo.png" without alt text, which is not meaningfu
 - [ ] Loading states indicated
 - [ ] Error messages clear and helpful
 
+### WCAG 2.2 New Criteria
+- [ ] Touch/pointer targets at least 24×24 CSS pixels (2.5.8)
+- [ ] Drag interactions have single-pointer alternatives (2.5.7)
+- [ ] Focused elements not obscured by sticky headers/footers (2.4.11)
+- [ ] Help mechanisms in same relative order across pages (3.2.6)
+- [ ] Previously entered info auto-populated in multi-step processes (3.3.7)
+- [ ] Authentication does not require cognitive function tests (3.3.8)
+
 ## Code Examples
 
 ### Accessible Button with Icon
@@ -311,7 +331,7 @@ python scripts/check_wcag.py path/to/component.tsx
 
 ### References (references/)
 
-**wcag-aa-guidelines.md** - Complete WCAG 2.1 Level AA success criteria
+**wcag-aa-guidelines.md** - Complete WCAG 2.2 Level AA success criteria
 - Organized by principle (Perceivable, Operable, Understandable, Robust)
 - Success criterion descriptions
 - Level A and AA requirements
@@ -429,9 +449,9 @@ Highest and most complex level. Not required for general compliance but recommen
 
 ### Official WCAG Documentation
 
-- [WCAG 2.1 Overview](https://www.w3.org/WAI/WCAG21/Understanding/)
-- [WCAG 2.1 Quick Reference](https://www.w3.org/WAI/WCAG21/quickref/)
-- [WCAG 2.2 (newer)](https://www.w3.org/WAI/WCAG22/Understanding/)
+- [WCAG 2.2 Overview](https://www.w3.org/WAI/WCAG22/Understanding/)
+- [WCAG 2.2 Quick Reference](https://www.w3.org/WAI/WCAG22/quickref/)
+- [WCAG 2.1 (older version)](https://www.w3.org/WAI/WCAG21/Understanding/)
 
 ### Testing Tools
 
