@@ -62,10 +62,10 @@
     {
       "name": "skill-reviewer",
       "source": "./plugins/skill-reviewer",
-      "version": "1.0.1",
-      "description": "Review SKILL.md files against Anthropic's official Claude Code skill authoring best practices",
+      "version": "1.1.0",
+      "description": "Review and plan Claude Code skills — audit SKILL.md files against best practices and scaffold new skills with design pattern guidance",
       "category": "development",
-      "tags": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "claude-code"]
+      "tags": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns", "claude-code"]
     }
   ]
 }
