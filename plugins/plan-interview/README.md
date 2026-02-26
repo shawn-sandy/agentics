@@ -49,6 +49,7 @@ Any plan with UI signals (React, Tailwind, `.tsx`, form/modal/dialog terminology
 ### After the interview
 
 The skill compiles a **Plan Interview Summary** with:
+- Plan naming issues (if the filename or heading is non-descriptive)
 - Key decisions confirmed
 - Open risks and concerns
 - Recommended next steps
