@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0] - 2026-02-26
+
+### Added
+
+- New `review-rename-plans` command — batch-review plan filenames in a directory, flag those that don't match their intent, and interactively rename them
+
 ## [1.2.0] - 2026-02-26
 
 ### Added
