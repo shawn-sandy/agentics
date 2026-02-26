@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-02-25
+
+### Changed
+
+- **Default standard upgraded from WCAG 2.1 to WCAG 2.2** across all plugin files
+- `SKILL.md` — WCAG 2.2 is now the default review standard; 2.1 available on request
+- `SKILL.md` — Systematic Review (Section 4) adds six new WCAG 2.2 AA criteria
+- `SKILL.md` — Quick Reference Checklist includes WCAG 2.2 items
+- `SKILL.md` — Section 4 Robust notes 4.1.1 Parsing as removed in WCAG 2.2
+- `wcag-aa-guidelines.md` — corrected 2.4.11 from "Focus Appearance" to "Focus Not Obscured (Minimum)"
+- `check_wcag.py` — focus outline removal upgraded from warning to error (2.4.7, 2.4.11)
+- `common-violations.md` — added six new sections with before/after code examples for WCAG 2.2 criteria
+- `testing-guide.md` — updated references to WCAG 2.2; manual testing checklist extended
+- `README.md` — all WCAG 2.1 references updated to WCAG 2.2; new criteria added
+- `plugin.json` and `marketplace.json` — version 1.1.0; descriptions and tags updated
+
+### Added
+
+- New WCAG 2.2 criteria in review process: Focus Not Obscured (2.4.11), Dragging Movements (2.5.7), Target Size (2.5.8), Consistent Help (3.2.6), Redundant Entry (3.3.7), Accessible Authentication (3.3.8)
+- New violation examples: Target Size, Focus Not Obscured, Dragging Movements, Accessible Authentication, Redundant Entry, Consistent Help
+- New Python checks: `target-size`, `dragging-movements` rules
+
 ## [1.0.1] - 2026-02-25
 
 ### Changed

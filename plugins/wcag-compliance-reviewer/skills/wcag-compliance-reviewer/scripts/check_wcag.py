@@ -2,7 +2,7 @@
 """
 WCAG Accessibility Checker for HTML/CSS and React/TypeScript files.
 
-This script performs static analysis to detect common WCAG 2.1 AA violations.
+This script performs static analysis to detect common WCAG 2.2 AA violations.
 """
 
 import re
@@ -26,7 +26,7 @@ class Issue:
 
 
 class WCAGChecker:
-    """Checks code for WCAG 2.1 AA compliance issues."""
+    """Checks code for WCAG 2.2 AA compliance issues."""
     
     def __init__(self):
         self.issues: List[Issue] = []
@@ -123,7 +123,15 @@ class WCAGChecker:
                     'Positive tabindex values can cause focus order issues',
                     line
                 )
-    
+
+            # Check for draggable elements (WCAG 2.5.7)
+            if 'draggable=' in line_lower or 'ondragstart=' in line_lower:
+                self._add_issue(
+                    filepath, i, 'warning', 'dragging-movements',
+                    'Draggable element detected — ensure a single-pointer alternative exists (WCAG 2.5.7)',
+                    line
+                )
+
     def _check_react(self, lines: List[str], filepath: str):
         """Check React/TypeScript files for accessibility issues."""
         for i, line in enumerate(lines, 1):
@@ -192,7 +200,26 @@ class WCAGChecker:
                     'Positive tabIndex values can cause focus order issues',
                     line
                 )
-    
+
+            # Check for drag-only interactions without alternatives (WCAG 2.5.7)
+            if 'onDrag' in line or 'onDragStart' in line or 'draggable=' in line:
+                if 'onClick' not in line:
+                    self._add_issue(
+                        filepath, i, 'warning', 'dragging-movements',
+                        'Draggable element detected — ensure a single-pointer alternative exists (WCAG 2.5.7)',
+                        line
+                    )
+
+            # Check for potential small target sizes (WCAG 2.5.8)
+            small_size = re.search(r'(?:width|height)\s*[:=]\s*[{"\']?(\d+)(?:px)?', line)
+            if small_size and int(small_size.group(1)) < 24:
+                if '<button' in line or 'onClick' in line or '<a ' in line:
+                    self._add_issue(
+                        filepath, i, 'warning', 'target-size',
+                        'Interactive element may have target size below 24×24 CSS pixels (WCAG 2.5.8)',
+                        line
+                    )
+
     def _check_css(self, lines: List[str], filepath: str):
         """Check CSS files for accessibility issues."""
         for i, line in enumerate(lines, 1):
@@ -203,8 +230,8 @@ class WCAGChecker:
                 # Check if it's on :focus
                 if ':focus' in line_lower or i > 1 and ':focus' in lines[i-2].lower():
                     self._add_issue(
-                        filepath, i, 'warning', 'focus-visible',
-                        'Removing outline on :focus requires alternative visible focus indicator (WCAG 2.4.7)',
+                        filepath, i, 'error', 'focus-visible',
+                        'Removing outline on :focus violates focus visibility requirements — must provide alternative indicator (WCAG 2.4.7, 2.4.11)',
                         line
                     )
             
@@ -224,6 +251,22 @@ class WCAGChecker:
                         line
                     )
     
+            # Check for potential target size issues (WCAG 2.5.8)
+            size_match = re.search(r'(?:width|min-width)\s*:\s*(\d+(?:\.\d+)?)\s*px', line_lower)
+            height_match = re.search(r'(?:height|min-height)\s*:\s*(\d+(?:\.\d+)?)\s*px', line_lower)
+            if size_match and float(size_match.group(1)) < 24:
+                self._add_issue(
+                    filepath, i, 'warning', 'target-size',
+                    'Element width below 24px — verify this is not an interactive target (WCAG 2.5.8)',
+                    line
+                )
+            if height_match and float(height_match.group(1)) < 24:
+                self._add_issue(
+                    filepath, i, 'warning', 'target-size',
+                    'Element height below 24px — verify this is not an interactive target (WCAG 2.5.8)',
+                    line
+                )
+
     def _similar_lightness(self, color1: str, color2: str) -> bool:
         """Simple heuristic to check if two colors might have similar lightness."""
         def hex_to_lightness(hex_color: str) -> int:

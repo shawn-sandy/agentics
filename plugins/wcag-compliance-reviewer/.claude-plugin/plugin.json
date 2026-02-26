@@ -1,10 +1,10 @@
 {
   "name": "wcag-compliance-reviewer",
-  "version": "1.0.1",
-  "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.1 Level AA accessibility compliance",
+  "version": "1.1.0",
+  "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
   "author": { "name": "Agentics Project" },
   "license": "MIT",
-  "keywords": ["accessibility", "wcag", "a11y", "wcag-2.1", "aria", "color-contrast", "screen-reader", "compliance-audit"],
+  "keywords": ["accessibility", "wcag", "a11y", "wcag-2.2", "aria", "color-contrast", "screen-reader", "compliance-audit", "wcag-2.1"],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/wcag-compliance-reviewer",
   "repository": "https://github.com/shawn-sandy/agentics"
 }

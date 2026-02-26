@@ -16,7 +16,7 @@ This document provides guidance on automated and manual accessibility testing to
 
 ### axe-core (Recommended)
 
-**What it tests:** WCAG 2.1 Level A and AA issues, including semantic HTML, ARIA, color contrast, forms, and more.
+**What it tests:** WCAG 2.2 Level A and AA issues, including semantic HTML, ARIA, color contrast, forms, and more.
 
 **Installation:**
 
@@ -152,7 +152,7 @@ npm install --save-dev pa11y
 # Test a single URL
 npx pa11y http://localhost:3000
 
-# Test with WCAG 2.1 AA standard
+# Test with WCAG 2.2 AA standard
 npx pa11y --standard WCAG2AA http://localhost:3000
 
 # Test multiple URLs
@@ -234,7 +234,7 @@ npx lhci autorun
 
 **Features:**
 - FastPass: Automated checks for common issues
-- Assessment: Guided manual testing for WCAG 2.1 Level AA
+- Assessment: Guided manual testing for WCAG 2.2 Level AA
 - Ad hoc tools: Color contrast, landmarks, headings, tab stops
 
 ---
@@ -467,6 +467,14 @@ describe('LoginForm', () => {
 - [ ] Disabled elements are clearly indicated
 - [ ] Loading states are indicated
 - [ ] Success/error messages are clear
+
+### WCAG 2.2 New Criteria
+- [ ] Touch/pointer targets at least 24×24 CSS pixels (2.5.8)
+- [ ] Drag interactions have single-pointer alternatives (2.5.7)
+- [ ] Focused elements not obscured by sticky headers/footers (2.4.11)
+- [ ] Help mechanisms in consistent position across pages (3.2.6)
+- [ ] Previously entered data auto-populated in multi-step forms (3.3.7)
+- [ ] Authentication does not require cognitive function tests (3.3.8)
 
 ---
 
