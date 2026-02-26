@@ -16,7 +16,7 @@ Before doing any other work, use `TodoWrite` to create todos for each step of th
 
 Create the following todos (all starting with `status: "pending"`):
 
-- Step 2: Read and analyze the plan
+- Step 2: Read, validate plan name, and analyze the plan
 - Step 3a: Round 1 — Technical & Trade-offs
 - Step 3b: Round 2a — UI/UX & Flows (if applicable)
 - Step 3c: Round 2b — Accessibility & Semantic (if applicable)
@@ -53,9 +53,76 @@ Once resolved, tell the user which file will be used (e.g., "Interviewing plan:
 
 If no plan file can be found via any of these methods, tell the user and stop.
 
-### Step 2 — Read and analyze the plan
+### Step 2 — Read, validate plan name, and analyze the plan
 
-Read the resolved plan file. Extract the following to guide question generation:
+Read the resolved plan file.
+
+**Plan name validation**: Before extracting plan details, check whether the
+plan's filename and H1 heading accurately describe the plan's content.
+
+1. **Extract identifiers**: Get the filename (without path or `.md` extension)
+   and the H1 heading (first line matching `# ...`).
+
+2. **Determine the plan's purpose**: Read enough of the plan to form a
+   one-sentence summary of what it intends to accomplish.
+
+3. **Evaluate the filename** against these criteria:
+   - **Descriptive**: Contains words that relate to the plan's goal or content.
+     Good: `create-skill-reviewer-plugin`, `fix-marketplace-json-location`.
+     Bad: `fuzzy-swimming-pearl`, `hidden-popping-moonbeam`.
+   - **Not random**: Does not follow a random adjective-noun or
+     adjective-verb-noun pattern with no connection to the plan's subject matter.
+     Note: `add-dark-mode-toggle` is descriptive even though it contains
+     adjectives — the key test is whether the words relate to the plan content.
+   - **Not too generic**: Not a placeholder like `plan.md`, `untitled.md`,
+     `draft.md`, `temp.md`, or `new-plan.md`.
+
+4. **Evaluate the H1 heading**:
+   - Does an H1 heading exist?
+   - Does it describe the plan's purpose? (Good: `# Plan: Create
+     'skill-reviewer' Plugin`. Bad: `# Plan` alone, or missing entirely.)
+   - Does it align with the filename? Flag misalignment only when the filename
+     and heading refer to entirely different topics — not when they describe the
+     same topic at different scopes (e.g., `fix-auth-bug` and
+     `# Plan: Refactor Authentication Module` are aligned because both concern
+     authentication).
+
+5. **Record the result** as one of:
+   - **Pass**: Both filename and heading are descriptive and aligned — proceed
+     silently.
+   - **Needs attention**: One or both are non-descriptive, generic, or
+     misaligned. Record:
+     - Which element(s) failed (filename, heading, or both)
+     - Why (random pattern, too generic, misaligned, or missing)
+     - A **suggested filename** in kebab-case derived from the plan's goal
+     - A **suggested H1 heading** in `# Plan: [Description]` format
+
+If the name needs attention, present the finding immediately before continuing:
+
+```markdown
+### Plan Name Review
+
+| Element | Current | Issue | Suggested |
+|---------|---------|-------|-----------|
+| Filename | `fuzzy-swimming-pearl.md` | Random — unrelated to content | `create-skill-reviewer-plugin.md` |
+| H1 Heading | _(missing)_ | No H1 heading found | `# Plan: Create 'skill-reviewer' Plugin` |
+```
+
+Then ask the user via `AskUserQuestion`: *"Would you like me to rename this plan
+file to `[suggested-name].md`?"* (and if the H1 heading was also flagged,
+include it in the offer: *"…and update the heading to `# Plan: [Description]`?"*).
+
+If the user confirms:
+- Rename the file using Bash `mv`.
+- Update the H1 heading in the file using `Edit` (if it was flagged).
+- **Update the resolved file path** for the remainder of the interview so that
+  Steps 4–6 (especially Step 6's save operation) reference the new path.
+
+If the user declines, proceed without changes.
+
+If the name passes validation, skip this section silently.
+
+Extract the following to guide question generation:
 
 - **Goal**: What is being built and why?
 - **Key components**: What files, services, or systems are involved?
@@ -217,6 +284,13 @@ summary in the chat:
 ### Key Decisions Confirmed
 
 [List decisions the user confirmed or clarified during the interview]
+
+### Plan Naming
+
+[Include only if name validation found issues in Step 2. Reproduce the table
+showing current name(s), the issue, and suggested replacement(s). Note whether
+the user accepted or declined the rename offer. Omit this section entirely if
+the name passed validation.]
 
 ### Open Risks & Concerns
 
