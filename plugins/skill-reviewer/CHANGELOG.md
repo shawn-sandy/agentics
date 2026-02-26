@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.1.0] - 2026-02-26
+
+### Added
+
+- `planning-skills` skill — guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch
+- `references/design-patterns.md` — comprehensive reference for four Anthropic design patterns (Sequential, Orchestrator, Iterative, Adaptive) with decision tree and combination guidance
+- Design pattern identification in the `reviewing-skills` audit (Sequential, Orchestrator, Iterative, Adaptive)
+- Word count check (5,000-word threshold per Anthropic's guide) alongside existing line count check
+- Folder structure validation (kebab-case naming, SKILL.md casing, scripts/references/assets subdirectories)
+- Three-level progressive disclosure assessment (frontmatter → body → linked files)
+- Skill Pack documentation and validation guidance
+- New anti-patterns: wrong SKILL.md casing, hardcoded absolute paths, non-kebab-case folders, exceeding 5,000 words
+
+### Changed
+
+- `best-practices.md` — expanded with Anthropic guide criteria: three-level progressive disclosure, folder structure rules, design patterns section, skill packs, word count thresholds
+- `audit-steps.md` — enriched Dimensions 2–4 with word count, folder structure, SKILL.md casing, and new anti-pattern checks; report format now includes word count, folder structure, and design pattern
+- `reviewing-skills` SKILL.md — Step 2 now measures word count, folder structure, and design pattern; Quick Reference Checklist expanded with new checks
+
 ## [1.0.1] - 2026-02-25
 
 ### Changed

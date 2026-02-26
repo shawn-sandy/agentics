@@ -1,18 +1,24 @@
 # Skill Reviewer
 
-A Claude Code plugin for auditing SKILL.md files against Anthropic's official Claude Code skill authoring best practices. Produces a scored report and optionally generates a corrected version.
+A Claude Code plugin for auditing SKILL.md files and planning new skills. Aligned with Anthropic's "The Complete Guide to Building Skills for Claude" (Jan 2026).
 
 ## Overview
 
-The Skill Reviewer performs structured quality audits of SKILL.md files across 5 dimensions: frontmatter validity, body quality, structure and progressive disclosure, anti-pattern detection, and discoverability. Each dimension is scored 0–2 for a maximum of 10 points, with a grade from Excellent to Rewrite.
+The Skill Reviewer provides two skills:
 
-This plugin is the counterpart to `claude-md-optimizer` — while that plugin audits CLAUDE.md files, this one audits skill files.
+1. **reviewing-skills** — Structured quality audits of SKILL.md files across 5 dimensions (frontmatter, body quality, structure, anti-patterns, discoverability). Scored 0–10 with grades from Excellent to Rewrite.
+2. **planning-skills** — Guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch, including design pattern selection and file generation.
+
+This plugin is the counterpart to `claude-md-optimizer` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
 
 ## Features
 
 - **5-Dimension Scoring** — Structured rubric covering frontmatter, body, structure, anti-patterns, and discoverability
 - **Graded Reports** — Excellent / Good / Needs Work / Rewrite grades with per-dimension breakdown
 - **Fix Generation** — Auto-corrects frontmatter errors; flags body issues with inline `<!-- SUGGESTION -->` comments
+- **Design Pattern Guidance** — Identifies and recommends Sequential, Orchestrator, Iterative, or Adaptive patterns
+- **Skill Scaffolding** — Generates complete skill folders with SKILL.md, references, and scripts
+- **Word Count & Folder Checks** — Validates against Anthropic's 5,000-word limit and folder structure conventions
 - **Live Docs Support** — Optionally fetches latest guidelines from the platform docs URL
 - **Safe Write Confirmation** — Requires explicit second confirmation before overwriting files
 
@@ -36,7 +42,9 @@ claude --plugin-dir /path/to/agentics/plugins/skill-reviewer
 
 ## Usage
 
-Once the plugin is loaded, the `reviewing-skills` skill activates automatically when you ask to review a SKILL.md file:
+Once the plugin is loaded, skills activate automatically based on user intent.
+
+### Reviewing Skills
 
 ```
 Review the SKILL.md at plugins/my-plugin/skills/my-skill/SKILL.md
@@ -48,6 +56,20 @@ Audit this skill and tell me if it follows best practices
 
 ```
 Score my skill and generate a corrected version
+```
+
+### Planning Skills
+
+```
+Help me plan a new skill for code formatting
+```
+
+```
+I want to create a skill that reviews PR descriptions
+```
+
+```
+What design pattern should I use for a deploy workflow skill?
 ```
 
 ### Using Live Guidelines
@@ -69,11 +91,15 @@ plugins/skill-reviewer/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
-│   └── reviewing-skills/
+│   ├── reviewing-skills/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── audit-steps.md
+│   │       └── best-practices.md
+│   └── planning-skills/
 │       ├── SKILL.md
 │       └── references/
-│           ├── audit-steps.md
-│           └── best-practices.md
+│           └── design-patterns.md
 ├── README.md
 └── CHANGELOG.md
 ```
@@ -117,8 +143,27 @@ plugins/skill-reviewer/
 
 ### Reference: `references/best-practices.md`
 
-Detailed criteria with good/bad examples for all 5 scoring dimensions. Loaded by the skill during audits as the default guidelines source.
+Detailed criteria with good/bad examples for all 5 scoring dimensions. Includes three-level progressive disclosure, folder structure rules, design patterns, skill packs, and word count thresholds. Aligned with Anthropic's guide.
 
 ### Reference: `references/audit-steps.md`
 
-Complete Steps 3–6 workflow: scoring rubric tables, report output format, fix generation rules, and write-to-disk confirmation logic.
+Complete Steps 3–6 workflow: scoring rubric tables, report output format, fix generation rules, and write-to-disk confirmation logic. Includes word count, folder structure, and design pattern in report output.
+
+### Skill: `planning-skills`
+
+**Auto-activates when:** User asks to plan, design, create, or scaffold a new skill.
+
+**Does NOT activate for:** Reviewing existing skills, auditing SKILL.md files, or general planning tasks.
+
+**Planning workflow:**
+
+1. Understand the skill goal (purpose, triggers, tools, output)
+2. Select a design pattern (Sequential, Orchestrator, Iterative, Adaptive)
+3. Plan the folder structure (SKILL.md, references/, scripts/, assets/)
+4. Draft the YAML frontmatter (name + description with triggers)
+5. Outline the SKILL.md body structure
+6. Generate the skill files on disk
+
+### Reference: `references/design-patterns.md`
+
+Comprehensive reference for four Anthropic design patterns with recommended SKILL.md outlines, structure signals, key considerations, a decision tree, and pattern combination guidance.

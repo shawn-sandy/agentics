@@ -1,10 +1,10 @@
 {
   "name": "skill-reviewer",
-  "version": "1.0.1",
-  "description": "Review SKILL.md files against Anthropic's official Claude Code skill authoring best practices",
+  "version": "1.1.0",
+  "description": "Review and plan Claude Code skills — audit SKILL.md files against best practices and scaffold new skills with design pattern guidance",
   "author": { "name": "Agentics Project" },
   "license": "MIT",
-  "keywords": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit"],
+  "keywords": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns"],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/skill-reviewer",
   "repository": "https://github.com/shawn-sandy/agentics"
 }

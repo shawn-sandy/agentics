@@ -38,9 +38,12 @@ Read the target file and record:
 | Metric | Value |
 |--------|-------|
 | Total lines | Count all lines |
+| Word count | Count words in body (after closing `---`) |
 | Frontmatter fields present | name, description, and any extras |
 | Body lines | Lines after closing `---` |
-| Reference files detected | Any `references/` paths mentioned |
+| Reference files detected | Any `references/` paths mentioned or present in skill folder |
+| Folder structure | Check for `scripts/`, `references/`, `assets/` subdirectories |
+| Design pattern | Identify: Sequential, Orchestrator, Iterative, Adaptive, or none |
 
 Note the presence or absence of:
 - YAML frontmatter delimiters (`---`)
@@ -48,6 +51,8 @@ Note the presence or absence of:
 - `description:` field
 - "Use when..." trigger phrase in description
 - Table of contents (for files ≥100 lines)
+- SKILL.md filename casing (must be exactly `SKILL.md`)
+- Kebab-case folder naming
 
 ---
 
@@ -92,15 +97,24 @@ Use this for rapid pre-audit assessment:
 
 **Body**
 - [ ] Total lines <500
+- [ ] Word count <5,000 (per Anthropic guide)
 - [ ] No Windows-style paths (`\`)
+- [ ] No hardcoded absolute paths
 - [ ] No time-sensitive platform-state content ("as of 2024", "currently", "recently added")
 - [ ] No first/second person in frontmatter description
 - [ ] Consistent terminology throughout
 
 **Structure**
+- [ ] File named exactly `SKILL.md` (case-sensitive)
+- [ ] Skill folder uses kebab-case naming
 - [ ] Table of contents present (if ≥100 lines)
 - [ ] Reference files at depth ≤1 (no `references/sub/file.md`)
 - [ ] Freedom level stated or implied
+- [ ] Content distributed across three levels (frontmatter → body → references) where appropriate
+
+**Design Pattern**
+- [ ] Identifiable pattern (Sequential, Orchestrator, Iterative, or Adaptive)
+- [ ] Body structure matches the chosen pattern
 
 **Discoverability**
 - [ ] "Use when..." trigger phrase clear and specific

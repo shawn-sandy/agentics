@@ -1,6 +1,6 @@
 # Skill Authoring Best Practices
 
-Reference criteria for the `reviewing-skills` audit. Each section maps to a scoring dimension.
+Reference criteria for the `reviewing-skills` audit. Each section maps to a scoring dimension. Aligned with Anthropic's "The Complete Guide to Building Skills for Claude" (Jan 2026).
 
 ## Table of Contents
 
@@ -9,6 +9,10 @@ Reference criteria for the `reviewing-skills` audit. Each section maps to a scor
   - [Description Field](#description-field)
 - [Body Quality Rules](#body-quality-rules)
 - [Structure and Progressive Disclosure](#structure-and-progressive-disclosure)
+  - [Three-Level Progressive Disclosure](#three-level-progressive-disclosure)
+  - [Folder Structure](#folder-structure)
+  - [Skill Packs](#skill-packs)
+- [Design Patterns](#design-patterns)
 - [Anti-patterns](#anti-patterns)
 - [Discoverability Patterns](#discoverability-patterns)
 
@@ -82,13 +86,27 @@ Add a sentence clarifying what the skill does NOT handle:
 
 The body is everything after the closing `---` frontmatter delimiter.
 
-### Line Count
+### Size Limits
+
+Skills are evaluated against two thresholds: line count (legacy check) and word count (per Anthropic's guide).
+
+**Line count:**
 
 | Lines | Assessment |
 |-------|------------|
 | <400 | Ideal |
 | 400–499 | Acceptable; consider splitting into reference files |
 | ≥500 | Exceeds limit — must split content into `references/` files |
+
+**Word count (Anthropic guideline):**
+
+| Words | Assessment |
+|-------|------------|
+| <3,000 | Ideal — concise, focused |
+| 3,000–4,999 | Acceptable; consider offloading detail to `references/` |
+| ≥5,000 | Exceeds recommended limit — must split into `references/` or a Skill Pack |
+
+Word count takes precedence when the two thresholds disagree. A 450-line file at 6,000 words still needs splitting.
 
 ### Content Quality
 
@@ -115,6 +133,47 @@ These become incorrect as Claude Code evolves.
 
 ## Structure and Progressive Disclosure
 
+### Three-Level Progressive Disclosure
+
+Anthropic's guide defines a three-level system for how Claude loads skill content:
+
+| Level | What | When Loaded | Implication |
+|-------|------|-------------|-------------|
+| **Level 1** | YAML frontmatter (`name` + `description`) | Always — present in Claude's system prompt | Description determines whether the skill activates at all |
+| **Level 2** | SKILL.md body | On activation — when Claude determines the skill applies | Must be self-contained enough to execute the skill |
+| **Level 3** | Linked files (`references/`, `scripts/`) | On demand — loaded only when the task requires them | Offload detail here to keep SKILL.md body lean |
+
+The frontmatter description carries outsized importance — if Claude does not understand when to use the skill from that description, the rest never loads.
+
+### Folder Structure
+
+**Folder naming:** Must use kebab-case (e.g., `sprint-planner`, `reviewing-skills`).
+
+**SKILL.md filename:** Case-sensitive, must be exactly `SKILL.md` — no variations (`skill.md`, `Skill.md`).
+
+**Minimum viable skill:**
+
+```
+my-skill/
+└── SKILL.md
+```
+
+**Full skill structure (optional subdirectories):**
+
+```
+my-skill/
+├── SKILL.md           ← Required — core instructions
+├── scripts/           ← Optional — executable Python or Bash scripts
+├── references/        ← Optional — documentation loaded on demand
+└── assets/            ← Optional — templates, config files, static resources
+```
+
+| Subdirectory | Purpose | Example Contents |
+|-------------|---------|-----------------|
+| `scripts/` | Executable automation scripts | `generate-report.py`, `setup.sh` |
+| `references/` | Extended documentation loaded by Claude on demand | `best-practices.md`, `api-reference.md` |
+| `assets/` | Templates, config samples, static resources | `template.html`, `config.example.json` |
+
 ### Reference File Depth
 
 Reference files must be at exactly one level below the skill root:
@@ -125,6 +184,28 @@ Reference files must be at exactly one level below the skill root:
 | `references/audit-steps.md` | `references/steps/audit/step3.md` |
 
 Claude Code resolves reference paths relative to the skill directory. Nested paths are not supported.
+
+### Skill Packs
+
+When a skill grows too large or serves multiple related purposes, split it into a **Skill Pack** — multiple skills in one plugin directory.
+
+**When to split:**
+- Single skill exceeds 5,000 words even after using `references/`
+- Skill serves two distinct user intents that rarely overlap
+- Users need to invoke sub-workflows independently
+
+**Example (two skills in one plugin):**
+
+```
+plugins/claude-md-optimizer/
+├── skills/
+│   ├── claude-md-optimizer/     ← Skill 1: audit CLAUDE.md files
+│   │   └── SKILL.md
+│   └── path-rules-advisor/      ← Skill 2: create .claude/rules/ files
+│       └── SKILL.md
+```
+
+Each skill has its own `SKILL.md` with independent frontmatter and triggers. Avoid creating skill packs for tightly coupled workflows that always run together.
 
 ### Table of Contents
 
@@ -158,6 +239,29 @@ If unspecified, Claude defaults to flexible — which may be wrong for process-c
 
 ---
 
+## Design Patterns
+
+Anthropic's guide codifies four design patterns for skills. Identifying which pattern a skill follows helps assess whether its structure is appropriate.
+
+| Pattern | Use When | Structure Signals |
+|---------|----------|-------------------|
+| **Sequential / Pipeline** | Multi-step processes in a specific order | Numbered steps, phase markers, rollback instructions |
+| **Orchestrator** | Workflows spanning multiple services or tools | MCP tool calls, API integrations, service coordination |
+| **Iterative / Refinement** | Output quality improves with iteration | Draft → review → refine loops, quality gates, revision limits |
+| **Adaptive** | Same outcome, different tools depending on context | Conditional branching, file-type detection, environment checks |
+
+**Sequential / Pipeline** is the most common pattern for Claude Code skills. Look for numbered steps, `TodoWrite` progress tracking, and explicit "do not skip steps" instructions.
+
+**Orchestrator** skills coordinate external services — expect references to MCP tools, API endpoints, or cross-service workflows.
+
+**Iterative / Refinement** skills produce high-stakes output where first-draft quality is insufficient. Look for revision loops and quality thresholds.
+
+**Adaptive** skills handle the same goal with different approaches based on context (e.g., different linters for different languages).
+
+A skill may combine patterns — a Sequential skill with an Adaptive sub-step is common. The primary pattern should be clearly signalled in the body structure.
+
+---
+
 ## Anti-patterns
 
 Anti-patterns by severity:
@@ -173,6 +277,8 @@ Anti-patterns by severity:
 | Reserved word in name | `claude-helper`, `anthropic-tool` | Choose a name without the reserved substrings |
 | Windows paths | `references\file.md` | Use forward slashes: `references/file.md` |
 | Reference depth >1 | `references/sub/file.md` | Flatten to `references/file.md` |
+| Wrong SKILL.md casing | `skill.md`, `Skill.md` | Must be exactly `SKILL.md` (case-sensitive) |
+| Hardcoded absolute paths | `/Users/me/project/data.json` | Use relative paths or file-resolution logic |
 
 ### Warning Level (should fix)
 
@@ -183,6 +289,8 @@ Anti-patterns by severity:
 | Time-sensitive content | Platform state described as of a specific date | Rewrite as timeless fact |
 | Missing TOC on long file | File >100 lines lacks navigation | Add table of contents |
 | Vague trigger phrase | "Use when user asks anything about code" | Make trigger specific to this skill's domain |
+| Exceeds 5,000 words | SKILL.md body is too long for efficient loading | Split into `references/` files or a Skill Pack |
+| Non-kebab-case folder name | `mySkill/`, `My_Skill/` | Use `my-skill/` |
 
 ### Suggestion Level (consider fixing)
 
@@ -193,6 +301,8 @@ Anti-patterns by severity:
 | Fewer than 3 keywords | Description not searchable | Add domain-specific terms |
 | Freedom level unstated | Reader must infer rigidity | Add "Follow these steps exactly" or "Adapt to context" |
 | Imperative voice avoided | "You should" instead of direct imperatives | Use "Do X" not "You should do X" |
+| No design pattern visible | Skill body has no structural pattern | Consider adopting Sequential, Orchestrator, Iterative, or Adaptive pattern |
+| Missing cross-platform note | Skill uses Claude-Code-only features without noting it | Add note if skill depends on CLI-specific features (e.g., `Bash` tool) |
 
 ---
 

@@ -41,15 +41,18 @@ Apply the criteria from `references/best-practices.md` when evaluating each dime
 | Check | Requirement | Severity |
 |-------|-------------|----------|
 | Line count | <500 lines total | Warning if 400–499; Error if ≥500 |
+| Word count | <5,000 words total (per Anthropic guide) | Warning if 3,000–4,999; Error if ≥5,000 |
 | Terminology | Consistent terms used throughout | Warning if inconsistent |
 | Concrete examples | At least one concrete example or code block where relevant | Suggestion if absent |
 | No time-sensitive platform-state content | No phrases like "as of 2024", "currently", "recently added", "new in version X" | Warning |
 | No first/second person in body instructions | Prefer imperative ("Read the file") over "You should read" | Suggestion |
 
+Word count takes precedence when line count and word count thresholds disagree. Count words in the body only (after closing `---`).
+
 **Scoring:**
-- **2 pts** — <400 lines, consistent, has examples, no time-sensitive content
-- **1 pt** — 400–499 lines, or missing examples, or minor inconsistency
-- **0 pts** — ≥500 lines, or time-sensitive content, or major inconsistency
+- **2 pts** — <400 lines AND <3,000 words, consistent, has examples, no time-sensitive content
+- **1 pt** — 400–499 lines or 3,000–4,999 words, or missing examples, or minor inconsistency
+- **0 pts** — ≥500 lines or ≥5,000 words, or time-sensitive content, or major inconsistency
 
 ---
 
@@ -63,11 +66,21 @@ Apply the criteria from `references/best-practices.md` when evaluating each dime
 | TOC presence | Files ≥100 lines must have a table of contents | Warning if absent |
 | Freedom level | Skill indicates how strictly to follow it (rigid vs. flexible) | Suggestion if absent |
 | Heading hierarchy | Headings use H2/H3 logically; no skipped levels | Warning if violated |
+| Folder naming | Skill folder uses kebab-case | Warning if violated |
+| SKILL.md casing | File is named exactly `SKILL.md` (case-sensitive) | Error if wrong casing |
+| Three-level architecture | Content distributed across frontmatter (L1), body (L2), and linked files (L3) where appropriate | Suggestion if all content crammed into body |
+
+**Three-level progressive disclosure assessment:**
+- Level 1 (frontmatter): Is the description sufficient for activation decisions?
+- Level 2 (body): Is the body focused on core instructions without excessive detail?
+- Level 3 (references/scripts): Is detailed content properly offloaded?
+
+A skill with >3,000 words in the body and no reference files should consider splitting.
 
 **Scoring:**
-- **2 pts** — Reference depth valid, TOC present (if needed), freedom level clear
-- **1 pt** — Missing TOC on long file, or freedom level unstated
-- **0 pts** — Reference depth violation, or no structure
+- **2 pts** — Reference depth valid, TOC present (if needed), freedom level clear, folder naming correct, content well-distributed across levels
+- **1 pt** — Missing TOC on long file, or freedom level unstated, or all content in body with no references
+- **0 pts** — Reference depth violation, wrong SKILL.md casing, or no structure
 
 ---
 
@@ -83,6 +96,10 @@ Check for the presence of known anti-patterns:
 | First/second person in `description` frontmatter | "I will review...", "You should use this when..." | Error |
 | `$ARGUMENTS` or `$PWD` in skill body | These variables only work in commands | Error |
 | XML tags in `description` | `<example>`, `<user>`, etc. | Error |
+| Wrong SKILL.md casing | File named `skill.md` or `Skill.md` instead of `SKILL.md` | Error |
+| Hardcoded absolute paths | `/Users/me/project/` or `C:\Users\` in body | Error |
+| Exceeds 5,000 words without references | Body too long with no content offloaded | Warning |
+| Non-kebab-case folder name | `mySkill/` or `My_Skill/` instead of `my-skill/` | Warning |
 
 **Scoring:**
 - **2 pts** — No anti-patterns detected
@@ -120,6 +137,9 @@ Present the audit results in this format:
 **File:** `path/to/SKILL.md`
 **Guidelines Source:** [Static: references/best-practices.md | Live fetch: code.claude.com | Fallback: live fetch failed, used static]
 **Total Lines:** N
+**Word Count:** N
+**Folder Structure:** [Minimum (SKILL.md only) | Standard (SKILL.md + references/) | Full (SKILL.md + references/ + scripts/) | Pack (multi-skill)]
+**Design Pattern:** [Sequential | Orchestrator | Iterative | Adaptive | Mixed | None detected]
 
 ## Scores
 
