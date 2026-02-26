@@ -40,7 +40,7 @@ Mark each todo `status: "completed"` as you finish that step.
 
 ## Step 1: Understand the Skill Goal
 
-Ask the user up to 4 questions using `AskUserQuestion` to understand what they want to build. Tailor questions to what the user has already provided — skip questions they have already answered.
+Ask the user up to 4 questions using `AskUserQuestion` to understand what they want to build. Tailor questions to what the user has already provided — skip questions they have already answered. If the user's initial message already covers purpose, triggers, tools, and expected output, skip directly to the concept summary without asking questions.
 
 **Questions to consider (pick the most relevant):**
 
@@ -159,6 +159,8 @@ Generate a body outline based on the design pattern selected in Step 2. Each pat
 - At least one concrete example or code block
 - No time-sensitive content
 
+If the outline suggests the body will exceed 3,000 words, recommend creating a reference file for the most detailed section before proceeding. If the skill serves two distinct user intents, recommend a Skill Pack (multiple skills in one plugin) instead of a single oversized skill.
+
 Present the outline as a numbered list of sections with brief descriptions:
 
 ```
@@ -190,6 +192,8 @@ After the user confirms the outline, generate the complete skill files on disk.
 **Before writing, confirm the target directory:**
 
 > "I'll create the skill at `[path]/[skill-name]/`. Should I proceed?"
+
+If the user declines or wants a different location, ask: "Where would you like me to create the skill folder? Please provide the path."
 
 **After generation, present a summary:**
 
