@@ -34,16 +34,19 @@ Mark each todo `status: "completed"` as you finish that step.
 Find the directory to scan using the first match from this priority order:
 
 1. **Explicit argument**: If `$ARGUMENTS` is provided, treat it as the directory path.
-2. **Project `docs/plans/`**: Check whether `docs/plans/` exists in `$PWD`.
-3. **Project `.claude/plans/`**: Check whether `.claude/plans/` exists in `$PWD`.
-4. **Project settings**: Read `.claude/settings.json` in `$PWD`. If a `"plansDirectory"` key exists, use that path.
-5. **Global default**: Fall back to `~/.claude/plans/`.
+2. **Project settings**: Read `.claude/settings.json` in `$PWD`. If a `"plansDirectory"` key exists, use that path (it may be relative to the project root or absolute).
+3. **Global settings**: Read `~/.claude/settings.json`. If a `"plansDirectory"` key exists, use that path.
+4. **Default locations**: Check the following in order and use the first that exists and contains `.md` files:
+   - `docs/plans/` in `$PWD`
+   - `.claude/plans/` in `$PWD`
+   - `~/.claude/plans/`
+5. **Ask the user**: If none of the above resolve to a valid directory with `.md` files, use `AskUserQuestion` to ask: *"I couldn't find a plans directory automatically. Where are your plan files stored?"* Accept the user's path and continue. If the user-provided path also doesn't exist, report the error and stop.
 
-Once resolved, confirm the directory to the user:
+Once resolved, confirm the directory and how it was found:
 
-> Reviewing plans in: `[resolved-path]`
+> Reviewing plans in: `[resolved-path]` _(from [source: project settings | global settings | default location | user input])_
 
-If the directory does not exist or contains no `.md` files, tell the user and stop.
+**Validation**: After resolving the path, verify the directory exists and contains at least one `.md` file. If it exists but is empty, tell the user and stop. If it doesn't exist (and the path came from settings or an argument, not from "Ask the user" step), fall through to the next priority level instead of stopping — this allows recovery when a configured path is stale.
 
 ### Step 2 — Scan and evaluate plan filenames
 
