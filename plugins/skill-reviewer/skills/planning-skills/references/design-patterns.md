@@ -197,6 +197,8 @@ Use this decision tree to recommend a pattern:
 
 If a skill combines patterns (e.g., a Sequential pipeline with an Adaptive sub-step), use the dominant pattern for overall structure and note the sub-pattern within the relevant step.
 
+If the planned skill serves two distinct user intents that rarely overlap, consider a **Skill Pack** (multiple skills in one plugin) instead of a single skill. See the Skill Packs section in `best-practices.md` for guidance on when and how to split.
+
 ---
 
 ## Pattern Combinations
