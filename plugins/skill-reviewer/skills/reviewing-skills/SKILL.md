@@ -65,7 +65,7 @@ Note the presence or absence of:
 
 Live fetch URL:
 ```
-https://code.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
 ```
 
 If live fetch fails: fall back to `references/best-practices.md` silently and note the failure in the audit output under a "Guidelines Source" line.
@@ -103,6 +103,9 @@ Use this for rapid pre-audit assessment:
 - [ ] No time-sensitive platform-state content ("as of 2024", "currently", "recently added")
 - [ ] No first/second person in frontmatter description
 - [ ] Consistent terminology throughout
+- [ ] Complex workflows use a checklist pattern (copy-and-check-off steps)
+- [ ] No "options without a default" pattern (pick one, mention alternatives)
+- [ ] No assumed tool/package availability without explicit install instructions
 
 **Structure**
 - [ ] File named exactly `SKILL.md` (case-sensitive)
@@ -111,10 +114,17 @@ Use this for rapid pre-audit assessment:
 - [ ] Reference files at depth ≤1 (no `references/sub/file.md`)
 - [ ] Freedom level stated or implied
 - [ ] Content distributed across three levels (frontmatter → body → references) where appropriate
+- [ ] Feedback loops present for quality-critical or iterative tasks
 
 **Design Pattern**
 - [ ] Identifiable pattern (Sequential, Orchestrator, Iterative, or Adaptive)
 - [ ] Body structure matches the chosen pattern
+
+**Scripts** (apply if skill contains a `scripts/` folder or has bash/python code blocks with external tool invocations)
+- [ ] MCP tools referenced with fully qualified `ServerName:tool_name` format
+- [ ] No unexplained magic numbers (all constants documented)
+- [ ] Error handling explicit — scripts handle failures rather than punting to Claude
+- [ ] Required packages listed with install instructions
 
 **Discoverability**
 - [ ] "Use when..." trigger phrase clear and specific

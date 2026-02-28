@@ -19,7 +19,9 @@ This plugin is the counterpart to `claude-md-optimizer` — while that plugin au
 - **Design Pattern Guidance** — Identifies and recommends Sequential, Orchestrator, Iterative, or Adaptive patterns
 - **Skill Scaffolding** — Generates complete skill folders with SKILL.md, references, and scripts
 - **Word Count & Folder Checks** — Validates against Anthropic's 5,000-word limit and folder structure conventions
-- **Live Docs Support** — Optionally fetches latest guidelines from the platform docs URL
+- **Script Quality Checks** — Detects assumed installs, unqualified MCP tool references, voodoo constants, and missing error handling
+- **Workflow Pattern Guidance** — Checklist, feedback loop, template, and conditional workflow patterns in best-practices reference
+- **Live Docs Support** — Optionally fetches latest guidelines from `platform.claude.com`
 - **Safe Write Confirmation** — Requires explicit second confirmation before overwriting files
 
 ## Installation
@@ -127,10 +129,12 @@ plugins/skill-reviewer/
 | Dimension | Max Pts | What it checks |
 |-----------|---------|----------------|
 | Frontmatter Validity | 2 | name format, description rules, third person, trigger phrase |
-| Body Quality | 2 | line count, conciseness, examples, no time-sensitive content |
-| Structure & Progressive Disclosure | 2 | reference depth, TOC, freedom level, headings |
-| Anti-pattern Detection | 2 | Windows paths, `$ARGUMENTS`, XML, reserved words |
+| Body Quality | 2 | line count (<500 ideal), conciseness, examples, no time-sensitive content |
+| Structure & Progressive Disclosure | 2 | reference depth, TOC, freedom level, headings, feedback loops |
+| Anti-pattern Detection | 2 | Windows paths, `$ARGUMENTS`, XML, reserved words, assumed installs, MCP tool format, script error handling |
 | Discoverability | 2 | trigger clarity, keyword density, scope definition |
+
+**Body Quality threshold:** `<500 lines` is the official Anthropic limit for optimal performance. Skills in the 400–499 line range score 2/2 (previously 1/2 in v1.1.0 — this is a scoring threshold change).
 
 **Grade thresholds:**
 
