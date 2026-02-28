@@ -8,12 +8,21 @@ Reference criteria for the `reviewing-skills` audit. Each section maps to a scor
   - [Name Field](#name-field)
   - [Description Field](#description-field)
 - [Body Quality Rules](#body-quality-rules)
+  - [Token Budget Consciousness](#token-budget-consciousness)
 - [Structure and Progressive Disclosure](#structure-and-progressive-disclosure)
   - [Three-Level Progressive Disclosure](#three-level-progressive-disclosure)
   - [Folder Structure](#folder-structure)
   - [Skill Packs](#skill-packs)
+- [Workflow Patterns](#workflow-patterns)
+  - [Checklist Workflow](#checklist-workflow)
+  - [Feedback Loop](#feedback-loop)
+  - [Template Pattern](#template-pattern)
+  - [Conditional Workflow](#conditional-workflow)
 - [Design Patterns](#design-patterns)
 - [Anti-patterns](#anti-patterns)
+  - [Script Quality Anti-patterns](#script-quality-anti-patterns)
+- [MCP Tool References](#mcp-tool-references)
+- [Evaluation-Driven Development](#evaluation-driven-development)
 - [Discoverability Patterns](#discoverability-patterns)
 
 ---
@@ -90,12 +99,11 @@ The body is everything after the closing `---` frontmatter delimiter.
 
 Skills are evaluated against two thresholds: line count (legacy check) and word count (per Anthropic's guide).
 
-**Line count:**
+**Line count (per official Anthropic docs — under 500 lines for optimal performance):**
 
 | Lines | Assessment |
 |-------|------------|
-| <400 | Ideal |
-| 400–499 | Acceptable; consider splitting into reference files |
+| <500 | Ideal |
 | ≥500 | Exceeds limit — must split content into `references/` files |
 
 **Word count (Anthropic guideline):**
@@ -117,6 +125,24 @@ Word count takes precedence when the two thresholds disagree. A 450-line file at
 | Imperative voice | "You should read the file" | "Read the file" |
 | No time-sensitive content | "As of 2024, Claude supports..." | "Claude supports..." (timeless) |
 | No speculation | "This might work..." | Definitive instructions |
+
+### Token Budget Consciousness
+
+Only add context Claude doesn't already have. Before including an explanation, ask: "Does Claude need this, or does it already know it?"
+
+**Verbose (avoid):**
+```
+# Before running this script, you need to make sure Python is installed.
+# Python is a programming language. You can check by running python --version.
+# If it's not installed, you can download it from python.org.
+```
+
+**Concise (preferred):**
+```
+Requires Python 3.8+. Install: brew install python3
+```
+
+Challenge each paragraph. Prune explanations of general concepts (what a JSON file is, how git works) — these waste context budget. Keep explanations of domain-specific behavior Claude cannot know (your team's conventions, specific tool quirks, expected output formats).
 
 ### Time-sensitive content (Error patterns)
 
@@ -239,6 +265,92 @@ If unspecified, Claude defaults to flexible — which may be wrong for process-c
 
 ---
 
+## Workflow Patterns
+
+Beyond the four Anthropic design patterns, skills can use specific content patterns to make complex workflows easier to follow.
+
+### Checklist Workflow
+
+For complex multi-step tasks, present steps as a copyable checklist. Users (or Claude) can copy the checklist and mark steps off as they complete them.
+
+```markdown
+## Deployment Checklist
+
+Copy this checklist and check off each step:
+
+- [ ] Run `npm test` — all tests passing
+- [ ] Update version in `package.json`
+- [ ] Build: `npm run build`
+- [ ] Deploy: `npm run deploy`
+- [ ] Verify smoke tests pass in production
+- [ ] Post deployment note in #deployments Slack channel
+```
+
+Use when: tasks have many steps that can fail independently, order matters, and the user may need to pause and resume.
+
+### Feedback Loop
+
+For quality-critical or iterative output, define an explicit validator → fix → repeat cycle. Do not assume Claude will iterate without instructions to do so.
+
+```markdown
+## Revision Loop
+
+1. Generate initial draft
+2. Run validator: `npm run lint`
+3. If errors: fix each error, then repeat from step 2
+4. Stop when: zero errors, or maximum 3 iterations reached
+5. If still failing after 3 iterations: surface errors to user
+```
+
+Include a stop condition to prevent infinite loops.
+
+### Template Pattern
+
+Two variants — choose based on how strictly the output should match:
+
+**Strict template** (ALWAYS use exactly as shown):
+```markdown
+## Commit Message Template
+
+ALWAYS use this format exactly:
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+```
+
+**Flexible template** (use as default, adapt as needed):
+```markdown
+## Report Template
+
+Use the following as the default structure. Adapt sections to fit the actual findings:
+```
+## Summary
+## Issues Found
+## Recommendations
+```
+```
+
+### Conditional Workflow
+
+When a skill must handle multiple task types with different approaches, use explicit decision branches:
+
+```markdown
+## Step 1: Determine File Type
+
+- If `.ts` or `.tsx` → proceed to [TypeScript Path](#typescript-path)
+- If `.py` → proceed to [Python Path](#python-path)
+- If `.md` → proceed to [Markdown Path](#markdown-path)
+- If unknown → ask user: "What language is this file?"
+```
+
+Include an explicit fallback for unexpected inputs.
+
+---
+
 ## Design Patterns
 
 Anthropic's guide codifies four design patterns for skills. Identifying which pattern a skill follows helps assess whether its structure is appropriate.
@@ -303,6 +415,76 @@ Anti-patterns by severity:
 | Imperative voice avoided | "You should" instead of direct imperatives | Use "Do X" not "You should do X" |
 | No design pattern visible | Skill body has no structural pattern | Consider adopting Sequential, Orchestrator, Iterative, or Adaptive pattern |
 | Missing cross-platform note | Skill uses Claude-Code-only features without noting it | Add note if skill depends on CLI-specific features (e.g., `Bash` tool) |
+
+### Script Quality Anti-patterns
+
+These apply when the skill contains a `scripts/` folder reference or has bash/python code blocks with external tool invocations.
+
+**Detection rule:** Check for any of: a `scripts/` directory, code blocks tagged ` ```bash ` or ` ```python ` containing CLI invocations (`curl`, `npm`, `pip`, `brew`, MCP tool calls).
+
+| Anti-pattern | Severity | Description | Fix |
+|--------------|----------|-------------|-----|
+| Assumes tools/packages installed | Warning | Script calls `npm`, `pip`, or external tools without confirming they're available | Add required packages with install commands |
+| MCP tool without `ServerName:` prefix | Warning | `tool_name` instead of `ServerName:tool_name` | Use fully qualified format: `GitHub:create_issue` |
+| Voodoo constants | Suggestion | Magic numbers (`timeout=30`, `retries=3`) with no explanation | Add inline comment justifying the value |
+| Punts to Claude on error | Warning | Script fails and lets Claude improvise recovery | Add explicit error handling: `if [ $? -ne 0 ]; then echo "Error: ..."; exit 1; fi` |
+| Verbose over-explanation | Suggestion | Explains things Claude already knows (what JSON is, how git works) | Remove; keep only domain-specific context |
+
+**Solve, don't punt:** A script that fails silently forces Claude to improvise recovery, producing inconsistent results. Scripts must handle their own failure modes.
+
+**Clear execution intent:** Distinguish "Run this script" (Claude should execute it) from "Read this script as reference" (Claude should understand its logic). Ambiguity causes misuse.
+
+---
+
+## MCP Tool References
+
+When a skill references MCP tools, always use the fully qualified `ServerName:tool_name` format.
+
+**Bad — causes "tool not found" errors:**
+```
+Call create_issue with the title and body.
+```
+
+**Good — unambiguous:**
+```
+Call GitHub:create_issue with the title and body.
+```
+
+If two MCP servers expose tools with the same name (e.g., both `GitHub` and `GitLab` have `create_issue`), the unqualified name is ambiguous. The `ServerName:` prefix eliminates the ambiguity.
+
+List required MCP servers in the skill body or in a `requirements` note:
+
+```markdown
+**Required MCP servers:** GitHub (for `GitHub:create_issue`, `GitHub:list_repos`)
+```
+
+---
+
+## Evaluation-Driven Development
+
+Build evaluations before writing extensive skill documentation. An evaluation lets you observe real behavior before optimizing words.
+
+**Evaluation structure:**
+
+```yaml
+query: "Review the SKILL.md at plugins/my-plugin/skills/my-skill/SKILL.md"
+expected_behavior:
+  - Reads the target file
+  - Scores all 5 dimensions
+  - Produces a report with grade
+  - Offers to generate corrected version
+files:
+  - plugins/my-plugin/skills/my-skill/SKILL.md
+```
+
+**Iterative refinement cycle:**
+
+1. **Claude A (author)** writes the skill
+2. **Claude B (agent using skill)** attempts a real task with it
+3. **Observe** — what did Claude B do that you didn't expect?
+4. **Refine** — add a rule, clarify an instruction, or remove ambiguity
+
+Repeat until behavior is consistent across 3–5 representative queries. This is faster than trying to anticipate every edge case upfront.
 
 ---
 

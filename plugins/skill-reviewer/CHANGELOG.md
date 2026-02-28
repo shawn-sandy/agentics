@@ -6,6 +6,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.2.0] - 2026-02-27
+
+### Added
+
+- **Workflow patterns** in `best-practices.md` — four new content patterns with examples: checklist workflow, feedback loop, template pattern (strict vs. flexible), and conditional workflow
+- **Token budget consciousness** section in `best-practices.md` — concise vs. verbose example; guidance on challenging each paragraph
+- **Script quality anti-patterns** in `best-practices.md` and `audit-steps.md` — five new checks: assumed installs, unqualified MCP tool references, voodoo constants, script punts to Claude on error, verbose over-explanation
+- **MCP Tool References** section in `best-practices.md` — `ServerName:tool_name` format requirement with bad/good examples
+- **Evaluation-driven development** section in `best-practices.md` — evaluation structure, iterative refinement cycle (Claude A → Claude B → observe → refine)
+- **Feedback loop check** added to Dimension 3 (Structure) in `audit-steps.md` — Suggestion if absent in iterative/quality-critical skills
+- **Script detection rule** in `audit-steps.md` Dimension 4 — defines when script-related checks apply (`scripts/` folder or bash/python code blocks with external tool invocations)
+- New checklist items in `SKILL.md` Quick Reference: checklist workflow, no-options-without-default, assumed installs, feedback loop, Scripts section (MCP format, magic numbers, error handling, install instructions)
+
+### Changed
+
+- **Scoring threshold (backward-incompatible):** Body Quality Dimension 2 Ideal threshold changed from `<400 lines` to `<500 lines`, aligning with official Anthropic documentation ("under 500 lines for optimal performance"). Skills in the 400–499 line range now score 2/2 instead of the previous 1/2 — existing audits will show higher scores.
+- `audit-steps.md` — removed `400–499 Warning` tier from line count; simplified to two bands: `<500` (Ideal) and `≥500` (Error)
+- `audit-steps.md` — updated Dimension 2 scoring: 2pts threshold is now `<500 lines AND <3,000 words` (was `<400`)
+- `audit-steps.md` Step 4 report template — updated `code.claude.com` → `platform.claude.com` in Guidelines Source line
+- `best-practices.md` line count table — updated to reflect `<500` Ideal threshold; removed 400–499 Acceptable band
+- `best-practices.md` TOC — added entries for all new sections
+- `SKILL.md` live fetch URL — corrected `code.claude.com` → `platform.claude.com`
+- `README.md` — updated scoring dimension table to reflect new anti-patterns (script checks, MCP format, assumed installs) and threshold change note
+
 ## [1.1.0] - 2026-02-26
 
 ### Added
