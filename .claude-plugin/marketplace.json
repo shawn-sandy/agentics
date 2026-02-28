@@ -30,7 +30,7 @@
     {
       "name": "claude-md-optimizer",
       "source": "./plugins/claude-md-optimizer",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
       "category": "development",
       "tags": ["claude-md", "configuration", "optimization", "best-practices"]

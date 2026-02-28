@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.0] — 2026-02-27
+
+### Changed
+
+- Refactored SKILL.md to follow three-level progressive disclosure pattern
+- Extracted Step 3 dimension scoring rubrics, example output, and notes to `references/audit-steps.md`
+- Added explicit freedom level statement to skill body
+- Added scope boundary to frontmatter description (excludes SKILL.md files and commands)
+
 ## [1.4.0] - 2026-02-25
 
 ### Fixed
