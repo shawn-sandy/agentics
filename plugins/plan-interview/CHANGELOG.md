@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0] - 2026-02-26
+
+### Added
+
+- Plan name validation in Step 2 — checks whether the filename and H1 heading are descriptive and aligned with the plan's content, suggests better names when they are random or generic, and offers to rename the file
+
 ## [1.1.0] - 2026-02-24
 
 ### Added
