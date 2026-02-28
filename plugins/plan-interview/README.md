@@ -11,6 +11,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | Component | Type | Invocation |
 |-----------|------|-----------|
 | `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
+| `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
 
 ## Usage
@@ -22,6 +23,16 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 /plan-interview:plan-interview ~/.claude/plans/my-feature.md     # specific plan file
 /plan-interview:plan-interview docs/plans/refactor-plan.md       # project-relative path
 ```
+
+### Review & Rename Plans
+
+```
+/plan-interview:review-rename-plans                          # scan project plans directory
+/plan-interview:review-rename-plans docs/plans/my-plan.md    # review a single file
+/plan-interview:review-rename-plans docs/plans/              # scan a specific directory
+```
+
+Reviews plan filenames against their content. Flags files whose names are random, generic, or misaligned with the plan's intent. Offers to rename using `git mv` to preserve history.
 
 ### Skill (automatic activation)
 
