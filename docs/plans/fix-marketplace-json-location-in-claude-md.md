@@ -1,4 +1,4 @@
-# Plan: CLAUDE.md Revision Review
+# Plan: Fix marketplace.json Location Reference in CLAUDE.md
 
 ## Context
 
