@@ -1,231 +1,161 @@
-# Plan: `code-test-suggestion` Plugin
+# Plan: Add `test-review` Skill to `code-test-suggestion` Plugin
 
 ## Context
 
-Developers frequently write tests that verify implementation details rather than behavior, or rely on coverage tools that produce many low-value tests while missing the ones that catch real bugs. This plugin takes a different approach: it reads the code, searches for the developer's plan/intent, identifies critical behaviors and fragile areas, and suggests the specific tests that would catch the most damaging failures — each with a rationale explaining why the test matters.
+The `code-test-suggestion` plugin currently has one skill (suggest new tests) and one command. The user wants a companion skill that reviews *existing* tests using the same analysis parameters and principles, then recommends improvements.
 
-This is the first plugin in the `testing` category for the agentics marketplace.
+**Key difference**: `code-test-suggestion` answers "what tests should I write?" while `test-review` answers "how good are my existing tests and how can I improve them?"
 
-## Plugin Structure
+## What Changes
+
+### New Files (3)
+
+1. **`plugins/code-test-suggestion/skills/test-review/SKILL.md`** — core skill
+2. **`plugins/code-test-suggestion/skills/test-review/references/test-quality-checklist.md`** — progressive disclosure reference for review dimensions
+3. **`plugins/code-test-suggestion/commands/review-tests.md`** — explicit command with full workflow
+
+### Modified Files (4)
+
+4. **`plugins/code-test-suggestion/.claude-plugin/plugin.json`** — bump to 1.1.0, add `test-review` keyword
+5. **`.claude-plugin/marketplace.json`** — bump version to 1.1.0
+6. **`plugins/code-test-suggestion/README.md`** — add test-review skill docs
+7. **`plugins/code-test-suggestion/CHANGELOG.md`** — add 1.1.0 entry
+
+## Skill Design: `test-review`
+
+### Activation Triggers (Non-Overlapping)
 
 ```
-plugins/code-test-suggestion/
-├── .claude-plugin/
-│   └── plugin.json
-├── CHANGELOG.md
-├── README.md
-├── commands/
-│   └── suggest-tests.md
-└── skills/
-    └── code-test-suggestion/
-        ├── SKILL.md
-        └── references/
-            └── test-analysis-guide.md
+description: Reviews existing tests for quality, coverage gaps, and alignment with code behavior
+and developer intent. Use when the user asks to review tests, audit test quality, check test
+coverage, improve tests, or asks "are my tests good". Also use when the user says "review these
+tests", "audit my test suite", "what's wrong with my tests", or "how can I improve my tests".
+Does not suggest new tests from scratch — reviews and improves what already exists. Not a code
+quality review or a test runner.
 ```
 
-## Files to Create/Modify
+**Boundary with other skills:**
+| Phrase | Activates |
+|--------|-----------|
+| "suggest tests for this code" | `code-test-suggestion` |
+| "review my tests" | `test-review` |
+| "review this code" | `code-review` |
 
-### 1. `plugins/code-test-suggestion/.claude-plugin/plugin.json`
-
-Standard plugin manifest, version `1.0.0`, category `testing`. Follows the exact pattern from existing plugins (code-review, plan-interview, etc.).
-
-```json
-{
-  "name": "code-test-suggestion",
-  "version": "1.0.0",
-  "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
-  "author": { "name": "Agentics Project" },
-  "license": "MIT",
-  "keywords": ["testing", "test-suggestion", "test-driven", "code-analysis", "testability"],
-  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/code-test-suggestion",
-  "repository": "https://github.com/shawn-sandy/agentics"
-}
-```
-
-### 2. `plugins/code-test-suggestion/skills/code-test-suggestion/SKILL.md` (core file)
-
-**Activation triggers** (non-overlapping with code-review's "review code, check for problems, analyze code quality"):
-```
-description: Suggests targeted, meaningful tests for code based on what the code actually does
-and why. Use when the user asks to suggest tests, recommend tests, identify what to test, review
-testability, find untested behavior, or asks "what tests should I write". Also use when the user
-says "test this code", "what would you test here", or "help me test this feature". Does not write
-or run tests directly — suggests and explains what tests would be valuable and why.
-```
-
-**Freedom level:** Flexible — steps execute in order but depth adapts to complexity.
-
-**6-step workflow:**
+### Workflow (7 steps)
 
 | Step | Purpose |
 |------|---------|
-| **Step 0** | Create `TodoWrite` progress todos for visibility |
-| **Step 1 — Identify Target Code** | Resolve via: explicit path → conversation context → `git diff --name-only` → ask user |
-| **Step 2 — Search for Plan** | Search `docs/plans/`, `~/.claude/plans/`, commit messages, inline comments for developer intent. Extract: goal, key behaviors, edge cases, acceptance criteria |
-| **Step 3 — Analyze the Code** | 5 dimensions: (a) behavioral summary, (b) critical paths (happy/error/branching/state), (c) integration points, (d) implicit contracts, (e) fragility areas. Loads `references/test-analysis-guide.md` for detailed heuristics |
-| **Step 4 — Detect Test Infrastructure** | Find framework from config files, glob for existing test files, read 1-2 nearby tests to learn conventions (assertion style, mocking patterns, naming). **Also detect coverage target** from jest.config, pyproject.toml, .nycrc, codecov.yml, CI config |
-| **Step 5 — Suggest Tests** | Prioritized output **grouped by file, then by priority** within each file: P1 (critical behavior), P2 (error handling/edge cases), P3 (integration contracts), P4 `[coverage-only]` (trivial code needed for target), Coverage Assessment, plus "Tests NOT Suggested" section. Each test has: what, why, code reference, approach |
-| **Step 6 — Offer to Write** | Ask user if they want test files written using detected project conventions |
+| **Step 0** | Create `TodoWrite` progress todos |
+| **Step 1 — Identify Target Tests** | Find existing test files: explicit path → conversation context → glob for test files near recent changes → ask user |
+| **Step 2 — Locate Source Code Under Test** | Find the implementation files those tests cover (infer from imports, naming conventions, directory structure) |
+| **Step 3 — Search for Implementation Plan** | Same as code-test-suggestion Step 2 — search docs/plans/, ~/.claude/plans/, commit messages, inline comments |
+| **Step 4 — Analyze Source Code** | Same 5 dimensions as code-test-suggestion Step 3 — behavioral summary, critical paths, integration points, implicit contracts, fragility areas. Loads shared `../code-test-suggestion/references/test-analysis-guide.md` |
+| **Step 5 — Detect Test Infrastructure & Coverage Target** | Same as code-test-suggestion Step 4 (4a-4d) — framework, existing patterns, coverage target |
+| **Step 6 — Review Existing Tests** | Core output: evaluate each test against the source code analysis and review principles. Load `references/test-quality-checklist.md` for detailed review dimensions |
+| **Step 7 — Offer to Apply Fixes** | Ask user if they want improvements applied to the test files |
 
-**Key suggestion principles built into Step 5:**
-- Behavior over implementation ("returns 401 on expired token" not "calls jwt.verify once")
-- Plan intent drives test design, coverage validates completeness
-- One reason to fail per test
-- Name tests as behavior sentences
-- Prioritize by blast radius
-- Acknowledge existing coverage
-- Cover thoroughly: 5-10 behavior-driven tests to start, plus `[coverage-only]` tests for trivial code if needed to meet the project's target
+### Step 6 Review Dimensions (from `test-quality-checklist.md`)
 
-### 3. `plugins/code-test-suggestion/skills/code-test-suggestion/references/test-analysis-guide.md`
+1. **Behavior vs Implementation** — Does the test verify what the code does or how it does it? Flag tests that would break on refactor without behavior change.
+2. **Test Naming** — Are tests named as behavior sentences? Flag vague names like "test1", "testFunction", "it works".
+3. **Assertion Focus** — Does each test have one reason to fail? Flag tests with 5+ assertions testing different behaviors.
+4. **Coverage Gaps** — Cross-reference source code analysis (Step 4) against what the tests actually cover. Identify critical paths, error paths, and edge cases with no test.
+5. **Mock Hygiene** — Are mocks appropriate? Flag over-mocking (mocking internals of the system under test), under-mocking (real calls to external services), stale mocks (mock behavior doesn't match current API).
+6. **Test Fragility** — Will the test break if implementation changes but behavior stays the same? Flag: testing internal method calls, asserting on specific log messages, snapshot tests of unstable output.
+7. **Setup/Teardown Isolation** — Is shared state leaking between tests? Flag: missing cleanup, global variable mutation, database state not reset.
+8. **Plan Alignment** — If a plan exists, do the tests verify the plan's key behaviors, edge cases, and acceptance criteria? List plan requirements with no corresponding test.
+9. **Coverage Target Progress** — How do existing tests compare to the project's coverage target? List functions/branches that are uncovered and contribute to the gap.
 
-Progressive disclosure Level 3 reference (loaded on demand during Step 3). Contains:
-- Behavioral summary heuristics (4 guiding questions)
-- Critical path identification signals (happy path, error path, state transitions)
-- Integration point test strategies with mock/no-mock guidance table
-- Implicit contract detection patterns (sorting, uniqueness, timing, idempotency, atomicity)
-- Fragility heuristics for: regex, numeric operations, string manipulation, collections
-- Language-specific patterns: TypeScript/JS, Python, Go, Rust (lean set for v1.0.0 — Claude can analyze any language; additional language heuristics can be added in v1.1.0)
+### Step 6 Output Format
 
-### 4. `plugins/code-test-suggestion/README.md`
+```markdown
+## Test Review for `[test-filename]`
 
-Plugin documentation covering: purpose, how it differs from code-review, skill activation phrases, command usage (`/code-test-suggestion:suggest-tests [path]`), usage examples (with plan, for recent changes), output structure explanation, installation instructions, and plugin structure.
+**Source code:** `[source-file]`
+**Plan context:** [Brief note or "No plan found"]
+**Test framework:** [Detected framework]
 
-### 5. `plugins/code-test-suggestion/commands/suggest-tests.md`
+### Summary
 
-Explicit command invoked via `/code-test-suggestion:suggest-tests [file-path]`. Follows the plan-interview command pattern with frontmatter:
+[2-3 sentence overview: how many tests, what they cover well, where the biggest gaps are]
+
+### Critical Issues
+
+Issues that make tests unreliable, misleading, or actively harmful.
+
+#### Issue: [Descriptive name]
+
+**Test:** `[test name or describe block]` (line [N])
+**Problem:** [What's wrong]
+**Impact:** [Why this matters — false confidence, missed bugs, CI noise]
+**Fix:**
+
+```[language]
+// Before → After, or concrete replacement code
+```
+
+### Improvements
+
+Non-critical issues that would make tests more valuable or maintainable.
+
+[Same format as Critical Issues]
+
+### Coverage Gaps
+
+Behaviors identified in the source code analysis (Step 4) that have no corresponding test.
+
+| Untested Behavior | Source Reference | Priority | Why It Matters |
+|-------------------|-----------------|----------|----------------|
+| [behavior] | [file:line] | P1/P2/P3 | [what breaks undetected] |
+
+**Coverage target:** [X]% | No target configured
+**Estimated current gap:** [qualitative: "3 of 8 exported functions have no test"]
+
+### What's Working Well
+
+[1-3 things the tests do right — reinforce good practices]
+```
+
+### Review Principles (Shared from code-test-suggestion)
+
+The same 8 principles from code-test-suggestion, adapted for review context:
+
+1. **Behavior over implementation** — Flag tests that assert on internal calls rather than outcomes
+2. **Plan intent drives review, coverage validates completeness** — Check tests against plan requirements, verify coverage target progress
+3. **One reason to fail per test** — Flag multi-assertion tests that conflate different behaviors
+4. **Name tests as behavior sentences** — Flag vague or generic test names
+5. **Prioritize by blast radius** — Focus review on tests that guard the most critical code paths
+6. **Acknowledge what's covered** — Credit existing tests that already work well
+7. **Evaluate mocking strategy** — Flag over-mocking, under-mocking, and stale mocks
+8. **Coverage gaps over trivial style issues** — Missing tests for critical paths matter more than naming conventions
+
+## Reference File: `test-quality-checklist.md`
+
+Progressive disclosure reference loaded during Step 6. Contains detailed heuristics for each of the 9 review dimensions listed above, with language-specific patterns (same languages as test-analysis-guide.md: TS/JS, Python, Go, Rust).
+
+Includes specific anti-patterns to flag:
+- Implementation coupling patterns (e.g., `expect(spy).toHaveBeenCalledWith(...)` on internal methods)
+- Snapshot test fragility signals
+- Test order dependency signs
+- Shared mutable state patterns
+- Assertion-free tests ("tests that can never fail")
+- Hardcoded values that should be parameterized
+
+## Version Bump
+
+This is a MINOR version bump (1.0.0 → 1.1.0): new skill added, backward compatible.
+
+- `plugins/code-test-suggestion/.claude-plugin/plugin.json`: version → "1.1.0"
+- `.claude-plugin/marketplace.json`: code-test-suggestion entry version → "1.1.0"
+
+## Command: `review-tests.md`
+
+Same pattern as `suggest-tests.md` — full 7-step workflow duplicated with `$ARGUMENTS` for explicit test file paths.
 
 ```markdown
 ---
-description: Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent
-argument-hint: [file-path] - path to file(s) to analyze; omit to use recent git changes
+description: Review existing tests for quality, coverage gaps, and alignment with code behavior
+argument-hint: [test-file-path] - path to test file(s) to review; omit to find tests near recent changes
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 ---
 ```
-
-The command body contains the **full 6-step workflow** (duplicated from the skill, not a reference). This is necessary because Claude does not auto-load SKILL.md when a command runs — the plan-interview plugin follows the same pattern. The only difference from the skill is Step 1: the command uses `$ARGUMENTS` as the primary file path input, while the skill infers targets from conversation context.
-
-### 6. `plugins/code-test-suggestion/CHANGELOG.md`
-
-Initial `[1.0.0] - 2026-03-01` entry documenting all 6 steps, the reference file, and the `suggest-tests` command.
-
-### 7. `.claude-plugin/marketplace.json` (EDIT existing file)
-
-Add 8th plugin entry to the `plugins` array:
-```json
-{
-  "name": "code-test-suggestion",
-  "source": "./plugins/code-test-suggestion",
-  "version": "1.0.0",
-  "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
-  "category": "testing",
-  "tags": ["testing", "test-suggestion", "test-driven", "code-analysis", "testability"]
-}
-```
-
-## Differentiation from code-review
-
-| | code-review | code-test-suggestion |
-|---|---|---|
-| **Purpose** | Finds what's wrong with code | Designs how to prove code works correctly |
-| **Triggers** | "review code", "check for problems", "analyze quality" | "suggest tests", "what tests should I write", "test this code" |
-| **Output** | Issues + fixes | Test specifications + rationale |
-| **Uses plans?** | No | Yes — plans inform test intent |
-
-## Reusable Patterns from Existing Plugins
-
-- **TodoWrite progress tracking**: from `plugins/plan-interview/skills/plan-interview/SKILL.md` (Step 0 pattern)
-- **Plan file resolution logic**: adapted from plan-interview's Step 1 priority-based search
-- **Progressive disclosure with references/**: from `plugins/claude-md-optimizer/skills/claude-md-optimizer/` and `plugins/skill-reviewer/`
-- **Plugin manifest structure**: from any existing plugin's `.claude-plugin/plugin.json`
-
-## Coverage-Aware Update (Post-v1.0.0 Refinement)
-
-The initial v1.0.0 implementation leans too far away from coverage — the wording actively dismisses it ("not arbitrary coverage metrics"). The skill should prioritize behavior-driven tests **while also striving to meet the project's coverage target** (or maximum coverage when no target is defined).
-
-### Changes Required (4 files)
-
-#### SKILL.md — `plugins/code-test-suggestion/skills/code-test-suggestion/SKILL.md`
-
-1. **Line 6 (intro)**: Change from:
-   > "Each suggested test is tied to actual code behavior, not arbitrary coverage metrics."
-
-   To:
-   > "Each suggested test is tied to actual code behavior. While behavior and intent drive prioritization, always strive to meet the project's coverage target or maximize coverage when no target is defined."
-
-2. **Step 4 — Add sub-step 4d (after 4c)**: New section `4d. Detect Coverage Target`:
-   - Search for coverage thresholds in: `jest.config.*` (`coverageThreshold`), `package.json` (`jest.coverageThreshold`), `pyproject.toml` (`[tool.coverage.report]`), `.nycrc`, `codecov.yml`, `.coveragerc`, CI config files
-   - Report detected target: "Coverage target: [X]% (from [config file])."
-   - If no target found: "No coverage target configured. Aiming for maximum practical coverage."
-
-3. **Step 5 output format**: Add a `**Coverage assessment:**` section to the output template after the Priority 3 tests and before "Tests NOT Suggested":
-   > ```markdown
-   > ### Coverage Assessment
-   >
-   > **Coverage target:** [X]% (from [config file]) | No target configured — aiming for maximum practical coverage
-   > **Functions/methods covered by suggestions:** [list covered]
-   > **Uncovered gaps:** [list functions, branches, or code paths not covered by any suggested test — with brief reason each is uncovered (e.g., "trivial getter", "dead code", "unreachable branch")]
-   > ```
-   Note: Do NOT include a numeric coverage percentage estimate — Claude cannot run the actual coverage tool, so a guessed number would be misleading. Instead, list what is and is not covered qualitatively.
-
-4. **Suggestion principle #2**: Change from:
-   > "Plan intent over arbitrary coverage."
-
-   To:
-   > "Plan intent drives test design, coverage validates completeness. Use the plan to determine *what* to test and *why*. Use coverage analysis to ensure nothing important is missed. If the project defines a coverage target, ensure suggestions would meet or exceed it."
-
-5. **Suggestion principle #8**: Change from:
-   > "Limit suggestions to what matters. Aim for 5-10 test suggestions for a typical file. Do not produce 30 trivial tests. Quality over quantity."
-
-   To:
-   > "Cover thoroughly, not trivially. Aim for 5-10 behavior-driven test suggestions for a typical file, but add more if needed to reach the project's coverage target. If the coverage target requires testing trivial code (simple getters, pass-through methods, one-line wrappers), suggest these tests with a **`[coverage-only]`** tag and a note that they provide minimal behavioral value but are needed for the target. Never leave coverage gaps unacknowledged — if a function or branch is intentionally not tested, state why in the Coverage Assessment."
-
-#### suggest-tests.md — `plugins/code-test-suggestion/commands/suggest-tests.md`
-
-Same 5 changes as SKILL.md (the command duplicates the full workflow):
-1. Line 9 intro wording
-2. Add Step 4d (coverage target detection)
-3. Add coverage assessment line to Step 5 output format
-4. Update suggestion principle #2
-5. Update suggestion principle #8
-
-#### README.md — `plugins/code-test-suggestion/README.md`
-
-1. Update the "Purpose" paragraph to mention that the skill also aims for coverage:
-   > Add: "At the same time, it ensures suggested tests would meet the project's coverage target — or maximize coverage when no target is defined — so you get both meaningful and thorough test suites."
-
-2. Update the output structure section to mention coverage assessment.
-
-#### CHANGELOG.md — `plugins/code-test-suggestion/CHANGELOG.md`
-
-Add a new entry or update 1.0.0:
-> - Coverage-aware: Step 4d detects project coverage targets from jest.config, pyproject.toml, .nycrc, codecov.yml; Step 5 includes coverage assessment and ensures suggestions meet or exceed the target
-
-### What does NOT change
-
-- **plugin.json / marketplace.json descriptions**: Keep concise. The description already says "tied to actual behavior and intent" which is accurate — coverage awareness is an implementation detail, not the tagline.
-- **test-analysis-guide.md**: No changes needed — it contains heuristics for *analyzing code*, not coverage policy.
-- **Activation triggers**: No change — coverage awareness doesn't change when the skill activates.
-- **Version**: Stays at 1.0.0 since this is a refinement before first release, not a post-release change.
-
-## Verification
-
-1. **Version sync**: Confirm `plugin.json` version matches `marketplace.json` entry:
-   ```bash
-   grep -r '"version"' plugins/code-test-suggestion/.claude-plugin/ .claude-plugin/marketplace.json
-   ```
-2. **Structure validation**: Verify all required files exist:
-   ```bash
-   ls -la plugins/code-test-suggestion/.claude-plugin/plugin.json
-   ls -la plugins/code-test-suggestion/skills/code-test-suggestion/SKILL.md
-   ls -la plugins/code-test-suggestion/skills/code-test-suggestion/references/test-analysis-guide.md
-   ```
-3. **JSON validity**: Parse both JSON files:
-   ```bash
-   python3 -c "import json; json.load(open('plugins/code-test-suggestion/.claude-plugin/plugin.json'))"
-   python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))"
-   ```
-4. **Local load test**:
-   ```bash
-   claude --plugin-dir ~/devbox/agentics/plugins/code-test-suggestion
-   ```
-   Then trigger with: "suggest tests for [some file]" — verify skill activates and follows the 6-step workflow.

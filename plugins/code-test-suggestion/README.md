@@ -15,7 +15,9 @@ The `code-review` plugin reviews code for quality, bugs, security, and best prac
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `code-test-suggestion` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
+| `test-review` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
 | `suggest-tests` | Command | Explicitly invoked via `/code-test-suggestion:suggest-tests [file-path]` |
+| `review-tests` | Command | Explicitly invoked via `/code-test-suggestion:review-tests [test-file-path]` |
 
 ## Usage
 
@@ -55,7 +57,27 @@ Suggest tests for my recent changes
 What should I test in my current branch?
 ```
 
-## What the Skill Does
+### Review existing tests (test-review skill)
+
+```
+Review my tests for src/services/auth.test.ts
+Are my tests good?
+Audit my test suite
+What's wrong with my tests?
+How can I improve these tests?
+```
+
+### Explicit review command
+
+```
+/code-test-suggestion:review-tests src/services/__tests__/auth.test.ts
+/code-test-suggestion:review-tests src/services/
+/code-test-suggestion:review-tests
+```
+
+## What the Skills Do
+
+### code-test-suggestion (suggest new tests)
 
 1. Identifies target code (from your message, conversation context, or recent git changes)
 2. Searches for an implementation plan to understand your intent
@@ -76,6 +98,26 @@ Suggestions are organized by file, then by priority within each file:
 - **Tests NOT Suggested** — Explains why certain obvious-seeming tests would be low-value.
 
 Each suggestion includes: what behavior to test, why the test matters, the code it validates, and a concrete test approach using your framework.
+
+### test-review (review existing tests)
+
+1. Identifies target test files (from your message, conversation context, or near recent changes)
+2. Locates the source code those tests cover (from imports, naming conventions, directory structure)
+3. Searches for an implementation plan to understand intended behavior
+4. Analyzes the source code across 5 dimensions (same as code-test-suggestion)
+5. Detects test framework and coverage target
+6. Reviews each test against the source analysis across 9 dimensions: behavior vs implementation, naming, assertion focus, coverage gaps, mock hygiene, fragility, isolation, plan alignment, coverage target progress
+7. Offers to apply fixes to the test files
+
+### test-review Output Structure
+
+Reviews are organized by test file:
+
+- **Summary** — Overview of test count, strengths, and biggest gaps.
+- **Critical Issues** — Tests that are unreliable, misleading, or harmful. Each with test name, line number, problem, impact, and concrete fix.
+- **Improvements** — Non-critical issues that would make tests more valuable.
+- **Coverage Gaps** — Behaviors from the source code analysis with no corresponding test, ranked by priority.
+- **What's Working Well** — Things the tests do right.
 
 ## Installation
 
@@ -102,12 +144,17 @@ plugins/code-test-suggestion/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── commands/
-│   └── suggest-tests.md
+│   ├── suggest-tests.md
+│   └── review-tests.md
 ├── skills/
-│   └── code-test-suggestion/
+│   ├── code-test-suggestion/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── test-analysis-guide.md
+│   └── test-review/
 │       ├── SKILL.md
 │       └── references/
-│           └── test-analysis-guide.md
+│           └── test-quality-checklist.md
 ├── README.md
 └── CHANGELOG.md
 ```
