@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0] - 2026-03-01
+
+### Removed
+
+- **BREAKING:** Removed `suggest-tests` command (`/code-test-suggestion:suggest-tests`)
+- **BREAKING:** Removed `review-tests` command (`/code-test-suggestion:review-tests`)
+- Removed `commands/` directory
+
+### Note
+
+Both workflows remain fully available as auto-activated skills. Say "suggest tests for ..." or "review my tests" to trigger them.
+
 ## [1.1.0] - 2026-03-01
 
 ### Added
