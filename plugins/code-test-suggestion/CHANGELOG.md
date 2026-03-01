@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0] - 2026-03-01
+
+### Added
+
+- New skill: `test-review` — reviews existing tests for quality, coverage gaps, and alignment with code behavior and developer intent
+- 7-step review workflow: identify tests → locate source code → search for plan → analyze source → detect infrastructure → review tests across 9 dimensions → offer to apply fixes
+- Review dimensions: behavior vs implementation, test naming, assertion focus, coverage gaps, mock hygiene, test fragility, setup/teardown isolation, plan alignment, coverage target progress
+- Reference file: test-quality-checklist.md with detailed heuristics for each review dimension, anti-patterns, and language-specific review patterns
+- Command: `/code-test-suggestion:review-tests [test-file-path]` for explicit invocation
+
 ## [1.0.0] - 2026-03-01
 
 ### Added
