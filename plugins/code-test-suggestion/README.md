@@ -16,12 +16,10 @@ The `code-review` plugin reviews code for quality, bugs, security, and best prac
 |-----------|------|-----------|
 | `code-test-suggestion` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
 | `test-review` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
-| `suggest-tests` | Command | Explicitly invoked via `/code-test-suggestion:suggest-tests [file-path]` |
-| `review-tests` | Command | Explicitly invoked via `/code-test-suggestion:review-tests [test-file-path]` |
 
 ## Usage
 
-### Automatic activation (skill)
+### Suggest tests (skill)
 
 Describe what you want:
 
@@ -31,14 +29,6 @@ What tests should I write for this function?
 Help me test the checkout flow
 What would you test in this code?
 Review this module for testability
-```
-
-### Explicit command
-
-```
-/code-test-suggestion:suggest-tests src/services/auth.ts
-/code-test-suggestion:suggest-tests src/services/
-/code-test-suggestion:suggest-tests
 ```
 
 ### With a plan
@@ -65,14 +55,6 @@ Are my tests good?
 Audit my test suite
 What's wrong with my tests?
 How can I improve these tests?
-```
-
-### Explicit review command
-
-```
-/code-test-suggestion:review-tests src/services/__tests__/auth.test.ts
-/code-test-suggestion:review-tests src/services/
-/code-test-suggestion:review-tests
 ```
 
 ## What the Skills Do
@@ -143,9 +125,6 @@ claude --plugin-dir /path/to/agentics/plugins/code-test-suggestion
 plugins/code-test-suggestion/
 ├── .claude-plugin/
 │   └── plugin.json
-├── commands/
-│   ├── suggest-tests.md
-│   └── review-tests.md
 ├── skills/
 │   ├── code-test-suggestion/
 │   │   ├── SKILL.md
