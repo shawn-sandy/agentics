@@ -4,7 +4,7 @@ Analyze code and suggest specific, purpose-driven tests tied to actual behavior 
 
 ## Purpose
 
-Developers often face two problems with testing: either they write tests after the fact that verify implementation details rather than behavior, or they rely on coverage tools to tell them what to test — which leads to many tests that catch nothing useful and few tests that catch real bugs. This plugin takes a different approach: it reads the code, looks for the developer's plan or intent, identifies critical behaviors and fragile areas, and suggests the specific tests that would catch the most damaging failures.
+Developers often face two problems with testing: either they write tests after the fact that verify implementation details rather than behavior, or they rely on coverage tools to tell them what to test — which leads to many tests that catch nothing useful and few tests that catch real bugs. This plugin takes a different approach: it reads the code, looks for the developer's plan or intent, identifies critical behaviors and fragile areas, and suggests the specific tests that would catch the most damaging failures. At the same time, it ensures suggested tests would meet the project's coverage target — or maximize coverage when no target is defined — so you get both meaningful and thorough test suites.
 
 ## How It Differs from code-review
 
@@ -71,6 +71,8 @@ Suggestions are organized by file, then by priority within each file:
 - **Priority 1: Critical Behavior Tests** — Verify the code's core purpose. Write these first.
 - **Priority 2: Error Handling and Edge Cases** — Verify graceful failure.
 - **Priority 3: Integration Contract Tests** — Verify correct interaction with dependencies.
+- **Priority 4: Coverage-Only Tests** — Trivial code tests tagged `[coverage-only]`, included only when needed to meet the project's coverage target.
+- **Coverage Assessment** — Lists covered functions and uncovered gaps (qualitative, not a guessed percentage).
 - **Tests NOT Suggested** — Explains why certain obvious-seeming tests would be low-value.
 
 Each suggestion includes: what behavior to test, why the test matters, the code it validates, and a concrete test approach using your framework.

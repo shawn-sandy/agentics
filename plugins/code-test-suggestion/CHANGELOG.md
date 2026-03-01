@@ -13,3 +13,4 @@
 - Step 6: Offers to write complete test files using detected project conventions
 - Reference file: test-analysis-guide.md with detailed heuristics for code analysis, language-specific patterns (TypeScript/JS, Python, Go, Rust), and mock strategy guidance
 - Command: `/code-test-suggestion:suggest-tests [file-path]` for explicit invocation
+- Coverage-aware: Step 4d detects project coverage targets from jest.config, pyproject.toml, .nycrc, codecov.yml; Step 5 includes Coverage Assessment section and `[coverage-only]` tagged tests for trivial code needed to meet the target
