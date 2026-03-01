@@ -6,7 +6,7 @@ allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 
 # /code-test-suggestion:suggest-tests
 
-Analyze code and suggest specific, purpose-driven tests. Each suggested test is tied to actual code behavior, not arbitrary coverage metrics.
+Analyze code and suggest specific, purpose-driven tests. Each suggested test is tied to actual code behavior. While behavior and intent drive prioritization, always strive to meet the project's coverage target or maximize coverage when no target is defined.
 
 ## Usage
 
@@ -156,6 +156,21 @@ Report the detected framework and patterns to the user: "Detected: [framework]. 
 
 If no tests exist at all, note this: "No existing tests found. Suggestions will use [framework] based on project configuration." If no framework is detected either, ask the user which framework they prefer.
 
+#### 4d. Detect Coverage Target
+
+Search for coverage thresholds in project configuration:
+
+- `jest.config.*` or `package.json` — look for `coverageThreshold` (e.g., `{ global: { branches: 80, functions: 80, lines: 80 } }`)
+- `pyproject.toml` — look for `[tool.coverage.report]` with `fail_under`
+- `.nycrc` or `.nycrc.json` — look for `check-coverage` and threshold values
+- `codecov.yml` — look for `coverage.status.project.default.target`
+- `.coveragerc` — look for `[report]` with `fail_under`
+- `.github/workflows/` or CI config — look for coverage enforcement flags in test commands
+
+Report the detected target: "Coverage target: [X]% (from [config file])."
+
+If no target is found: "No coverage target configured. Aiming for maximum practical coverage."
+
 ### Step 5 — Suggest Tests with Rationale
 
 This is the core output. For each suggestion, explain:
@@ -198,6 +213,16 @@ These verify the code fails gracefully.
 
 These verify the code works correctly with its dependencies.
 
+### Priority 4: Coverage-Only Tests `[coverage-only]`
+
+Tests for trivial code needed to meet the project's coverage target. Each tagged `[coverage-only]`.
+
+### Coverage Assessment
+
+**Coverage target:** [X]% (from [config file]) | No target configured — aiming for maximum practical coverage
+**Functions/methods covered by suggestions:** [list covered]
+**Uncovered gaps:** [list functions, branches, or code paths not covered — with brief reason]
+
 ### Tests NOT Suggested (and Why)
 
 [List 1-3 tests that might seem obvious but are not valuable here]
@@ -209,7 +234,7 @@ Follow these rules when deciding what to suggest:
 
 1. **Behavior over implementation.** Test what the code does, not how it does it internally. "When given an expired token, returns 401" is good. "Calls `jwt.verify()` once" is bad.
 
-2. **Plan intent over arbitrary coverage.** If the plan says "users must not be able to access other users' data", suggest a test that verifies cross-user data isolation.
+2. **Plan intent drives test design, coverage validates completeness.** Use the plan to determine *what* to test and *why*. Use coverage analysis to ensure nothing important is missed. If the project defines a coverage target, ensure suggestions would meet or exceed it.
 
 3. **One reason to fail per test.** Each suggested test should have exactly one reason to fail.
 
@@ -221,7 +246,7 @@ Follow these rules when deciding what to suggest:
 
 7. **Suggest mocking strategy when relevant.** Specify what to mock and why.
 
-8. **Limit suggestions to what matters.** Aim for 5-10 test suggestions for a typical file.
+8. **Cover thoroughly, not trivially.** Aim for 5-10 behavior-driven test suggestions for a typical file, but add more if needed to reach the project's coverage target. If the coverage target requires testing trivial code, suggest these with a **`[coverage-only]`** tag. Never leave coverage gaps unacknowledged.
 
 ### Step 6 — Offer to Write Test Files
 

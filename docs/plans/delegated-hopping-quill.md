@@ -63,18 +63,18 @@ or run tests directly — suggests and explains what tests would be valuable and
 | **Step 1 — Identify Target Code** | Resolve via: explicit path → conversation context → `git diff --name-only` → ask user |
 | **Step 2 — Search for Plan** | Search `docs/plans/`, `~/.claude/plans/`, commit messages, inline comments for developer intent. Extract: goal, key behaviors, edge cases, acceptance criteria |
 | **Step 3 — Analyze the Code** | 5 dimensions: (a) behavioral summary, (b) critical paths (happy/error/branching/state), (c) integration points, (d) implicit contracts, (e) fragility areas. Loads `references/test-analysis-guide.md` for detailed heuristics |
-| **Step 4 — Detect Test Infrastructure** | Find framework from config files, glob for existing test files, read 1-2 nearby tests to learn conventions (assertion style, mocking patterns, naming) |
-| **Step 5 — Suggest Tests** | Prioritized output **grouped by file, then by priority** within each file: P1 (critical behavior), P2 (error handling/edge cases), P3 (integration contracts), plus "Tests NOT Suggested" section. Each test has: what, why, code reference, approach |
+| **Step 4 — Detect Test Infrastructure** | Find framework from config files, glob for existing test files, read 1-2 nearby tests to learn conventions (assertion style, mocking patterns, naming). **Also detect coverage target** from jest.config, pyproject.toml, .nycrc, codecov.yml, CI config |
+| **Step 5 — Suggest Tests** | Prioritized output **grouped by file, then by priority** within each file: P1 (critical behavior), P2 (error handling/edge cases), P3 (integration contracts), P4 `[coverage-only]` (trivial code needed for target), Coverage Assessment, plus "Tests NOT Suggested" section. Each test has: what, why, code reference, approach |
 | **Step 6 — Offer to Write** | Ask user if they want test files written using detected project conventions |
 
 **Key suggestion principles built into Step 5:**
 - Behavior over implementation ("returns 401 on expired token" not "calls jwt.verify once")
-- Plan intent over arbitrary coverage
+- Plan intent drives test design, coverage validates completeness
 - One reason to fail per test
 - Name tests as behavior sentences
 - Prioritize by blast radius
 - Acknowledge existing coverage
-- Limit to 5-10 suggestions per file (quality over quantity)
+- Cover thoroughly: 5-10 behavior-driven tests to start, plus `[coverage-only]` tests for trivial code if needed to meet the project's target
 
 ### 3. `plugins/code-test-suggestion/skills/code-test-suggestion/references/test-analysis-guide.md`
 
@@ -137,6 +137,75 @@ Add 8th plugin entry to the `plugins` array:
 - **Plan file resolution logic**: adapted from plan-interview's Step 1 priority-based search
 - **Progressive disclosure with references/**: from `plugins/claude-md-optimizer/skills/claude-md-optimizer/` and `plugins/skill-reviewer/`
 - **Plugin manifest structure**: from any existing plugin's `.claude-plugin/plugin.json`
+
+## Coverage-Aware Update (Post-v1.0.0 Refinement)
+
+The initial v1.0.0 implementation leans too far away from coverage — the wording actively dismisses it ("not arbitrary coverage metrics"). The skill should prioritize behavior-driven tests **while also striving to meet the project's coverage target** (or maximum coverage when no target is defined).
+
+### Changes Required (4 files)
+
+#### SKILL.md — `plugins/code-test-suggestion/skills/code-test-suggestion/SKILL.md`
+
+1. **Line 6 (intro)**: Change from:
+   > "Each suggested test is tied to actual code behavior, not arbitrary coverage metrics."
+
+   To:
+   > "Each suggested test is tied to actual code behavior. While behavior and intent drive prioritization, always strive to meet the project's coverage target or maximize coverage when no target is defined."
+
+2. **Step 4 — Add sub-step 4d (after 4c)**: New section `4d. Detect Coverage Target`:
+   - Search for coverage thresholds in: `jest.config.*` (`coverageThreshold`), `package.json` (`jest.coverageThreshold`), `pyproject.toml` (`[tool.coverage.report]`), `.nycrc`, `codecov.yml`, `.coveragerc`, CI config files
+   - Report detected target: "Coverage target: [X]% (from [config file])."
+   - If no target found: "No coverage target configured. Aiming for maximum practical coverage."
+
+3. **Step 5 output format**: Add a `**Coverage assessment:**` section to the output template after the Priority 3 tests and before "Tests NOT Suggested":
+   > ```markdown
+   > ### Coverage Assessment
+   >
+   > **Coverage target:** [X]% (from [config file]) | No target configured — aiming for maximum practical coverage
+   > **Functions/methods covered by suggestions:** [list covered]
+   > **Uncovered gaps:** [list functions, branches, or code paths not covered by any suggested test — with brief reason each is uncovered (e.g., "trivial getter", "dead code", "unreachable branch")]
+   > ```
+   Note: Do NOT include a numeric coverage percentage estimate — Claude cannot run the actual coverage tool, so a guessed number would be misleading. Instead, list what is and is not covered qualitatively.
+
+4. **Suggestion principle #2**: Change from:
+   > "Plan intent over arbitrary coverage."
+
+   To:
+   > "Plan intent drives test design, coverage validates completeness. Use the plan to determine *what* to test and *why*. Use coverage analysis to ensure nothing important is missed. If the project defines a coverage target, ensure suggestions would meet or exceed it."
+
+5. **Suggestion principle #8**: Change from:
+   > "Limit suggestions to what matters. Aim for 5-10 test suggestions for a typical file. Do not produce 30 trivial tests. Quality over quantity."
+
+   To:
+   > "Cover thoroughly, not trivially. Aim for 5-10 behavior-driven test suggestions for a typical file, but add more if needed to reach the project's coverage target. If the coverage target requires testing trivial code (simple getters, pass-through methods, one-line wrappers), suggest these tests with a **`[coverage-only]`** tag and a note that they provide minimal behavioral value but are needed for the target. Never leave coverage gaps unacknowledged — if a function or branch is intentionally not tested, state why in the Coverage Assessment."
+
+#### suggest-tests.md — `plugins/code-test-suggestion/commands/suggest-tests.md`
+
+Same 5 changes as SKILL.md (the command duplicates the full workflow):
+1. Line 9 intro wording
+2. Add Step 4d (coverage target detection)
+3. Add coverage assessment line to Step 5 output format
+4. Update suggestion principle #2
+5. Update suggestion principle #8
+
+#### README.md — `plugins/code-test-suggestion/README.md`
+
+1. Update the "Purpose" paragraph to mention that the skill also aims for coverage:
+   > Add: "At the same time, it ensures suggested tests would meet the project's coverage target — or maximize coverage when no target is defined — so you get both meaningful and thorough test suites."
+
+2. Update the output structure section to mention coverage assessment.
+
+#### CHANGELOG.md — `plugins/code-test-suggestion/CHANGELOG.md`
+
+Add a new entry or update 1.0.0:
+> - Coverage-aware: Step 4d detects project coverage targets from jest.config, pyproject.toml, .nycrc, codecov.yml; Step 5 includes coverage assessment and ensures suggestions meet or exceed the target
+
+### What does NOT change
+
+- **plugin.json / marketplace.json descriptions**: Keep concise. The description already says "tied to actual behavior and intent" which is accurate — coverage awareness is an implementation detail, not the tagline.
+- **test-analysis-guide.md**: No changes needed — it contains heuristics for *analyzing code*, not coverage policy.
+- **Activation triggers**: No change — coverage awareness doesn't change when the skill activates.
+- **Version**: Stays at 1.0.0 since this is a refinement before first release, not a post-release change.
 
 ## Verification
 
