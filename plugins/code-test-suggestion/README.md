@@ -21,14 +21,24 @@ The `code-review` plugin reviews code for quality, bugs, security, and best prac
 
 ### Suggest tests (skill)
 
-Describe what you want:
+Describe what you want — the skill parses file paths and function names directly from your message:
 
 ```
-Suggest tests for src/services/auth.ts
+Suggest tests for `src/services/auth.ts`
+Suggest tests for the `validateToken` function in `src/services/auth.ts`
 What tests should I write for this function?
 Help me test the checkout flow
 What would you test in this code?
 Review this module for testability
+```
+
+### With a specific function scope
+
+Mention a function or method name to limit analysis to that function only:
+
+```
+Test the `parseJWT` method in src/utils/token.ts
+Suggest tests for the `render` function in src/components/Button.tsx
 ```
 
 ### With a plan
@@ -61,7 +71,7 @@ How can I improve these tests?
 
 ### code-test-suggestion (suggest new tests)
 
-1. Identifies target code (from your message, conversation context, or recent git changes)
+1. Identifies target code — parses your message for a file path and optional function/method name; falls back to conversation context or recent git changes if none provided
 2. Searches for an implementation plan to understand your intent
 3. Analyzes the code: behavioral summary, critical paths, integration points, implicit contracts, fragility areas
 4. Detects your project's test framework and existing test patterns
