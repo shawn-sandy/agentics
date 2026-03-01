@@ -66,6 +66,14 @@
       "description": "Review and plan Claude Code skills — audit SKILL.md files against best practices and scaffold new skills with design pattern guidance",
       "category": "development",
       "tags": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns", "claude-code"]
+    },
+    {
+      "name": "code-test-suggestion",
+      "source": "./plugins/code-test-suggestion",
+      "version": "1.0.0",
+      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
+      "category": "testing",
+      "tags": ["testing", "test-suggestion", "test-driven", "code-analysis", "testability"]
     }
   ]
 }
