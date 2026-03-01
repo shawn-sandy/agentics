@@ -40,12 +40,35 @@ Mark each todo `status: "completed"` as you finish that step.
 
 Determine which code to analyze using this priority order:
 
-1. **Explicit path in message** — If the user provided a file path or pasted code, use it directly.
-2. **Conversation context** — If a file was recently created, edited, or discussed, use that.
-3. **Recent changes** — Run `git diff --name-only HEAD~1` (or `git diff --name-only --cached` for staged changes) to find recently changed files. Exclude test files, config files, and lock files. Present the list and ask the user to confirm which files to analyze.
-4. **Ask if unclear** — "Which code would you like me to suggest tests for? Please provide a file path or paste the code."
+1. **File path argument** — Parse the invocation message for a file path. A file path may appear:
+   - In backticks: `` `src/auth.ts` ``
+   - In quotes: `"src/auth.ts"` or `'src/auth.ts'`
+   - As a bare token that looks like a path: `src/auth.ts` or `./lib/utils.js`
+   - After keywords: "for", "in", "analyze", "review", "of"
+   - As a token ending in a known code extension: `.ts`, `.js`, `.tsx`, `.jsx`, `.py`, `.go`, `.rs`, `.rb`, `.java`, `.cs`
 
-Once resolved, tell the user which file(s) will be analyzed before proceeding.
+   If a file path is found, resolve it relative to `$PWD` and confirm it exists. **If it does not exist, stop and report the error to the user — do not fall through to lower-priority sources.**
+
+2. **Function/method argument** — Parse the invocation message for a function or method name alongside a file path. Indicators include:
+   - After "function", "method", "the", "called": e.g., "test the `validateToken` function", "the `render` method in `Button.tsx`"
+   - A backtick-wrapped identifier that is not a file path (no `/` or extension)
+
+   If a function/method name is found, note it. Once the file is resolved (from level 1 or levels 3–6), scope the analysis in Step 3 to that function/method only and tell the user: "Scoping analysis to `[name]` function only."
+
+   If a function name is given without a file path, still require a file path from levels 3–6 before scoping.
+
+3. **Pasted code** — If the user pasted a code block directly in their message, use it. Treat it as an anonymous file; note to the user that coverage assessment will be limited without a file path.
+
+4. **Conversation context** — If a file was recently created, edited, or discussed in this session, use that.
+
+5. **Recent changes** — Run `git diff --name-only HEAD~1` (or `git diff --name-only --cached` for staged changes) to find recently changed files. Exclude test files, config files, and lock files. Present the list and ask the user to confirm which files to analyze.
+
+6. **Ask if unclear** — "Which code would you like me to suggest tests for? Please provide a file path or paste the code."
+
+Once resolved, report clearly to the user:
+- File(s) to be analyzed
+- Function/method scope, if any (e.g., "Scoping analysis to `validateToken` function only.")
+- Whether the analysis is full-file or function-scoped
 
 If multiple files are specified, process them together as a unit (they may interact). If more than 5 files are specified, ask the user to narrow scope or confirm they want a broad analysis.
 

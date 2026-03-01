@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.0] - 2026-03-01
+
+### Added
+
+- Step 1 now parses invocation message for explicit file path and function/method arguments
+- File paths (backtick, quoted, or bare tokens with known extensions) are prioritized over git inspection
+- Function/method scoping: when a function name is provided, analysis in Step 3 is limited to that function
+- Error reporting when a provided file path does not exist (no silent fallback)
+
 ## [2.0.0] - 2026-03-01
 
 ### Removed
