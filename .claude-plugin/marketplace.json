@@ -70,7 +70,7 @@
     {
       "name": "code-test-suggestion",
       "source": "./plugins/code-test-suggestion",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": ["testing", "test-suggestion", "test-review", "test-driven", "code-analysis", "testability"]

@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.0] - 2026-03-02
+
+### Fixed
+
+- Removed non-compliant cross-skill reference in `test-review` SKILL.md Step 4 (`../code-test-suggestion/references/test-analysis-guide.md`). The `../` path escapes the skill root and is not supported by Claude Code's skill reference spec. Step 4's built-in heuristics (4a–4e) are self-sufficient.
+
 ## [2.1.0] - 2026-03-01
 
 ### Added
