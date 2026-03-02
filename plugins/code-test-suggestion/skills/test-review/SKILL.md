@@ -181,7 +181,7 @@ If no target is found: "No coverage target configured. Will evaluate coverage co
 
 ## Step 6 — Review Existing Tests
 
-This is the core output. Load `references/test-quality-checklist.md` for detailed heuristics on each review dimension.
+This is the core output. Load `references/test-quality-checklist.md` for detailed heuristics on each review dimension. If the file is unavailable, apply the nine review dimensions using the criteria defined in the Review Dimensions list below.
 
 Read every test in the target file(s) and evaluate against the source code analysis from Step 4. For each finding, reference the specific test by name and line number.
 
@@ -203,7 +203,7 @@ Evaluate each test across these 9 dimensions:
 
 When reviewing multiple test files, group findings **by test file**:
 
-```markdown
+~~~markdown
 ## Test Review for `[test-filename]`
 
 **Source code:** `[source-file]`
@@ -251,7 +251,7 @@ Behaviors identified in the source code analysis (Step 4) that have no correspon
 ### What's Working Well
 
 [1-3 things the tests do right — reinforce good practices]
-```
+~~~
 
 ### Review Principles
 
