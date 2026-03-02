@@ -100,7 +100,7 @@ Report: "No implementation plan found. I will evaluate tests against behavior in
 
 ## Step 4 — Analyze Source Code
 
-Read the source code and identify the following. Load `../code-test-suggestion/references/test-analysis-guide.md` for detailed heuristics on each category.
+Read the source code and identify the following.
 
 ### 4a. What the Code Does (Behavioral Summary)
 
