@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.1] - 2026-03-02
+
+### Changed
+
+- Renamed skill `test-review` → `reviewing-tests` to follow the gerund naming convention for skills (non-breaking; skill activates by description match, not by name)
+
 ## [2.2.0] - 2026-03-02
 
 ### Fixed

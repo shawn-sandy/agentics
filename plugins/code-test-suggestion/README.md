@@ -15,7 +15,7 @@ The `code-review` plugin reviews code for quality, bugs, security, and best prac
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `code-test-suggestion` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
-| `test-review` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
+| `reviewing-tests` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
 
 ## Usage
 
@@ -57,7 +57,7 @@ Suggest tests for my recent changes
 What should I test in my current branch?
 ```
 
-### Review existing tests (test-review skill)
+### Review existing tests (reviewing-tests skill)
 
 ```
 Review my tests for src/services/auth.test.ts
@@ -91,7 +91,7 @@ Suggestions are organized by file, then by priority within each file:
 
 Each suggestion includes: what behavior to test, why the test matters, the code it validates, and a concrete test approach using your framework.
 
-### test-review (review existing tests)
+### reviewing-tests (review existing tests)
 
 1. Identifies target test files (from your message, conversation context, or near recent changes)
 2. Locates the source code those tests cover (from imports, naming conventions, directory structure)
@@ -101,7 +101,7 @@ Each suggestion includes: what behavior to test, why the test matters, the code 
 6. Reviews each test against the source analysis across 9 dimensions: behavior vs implementation, naming, assertion focus, coverage gaps, mock hygiene, fragility, isolation, plan alignment, coverage target progress
 7. Offers to apply fixes to the test files
 
-### test-review Output Structure
+### reviewing-tests Output Structure
 
 Reviews are organized by test file:
 
@@ -140,7 +140,7 @@ plugins/code-test-suggestion/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── test-analysis-guide.md
-│   └── test-review/
+│   └── reviewing-tests/
 │       ├── SKILL.md
 │       └── references/
 │           └── test-quality-checklist.md
