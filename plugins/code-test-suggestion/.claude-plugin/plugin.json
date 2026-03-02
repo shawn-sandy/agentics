@@ -1,6 +1,6 @@
 {
   "name": "code-test-suggestion",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
   "author": {
     "name": "Agentics Project"
@@ -12,7 +12,7 @@
     "test-driven",
     "code-analysis",
     "testability",
-    "test-review"
+    "reviewing-tests"
   ],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/code-test-suggestion",
   "repository": "https://github.com/shawn-sandy/agentics"

@@ -1,6 +1,6 @@
 # Test Quality Checklist
 
-Reference heuristics for reviewing existing test quality. Loaded by the test-review skill during Step 6.
+Reference heuristics for reviewing existing test quality. Loaded by the reviewing-tests skill during Step 6.
 
 ## 1. Behavior vs Implementation
 
