@@ -21,6 +21,7 @@ This plugin is the counterpart to `claude-md-optimizer` — while that plugin au
 - **Word Count & Folder Checks** — Validates against Anthropic's 5,000-word limit and folder structure conventions
 - **Script Quality Checks** — Detects assumed installs, unqualified MCP tool references, voodoo constants, and missing error handling
 - **Workflow Pattern Guidance** — Checklist, feedback loop, template, and conditional workflow patterns in best-practices reference
+- **Regression Risk Check** — Optional git-based comparison (Step 2c) detects breaking changes (`name:` renamed, trigger phrase removed) and regressions (reference files removed, >30% line reduction, new anti-patterns) vs. last committed version; classified as BREAKING | WARNING | INFO and reported separately from the 1–10 score
 - **Live Docs Support** — Optionally fetches latest guidelines from `platform.claude.com`
 - **Safe Write Confirmation** — Requires explicit second confirmation before overwriting files
 
@@ -119,10 +120,11 @@ plugins/skill-reviewer/
 1. Resolve the target SKILL.md (explicit path > conversation context > ask user)
 2. Read and measure (line count, frontmatter fields, reference files)
 3. Determine guidelines source (static reference or live fetch)
-4. Score 5 dimensions (2 pts each, max 10)
-5. Output scored report with grade and issue list
-6. Offer to generate corrected version (frontmatter fixes + inline body annotations)
-7. Confirm before writing to disk
+4. Run Regression Risk Check (optional — compares against last committed version via git)
+5. Score 5 dimensions (2 pts each, max 10)
+6. Output scored report with grade, regression risk section, and issue list
+7. Offer to generate corrected version (frontmatter fixes + inline body annotations)
+8. Confirm before writing to disk
 
 **Scoring dimensions:**
 
