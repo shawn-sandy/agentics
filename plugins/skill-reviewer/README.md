@@ -4,10 +4,11 @@ A Claude Code plugin for auditing SKILL.md files and planning new skills. Aligne
 
 ## Overview
 
-The Skill Reviewer provides two skills:
+The Skill Reviewer provides three skills:
 
 1. **reviewing-skills** — Structured quality audits of SKILL.md files across 5 dimensions (frontmatter, body quality, structure, anti-patterns, discoverability). Scored 0–10 with grades from Excellent to Rewrite.
 2. **planning-skills** — Guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch, including design pattern selection and file generation.
+3. **running-tests** — Adaptive skill that identifies changed files, finds related test files, detects the test framework, runs tests via Bash, and reports pass/fail/error counts. Also detects missing test files and advises on what to create.
 
 This plugin is the counterpart to `claude-md-optimizer` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
 
@@ -99,10 +100,14 @@ plugins/skill-reviewer/
 │   │   └── references/
 │   │       ├── audit-steps.md
 │   │       └── best-practices.md
-│   └── planning-skills/
+│   ├── planning-skills/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── design-patterns.md
+│   └── running-tests/
 │       ├── SKILL.md
 │       └── references/
-│           └── design-patterns.md
+│           └── test-runner-guide.md
 ├── README.md
 └── CHANGELOG.md
 ```
@@ -173,3 +178,21 @@ Complete Steps 3–6 workflow: scoring rubric tables, report output format, fix 
 ### Reference: `references/design-patterns.md`
 
 Comprehensive reference for four Anthropic design patterns with recommended SKILL.md outlines, structure signals, key considerations, a decision tree, and pattern combination guidance.
+
+### Skill: `running-tests`
+
+**Auto-activates when:** User asks to run tests, check if tests pass, test a file, verify changes don't break tests, or asks about missing tests.
+
+**Does NOT activate for:** Reviewing test quality, suggesting new test cases, or auditing SKILL.md files — use `reviewing-tests` (code-test-suggestion plugin) for test quality review.
+
+**Test run workflow:**
+
+1. Identify changed files (explicit path > `git diff --name-only HEAD` > context > ask)
+2. Find related test files using naming conventions per language/framework
+3. Detect the test framework from config files (nearest ancestor rule for monorepos)
+4. Run tests via Bash scoped to resolved test files only
+5. Report pass/fail/error counts; advise on missing test files with conventional path suggestions
+
+### Reference: `references/test-runner-guide.md`
+
+Per-framework lookup tables covering: test file naming conventions (TS/JS/Python/Go/Rust/Ruby), framework detection signals and run command templates, result parsing patterns, missing test advisory templates, and the monorepo nearest-ancestor tie-breaking rule.

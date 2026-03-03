@@ -1,7 +1,7 @@
 {
   "name": "skill-reviewer",
-  "version": "1.3.0",
-  "description": "Review and plan Claude Code skills — audit SKILL.md files against best practices and scaffold new skills with design pattern guidance",
+  "version": "1.4.0",
+  "description": "Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage",
   "author": { "name": "Agentics Project" },
   "license": "MIT",
   "keywords": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns"],
