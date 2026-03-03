@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.4.0] - 2026-03-03
+
+### Added
+
+- **`running-tests` skill** — Adaptive skill that identifies changed files (via git or user input), finds related test files using naming conventions, detects the test framework, runs tests via Bash, and reports pass/fail/error counts
+- **Missing test detection** — identifies source files with no test file and provides conventional test file path suggestions (file-level advisory)
+- **`references/test-runner-guide.md`** — per-framework lookup tables for naming conventions, detection signals, run commands, result parsing, and missing test advisory templates
+
+---
+
 ## [1.3.0] - 2026-03-03
 
 ### Added
