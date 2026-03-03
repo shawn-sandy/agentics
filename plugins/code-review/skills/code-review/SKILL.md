@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Reviews code for best practices, bugs, and security vulnerabilities. Use when the user asks to review code, check a file for problems, review changed files, or analyze code quality. Does not cover architecture reviews or testing strategy.
+description: Reviews code for best practices, bugs, security vulnerabilities, and complexity. Use when the user asks to review code, check a file for problems, review changed files, analyze code quality, or assess code complexity. Does not cover architecture reviews or testing strategy.
 ---
 
 When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples. Adapt the checklist depth to the code's complexity and context.
@@ -13,6 +13,7 @@ When reviewing code, systematically check for common issues across multiple dime
   - [2. Potential Bugs](#2-potential-bugs)
   - [3. Security Vulnerabilities](#3-security-vulnerabilities)
   - [4. Best Practices](#4-best-practices)
+  - [5. Code Complexity](#5-code-complexity)
 - [Review Format](#review-format)
 - [Example Review](#example-review)
 - [Tips for Effective Reviews](#tips-for-effective-reviews)
@@ -137,12 +138,50 @@ Once target files are confirmed, proceed to the Review Checklist for each file.
 - Are TODOs or FIXMEs accompanied by context?
 - Is public API documented?
 
+### 5. Code Complexity
+
+Assess the overall complexity and rate it: **Low / Medium / High / Very High**
+
+**Structural Complexity:**
+- Nesting depth (>3 levels of conditionals/loops is a signal)
+- Cyclomatic complexity (number of branching paths per function)
+- Function/method length (>50 lines raises cognitive load)
+- Number of responsibilities per module or class
+
+**Coupling & Cohesion:**
+- Number of imports relative to the file's purpose and language conventions
+- How tightly modules depend on each other
+- Whether data flows are easy to trace end-to-end
+
+**Cognitive Load:**
+- Is the logic easy to follow without deep context?
+- Are there chained operations that are hard to debug?
+- Are there global or shared mutable states?
+
+**Rating Guide:**
+| Rating | Signals |
+|--------|---------|
+| Low | Flat structure, few branches, clear data flow, imports typical for the language/framework |
+| Medium | Some nesting or branching, moderate length, manageable coupling |
+| High | Deep nesting, many branches, long functions, tight coupling |
+| Very High | Multiple complexity signals combined; refactoring strongly advised |
+
+**Notes:**
+- When reviewing multiple files, rate each file individually. Include an aggregate rating only when
+  reviewing more than 3 files.
+- For files under ~30 lines with a single responsibility, note `Low (trivially simple)` and omit
+  the detailed breakdown.
+
 ## Review Format
 
 Structure the review as follows:
 
 ### Summary
 Brief overview of the code's purpose and overall quality (1-2 sentences).
+
+### Complexity Rating
+**[Low / Medium / High / Very High]** — One-sentence rationale (e.g., "Deep nesting in 3 core
+functions and tightly coupled imports drive the rating.").
 
 ### Critical Issues
 Issues that could cause bugs, security vulnerabilities, or data loss. **Must be fixed.**
@@ -158,6 +197,9 @@ Things the code does well. Reinforce good practices.
 ```markdown
 ### Summary
 This function validates user input and creates a new user record. The logic is mostly sound, but there are security and error handling concerns.
+
+### Complexity Rating
+**Medium** — Single-responsibility function with straightforward flow, but missing validation adds implicit branching paths that increase cognitive load.
 
 ### Critical Issues
 
@@ -224,3 +266,4 @@ email = email.lower().strip()
 - Don't review entire codebases unless explicitly asked
 - Focus on substantive issues, not purely stylistic preferences
 - Adapt review depth to the code's complexity and context
+- Complexity rating covers code-level coupling and nesting depth, not system architecture

@@ -46,10 +46,11 @@ Check src/components/LoginForm.tsx for security issues
 ### Review output format
 
 Reviews are structured as:
-- **Summary** — brief overview of code purpose and overall quality
-- **Critical Issues** — bugs, security vulnerabilities, data loss risks (must fix)
-- **Improvements** — non-critical quality and maintainability suggestions
-- **Positive Observations** — what the code does well
+1. **Summary** — brief overview of code purpose and overall quality
+2. **Complexity Rating** — Low/Medium/High/Very High with a one-sentence rationale
+3. **Critical Issues** — bugs, security vulnerabilities, data loss risks (must fix)
+4. **Improvements** — non-critical quality and maintainability suggestions
+5. **Positive Observations** — what the code does well
 
 ## Installation
 
