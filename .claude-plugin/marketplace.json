@@ -62,7 +62,7 @@
     {
       "name": "skill-reviewer",
       "source": "./plugins/skill-reviewer",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "description": "Review and plan Claude Code skills — audit SKILL.md files against best practices and scaffold new skills with design pattern guidance",
       "category": "development",
       "tags": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns", "claude-code"]

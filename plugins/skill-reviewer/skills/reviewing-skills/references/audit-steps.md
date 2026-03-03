@@ -4,6 +4,67 @@ This reference file is loaded by `reviewing-skills` to complete the audit workfl
 
 ---
 
+## Regression Risk Check (Step 2c Detail)
+
+### Comparison Matrix
+
+| Field / Metric | How to Extract (Previous Version) | Risk Level | Condition |
+|----------------|-----------------------------------|------------|-----------|
+| `name:` | Parse YAML frontmatter from `git show` output | **BREAKING** | Any change |
+| Trigger phrases in `description:` | Extract all "Use when..." clauses | **BREAKING** | Any clause present in previous but absent in current |
+| `description:` activation intent | Check whether `"Use when..."` clause and ≥3 domain keywords from previous description appear in current | **WARNING** | `Use when...` clause missing or <3 original keywords survive |
+| Reference files in body | Grep for `` `?references/[^\s`]+\.md`? `` in previous body (matches bare and backtick-quoted paths) | **WARNING** | Any path absent in current |
+| Total line count | Count lines in `git show` output | **WARNING** | Current <70% of previous |
+| New anti-patterns | Apply Dimension 4 checks to previous version | **INFO** | New error/warning anti-pattern in current that was absent before |
+
+**Notes:**
+- Parse frontmatter by reading lines between first and second `---` delimiters in `git show` output. If `description:` spans multiple lines (folded YAML), collect all continuation lines until the next top-level key.
+- Activation intent check: extract the `"Use when..."` clause and domain-specific keywords from the previous description; verify each survives in the current description.
+- Reference detection: use pattern `` `?references/[^\s`]+\.md`? `` to match both bare paths (`references/audit-steps.md`) and backtick-quoted paths (`` `references/audit-steps.md` ``).
+- If `git show` returns non-zero exit (renamed file, shallow clone path error): skip all comparisons and note "No previous version found — file may have been renamed" in report.
+
+### Skip Conditions
+
+Omit the Regression Risk section from the report entirely if:
+- `git rev-parse --git-dir` exits non-zero
+- `git log --oneline -1 -- <path>` returns empty output
+- User opted out
+
+### Report Template
+
+Append after the Scores table and before Grade. Three variants:
+
+**Skipped:**
+```
+**Regression Risk:** Skipped — [not a git repo | file not yet committed | user opt-out | no previous version found]
+```
+
+**Clean:**
+```
+**Regression Risk:** None detected — no breaking changes or regressions vs. last commit.
+```
+
+**Findings:**
+```
+## Regression Risk
+
+**Previous version:** git HEAD (`git show HEAD:<path>`)
+
+| Risk | Field / Metric | Previous | Current | Impact |
+|------|----------------|----------|---------|--------|
+| BREAKING | `name:` | `old-name` | `new-name` | Invocation references break |
+| BREAKING | Trigger phrase removed | "Use when the user asks to audit..." | (absent) | Skill stops auto-activating |
+| WARNING | Activation intent | `Use when...` clause absent in current | — | Activation behavior may shift |
+| WARNING | Reference file removed | `references/audit-steps.md` | (absent) | Progressive disclosure broken |
+| WARNING | Line reduction | 220 lines | 130 lines (41%) | Content may have been lost |
+| INFO | New anti-pattern | — | Windows path in body | Regression from previously clean |
+
+**Summary:** BREAKING: N | Warnings: N | Info: N
+> Regression Risk findings are informational and do not affect the 1–10 quality score.
+```
+
+---
+
 ## Step 3: Score 5 Dimensions
 
 Score each dimension 0–2. Maximum total: **10 points**.
@@ -160,6 +221,10 @@ Present the audit results in this format:
 | 5. Discoverability | X/2 | [key findings] |
 | **Total** | **X/10** | |
 
+## Regression Risk
+
+**Regression Risk:** [None detected | Skipped — reason | See table below]
+
 ## Grade: [Excellent | Good | Needs Work | Rewrite]
 
 ## Issues Found
@@ -187,7 +252,11 @@ Present the audit results in this format:
 
 ## Step 5: Offer Optimized Version
 
-After presenting the report, offer to generate a corrected version:
+After presenting the report, offer to generate a corrected version.
+
+**If the Regression Risk section contains any BREAKING findings**, prepend this note before the offer:
+
+> "Note: BREAKING regression changes were detected (see Regression Risk section above). The optimized version below addresses quality issues — review breaking changes separately before distributing."
 
 > "Would you like me to generate an optimized version of this skill file?"
 

@@ -460,6 +460,12 @@ List required MCP servers in the skill body or in a `requirements` note:
 
 ---
 
+## Regression Risk
+
+The 1–10 quality score reflects the current state of a SKILL.md file in isolation. **Regression risk is evaluated separately** and does not affect any dimension score. A skill can score 10/10 and still introduce a breaking change if `name:` was renamed or a trigger phrase was removed. When reviewing a modified skill, the Regression Risk section (Step 2c) compares the current file against its last committed version and classifies changes as BREAKING, WARNING, or INFO. This is an informational overlay on top of the quality audit, not a scoring dimension.
+
+---
+
 ## Evaluation-Driven Development
 
 Build evaluations before writing extensive skill documentation. An evaluation lets you observe real behavior before optimizing words.

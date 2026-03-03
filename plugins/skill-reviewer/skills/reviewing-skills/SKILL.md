@@ -14,6 +14,7 @@ Follow these steps exactly.
 - [Step 1: Resolve Target SKILL.md](#step-1-resolve-target-skillmd)
 - [Step 2: Read and Measure](#step-2-read-and-measure)
 - [Step 2b: Determine Guidelines Source](#step-2b-determine-guidelines-source)
+- [Step 2c: Regression Risk Check (optional)](#step-2c-regression-risk-check-optional)
 - [Steps 3–6: Audit, Score, Report, and Optionally Fix](#steps-36-audit-score-report-and-optionally-fix)
 - [Quick Reference Checklist](#quick-reference-checklist)
 
@@ -69,6 +70,33 @@ https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
 ```
 
 If live fetch fails: fall back to `references/best-practices.md` silently and note the failure in the audit output under a "Guidelines Source" line.
+
+---
+
+## Step 2c: Regression Risk Check (optional)
+
+Compare the current SKILL.md against its last committed version to detect breaking changes and regressions.
+
+**Skip entirely if any of the following are true:**
+- Not inside a git repository (`git rev-parse --git-dir` returns non-zero)
+- File has never been committed (`git log --oneline -- <path>` returns no output)
+- User says "skip regression check", "no comparison", or "first review"
+
+**If not skipped, run in order:**
+
+1. Resolve the git-relative path:
+   ```
+   git ls-files --full-name <path-to-SKILL.md>
+   ```
+2. Retrieve the last committed version:
+   ```
+   git show HEAD:<git-relative-path>
+   ```
+   If this fails (file renamed, untracked, or path error): skip and note "No previous version found — file may have been renamed" in report. Do NOT attempt `git log --follow`; surface the limitation and move on.
+
+**What to compare:** See `references/audit-steps.md` — Regression Risk section.
+
+**Output:** A **Regression Risk** section in the audit report, appended after the Scores table and before the Grade line. Does not affect any dimension score.
 
 ---
 
@@ -130,3 +158,11 @@ Use this for rapid pre-audit assessment:
 - [ ] "Use when..." trigger phrase clear and specific
 - [ ] ≥3 searchable keywords in description
 - [ ] Scope defined (what this skill does NOT cover)
+
+**Regression Risk** (skip if not in git, file is new, or user opts out)
+- [ ] `name:` field unchanged (BREAKING if changed)
+- [ ] `description:` trigger phrases preserved (BREAKING if any removed)
+- [ ] `description:` activation intent preserved (WARNING if `Use when...` clause or ≥3 domain keywords absent vs. previous)
+- [ ] Reference files not removed (WARNING if any `references/` path disappeared)
+- [ ] Line count not reduced >30% (WARNING if significant shrinkage)
+- [ ] No new anti-patterns introduced vs. previous version (INFO)

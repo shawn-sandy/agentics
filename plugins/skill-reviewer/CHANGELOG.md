@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ---
 
+## [1.3.0] - 2026-03-03
+
+### Added
+
+- **Step 2c: Regression Risk Check** — optional git-based comparison against last committed version
+- **Comparison matrix** with 6 fields classified as BREAKING | WARNING | INFO:
+  - `name:` change (BREAKING)
+  - Trigger phrase removal from `description:` (BREAKING)
+  - Activation intent degradation — `Use when...` clause absent or <3 original keywords survive (WARNING)
+  - Reference file removal (WARNING)
+  - >30% line reduction (WARNING)
+  - New anti-patterns introduced (INFO)
+- **Regression Risk section** in audit report — after Scores table, before Grade; does not affect 1–10 score
+- **Quick Reference Checklist** — new Regression Risk block (6 items)
+- Graceful skip: auto-skipped if not in git, file untracked, or user opts out
+- Step 5 BREAKING warning — prepends advisory note before optimized version offer when BREAKING findings exist
+
+---
+
 ## [1.2.0] - 2026-02-27
 
 ### Added
