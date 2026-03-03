@@ -1,9 +1,45 @@
 ---
 name: code-review
-description: Review code for best practices, bugs, and security issues. Use when the user asks to review code, check for problems, or analyze code quality.
+description: Reviews code for best practices, bugs, and security vulnerabilities. Use when the user asks to review code, check a file for problems, review changed files, or analyze code quality. Does not cover architecture reviews or testing strategy.
 ---
 
-When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples.
+When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples. Adapt the checklist depth to the code's complexity and context.
+
+## Table of Contents
+
+- [Step 0: Resolve Target Files](#step-0-resolve-target-files)
+- [Review Checklist](#review-checklist)
+  - [1. Code Quality](#1-code-quality)
+  - [2. Potential Bugs](#2-potential-bugs)
+  - [3. Security Vulnerabilities](#3-security-vulnerabilities)
+  - [4. Best Practices](#4-best-practices)
+- [Review Format](#review-format)
+- [Example Review](#example-review)
+- [Tips for Effective Reviews](#tips-for-effective-reviews)
+- [Scope](#scope)
+
+## Step 0: Resolve Target Files
+
+Before reviewing, identify which files to check using this priority order:
+
+1. **Explicit path in message** — If the user named a file or directory, use it directly. Skip to the Review Checklist.
+
+2. **Local changes (git status)** — If no file was specified, run:
+   `git status --short`
+   - If this fails (not a git repo), skip to step 4.
+   - If files are listed, show the list and ask: "I found these changed files — which would you like me to review?" Review confirmed files. Skip binaries, lock files (*.lock, package-lock.json, yarn.lock), and generated files; note any skipped.
+   - If no files are listed, continue to step 3.
+
+3. **Branch diff** — Run each in order until files are returned:
+   - `git diff main...HEAD --name-only`
+   - `git diff master...HEAD --name-only`
+   - `git diff HEAD~1 --name-only`
+   If files are returned, show the list and confirm before reviewing. Skip non-reviewable files as above.
+   If all return empty or fail (e.g., detached HEAD), continue to step 4.
+
+4. **Fallback** — Ask: "Which file or files would you like me to review?"
+
+Once target files are confirmed, proceed to the Review Checklist for each file.
 
 ## Review Checklist
 
@@ -103,7 +139,7 @@ When reviewing code, systematically check for common issues across multiple dime
 
 ## Review Format
 
-Structure your review as follows:
+Structure the review as follows:
 
 ### Summary
 Brief overview of the code's purpose and overall quality (1-2 sentences).
