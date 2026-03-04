@@ -1,9 +1,9 @@
 ---
 name: pr-agent
-description: Use when the user asks to create a PR, open a pull request, make a PR, push and create a PR, or submit their branch for review. Does not enter plan mode. Does not commit changes — use commit-agent first.
+description: Use when the user asks to create a PR, open a pull request, make a PR, push and create a PR, or submit their branch for review. Does not commit changes — use commit-agent first.
 ---
 
-Push the current branch if needed and create a GitHub pull request. Follow these steps in strict order. **STOP immediately after step 5.**
+Push the current branch if needed and create a GitHub pull request. This skill does not commit changes or run tests. Follow these steps in strict order. **STOP immediately after step 5.**
 
 ## Step 1: Guards
 
@@ -22,7 +22,7 @@ GitHub CLI is required. Install it from https://cli.github.com/ and run `gh auth
 ```
 and **STOP**.
 
-## Step 2: Detect Base Branch
+## Step 2: Detect Base Branch and Gather PR Content
 
 Run:
 ```
@@ -48,14 +48,17 @@ If a PR already exists, output: "A pull request already exists: <url>" and **STO
 
 ## Step 4: Push if Needed
 
-Run `git status` to check for a remote tracking reference.
+Run:
+```
+git rev-parse --abbrev-ref --symbolic-full-name @{u}
+```
 
-If the branch has no upstream tracking ref, run:
+If the command exits non-zero (no upstream tracking ref), run:
 ```
 git push -u origin <current-branch>
 ```
 
-If the branch already has a tracking ref and is ahead of remote, run:
+If the command exits zero (upstream exists), run:
 ```
 git push
 ```
