@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0] - 2026-03-03
+
+### Changed
+
+- BREAKING CHANGE: skill renamed from `code-review` to `code-review-agent` to avoid conflict with Anthropic's built-in `code-review` skill
+- Skill directory renamed: `skills/code-review/` → `skills/code-review-agent/`
+
 ## [1.2.0] - 2026-03-03
 
 ### Added

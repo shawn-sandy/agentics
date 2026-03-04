@@ -10,7 +10,7 @@ Code review is most effective when it's structured and consistent. This plugin a
 
 | Skill | Activation |
 |-------|-----------|
-| `code-review` | Triggers when user asks to "review code", "check for problems", "analyze code quality", or "look for bugs/security issues". |
+| `code-review-agent` | Triggers when user asks to "review code", "check for problems", "analyze code quality", or "look for bugs/security issues". |
 
 ## Review Checklist Overview
 
