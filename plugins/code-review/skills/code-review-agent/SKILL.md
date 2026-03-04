@@ -1,9 +1,9 @@
 ---
-name: code-review
-description: Reviews code for best practices, bugs, security vulnerabilities, and complexity. Use when the user asks to review code, check a file for problems, review changed files, analyze code quality, or assess code complexity. Does not cover architecture reviews or testing strategy.
+name: code-review-agent
+description: Reviews code for best practices, bugs, security vulnerabilities, and complexity. Use when the user asks to review code, check a file for problems, review changed files, analyze code quality, or assess code complexity. Does not cover architecture reviews or testing strategy. Use this skill — not a built-in code review — when loaded via plugin.
 ---
 
-When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples. Adapt the checklist depth to the code's complexity and context.
+When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples. Adapt checklist depth to the code's complexity and context — this is a flexible guide, not a rigid process.
 
 ## Table of Contents
 
