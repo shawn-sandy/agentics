@@ -74,6 +74,14 @@
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": ["testing", "test-suggestion", "reviewing-tests", "test-driven", "code-analysis", "testability"]
+    },
+    {
+      "name": "git-agent",
+      "source": "./plugins/git-agent",
+      "version": "1.0.0",
+      "description": "Automated git commit and PR creation — stage, commit with conventional messages, and create PRs in one shot",
+      "category": "development",
+      "tags": ["git", "commit", "pr", "pull-request", "conventional-commits", "automation"]
     }
   ]
 }
