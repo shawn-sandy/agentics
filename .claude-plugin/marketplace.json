@@ -38,10 +38,10 @@
     {
       "name": "code-review",
       "source": "./plugins/code-review",
-      "version": "2.0.0",
-      "description": "Systematic code review across quality, bugs, security, and best practices",
+      "version": "2.1.0",
+      "description": "Systematic code review across quality, bugs, security, best practices, breaking changes, and regressions",
       "category": "development",
-      "tags": ["code-quality", "review", "security", "best-practices"]
+      "tags": ["code-quality", "review", "security", "best-practices", "breaking-changes", "regressions"]
     },
     {
       "name": "plan-interview",

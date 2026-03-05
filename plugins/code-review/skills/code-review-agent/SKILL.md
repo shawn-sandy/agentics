@@ -1,6 +1,6 @@
 ---
 name: code-review-agent
-description: Reviews code for best practices, bugs, security vulnerabilities, and complexity. Use when the user asks to review code, check a file for problems, review changed files, analyze code quality, or assess code complexity. Does not cover architecture reviews or testing strategy. Use this skill — not a built-in code review — when loaded via plugin.
+description: Reviews code for best practices, bugs, security vulnerabilities, complexity, breaking changes, and potential regressions. Use when the user asks to review code, check a file for problems, review changed files, analyze code quality, assess code complexity, detect breaking changes, check if this change breaks anything, or assess whether a change could cause a regression. Does not cover architecture reviews or testing strategy. Use this skill — not a built-in code review — when loaded via plugin.
 ---
 
 When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples. Adapt checklist depth to the code's complexity and context — this is a flexible guide, not a rigid process.
@@ -14,6 +14,7 @@ When reviewing code, systematically check for common issues across multiple dime
   - [3. Security Vulnerabilities](#3-security-vulnerabilities)
   - [4. Best Practices](#4-best-practices)
   - [5. Code Complexity](#5-code-complexity)
+  - [6. Breaking Changes & Regressions](#6-breaking-changes--regressions)
 - [Review Format](#review-format)
 - [Example Review](#example-review)
 - [Tips for Effective Reviews](#tips-for-effective-reviews)
@@ -172,6 +173,35 @@ Assess the overall complexity and rate it: **Low / Medium / High / Very High**
 - For files under ~30 lines with a single responsibility, note `Low (trivially simple)` and omit
   the detailed breakdown.
 
+### 6. Breaking Changes & Regressions
+
+**Public API Surface**
+- Are exported functions, classes, or types renamed or removed?
+- Have function signatures changed (added required parameters, removed parameters, or reordered parameters)?
+- Have return types or shapes changed in ways callers won't expect?
+- Are previously thrown errors now suppressed, or new errors thrown that callers don't handle?
+
+**Shared / Internal Contracts**
+- Are widely-used utilities or helpers modified in ways that affect all call sites?
+- Are base classes or interfaces changed in ways that break subclasses?
+- Are default argument values, fallback behaviors, or guard conditions changed?
+
+**Data & Config Contracts**
+- Are environment variable names or config keys renamed or removed?
+- Are serialized data formats, API request/response shapes, or wire formats changed?
+- Are database schema changes present (NOT NULL columns added, columns dropped, type changes)? *(Apply only when reviewing migration files or schema definitions.)*
+
+**Regression Risk**
+- Does the change touch code that previously had bugs fixed? (Check surrounding comments or nearby history for context clues.)
+- Are shared mutable states or global singletons modified?
+- Are previously reliable invariants (e.g., "this function never returns null") broken?
+
+**Call Site Assessment**
+- Are there other files that import or call the changed symbol?
+- Does the number of call sites suggest a high blast radius (3 or more callers)?
+- Do any call sites pass arguments or rely on return values in ways that the new signature or behavior would break?
+- If git history is unavailable, assess the API surface visually from the reviewed code only.
+
 ## Review Format
 
 Structure the review as follows:
@@ -182,6 +212,18 @@ Brief overview of the code's purpose and overall quality (1-2 sentences).
 ### Complexity Rating
 **[Low / Medium / High / Very High]** — One-sentence rationale (e.g., "Deep nesting in 3 core
 functions and tightly coupled imports drive the rating.").
+
+### Breaking Changes & Regressions
+List any changes that break existing callers, alter contracts, or risk reintroducing previously fixed behavior.
+For each:
+- **What changed** — the specific symbol, config key, schema field, or behavior
+- **Who is affected** — call sites, dependents, consumers
+- **Severity** — Breaking (callers will fail) / Risky (callers may silently misbehave)
+- **Migration path** — what callers must do to adapt
+
+If none detected: `No breaking changes or regression risks identified.`
+
+> If a breaking change also qualifies as a Critical Issue, list it here only — omit it from Critical Issues to avoid duplication.
 
 ### Critical Issues
 Issues that could cause bugs, security vulnerabilities, or data loss. **Must be fixed.**
@@ -200,6 +242,14 @@ This function validates user input and creates a new user record. The logic is m
 
 ### Complexity Rating
 **Medium** — Single-responsibility function with straightforward flow, but missing validation adds implicit branching paths that increase cognitive load.
+
+### Breaking Changes & Regressions
+
+**1. Renamed export — `createUser` → `createUserRecord` (Line 1)**
+- **What changed:** The exported function `createUser` was renamed to `createUserRecord`
+- **Who is affected:** All callers importing `createUser` from this module
+- **Severity:** Breaking — callers will fail with a missing export error at runtime
+- **Migration path:** Update all import sites to use `createUserRecord`; search with `grep -r "createUser"` or your IDE's find-references
 
 ### Critical Issues
 
