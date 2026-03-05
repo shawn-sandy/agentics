@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.0] - 2026-03-05
+
+### Added
+- Breaking Changes & Regressions checklist section (section 6) covering: public API surface, shared/internal contracts, data & config contracts, regression risk, and call site assessment
+- Breaking Changes & Regressions output section in Review Format, placed between Complexity Rating and Critical Issues
+- No-duplicate guidance: breaking changes listed in the new section are omitted from Critical Issues
+- No-git-context fallback: when git history is unavailable, assess API surface visually from reviewed code only
+- DB schema checks marked conditional: apply only when reviewing migration files or schema definitions
+- Detection approach uses question-based guidance consistent with the rest of the checklist
+- Example breaking change entry added to the Example Review section
+- Updated frontmatter description to trigger on "detect breaking changes", "check if this change breaks anything", and "could this cause a regression" intents
+- Added `breaking-changes` and `regressions` tags to marketplace.json entry
+
 ## [2.0.0] - 2026-03-03
 
 ### Changed
