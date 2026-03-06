@@ -1,6 +1,16 @@
 ---
 name: code-review-agent
-description: Reviews code for best practices, bugs, security vulnerabilities, complexity, breaking changes, and potential regressions. Use when the user asks to review code, check a file for problems, review changed files, analyze code quality, assess code complexity, detect breaking changes, check if this change breaks anything, or assess whether a change could cause a regression. Does not cover architecture reviews or testing strategy. Use this skill — not a built-in code review — when loaded via plugin.
+description: >
+  Performs structured, multi-dimensional code review covering six areas: code quality,
+  potential bugs, security vulnerabilities, best practices, code complexity rating
+  (Low/Medium/High/Very High), and breaking changes with regression risk assessment.
+  Automatically resolves which files to review from git status, branch diffs, or explicit
+  paths. Use this skill whenever the user asks to review code, check files for problems,
+  look over a PR or branch diff, assess code quality or complexity, find bugs or security
+  issues, detect breaking changes, or evaluate whether a change could cause a regression.
+  Also triggers for informal requests like "take a look at this" or "anything wrong with
+  this code." Produces a structured report with severity-ranked findings. Does not cover
+  system architecture reviews, testing strategy, or accessibility audits.
 ---
 
 When reviewing code, systematically check for common issues across multiple dimensions. Provide specific, actionable feedback with line numbers and code examples. Adapt checklist depth to the code's complexity and context — this is a flexible guide, not a rigid process.

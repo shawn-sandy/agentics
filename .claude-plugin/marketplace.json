@@ -38,8 +38,8 @@
     {
       "name": "code-review",
       "source": "./plugins/code-review",
-      "version": "2.1.0",
-      "description": "Systematic code review across quality, bugs, security, best practices, breaking changes, and regressions",
+      "version": "2.1.1",
+      "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
       "tags": ["code-quality", "review", "security", "best-practices", "breaking-changes", "regressions"]
     },

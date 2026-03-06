@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.1] - 2026-03-06
+
+### Fixed
+- Optimized skill description for improved trigger accuracy: now describes the structured 6-dimension checklist, complexity rating system, and automatic file resolution
+- Removed self-referential "use this skill -- not built-in" language in favor of content-rich description
+- Added informal trigger phrases ("take a look at this", "anything wrong with this code")
+- Expanded scope exclusions to include accessibility audits
+- Updated README to reflect all six review dimensions and the Breaking Changes output section
+- Updated marketplace.json description to include complexity rating
+
 ## [2.1.0] - 2026-03-05
 
 ### Added
