@@ -237,15 +237,15 @@ claude --plugin-dir ./plugins/dev-tools
 
 ---
 
-### code-review `v2.1.0`
+### code-review `v2.1.1`
 
-Systematic code review across quality, bugs, security vulnerabilities, breaking changes, and regressions.
+Systematic code review across quality, bugs, security vulnerabilities, breaking changes, and regressions with complexity rating.
 
 **Skills** (activate automatically based on your request):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `code-review` | Review code, check for bugs, analyze code quality, or look for security issues |
+| `code-review-agent` | Review code, check for bugs, analyze code quality, look for security issues, or detect breaking changes |
 
 ```bash
 claude --plugin-dir ./plugins/code-review
@@ -475,6 +475,10 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 - [Plugin Directory](./plugins/README.md) — Plugin development guide and examples
 - [Test Fixtures](./tests/fixtures/README.md) — Testing utilities and fixtures
 - [Roadmap](./ROADMAP.md) — Planned features and API development
+- [Changelog](./CHANGELOG.md) — Project-level change history
+- [Security Policy](./SECURITY.md) — Vulnerability reporting
+- [Contributing](./CONTRIBUTING.md) — How to contribute
+- [Code of Conduct](./CODE_OF_CONDUCT.md) — Community standards
 
 ## Roadmap
 
@@ -482,7 +486,19 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 - 9 example plugin implementations covering commands, skills, and agents
 - Test marketplace configuration (`agentics-kit` v2.1.0)
 - Plugin structure documentation and patterns
-- Plugins: hello-world, dev-tools v2.0.0, code-review v2.1.0, plan-interview v1.3.0, claude-md-optimizer v1.5.0, wcag-compliance-reviewer v1.1.0, skill-reviewer v1.4.0, code-test-suggestion v2.2.1, git-agent v1.0.0
+- Community infrastructure: contributing guide, code of conduct, security policy, issue templates
+
+| Plugin | Version | Type |
+|--------|---------|------|
+| hello-world | v1.0.0 | Command |
+| dev-tools | v2.0.0 | Command |
+| code-review | v2.1.1 | Skill |
+| plan-interview | v1.3.0 | Command + Skill |
+| claude-md-optimizer | v1.5.0 | Skill |
+| wcag-compliance-reviewer | v1.1.0 | Skill |
+| skill-reviewer | v1.4.0 | Skill (x3) |
+| code-test-suggestion | v2.2.1 | Skill (x2) |
+| git-agent | v1.0.0 | Skill (x2) |
 
 ### Planned Features
 
