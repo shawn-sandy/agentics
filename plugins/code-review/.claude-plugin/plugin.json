@@ -6,7 +6,13 @@
     "name": "Agentics Project"
   },
   "license": "MIT",
-  "keywords": ["code-quality", "review", "security", "best-practices", "complexity"],
+  "keywords": [
+    "code-quality",
+    "review",
+    "security",
+    "best-practices",
+    "complexity"
+  ],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/code-review",
   "repository": "https://github.com/shawn-sandy/agentics"
 }

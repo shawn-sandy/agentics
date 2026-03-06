@@ -2,7 +2,7 @@
     "permissions": {
         "allow": [
             "Bash(tree:*)",
-            "Bash(git -C /Users/shawnsandy/devbox/agentics ls-files)"
+            "Bash(git ls-files)"
         ]
     },
     "plansDirectory": "docs/plans"
