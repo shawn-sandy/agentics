@@ -1,80 +1,74 @@
 # Contributing to Agentics
 
-Thank you for your interest in contributing to the agentics plugin marketplace!
+Thank you for your interest in contributing! This guide covers how to report bugs, propose new plugins, and submit changes.
 
 ## Reporting Bugs
 
-1. Check [existing issues](https://github.com/shawn-sandy/agentics/issues) to avoid duplicates
-2. Open a new issue using the **Bug Report** template
-3. Include: steps to reproduce, expected behavior, actual behavior, Claude Code version
+Open a [GitHub Issue](https://github.com/shawn-sandy/agentics/issues/new) with:
+
+- Plugin name and version
+- Claude Code CLI version (`claude --version`)
+- Steps to reproduce
+- Expected vs actual behavior
+- Error messages or screenshots
 
 ## Proposing New Plugins
 
-1. Open an issue using the **New Plugin** template
-2. Describe the plugin's purpose, commands/skills, and target audience
-3. Discuss the proposal before starting development
+1. Open a GitHub Issue describing the plugin idea
+2. Include: purpose, target audience, planned commands/skills
+3. Wait for feedback before starting implementation
 
 ## Plugin Development Workflow
 
-### 1. Create Your Plugin
+1. **Create your plugin** following the structure in [plugins/README.md](./plugins/README.md)
+2. **Test locally** with `claude --plugin-dir ./plugins/your-plugin`
+3. **Register** in `.claude-plugin/marketplace.json` (version must match `plugin.json`)
+4. **Document** with a README.md in your plugin directory
 
-```bash
-mkdir -p plugins/my-plugin/.claude-plugin
-mkdir -p plugins/my-plugin/commands  # or skills/
+### Plugin Structure
 
-# Create plugin manifest
-cat > plugins/my-plugin/.claude-plugin/plugin.json <<EOF
-{
-  "name": "my-plugin",
-  "version": "1.0.0",
-  "description": "Brief description of what the plugin does"
-}
-EOF
+```
+plugins/my-plugin/
+├── .claude-plugin/
+│   └── plugin.json          # Required: name, version, description
+├── commands/                 # Slash commands (optional)
+│   └── my-command.md
+├── skills/                   # Auto-activated skills (optional)
+│   └── my-skill/
+│       └── SKILL.md
+└── README.md                 # Plugin documentation
 ```
 
-### 2. Test Locally
+## Pull Request Process
 
-```bash
-claude --plugin-dir ./plugins/my-plugin
-```
-
-### 3. Register in Marketplace
-
-Add your plugin entry to `.claude-plugin/marketplace.json`. The `version` must match your `plugin.json` exactly.
-
-### 4. Submit a PR
-
-See the PR process below.
-
-## PR Process
-
-1. Fork the repository and create a feature branch
-2. Make your changes following the conventions below
-3. Test your plugin locally with `--plugin-dir`
-4. Ensure version sync between `plugin.json` and `marketplace.json`
-5. Include a CHANGELOG.md entry for your plugin
+1. Create a feature branch from `main`
+2. Make your changes
+3. Ensure version sync between `plugin.json` and `marketplace.json`
+4. Test your plugin locally with `--plugin-dir`
+5. Include the plan file in commits for plugin changes
 6. Submit a PR with a clear description
 
 ### PR Checklist
 
-- [ ] Plugin manifest (`plugin.json`) has required fields: `name`, `version`, `description`
+- [ ] Plugin manifest (`plugin.json`) has required fields: name, version, description
 - [ ] Version in `marketplace.json` matches `plugin.json`
 - [ ] Plugin tested locally with `claude --plugin-dir`
-- [ ] README.md included with usage examples
-- [ ] Homepage URL points to plugin directory (e.g., `https://github.com/shawn-sandy/agentics/tree/main/plugins/my-plugin`)
-- [ ] CHANGELOG.md updated
+- [ ] README.md included in plugin directory
+- [ ] Homepage URL points to plugin's directory (e.g., `https://github.com/shawn-sandy/agentics/tree/main/plugins/my-plugin`)
+- [ ] CHANGELOG.md updated (for existing plugins)
 
-## Conventions
+## Commit Messages
 
-- **Commit messages:** Use [Conventional Commits](https://www.conventionalcommits.org/) — e.g., `feat(plugins/my-plugin): add format command`
-- **Versioning:** Follow [Semantic Versioning](https://semver.org/)
-- **Plugin names:** Lowercase, hyphen-separated (e.g., `my-plugin`)
-- **Plugin structure:** Follow the [official Claude Code plugin structure](https://code.claude.com/docs/en/plugins)
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat(plugins/my-plugin): add new skill for X`
+- `fix(plugins/my-plugin): correct version mismatch`
+- `docs: update README with new plugin`
 
 ## Code of Conduct
 
-This project follows the [Contributor Covenant Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+This project follows the [Contributor Covenant](./CODE_OF_CONDUCT.md). Please read it before participating.
 
 ## Questions?
 
-Open a [discussion](https://github.com/shawn-sandy/agentics/discussions) or file an issue.
+Open a [GitHub Issue](https://github.com/shawn-sandy/agentics/issues) or start a [Discussion](https://github.com/shawn-sandy/agentics/discussions).
