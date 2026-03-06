@@ -143,6 +143,23 @@
         "conventional-commits",
         "automation"
       ]
+    },
+    {
+      "name": "marketplace-builder",
+      "source": "./plugins/marketplace-builder",
+      "version": "1.0.0",
+      "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure — audit readiness, generate missing files, and guide marketplace setup",
+      "category": "development",
+      "tags": [
+        "marketplace",
+        "scaffold",
+        "skill-marketplace",
+        "plugin-builder",
+        "marketplace-setup",
+        "plugin-readiness",
+        "developer-experience",
+        "onboarding"
+      ]
     }
   ]
 }
