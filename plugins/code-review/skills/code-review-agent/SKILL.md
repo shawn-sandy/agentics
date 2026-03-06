@@ -30,7 +30,6 @@ flexible guide, not a rigid process.
   - [4. Best Practices](#4-best-practices)
   - [5. Code Complexity](#5-code-complexity)
   - [6. Breaking Changes & Regressions](#6-breaking-changes--regressions)
-  - [6. Breaking Changes & Regressions](#6-breaking-changes--regressions)
 - [Review Format](#review-format)
 - [Example Review](#example-review)
 - [Tips for Effective Reviews](#tips-for-effective-reviews)
@@ -196,12 +195,14 @@ Assess the overall complexity and rate it: **Low / Medium / High / Very High**
 - Are there chained operations that are hard to debug?
 - Are there global or shared mutable states?
 
-**Rating Guide:** | Rating | Signals | |--------|---------| | Low | Flat
-structure, few branches, clear data flow, imports typical for the
-language/framework | | Medium | Some nesting or branching, moderate length,
-manageable coupling | | High | Deep nesting, many branches, long functions,
-tight coupling | | Very High | Multiple complexity signals combined; refactoring
-strongly advised |
+**Rating Guide:**
+
+| Rating | Signals |
+|--------|---------|
+| Low | Flat structure, few branches, clear data flow, imports typical for the language/framework |
+| Medium | Some nesting or branching, moderate length, manageable coupling |
+| High | Deep nesting, many branches, long functions, tight coupling |
+| Very High | Multiple complexity signals combined; refactoring strongly advised |
 
 **Notes:**
 
@@ -209,50 +210,6 @@ strongly advised |
   aggregate rating only when reviewing more than 3 files.
 - For files under ~30 lines with a single responsibility, note
   `Low (trivially simple)` and omit the detailed breakdown.
-
-### 6. Breaking Changes & Regressions
-
-**Public API Surface**
-
-- Are exported functions, classes, or types renamed or removed?
-- Have function signatures changed (added required parameters, removed
-  parameters, or reordered parameters)?
-- Have return types or shapes changed in ways callers won't expect?
-- Are previously thrown errors now suppressed, or new errors thrown that callers
-  don't handle?
-
-**Shared / Internal Contracts**
-
-- Are widely-used utilities or helpers modified in ways that affect all call
-  sites?
-- Are base classes or interfaces changed in ways that break subclasses?
-- Are default argument values, fallback behaviors, or guard conditions changed?
-
-**Data & Config Contracts**
-
-- Are environment variable names or config keys renamed or removed?
-- Are serialized data formats, API request/response shapes, or wire formats
-  changed?
-- Are database schema changes present (NOT NULL columns added, columns dropped,
-  type changes)? _(Apply only when reviewing migration files or schema
-  definitions.)_
-
-**Regression Risk**
-
-- Does the change touch code that previously had bugs fixed? (Check surrounding
-  comments or nearby history for context clues.)
-- Are shared mutable states or global singletons modified?
-- Are previously reliable invariants (e.g., "this function never returns null")
-  broken?
-
-**Call Site Assessment**
-
-- Are there other files that import or call the changed symbol?
-- Does the number of call sites suggest a high blast radius (3 or more callers)?
-- Do any call sites pass arguments or rely on return values in ways that the new
-  signature or behavior would break?
-- If git history is unavailable, assess the API surface visually from the
-  reviewed code only.
 
 ### 6. Breaking Changes & Regressions
 
@@ -327,22 +284,6 @@ If none detected: `No breaking changes or regression risks identified.`
 > If a breaking change also qualifies as a Critical Issue, list it here only —
 > omit it from Critical Issues to avoid duplication.
 
-### Breaking Changes & Regressions
-
-List any changes that break existing callers, alter contracts, or risk
-reintroducing previously fixed behavior. For each:
-
-- **What changed** — the specific symbol, config key, schema field, or behavior
-- **Who is affected** — call sites, dependents, consumers
-- **Severity** — Breaking (callers will fail) / Risky (callers may silently
-  misbehave)
-- **Migration path** — what callers must do to adapt
-
-If none detected: `No breaking changes or regression risks identified.`
-
-> If a breaking change also qualifies as a Critical Issue, list it here only —
-> omit it from Critical Issues to avoid duplication.
-
 ### Critical Issues
 
 Issues that could cause bugs, security vulnerabilities, or data loss. **Must be
@@ -369,18 +310,6 @@ mostly sound, but there are security and error handling concerns.
 
 **Medium** — Single-responsibility function with straightforward flow, but
 missing validation adds implicit branching paths that increase cognitive load.
-
-### Breaking Changes & Regressions
-
-**1. Renamed export — `createUser` → `createUserRecord` (Line 1)**
-
-- **What changed:** The exported function `createUser` was renamed to
-  `createUserRecord`
-- **Who is affected:** All callers importing `createUser` from this module
-- **Severity:** Breaking — callers will fail with a missing export error at
-  runtime
-- **Migration path:** Update all import sites to use `createUserRecord`; search
-  with `grep -r "createUser"` or your IDE's find-references
 
 ### Breaking Changes & Regressions
 

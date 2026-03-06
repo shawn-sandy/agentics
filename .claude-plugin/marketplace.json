@@ -64,14 +64,6 @@
         "breaking-changes",
         "regressions"
       ]
-      "tags": [
-        "code-quality",
-        "review",
-        "security",
-        "best-practices",
-        "breaking-changes",
-        "regressions"
-      ]
     },
     {
       "name": "plan-interview",
