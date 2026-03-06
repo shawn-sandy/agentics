@@ -1,6 +1,6 @@
 # code-review Plugin
 
-Structured, multi-dimensional code review across quality, bugs, security, best practices, complexity, and breaking changes. Provides specific, actionable feedback with line numbers and suggested fixes.
+Structured, multi-dimensional code review across quality, bugs, security, best practices, complexity, and breaking changes & regressions. Provides specific, actionable feedback with line numbers and suggested fixes.
 
 ## Purpose
 
