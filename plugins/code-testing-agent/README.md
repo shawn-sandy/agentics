@@ -1,4 +1,4 @@
-# code-test-suggestion Plugin
+# code-testing-agent Plugin
 
 Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent. This plugin does not generate arbitrary unit tests for coverage metrics — it identifies what tests would be genuinely valuable and explains why each one matters.
 
@@ -8,13 +8,13 @@ Developers often face two problems with testing: either they write tests after t
 
 ## How It Differs from code-review
 
-The `code-review` plugin reviews code for quality, bugs, security, and best practices — it tells you what is wrong with your code. The `code-test-suggestion` plugin tells you how to prove your code works correctly — it designs a test strategy based on what the code does and what the developer intended.
+The `code-review` plugin reviews code for quality, bugs, security, and best practices — it tells you what is wrong with your code. The `code-testing-agent` plugin tells you how to prove your code works correctly — it designs a test strategy based on what the code does and what the developer intended.
 
 ## Components
 
 | Component | Type | Activation |
 |-----------|------|-----------|
-| `code-test-suggestion` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
+| `code-testing-agent` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
 | `reviewing-tests` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
 
 ## Usage
@@ -69,7 +69,7 @@ How can I improve these tests?
 
 ## What the Skills Do
 
-### code-test-suggestion (suggest new tests)
+### code-testing-agent (suggest new tests)
 
 1. Identifies target code — parses your message for a file path and optional function/method name; falls back to conversation context or recent git changes if none provided
 2. Searches for an implementation plan to understand your intent
@@ -96,7 +96,7 @@ Each suggestion includes: what behavior to test, why the test matters, the code 
 1. Identifies target test files (from your message, conversation context, or near recent changes)
 2. Locates the source code those tests cover (from imports, naming conventions, directory structure)
 3. Searches for an implementation plan to understand intended behavior
-4. Analyzes the source code across 5 dimensions (same as code-test-suggestion)
+4. Analyzes the source code across 5 dimensions (same as code-testing-agent)
 5. Detects test framework and coverage target
 6. Reviews each test against the source analysis across 9 dimensions: behavior vs implementation, naming, assertion focus, coverage gaps, mock hygiene, fragility, isolation, plan alignment, coverage target progress
 7. Offers to apply fixes to the test files
@@ -120,23 +120,23 @@ Reviews are organized by test file:
 /plugin marketplace add https://github.com/shawn-sandy/agentics
 
 # Install the plugin
-/plugin install code-test-suggestion@agentics-kit
+/plugin install code-testing-agent@agentics-kit
 ```
 
 ### Load Locally (Development)
 
 ```bash
-claude --plugin-dir /path/to/agentics/plugins/code-test-suggestion
+claude --plugin-dir /path/to/agentics/plugins/code-testing-agent
 ```
 
 ## Plugin Structure
 
 ```
-plugins/code-test-suggestion/
+plugins/code-testing-agent/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
-│   ├── code-test-suggestion/
+│   ├── code-testing-agent/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── test-analysis-guide.md

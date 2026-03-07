@@ -1,6 +1,6 @@
 # Test Analysis Guide
 
-Reference heuristics for analyzing code testability. Loaded by the code-test-suggestion skill during Step 3.
+Reference heuristics for analyzing code testability. Loaded by the code-testing-agent skill during Step 3.
 
 ## Behavioral Summary Heuristics
 

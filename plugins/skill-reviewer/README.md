@@ -183,7 +183,7 @@ Comprehensive reference for four Anthropic design patterns with recommended SKIL
 
 **Auto-activates when:** User asks to run tests, check if tests pass, test a file, verify changes don't break tests, or asks about missing tests.
 
-**Does NOT activate for:** Reviewing test quality, suggesting new test cases, or auditing SKILL.md files — use `reviewing-tests` (code-test-suggestion plugin) for test quality review.
+**Does NOT activate for:** Reviewing test quality, suggesting new test cases, or auditing SKILL.md files — use `reviewing-tests` (code-testing-agent plugin) for test quality review.
 
 **Test run workflow:**
 
