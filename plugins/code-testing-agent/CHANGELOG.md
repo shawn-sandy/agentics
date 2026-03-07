@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0] - 2026-03-06
+
+### Changed
+
+- BREAKING CHANGE: plugin renamed from `code-test-suggestion` to `code-testing-agent`
+- Plugin directory renamed: `plugins/code-test-suggestion/` → `plugins/code-testing-agent/`
+- Skill directory renamed: `skills/code-test-suggestion/` → `skills/code-testing-agent/`
+- Skill frontmatter name updated: `code-test-suggestion` → `code-testing-agent`
+- Keyword `test-suggestion` replaced with `testing-agent` in `plugin.json` and `marketplace.json`
+- Homepage URL updated to reflect new directory name
+- Users who installed `code-test-suggestion@agentics-kit` must reinstall as `code-testing-agent@agentics-kit`
+
 ## [2.2.1] - 2026-03-02
 
 ### Changed

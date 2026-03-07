@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -68,12 +68,12 @@
       "tags": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns", "claude-code", "running-tests"]
     },
     {
-      "name": "code-test-suggestion",
-      "source": "./plugins/code-test-suggestion",
-      "version": "2.2.1",
+      "name": "code-testing-agent",
+      "source": "./plugins/code-testing-agent",
+      "version": "3.0.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
-      "tags": ["testing", "test-suggestion", "reviewing-tests", "test-driven", "code-analysis", "testability"]
+      "tags": ["testing", "testing-agent", "reviewing-tests", "test-driven", "code-analysis", "testability"]
     },
     {
       "name": "git-agent",
