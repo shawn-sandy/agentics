@@ -5,7 +5,7 @@ This guide provides comprehensive instructions for testing the `hello-world` plu
 ## Prerequisites
 
 - **Claude Code CLI** must be installed and accessible in your PATH
-- Working directory should be the project root: `/Users/shawnsandy/devbox/agentics`
+- Working directory should be the project root (the cloned `agentics` directory)
 - Terminal with bash/zsh support
 
 ## Understanding Commands vs Skills
@@ -173,7 +173,7 @@ I'm here to help you explore the marketplace and discover amazing plugins.
 **Possible Causes:**
 1. **Incorrect path** - Verify you're in the project root directory
    ```bash
-   pwd  # Should show: /Users/shawnsandy/devbox/agentics
+   pwd  # Should show your agentics project root
    ls plugins/hello-world  # Should list plugin contents
    ```
 
@@ -280,7 +280,7 @@ For rapid testing during development:
 
 ```bash
 # 1. Navigate to project root
-cd /Users/shawnsandy/devbox/agentics
+cd /path/to/agentics
 
 # 2. Run the test helper script
 ./plugins/hello-world/test.sh

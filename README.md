@@ -2,33 +2,37 @@
 
 A marketplace system for Claude Code plugins, enabling discovery, distribution, and installation of plugins that extend Claude's capabilities.
 
+## Quick Start
+
+```bash
+git clone https://github.com/shawn-sandy/agentics.git
+cd agentics
+claude --plugin-dir ./plugins/code-review
+# Then ask: "Review this code for issues"
+```
+
 ## Overview
 
 The agentics project provides:
 
-- **Plugin Marketplace API** - REST API for discovering and serving Claude Code plugins
-- **Example Plugins** - Reference implementations demonstrating plugin structure
-- **Test Marketplace** - Local marketplace for testing and development
-- **CLI Tools** - Command-line utilities for plugin management (planned)
+- **Example Plugins** — 9 reference implementations demonstrating Claude Code plugin structure
+- **Test Marketplace** — Local marketplace (`agentics-kit`) for testing plugin discovery and installation
+- **Plugin Development Guide** — Documentation and patterns for creating your own plugins
 
 ## Prerequisites
 
 ### Required
 
-- **Claude Code CLI** (version 1.0.33 or later - required for plugin support)
+- **Claude Code CLI** (version 1.0.33 or later — required for plugin support)
   ```bash
   # Verify installation
   claude --version
   ```
 
-### Optional (For API Development)
+### Optional Tools
 
-- **Node.js** (version 18.0.0 or later)
-  ```bash
-  # Verify installation
-  node --version
-  ```
-- **npm** or **yarn** package manager
+- **Git** — For cloning the repository
+- **GitHub CLI (`gh`)** — For the git-agent plugin's PR creation
 
 ### Platform Support
 
@@ -36,24 +40,22 @@ The agentics project provides:
 - **Linux** (Ubuntu 20.04+ or equivalent)
 - **Windows** (WSL2 recommended for best compatibility)
 
-### Optional Tools
-
-- **Git** - For cloning the repository
-- **curl** - For API testing
-- **jq** - For JSON parsing and formatting in examples
-
 ## Project Structure
 
 ```
 agentics/
 ├── .claude-plugin/
-│   └── marketplace.json          # Marketplace manifest
-├── plugins/                      # Example plugins for testing
+│   └── marketplace.json          # Marketplace manifest (agentics-kit)
+├── plugins/                      # Example plugins
 │   ├── hello-world/              # Minimal example plugin
 │   ├── dev-tools/                # Code formatting plugin
-│   ├── code-review/              # Skill-only code review plugin
-│   ├── plan-interview/           # Plan stress-test plugin (command + skill)
-│   └── claude-md-optimizer/      # CLAUDE.md audit and optimization plugin
+│   ├── code-review/              # Code review skill
+│   ├── plan-interview/           # Plan stress-test (command + skill)
+│   ├── claude-md-optimizer/      # CLAUDE.md audit and optimization
+│   ├── wcag-compliance-reviewer/ # WCAG 2.2 accessibility compliance
+│   ├── skill-reviewer/           # Skill authoring review and testing
+│   ├── code-test-suggestion/     # Test suggestion and review
+│   └── git-agent/                # Automated git commit and PR creation
 ├── tests/
 │   └── fixtures/                 # Test plugin fixtures
 └── README.md                     # This file
@@ -61,13 +63,9 @@ agentics/
 
 ## Installation
 
-### For Plugin Users (Testing Example Plugins)
-
-If you want to test the example plugins locally, no dependencies are required beyond Claude Code CLI.
-
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/agentics.git
+   git clone https://github.com/shawn-sandy/agentics.git
    cd agentics
    ```
 
@@ -91,31 +89,6 @@ If you want to test the example plugins locally, no dependencies are required be
    ```
 
 **Note:** You can test plugins immediately without installing any dependencies. The `--plugin-dir` flag loads plugins directly from your local filesystem and starts an interactive session.
-
-### For Marketplace API Developers
-
-If you want to develop or test the marketplace API (currently in progress):
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/agentics.git
-   cd agentics
-   ```
-
-2. **Install dependencies (when API is implemented):**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Start the development server:**
-   ```bash
-   npm run dev
-   # API will be available at http://localhost:3000
-   ```
-
-**Note:** The marketplace API is currently in development. Plugins work independently and can be tested without the API using the `--plugin-dir` method above.
 
 ### Troubleshooting
 
@@ -170,9 +143,7 @@ You see an error like: `Error: Input must be provided either through stdin or as
 
 ## Usage Guide
 
-### For Plugin Users
-
-#### Single Plugin Testing
+### Single Plugin Testing
 
 Test individual plugins by loading them directly:
 
@@ -188,7 +159,7 @@ claude --plugin-dir ./plugins/hello-world
 claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
 ```
 
-#### Multiple Plugin Testing
+### Multiple Plugin Testing
 
 Load multiple plugins simultaneously by specifying multiple `--plugin-dir` flags:
 
@@ -204,13 +175,13 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Format my code"
 ```
 
-#### Commands vs Skills
+### Commands vs Skills
 
 **Commands** require explicit invocation using the `/plugin:command` syntax:
 ```bash
 # Explicit command invocation
 /dev-tools:format src/index.ts
-/plan-interview:plan-interview ~/.claude/plans/my-plan.md
+/plan-interview:plan-interview docs/plans/my-plan.md
 ```
 
 **Skills** activate automatically based on your request:
@@ -224,42 +195,6 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Form
 ```
 
 **Tip:** Use `/help` in Claude to see all available commands from loaded plugins.
-
-### For API Developers
-
-**Prerequisites:** Ensure you've completed the [installation steps for API developers](#for-marketplace-api-developers) before proceeding.
-
-**Note:** The marketplace API is currently in progress. The examples below represent the planned functionality.
-
-#### Using the Marketplace API (In Progress)
-
-1. **Start the API server:**
-   ```bash
-   npm run dev
-   ```
-
-2. **Register the test marketplace:**
-   ```bash
-   curl -X POST http://localhost:3000/api/v1/marketplaces \
-     -H "Content-Type: application/json" \
-     -d '{
-       "name": "agentics-test",
-       "source": {
-         "type": "local",
-         "path": "./marketplace-data"
-       }
-     }'
-   ```
-
-3. **Sync and discover plugins:**
-   ```bash
-   curl -X POST http://localhost:3000/api/v1/marketplaces/agentics-test/sync
-   ```
-
-4. **List available plugins:**
-   ```bash
-   curl http://localhost:3000/api/v1/plugins
-   ```
 
 ## Plugins
 
@@ -292,27 +227,25 @@ Code formatting for JavaScript, TypeScript, Python, CSS, HTML, and Markdown.
 | Command | Description |
 |---------|-------------|
 | `/dev-tools:format [path]` | Format a file or directory using the appropriate formatter |
-| `/dev-tools:plan-interview [plan-file-path]` | Stress-test a plan with a structured multi-round interview |
 
 ```bash
 claude --plugin-dir ./plugins/dev-tools
 # /dev-tools:format src/index.ts
-# /dev-tools:plan-interview ~/.claude/plans/my-plan.md
 ```
 
 [View Plugin Documentation](./plugins/dev-tools/README.md)
 
 ---
 
-### code-review `v1.0.0`
+### code-review `v2.1.1`
 
-Systematic code review across quality, bugs, security vulnerabilities, and best practices.
+Systematic code review across quality, bugs, security vulnerabilities, breaking changes, and regressions with complexity rating.
 
 **Skills** (activate automatically based on your request):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `code-review` | Review code, check for bugs, analyze code quality, or look for security issues |
+| `code-review-agent` | Review code, check for bugs, analyze code quality, look for security issues, or detect breaking changes |
 
 ```bash
 claude --plugin-dir ./plugins/code-review
@@ -324,7 +257,7 @@ claude --plugin-dir ./plugins/code-review
 
 ---
 
-### plan-interview `v1.0.0`
+### plan-interview `v1.3.0`
 
 Stress-tests implementation plans with structured multi-round interviews before coding begins.
 
@@ -350,7 +283,7 @@ claude --plugin-dir ./plugins/plan-interview
 
 ---
 
-### claude-md-optimizer `v1.0.0`
+### claude-md-optimizer `v1.5.0`
 
 Audits and optimizes CLAUDE.md files against Claude Code best practices.
 
@@ -368,17 +301,106 @@ claude --plugin-dir ./plugins/claude-md-optimizer
 
 [View Plugin Documentation](./plugins/claude-md-optimizer/README.md)
 
+---
+
+### wcag-compliance-reviewer `v1.1.0`
+
+Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance.
+
+**Skills** (activate automatically based on your request):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `wcag-compliance-reviewer` | Review code for accessibility, WCAG compliance, or a11y issues |
+
+```bash
+claude --plugin-dir ./plugins/wcag-compliance-reviewer
+# "Check this component for accessibility issues"
+# "Is this page WCAG 2.2 compliant?"
+```
+
+[View Plugin Documentation](./plugins/wcag-compliance-reviewer/README.md)
+
+---
+
+### skill-reviewer `v1.4.0`
+
+Reviews and plans Claude Code skills, and runs tests for changed files.
+
+**Skills** (activate automatically based on your request):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `reviewing-skills` | Audit or review a SKILL.md file for quality and best practices |
+| `planning-skills` | Plan, design, or scaffold a new Claude Code skill |
+| `running-tests` | Run tests for changed files, detect test framework, report results |
+
+```bash
+claude --plugin-dir ./plugins/skill-reviewer
+# "Review this SKILL.md file"
+# "Help me plan a new skill"
+# "Run tests for the files I changed"
+```
+
+[View Plugin Documentation](./plugins/skill-reviewer/README.md)
+
+---
+
+### code-test-suggestion `v2.2.1`
+
+Analyzes code and suggests specific, purpose-driven tests tied to actual behavior and intent.
+
+**Skills** (activate automatically based on your request):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `code-test-suggestion` | Suggest tests for code based on behavior and intent |
+| `reviewing-tests` | Review existing tests for quality, coverage gaps, and alignment |
+
+```bash
+claude --plugin-dir ./plugins/code-test-suggestion
+# "What tests should I write for this function?"
+# "Review my test suite for gaps"
+```
+
+[View Plugin Documentation](./plugins/code-test-suggestion/README.md)
+
+---
+
+### git-agent `v1.0.0`
+
+Automated git commit and PR creation — stage, commit with conventional messages, and create PRs in one shot.
+
+**Skills** (activate automatically based on your request):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `commit-agent` | Stage changes and create a conventional commit |
+| `pr-agent` | Push branch and create a pull request |
+
+```bash
+claude --plugin-dir ./plugins/git-agent
+# "Commit my changes"
+# "Create a PR for this branch"
+```
+
+[View Plugin Documentation](./plugins/git-agent/README.md)
+
 ## Test Marketplace
 
 The `.claude-plugin/marketplace.json` at the project root defines the `agentics-kit` marketplace, which references all example plugins. Register it once to make all plugins installable by name:
 
 ```bash
-/plugin marketplace add ~/devbox/agentics
+/plugin marketplace add /path/to/agentics
 /plugin install hello-world@agentics-kit
 /plugin install dev-tools@agentics-kit
 /plugin install code-review@agentics-kit
 /plugin install plan-interview@agentics-kit
 /plugin install claude-md-optimizer@agentics-kit
+/plugin install wcag-compliance-reviewer@agentics-kit
+/plugin install skill-reviewer@agentics-kit
+/plugin install code-test-suggestion@agentics-kit
+/plugin install git-agent@agentics-kit
 ```
 
 ## Development
@@ -450,50 +472,49 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 
 ## Documentation
 
-- [Plugin Directory](./plugins/README.md) - Plugin development guide and examples
-- [Test Fixtures](./tests/fixtures/README.md) - Testing utilities and fixtures
+- [Plugin Directory](./plugins/README.md) — Plugin development guide and examples
+- [Test Fixtures](./tests/fixtures/README.md) — Testing utilities and fixtures
+- [Roadmap](./ROADMAP.md) — Planned features and API development
+- [Changelog](./CHANGELOG.md) — Project-level change history
+- [Security Policy](./SECURITY.md) — Vulnerability reporting
+- [Contributing](./CONTRIBUTING.md) — How to contribute
+- [Code of Conduct](./CODE_OF_CONDUCT.md) — Community standards
 
 ## Roadmap
 
 ### Current Features
-- ✅ Example plugin implementations (hello-world, dev-tools v2.0.0, code-review, plan-interview, claude-md-optimizer)
-- ✅ Test marketplace configuration (`agentics-kit`)
-- ✅ Plugin structure documentation
-- ✅ dev-tools: format, plan-interview commands
-- ✅ code-review skill (standalone plugin)
-- ✅ plan-interview command and skill (standalone plugin)
-- ✅ claude-md-optimizer skill (standalone plugin)
+- 9 example plugin implementations covering commands, skills, and agents
+- Test marketplace configuration (`agentics-kit` v2.1.0)
+- Plugin structure documentation and patterns
+- Community infrastructure: contributing guide, code of conduct, security policy, issue templates
 
-### In Progress
-- 🚧 Marketplace API implementation
-- 🚧 Plugin discovery and indexing
-- 🚧 RESTful API endpoints
+| Plugin | Version | Type |
+|--------|---------|------|
+| hello-world | v1.0.0 | Command |
+| dev-tools | v2.0.0 | Command |
+| code-review | v2.1.1 | Skill |
+| plan-interview | v1.3.0 | Command + Skill |
+| claude-md-optimizer | v1.5.0 | Skill |
+| wcag-compliance-reviewer | v1.1.0 | Skill |
+| skill-reviewer | v1.4.0 | Skill (x3) |
+| code-test-suggestion | v2.2.1 | Skill (x2) |
+| git-agent | v1.0.0 | Skill (x2) |
 
 ### Planned Features
-- ⏱️ CLI for plugin installation (`agentics install`)
-- ⏱️ Plugin search and filtering
-- ⏱️ Remote marketplace support
-- ⏱️ Plugin versioning and updates
-- ⏱️ Dependency management
-- ⏱️ Plugin scaffolding tools
-- ⏱️ Publishing workflow
+
+See [ROADMAP.md](./ROADMAP.md) for details on upcoming features including:
+- Marketplace API implementation
+- CLI for plugin installation
+- Remote marketplace support
+- Plugin search and filtering
 
 ## Contributing
 
-### Creating Example Plugins
-
-1. Follow the plugin structure in `plugins/README.md`
-2. Keep examples simple and focused
-3. Document all components clearly
-4. Test thoroughly before committing
-
-### Plugin Guidelines
-
-- Use official Claude Code plugin structure
-- Include comprehensive README
-- Follow semantic versioning
-- Provide clear component descriptions
-- Test with Claude Code before publishing
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on:
+- Reporting bugs
+- Proposing new plugins
+- Plugin development workflow
+- PR process and conventions
 
 ## Resources
 
@@ -508,7 +529,7 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 
 MIT License
 
-Copyright (c) 2024 Agentics Project
+Copyright (c) 2026 Shawn Sandy
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
