@@ -25,13 +25,13 @@ The skill checks across six dimensions:
 
 ## Agent
 
-The plugin includes a `code-reviewer` sub-agent for delegation from other contexts. The agent runs in read-only mode (`permissionMode: plan`) with project-scoped persistent memory and background execution. It uses confidence-based filtering to surface only high-priority findings.
+The plugin includes an `agent-code-reviewer` sub-agent for delegation from other contexts. The agent runs in read-only mode (`permissionMode: plan`) with project-scoped persistent memory and background execution. It uses confidence-based filtering to surface only high-priority findings.
 
 | Field | Value |
 |-------|-------|
 | Model | Sonnet |
 | Tools | Read, Glob, Grep, Bash |
-| Memory | Project-scoped (`.claude/agent-memory/code-reviewer/`) |
+| Memory | Project-scoped (`.claude/agent-memory/agent-code-reviewer/`) |
 | Background | Yes (non-blocking) |
 
 ## Usage

@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.0] - 2026-03-08
+
+### Changed
+
+- BREAKING CHANGE: agent renamed from `code-reviewer` to `agent-code-reviewer` to avoid conflict with built-in code-reviewer agent
+- Agent file renamed: `agents/code-reviewer.md` -> `agents/agent-code-reviewer.md`
+
 ## [2.3.0] - 2026-03-08
 
 ### Changed
