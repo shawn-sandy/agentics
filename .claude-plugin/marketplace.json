@@ -145,6 +145,20 @@
       ]
     },
     {
+      "name": "agent-creator",
+      "source": "./plugins/agent-creator",
+      "version": "1.0.0",
+      "description": "Scaffold Claude Code agent-based plugins with guided workflows",
+      "category": "development",
+      "tags": [
+        "agents",
+        "scaffolding",
+        "plugin-authoring",
+        "code-generation",
+        "sub-agents"
+      ]
+    },
+    {
       "name": "react-perf-analyzer",
       "source": "./plugins/react-perf-analyzer",
       "version": "1.1.0",
