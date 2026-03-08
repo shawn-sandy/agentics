@@ -82,6 +82,14 @@
       "description": "Automated git commit and PR creation — stage, commit with conventional messages, and create PRs in one shot",
       "category": "development",
       "tags": ["git", "commit", "pr", "pull-request", "conventional-commits", "automation"]
+    },
+    {
+      "name": "agent-creator",
+      "source": "./plugins/agent-creator",
+      "version": "1.0.0",
+      "description": "Scaffold Claude Code agent-based plugins with guided workflows",
+      "category": "development",
+      "tags": ["agents", "scaffolding", "plugin-authoring", "code-generation", "sub-agents"]
     }
   ]
 }
