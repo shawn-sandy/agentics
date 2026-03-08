@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.3.0] - 2026-03-08
+
+### Changed
+
+- Removed `WebFetch` and `WebSearch` from agent tools (unnecessary for code review)
+- Switched agent tools format to comma-separated (docs convention)
+- Fixed workflow step 1: `git status` runs via Bash, not Grep/Glob
+- Enhanced agent description with proactive delegation language
+
+### Added
+
+- `permissionMode: plan` for enforced read-only behavior at framework level
+- `disallowedTools` blocking Write, Edit, NotebookEdit (defense-in-depth)
+- `memory: project` for persistent learning of project patterns across sessions
+- Memory instructions section in agent prompt body
+- `background: true` for non-blocking execution
+
 ## [2.2.0] - 2026-03-08
 
 ### Added
