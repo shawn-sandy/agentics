@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0] - 2026-03-08
+
+### Added
+
+- New `code-reviewer` agent (`agents/code-reviewer.md`) for sub-agent invocation from other contexts
+- Agent uses Read-Only tools (Read, Glob, Grep, WebFetch, WebSearch) with sonnet model and 10-turn limit
+- Confidence-based filtering to surface only high-priority findings
+- Structured output matching the existing skill review format
+
 ## [2.1.1] - 2026-03-06
 
 ### Fixed
