@@ -1,0 +1,82 @@
+[
+  {
+    "query": "can you review src/api/auth.ts? my team lead wants a second pair of eyes before we merge the login refactor",
+    "should_trigger": true
+  },
+  {
+    "query": "I just pushed some changes to the payment processing module. Can you look at the diff on this branch and flag anything sketchy? Particularly worried about the stripe webhook handler in lib/webhooks/stripe.py",
+    "should_trigger": true
+  },
+  {
+    "query": "check server/routes/users.js for security issues — we're about to go live and I want to make sure there's no injection vulnerabilities or anything like that before the deploy",
+    "should_trigger": true
+  },
+  {
+    "query": "hey I refactored the OrderService class and renamed a bunch of the public methods. can you check if this change could break anything? the file is src/services/OrderService.java",
+    "should_trigger": true
+  },
+  {
+    "query": "I need you to assess the code quality of these files I changed on this branch. Mostly concerned about readability and whether the naming conventions are consistent with what we have elsewhere",
+    "should_trigger": true
+  },
+  {
+    "query": "look at utils/data_transform.py and tell me how complex it is. there's a bunch of nested loops and I'm wondering if it needs to be simplified before code review",
+    "should_trigger": true
+  },
+  {
+    "query": "review my changes — I modified the database migration in db/migrations/20260301_add_user_preferences.sql and also updated the UserPreferences model. worried I might have introduced a regression with the default values",
+    "should_trigger": true
+  },
+  {
+    "query": "ok so i just finished this PR with like 8 files changed across the authentication flow. can u take a look and tell me if anything's off? mostly the files in src/auth/ and src/middleware/",
+    "should_trigger": true
+  },
+  {
+    "query": "analyze the code in components/Dashboard/DataGrid.tsx for potential bugs — we've been getting intermittent null pointer errors in production and I think it might be related to how we handle the empty state",
+    "should_trigger": true
+  },
+  {
+    "query": "I changed the return type of getUser() from User | null to User | undefined in our API layer. Could this cause a regression for callers that are checking for null explicitly? The function is in src/repositories/userRepo.ts",
+    "should_trigger": true
+  },
+  {
+    "query": "How should we structure the microservices for our new order processing system? I'm thinking about event-driven architecture with Kafka but not sure if that's overkill for our scale. We currently handle about 500 orders/day",
+    "should_trigger": false
+  },
+  {
+    "query": "what tests should I write for the PaymentProcessor class? It handles credit card validation, charge creation, and refund processing. I want good coverage but not sure which edge cases matter most",
+    "should_trigger": false
+  },
+  {
+    "query": "check if our React components in src/components/ meet WCAG 2.1 AA accessibility standards — particularly the form inputs and modal dialogs. We need to pass an accessibility audit next month",
+    "should_trigger": false
+  },
+  {
+    "query": "the login endpoint is returning 500 errors intermittently. Can you fix the bug? The error log shows a connection pool timeout in src/db/pool.ts line 47. Just patch it so it retries on timeout",
+    "should_trigger": false
+  },
+  {
+    "query": "write me a REST API endpoint for user registration that validates the email, hashes the password with bcrypt, and stores it in postgres. Use Express and TypeScript. Put it in src/routes/register.ts",
+    "should_trigger": false
+  },
+  {
+    "query": "review the test suite in tests/integration/payment_test.py — are the assertions meaningful or are we just testing that the mocks work? I feel like our tests aren't catching real bugs",
+    "should_trigger": false
+  },
+  {
+    "query": "our API response times have degraded from 200ms to 1.2s over the past week. Can you profile the hot paths in src/services/ and identify the bottleneck? Might be the new caching layer we added",
+    "should_trigger": false
+  },
+  {
+    "query": "review the API documentation in docs/api-reference.md — make sure the endpoint descriptions match the actual implementation and all the request/response examples are accurate",
+    "should_trigger": false
+  },
+  {
+    "query": "review the SKILL.md file in plugins/my-new-skill/skills/analyzer/SKILL.md — check if the description is triggering correctly and the instructions follow best practices for Claude Code skills",
+    "should_trigger": false
+  },
+  {
+    "query": "I'm designing the database schema for a multi-tenant SaaS app. Should I use row-level security in Postgres or separate schemas per tenant? The tables are in db/schema.sql if you want to look",
+    "should_trigger": false
+  }
+]

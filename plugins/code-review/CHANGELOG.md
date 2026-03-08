@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0] - 2026-03-08
+
+### Added
+- `code-reviewer` subagent (`agents/code-reviewer.md`) — runs the full review checklist in its own context window with Read, Grep, Glob, and Bash tools
+
+### Changed
+- `code-review-agent` skill simplified to a thin delegation wrapper that passes the user's request to the `code-review:code-reviewer` subagent
+- Review logic (file resolution, checklist, format template, examples) moved entirely into the subagent
+
 ## [2.1.0] - 2026-03-05
 
 ### Added

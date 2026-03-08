@@ -38,7 +38,7 @@
     {
       "name": "code-review",
       "source": "./plugins/code-review",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "description": "Systematic code review across quality, bugs, security, best practices, breaking changes, and regressions",
       "category": "development",
       "tags": ["code-quality", "review", "security", "best-practices", "breaking-changes", "regressions"]
