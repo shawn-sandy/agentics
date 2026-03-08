@@ -1,5 +1,5 @@
 ---
-name: code-test-suggestion
+name: code-testing-agent
 description: Suggests targeted, meaningful tests for code based on what the code actually does and why. Use when the user asks to suggest tests, recommend tests, identify what to test, review testability, find untested behavior, or asks "what tests should I write". Also use when the user says "test this code", "what would you test here", or "help me test this feature". Does not write or run tests directly — suggests and explains what tests would be valuable and why. Not a code quality review or a test runner.
 ---
 

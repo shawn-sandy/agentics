@@ -3,15 +3,18 @@
 ## [2.2.0] - 2026-03-08
 
 ### Added
+
 - `code-reviewer` subagent (`agents/code-reviewer.md`) — runs the full review checklist in its own context window with Read, Grep, Glob, and Bash tools
 
 ### Changed
+
 - `code-review-agent` skill simplified to a thin delegation wrapper that passes the user's request to the `code-review:code-reviewer` subagent
 - Review logic (file resolution, checklist, format template, examples) moved entirely into the subagent
 
 ## [2.1.0] - 2026-03-05
 
 ### Added
+
 - Breaking Changes & Regressions checklist section (section 6) covering: public API surface, shared/internal contracts, data & config contracts, regression risk, and call site assessment
 - Breaking Changes & Regressions output section in Review Format, placed between Complexity Rating and Critical Issues
 - No-duplicate guidance: breaking changes listed in the new section are omitted from Critical Issues
@@ -32,6 +35,7 @@
 ## [1.2.0] - 2026-03-03
 
 ### Added
+
 - Code complexity rating (Low/Medium/High/Very High) to Review Checklist (#5)
 - Complexity Rating section in Review Format output (after Summary)
 - Rating guide table with signals for each level
@@ -45,10 +49,12 @@
 ## [1.1.0] - 2026-03-03
 
 ### Added
+
 - Adaptive file resolution (Step 0): supports explicit path, git status, branch diff, and fallback prompt
 - Table of contents
 
 ### Fixed
+
 - Description rewritten to third person with scope exclusion
 - Second-person "your review" corrected to "the review"
 - Freedom level statement added to opening paragraph

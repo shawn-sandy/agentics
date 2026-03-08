@@ -1,6 +1,6 @@
 # code-review Plugin
 
-Systematic code review across quality, bugs, security vulnerabilities, and best practices. Provides specific, actionable feedback with line numbers and suggested fixes.
+Structured, multi-dimensional code review across quality, bugs, security, best practices, complexity, and breaking changes & regressions. Provides specific, actionable feedback with line numbers and suggested fixes.
 
 ## Purpose
 
@@ -54,6 +54,7 @@ Check src/components/LoginForm.tsx for security issues
 ### Review output format
 
 Reviews are structured as:
+
 1. **Summary** — brief overview of code purpose and overall quality
 2. **Complexity Rating** — Low/Medium/High/Very High with a one-sentence rationale
 3. **Breaking Changes & Regressions** — changes that break callers, alter contracts, or risk regressions

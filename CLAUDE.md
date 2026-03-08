@@ -33,10 +33,10 @@ tests/fixtures/       → Test data for validation logic
 
 ```bash
 # Load a plugin for local testing
-claude --plugin-dir ~/devbox/agentics/plugins/<name>
+claude --plugin-dir ./plugins/<name>
 
 # Register marketplace and install a plugin
-/plugin marketplace add ~/devbox/agentics
+/plugin marketplace add /path/to/agentics
 /plugin install <plugin-name>@agentics-kit
 ```
 

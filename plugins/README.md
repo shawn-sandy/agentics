@@ -13,13 +13,12 @@ A minimal viable plugin demonstrating basic plugin structure. Perfect for unders
 **Use case:** Learning plugin basics, testing plugin loading
 
 ### dev-tools
-A commands-focused plugin demonstrating explicit invocation and plan file handling.
+A commands-focused plugin for code formatting.
 
 **Components:**
 - Command: `/dev-tools:format [path]` - Format code files using the appropriate formatter
-- Command: `/dev-tools:plan-interview [plan-file-path]` - Structured plan stress-test interview
 
-**Use case:** Understanding command plugins, formatter delegation, plan file resolution
+**Use case:** Understanding command plugins, formatter delegation
 
 ### code-review
 A skill-only plugin that activates automatically when the user asks to review code.
@@ -45,6 +44,42 @@ A skill-only plugin that audits and optimizes CLAUDE.md files.
 - Skill: `claude-md-optimizer` - Audit CLAUDE.md files against best practices
 
 **Use case:** Understanding skills with broad activation criteria and multi-step output
+
+### wcag-compliance-reviewer
+A skill-only plugin that reviews code for WCAG 2.2 Level AA accessibility compliance.
+
+**Components:**
+- Skill: `wcag-compliance-reviewer` - Review HTML/CSS and React/TypeScript code for WCAG 2.2 compliance
+
+**Use case:** Accessibility auditing, compliance checking
+
+### skill-reviewer
+A multi-skill plugin for reviewing, planning, and testing Claude Code skills.
+
+**Components:**
+- Skill: `reviewing-skills` - Audit SKILL.md files across 5 dimensions with scoring
+- Skill: `planning-skills` - Guide workflow for designing and scaffolding new skills
+- Skill: `running-tests` - Detect changed files, find related tests, run them, report results
+
+**Use case:** Plugin authoring quality assurance, skill development workflow
+
+### code-test-suggestion
+A skill-only plugin that suggests targeted tests based on actual code behavior and intent.
+
+**Components:**
+- Skill: `code-test-suggestion` - Suggest specific, purpose-driven tests for code
+- Skill: `reviewing-tests` - Review existing tests for quality and coverage gaps
+
+**Use case:** Test-driven development, test quality improvement
+
+### git-agent
+A skill-only plugin for automated git commit and PR creation.
+
+**Components:**
+- Skill: `commit-agent` - Stage changes and create conventional commits
+- Skill: `pr-agent` - Push branch and create pull requests via `gh`
+
+**Use case:** Streamlined git workflows, automated PR creation
 
 ## Testing Plugins Locally
 
