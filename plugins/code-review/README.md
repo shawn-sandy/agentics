@@ -23,6 +23,17 @@ The skill checks across six dimensions:
 5. **Code Complexity** — structural complexity, coupling/cohesion, cognitive load (Low/Medium/High/Very High rating)
 6. **Breaking Changes & Regressions** — public API surface, shared contracts, data/config contracts, regression risk
 
+## Agent
+
+The plugin includes a `code-reviewer` sub-agent for delegation from other contexts. The agent runs in read-only mode (`permissionMode: plan`) with project-scoped persistent memory and background execution. It uses confidence-based filtering to surface only high-priority findings.
+
+| Field | Value |
+|-------|-------|
+| Model | Sonnet |
+| Tools | Read, Glob, Grep, Bash |
+| Memory | Project-scoped (`.claude/agent-memory/code-reviewer/`) |
+| Background | Yes (non-blocking) |
+
 ## Usage
 
 ### Automatic activation (skill)
