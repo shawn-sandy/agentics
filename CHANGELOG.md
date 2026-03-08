@@ -2,9 +2,68 @@
 
 All notable changes to this project are documented here.
 
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individual plugin changelogs live in `plugins/<name>/CHANGELOG.md`.
+
 ---
 
-## [Unreleased] — Marketplace Refactor
+## [2.1.0] - 2026-03-06 — Open-Source Readiness & Documentation
+
+### Added
+
+- **ROADMAP.md** — planned features: Marketplace API, CLI tools, remote marketplace support
+- **SECURITY.md** — vulnerability reporting policy and scope
+- **CONTRIBUTING.md** — contributor guidelines: bug reports, plugin proposals, PR process
+- **CODE_OF_CONDUCT.md** — Contributor Covenant code of conduct
+- **GitHub templates** — issue templates (bug report, new plugin), pull request template
+- **Open-source readiness plan** (`docs/plans/open-source-readiness-plan.md`) and stress test
+
+### Changed
+
+- **README.md** — expanded with prerequisites, troubleshooting, usage guide, plugin catalog with all 9 plugins, and documentation links
+- **plugins/README.md** — updated to include all 9 plugins with corrected descriptions
+- **CLAUDE.md** — updated reference implementations list and common commands
+
+### Plugin Updates
+
+- **code-review v2.1.1** — optimized skill description for trigger accuracy; added informal trigger phrases
+- **git-agent v1.0.0** — removed hardcoded paths from documentation
+
+---
+
+## [2.0.0] - 2026-03-05 — Plugin Expansion
+
+### Added — New Plugins
+
+- **git-agent v1.0.0** — `commit-agent` and `pr-agent` skills for automated git commit and PR creation
+
+### Plugin Updates
+
+- **code-review v2.1.0** — added breaking changes & regression detection (section 6); conditional DB schema checks; no-git-context fallback
+- **code-review v2.0.0** — BREAKING: skill renamed `code-review` to `code-review-agent` to avoid conflict with Anthropic's built-in skill
+- **code-review v1.2.0** — added code complexity rating (Low/Medium/High/Very High)
+- **code-review v1.1.0** — added adaptive file resolution and table of contents
+- **skill-reviewer v1.4.0** — added `running-tests` skill with framework detection and missing test advisory
+- **skill-reviewer v1.3.0** — added regression risk check with 6-field comparison matrix
+- **skill-reviewer v1.2.0** — aligned with official Anthropic best practices; added workflow patterns, token budget, script quality anti-patterns
+- **skill-reviewer v1.1.0** — added `planning-skills` skill with design pattern reference
+- **code-test-suggestion v2.2.1** — renamed skill `test-review` to `reviewing-tests` (gerund convention)
+- **code-test-suggestion v2.2.0** — removed non-compliant cross-skill reference
+- **code-test-suggestion v2.1.0** — added argument parsing for explicit file path and function scoping
+- **code-test-suggestion v2.0.0** — BREAKING: removed commands, kept skills only
+- **code-test-suggestion v1.1.0** — added `test-review` skill with 7-step review workflow
+- **code-test-suggestion v1.0.0** — initial release with 6-step code test suggestion skill
+- **claude-md-optimizer v1.5.0** — refactored SKILL.md with progressive disclosure pattern
+- **plan-interview v1.3.0** — added `review-rename-plans` command
+- **plan-interview v1.2.0** — added plan name validation in Step 2
+- **wcag-compliance-reviewer v1.1.0** — upgraded default standard from WCAG 2.1 to WCAG 2.2; added 6 new criteria
+
+### Changed
+
+- **Marketplace manifest** (`agentics-kit`) bumped to v2.1.0 — expanded from 5 to 9 plugins
+
+---
+
+## [1.0.0] — Initial Marketplace Setup
 
 ### Summary
 
@@ -12,112 +71,24 @@ Three bugs were discovered and fixed during an attempt to register the `agentics
 marketplace via `/plugin marketplace add`. Each bug was a schema validation error caught
 by the Claude Code CLI at a different stage: marketplace registration, plugin install.
 
----
-
 ### Bug 1 — Marketplace registered at the wrong directory
 
 **Commit:** `af36361` / `aae719c`
 
-**Symptom:**
-Registration required pointing at a subdirectory instead of the repo root:
-```bash
-/plugin marketplace add ~/devbox/agentics/marketplace-data  # wrong
-```
-
-**Root Cause:**
-Claude Code looks for `.claude-plugin/marketplace.json` in the directory you register.
-The manifest was nested inside `marketplace-data/.claude-plugin/` — a subdirectory of
-the repo — so users had to register `marketplace-data/` rather than the project root.
-This was inconsistent with the Claude Code docs, which show `.claude-plugin/` at the
-root of the registered directory.
-
-**Fix:**
-Moved the manifest to the project root via `git mv`:
-```
-marketplace-data/.claude-plugin/marketplace.json → .claude-plugin/marketplace.json
-```
-
-**Side effect fixed:**
-Moving the file also resolved a latent path traversal issue. Source paths in
-`marketplace.json` are resolved relative to the manifest's location. When the manifest
-lived inside `marketplace-data/.claude-plugin/`, the paths had to traverse upward:
-```json
-"source": "../plugins/hello-world"
-```
-After moving to the project root, the paths are straightforward:
-```json
-"source": "./plugins/hello-world"
-```
-
-The `marketplace-data/` directory was deleted entirely (its README contained only
-API speculation and boilerplate not relevant to local plugin testing).
-
----
+Moved manifest from `marketplace-data/.claude-plugin/` to project root `.claude-plugin/`.
+This fixed registration path and source path resolution.
 
 ### Bug 2 — `"components"` is not a valid key in `marketplace.json`
 
 **Commit:** `95bf881`
 
-**Error:**
-```
-Error: Failed to parse marketplace file at .claude-plugin/marketplace.json:
-Invalid schema: plugins.1: Unrecognized key: "components"
-```
-
-**Root Cause:**
-The `dev-tools` plugin entry in `marketplace.json` included a `"components"` field
-listing its commands and skills:
-```json
-{
-  "name": "dev-tools",
-  "source": "./plugins/dev-tools",
-  "components": {
-    "commands": ["format", "plan-review", "plan-interview"],
-    "skills": ["code-review", "claude-md-optimizer"]
-  }
-}
-```
-This field was a custom addition not defined in the official marketplace schema. The
-CLI's strict schema validation rejects any unrecognized keys.
-
-**Fix:**
-Removed the `"components"` block from the `dev-tools` entry. The CLI discovers
-commands and skills by scanning the plugin directory itself — they do not need to be
-declared in `marketplace.json`.
-
----
+Removed custom `"components"` field from `dev-tools` entry. The CLI discovers commands and skills by scanning plugin directories.
 
 ### Bug 3 — `"category"` is not a valid key in `plugin.json`
 
 **Commit:** `0e463fd`
 
-**Error:**
-```
-Error: Failed to install: Plugin has an invalid manifest file at
-.claude-plugin/plugin.json. Validation errors: Unrecognized key: "category"
-```
-
-**Root Cause:**
-Both `plugins/hello-world/.claude-plugin/plugin.json` and
-`plugins/dev-tools/.claude-plugin/plugin.json` contained a `"category"` field:
-```json
-{
-  "name": "hello-world",
-  "version": "1.0.0",
-  "description": "...",
-  "license": "MIT",
-  "category": "learning"   ← not allowed here
-}
-```
-`"category"` is a marketplace-level concept used for discovery and filtering. It
-belongs in `marketplace.json` (where it is valid and already present), not in the
-plugin's own manifest.
-
-**Fix:**
-Removed `"category"` from both `plugin.json` files. The field remains in
-`marketplace.json` where it is schema-valid.
-
----
+Removed `"category"` from `hello-world` and `dev-tools` `plugin.json` files. Category belongs in `marketplace.json` only.
 
 ### Schema Field Reference
 
@@ -126,22 +97,9 @@ Removed `"category"` from both `plugin.json` files. The field remains in
 | `name` | required | required |
 | `version` | required | required |
 | `description` | required | required |
-| `source` | — | required |
-| `author` | allowed | — |
-| `license` | allowed | — |
+| `source` | -- | required |
+| `author` | allowed | -- |
+| `license` | allowed | -- |
 | `category` | **not allowed** | allowed |
 | `tags` | **not allowed** | allowed |
 | `components` | **not allowed** | **not allowed** |
-
----
-
-### Files Changed
-
-| File | Change |
-|------|--------|
-| `.claude-plugin/marketplace.json` | Created (moved from `marketplace-data/.claude-plugin/`), source paths updated, version bumped to `1.1.0`, `"components"` removed |
-| `plugins/hello-world/.claude-plugin/plugin.json` | Removed `"category"` |
-| `plugins/dev-tools/.claude-plugin/plugin.json` | Removed `"category"` |
-| `marketplace-data/` | Deleted entirely |
-| `CLAUDE.md` | Updated registration command and directory structure references |
-| `README.md` | Updated project structure diagram and marketplace registration section |

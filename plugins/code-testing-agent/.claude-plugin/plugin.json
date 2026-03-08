@@ -1,6 +1,6 @@
 {
-  "name": "code-test-suggestion",
-  "version": "2.2.1",
+  "name": "code-testing-agent",
+  "version": "3.0.0",
   "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
   "author": {
     "name": "Agentics Project"
@@ -8,12 +8,12 @@
   "license": "MIT",
   "keywords": [
     "testing",
-    "test-suggestion",
+    "testing-agent",
     "test-driven",
     "code-analysis",
     "testability",
     "reviewing-tests"
   ],
-  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/code-test-suggestion",
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/code-testing-agent",
   "repository": "https://github.com/shawn-sandy/agentics"
 }

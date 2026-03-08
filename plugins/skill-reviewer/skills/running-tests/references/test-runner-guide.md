@@ -104,7 +104,7 @@ Use these file-level message templates when a source file has no corresponding t
     → For test content suggestions, use the reviewing-tests skill.
 ```
 
-**Advisory scope:** File-level only. Do not parse function signatures. Do not generate test stubs. Direct the user to `reviewing-tests` (code-test-suggestion plugin) for detailed test content.
+**Advisory scope:** File-level only. Do not parse function signatures. Do not generate test stubs. Direct the user to `reviewing-tests` (code-testing-agent plugin) for detailed test content.
 
 ---
 
