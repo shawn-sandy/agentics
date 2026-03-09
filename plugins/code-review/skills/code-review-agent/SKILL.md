@@ -1,18 +1,17 @@
 ---
 name: code-review-agent
 description: >
-  Performs structured, multi-dimensional code review covering six areas: code
-  quality, potential bugs, security vulnerabilities, best practices, code
-  complexity rating (Low/Medium/High/Very High), and breaking changes with
-  regression risk assessment. Automatically resolves which files to review from
-  git status, branch diffs, or explicit paths. Use this skill whenever the user
-  asks to review code, check files for problems, look over a PR or branch diff,
+  Performs interactive, multi-dimensional code review when the user directly asks
+  to review code, check files for problems, look over a PR or branch diff,
   assess code quality or complexity, find bugs or security issues, detect
   breaking changes, or evaluate whether a change could cause a regression. Also
   triggers for informal requests like "take a look at this" or "anything wrong
-  with this code." Produces a structured report with severity-ranked findings.
-  Does not cover system architecture reviews, testing strategy, or accessibility
-  audits.
+  with this code." Covers six areas: code quality, potential bugs, security
+  vulnerabilities, best practices, code complexity rating (Low/Medium/High/Very
+  High), and breaking changes with regression risk assessment. Automatically
+  resolves which files to review from git status, branch diffs, or explicit
+  paths. Produces a structured report with severity-ranked findings. Does not
+  cover system architecture reviews, testing strategy, or accessibility audits.
 ---
 
 When reviewing code, systematically check for common issues across multiple

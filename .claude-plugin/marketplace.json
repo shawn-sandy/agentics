@@ -53,7 +53,7 @@
     {
       "name": "code-review",
       "source": "./plugins/code-review",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
       "tags": [
