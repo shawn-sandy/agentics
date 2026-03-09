@@ -1,15 +1,15 @@
 ---
 name: agent-code-reviewer
 description: >
-  Reviews code for bugs, logic errors, security vulnerabilities, code quality
-  issues, and adherence to project conventions, using confidence-based filtering
-  to report only high-priority issues that truly matter. Use when the user asks
-  to review code, check files for problems, find bugs or security issues, detect
-  breaking changes, or evaluate code quality. Also triggers for informal requests
-  like "take a look at this" or "anything wrong with this code." Use proactively
-  after code changes, branch switches, or before merging to catch issues early.
-  Does not cover system architecture reviews, testing strategy, or accessibility
-  audits.
+  Internal background code review agent for delegation from other agents or
+  automated workflows. Reviews code for bugs, logic errors, security
+  vulnerabilities, code quality issues, and adherence to project conventions,
+  using confidence-based filtering to report only high-priority issues. Use when
+  delegating a code review to a sub-agent, when another agent needs a second
+  opinion on code quality, or when running a proactive sweep after a branch
+  switch, merge, or batch of commits. Not intended for direct user-initiated
+  review requests — those are handled by the code-review-agent skill. Does not
+  cover system architecture reviews, testing strategy, or accessibility audits.
 tools: Read, Glob, Grep, Bash
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet

@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.1] - 2026-03-08
+
+### Fixed
+
+- Resolved activation conflict between skill and agent — both had overlapping trigger descriptions causing redundant or unpredictable activation
+- Skill (`code-review-agent`) now owns all direct, interactive user review requests
+- Agent (`agent-code-reviewer`) rewritten as internal-only, for delegation from other agents or automated workflows
+- Agent retained for future delegation workflows; not triggered by direct user requests
+
 ## [3.0.0] - 2026-03-08
 
 ### Changed
