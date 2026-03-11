@@ -4,8 +4,8 @@
 
 ### Changed
 
-- Interview findings are now always saved to the plan file automatically — no longer asks for confirmation (Step 6)
-- If a previous `## Interview Summary` section exists, it is replaced instead of duplicated
+- Step 6 now proposes concrete edits to the plan based on interview findings, asks for approval, and applies approved changes directly into the plan's content before saving the interview summary
+- Interview summary is always appended (or replaced if one already exists) after edits are applied
 
 ## [1.4.0] - 2026-03-10
 

@@ -31,7 +31,7 @@ Create the following todos (all starting with `status: "pending"`):
 - Step 3d: Round 3 — Edge Cases & Best Practices (if applicable)
 - Step 4: Surface out-of-scope concerns & complexity check
 - Step 5: Compile and present review summary
-- Step 6: Save findings to the plan file
+- Step 6: Apply interview findings and save summary
 
 Mark each todo `status: "completed"` as you finish that step.
 
@@ -255,18 +255,46 @@ the name passed validation.]
 [Concise list of areas where the plan can be reduced in scope or abstraction, with specific simpler alternatives — omit this section if no complexity concerns were found]
 ```
 
-### Step 6 — Save findings to the plan file
+### Step 6 — Apply interview findings and save summary
 
-After presenting the summary, **always** append it to the plan file — do not ask
-for confirmation. Use the `Edit` tool to append the summary as a new
-`## Interview Summary` section at the end of the plan file.
+#### 6a — Propose plan edits
 
-If the plan file already contains an `## Interview Summary` section from a
-previous interview, replace it with the new summary instead of appending a
-duplicate.
+Using the interview summary from Step 5, derive a numbered list of concrete edits to the plan file. Each edit should be one of:
 
-After saving, confirm to the user: *"Interview summary has been saved to
-`[plan-file-path]`."*
+- **Update** an existing section (e.g., incorporate a confirmed decision, revise an approach based on feedback)
+- **Add** missing content (e.g., a rollback strategy, error handling section, or edge case surfaced during the interview)
+- **Remove or simplify** over-engineered elements the user agreed to simplify
+- **Resolve** open questions that were answered during the interview
+
+Present the edits as a numbered list, where each item states what will change and where in the plan. For example:
+
+```
+Recommended plan edits:
+
+1. Update "## Data Model" to use PostgreSQL instead of MongoDB (confirmed in Round 1)
+2. Add new "## Error Handling" section after "## Implementation" covering the failure modes discussed
+3. Remove the Redis caching layer from "## Architecture" — replace with in-memory LRU cache
+4. Update "## Open Questions" to remove Q2 and Q3 (answered during interview), keep Q1 as unresolved
+```
+
+If the interview did not surface any changes to the plan content (all existing content was confirmed as-is), skip 6a and 6b — proceed directly to 6c.
+
+#### 6b — Get approval and apply edits
+
+Ask the user via `AskUserQuestion`: *"Which edits should I apply? Reply **all** to apply everything, list the numbers you want (e.g., '1, 3, 4'), or **none** to skip."*
+
+- If **none** or the user declines, skip to 6c without modifying plan content.
+- Otherwise, apply only the approved edits using the `Edit` tool. Modify the plan's existing sections in place — update prose, add new sections at logical positions, or remove content as specified.
+
+After applying, confirm: *"Applied [N] edits to `[plan-file-path]`."*
+
+#### 6c — Save interview summary
+
+After edits are applied (or skipped), **always** append the interview summary from Step 5 to the plan file as a new `## Interview Summary` section at the end using the `Edit` tool.
+
+If the plan file already contains an `## Interview Summary` section from a previous interview, replace it with the new summary instead of appending a duplicate.
+
+Confirm to the user: *"Interview summary saved to `[plan-file-path]`."*
 
 ---
 
