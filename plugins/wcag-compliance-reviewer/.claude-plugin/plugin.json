@@ -1,6 +1,5 @@
 {
   "name": "wcag-compliance-reviewer",
-  "version": "1.1.0",
   "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
   "author": { "name": "Agentics Project" },
   "license": "MIT",

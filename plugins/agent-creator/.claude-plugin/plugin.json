@@ -1,6 +1,5 @@
 {
   "name": "agent-creator",
-  "version": "1.0.0",
   "description": "Scaffold Claude Code agent-based plugins with guided workflows",
   "author": { "name": "Agentics Project" },
   "license": "MIT",

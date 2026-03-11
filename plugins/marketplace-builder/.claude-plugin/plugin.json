@@ -1,6 +1,5 @@
 {
   "name": "marketplace-builder",
-  "version": "1.0.0",
   "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure",
   "author": { "name": "Agentics Project" },
   "license": "MIT",

@@ -1,6 +1,5 @@
 {
   "name": "hello-world",
-  "version": "1.0.0",
   "description": "A minimal example plugin demonstrating the basic structure of Claude Code plugins",
   "author": {
     "name": "Agentics Project"
