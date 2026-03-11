@@ -23,7 +23,7 @@ Create the following todos (all starting with `status: "pending"`):
 - Step 3d: Round 3 — Edge Cases & Best Practices (if applicable)
 - Step 4: Surface out-of-scope concerns & complexity check
 - Step 5: Compile and present review summary
-- Step 6: Offer to save findings
+- Step 6: Save findings to the plan file
 
 Mark each todo `status: "completed"` as you finish that step.
 
@@ -308,12 +308,15 @@ with specific simpler alternatives — omit this section if no complexity concer
 were found]
 ```
 
-### Step 6 — Offer to save findings
+### Step 6 — Save findings to the plan file
 
-After presenting the summary, ask the user:
+After presenting the summary, **always** append it to the plan file — do not ask
+for confirmation. Use the `Edit` tool to append the summary as a new
+`## Interview Summary` section at the end of the plan file.
 
-> "Would you like me to append this interview summary to the plan file?"
+If the plan file already contains an `## Interview Summary` section from a
+previous interview, replace it with the new summary instead of appending a
+duplicate.
 
-**Do not write to the plan file unless the user explicitly confirms.** If they
-confirm, append the summary as a new `## Interview Summary` section at the end
-of the plan file using the `Edit` tool.
+After saving, confirm to the user: *"Interview summary has been saved to
+`[plan-file-path]`."*

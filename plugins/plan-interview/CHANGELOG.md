@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0] - 2026-03-11
+
+### Changed
+
+- Interview findings are now always saved to the plan file automatically — no longer asks for confirmation (Step 6)
+- If a previous `## Interview Summary` section exists, it is replaced instead of duplicated
+
 ## [1.4.0] - 2026-03-10
 
 ### Added
