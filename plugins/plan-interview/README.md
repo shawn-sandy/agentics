@@ -12,6 +12,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 |-----------|------|-----------|
 | `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
+| `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
 
 ## Usage
@@ -33,6 +34,16 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 ```
 
 Reviews plan filenames against their content. Flags files whose names are random, generic, or misaligned with the plan's intent. Offers to rename using `git mv` to preserve history.
+
+### Plan File Hygiene (batch rename)
+
+```
+/plan-interview:plan-hygiene                    # scan plansDirectory + additional dirs
+/plan-interview:plan-hygiene docs/planning      # scan only docs/planning
+/plan-interview:plan-hygiene openspec/plans     # scan only openspec/plans
+```
+
+Scans plan directories for files with random non-descriptive names (e.g., `precious-knitting-tulip.md`) and renames them to descriptive kebab-case names derived from their content headings. Presents a proposal table and asks for approval before renaming. Uses `git mv` to preserve history.
 
 ### Skill (automatic activation)
 
@@ -60,6 +71,7 @@ Any plan with UI signals (React, Tailwind, `.tsx`, form/modal/dialog terminology
 ### After the interview
 
 The skill compiles a **Plan Interview Summary** with:
+
 - Plan naming issues (if the filename or heading is non-descriptive)
 - Key decisions confirmed
 - Open risks and concerns
@@ -67,6 +79,25 @@ The skill compiles a **Plan Interview Summary** with:
 - Simplification opportunities (if any)
 
 You can optionally save the summary back to the plan file.
+
+## Rules
+
+To automate plan-hygiene before commits, copy this rule into `.claude/rules/plan-hygiene.md` or `/.claude/rules/pre-commit-plan-hygiene.md` :
+
+```markdown
+---
+description: Run plan file hygiene before committing changes
+paths:
+  - "**/plans/**"
+  - "**/planning/**"
+---
+
+# Pre-Commit Plan Hygiene
+
+Before creating any git commit, check if there are plan files with random non-descriptive names (e.g., `precious-knitting-tulip.md`) in the planning directories.
+
+If random-named plan files exist, run `/plan-hygiene` first and complete the rename workflow before proceeding with the commit.
+```
 
 ## Installation
 
