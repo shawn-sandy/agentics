@@ -1,6 +1,5 @@
 {
   "name": "dev-tools",
-  "version": "2.0.0",
   "description": "Code formatting for JavaScript, TypeScript, Python, CSS, HTML, and Markdown",
   "author": {
     "name": "Agentics Project"

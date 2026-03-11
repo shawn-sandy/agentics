@@ -19,7 +19,7 @@ Add plugin entries to `.claude-plugin/marketplace.json`:
 }
 ```
 
-**Version Synchronization:** `version` in `marketplace.json` must exactly match `version` in the plugin's `plugin.json`.
+**Version location:** For relative-path plugins (like all plugins in this repo), set `version` only in `marketplace.json`. Do NOT add `version` to `plugin.json` — per [official docs](https://code.claude.com/docs/en/plugin-marketplaces), `plugin.json` silently overrides the marketplace version, creating a maintenance risk.
 
 ## Standard Categories
 
@@ -47,12 +47,11 @@ Example: `["formatting", "code-quality", "prettier", "eslint"]`
 
 ## Bumping a Plugin Version
 
-Every plugin version appears in exactly two places that **must match**:
+For relative-path plugins, the version lives in one place only:
 
-1. `plugins/<name>/.claude-plugin/plugin.json` → `"version"`
-2. `.claude-plugin/marketplace.json` → `plugins[].version` for that plugin entry
+- `.claude-plugin/marketplace.json` → `plugins[].version` for that plugin entry
 
-A mismatch causes install failure.
+Do **not** add `version` to `plugin.json` for relative-path plugins. If both files declare a version, `plugin.json` silently wins, making the marketplace version misleading.
 
 ### When to bump
 
@@ -66,14 +65,13 @@ A mismatch causes install failure.
 
 ### How to bump
 
-1. **Edit `plugin.json`** — update `"version"` in `plugins/<name>/.claude-plugin/plugin.json`
-2. **Edit `marketplace.json`** — update the matching `"version"` in `.claude-plugin/marketplace.json` under the same plugin entry
-3. **Update changelog** — add an entry to `plugins/<name>/CHANGELOG.md` (create the file if it doesn't exist)
-4. **Verify sync** — confirm both values match:
+1. **Edit `marketplace.json`** — update `"version"` in `.claude-plugin/marketplace.json` under the plugin entry
+2. **Update changelog** — add an entry to `plugins/<name>/CHANGELOG.md` (create the file if it doesn't exist)
+3. **Verify** — confirm the version is set only in `marketplace.json`:
    ```bash
-   grep -r '"version"' plugins/<name>/.claude-plugin/ .claude-plugin/marketplace.json
+   grep '"version"' .claude-plugin/marketplace.json | grep <name>
    ```
-5. **Commit** — use a conventional commit message:
+4. **Commit** — use a conventional commit message:
    - Patch: `fix(plugins/<name>): bump version to X.Y.Z`
    - Minor: `feat(plugins/<name>): bump version to X.Y.Z`
    - Major: `feat(plugins/<name>)!: bump version to X.Y.Z` with a `BREAKING CHANGE:` note in the body
@@ -83,4 +81,4 @@ A mismatch causes install failure.
 - Invalid `source` paths — must be relative or absolute and must exist on disk
 - Duplicate plugin names in the same marketplace
 - Missing `marketplace.json` in `.claude-plugin/` directory
-- Version mismatch between `marketplace.json` and `plugin.json`
+- Setting `version` in both `plugin.json` and `marketplace.json` — for relative-path plugins, set it only in `marketplace.json`

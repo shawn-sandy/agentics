@@ -14,7 +14,7 @@ Two distinct purposes:
 ## Tech Stack
 
 - **Formats:** Markdown (commands, skills), JSON (plugin manifests)
-- **Plugin manifest:** `.claude-plugin/plugin.json` — requires `name`, `version`, `description`
+- **Plugin manifest:** `.claude-plugin/plugin.json` — requires `name`; `version` is managed in `marketplace.json` for relative-path plugins
 - **Marketplace manifest:** `.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
 - **Minimum Claude Code Version:** 1.0.33 or later
 
@@ -64,7 +64,7 @@ Detailed patterns in `.claude/rules/`:
 
 - Plugin Homepage URLs must point to the plugin's specific directory in the repository, not the repository root, for example `https://github.com/shawn-sandy/agentics/tree/main/plugins/{plugin-name}`.
 - Always include the plan file in commits for plugin changes, even minor ones.
-- `version` in `marketplace.json` must exactly match `version` in the plugin's `plugin.json`.
+- For relative-path plugins, set `version` only in `marketplace.json`, not in `plugin.json` (per [official docs](https://code.claude.com/docs/en/plugin-marketplaces)).
 - Component types: **Commands** (invoked via `/plugin:name`), **Skills** (auto-activated by intent), **Agents** (subprocesses), **Hooks** (event-driven).
 
 ## Official Documentation

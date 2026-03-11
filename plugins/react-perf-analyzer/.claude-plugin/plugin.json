@@ -1,6 +1,5 @@
 {
   "name": "react-perf-analyzer",
-  "version": "1.1.0",
   "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores — produces a heuristic report with recommendations",
   "author": {
     "name": "Agentics Project"

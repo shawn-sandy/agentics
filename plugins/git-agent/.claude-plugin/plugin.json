@@ -1,6 +1,5 @@
 {
   "name": "git-agent",
-  "version": "1.0.0",
   "description": "Automated git commit and PR creation — stage, commit with conventional messages, and create PRs in one shot",
   "author": { "name": "Agentics Project" },
   "license": "MIT",

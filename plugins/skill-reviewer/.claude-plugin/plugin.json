@@ -1,6 +1,5 @@
 {
   "name": "skill-reviewer",
-  "version": "1.4.0",
   "description": "Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage",
   "author": { "name": "Agentics Project" },
   "license": "MIT",

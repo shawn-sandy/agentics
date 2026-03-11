@@ -1,6 +1,5 @@
 {
   "name": "code-review",
-  "version": "3.0.1",
   "description": "Systematic code review across quality, bugs, security, and best practices",
   "author": {
     "name": "Agentics Project"

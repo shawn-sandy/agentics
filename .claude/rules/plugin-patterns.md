@@ -77,9 +77,9 @@ Each plugin must have a `README.md` with:
 
 ### Plugin Manifest Errors
 
-- Missing required fields in `plugin.json` (`name`, `version`, `description`)
+- Missing required field `name` in `plugin.json`
 - Invalid semantic version format (must be `X.Y.Z`, not `v1.0` or `1.0`)
-- Version mismatch between `plugin.json` and `marketplace.json`
+- Setting `version` in both `plugin.json` and `marketplace.json` — for relative-path plugins, set it only in `marketplace.json`
 
 ### Component Structure Errors
 
