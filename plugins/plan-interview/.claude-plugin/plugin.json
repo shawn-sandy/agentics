@@ -1,6 +1,6 @@
 {
   "name": "plan-interview",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
   "author": {
     "name": "Agentics Project"

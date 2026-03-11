@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0] - 2026-03-10
+
+### Added
+
+- New `plan-hygiene` command — batch scans plan directories for randomly-named files and renames them to descriptive kebab-case names based on content headings
+- Rules section in README with copyable pre-commit plan hygiene rule
+
 ## [1.3.0] - 2026-02-26
 
 ### Added
