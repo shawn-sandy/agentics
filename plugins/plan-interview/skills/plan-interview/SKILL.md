@@ -1,6 +1,8 @@
 ---
 name: plan-interview
-description: Use when the user asks to stress-test, validate, critique, or find gaps and risks in an implementation plan.
+description:
+  Use when the user asks to stress-test, validate, critique, or find gaps and
+  risks in an implementation plan.
 ---
 
 # Plan Interview
@@ -12,7 +14,9 @@ implementation begins.
 
 ### Step 0 — Create progress todos
 
-Before doing any other work, use `TodoWrite` to create todos for each step of this interview. This gives the user visibility into progress and ensures no step is skipped.
+Before doing any other work, use `TodoWrite` to create todos for each step of
+this interview. This gives the user visibility into progress and ensures no step
+is skipped.
 
 Create the following todos (all starting with `status: "pending"`):
 
@@ -68,19 +72,20 @@ plan's filename and H1 heading accurately describe the plan's content.
 
 3. **Evaluate the filename** against these criteria:
    - **Descriptive**: Contains words that relate to the plan's goal or content.
-     Good: `create-skill-reviewer-plugin`, `fix-marketplace-json-location`.
-     Bad: `fuzzy-swimming-pearl`, `hidden-popping-moonbeam`.
+     Good: `create-skill-reviewer-plugin`, `fix-marketplace-json-location`. Bad:
+     `fuzzy-swimming-pearl`, `hidden-popping-moonbeam`.
    - **Not random**: Does not follow a random adjective-noun or
-     adjective-verb-noun pattern with no connection to the plan's subject matter.
-     Note: `add-dark-mode-toggle` is descriptive even though it contains
+     adjective-verb-noun pattern with no connection to the plan's subject
+     matter. Note: `add-dark-mode-toggle` is descriptive even though it contains
      adjectives — the key test is whether the words relate to the plan content.
    - **Not too generic**: Not a placeholder like `plan.md`, `untitled.md`,
      `draft.md`, `temp.md`, or `new-plan.md`.
 
 4. **Evaluate the H1 heading**:
    - Does an H1 heading exist?
-   - Does it describe the plan's purpose? (Good: `# Plan: Create
-     'skill-reviewer' Plugin`. Bad: `# Plan` alone, or missing entirely.)
+   - Does it describe the plan's purpose? (Good:
+     `# Plan: Create 'skill-reviewer' Plugin`. Bad: `# Plan` alone, or missing
+     entirely.)
    - Does it align with the filename? Flag misalignment only when the filename
      and heading refer to entirely different topics — not when they describe the
      same topic at different scopes (e.g., `fix-auth-bug` and
@@ -102,17 +107,19 @@ If the name needs attention, present the finding immediately before continuing:
 ```markdown
 ### Plan Name Review
 
-| Element | Current | Issue | Suggested |
-|---------|---------|-------|-----------|
-| Filename | `fuzzy-swimming-pearl.md` | Random — unrelated to content | `create-skill-reviewer-plugin.md` |
-| H1 Heading | _(missing)_ | No H1 heading found | `# Plan: Create 'skill-reviewer' Plugin` |
+| Element    | Current                   | Issue                         | Suggested                                |
+| ---------- | ------------------------- | ----------------------------- | ---------------------------------------- |
+| Filename   | `fuzzy-swimming-pearl.md` | Random — unrelated to content | `create-skill-reviewer-plugin.md`        |
+| H1 Heading | _(missing)_               | No H1 heading found           | `# Plan: Create 'skill-reviewer' Plugin` |
 ```
 
-Then ask the user via `AskUserQuestion`: *"Would you like me to rename this plan
-file to `[suggested-name].md`?"* (and if the H1 heading was also flagged,
-include it in the offer: *"…and update the heading to `# Plan: [Description]`?"*).
+Then ask the user via `AskUserQuestion`: _"Would you like me to rename this plan
+file to `[suggested-name].md`?"_ (and if the H1 heading was also flagged,
+include it in the offer: _"…and update the heading to
+`# Plan: [Description]`?"_).
 
 If the user confirms:
+
 - Rename the file using Bash `mv`.
 - Update the H1 heading in the file using `Edit` (if it was flagged).
 - **Update the resolved file path** for the remainder of the interview so that
@@ -312,7 +319,8 @@ were found]
 
 After presenting the summary, ask the user:
 
-> "Would you like me to append this interview summary to the plan file?"
+> "Would you like me to append this interview summary to the plan file and
+> update the plan file accordingly?"
 
 **Do not write to the plan file unless the user explicitly confirms.** If they
 confirm, append the summary as a new `## Interview Summary` section at the end

@@ -82,7 +82,7 @@ You can optionally save the summary back to the plan file.
 
 ## Rules
 
-To automate plan-hygiene before commits, copy this rule into `.claude/rules/plan-hygiene.md` or `/.claude/rules/pre-commit-plan-hygiene.md` :
+To automate plan-hygiene before commits, copy this rule into `.claude/rules/plan-hygiene.md` and adjust paths as needed:
 
 ```markdown
 ---
