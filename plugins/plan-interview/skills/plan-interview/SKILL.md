@@ -324,4 +324,6 @@ After presenting the summary, ask the user:
 
 **Do not write to the plan file unless the user explicitly confirms.** If they
 confirm, append the summary as a new `## Interview Summary` section at the end
-of the plan file using the `Edit` tool.
+of the plan file using the `Edit` tool and always apply all the interview
+findings into the plan's implementation steps. If they decline, do not modify
+the file.
