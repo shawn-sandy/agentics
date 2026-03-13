@@ -3,6 +3,14 @@ name: plugin-creator
 description: Scaffolds complete Claude Code plugins with guided workflows. Use when the user asks to "create a plugin", "scaffold a plugin", "generate a new plugin", "make a plugin", or "set up a plugin from scratch". Covers plugin manifest, commands, skills, agents, hooks, and MCP server scaffolding. Does NOT scaffold individual skills (use skill-reviewer:planning-skills), individual agents (use agent-creator), or marketplace infrastructure (use marketplace-builder).
 ---
 
+## Plan Mode Guard
+
+**If plan mode is active, STOP immediately.** Do not proceed to any step below. Instead, respond:
+
+> "The plugin-creator skill writes files and directories, which is not allowed in plan mode. Please exit plan mode first (`/exit-plan`), then invoke this skill again."
+
+---
+
 ## Overview
 
 Walks users through a structured workflow to scaffold a complete Claude Code plugin — producing a ready-to-use plugin directory with manifest, components, and changelog.
