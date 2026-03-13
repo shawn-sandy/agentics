@@ -1,4 +1,4 @@
-# Plan: `plugin-dev` Plugin — Create & Manage Plugins
+# Plan: `agentic-plugin-dev` Plugin — Create & Manage Plugins
 
 ## Context
 
@@ -20,7 +20,7 @@ The agentics marketplace has plugins for reviewing skills (`skill-reviewer`), cr
 ## File Tree
 
 ```
-plugins/plugin-dev/
+plugins/agentic-plugin-dev/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
@@ -47,16 +47,16 @@ plugins/plugin-dev/
 
 ### 1. Create plugin manifest
 
-**File:** `plugins/plugin-dev/.claude-plugin/plugin.json`
+**File:** `plugins/agentic-plugin-dev/.claude-plugin/plugin.json`
 
-- `name`: `"plugin-dev"`
+- `name`: `"agentic-plugin-dev"`
 - No `version` field (relative-path convention)
 - Keywords: `plugin-authoring`, `scaffolding`, `validation`, `marketplace`, `plugin-management`
-- Homepage: `https://github.com/shawn-sandy/agentics/tree/main/plugins/plugin-dev`
+- Homepage: `https://github.com/shawn-sandy/agentics/tree/main/plugins/agentic-plugin-dev`
 
 ### 2. Create `plugin-creator` skill
 
-**File:** `plugins/plugin-dev/skills/plugin-creator/SKILL.md`
+**File:** `plugins/agentic-plugin-dev/skills/plugin-creator/SKILL.md`
 
 - Sequential pattern, rigid freedom level
 - **Step 0** — Disambiguation check: if user intent is ambiguous (e.g., "scaffold something", "create a skill"), ask whether they mean a full plugin or just a component (redirect to skill-reviewer or agent-creator if appropriate)
@@ -73,7 +73,7 @@ plugins/plugin-dev/
 
 ### 3. Create `plugin-manager` skill
 
-**File:** `plugins/plugin-dev/skills/plugin-manager/SKILL.md`
+**File:** `plugins/agentic-plugin-dev/skills/plugin-manager/SKILL.md`
 
 - Adaptive pattern, flexible freedom level
 - **Step 0** — Disambiguation: if user intent overlaps with marketplace-builder (e.g., "set up a marketplace"), ask which scope they mean
@@ -91,7 +91,7 @@ plugins/plugin-dev/
 
 ### 4. Create `plugin-validator` skill
 
-**File:** `plugins/plugin-dev/skills/plugin-validator/SKILL.md`
+**File:** `plugins/agentic-plugin-dev/skills/plugin-validator/SKILL.md`
 
 - Sequential pattern, rigid freedom level
 - **Step 1** — Resolve target plugin path
@@ -105,14 +105,14 @@ plugins/plugin-dev/
 
 ### 5. Create CHANGELOG.md
 
-**File:** `plugins/plugin-dev/CHANGELOG.md`
+**File:** `plugins/agentic-plugin-dev/CHANGELOG.md`
 
 - Use [Keep a Changelog](https://keepachangelog.com/) format
 - Initial `v1.0.0` entry under `### Added` listing all three skills
 
 ### 6. Create README.md
 
-**File:** `plugins/plugin-dev/README.md`
+**File:** `plugins/agentic-plugin-dev/README.md`
 
 - Overview, features, installation, usage examples, related plugins
 
@@ -120,7 +120,7 @@ plugins/plugin-dev/
 
 **Edit:** `.claude-plugin/marketplace.json`
 
-- Add entry: name `plugin-dev`, version `1.0.0`, category `development`
+- Add entry: name `agentic-plugin-dev`, version `1.0.0`, category `development`
 - Tags: `plugin-authoring`, `scaffolding`, `validation`, `marketplace`, `plugin-management`, `claude-code`
 
 ## Key Files to Reference During Implementation
@@ -135,7 +135,7 @@ plugins/plugin-dev/
 
 ## Verification
 
-1. Load plugin locally: `claude --plugin-dir ./plugins/plugin-dev`
+1. Load plugin locally: `claude --plugin-dir ./plugins/agentic-plugin-dev`
 2. Test `plugin-creator`: say "create a new plugin called test-plugin" — verify directory structure is generated correctly
 3. Test `plugin-creator` disambiguation: say "scaffold a skill" — verify it asks whether you mean a full plugin or just a skill component
 4. Test `plugin-manager`: say "list all marketplace plugins" — verify formatted output
