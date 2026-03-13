@@ -192,6 +192,21 @@
         "developer-experience",
         "onboarding"
       ]
+    },
+    {
+      "name": "agentic-plugin-dev",
+      "source": "./plugins/agentic-plugin-dev",
+      "version": "1.0.0",
+      "description": "Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure",
+      "category": "development",
+      "tags": [
+        "plugin-authoring",
+        "scaffolding",
+        "validation",
+        "marketplace",
+        "plugin-management",
+        "claude-code"
+      ]
     }
   ]
 }
