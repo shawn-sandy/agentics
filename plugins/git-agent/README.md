@@ -6,6 +6,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
+- **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
 
 ## Installation
 
@@ -56,6 +57,27 @@ The skill will:
 
 **STOPS after PR creation. Does not analyze code, run tests, or take further action.**
 
+### ship
+
+Say any of:
+- "ship it"
+- "commit and create a PR"
+- "ship my changes"
+- "send it"
+- "land my work"
+
+The skill will:
+1. Guard: check for clean tree, detached HEAD, default branch, `gh` auth
+2. Run `git add -A` and analyze `git diff --staged`
+3. Write a conventional commit message and run `git commit`
+4. Push the branch (with `-u` if no upstream)
+5. If a PR already exists, report the URL and stop
+6. Detect base branch, gather content, and run `gh pr create`
+
+**STOPS after PR creation (or after pushing to an existing PR). Does not analyze code, run tests, or take further action.**
+
+Use `commit-agent` or `pr-agent` if you only need one step.
+
 ## Requirements
 
 - `pr-agent` requires the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`)
@@ -69,7 +91,9 @@ plugins/git-agent/
 ├── skills/
 │   ├── commit-agent/
 │   │   └── SKILL.md
-│   └── pr-agent/
+│   ├── pr-agent/
+│   │   └── SKILL.md
+│   └── ship/
 │       └── SKILL.md
 ├── CHANGELOG.md
 └── README.md
