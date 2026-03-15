@@ -14,6 +14,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
+| `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
 ## Usage
 
@@ -55,6 +56,12 @@ Interview my implementation plan
 Find gaps and risks in this plan
 Validate my approach before I start coding
 ```
+
+### Hook (automatic prompt after plan mode)
+
+When Claude exits plan mode via the `ExitPlanMode` tool, the plugin automatically suggests running the plan-interview skill. This is a prompt only — the interview does not start unless you confirm.
+
+No action required to enable this; it activates automatically when the plugin is installed.
 
 ### Interview rounds
 
