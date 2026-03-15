@@ -1,6 +1,7 @@
 ---
 name: pr-agent
 description: Use when the user asks to create a PR, open a pull request, make a PR, push and create a PR, or submit their branch for review. Does not commit changes — use commit-agent first.
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *)
 ---
 
 Push the current branch if needed and create a GitHub pull request. This skill does not commit changes or run tests. Follow these steps in strict order. **STOP immediately after step 5.**
