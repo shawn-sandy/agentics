@@ -1,6 +1,7 @@
 ---
 name: commit-agent
 description: Use when the user asks to commit changes, stage and commit, commit all changes, commit everything, or save their work to git. Does not push or create PRs — use pr-agent for that.
+allowed-tools: Bash(git *)
 ---
 
 Stage all changes and create a conventional commit message. Follow these steps in strict order. **STOP immediately after step 4.**
