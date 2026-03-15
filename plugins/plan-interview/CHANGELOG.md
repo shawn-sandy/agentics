@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.0] - 2026-03-14
+
+### Added
+
+- PostToolUse hook on `ExitPlanMode` — prompts user to run plan-interview after exiting plan mode
+
 ## [1.4.0] - 2026-03-10
 
 ### Added
