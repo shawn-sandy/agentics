@@ -26,6 +26,7 @@ Create the following todos (all starting with `status: "pending"`):
 - Step 3c: Round 2b — Accessibility & Semantic (if applicable)
 - Step 3d: Round 3 — Edge Cases & Best Practices (if applicable)
 - Step 4: Surface out-of-scope concerns & complexity check
+- Step 4.5: Deep grill session (optional)
 - Step 5: Compile and present review summary
 - Step 6: Offer to save findings
 
@@ -279,6 +280,31 @@ section:
 ```
 
 Skip this section silently if no complexity concerns are found.
+
+### Step 4.5 — Deep grill (optional)
+
+After surfacing out-of-scope concerns, ask the user:
+
+> "Would you like a deep-grill session? I'll interview you relentlessly about
+> every decision branch until we reach a shared understanding — providing my
+> recommended answer for each question. Where answers can be found in the
+> codebase, I'll explore it instead of guessing."
+
+If the user **declines**, mark this todo complete and proceed to Step 5.
+
+If the user **confirms**:
+
+- Walk each branch of the design tree in the plan, one at a time.
+- For each decision node, ask a focused question and provide your recommended
+  answer before waiting for the user's response.
+- If the question can be answered by exploring the codebase, use `Glob`,
+  `Grep`, or `Read` first, then present your finding as the recommended answer.
+- After each response, check whether sub-questions exist for that branch. If
+  so, resolve them before moving to the next branch.
+- Continue until every decision branch is fully resolved or the user signals
+  they are done.
+- Collect all decisions and insights; include them in the Step 5 summary under
+  a new **Deep Grill Findings** section.
 
 ### Step 5 — Compile and present the review summary
 
