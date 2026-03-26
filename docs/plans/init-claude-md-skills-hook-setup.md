@@ -112,6 +112,7 @@ Report each check as PASS or FAIL with a one-line explanation. If all pass, conf
 2. **CLAUDE.local.md**: Confirm role/preference section and full plugin list appended
 3. **Hook**: Edit and save `.claude-plugin/marketplace.json` — hook output should appear immediately. To test the error path: introduce a syntax error, confirm the error message fires, then `git checkout .claude-plugin/marketplace.json` to restore
 4. **`/validate-plugin`**: Run `/validate-plugin hello-world` — expect all checks to PASS
+
 ---
 
 ## Next Steps (out of scope)
@@ -142,3 +143,9 @@ Report each check as PASS or FAIL with a one-line explanation. If all pass, conf
 2. `/validate-plugin` check #6 added with `skills/` directory condition
 3. Hook command simplified to unconditional `jq empty` (removes `$CLAUDE_TOOL_INPUT` filtering)
 4. Verification step updated with `git checkout` recovery note for hook error-path test
+
+### Suggested next steps
+
+Browse official plugins with /plugin — these bundle skills, agents, hooks, and MCP servers
+Install the skill-creator plugin to create and refine skills with evals: /plugin install skill-creator@claude-plugins-official
+Add a validate-marketplace hook that checks all source paths in marketplace.json exist on disk (out of scope today, listed in Next Steps)
