@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0] - 2026-03-26
+
+### Added
+
+- SKILL.md files accepted as review targets in both the skill and command — skill detection runs automatically after file resolution in Step 1
+- Step 2.5: Skill Tool Analysis (skill-review mode only) — scans skill instruction body for tool references, classifies each as Declared / Missing / Undeclared, and outputs a suggested `allowed-tools` line for the paired command file
+- Step 6 in skill-review mode: offers to apply the `allowed-tools` recommendation directly to the paired command file
+- `Grep` and `Bash` added to the command's `allowed-tools` frontmatter (both were already used but undeclared)
+
+### Note
+
+`allowed-tools` is not supported in SKILL.md files (skill frontmatter). The tool recommendation targets paired command files in `commands/`.
+
 ## [1.6.0] - 2026-03-26
 
 ### Added
