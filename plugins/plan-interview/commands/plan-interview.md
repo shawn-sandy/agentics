@@ -1,7 +1,7 @@
 ---
 description: Stress-test a plan with a structured interview across technical, UX, edge case, and out-of-scope domains
 argument-hint: [plan-file-path] - omit to auto-detect from IDE or ~/.claude/plans/
-allowed-tools: Read, Glob, AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 ---
 
 
@@ -25,6 +25,7 @@ Before doing any other work, use `TodoWrite` to create todos for each step of th
 Create the following todos (all starting with `status: "pending"`):
 
 - Step 2: Read, validate plan name, and analyze the plan
+- Step 2.5: Skill tool analysis (skill-review mode only)
 - Step 3a: Round 1 — Technical & Trade-offs
 - Step 3b: Round 2a — UI/UX & Flows (if applicable)
 - Step 3c: Round 2b — Accessibility & Semantic (if applicable)
@@ -44,13 +45,28 @@ Use the first match from this priority order:
 3. **Project-level settings**: Read `.claude/settings.json` in the current project directory. If a `"plansDirectory"` key exists, glob `*.md` files from that path and use the most recently modified file. This takes precedence over the global config in step 4.
 4. **Latest plan in `~/.claude/plans/`**: If none of the above applies, use `Glob` on `~/.claude/plans/*.md`, sort by modification time, and select the most recently modified file.
 
-Once resolved, tell the user which file will be used (e.g., "Interviewing plan: `~/.claude/plans/my-feature.md`") before proceeding.
+Once resolved, detect the review mode before proceeding:
 
-If no plan file can be found via any of these methods, tell the user and stop.
+**Skill detection** — the resolved file is a skill if:
+- Its filename is `SKILL.md`, **or**
+- Its YAML frontmatter contains both a `name:` and `description:` field but the
+  body has no plan-style headings (`## Implementation`, `## Plan`, `## Steps`,
+  `## Context`)
+
+Set `mode = skill-review` if detected, otherwise `mode = plan-review`.
+
+Announce the file and mode:
+- Plan: `"Interviewing plan: ~/.claude/plans/my-feature.md"`
+- Skill: `"Reviewing skill: path/to/SKILL.md"`
+
+If no file can be found via any of these methods, tell the user and stop.
 
 ### Step 2 — Read, validate plan name, and analyze the plan
 
-Read the resolved plan file.
+**In `skill-review` mode**: skip the plan name validation section entirely and
+proceed directly to Step 2.5 after reading the file.
+
+Read the resolved file.
 
 **Plan name validation**: Before extracting plan details, check whether the
 plan's filename and H1 heading accurately describe the plan's content.
@@ -149,6 +165,59 @@ After scope assessment, also check for **UI involvement**: look for any of the f
 - UX terminology: button, modal, form, dialog, dropdown, input, layout, page, screen, component
 
 If any UI signals are detected, always include Round 2 — even for plans classified as short/focused. When triggering Round 2 on a short plan, briefly note what was detected (e.g., "Running Round 2 — plan references React components and `.tsx` files") so the user understands why.
+
+### Step 2.5 — Skill tool analysis _(skill-review mode only)_
+
+Skip this step entirely when `mode = plan-review`.
+
+Analyze the skill file to detect tool usage and recommend `allowed-tools` for
+any paired command file.
+
+1. **Parse existing `allowed-tools`**: Extract the current `allowed-tools` value
+   from the YAML frontmatter. If absent, treat as empty.
+
+2. **Scan for tool references**: Search the skill body for any of the following
+   known Claude tool names (match as whole words or within backticks):
+
+   ```
+   Read, Write, Edit, MultiEdit, Glob, Grep, Bash, AskUserQuestion,
+   TodoWrite, Agent, WebFetch, WebSearch, NotebookRead, NotebookEdit
+   ```
+
+   Also detect filtered patterns such as `Bash(git *)` or `Bash(gh *)`.
+
+3. **Classify each tool** as one of:
+   - **Declared** — already present in `allowed-tools`
+   - **Missing** — detected in the skill body but absent from `allowed-tools`
+   - **Undeclared** — listed in `allowed-tools` but not detected in the body
+     (flag for review, do not auto-remove)
+
+4. **Present the analysis table:**
+
+   ```markdown
+   ### Skill Tool Analysis
+
+   | Status     | Tool           | Detected In                           |
+   |------------|----------------|---------------------------------------|
+   | Declared   | Read           | Step 1 — reading skill file           |
+   | Missing    | Grep           | Step 4.5 — deep grill codebase search |
+   | Undeclared | Write          | In allowed-tools but not detected     |
+   ```
+
+5. **Output a suggested `allowed-tools` line**, listing all detected tools in
+   alphabetical order:
+
+   ```markdown
+   **Suggested frontmatter** (applies to paired command file, not SKILL.md):
+
+   ```yaml
+   allowed-tools: AskUserQuestion, Bash, Edit, Glob, Grep, Read, TodoWrite
+   ```
+   ```
+
+   > Note: `allowed-tools` is only valid in command files (`.md` files in
+   > `commands/`). If the reviewed skill has a paired command file, the
+   > recommendation applies there.
 
 ### Step 3 — Conduct the structured interview
 
@@ -253,6 +322,11 @@ the name passed validation.]
 
 ### Simplification Opportunities
 [Concise list of areas where the plan can be reduced in scope or abstraction, with specific simpler alternatives — omit this section if no complexity concerns were found]
+
+### Allowed Tools Recommendation
+[Include only in `skill-review` mode. Reproduce the tool analysis table from
+Step 2.5, plus the suggested `allowed-tools` line for any paired command file.
+Omit this section entirely when reviewing a plan file.]
 ```
 
 ### Step 6 — Offer to save findings
@@ -262,6 +336,16 @@ After presenting the summary, ask the user:
 > "Would you like me to append this interview summary to the plan file?"
 
 **Do not write to the plan file unless the user explicitly confirms.** If they confirm, append the summary as a new `## Interview Summary` section at the end of the plan file using the `Edit` tool.
+
+**In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
+
+> "Would you like me to apply the `allowed-tools` recommendation to the paired
+> command file?"
+
+If confirmed, use `Edit` to add or update the `allowed-tools` line in the YAML
+frontmatter of the corresponding command file (look for a `.md` file in
+`commands/` with a matching name). If no paired command file exists, note that
+`allowed-tools` is only applicable to command files and skip.
 
 ---
 
