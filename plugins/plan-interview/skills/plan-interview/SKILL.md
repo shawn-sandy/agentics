@@ -297,14 +297,14 @@ If the user **confirms**:
 - Walk each branch of the design tree in the plan, one at a time.
 - For each decision node, ask a focused question and provide your recommended
   answer before waiting for the user's response.
-- If the question can be answered by exploring the codebase, use `Glob`,
-  `Grep`, or `Read` first, then present your finding as the recommended answer.
-- After each response, check whether sub-questions exist for that branch. If
-  so, resolve them before moving to the next branch.
+- If the question can be answered by exploring the codebase, use `Glob`, `Grep`,
+  or `Read` first, then present your finding as the recommended answer.
+- After each response, check whether sub-questions exist for that branch. If so,
+  resolve them before moving to the next branch.
 - Continue until every decision branch is fully resolved or the user signals
   they are done.
-- Collect all decisions and insights; include them in the Step 5 summary under
-  a new **Deep Grill Findings** section.
+- Collect all decisions and insights; include them in the Step 5 summary under a
+  new **Deep Grill Findings** section.
 
 ### Step 5 — Compile and present the review summary
 
@@ -345,11 +345,10 @@ were found]
 
 After presenting the summary, ask the user:
 
-> "Would you like me to append this interview summary to the plan file and
-> update the plan file accordingly?"
+> "Would you like me to update the plan with suggested changes and append this
+> interview summary to the plan file?"
 
 **Do not write to the plan file unless the user explicitly confirms.** If they
-confirm, append the summary as a new `## Interview Summary` section at the end
-of the plan file using the `Edit` tool and always apply all the interview
-findings into the plan's implementation steps. If they decline, do not modify
-the file.
+confirm, update the plan with suggested changes and append the summary as a new
+`## Interview Summary` section at the end of the plan file using the `Edit`
+tool. If they decline, do not modify the file.
