@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.0] - 2026-03-26
+
+### Added
+
+- Optional deep grill step (Step 4.5) in the plan-interview skill — relentlessly walks every decision branch, provides recommended answers, and explores the codebase when answers can be found there. Findings feed into the Step 5 summary under a new **Deep Grill Findings** section.
+
 ## [1.5.0] - 2026-03-14
 
 ### Added
