@@ -49,7 +49,7 @@ claude --plugin-dir ./plugins/<name>
 - **Skills only:** `plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
 - **Skills only:** `plugins/code-review/` — auto-activated code review
 - **Mixed:** `plugins/plan-interview/` — commands + skills
-- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v2.0.0)
+- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v2.2.0)
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
 
 ## Modular Rules
@@ -59,6 +59,7 @@ Detailed patterns in `.claude/rules/`:
 - `plugin-patterns.md` — command/skill patterns, progressive disclosure, pitfalls (scoped to `plugins/**`)
 - `marketplace.md` — categories, tagging, versioning, registration
 - `testing.md` — test fixture guidelines (scoped to `tests/**`)
+- `plan-hygiene.md` — pre-commit plan file rename checks (scoped to `**/plans/**`)
 
 ## Conventions
 
@@ -66,6 +67,7 @@ Detailed patterns in `.claude/rules/`:
 - Always include the plan file in commits for plugin changes, even minor ones.
 - For relative-path plugins, set `version` only in `marketplace.json`, not in `plugin.json` (per [official docs](https://code.claude.com/docs/en/plugin-marketplaces)).
 - Component types: **Commands** (invoked via `/plugin:name`), **Skills** (auto-activated by intent), **Agents** (subprocesses), **Hooks** (event-driven).
+- Skill `SKILL.md` files should include `allowed-tools` frontmatter to restrict which Claude tools the skill can invoke.
 
 ## Official Documentation
 
