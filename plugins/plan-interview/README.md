@@ -4,7 +4,7 @@ Stress-tests implementation plans with structured multi-round interviews before 
 
 ## Purpose
 
-Writing a plan is not the same as stress-testing one. This plugin conducts a structured interview — asking targeted questions derived from the plan's own content — to expose gaps, over-engineering, and implicit assumptions before you commit to implementation. It's the difference between a plan that survives first contact with the code and one that doesn't.
+Writing a plan is not the same as stress-testing one. This plugin conducts a structured interview — asking targeted questions derived from the plan's own content — to expose gaps, over-engineering, and implicit assumptions before you commit to implementation. It's the difference between a plan that survives first contact with the code and one that doesn't. Also stress-tests `SKILL.md` files by auditing tool usage and generating `allowed-tools` recommendations.
 
 ## Components
 
@@ -57,6 +57,14 @@ Find gaps and risks in this plan
 Validate my approach before I start coding
 ```
 
+In skill-review mode, target a `SKILL.md` file instead:
+
+```
+Review this SKILL.md for tool coverage
+Audit the allowed-tools in my skill
+Check what tools this skill uses
+```
+
 ### Hook (automatic prompt after plan mode)
 
 When Claude exits plan mode via the `ExitPlanMode` tool, the plugin automatically suggests running the plan-interview skill. This is a prompt only — the interview does not start unless you confirm.
@@ -75,6 +83,8 @@ The number of rounds scales with plan complexity:
 
 Any plan with UI signals (React, Tailwind, `.tsx`, form/modal/dialog terminology) always includes Round 2.
 
+During any interview, you can request a **Deep Grill** session (Step 4.5). Claude walks through every decision branch with relentless follow-up questions, suggests answers, and explores the codebase with `Glob`/`Grep`/`Read`. Findings are collected in the final summary.
+
 ### After the interview
 
 The skill compiles a **Plan Interview Summary** with:
@@ -84,6 +94,7 @@ The skill compiles a **Plan Interview Summary** with:
 - Open risks and concerns
 - Recommended next steps
 - Simplification opportunities (if any)
+- Allowed Tools Recommendation (skill-review mode only — suggested `allowed-tools` line for the paired command file)
 
 You can optionally save the summary back to the plan file.
 
