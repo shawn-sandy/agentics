@@ -309,7 +309,7 @@ Use `AskUserQuestion` to ask the user whether to run the deep grill:
 - **Question:** "The structured interview is complete. Would you like to run a
   deep grill session? This walks each design-tree branch in depth and may take
   additional time."
-- **Options:** "Yes, run deep grill" / "No, skip to summary"
+- **Options:** "Yes, run deep grill (you can stop at any time)" / "No, skip to summary"
 
 If the user declines, mark Step 4 completed and proceed directly to Step 5.
 

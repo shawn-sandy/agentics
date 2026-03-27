@@ -1,6 +1,7 @@
 ---
 name: plan-status
 description: Use when the user asks to check, update, or determine the status of a plan file.
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
 ---
 
 # Plan Status
