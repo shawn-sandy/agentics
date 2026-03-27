@@ -53,8 +53,6 @@ Structure skills in layers to avoid overwhelming context:
 3. **Detailed Instructions** — Step-by-step process with edge cases
 4. **Examples** — Concrete demonstrations
 
-See `plugins/dev-tools/skills/code-review/SKILL.md` for the reference implementation.
-
 ## Plugin README Structure
 
 Each plugin must have a `README.md` with:

@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ---
 
+## [2.3.0] - 2026-03-27 — Remove hello-world and dev-tools plugins
+
+### Removed
+
+- **hello-world v1.0.0** — example plugin no longer needed in marketplace
+- **dev-tools v2.0.0** — example plugin no longer needed in marketplace
+
+### Changed
+
+- **Marketplace manifest** (`agentics-kit`) bumped to v2.3.0
+- **CLAUDE.md** — removed hello-world and dev-tools from Reference Implementations
+- **README.md** — updated plugin listings, examples, and counts
+- **plugins/README.md** — removed hello-world and dev-tools entries
+- **.claude/rules/plugin-patterns.md** — removed dead pointer to deleted dev-tools file
+- **CLAUDE.local.md** — removed `--plugin-dir` entries for deleted plugins
+
+---
+
 ## [2.1.0] - 2026-03-06 — Open-Source Readiness & Documentation
 
 ### Added

@@ -4,22 +4,6 @@ This directory contains example plugins for testing the agentics marketplace API
 
 ## Available Plugins
 
-### hello-world
-A minimal viable plugin demonstrating basic plugin structure. Perfect for understanding the fundamentals of Claude Code plugin development.
-
-**Components:**
-- Command: `/hello-world:greet [name]` - Simple greeting command
-
-**Use case:** Learning plugin basics, testing plugin loading
-
-### dev-tools
-A commands-focused plugin for code formatting.
-
-**Components:**
-- Command: `/dev-tools:format [path]` - Format code files using the appropriate formatter
-
-**Use case:** Understanding command plugins, formatter delegation
-
 ### code-review
 A skill-only plugin that activates automatically when the user asks to review code.
 
