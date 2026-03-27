@@ -4,6 +4,7 @@ description:
   Use when the user asks to stress-test, validate, critique, or find gaps and
   risks in an implementation plan.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 ---
 
 # Plan Interview
@@ -23,14 +24,15 @@ Create the following todos (all starting with `status: "pending"`):
 
 - Step 2: Read, validate plan name, and analyze the plan
 - Step 2.5: Skill tool analysis (skill-review mode only)
+- Step 2.5: Skill tool analysis (skill-review mode only)
 - Step 3a: Round 1 — Technical & Trade-offs
 - Step 3b: Round 2a — UI/UX & Flows (if applicable)
 - Step 3c: Round 2b — Accessibility & Semantic (if applicable)
 - Step 3d: Round 3 — Edge Cases & Best Practices (if applicable)
-- Step 4: Surface out-of-scope concerns & complexity check
-- Step 4.5: Deep grill session (optional)
-- Step 5: Compile and present review summary
-- Step 6: Offer to save findings
+- Step 4: Deep grill session (optional — ask user)
+- Step 5: Surface out-of-scope concerns & complexity check
+- Step 6: Compile and present review summary
+- Step 7: Offer to save findings
 
 Mark each todo `status: "completed"` as you finish that step.
 
@@ -58,6 +60,7 @@ Use the first match from this priority order:
 Once resolved, detect the review mode before proceeding:
 
 **Skill detection** — the resolved file is a skill if:
+
 - Its filename is `SKILL.md`, **or**
 - Its YAML frontmatter contains both a `name:` and `description:` field but the
   body has no plan-style headings (`## Implementation`, `## Plan`, `## Steps`,
@@ -66,15 +69,36 @@ Once resolved, detect the review mode before proceeding:
 Set `mode = skill-review` if detected, otherwise `mode = plan-review`.
 
 Announce the file and mode:
+
+- Plan: `"Interviewing plan: ~/.claude/plans/my-feature.md"`
+- Skill: `"Reviewing skill: path/to/SKILL.md"` Once resolved, detect the review
+  mode before proceeding:
+
+**Skill detection** — the resolved file is a skill if:
+
+- Its filename is `SKILL.md`, **or**
+- Its YAML frontmatter contains both a `name:` and `description:` field but the
+  body has no plan-style headings (`## Implementation`, `## Plan`, `## Steps`,
+  `## Context`)
+
+Set `mode = skill-review` if detected, otherwise `mode = plan-review`.
+
+Announce the file and mode:
+
 - Plan: `"Interviewing plan: ~/.claude/plans/my-feature.md"`
 - Skill: `"Reviewing skill: path/to/SKILL.md"`
 
-If no file can be found via any of these methods, tell the user and stop.
+If no file can be found via any of these methods, tell the user and stop. If no
+file can be found via any of these methods, tell the user and stop.
 
 ### Step 2 — Read, validate plan name, and analyze the plan
 
 **In `skill-review` mode**: skip the plan name validation section entirely and
 proceed directly to Step 2.5 after reading the file.
+
+Read the resolved file. **In `skill-review` mode**: skip the plan name
+validation section entirely and proceed directly to Step 2.5 after reading the
+file.
 
 Read the resolved file.
 
@@ -140,7 +164,7 @@ If the user confirms:
 - Rename the file using Bash `mv`.
 - Update the H1 heading in the file using `Edit` (if it was flagged).
 - **Update the resolved file path** for the remainder of the interview so that
-  Steps 4–6 (especially Step 6's save operation) reference the new path.
+  Steps 4–7 (especially Step 7's save operation) reference the new path.
 
 If the user declines, proceed without changes.
 
@@ -224,28 +248,31 @@ the skill's frontmatter.
    ```markdown
    ### Skill Tool Analysis
 
-   | Status     | Tool           | Detected In                           |
-   |------------|----------------|---------------------------------------|
-   | Declared   | Read           | Step 1 — reading skill file           |
-   | Missing    | Grep           | Step 4.5 — deep grill codebase search |
-   | Undeclared | Write          | In allowed-tools but not detected     |
+   | Status     | Tool  | Detected In                         |
+   | ---------- | ----- | ----------------------------------- |
+   | Declared   | Read  | Step 1 — reading skill file         |
+   | Missing    | Grep  | Step 4 — deep grill codebase search |
+   | Undeclared | Write | In allowed-tools but not detected   |
    ```
 
 5. **Output a suggested `allowed-tools` line**, listing all detected tools in
    alphabetical order:
 
-   ```markdown
+   ````markdown
    **Suggested frontmatter** (commands only — `allowed-tools` is not supported
    in SKILL.md files):
 
    ```yaml
    allowed-tools: AskUserQuestion, Bash, Edit, Glob, Grep, Read, TodoWrite
    ```
+   ````
+
    ```
 
    > Note: `allowed-tools` is only valid in command files (`.md` files in
    > `commands/`). If the reviewed skill has a paired command file, the
    > recommendation applies there.
+   ```
 
 ### Step 3 — Conduct the structured interview
 
@@ -302,7 +329,33 @@ Ask up to 4 questions covering:
   coverage, DX
 - Any remaining open questions from the plan that haven't been addressed
 
-### Step 4 — Surface out-of-scope concerns
+### Step 4 — Deep grill (optional)
+
+Use `AskUserQuestion` to ask the user whether to run the deep grill:
+
+- **Question:** "The structured interview is complete. Would you like to run a
+  deep grill session? This walks each design-tree branch in depth and may take
+  additional time."
+- **Options:** "Yes, run deep grill (you can stop at any time)" / "No, skip to
+  summary"
+
+If the user declines, mark Step 4 completed and proceed directly to Step 5.
+
+If the user confirms, conduct the deep-grill session:
+
+- Walk each branch of the design tree in the plan, one at a time.
+- For each decision node, ask a focused question and provide your recommended
+  answer before waiting for the user's response.
+- If the question can be answered by exploring the codebase, use `Glob`, `Grep`,
+  or `Read` first, then present your finding as the recommended answer.
+- After each response, check whether sub-questions exist for that branch. If so,
+  resolve them before moving to the next branch.
+- Continue until every decision branch is fully resolved or the user signals
+  they are done.
+- Collect all decisions and insights; include them in the Step 6 summary under a
+  new **Deep Grill Findings** section.
+
+### Step 5 — Surface out-of-scope concerns
 
 After the structured rounds, review the full plan one more time and identify any
 issues that were not covered by the interview questions. These are concerns you
@@ -351,32 +404,7 @@ section:
 
 Skip this section silently if no complexity concerns are found.
 
-### Step 4.5 — Deep grill (optional)
-
-After surfacing out-of-scope concerns, ask the user:
-
-> "Would you like a deep-grill session? I'll interview you relentlessly about
-> every decision branch until we reach a shared understanding — providing my
-> recommended answer for each question. Where answers can be found in the
-> codebase, I'll explore it instead of guessing."
-
-If the user **declines**, mark this todo complete and proceed to Step 5.
-
-If the user **confirms**:
-
-- Walk each branch of the design tree in the plan, one at a time.
-- For each decision node, ask a focused question and provide your recommended
-  answer before waiting for the user's response.
-- If the question can be answered by exploring the codebase, use `Glob`, `Grep`,
-  or `Read` first, then present your finding as the recommended answer.
-- After each response, check whether sub-questions exist for that branch. If so,
-  resolve them before moving to the next branch.
-- Continue until every decision branch is fully resolved or the user signals
-  they are done.
-- Collect all decisions and insights; include them in the Step 5 summary under a
-  new **Deep Grill Findings** section.
-
-### Step 5 — Compile and present the review summary
+### Step 6 — Compile and present the review summary
 
 After all rounds and the out-of-scope check are complete, output a structured
 summary in the chat:
@@ -387,6 +415,10 @@ summary in the chat:
 ### Key Decisions Confirmed
 
 [List decisions the user confirmed or clarified during the interview]
+
+### Deep Grill Findings
+
+[Key decisions and insights resolved during the deep grill session]
 
 ### Plan Naming
 
@@ -417,15 +449,29 @@ Step 2.5, plus the suggested `allowed-tools` line for any paired command file.
 Omit this section entirely when reviewing a plan file.]
 ```
 
-### Step 6 — Offer to save findings
+### Step 7 — Offer to save findings
 
-After presenting the summary, ask the user:
+After presenting the Step 6 summary, ask the user:
 
 > "Would you like me to update the plan with suggested changes and append this
-> interview summary to the plan file?"
+> interview summary to the plan file?" "Would you like me to update the plan
+> with suggested changes and append this interview summary to the plan file?"
 
 **Do not write to the plan file unless the user explicitly confirms.** If they
 confirm, update the plan with suggested changes and append the summary as a new
+`## Interview Summary` section at the end of the plan file using the `Edit`
+tool. If they decline, do not modify the file.
+
+**In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
+
+> "Would you like me to apply the `allowed-tools` recommendation to the paired
+> command file?"
+
+If confirmed, use `Edit` to add or update the `allowed-tools` line in the YAML
+frontmatter of the corresponding command file (look for a `.md` file in
+`commands/` with a matching name). If no paired command file exists, note that
+`allowed-tools` is only applicable to command files and skip. confirm, update
+the plan with suggested changes and append the summary as a new
 `## Interview Summary` section at the end of the plan file using the `Edit`
 tool. If they decline, do not modify the file.
 

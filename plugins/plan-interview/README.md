@@ -4,16 +4,18 @@ Stress-tests implementation plans with structured multi-round interviews before 
 
 ## Purpose
 
-Writing a plan is not the same as stress-testing one. This plugin conducts a structured interview — asking targeted questions derived from the plan's own content — to expose gaps, over-engineering, and implicit assumptions before you commit to implementation. It's the difference between a plan that survives first contact with the code and one that doesn't.
+Writing a plan is not the same as stress-testing one. This plugin conducts a structured interview — asking targeted questions derived from the plan's own content — to expose gaps, over-engineering, and implicit assumptions before you commit to implementation. It's the difference between a plan that survives first contact with the code and one that doesn't. Also stress-tests `SKILL.md` files by auditing tool usage and generating `allowed-tools` recommendations.
 
 ## Components
 
 | Component | Type | Invocation |
 |-----------|------|-----------|
 | `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
+| `plan-status` | Command | `/plan-interview:plan-status [plan-file-path]` |
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
+| `plan-status` | Skill | Auto-activates on plan status check/update requests |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
 ## Usage
@@ -46,6 +48,39 @@ Reviews plan filenames against their content. Flags files whose names are random
 
 Scans plan directories for files with random non-descriptive names (e.g., `precious-knitting-tulip.md`) and renames them to descriptive kebab-case names derived from their content headings. Presents a proposal table and asks for approval before renaming. Uses `git mv` to preserve history.
 
+### Plan Status
+
+Check whether a plan has been implemented and update its YAML frontmatter with
+a lifecycle status and dates:
+
+```
+/plan-interview:plan-status                                    # auto-detects from IDE or settings
+/plan-interview:plan-status docs/plans/my-feature.md          # specific plan file
+```
+
+Status values:
+
+| Status | Meaning |
+|--------|---------|
+| `todo` | No implementation evidence found in codebase |
+| `in-progress` | 1–79% of plan signals found in codebase |
+| `completed` | 80%+ of plan signals found in codebase |
+| `artifact` | Completed 30+ days ago, promoted to reference documentation |
+
+After analysis, the skill writes YAML frontmatter to the plan file (with user
+confirmation):
+
+```yaml
+---
+status: completed
+created: 2026-01-15
+modified: 2026-03-26
+---
+```
+
+Dates are sourced from git log. The `modified` field is omitted when it equals
+`created`. Existing frontmatter fields are preserved.
+
 ### Skill (automatic activation)
 
 Describe your intent and the skill activates:
@@ -55,6 +90,24 @@ Stress-test this plan
 Interview my implementation plan
 Find gaps and risks in this plan
 Validate my approach before I start coding
+```
+
+To check the status of a plan, describe your intent and the `plan-status` skill
+activates:
+
+```
+Check the status of this plan
+Has this plan been implemented?
+Update the plan status
+What's the lifecycle status of this plan?
+```
+
+In skill-review mode, target a `SKILL.md` file instead:
+
+```
+Review this SKILL.md for tool coverage
+Audit the allowed-tools in my skill
+Check what tools this skill uses
 ```
 
 ### Hook (automatic prompt after plan mode)
@@ -75,6 +128,8 @@ The number of rounds scales with plan complexity:
 
 Any plan with UI signals (React, Tailwind, `.tsx`, form/modal/dialog terminology) always includes Round 2.
 
+During any interview, you can request a **Deep Grill** session (Step 4.5). Claude walks through every decision branch with relentless follow-up questions, suggests answers, and explores the codebase with `Glob`/`Grep`/`Read`. Findings are collected in the final summary.
+
 ### After the interview
 
 The skill compiles a **Plan Interview Summary** with:
@@ -84,6 +139,7 @@ The skill compiles a **Plan Interview Summary** with:
 - Open risks and concerns
 - Recommended next steps
 - Simplification opportunities (if any)
+- Allowed Tools Recommendation (skill-review mode only — suggested `allowed-tools` line for the paired command file)
 
 You can optionally save the summary back to the plan file.
 
