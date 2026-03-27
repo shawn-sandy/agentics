@@ -4,6 +4,7 @@ description:
   Use when the user asks to stress-test, validate, critique, or find gaps and
   risks in an implementation plan.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 ---
 
 # Plan Interview
@@ -22,6 +23,7 @@ is skipped.
 Create the following todos (all starting with `status: "pending"`):
 
 - Step 2: Read, validate plan name, and analyze the plan
+- Step 2.5: Skill tool analysis (skill-review mode only)
 - Step 2.5: Skill tool analysis (skill-review mode only)
 - Step 3a: Round 1 — Technical & Trade-offs
 - Step 3b: Round 2a — UI/UX & Flows (if applicable)
@@ -58,6 +60,7 @@ Use the first match from this priority order:
 Once resolved, detect the review mode before proceeding:
 
 **Skill detection** — the resolved file is a skill if:
+
 - Its filename is `SKILL.md`, **or**
 - Its YAML frontmatter contains both a `name:` and `description:` field but the
   body has no plan-style headings (`## Implementation`, `## Plan`, `## Steps`,
@@ -66,15 +69,36 @@ Once resolved, detect the review mode before proceeding:
 Set `mode = skill-review` if detected, otherwise `mode = plan-review`.
 
 Announce the file and mode:
+
+- Plan: `"Interviewing plan: ~/.claude/plans/my-feature.md"`
+- Skill: `"Reviewing skill: path/to/SKILL.md"` Once resolved, detect the review
+  mode before proceeding:
+
+**Skill detection** — the resolved file is a skill if:
+
+- Its filename is `SKILL.md`, **or**
+- Its YAML frontmatter contains both a `name:` and `description:` field but the
+  body has no plan-style headings (`## Implementation`, `## Plan`, `## Steps`,
+  `## Context`)
+
+Set `mode = skill-review` if detected, otherwise `mode = plan-review`.
+
+Announce the file and mode:
+
 - Plan: `"Interviewing plan: ~/.claude/plans/my-feature.md"`
 - Skill: `"Reviewing skill: path/to/SKILL.md"`
 
-If no file can be found via any of these methods, tell the user and stop.
+If no file can be found via any of these methods, tell the user and stop. If no
+file can be found via any of these methods, tell the user and stop.
 
 ### Step 2 — Read, validate plan name, and analyze the plan
 
 **In `skill-review` mode**: skip the plan name validation section entirely and
 proceed directly to Step 2.5 after reading the file.
+
+Read the resolved file. **In `skill-review` mode**: skip the plan name
+validation section entirely and proceed directly to Step 2.5 after reading the
+file.
 
 Read the resolved file.
 
@@ -224,28 +248,31 @@ the skill's frontmatter.
    ```markdown
    ### Skill Tool Analysis
 
-   | Status     | Tool           | Detected In                           |
-   |------------|----------------|---------------------------------------|
-   | Declared   | Read           | Step 1 — reading skill file           |
-   | Missing    | Grep           | Step 4 — deep grill codebase search   |
-   | Undeclared | Write          | In allowed-tools but not detected     |
+   | Status     | Tool  | Detected In                         |
+   | ---------- | ----- | ----------------------------------- |
+   | Declared   | Read  | Step 1 — reading skill file         |
+   | Missing    | Grep  | Step 4 — deep grill codebase search |
+   | Undeclared | Write | In allowed-tools but not detected   |
    ```
 
 5. **Output a suggested `allowed-tools` line**, listing all detected tools in
    alphabetical order:
 
-   ```markdown
+   ````markdown
    **Suggested frontmatter** (commands only — `allowed-tools` is not supported
    in SKILL.md files):
 
    ```yaml
    allowed-tools: AskUserQuestion, Bash, Edit, Glob, Grep, Read, TodoWrite
    ```
+   ````
+
    ```
 
    > Note: `allowed-tools` is only valid in command files (`.md` files in
    > `commands/`). If the reviewed skill has a paired command file, the
    > recommendation applies there.
+   ```
 
 ### Step 3 — Conduct the structured interview
 
@@ -309,7 +336,8 @@ Use `AskUserQuestion` to ask the user whether to run the deep grill:
 - **Question:** "The structured interview is complete. Would you like to run a
   deep grill session? This walks each design-tree branch in depth and may take
   additional time."
-- **Options:** "Yes, run deep grill (you can stop at any time)" / "No, skip to summary"
+- **Options:** "Yes, run deep grill (you can stop at any time)" / "No, skip to
+  summary"
 
 If the user declines, mark Step 4 completed and proceed directly to Step 5.
 
@@ -426,10 +454,24 @@ Omit this section entirely when reviewing a plan file.]
 After presenting the Step 6 summary, ask the user:
 
 > "Would you like me to update the plan with suggested changes and append this
-> interview summary to the plan file?"
+> interview summary to the plan file?" "Would you like me to update the plan
+> with suggested changes and append this interview summary to the plan file?"
 
 **Do not write to the plan file unless the user explicitly confirms.** If they
 confirm, update the plan with suggested changes and append the summary as a new
+`## Interview Summary` section at the end of the plan file using the `Edit`
+tool. If they decline, do not modify the file.
+
+**In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
+
+> "Would you like me to apply the `allowed-tools` recommendation to the paired
+> command file?"
+
+If confirmed, use `Edit` to add or update the `allowed-tools` line in the YAML
+frontmatter of the corresponding command file (look for a `.md` file in
+`commands/` with a matching name). If no paired command file exists, note that
+`allowed-tools` is only applicable to command files and skip. confirm, update
+the plan with suggested changes and append the summary as a new
 `## Interview Summary` section at the end of the plan file using the `Edit`
 tool. If they decline, do not modify the file.
 
