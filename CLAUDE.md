@@ -44,12 +44,10 @@ claude --plugin-dir ./plugins/<name>
 
 ## Reference Implementations
 
-- **Minimal:** `plugins/hello-world/` — single command, basic structure
-- **Commands only:** `plugins/dev-tools/` — formatting commands
 - **Skills only:** `plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
 - **Skills only:** `plugins/code-review/` — auto-activated code review
 - **Mixed:** `plugins/plan-interview/` — commands + skills
-- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v2.2.0)
+- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v2.3.0)
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
 
 ## Modular Rules

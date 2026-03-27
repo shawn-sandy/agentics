@@ -15,7 +15,7 @@ claude --plugin-dir ./plugins/code-review
 
 The agentics project provides:
 
-- **Example Plugins** — 9 reference implementations demonstrating Claude Code plugin structure
+- **Example Plugins** — 7 reference implementations demonstrating Claude Code plugin structure
 - **Test Marketplace** — Local marketplace (`agentics-kit`) for testing plugin discovery and installation
 - **Plugin Development Guide** — Documentation and patterns for creating your own plugins
 
@@ -47,8 +47,6 @@ agentics/
 ├── .claude-plugin/
 │   └── marketplace.json          # Marketplace manifest (agentics-kit)
 ├── plugins/                      # Example plugins
-│   ├── hello-world/              # Minimal example plugin
-│   ├── dev-tools/                # Code formatting plugin
 │   ├── code-review/              # Code review skill
 │   ├── plan-interview/           # Plan stress-test (command + skill)
 │   ├── claude-md-optimizer/      # CLAUDE.md audit and optimization
@@ -71,21 +69,18 @@ agentics/
 
 2. **Load a plugin directly:**
    ```bash
-   # Test with hello-world plugin
-   claude --plugin-dir ./plugins/hello-world
+   # Test with code-review plugin
+   claude --plugin-dir ./plugins/code-review
 
    # This starts an interactive Claude Code session.
-   # Once Claude responds, you can type your slash commands:
-   # /hello-world:greet
-   # /hello-world:greet Alice
+   # Once Claude responds, ask naturally:
+   # "Review this code for issues"
    ```
 
 3. **Verify the plugin loaded:**
    ```bash
    # In the Claude interactive session, list available commands:
    /help
-
-   # You should see /hello-world:greet in the list
    ```
 
 **Note:** You can test plugins immediately without installing any dependencies. The `--plugin-dir` flag loads plugins directly from your local filesystem and starts an interactive session.
@@ -108,10 +103,10 @@ The Claude Code CLI is not installed or not in your PATH.
 The plugin directory may not exist or the path is incorrect.
 
 **Solution:**
-- Verify the path exists: `ls -la ./plugins/hello-world`
+- Verify the path exists: `ls -la ./plugins/code-review`
 - Use absolute paths if relative paths aren't working:
   ```bash
-  claude --plugin-dir /full/path/to/agentics/plugins/hello-world
+  claude --plugin-dir /full/path/to/agentics/plugins/code-review
   ```
 - Check that `.claude-plugin/plugin.json` exists in the plugin directory
 
@@ -120,8 +115,8 @@ The plugin directory may not exist or the path is incorrect.
 The plugin directory or files may not be readable.
 
 **Solution:**
-- Check file permissions: `ls -la ./plugins/hello-world`
-- Make directory readable: `chmod -R +r ./plugins/hello-world`
+- Check file permissions: `ls -la ./plugins/code-review`
+- Make directory readable: `chmod -R +r ./plugins/code-review`
 - Ensure you own the files: `chown -R $USER:$USER ./plugins/`
 
 #### "Input must be provided" error with --plugin-dir
@@ -132,14 +127,14 @@ You see an error like: `Error: Input must be provided either through stdin or as
 - This error can occur if Claude Code can't start the interactive session properly
 - Try providing a prompt directly:
   ```bash
-  claude --plugin-dir ./plugins/hello-world "List available commands"
+  claude --plugin-dir ./plugins/code-review "List available commands"
   ```
 - Or pipe a command:
   ```bash
-  echo "Run /hello-world:greet" | claude --plugin-dir ./plugins/hello-world
+  echo "Review this code for issues" | claude --plugin-dir ./plugins/code-review
   ```
 - Verify your Claude Code version supports plugins: `claude --version` (need 1.0.33+)
-- Check plugin.json is valid JSON: `cat plugins/hello-world/.claude-plugin/plugin.json | jq`
+- Check plugin.json is valid JSON: `cat plugins/code-review/.claude-plugin/plugin.json | jq`
 
 ## Usage Guide
 
@@ -148,15 +143,14 @@ You see an error like: `Error: Input must be provided either through stdin or as
 Test individual plugins by loading them directly:
 
 ```bash
-# Test hello-world plugin (starts interactive session)
-claude --plugin-dir ./plugins/hello-world
+# Test code-review plugin (starts interactive session)
+claude --plugin-dir ./plugins/code-review
 
-# Once in the Claude session, you can run:
-# /hello-world:greet
-# /hello-world:greet Alice
+# Once in the Claude session, ask naturally:
+# "Review this code for issues"
 
 # Or provide a prompt directly:
-claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
+claude --plugin-dir ./plugins/code-review "Review this file for bugs"
 ```
 
 ### Multiple Plugin Testing
@@ -164,15 +158,15 @@ claude --plugin-dir ./plugins/hello-world "Run /hello-world:greet Alice"
 Load multiple plugins simultaneously by specifying multiple `--plugin-dir` flags:
 
 ```bash
-# Load both plugins at once (starts interactive session)
-claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
+# Load multiple plugins at once (starts interactive session)
+claude --plugin-dir ./plugins/code-review --plugin-dir ./plugins/plan-interview
 
 # Once in the Claude session, you can use commands from both plugins:
-# /hello-world:greet
-# /dev-tools:format src/index.ts
+# "Review this code for issues"
+# /plan-interview:plan-interview docs/plans/my-plan.md
 
 # Or provide a prompt directly:
-claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Format my code"
+claude --plugin-dir ./plugins/code-review --plugin-dir ./plugins/plan-interview "Review my code"
 ```
 
 ### Commands vs Skills
@@ -180,7 +174,6 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Form
 **Commands** require explicit invocation using the `/plugin:command` syntax:
 ```bash
 # Explicit command invocation
-/dev-tools:format src/index.ts
 /plan-interview:plan-interview docs/plans/my-plan.md
 ```
 
@@ -197,45 +190,6 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools "Form
 **Tip:** Use `/help` in Claude to see all available commands from loaded plugins.
 
 ## Plugins
-
-### hello-world `v1.0.0`
-
-A minimal example plugin demonstrating basic plugin structure.
-
-**Commands:**
-
-| Command | Description |
-|---------|-------------|
-| `/hello-world:greet [name]` | Greet the user, optionally by name |
-
-```bash
-claude --plugin-dir ./plugins/hello-world
-# /hello-world:greet
-# /hello-world:greet Alice
-```
-
-[View Plugin Documentation](./plugins/hello-world/README.md)
-
----
-
-### dev-tools `v2.0.0`
-
-Code formatting for JavaScript, TypeScript, Python, CSS, HTML, and Markdown.
-
-**Commands:**
-
-| Command | Description |
-|---------|-------------|
-| `/dev-tools:format [path]` | Format a file or directory using the appropriate formatter |
-
-```bash
-claude --plugin-dir ./plugins/dev-tools
-# /dev-tools:format src/index.ts
-```
-
-[View Plugin Documentation](./plugins/dev-tools/README.md)
-
----
 
 ### code-review `v2.1.1`
 
@@ -392,8 +346,6 @@ The `.claude-plugin/marketplace.json` at the project root defines the `agentics-
 
 ```bash
 /plugin marketplace add /path/to/agentics
-/plugin install hello-world@agentics-kit
-/plugin install dev-tools@agentics-kit
 /plugin install code-review@agentics-kit
 /plugin install plan-interview@agentics-kit
 /plugin install claude-md-optimizer@agentics-kit
@@ -483,15 +435,13 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 ## Roadmap
 
 ### Current Features
-- 9 example plugin implementations covering commands, skills, and agents
-- Test marketplace configuration (`agentics-kit` v2.1.0)
+- 7 example plugin implementations covering commands, skills, and agents
+- Test marketplace configuration (`agentics-kit` v2.3.0)
 - Plugin structure documentation and patterns
 - Community infrastructure: contributing guide, code of conduct, security policy, issue templates
 
 | Plugin | Version | Type |
 |--------|---------|------|
-| hello-world | v1.0.0 | Command |
-| dev-tools | v2.0.0 | Command |
 | code-review | v2.1.1 | Skill |
 | plan-interview | v1.3.0 | Command + Skill |
 | claude-md-optimizer | v1.5.0 | Skill |
