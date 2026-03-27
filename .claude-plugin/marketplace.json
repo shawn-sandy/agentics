@@ -68,7 +68,7 @@
     {
       "name": "plan-interview",
       "source": "./plugins/plan-interview",
-      "version": "1.7.0",
+      "version": "1.9.1",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
       "tags": [

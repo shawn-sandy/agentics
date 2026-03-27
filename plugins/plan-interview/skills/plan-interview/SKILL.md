@@ -27,10 +27,10 @@ Create the following todos (all starting with `status: "pending"`):
 - Step 3b: Round 2a — UI/UX & Flows (if applicable)
 - Step 3c: Round 2b — Accessibility & Semantic (if applicable)
 - Step 3d: Round 3 — Edge Cases & Best Practices (if applicable)
-- Step 4: Surface out-of-scope concerns & complexity check
-- Step 4.5: Deep grill session (optional)
-- Step 5: Compile and present review summary
-- Step 6: Offer to save findings
+- Step 4: Deep grill session (optional — ask user)
+- Step 5: Surface out-of-scope concerns & complexity check
+- Step 6: Compile and present review summary
+- Step 7: Offer to save findings
 
 Mark each todo `status: "completed"` as you finish that step.
 
@@ -140,7 +140,7 @@ If the user confirms:
 - Rename the file using Bash `mv`.
 - Update the H1 heading in the file using `Edit` (if it was flagged).
 - **Update the resolved file path** for the remainder of the interview so that
-  Steps 4–6 (especially Step 6's save operation) reference the new path.
+  Steps 4–7 (especially Step 7's save operation) reference the new path.
 
 If the user declines, proceed without changes.
 
@@ -227,7 +227,7 @@ the skill's frontmatter.
    | Status     | Tool           | Detected In                           |
    |------------|----------------|---------------------------------------|
    | Declared   | Read           | Step 1 — reading skill file           |
-   | Missing    | Grep           | Step 4.5 — deep grill codebase search |
+   | Missing    | Grep           | Step 4 — deep grill codebase search   |
    | Undeclared | Write          | In allowed-tools but not detected     |
    ```
 
@@ -302,7 +302,32 @@ Ask up to 4 questions covering:
   coverage, DX
 - Any remaining open questions from the plan that haven't been addressed
 
-### Step 4 — Surface out-of-scope concerns
+### Step 4 — Deep grill (optional)
+
+Use `AskUserQuestion` to ask the user whether to run the deep grill:
+
+- **Question:** "The structured interview is complete. Would you like to run a
+  deep grill session? This walks each design-tree branch in depth and may take
+  additional time."
+- **Options:** "Yes, run deep grill" / "No, skip to summary"
+
+If the user declines, mark Step 4 completed and proceed directly to Step 5.
+
+If the user confirms, conduct the deep-grill session:
+
+- Walk each branch of the design tree in the plan, one at a time.
+- For each decision node, ask a focused question and provide your recommended
+  answer before waiting for the user's response.
+- If the question can be answered by exploring the codebase, use `Glob`, `Grep`,
+  or `Read` first, then present your finding as the recommended answer.
+- After each response, check whether sub-questions exist for that branch. If so,
+  resolve them before moving to the next branch.
+- Continue until every decision branch is fully resolved or the user signals
+  they are done.
+- Collect all decisions and insights; include them in the Step 6 summary under a
+  new **Deep Grill Findings** section.
+
+### Step 5 — Surface out-of-scope concerns
 
 After the structured rounds, review the full plan one more time and identify any
 issues that were not covered by the interview questions. These are concerns you
@@ -351,32 +376,7 @@ section:
 
 Skip this section silently if no complexity concerns are found.
 
-### Step 4.5 — Deep grill (optional)
-
-After surfacing out-of-scope concerns, ask the user:
-
-> "Would you like a deep-grill session? I'll interview you relentlessly about
-> every decision branch until we reach a shared understanding — providing my
-> recommended answer for each question. Where answers can be found in the
-> codebase, I'll explore it instead of guessing."
-
-If the user **declines**, mark this todo complete and proceed to Step 5.
-
-If the user **confirms**:
-
-- Walk each branch of the design tree in the plan, one at a time.
-- For each decision node, ask a focused question and provide your recommended
-  answer before waiting for the user's response.
-- If the question can be answered by exploring the codebase, use `Glob`, `Grep`,
-  or `Read` first, then present your finding as the recommended answer.
-- After each response, check whether sub-questions exist for that branch. If so,
-  resolve them before moving to the next branch.
-- Continue until every decision branch is fully resolved or the user signals
-  they are done.
-- Collect all decisions and insights; include them in the Step 5 summary under a
-  new **Deep Grill Findings** section.
-
-### Step 5 — Compile and present the review summary
+### Step 6 — Compile and present the review summary
 
 After all rounds and the out-of-scope check are complete, output a structured
 summary in the chat:
@@ -387,6 +387,10 @@ summary in the chat:
 ### Key Decisions Confirmed
 
 [List decisions the user confirmed or clarified during the interview]
+
+### Deep Grill Findings
+
+[Key decisions and insights resolved during the deep grill session]
 
 ### Plan Naming
 
@@ -417,9 +421,9 @@ Step 2.5, plus the suggested `allowed-tools` line for any paired command file.
 Omit this section entirely when reviewing a plan file.]
 ```
 
-### Step 6 — Offer to save findings
+### Step 7 — Offer to save findings
 
-After presenting the summary, ask the user:
+After presenting the Step 6 summary, ask the user:
 
 > "Would you like me to update the plan with suggested changes and append this
 > interview summary to the plan file?"

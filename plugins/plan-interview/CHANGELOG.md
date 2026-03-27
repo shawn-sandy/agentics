@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.9.1] - 2026-03-26
+
+### Changed
+
+- Deep grill step (Step 4) is now optional — uses `AskUserQuestion` to prompt
+  the user before starting; if declined, skips directly to Step 5
+- Step 0 todo label updated to reflect optional status
+
+## [1.9.0] - 2026-03-26
+
+### Changed
+
+- Deep grill promoted from optional Step 4.5 to mandatory Step 4 — now always
+  runs after the structured interview rounds instead of requiring user opt-in
+- Former Step 4 (Surface out-of-scope concerns) renumbered to Step 5
+- Former Step 5 (Compile summary) renumbered to Step 6
+- Former Step 6 (Offer to save findings) renumbered to Step 7
+- Step 0 todo list updated to reflect new step numbering
+- Summary template now always includes a **Deep Grill Findings** section
+
+## [1.8.0] - 2026-03-26
+
+### Added
+
+- New `plan-status` skill and command — determines plan lifecycle status
+  (`todo`, `in-progress`, `completed`, `artifact`) by inspecting the codebase
+  for implementation evidence, then writes status and dates to plan YAML
+  frontmatter
+- Codebase analysis extracts inline backtick tokens from plan body, checks
+  existence via `Glob`/`Grep`, and scores: 0% = todo, 1–79% = in-progress,
+  80%+ = completed
+- Artifact promotion prompt: plans completed 30+ days ago (by `modified` date)
+  are offered `artifact` status to preserve them as project documentation
+- Handles zero-signal plans (no backtick tokens) with a manual status prompt
+- Zero `stat` dependency — date detection uses git log only, with current date
+  as fallback for untracked files
+
 ## [1.7.0] - 2026-03-26
 
 ### Added
