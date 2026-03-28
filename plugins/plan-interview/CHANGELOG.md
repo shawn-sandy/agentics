@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.10.0] - 2026-03-28
+
+### Added
+
+- New `deep-grill` skill — standalone deep grill session that walks each branch
+  of a plan's design tree, asks focused questions at every decision node, and
+  explores the codebase to resolve them. Can be invoked independently on any
+  plan file at any time.
+- New `deep-grill` command for explicit invocation via
+  `/plan-interview:deep-grill [plan-file-path]`
+
+### Changed
+
+- Deep grill removed from plan-interview skill (was Step 4) — replaced with a
+  callout directing users to the standalone `deep-grill` skill
+- Plan-interview skill steps renumbered: former Steps 5–7 are now Steps 4–6
+- Step 0 todo list updated to remove deep grill entry and reflect new numbering
+- Summary template `Deep Grill Findings` section removed (standalone skill
+  produces its own summary)
+
 ## [1.9.1] - 2026-03-26
 
 ### Changed
