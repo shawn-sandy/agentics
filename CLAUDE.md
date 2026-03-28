@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
@@ -25,9 +25,10 @@ plugins/              → Plugin source code (what users install)
 .claude-plugin/       → Marketplace metadata (marketplace.json)
 tests/fixtures/       → Test data for validation logic
 .claude/rules/        → Detailed authoring patterns (scoped rules)
+docs/plans/           → Plan files (commit with plugin changes)
 ```
 
-**Key principle:** Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` uses relative `source` paths, allowing the same plugin to appear in multiple marketplaces.
+Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` uses relative `source` paths.
 
 ## Common Commands
 
@@ -40,7 +41,7 @@ claude --plugin-dir ./plugins/<name>
 /plugin install <plugin-name>@agentics-kit
 ```
 
-> Machine-specific paths (e.g. absolute local paths) belong in `CLAUDE.local.md`, not here.
+> Machine-specific paths belong in `CLAUDE.local.md`, not here.
 
 ## Reference Implementations
 
@@ -61,11 +62,12 @@ Detailed patterns in `.claude/rules/`:
 
 ## Conventions
 
-- Plugin Homepage URLs must point to the plugin's specific directory in the repository, not the repository root, for example `https://github.com/shawn-sandy/agentics/tree/main/plugins/{plugin-name}`.
+- Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/plugins/{plugin-name}`
 - Always include the plan file in commits for plugin changes, even minor ones.
-- For relative-path plugins, set `version` only in `marketplace.json`, not in `plugin.json` (per [official docs](https://code.claude.com/docs/en/plugin-marketplaces)).
-- Component types: **Commands** (invoked via `/plugin:name`), **Skills** (auto-activated by intent), **Agents** (subprocesses), **Hooks** (event-driven).
-- Skill `SKILL.md` files should include `allowed-tools` frontmatter to restrict which Claude tools the skill can invoke.
+- `.claude/settings.json` auto-validates `marketplace.json` JSON syntax after every Write/Edit — fix any errors before committing.
+- For relative-path plugins, set `version` only in `marketplace.json`, not in `plugin.json`.
+- Component types: **Commands** (`/plugin:name`), **Skills** (auto-activated), **Agents** (subprocesses), **Hooks** (event-driven).
+- Skill `SKILL.md` can use `allowed-tools` frontmatter to restrict tool access if necessary
 
 ## Official Documentation
 
