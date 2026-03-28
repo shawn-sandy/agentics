@@ -14,8 +14,10 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `plan-status` | Command | `/plan-interview:plan-status [plan-file-path]` |
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
+| `deep-grill` | Command | `/plan-interview:deep-grill [plan-file-path]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
 | `plan-status` | Skill | Auto-activates on plan status check/update requests |
+| `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
 ## Usage
@@ -81,6 +83,21 @@ modified: 2026-03-26
 Dates are sourced from git log. The `modified` field is omitted when it equals
 `created`. Existing frontmatter fields are preserved.
 
+### Deep Grill
+
+Walk through every decision branch in a plan with focused questions and codebase
+exploration:
+
+```
+/plan-interview:deep-grill                                    # auto-detects latest plan
+/plan-interview:deep-grill docs/plans/my-feature.md          # specific plan file
+/plan-interview:deep-grill ~/.claude/plans/my-feature.md     # absolute path
+```
+
+The deep grill is a standalone session — it does not modify the plan file. It
+reads the plan, builds a decision tree, and walks each branch one at a time.
+Results are presented as a summary at the end.
+
 ### Skill (automatic activation)
 
 Describe your intent and the skill activates:
@@ -90,6 +107,14 @@ Stress-test this plan
 Interview my implementation plan
 Find gaps and risks in this plan
 Validate my approach before I start coding
+```
+
+To run a standalone deep grill, describe your intent:
+
+```
+Deep grill this plan
+Walk through each decision in my plan
+Examine every branch in my implementation plan
 ```
 
 To check the status of a plan, describe your intent and the `plan-status` skill
@@ -128,7 +153,7 @@ The number of rounds scales with plan complexity:
 
 Any plan with UI signals (React, Tailwind, `.tsx`, form/modal/dialog terminology) always includes Round 2.
 
-During any interview, you can request a **Deep Grill** session (Step 4.5). Claude walks through every decision branch with relentless follow-up questions, suggests answers, and explores the codebase with `Glob`/`Grep`/`Read`. Findings are collected in the final summary.
+After the interview (or independently), run the **Deep Grill** skill to walk every decision branch with focused questions, suggested answers, and codebase exploration via `Glob`/`Grep`/`Read`. Say _"deep grill this plan"_ or invoke `/plan-interview:deep-grill [path]` directly.
 
 ### After the interview
 
