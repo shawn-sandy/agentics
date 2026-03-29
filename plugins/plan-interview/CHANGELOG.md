@@ -4,7 +4,7 @@
 
 ### Added
 
-- New `status-sweep` command — processes multiple plan files in a directory,
+- New `update-plan-status` command — processes multiple plan files in a directory,
   analyzing codebase evidence and writing YAML frontmatter in bulk with a
   summary-first, bulk-approval UX instead of per-file confirmation
 - Stricter token filter in batch mode to avoid noisy scoring across many files

@@ -1,4 +1,4 @@
-# Plan: Add `batch-status` command to plan-interview plugin
+# Plan: Add `update-plan-status` command to plan-interview plugin
 
 ## Context
 
@@ -11,10 +11,10 @@ processes an entire directory in 2-3 interactions total.
 
 ## Changes
 
-### 1. Create `commands/batch-status.md`
+### 1. Create `commands/update-plan-status.md`
 
 New command file at
-`plugins/plan-interview/commands/batch-status.md`.
+`plugins/plan-interview/commands/update-plan-status.md`.
 
 **Frontmatter:**
 
@@ -111,8 +111,8 @@ New command file at
 
 **File:** `plugins/plan-interview/README.md`
 
-- Add `batch-status` row to the Components table
-- Add usage example: `/plan-interview:batch-status docs/plans/`
+- Add `update-plan-status` row to the Components table
+- Add usage example: `/plan-interview:update-plan-status docs/plans/`
 - Add `--force` flag documentation
 
 ### 3. Add CHANGELOG entry
@@ -124,7 +124,7 @@ New command file at
 
 ### Added
 
-- New `batch-status` command — processes multiple plan files in a directory,
+- New `update-plan-status` command — processes multiple plan files in a directory,
   analyzing codebase evidence and writing YAML frontmatter in bulk with
   summary-first approval instead of per-file confirmation
 ```
@@ -139,15 +139,15 @@ New command file at
 
 | File                                                | Change                          |
 | --------------------------------------------------- | ------------------------------- |
-| `plugins/plan-interview/commands/batch-status.md`   | New file — command definition   |
-| `plugins/plan-interview/README.md`                  | Add batch-status documentation  |
+| `plugins/plan-interview/commands/update-plan-status.md`   | New file — command definition   |
+| `plugins/plan-interview/README.md`                  | Add update-plan-status documentation  |
 | `plugins/plan-interview/CHANGELOG.md`               | v1.12.0 entry                   |
 | `.claude-plugin/marketplace.json`                   | Version bump 1.11.0 -> 1.12.0  |
 
 ## Verification
 
 1. Load plugin: `claude --plugin-dir ~/devbox/agentics/plugins/plan-interview`
-2. Run: `/plan-interview:batch-status docs/plans/`
+2. Run: `/plan-interview:update-plan-status docs/plans/`
    - Should discover ~82 plan files
    - Triage should show ~78 in Group A (no frontmatter), ~1 in Group B, ~3 in
      Group D (completed)
@@ -156,12 +156,12 @@ New command file at
 3. Run again without `--force`: should report all files already processed
 4. Run with `--force`: should re-analyze all files
 5. Verify legacy artifact normalization: manually set `status: artifact` on a
-   test file, run batch-status, confirm it normalizes to
+   test file, run update-plan-status, confirm it normalizes to
    `status: completed` + `type: artifact`
 
 ## Next Steps
 
-- Add `batch-status` as a skill (auto-activation) if batch operations prove to
+- Add `update-plan-status` as a skill (auto-activation) if batch operations prove to
   be frequently needed
 - Add a `--dry-run` flag that does analysis + summary without the write step
 - Integrate with plan-hygiene to flag random filenames during batch processing
