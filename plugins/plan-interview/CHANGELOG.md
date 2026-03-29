@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.12.0] - 2026-03-29
+
+### Added
+
+- New `batch-status` command — processes multiple plan files in a directory,
+  analyzing codebase evidence and writing YAML frontmatter in bulk with a
+  summary-first, bulk-approval UX instead of per-file confirmation
+- Stricter token filter in batch mode to avoid noisy scoring across many files
+  (excludes version strings, JSON values, API routes, git refs)
+- Three summary flags: `30d+ old` (auto-artifact), `no signals` (zero-signal
+  files), `docs plan` (documentation-focused plans; review recommended)
+- Category-based override shortcuts: Auto-artifacts, Review-flagged,
+  No-signals, Specific files
+
+## [1.11.0] - 2026-03-29
+
+### Added
+
+- New `type` frontmatter field for completed plans — values: `standard`
+  (default) or `artifact` (valuable project documentation)
+- Step 5 now always prompts the user to classify a completed plan as `standard`
+  or `artifact`; plans 30+ days old show a contextual nudge toward `artifact`
+
+### Changed
+
+- `artifact` removed as a status value — now exists only as `type: artifact`
+  on completed plans
+- Status values simplified to three: `todo`, `in-progress`, `completed`
+- Step 5 renamed from "Artifact check" to "Type classification"; sets `type`
+  instead of changing status
+- Step 6 summary table includes a `Type` row for completed plans
+- Step 7 frontmatter writes now include `type` when status is `completed`
+- Manual status prompt (zero-signal plans) no longer offers `artifact` as an
+  option
+- Legacy `status: artifact` plans are automatically normalized to
+  `status: completed` + `type: artifact` when re-processed
+- `commands/plan-status.md` updated to mirror all SKILL.md changes
+
 ## [1.10.0] - 2026-03-28
 
 ### Added

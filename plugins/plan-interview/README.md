@@ -12,6 +12,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 |-----------|------|-----------|
 | `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
 | `plan-status` | Command | `/plan-interview:plan-status [plan-file-path]` |
+| `batch-status` | Command | `/plan-interview:batch-status [directory-path] [--force]` |
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
 | `deep-grill` | Command | `/plan-interview:deep-grill [plan-file-path]` |
@@ -67,7 +68,13 @@ Status values:
 | `todo` | No implementation evidence found in codebase |
 | `in-progress` | 1–79% of plan signals found in codebase |
 | `completed` | 80%+ of plan signals found in codebase |
-| `artifact` | Completed 30+ days ago, promoted to reference documentation |
+
+Type values (set for completed plans only):
+
+| Type | Meaning |
+|------|---------|
+| `standard` | Default — a completed plan |
+| `artifact` | Valuable reference documentation preserved long-term |
 
 After analysis, the skill writes YAML frontmatter to the plan file (with user
 confirmation):
@@ -75,6 +82,7 @@ confirmation):
 ```yaml
 ---
 status: completed
+type: standard
 created: 2026-01-15
 modified: 2026-03-26
 ---
@@ -82,6 +90,22 @@ modified: 2026-03-26
 
 Dates are sourced from git log. The `modified` field is omitted when it equals
 `created`. Existing frontmatter fields are preserved.
+
+### Batch Status
+
+Process an entire directory of plan files at once — adds frontmatter to files
+that don't have it, skips files already processed (unless `--force`):
+
+```
+/plan-interview:batch-status                          # uses plansDirectory setting or docs/plans/
+/plan-interview:batch-status docs/plans/              # specific directory
+/plan-interview:batch-status docs/plans/ --force      # re-analyze files with existing status
+```
+
+The command presents a summary table of all files and their computed
+status/type before writing anything. Override options let you adjust
+auto-classified artifact plans, documentation-focused plans, or zero-signal
+files before confirming the write.
 
 ### Deep Grill
 
