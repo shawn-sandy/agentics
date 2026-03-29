@@ -1,13 +1,26 @@
 ---
 name: plan-status
-description: Use when the user asks to check, update, or determine the status of a plan file.
+description: Use when the user asks to check, update, or determine the status of a plan file — not for stress-testing, validating, or critiquing plan content.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
 ---
 
-# Plan Status
+## Plan Status
 
 Determine whether a plan has been implemented by inspecting the codebase, then
 write the lifecycle status and dates into the plan file's YAML frontmatter.
+
+Follow these steps exactly.
+
+## Table of Contents
+
+- [Step 0 — Create progress todos](#step-0--create-progress-todos)
+- [Step 1 — Resolve plan file](#step-1--resolve-plan-file)
+- [Step 2 — Get file dates from git](#step-2--get-file-dates-from-git)
+- [Step 3 — Read existing frontmatter](#step-3--read-existing-frontmatter)
+- [Step 4 — Analyze codebase for implementation evidence](#step-4--analyze-codebase-for-implementation-evidence)
+- [Step 5 — Artifact check](#step-5--artifact-check-only-when-status-resolves-to-completed)
+- [Step 6 — Present findings and confirm](#step-6--present-findings-and-confirm)
+- [Step 7 — Update plan file frontmatter](#step-7--update-plan-file-frontmatter)
 
 ## Instructions
 
@@ -46,7 +59,7 @@ If no file is found via any method, tell the user and stop.
 
 Announce the resolved file: `"Checking plan status: path/to/plan.md"`
 
-### Step 2 — Get file dates
+### Step 2 — Get file dates from git
 
 Use `Bash` to run git commands. Do not use `stat` — it is not cross-platform.
 
@@ -100,7 +113,7 @@ analysis entirely. Instead, ask the user via `AskUserQuestion`:
 > "No extractable implementation signals found in this plan (no backtick-quoted
 > file paths or names). Please set the status manually."
 
-Offer options: `todo`, `in-progress`, `completed`, `artifact`. Use the
+Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `artifact`. Use the
 user-selected value as the status and proceed to Step 6.
 
 **For each extracted token**, check both:
