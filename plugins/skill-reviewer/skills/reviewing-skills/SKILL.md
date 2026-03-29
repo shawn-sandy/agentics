@@ -138,7 +138,7 @@ Use this for rapid pre-audit assessment:
 **Structure**
 - [ ] File named exactly `SKILL.md` (case-sensitive)
 - [ ] Skill folder uses kebab-case naming
-- [ ] Table of contents present (if ≥100 lines)
+- [ ] Table of contents present in reference files (if ≥100 lines); optional suggestion for SKILL.md
 - [ ] Reference files at depth ≤1 (no `references/sub/file.md`)
 - [ ] Freedom level stated or implied
 - [ ] Content distributed across three levels (frontmatter → body → references) where appropriate

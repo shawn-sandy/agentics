@@ -124,7 +124,7 @@ Word count takes precedence when line count and word count thresholds disagree. 
 | Check | Requirement | Severity |
 |-------|-------------|----------|
 | Reference depth | Reference files must be at depth ≤1 (`references/file.md` — no subdirectories) | Error if violated |
-| TOC presence | Files ≥100 lines must have a table of contents | Warning if absent |
+| TOC presence | Reference files (`references/*.md`) ≥100 lines must have a TOC; absent TOC in SKILL.md itself is a Suggestion only | Warning if absent in reference files; Suggestion if absent in SKILL.md |
 | Freedom level | Skill indicates how strictly to follow it (rigid vs. flexible) | Suggestion if absent |
 | Heading hierarchy | Headings use H2/H3 logically; no skipped levels | Warning if violated |
 | Folder naming | Skill folder uses kebab-case | Warning if violated |
@@ -141,7 +141,7 @@ A skill with >3,000 words in the body and no reference files should consider spl
 
 **Scoring:**
 - **2 pts** — Reference depth valid, TOC present (if needed), freedom level clear, folder naming correct, content well-distributed across levels
-- **1 pt** — Missing TOC on long file, or freedom level unstated, or all content in body with no references
+- **1 pt** — Missing TOC on long reference file (≥100 lines), or freedom level unstated, or all content in body with no references
 - **0 pts** — Reference depth violation, wrong SKILL.md casing, or no structure
 
 ---

@@ -235,7 +235,11 @@ Each skill has its own `SKILL.md` with independent frontmatter and triggers. Avo
 
 ### Table of Contents
 
-Files at or exceeding 100 lines must have a TOC immediately after the title or overview section. TOC format:
+**Reference files** (`references/*.md`) at or exceeding 100 lines must have a TOC at the top. This requirement applies to reference files only — not to SKILL.md itself. Per Anthropic's official guide: "For reference files longer than 100 lines, include a table of contents at the top."
+
+Adding a TOC to SKILL.md is a suggestion (improves navigation for long files) but is not required and should not be scored as a Warning.
+
+TOC format:
 
 ```markdown
 ## Table of Contents
