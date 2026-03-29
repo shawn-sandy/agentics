@@ -12,7 +12,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 |-----------|------|-----------|
 | `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
 | `plan-status` | Command | `/plan-interview:plan-status [plan-file-path]` |
-| `status-sweep` | Command | `/plan-interview:status-sweep [directory-path] [--force]` |
+| `update-plan-status` | Command | `/plan-interview:update-plan-status [directory-path] [--force]` |
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
 | `deep-grill` | Command | `/plan-interview:deep-grill [plan-file-path]` |
@@ -97,9 +97,9 @@ Process an entire directory of plan files at once — adds frontmatter to files
 that don't have it, skips files already processed (unless `--force`):
 
 ```
-/plan-interview:status-sweep                          # uses plansDirectory setting or docs/plans/
-/plan-interview:status-sweep docs/plans/              # specific directory
-/plan-interview:status-sweep docs/plans/ --force      # re-analyze files with existing status
+/plan-interview:update-plan-status                          # uses plansDirectory setting or docs/plans/
+/plan-interview:update-plan-status docs/plans/              # specific directory
+/plan-interview:update-plan-status docs/plans/ --force      # re-analyze files with existing status
 ```
 
 The command presents a summary table of all files and their computed

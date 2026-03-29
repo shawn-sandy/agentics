@@ -4,7 +4,7 @@ argument-hint: "[directory-path] [--force] — omit directory to use plansDirect
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
 ---
 
-# Batch Plan Status
+# Update Plan Status
 
 Process multiple plan files in a directory — analyze codebase evidence for
 each file and add/update YAML frontmatter in bulk. Uses a summary-first,
@@ -282,8 +282,8 @@ After writing, confirm: `"Batch frontmatter update complete."`
 ## Examples
 
 ```
-/plan-interview:batch-status                          # uses plansDirectory setting or docs/plans/
-/plan-interview:batch-status docs/plans/              # specific directory
-/plan-interview:batch-status ~/.claude/plans/         # absolute path
-/plan-interview:batch-status docs/plans/ --force      # re-analyze files with existing status
+/plan-interview:update-plan-status                          # uses plansDirectory setting or docs/plans/
+/plan-interview:update-plan-status docs/plans/              # specific directory
+/plan-interview:update-plan-status ~/.claude/plans/         # absolute path
+/plan-interview:update-plan-status docs/plans/ --force      # re-analyze files with existing status
 ```
