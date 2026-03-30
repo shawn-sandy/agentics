@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-11
+---
+
 # Plan: Fix Plugin Version Hygiene
 
 ## Context

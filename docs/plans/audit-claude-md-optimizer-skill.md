@@ -1,3 +1,9 @@
+---
+status: completed
+type: artifact
+created: 2026-02-27
+---
+
 # Plan: Audit claude-md-optimizer SKILL.md
 
 ## Context

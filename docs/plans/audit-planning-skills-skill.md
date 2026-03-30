@@ -1,3 +1,9 @@
+---
+status: completed
+type: artifact
+created: 2026-02-26
+---
+
 # Review: planning-skills Skill Audit
 
 Audit of `plugins/skill-reviewer/skills/planning-skills/SKILL.md` against the updated best practices (aligned with Anthropic's guide, Jan 2026).

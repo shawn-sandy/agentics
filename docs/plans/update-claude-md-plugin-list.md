@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-23
+modified: 2026-02-26
+---
+
 # Plan: Update CLAUDE.md to Reflect 5-Plugin Marketplace
 
 ## Context

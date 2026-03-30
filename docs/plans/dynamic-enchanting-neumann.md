@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-15
+---
+
 # Plan: Add allowed-tools to git-agent skills
 
 ## Context

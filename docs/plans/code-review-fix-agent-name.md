@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-08
+---
+
 # Code Review: fix/agent-name branch
 
 ## Summary

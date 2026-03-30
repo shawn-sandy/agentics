@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-02-26
+---
+
 # Plan: Rename Non-Descriptive Plan Files
 
 ## Context

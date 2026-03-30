@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-24
+modified: 2026-02-26
+---
+
 # Plan: Register wcag-compliance-reviewer Plugin
 
 ## Context

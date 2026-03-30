@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-13
+---
+
 # Plan: `agentic-plugin-dev` Plugin — Create & Manage Plugins
 
 ## Context

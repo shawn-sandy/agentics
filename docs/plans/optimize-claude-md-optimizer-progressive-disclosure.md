@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-02-27
+---
+
 # Plan: Optimize claude-md-optimizer SKILL.md (Progressive Disclosure Refactor)
 
 ## Context

@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-08
+---
+
 # Plan: Create README for agent-creator Plugin
 
 ## Context

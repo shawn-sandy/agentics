@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-23
+modified: 2026-02-27
+---
+
 # Plan: Fix marketplace.json Location Reference in CLAUDE.md
 
 ## Context

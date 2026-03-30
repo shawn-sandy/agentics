@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-02
+---
+
 # Plan: Fix Cross-Skill Reference in test-review SKILL.md
 
 ## Context

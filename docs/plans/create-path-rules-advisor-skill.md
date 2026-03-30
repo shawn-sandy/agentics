@@ -1,3 +1,10 @@
+---
+status: completed
+type: artifact
+created: 2026-02-24
+modified: 2026-02-26
+---
+
 # Plan: Add `path-rules-advisor` Skill to claude-md-optimizer Plugin
 
 ## Context

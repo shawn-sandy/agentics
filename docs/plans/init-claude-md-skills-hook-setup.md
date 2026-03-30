@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-26
+---
+
 # Plan: /init Setup — CLAUDE.md, CLAUDE.local.md, Skills, Hook
 
 > Rename this file to `init-claude-md-skills-hook-setup.md` before committing.

@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-05
+---
+
 # Plan: Add Breaking Changes & Regression Detection to code-review-agent
 
 ## Context

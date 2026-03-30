@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-03-06
+modified: 2026-03-08
+---
+
 # Plan: Rename `code-test-suggestion` to `code-testing-agent`
 
 ## Context

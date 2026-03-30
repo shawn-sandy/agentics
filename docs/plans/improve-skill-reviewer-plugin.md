@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-02-26
+---
+
 # Plan: Improve Skill Reviewer Plugin
 
 ## Summary

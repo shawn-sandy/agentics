@@ -1,3 +1,10 @@
+---
+status: completed
+type: artifact
+created: 2026-02-24
+modified: 2026-02-26
+---
+
 # Plan: Enhance claude-md-optimizer Plugin with Memory Docs Guidance
 
 ## Context

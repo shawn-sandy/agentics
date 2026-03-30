@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-23
+modified: 2026-02-26
+---
+
 # Plan: Dev-Tools Plugin Refactor & Marketplace Optimization
 
 ## Context

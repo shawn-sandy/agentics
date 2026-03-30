@@ -1,3 +1,10 @@
+---
+status: completed
+type: artifact
+created: 2026-01-19
+modified: 2026-02-26
+---
+
 # Plan: Test hello-world Plugin
 
 ## Problem Analysis

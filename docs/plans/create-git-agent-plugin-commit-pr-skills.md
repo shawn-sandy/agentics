@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-03
+---
+
 # Plan: Create git-agent Plugin with commit-agent and pr-agent Skills
 
 ## Context

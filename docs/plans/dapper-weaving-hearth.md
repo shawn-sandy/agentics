@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-28
+---
+
 # Plan: Extract Deep Grill into Standalone Skill
 
 ## Context

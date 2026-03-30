@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-08
+---
+
 # Plan: Create `agent-creator` Plugin
 
 ## Context

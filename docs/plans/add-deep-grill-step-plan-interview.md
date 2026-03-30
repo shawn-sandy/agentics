@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-26
+---
+
 # Plan: Add Optional Deep Grill Step to Plan Interview Skill
 
 ## Context

@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-10
+---
+
 # Plan: Update plan-interview README with plan-hygiene info
 
 ## Context

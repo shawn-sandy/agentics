@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-12
+---
+
 # Plan: Make ship skill GitLab-compatible
 
 ## Context

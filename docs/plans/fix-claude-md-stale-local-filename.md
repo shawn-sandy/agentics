@@ -1,3 +1,9 @@
+---
+status: completed
+type: artifact
+created: 2026-02-24
+---
+
 # Fix: Stale `.claude.md.local` Reference in CLAUDE.md
 
 ## Context

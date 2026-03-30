@@ -2,6 +2,8 @@
 title: Update plan-interview README for v1.6.0 and v1.7.0
 branch: upgrade/plan-inteview
 file: plugins/plan-interview/README.md
+status: in-progress
+created: 2026-03-26
 ---
 
 # Update plan-interview README for v1.6.0 and v1.7.0

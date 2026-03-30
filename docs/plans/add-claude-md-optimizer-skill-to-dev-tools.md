@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-22
+modified: 2026-02-26
+---
+
 # Plan: Add `claude-md-optimizer` Skill to dev-tools Plugin
 
 ## Context

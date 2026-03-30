@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-02-24
+---
+
 # Plan: Optimize claude-md-optimizer SKILL.md
 
 ## Context
