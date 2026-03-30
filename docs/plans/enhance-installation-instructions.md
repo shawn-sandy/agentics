@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-02
+---
+
 # Plan: Rename Skill `test-review` → `reviewing-tests`
 
 ## Context

@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-15
+---
+
 # Plan: Add PostToolUse Hook to Trigger Plan Interview After Exiting Plan Mode
 
 ## Context

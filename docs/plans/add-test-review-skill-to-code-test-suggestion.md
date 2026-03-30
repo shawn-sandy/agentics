@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-01
+---
+
 # Plan: Add `test-review` Skill to `code-test-suggestion` Plugin
 
 ## Context

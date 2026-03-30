@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-03
+---
+
 # Plan: Fix pr-agent SKILL.md
 
 ## Context

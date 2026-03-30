@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-08
+---
+
 # Plan: Rename code-reviewer agent to agent-code-reviewer
 
 ## Context

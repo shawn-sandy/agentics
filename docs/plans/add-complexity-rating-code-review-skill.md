@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-03
+---
+
 # Plan: Add Code Complexity Rating to code-review Skill
 
 ## Context

@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-03-05
+modified: 2026-03-08
+---
+
 # Stress Test: Open-Source Readiness Plan
 
 ## Context

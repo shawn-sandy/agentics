@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-02-23
+---
+
 # Plan: Plugin Development Guide
 
 ## Context

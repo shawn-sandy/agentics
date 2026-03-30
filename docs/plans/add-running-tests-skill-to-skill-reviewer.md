@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-03
+---
+
 # Plan: Add `running-tests` Skill to `skill-reviewer` Plugin
 
 **Rename this file to:** `add-running-tests-skill-to-skill-reviewer.md`

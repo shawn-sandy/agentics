@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-09
+---
+
 # Plan: Resolve Skill vs Agent Activation Conflict in code-review Plugin
 
 ## Context

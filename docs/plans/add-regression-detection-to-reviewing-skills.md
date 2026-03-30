@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-03
+---
+
 # Plan: Add Regression & Breaking-Change Detection to `reviewing-skills`
 
 ## Context

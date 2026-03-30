@@ -1,3 +1,10 @@
+---
+status: completed
+type: artifact
+created: 2026-02-22
+modified: 2026-02-26
+---
+
 # Installation Instructions Enhancement Plan
 
 ## Overview

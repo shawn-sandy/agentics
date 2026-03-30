@@ -1,3 +1,9 @@
+---
+status: completed
+type: artifact
+created: 2026-02-26
+---
+
 # Plan: Add review-rename-plans Command to plan-interview Plugin
 
 ## Context

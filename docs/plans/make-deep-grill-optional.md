@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-26
+---
+
 # Make Deep Grill Step Optional in Plan Interview Skill
 
 ## Context

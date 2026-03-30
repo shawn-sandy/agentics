@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-02-26
+---
+
 # Plan: Update wcag-compliance-reviewer to WCAG 2.2
 
 ## Context

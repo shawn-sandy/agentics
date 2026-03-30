@@ -1,3 +1,10 @@
+---
+status: completed
+type: artifact
+created: 2026-02-23
+modified: 2026-02-26
+---
+
 # Plan: Document Plugin Version Bump Process
 
 ## Context

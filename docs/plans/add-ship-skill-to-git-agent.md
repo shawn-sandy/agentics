@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-12
+---
+
 # Plan: Add `/ship` Skill to git-agent Plugin
 
 ## Context

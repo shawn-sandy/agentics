@@ -1,3 +1,10 @@
+---
+status: completed
+type: standard
+created: 2026-03-06
+modified: 2026-03-08
+---
+
 # Plan: Add `marketplace-builder` Plugin
 
 ## Context

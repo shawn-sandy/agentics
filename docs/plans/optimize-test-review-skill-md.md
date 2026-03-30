@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-02
+---
+
 # Plan: Optimize test-review SKILL.md
 
 ## Context

@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-06
+---
+
 # Plan: Optimize code-review-agent Trigger Description
 
 ## Context

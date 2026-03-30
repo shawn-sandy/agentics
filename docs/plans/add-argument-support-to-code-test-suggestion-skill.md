@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-01
+---
+
 # Plan: Add Argument Support to code-test-suggestion Skill
 
 ## Context

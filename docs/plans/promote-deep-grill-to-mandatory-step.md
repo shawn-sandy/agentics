@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-26
+---
+
 # Plan: Promote Deep Grill to Mandatory Step
 
 ## Context

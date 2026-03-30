@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-02
+---
+
 # Skill Audit: test-review SKILL.md
 
 ## Context

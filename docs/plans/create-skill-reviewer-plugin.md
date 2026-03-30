@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-25
+modified: 2026-02-26
+---
+
 # Plan: Create `skill-reviewer` Plugin
 
 ## Context

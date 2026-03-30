@@ -1,3 +1,10 @@
+---
+status: completed
+type: artifact
+created: 2026-02-23
+modified: 2026-02-26
+---
+
 # Plan: Remove Unsupported Fields from marketplace.json Plugin Entries
 
 ## Context

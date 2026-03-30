@@ -1,3 +1,8 @@
+---
+status: todo
+created: 2026-03-08
+---
+
 # Plan: Code Review for fix/agent-name PR
 
 ## Context

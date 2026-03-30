@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-29
+---
+
 # Plan: Add `update-plan-status` command to plan-interview plugin
 
 ## Context

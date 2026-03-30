@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-01-19
+modified: 2026-02-26
+---
+
 # Claude Plugin Marketplace API - Implementation Plan
 
 ## Overview

@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-27
+---
+
 # Plan: Make Deep Grill Default Yes in Plan Interview Skill
 
 ## Context

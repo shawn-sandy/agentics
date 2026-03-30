@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-03-08
+---
+
 # Plan: Improve code-reviewer agent (v2.2.0 -> v2.3.0)
 
 ## Context

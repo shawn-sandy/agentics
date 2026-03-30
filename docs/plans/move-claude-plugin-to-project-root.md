@@ -1,3 +1,9 @@
+---
+status: in-progress
+created: 2026-02-23
+modified: 2026-02-26
+---
+
 # Plan: Move .claude-plugin to Project Root (Marketplace Refactor)
 
 ## Context

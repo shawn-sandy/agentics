@@ -1,3 +1,8 @@
+---
+status: in-progress
+created: 2026-03-05
+---
+
 # Open-Source Readiness Plan
 
 **Goal:** Prepare the agentics repository for public open-source release so that new users can discover, understand, install, and contribute to the plugin marketplace effectively.
