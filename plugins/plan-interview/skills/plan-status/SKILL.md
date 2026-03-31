@@ -1,7 +1,8 @@
 ---
 name: plan-status
-description: Use when the user asks to check, update, or determine the status of a plan file — not for stress-testing, validating, or critiquing plan content.
+description: Use when the user asks to check, update, or determine the status of a plan file, when entering or exiting plan mode, when creating or updating plans, or when working with plan files in any capacity — not for stress-testing, validating, or critiquing plan content.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
+argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
 
 ## Plan Status
