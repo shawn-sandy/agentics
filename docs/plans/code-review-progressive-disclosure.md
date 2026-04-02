@@ -1,6 +1,8 @@
 ---
-status: draft
+status: completed
+type: standard
 scope: plugins/code-review/skills/code-review-agent/
+created: 2026-04-01
 ---
 
 # Progressive Disclosure: Extract Review Checklist and Example
