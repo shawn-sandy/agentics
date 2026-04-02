@@ -17,6 +17,7 @@ implementation begins.
 - [Step 1 — Resolve the plan file](#step-1--resolve-the-plan-file)
 - [Step 2 — Read, validate plan name, and analyze the plan](#step-2--read-validate-plan-name-and-analyze-the-plan)
 - [Step 2.5 — Skill tool analysis](#step-25--skill-tool-analysis-skill-review-mode-only)
+- [Step 2.6 — Skill quality checklist](#step-26--skill-quality-checklist-skill-review-mode-only)
 - [Step 3 — Conduct the structured interview](#step-3--conduct-the-structured-interview)
 - [Step 4 — Surface out-of-scope concerns](#step-4--surface-out-of-scope-concerns)
 - [Step 5 — Compile and present the review summary](#step-5--compile-and-present-the-review-summary)
@@ -34,6 +35,7 @@ Create the following todos (all starting with `status: "pending"`):
 
 - Step 2: Read, validate plan name, and analyze the plan
 - Step 2.5: Skill tool analysis (skill-review mode only)
+- Step 2.6: Skill quality checklist (skill-review mode only)
 - Step 3a: Round 1 — Technical & Trade-offs
 - Step 3b: Round 2a — UI/UX & Flows (if applicable)
 - Step 3c: Round 2b — Accessibility & Semantic (if applicable)
@@ -262,6 +264,39 @@ the skill's frontmatter.
    > recommendation applies there.
    ```
 
+### Step 2.6 — Skill quality checklist _(skill-review mode only)_
+
+Skip this step entirely when `mode = plan-review`.
+
+Read [reference/skill-checklist.md](reference/skill-checklist.md) and evaluate the reviewed skill
+against every item in the checklist. For each category, mark items as passing
+or failing based on what you can observe in the skill file and its directory.
+
+Present the results as a scored table:
+
+```markdown
+### Skill Quality Checklist
+
+| Category        | Passing | Failing | N/A |
+| --------------- | ------- | ------- | --- |
+| Core quality    | 8       | 2       | 0   |
+| Code & scripts  | —       | —       | 8   |
+| Testing         | 0       | 3       | 1   |
+```
+
+Then list only the **failing items** with a brief note on each:
+
+```markdown
+**Failing items:**
+
+- [ ] Description does not include when to use the Skill
+- [ ] No concrete examples provided
+- [ ] Not tested with multiple models
+```
+
+Mark items as **N/A** (not applicable) when the skill has no scripts or code
+(entire "Code and scripts" category may be N/A for instruction-only skills).
+
 ### Step 3 — Conduct the structured interview
 
 Generate questions dynamically from the plan content — do not use generic or
@@ -403,6 +438,11 @@ implementation]
 [Concise list of areas where the plan can be reduced in scope or abstraction,
 with specific simpler alternatives — omit this section if no complexity concerns
 were found]
+
+### Skill Quality Checklist Results
+
+[Include only in `skill-review` mode. Reproduce the scored table and failing
+items from Step 2.6. Omit this section entirely when reviewing a plan file.]
 
 ### Allowed Tools Recommendation
 
