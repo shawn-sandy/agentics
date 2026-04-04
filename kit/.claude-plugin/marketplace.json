@@ -13,7 +13,11 @@
   "plugins": [
     {
       "name": "claude-md-optimizer",
-      "source": "./plugins/claude-md-optimizer",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/claude-md-optimizer"
+      },
       "version": "1.5.0",
       "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
       "category": "development",
@@ -26,7 +30,11 @@
     },
     {
       "name": "code-review",
-      "source": "./plugins/code-review",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/code-review"
+      },
       "version": "3.1.0",
       "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
@@ -41,7 +49,11 @@
     },
     {
       "name": "plan-interview",
-      "source": "./plugins/plan-interview",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/plan-interview"
+      },
       "version": "1.12.0",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
@@ -54,7 +66,11 @@
     },
     {
       "name": "wcag-compliance-reviewer",
-      "source": "./plugins/wcag-compliance-reviewer",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/wcag-compliance-reviewer"
+      },
       "version": "1.1.0",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
@@ -72,7 +88,11 @@
     },
     {
       "name": "skill-reviewer",
-      "source": "./plugins/skill-reviewer",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/skill-reviewer"
+      },
       "version": "1.4.0",
       "description": "Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage",
       "category": "development",
@@ -90,7 +110,11 @@
     },
     {
       "name": "code-testing-agent",
-      "source": "./plugins/code-testing-agent",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/code-testing-agent"
+      },
       "version": "3.0.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
@@ -105,7 +129,11 @@
     },
     {
       "name": "git-agent",
-      "source": "./plugins/git-agent",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/git-agent"
+      },
       "version": "1.1.0",
       "description": "Automated git commit and PR creation — stage, commit with conventional messages, and create PRs in one shot",
       "category": "development",
@@ -121,7 +149,11 @@
     },
     {
       "name": "agent-creator",
-      "source": "./plugins/agent-creator",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/agent-creator"
+      },
       "version": "1.0.0",
       "description": "Scaffold Claude Code agent-based plugins with guided workflows",
       "category": "development",
@@ -135,7 +167,11 @@
     },
     {
       "name": "react-perf-analyzer",
-      "source": "./plugins/react-perf-analyzer",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/react-perf-analyzer"
+      },
       "version": "1.1.0",
       "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores — produces a heuristic report with recommendations",
       "category": "testing",
@@ -152,7 +188,11 @@
     },
     {
       "name": "marketplace-builder",
-      "source": "./plugins/marketplace-builder",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/marketplace-builder"
+      },
       "version": "1.0.0",
       "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure — audit readiness, generate missing files, and guide marketplace setup",
       "category": "development",
@@ -169,7 +209,11 @@
     },
     {
       "name": "agentic-plugin-dev",
-      "source": "./plugins/agentic-plugin-dev",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/agentic-plugin-dev"
+      },
       "version": "1.0.0",
       "description": "Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure",
       "category": "development",

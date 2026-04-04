@@ -9,9 +9,13 @@ Add plugin entries to `kit/.claude-plugin/marketplace.json`:
   "plugins": [
     {
       "name": "my-plugin",
+      "source": {
+        "source": "git-subdir",
+        "url": "shawn-sandy/agentics",
+        "path": "kit/plugins/my-plugin"
+      },
       "version": "1.0.0",
       "description": "Brief description",
-      "source": "./plugins/my-plugin",
       "category": "development",
       "tags": ["relevant", "tags"]
     }
@@ -19,7 +23,7 @@ Add plugin entries to `kit/.claude-plugin/marketplace.json`:
 }
 ```
 
-**Version:** Set `version` only in `marketplace.json` for relative-path plugins. Do NOT add it to `plugin.json` — `plugin.json` silently overrides the marketplace version.
+**Version:** Set `version` only in `marketplace.json`. Do NOT add it to `plugin.json` — `plugin.json` silently overrides the marketplace version.
 
 ## Standard Categories
 
@@ -53,7 +57,7 @@ Tags must be specific, searchable, and related to plugin functionality. Avoid ge
 
 ## Common Pitfalls
 
-- Invalid `source` paths — must exist on disk
+- Invalid `path` in `git-subdir` source — must match actual directory in the repo
 - Duplicate plugin names in the same marketplace
-- Missing `marketplace.json` in `agentics/.claude-plugin/`
+- Missing `marketplace.json` in `kit/.claude-plugin/`
 - Setting `version` in both `plugin.json` and `marketplace.json`
