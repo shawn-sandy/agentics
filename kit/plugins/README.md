@@ -96,10 +96,10 @@ Test individual plugins directly with Claude Code:
 
 ```bash
 # Option 1: From repository root (relative path)
-claude --plugin-dir ./plugins/hello-world
+claude --plugin-dir ./kit/plugins/hello-world
 
 # Option 2: From anywhere (absolute path)
-claude --plugin-dir /full/path/to/agentics/plugins/hello-world
+claude --plugin-dir /full/path/to/agentics/kit/plugins/hello-world
 
 # In Claude, run:
 # /hello-world:greet
@@ -108,7 +108,7 @@ claude --plugin-dir /full/path/to/agentics/plugins/hello-world
 
 ```bash
 # Test dev-tools plugin
-claude --plugin-dir ./plugins/dev-tools
+claude --plugin-dir ./kit/plugins/dev-tools
 
 # In Claude, run:
 # /dev-tools:format
@@ -120,7 +120,7 @@ claude --plugin-dir ./plugins/dev-tools
 Load both plugins simultaneously:
 
 ```bash
-claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
+claude --plugin-dir ./kit/plugins/hello-world --plugin-dir ./kit/plugins/dev-tools
 ```
 
 ### Troubleshooting
@@ -130,7 +130,7 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 **Error:** "Plugin directory does not exist" or similar
 
 **Solutions:**
-- Verify the path exists: `ls -la ./plugins/hello-world`
+- Verify the path exists: `ls -la ./kit/plugins/hello-world`
 - Check you're in the repository root: `pwd`
 - Use absolute path instead: `claude --plugin-dir /full/path/to/plugins/hello-world`
 - Ensure `.claude-plugin/plugin.json` exists in the plugin directory
@@ -141,7 +141,7 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 
 **Solutions:**
 - Verify the plugin loaded successfully (check Claude's startup output)
-- Check command file exists: `ls -la plugins/hello-world/commands/`
+- Check command file exists: `ls -la kit/plugins/hello-world/commands/`
 - Ensure command file has `.md` extension
 - Verify YAML frontmatter has `description` field
 - Try restarting Claude with `--plugin-dir` flag
@@ -152,7 +152,7 @@ claude --plugin-dir ./plugins/hello-world --plugin-dir ./plugins/dev-tools
 
 **Solutions:**
 - Check skill description matches your request intent
-- Verify skill file location: `plugins/plugin-name/skills/skill-name/SKILL.md`
+- Verify skill file location: `kit/plugins/plugin-name/skills/skill-name/SKILL.md`
 - Ensure YAML frontmatter has both `name` and `description` fields
 - Try being more explicit in your request
 - Use the exact phrasing from skill description for testing

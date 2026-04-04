@@ -41,7 +41,7 @@ This plugin is the counterpart to `claude-md-optimizer` — while that plugin au
 ### Load Locally (Development)
 
 ```bash
-claude --plugin-dir /path/to/agentics/plugins/skill-reviewer
+claude --plugin-dir /path/to/agentics/kit/plugins/skill-reviewer
 ```
 
 ## Usage

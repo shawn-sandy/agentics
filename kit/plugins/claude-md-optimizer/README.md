@@ -49,5 +49,5 @@ Optimize the CLAUDE.md at ~/myproject/CLAUDE.md
 Or load directly for local testing:
 
 ```bash
-claude --plugin-dir ./plugins/claude-md-optimizer
+claude --plugin-dir ./kit/plugins/claude-md-optimizer
 ```

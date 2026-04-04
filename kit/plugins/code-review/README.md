@@ -160,5 +160,5 @@ Reviews are structured as:
 Or load directly for local testing:
 
 ```bash
-claude --plugin-dir ./plugins/code-review
+claude --plugin-dir ./kit/plugins/code-review
 ```

@@ -95,7 +95,7 @@ If a `marketplace.json` exists in the project root, offers to register the new p
 ### Load Locally (Development)
 
 ```bash
-claude --plugin-dir /path/to/agentics/plugins/agent-creator
+claude --plugin-dir /path/to/agentics/kit/plugins/agent-creator
 ```
 
 ## Plugin Structure

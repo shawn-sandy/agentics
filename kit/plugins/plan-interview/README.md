@@ -220,5 +220,5 @@ If random-named plan files exist, run `/plan-hygiene` first and complete the ren
 Or load directly for local testing:
 
 ```bash
-claude --plugin-dir ./plugins/plan-interview
+claude --plugin-dir ./kit/plugins/plan-interview
 ```

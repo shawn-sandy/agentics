@@ -28,7 +28,7 @@ The marketplace-builder plugin helps developers turn any repository into a funct
 **Local development:**
 
 ```bash
-claude --plugin-dir ./plugins/marketplace-builder
+claude --plugin-dir ./kit/plugins/marketplace-builder
 ```
 
 ## Usage
