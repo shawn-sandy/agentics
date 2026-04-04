@@ -1,0 +1,16 @@
+{
+  "name": "plan-interview",
+  "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "planning",
+    "interview",
+    "stress-test",
+    "architecture"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/plan-interview",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

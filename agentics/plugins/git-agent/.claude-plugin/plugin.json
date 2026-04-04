@@ -1,9 +1,0 @@
-{
-  "name": "git-agent",
-  "description": "Automated git commit and PR creation — stage, commit with conventional messages, and create PRs in one shot",
-  "author": { "name": "Agentics Project" },
-  "license": "MIT",
-  "keywords": ["git", "commit", "pr", "pull-request", "conventional-commits", "automation"],
-  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/agentics/plugins/git-agent",
-  "repository": "https://github.com/shawn-sandy/agentics"
-}

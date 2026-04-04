@@ -1,6 +1,6 @@
 ---
 paths:
-  - "agentics/plugins/**"
+  - "kit/plugins/**"
 ---
 
 # Plugin Component Patterns

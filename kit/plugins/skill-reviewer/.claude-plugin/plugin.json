@@ -1,0 +1,9 @@
+{
+  "name": "skill-reviewer",
+  "description": "Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage",
+  "author": { "name": "Agentics Project" },
+  "license": "MIT",
+  "keywords": ["skills", "plugin-authoring", "best-practices", "skill-review", "quality-audit", "skill-planning", "design-patterns"],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/skill-reviewer",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

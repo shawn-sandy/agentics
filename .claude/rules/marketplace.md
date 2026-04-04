@@ -2,7 +2,7 @@
 
 ## Registering a Plugin
 
-Add plugin entries to `agentics/.claude-plugin/marketplace.json`:
+Add plugin entries to `kit/.claude-plugin/marketplace.json`:
 
 ```json
 {
@@ -44,12 +44,12 @@ Tags must be specific, searchable, and related to plugin functionality. Avoid ge
 
 ### How to bump
 
-1. Update `"version"` in `agentics/.claude-plugin/marketplace.json` under the plugin entry
-2. Add an entry to `agentics/plugins/<name>/CHANGELOG.md`
+1. Update `"version"` in `kit/.claude-plugin/marketplace.json` under the plugin entry
+2. Add an entry to `kit/plugins/<name>/CHANGELOG.md`
 3. Commit with a conventional message:
-   - Patch: `fix(agentics/plugins/<name>): bump version to X.Y.Z`
-   - Minor: `feat(agentics/plugins/<name>): bump version to X.Y.Z`
-   - Major: `feat(agentics/plugins/<name>)!: bump version to X.Y.Z` + `BREAKING CHANGE:` in body
+   - Patch: `fix(kit/plugins/<name>): bump version to X.Y.Z`
+   - Minor: `feat(kit/plugins/<name>): bump version to X.Y.Z`
+   - Major: `feat(kit/plugins/<name>)!: bump version to X.Y.Z` + `BREAKING CHANGE:` in body
 
 ## Common Pitfalls
 
