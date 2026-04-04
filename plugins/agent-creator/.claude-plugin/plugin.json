@@ -1,9 +1,0 @@
-{
-  "name": "agent-creator",
-  "description": "Scaffold Claude Code agent-based plugins with guided workflows",
-  "author": { "name": "Agentics Project" },
-  "license": "MIT",
-  "keywords": ["agents", "scaffolding", "plugin-authoring", "code-generation", "sub-agents"],
-  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/plugins/agent-creator",
-  "repository": "https://github.com/shawn-sandy/agentics"
-}

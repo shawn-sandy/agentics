@@ -1,0 +1,16 @@
+{
+  "name": "marketplace-builder",
+  "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure",
+  "author": { "name": "Agentics Project" },
+  "license": "MIT",
+  "keywords": [
+    "marketplace",
+    "scaffold",
+    "skill-marketplace",
+    "plugin-builder",
+    "marketplace-setup",
+    "plugin-readiness"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/agentics/plugins/marketplace-builder",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
