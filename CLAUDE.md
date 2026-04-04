@@ -8,22 +8,22 @@ This file provides guidance to Claude Code when working with this repository.
 
 Two distinct purposes:
 
-1. **Example Plugins** — Reference implementations in `agentics/plugins/` demonstrating Claude Code plugin structure
+1. **Example Plugins** — Reference implementations in `kit/plugins/` demonstrating Claude Code plugin structure
 2. **Marketplace Infrastructure** — (Planned) API and CLI for discovering and serving these plugins
 
 ## Tech Stack
 
 - **Formats:** Markdown (commands, skills), JSON (plugin manifests)
-- **Plugin manifest:** `agentics/plugins/<name>/.claude-plugin/plugin.json` — requires `name`; `version` is managed in `marketplace.json` for relative-path plugins
-- **Marketplace manifest:** `agentics/.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
+- **Plugin manifest:** `kit/plugins/<name>/.claude-plugin/plugin.json` — requires `name`; `version` is managed in `marketplace.json` for relative-path plugins
+- **Marketplace manifest:** `kit/.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
 - **Minimum Claude Code Version:** 1.0.33 or later
 
 ## Repository Structure
 
 ```plaintext
-agentics/             → Self-contained marketplace subtree (git-subdir distributable)
-agentics/plugins/     → Plugin source code (what users install)
-agentics/.claude-plugin/ → Marketplace metadata (marketplace.json)
+kit/                  → Self-contained marketplace subtree (git-subdir distributable)
+kit/plugins/          → Plugin source code (what users install)
+kit/.claude-plugin/   → Marketplace metadata (marketplace.json)
 tests/fixtures/       → Test data for validation logic
 .claude/rules/        → Detailed authoring patterns (scoped rules)
 docs/plans/           → Plan files (commit with plugin changes)
@@ -35,38 +35,38 @@ Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` use
 
 ```bash
 # Load a plugin for local testing
-claude --plugin-dir ./agentics/plugins/<name>
+claude --plugin-dir ./kit/plugins/<name>
 
 # Register marketplace (full repo) and install a plugin
-/plugin marketplace add /path/to/agentics --sparse agentics
+/plugin marketplace add /path/to/agentics --sparse kit
 /plugin install <plugin-name>@agentics-kit
 
 # Or register as git-subdir from another marketplace
-# { "source": "git-subdir", "url": "shawn-sandy/agentics", "path": "agentics/plugins/<name>" }
+# { "source": "git-subdir", "url": "shawn-sandy/agentics", "path": "kit/plugins/<name>" }
 ```
 
 > Machine-specific paths belong in `CLAUDE.local.md`, not here.
 
 ## Reference Implementations
 
-- **Skills only:** `agentics/plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
-- **Skills only:** `agentics/plugins/code-review/` — auto-activated code review
-- **Mixed:** `agentics/plugins/plan-interview/` — commands + skills
-- **Marketplace config:** `agentics/.claude-plugin/marketplace.json` — registry (agentics-kit v2.3.0)
+- **Skills only:** `kit/plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
+- **Skills only:** `kit/plugins/code-review/` — auto-activated code review
+- **Mixed:** `kit/plugins/plan-interview/` — commands + skills
+- **Marketplace config:** `kit/.claude-plugin/marketplace.json` — registry (agentics-kit v2.3.0)
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
 
 ## Modular Rules
 
 Detailed patterns in `.claude/rules/`:
 
-- `plugin-patterns.md` — command/skill patterns, progressive disclosure, pitfalls (scoped to `agentics/plugins/**`)
+- `plugin-patterns.md` — command/skill patterns, progressive disclosure, pitfalls (scoped to `kit/plugins/**`)
 - `marketplace.md` — categories, tagging, versioning, registration
 - `testing.md` — test fixture guidelines (scoped to `tests/**`)
 - `plan-hygiene.md` — pre-commit plan file rename checks (scoped to `**/plans/**`)
 
 ## Conventions
 
-- Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/agentics/plugins/{plugin-name}`
+- Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
 - Always include the plan file in commits for plugin changes, even minor ones.
 - `.claude/settings.json` auto-validates `marketplace.json` JSON syntax after every Write/Edit — fix any errors before committing.
 - For relative-path plugins, set `version` only in `marketplace.json`, not in `plugin.json`.

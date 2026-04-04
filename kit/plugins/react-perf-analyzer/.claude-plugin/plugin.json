@@ -1,0 +1,22 @@
+{
+  "name": "react-perf-analyzer",
+  "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores — produces a heuristic report with recommendations",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "performance",
+    "web-vitals",
+    "cls",
+    "inp",
+    "long-tasks",
+    "long-animation-frames",
+    "event-timing",
+    "profiling",
+    "optimization"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/react-perf-analyzer",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

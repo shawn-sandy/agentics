@@ -1,0 +1,17 @@
+{
+  "name": "code-review",
+  "description": "Systematic code review across quality, bugs, security, and best practices",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "code-quality",
+    "review",
+    "security",
+    "best-practices",
+    "complexity"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/code-review",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
