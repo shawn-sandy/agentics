@@ -36,7 +36,7 @@ Register the agentics-kit marketplace and install the plugin in one step:
 To load the plugin directly from a local clone:
 
 ```bash
-claude --plugin-dir /path/to/agentics/plugins/wcag-compliance-reviewer
+claude --plugin-dir /path/to/agentics/kit/plugins/wcag-compliance-reviewer
 ```
 
 ## When to Use This Skill

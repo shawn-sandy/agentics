@@ -22,7 +22,7 @@ Create, manage, and validate Claude Code plugins — scaffold new plugins, manag
 ### Local testing
 
 ```bash
-claude --plugin-dir ./plugins/agentic-plugin-dev
+claude --plugin-dir ./kit/plugins/agentic-plugin-dev
 ```
 
 ## Usage

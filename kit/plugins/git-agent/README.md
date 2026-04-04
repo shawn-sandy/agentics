@@ -12,7 +12,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ```bash
 # Load locally for testing
-claude --plugin-dir ./plugins/git-agent
+claude --plugin-dir ./kit/plugins/git-agent
 
 # Or install via marketplace
 /plugin marketplace add /path/to/agentics

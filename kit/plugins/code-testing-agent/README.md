@@ -126,7 +126,7 @@ Reviews are organized by test file:
 ### Load Locally (Development)
 
 ```bash
-claude --plugin-dir /path/to/agentics/plugins/code-testing-agent
+claude --plugin-dir /path/to/agentics/kit/plugins/code-testing-agent
 ```
 
 ## Plugin Structure
