@@ -45,10 +45,23 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-- **Skills only:** `kit/plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
-- **Skills only:** `kit/plugins/code-review/` — auto-activated code review
-- **Mixed:** `kit/plugins/plan-interview/` — commands + skills
-- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v3.0.0)
+11 plugins in the marketplace (`agentics-kit` v3.0.0):
+
+| Plugin | Type | Notes |
+|--------|------|-------|
+| `claude-md-optimizer` | Skills | Auto-activated CLAUDE.md auditing |
+| `code-review` | Skills + Agents | Auto-activated code review |
+| `plan-interview` | Commands + Skills | Planning workflow with deep-grill |
+| `skill-reviewer` | Skills | Skill file quality checks |
+| `code-testing-agent` | Skills + Agents | Test suggestion and review |
+| `git-agent` | Skills | Commit, PR, and ship workflows |
+| `agent-creator` | Agents | Plugin scaffolding agent |
+| `agentic-plugin-dev` | Skills + Commands | Plugin development toolkit |
+| `marketplace-builder` | Skills | Marketplace scaffolding |
+| `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
+| `react-perf-analyzer` | Skills | React performance analysis |
+
+- **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
 
 ## Modular Rules
