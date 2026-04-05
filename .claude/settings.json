@@ -14,7 +14,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "jq empty .claude-plugin/marketplace.json 2>&1 && echo 'OK: marketplace.json valid' || echo 'ERROR: marketplace.json has invalid JSON — fix before committing'"
+                        "command": "jq empty kit/.claude-plugin/marketplace.json 2>&1 && echo 'OK: marketplace.json valid' || echo 'ERROR: marketplace.json has invalid JSON — fix before committing'"
                     }
                 ]
             }
