@@ -15,14 +15,13 @@ Two distinct purposes:
 
 - **Formats:** Markdown (commands, skills), JSON (plugin manifests)
 - **Plugin manifest:** `kit/plugins/<name>/.claude-plugin/plugin.json` — requires `name`; `version` is managed in `marketplace.json` for relative-path plugins
-- **Marketplace manifest:** `kit/.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
+- **Marketplace manifest:** `.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
 - **Minimum Claude Code Version:** 1.0.33 or later
 
 ## Repository Structure
 
 ```plaintext
-kit/                  → Self-contained marketplace subtree
-kit/.claude-plugin/   → Marketplace metadata (marketplace.json)
+.claude-plugin/       → Marketplace metadata (marketplace.json) — must be at repo root
 kit/plugins/          → Plugin source code (what users install)
 tests/fixtures/       → Test data for validation logic
 .claude/rules/        → Detailed authoring patterns (scoped rules)
@@ -38,7 +37,7 @@ Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` use
 claude --plugin-dir ./kit/plugins/<name>
 
 # Register marketplace and install a plugin
-/plugin marketplace add shawn-sandy/agentics/kit
+/plugin marketplace add shawn-sandy/agentics
 /plugin install <plugin-name>@agentics-kit
 ```
 
@@ -49,7 +48,7 @@ claude --plugin-dir ./kit/plugins/<name>
 - **Skills only:** `kit/plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
 - **Skills only:** `kit/plugins/code-review/` — auto-activated code review
 - **Mixed:** `kit/plugins/plan-interview/` — commands + skills
-- **Marketplace config:** `kit/.claude-plugin/marketplace.json` — registry (agentics-kit v3.0.0)
+- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v3.0.0)
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
 
 ## Modular Rules
@@ -65,7 +64,7 @@ Detailed patterns in `.claude/rules/`:
 
 - Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
 - Always include the plan file in commits for plugin changes, even minor ones.
-- `.claude/settings.json` auto-validates `kit/.claude-plugin/marketplace.json` JSON syntax after every Write/Edit — fix any errors before committing.
+- `.claude/settings.json` auto-validates `marketplace.json` JSON syntax after every Write/Edit — fix any errors before committing.
 - For relative-path plugins, set `version` only in `marketplace.json`, not in `plugin.json`.
 - Component types: **Commands** (`/plugin:name`), **Skills** (auto-activated), **Agents** (subprocesses), **Hooks** (event-driven).
 - Skill `SKILL.md` can use `allowed-tools` frontmatter to restrict tool access if necessary

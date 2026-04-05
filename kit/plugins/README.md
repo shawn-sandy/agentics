@@ -47,12 +47,13 @@ A multi-skill plugin for reviewing, planning, and testing Claude Code skills.
 
 **Use case:** Plugin authoring quality assurance, skill development workflow
 
-### code-test-suggestion
-A skill-only plugin that suggests targeted tests based on actual code behavior and intent.
+### code-testing-agent
+A multi-skill plugin that analyzes code and suggests targeted tests, reviews existing tests, and runs changed test files.
 
 **Components:**
-- Skill: `code-test-suggestion` - Suggest specific, purpose-driven tests for code
+- Skill: `code-testing-agent` - Suggest specific, purpose-driven tests tied to actual code behavior
 - Skill: `reviewing-tests` - Review existing tests for quality and coverage gaps
+- Skill: `running-tests` - Detect changed files, find related tests, run them, report results
 
 **Use case:** Test-driven development, test quality improvement
 
@@ -64,6 +65,41 @@ A skill-only plugin for automated git commit and PR creation.
 - Skill: `pr-agent` - Push branch and create pull requests via `gh`
 
 **Use case:** Streamlined git workflows, automated PR creation
+
+### agent-creator
+A skill-only plugin for scaffolding Claude Code agent-based plugins with guided workflows.
+
+**Components:**
+- Skill: `generating-agents` - Scaffold agent-based plugin components with guided prompts
+
+**Use case:** Plugin authoring, agent scaffolding
+
+### agentic-plugin-dev
+A multi-skill plugin for creating, managing, and validating Claude Code plugins.
+
+**Components:**
+- Skill: `plugin-creator` - Scaffold new plugins end-to-end with guided workflow
+- Skill: `plugin-manager` - Manage marketplace entries and plugin metadata
+- Skill: `plugin-validator` - Audit plugin structure and validate manifests
+
+**Use case:** Full plugin development lifecycle management
+
+### marketplace-builder
+A skill-only plugin for evaluating a repository and scaffolding Claude Code marketplace infrastructure.
+
+**Components:**
+- Skill: `building-marketplaces` - Evaluate repo readiness and scaffold marketplace structure
+
+**Use case:** Setting up new Claude Code plugin marketplaces
+
+### react-perf-analyzer
+A plugin for identifying React performance issues correlated with Core Web Vitals (INP, CLS, LCP, TBT).
+
+**Components:**
+- Skill: `react-perf-analyzer` - Analyze React source for patterns that hurt Web Vitals scores
+- Command: `/react-perf-analyzer:test [url]` - Run Lighthouse against a URL and report scores
+
+**Use case:** React performance auditing, Core Web Vitals optimization
 
 ## Testing Plugins Locally
 
@@ -86,8 +122,8 @@ Before testing plugins, verify your setup:
 
 3. **List available plugins:**
    ```bash
-   ls -la plugins/
-   # Should show hello-world/ and dev-tools/ directories
+   ls -la kit/plugins/
+   # Should show code-review/, plan-interview/, git-agent/, etc.
    ```
 
 ### Using --plugin-dir
@@ -96,31 +132,30 @@ Test individual plugins directly with Claude Code:
 
 ```bash
 # Option 1: From repository root (relative path)
-claude --plugin-dir ./kit/plugins/hello-world
+claude --plugin-dir ./kit/plugins/code-review
 
 # Option 2: From anywhere (absolute path)
-claude --plugin-dir /full/path/to/agentics/kit/plugins/hello-world
+claude --plugin-dir /full/path/to/agentics/kit/plugins/code-review
 
-# In Claude, run:
-# /hello-world:greet
-# /hello-world:greet Alice
+# In Claude, ask naturally (skill activates automatically):
+# "Review this code for issues"
 ```
 
 ```bash
-# Test dev-tools plugin
-claude --plugin-dir ./kit/plugins/dev-tools
+# Test plan-interview plugin (has both a command and a skill)
+claude --plugin-dir ./kit/plugins/plan-interview
 
-# In Claude, run:
-# /dev-tools:format
-# Or ask: "Can you review this code for issues?" (skill activates)
+# Invoke the command explicitly:
+# /plan-interview:plan-interview docs/plans/my-plan.md
+# Or ask: "Stress-test this plan before I start coding" (skill activates)
 ```
 
 ### Loading Multiple Plugins
 
-Load both plugins simultaneously:
+Load multiple plugins simultaneously:
 
 ```bash
-claude --plugin-dir ./kit/plugins/hello-world --plugin-dir ./kit/plugins/dev-tools
+claude --plugin-dir ./kit/plugins/code-review --plugin-dir ./kit/plugins/plan-interview
 ```
 
 ### Troubleshooting
@@ -130,9 +165,9 @@ claude --plugin-dir ./kit/plugins/hello-world --plugin-dir ./kit/plugins/dev-too
 **Error:** "Plugin directory does not exist" or similar
 
 **Solutions:**
-- Verify the path exists: `ls -la ./kit/plugins/hello-world`
+- Verify the path exists: `ls -la ./kit/plugins/code-review`
 - Check you're in the repository root: `pwd`
-- Use absolute path instead: `claude --plugin-dir /full/path/to/plugins/hello-world`
+- Use absolute path instead: `claude --plugin-dir /full/path/to/agentics/kit/plugins/code-review`
 - Ensure `.claude-plugin/plugin.json` exists in the plugin directory
 
 #### Command not recognized
@@ -141,7 +176,7 @@ claude --plugin-dir ./kit/plugins/hello-world --plugin-dir ./kit/plugins/dev-too
 
 **Solutions:**
 - Verify the plugin loaded successfully (check Claude's startup output)
-- Check command file exists: `ls -la kit/plugins/hello-world/commands/`
+- Check command file exists: `ls -la kit/plugins/plan-interview/commands/`
 - Ensure command file has `.md` extension
 - Verify YAML frontmatter has `description` field
 - Try restarting Claude with `--plugin-dir` flag
@@ -183,21 +218,21 @@ Every plugin requires a `.claude-plugin/plugin.json` file:
 ```json
 {
   "name": "plugin-name",
-  "version": "1.0.0",
   "description": "Brief description of what the plugin does",
   "author": {
-    "name": "Author Name",
-    "email": "author@example.com"
+    "name": "Author Name"
   },
   "license": "MIT",
-  "category": "development"
+  "homepage": "https://github.com/owner/repo/tree/main/kit/plugins/plugin-name",
+  "repository": "https://github.com/owner/repo"
 }
 ```
 
 **Required fields:**
 - `name` - Plugin identifier (lowercase, hyphens only)
-- `version` - Semantic version (e.g., "1.0.0")
 - `description` - Brief description of functionality
+
+**Note:** Do not set `version` in `plugin.json` — version is managed exclusively in `marketplace.json`.
 
 **Optional fields:**
 - `author` - Author information (name, email, url)
