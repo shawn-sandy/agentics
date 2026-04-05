@@ -15,15 +15,14 @@ Two distinct purposes:
 
 - **Formats:** Markdown (commands, skills), JSON (plugin manifests)
 - **Plugin manifest:** `kit/plugins/<name>/.claude-plugin/plugin.json` — requires `name`; `version` is managed in `marketplace.json` for relative-path plugins
-- **Marketplace manifest:** `kit/.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
+- **Marketplace manifest:** `.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
 - **Minimum Claude Code Version:** 1.0.33 or later
 
 ## Repository Structure
 
 ```plaintext
-kit/                  → Self-contained marketplace subtree (git-subdir distributable)
+.claude-plugin/       → Marketplace metadata (marketplace.json) — must be at repo root
 kit/plugins/          → Plugin source code (what users install)
-kit/.claude-plugin/   → Marketplace metadata (marketplace.json)
 tests/fixtures/       → Test data for validation logic
 .claude/rules/        → Detailed authoring patterns (scoped rules)
 docs/plans/           → Plan files (commit with plugin changes)
@@ -37,12 +36,9 @@ Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` use
 # Load a plugin for local testing
 claude --plugin-dir ./kit/plugins/<name>
 
-# Register marketplace (full repo) and install a plugin
-/plugin marketplace add /path/to/agentics --sparse kit
+# Register marketplace and install a plugin
+/plugin marketplace add shawn-sandy/agentics
 /plugin install <plugin-name>@agentics-kit
-
-# Or register as git-subdir from another marketplace
-# { "source": "git-subdir", "url": "shawn-sandy/agentics", "path": "kit/plugins/<name>" }
 ```
 
 > Machine-specific paths belong in `CLAUDE.local.md`, not here.
@@ -52,7 +48,7 @@ claude --plugin-dir ./kit/plugins/<name>
 - **Skills only:** `kit/plugins/claude-md-optimizer/` — auto-activated CLAUDE.md auditing
 - **Skills only:** `kit/plugins/code-review/` — auto-activated code review
 - **Mixed:** `kit/plugins/plan-interview/` — commands + skills
-- **Marketplace config:** `kit/.claude-plugin/marketplace.json` — registry (agentics-kit v2.3.0)
+- **Marketplace config:** `.claude-plugin/marketplace.json` — registry (agentics-kit v3.0.0)
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
 
 ## Modular Rules
