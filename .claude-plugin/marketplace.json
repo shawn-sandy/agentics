@@ -15,7 +15,7 @@
       "name": "claude-md-optimizer",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/claude-md-optimizer"
       },
       "version": "1.5.0",
@@ -32,7 +32,7 @@
       "name": "code-review",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-review"
       },
       "version": "3.1.0",
@@ -51,7 +51,7 @@
       "name": "plan-interview",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
       "version": "1.12.0",
@@ -68,7 +68,7 @@
       "name": "wcag-compliance-reviewer",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
       "version": "1.1.0",
@@ -90,7 +90,7 @@
       "name": "skill-reviewer",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
       "version": "1.4.0",
@@ -112,7 +112,7 @@
       "name": "code-testing-agent",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
       "version": "3.0.0",
@@ -131,7 +131,7 @@
       "name": "git-agent",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
       "version": "1.1.0",
@@ -151,7 +151,7 @@
       "name": "agent-creator",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agent-creator"
       },
       "version": "1.0.0",
@@ -169,7 +169,7 @@
       "name": "react-perf-analyzer",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/react-perf-analyzer"
       },
       "version": "1.1.0",
@@ -190,7 +190,7 @@
       "name": "marketplace-builder",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/marketplace-builder"
       },
       "version": "1.0.0",
@@ -211,7 +211,7 @@
       "name": "agentic-plugin-dev",
       "source": {
         "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
+        "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agentic-plugin-dev"
       },
       "version": "1.0.0",
