@@ -4,6 +4,19 @@ A marketplace system for Claude Code plugins, enabling discovery, distribution, 
 
 ## Quick Start
 
+**Install from GitHub (recommended):**
+
+```bash
+# Register the agentics-kit marketplace
+/plugin marketplace add shawn-sandy/agentics --sparse kit
+
+# Install any plugin by name
+/plugin install code-review@agentics-kit
+/plugin install git-agent@agentics-kit
+```
+
+**Or load a plugin directly for local testing:**
+
 ```bash
 git clone https://github.com/shawn-sandy/agentics.git
 cd agentics
