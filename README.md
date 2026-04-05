@@ -8,7 +8,7 @@ A marketplace system for Claude Code plugins, enabling discovery, distribution, 
 
 ```bash
 # Register the agentics-kit marketplace
-/plugin marketplace add shawn-sandy/agentics
+/plugin marketplace add shawn-sandy/agentics/kit
 
 # Install any plugin by name
 /plugin install code-review@agentics-kit
@@ -445,7 +445,7 @@ The `agentics-kit` marketplace is defined in `kit/.claude-plugin/marketplace.jso
 Register the marketplace and install plugins by name:
 
 ```bash
-/plugin marketplace add shawn-sandy/agentics
+/plugin marketplace add shawn-sandy/agentics/kit
 /plugin install code-review@agentics-kit
 /plugin install plan-interview@agentics-kit
 /plugin install claude-md-optimizer@agentics-kit
