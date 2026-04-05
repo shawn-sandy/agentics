@@ -22,7 +22,7 @@ Open a [GitHub Issue](https://github.com/shawn-sandy/agentics/issues/new) with:
 
 1. **Create your plugin** following the structure in [plugins/README.md](./plugins/README.md)
 2. **Test locally** with `claude --plugin-dir ./plugins/your-plugin`
-3. **Register** in `kit/.claude-plugin/marketplace.json` (version must match `plugin.json`)
+3. **Register** in `.claude-plugin/marketplace.json` (version must match `plugin.json`)
 4. **Document** with a README.md in your plugin directory
 
 ### Plugin Structure
