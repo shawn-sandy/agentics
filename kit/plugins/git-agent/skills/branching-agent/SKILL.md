@@ -1,7 +1,7 @@
 ---
 name: branching-agent
 description: Use when the user asks to create a new branch, make a branch, start a new branch, or branch off for a feature, fix, or any new work. Does not commit, push, or create PRs.
-allowed-tools: Bash(git *), AskUserQuestion
+allowed-tools: Bash(git *), AskUserQuestion, ToolSearch
 argument-hint: "new branch for the login fix", "start a feature for dark mode"
 ---
 
@@ -10,6 +10,19 @@ recommendation, then create a new branch from `origin/<default>` without leaving
 the current branch as an intermediate step. Carries uncommitted changes forward
 when safe. Follow these steps in strict order. **STOP immediately after
 Step 5.**
+
+## Step 0: Resolve Work Description
+
+Check `$ARGUMENTS` for a usable branch description:
+
+- If `$ARGUMENTS` is empty or contains only generic phrases with no subject (e.g.
+  "create a new branch", "new branch", "make a branch"), use `AskUserQuestion`
+  to ask:
+
+  > "What feature or task is this branch for? Describe the work in a few words."
+
+- If `$ARGUMENTS` already contains a subject (e.g. "new branch for the login
+  fix", "accessibility list skill"), store it for use in Step 4b and continue.
 
 ## Step 1: Check Working Tree State
 
