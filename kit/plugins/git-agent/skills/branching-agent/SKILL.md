@@ -194,11 +194,13 @@ and **STOP**. Do not append a numeric suffix.
 Run:
 
 ```
-git checkout -b <branch> origin/<default>
+git checkout -b <branch> --no-track origin/<default>
 ```
 
 This creates `<branch>` pointing at the tip of `origin/<default>` and switches
-to it in one step. The new branch is set to track `origin/<default>` by default.
+to it in one step. `--no-track` prevents git from automatically setting
+`origin/<default>` as the upstream — without it, the new branch would track
+the default branch, causing pushes to target the wrong remote ref.
 
 **On failure** — most commonly
 `error: Your local changes to the following files would be overwritten by checkout: ...`
