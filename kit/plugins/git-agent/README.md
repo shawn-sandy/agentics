@@ -4,7 +4,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ## Features
 
-- **new-branch** — Fetches latest from origin and creates a branch from `origin/<default>` without switching to the default branch first. Prompts for name and type with a recommendation based on existing branch patterns.
+- **branching-agent** — Fetches latest from origin and creates a branch from `origin/<default>` without switching to the default branch first. Prompts for name and type with a recommendation based on existing branch patterns.
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
@@ -24,7 +24,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 
 All skills activate automatically when intent matches.
 
-### new-branch
+### branching-agent
 
 Say any of:
 - "create a new branch"
@@ -95,7 +95,7 @@ The skill will:
 
 **STOPS after PR creation (or after pushing to an existing PR). Does not analyze code, run tests, or take further action.**
 
-Use `commit-agent` or `pr-agent` if you only need one step.
+Use `branching-agent`, `commit-agent`, or `pr-agent` if you only need one step.
 
 ## Requirements
 
@@ -108,7 +108,7 @@ plugins/git-agent/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
-│   ├── new-branch/
+│   ├── branching-agent/
 │   │   └── SKILL.md
 │   ├── commit-agent/
 │   │   └── SKILL.md
