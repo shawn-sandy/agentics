@@ -189,7 +189,7 @@ will produce a useful recommendation.
 1. **Skill loads.**
 
    ```bash
-   claude --plugin-dir ~/devbox/agentics/kit/plugins/dev-tools
+   claude --plugin-dir ~/devbox/agentics/kit/plugins/git-agent
    ```
 
    Then in the session: ask *"create a new branch for testing the fetch

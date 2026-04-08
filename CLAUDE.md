@@ -54,7 +54,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `plan-interview` | Commands + Skills | Planning workflow with deep-grill |
 | `skill-reviewer` | Skills | Skill file quality checks |
 | `code-testing-agent` | Skills + Agents | Test suggestion and review |
-| `git-agent` | Skills | Commit, PR, and ship workflows |
+| `git-agent` | Skills | Branch creation, commit, PR, and ship workflows |
 | `agent-creator` | Agents | Plugin scaffolding agent |
 | `agentic-plugin-dev` | Skills + Commands | Plugin development toolkit |
 | `marketplace-builder` | Skills | Marketplace scaffolding |
