@@ -1,5 +1,12 @@
 # Changelog — git-agent
 
+## v3.0.0 — Remove branching-agent skill
+
+- **BREAKING CHANGE:** Removed the `branching-agent` skill. Users who relied
+  on automated branch creation should fall back to `git checkout -b` or
+  another plugin.
+- The remaining skills (`commit-agent`, `pr-agent`, `ship`) are unchanged.
+
 ## v2.0.0 — Rename new-branch skill to branching-agent
 
 - Skill renamed: `new-branch` → `branching-agent`
