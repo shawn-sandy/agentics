@@ -69,6 +69,8 @@ marketplace-builder/
   CHANGELOG.md
 ```
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Components
 
 ### Skill: building-marketplaces
