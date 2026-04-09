@@ -4,6 +4,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ## Features
 
+- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Stops immediately after.
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
@@ -22,6 +23,26 @@ claude --plugin-dir ./kit/plugins/git-agent
 ## Usage
 
 All skills activate automatically when intent matches.
+
+### branch-agent
+
+Say any of:
+- "create a new branch called feat/login-fix"
+- "start a branch for dark mode"
+- "branch off main for this feature"
+- "make a fresh branch feat/signup"
+
+The skill will:
+1. Guard: check for detached HEAD, verify `origin` remote exists
+2. Read the branch name from your message (`$ARGUMENTS`)
+3. Detect the default branch via `git symbolic-ref`, fall back to `main`/`master`
+4. Run `git fetch origin <default>` to ensure the ref is current
+5. Run `git checkout -b <branch> --no-track origin/<default>` (no upstream set)
+6. Output the created branch name and short SHA
+
+**STOPS after branch creation. Does not stage, commit, push, or create PRs.**
+
+Use `commit-agent` to commit work on the new branch. Use `pr-agent` when ready to open a PR.
 
 ### commit-agent
 
@@ -89,6 +110,8 @@ plugins/git-agent/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
+│   ├── branch-agent/
+│   │   └── SKILL.md
 │   ├── commit-agent/
 │   │   └── SKILL.md
 │   ├── pr-agent/

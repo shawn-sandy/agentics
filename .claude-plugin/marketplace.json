@@ -134,11 +134,13 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.0.0",
-      "description": "Automated git workflow — commit with conventional messages and create PRs",
+      "version": "3.1.0",
+      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs",
       "category": "development",
       "tags": [
         "git",
+        "branch",
+        "checkout",
         "commit",
         "pr",
         "pull-request",

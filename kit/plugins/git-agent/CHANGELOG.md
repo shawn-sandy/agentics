@@ -1,5 +1,13 @@
 # Changelog — git-agent
 
+## v3.1.0 — Add branch-agent skill
+
+- New skill: `branch-agent` — creates a branch from `origin/<default>` with no upstream tracking ref and switches to it
+- Accepts the branch name verbatim from `$ARGUMENTS`; stops cleanly if none provided
+- Guards against detached HEAD, missing `origin` remote, and fetch failures
+- Default branch detection follows the `pr-agent` pattern (`git symbolic-ref` → `git remote show` → `main`/`master` fallback)
+- Uses `--no-track` on `git checkout -b` to prevent automatic upstream tracking
+
 ## v3.0.0 — Remove branching-agent skill
 
 - **BREAKING CHANGE:** Removed the `branching-agent` skill. Users who relied
