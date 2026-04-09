@@ -4,7 +4,6 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ## Features
 
-- **branching-agent** — Fetches latest from origin and creates a branch from `origin/<default>` without switching to the default branch first. Prompts for name and type with a recommendation based on existing branch patterns.
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
@@ -23,24 +22,6 @@ claude --plugin-dir ./kit/plugins/git-agent
 ## Usage
 
 All skills activate automatically when intent matches.
-
-### branching-agent
-
-Say any of:
-- "create a new branch"
-- "make a branch for X"
-- "start a new branch"
-- "branch off for this fix"
-
-The skill will:
-1. Check for uncommitted changes — if present, ask whether to carry them forward or stop
-2. Detect the default branch via `git symbolic-ref`, fall back to `git remote show origin`
-3. Run `git fetch origin` (non-destructive — no checkout, no pull)
-4. Scan all branch names to identify the most-used type prefix and naming convention
-5. Prompt for a description (or extract from your message) and a type prefix with a recommendation
-6. Run `git checkout -b <branch> origin/<default>`
-
-**STOPS after branch creation. Does not stage, commit, push, or create PRs.**
 
 ### commit-agent
 
@@ -95,7 +76,7 @@ The skill will:
 
 **STOPS after PR creation (or after pushing to an existing PR). Does not analyze code, run tests, or take further action.**
 
-Use `branching-agent`, `commit-agent`, or `pr-agent` if you only need one step.
+Use `commit-agent` or `pr-agent` if you only need one step.
 
 ## Requirements
 
@@ -108,8 +89,6 @@ plugins/git-agent/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
-│   ├── branching-agent/
-│   │   └── SKILL.md
 │   ├── commit-agent/
 │   │   └── SKILL.md
 │   ├── pr-agent/
