@@ -13,6 +13,8 @@ For actual runtime measurements, the `/react-perf-analyzer:test` command runs Li
 | **Static analysis** (skill) | Auto-activates from intent | Before running the app — find likely problems early |
 | **Runtime testing** (command) | `/react-perf-analyzer:test [url]` | Against a running app — get actual scored measurements |
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 **Metrics covered:**
 
 | Metric | API Spec | Target | Poor |

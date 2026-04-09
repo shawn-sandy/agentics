@@ -12,6 +12,8 @@ Authoring a Claude Code agent involves several interconnected decisions: naming 
 |-----------|------|-----------|
 | `generating-agents` | Skill | Auto-triggers when user asks to "create an agent", "generate an agent plugin", "scaffold an agent", "add an agent to my plugin", "build a new agent", or "make a sub-agent" |
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Usage
 
 The skill activates automatically when your message matches the trigger phrases. Just describe what you need:

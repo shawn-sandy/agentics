@@ -12,6 +12,8 @@ CLAUDE.md files are loaded as system instructions on every Claude Code session. 
 |-------|-----------|
 | `claude-md-optimizer` | Triggers when user asks to "optimize", "audit", "review", "clean up", or "analyze" a CLAUDE.md file. Also activates when user reports Claude ignoring instructions. |
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Usage
 
 ### Automatic activation (skill)

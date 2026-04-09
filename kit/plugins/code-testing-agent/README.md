@@ -17,6 +17,8 @@ The `code-review` plugin reviews code for quality, bugs, security, and best prac
 | `code-testing-agent` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
 | `reviewing-tests` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Usage
 
 ### Suggest tests (skill)
