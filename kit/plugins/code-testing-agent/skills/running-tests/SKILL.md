@@ -6,6 +6,7 @@ description:
   "check if tests pass", "test this file", "verify my changes", or "are there
   missing tests". Does not review test quality — use reviewing-tests for that.
   Does not suggest tests — use code-testing-agent for that.
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion, TodoWrite
 ---
 
 Detect the test framework per changed file, run scoped test commands via Bash,

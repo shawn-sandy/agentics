@@ -1,6 +1,7 @@
 ---
 name: reviewing-tests
 description: Reviews existing tests for quality, coverage gaps, and alignment with code behavior and developer intent. Use when the user asks to review tests, audit test quality, check test coverage, improve tests, or asks "are my tests good". Also use when the user says "review these tests", "audit my test suite", "what's wrong with my tests", or "how can I improve my tests". Does not suggest new tests from scratch — reviews and improves what already exists. Not a code quality review or a test runner.
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion, TodoWrite
 ---
 
 Review existing tests against the source code they cover. Identify quality issues, coverage gaps, and misalignment with developer intent. Every finding is tied to a specific test and explains why it matters.

@@ -1,6 +1,7 @@
 ---
 name: code-review-agent
 description: Reviews code for bugs, security issues, quality, complexity, and breaking changes. Use when the user asks to review code, check a PR or branch diff, find bugs or security issues, or says "take a look at this."
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion, TodoWrite
 ---
 
 When reviewing code, systematically check for common issues across multiple

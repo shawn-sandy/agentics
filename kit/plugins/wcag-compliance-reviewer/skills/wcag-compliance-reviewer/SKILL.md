@@ -1,6 +1,7 @@
 ---
 name: wcag-compliance-reviewer
 description: Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance. Use when the user asks to review code for accessibility, check WCAG compliance, identify accessibility issues, or audit components/pages for a11y standards. Applicable for code reviews, component development, and accessibility testing.
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion, TodoWrite
 ---
 
 ## WCAG 2.2 AA Compliance Reviewer
