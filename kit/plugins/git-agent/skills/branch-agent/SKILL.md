@@ -34,10 +34,14 @@ named branch first." and **STOP**.
 
 Read `$ARGUMENTS`.
 
-- If `$ARGUMENTS` is non-empty, use it verbatim as the branch name. Do not
-  slugify, abbreviate, or transform it.
 - If `$ARGUMENTS` is empty or contains only whitespace, output: "Provide a
   branch name. Example: branch-agent feat/login-fix" and **STOP**.
+- If `$ARGUMENTS` contains spaces or reads as a descriptive phrase, convert it
+  to a human readable slug: lowercase, replace spaces and special characters
+  with `-`, collapse consecutive dashes, strip leading/trailing dashes, truncate
+  to 30 characters. Example: `"add allowed tools to skills"` →
+  `"add-allowed-tools-to-skills"`.
+- Otherwise use `$ARGUMENTS` verbatim as the branch name.
 
 ## Step 3: Detect Default Branch
 
