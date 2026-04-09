@@ -5,7 +5,7 @@ description: >
   push and PR, ship it, send it, or land their work. Chains commit + push +
   pull/merge request into one flow. Supports GitHub (gh) and GitLab (glab). Use
   commit-agent for commit only or pr-agent for PR only.
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *)
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob
 ---
 
 Stage, commit, push, and create a pull/merge request in one flow. Supports

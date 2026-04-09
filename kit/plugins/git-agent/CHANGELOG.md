@@ -1,5 +1,12 @@
 # Changelog — git-agent
 
+## v3.2.0 — Grant read permissions to pr-agent and ship
+
+- `pr-agent`: add `Read, Grep, Glob` to `allowed-tools` (forward-looking
+  permission grant — no current behavior change; enables future edits to
+  read PR templates, changelogs, and release notes without a permission update)
+- `ship`: same as above
+
 ## v3.1.0 — Add branch-agent skill
 
 - New skill: `branch-agent` — creates a branch from `origin/<default>` with no upstream tracking ref and switches to it
