@@ -1,6 +1,7 @@
 ---
 name: generating-agents
 description: Scaffolds Claude Code agent-based plugins with a guided workflow. Use when the user asks to "create an agent", "generate an agent plugin", "scaffold an agent", "add an agent to my plugin", "build a new agent", or "make a sub-agent". Covers agent frontmatter, tool selection, system prompt generation, and file creation. Does NOT review existing agents or audit agent quality.
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion, TodoWrite
 ---
 
 ## Overview

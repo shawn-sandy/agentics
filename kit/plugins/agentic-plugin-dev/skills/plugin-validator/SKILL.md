@@ -1,6 +1,7 @@
 ---
 name: plugin-validator
 description: Validates Claude Code plugin structure against the official spec. Use when the user asks to "validate a plugin", "check plugin structure", "audit a plugin", "verify plugin setup", or "is this plugin valid". Covers manifest validation, directory structure, and component frontmatter checks. Does NOT review skill quality or content (use skill-reviewer). Does NOT review agent quality (use agent-creator).
+allowed-tools: Read, Glob, Grep, Bash, Edit, Write, AskUserQuestion, TodoWrite
 ---
 
 ## Overview

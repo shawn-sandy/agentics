@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0] - 2026-04-09
+
+### Changed
+- Explicitly declare `allowed-tools` frontmatter on all skills.
+  Makes tool requirements explicit and removes reliance on session baseline
+  permissions. No behavior change — tools were already available via session default.
+
 ## [1.5.0] — 2026-02-27
 
 ### Changed
