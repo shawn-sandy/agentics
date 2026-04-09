@@ -11,6 +11,8 @@ allowed-tools:
   - AskUserQuestion
 argument-hint:
   Branch name (optional; defaults to "feature/auto-branch" if not provided)
+disable-model-invocation: true
+model: Haiku
 ---
 
 Create a new branch from the latest `origin/<default>` with no upstream tracking
