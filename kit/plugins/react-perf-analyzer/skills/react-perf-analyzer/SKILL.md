@@ -1,6 +1,7 @@
 ---
 name: react-perf-analyzer
 description: Use when the user asks to analyze React component performance, profile component rendering speed, check for INP issues, audit layout stability, detect long tasks or slow animations, find performance bottlenecks in React components, or produce a performance report with fix recommendations. Does not cover general code quality, architecture reviews, or runtime profiling — for those use code-review-agent.
+allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite
 ---
 
 # React Performance Analyzer

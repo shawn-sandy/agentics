@@ -12,6 +12,8 @@ The Skill Reviewer provides three skills:
 
 This plugin is the counterpart to `claude-md-optimizer` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Features
 
 - **5-Dimension Scoring** — Structured rubric covering frontmatter, body, structure, anti-patterns, and discoverability

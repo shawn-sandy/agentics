@@ -10,6 +10,8 @@ Create, manage, and validate Claude Code plugins — scaffold new plugins, manag
 | `plugin-manager` | "list marketplace plugins", "bump version" | Manages entries in `marketplace.json` — list, add, remove, update, bump versions |
 | `plugin-validator` | "validate a plugin", "check plugin structure" | Runs structural validation against the official spec and produces a PASS/FAIL report |
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Installation
 
 ### From marketplace

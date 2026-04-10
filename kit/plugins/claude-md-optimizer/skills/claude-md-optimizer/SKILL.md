@@ -1,6 +1,7 @@
 ---
 name: md-optimizer
 description: Use when the user asks to audit, optimize, review, clean up, or improve a CLAUDE.md file. Also use when Claude is ignoring instructions, behaving inconsistently, or the CLAUDE.md appears bloated or overloaded. Does not cover SKILL.md files, plugin commands, or other markdown files.
+allowed-tools: AskUserQuestion, Glob, Read, Write
 ---
 
 Audit and optimize a CLAUDE.md file against Claude Code best practices.

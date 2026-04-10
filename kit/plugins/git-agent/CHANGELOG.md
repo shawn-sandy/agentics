@@ -1,6 +1,6 @@
 # Changelog — git-agent
 
-## v3.2.0 — Auto-detect branch names from working tree changes
+## v3.3.0 — Auto-detect branch names from working tree changes
 
 - `branch-agent` now auto-generates a branch name when invoked with no
   argument **and** the working tree has uncommitted changes
@@ -15,7 +15,15 @@
 - Total branch name length capped at 60 characters with word-boundary
   truncation; falls back to `chore/auto-branch` if validation fails
 - Empty argument with a clean working tree still errors as before; explicit
-  branch names are still used verbatim with no transformation
+  branch names are still used verbatim with no transformation; descriptive
+  phrases continue to be auto-slugified per v3.2.0 behavior
+
+## v3.2.0 — Grant read permissions to pr-agent and ship
+
+- `pr-agent`: add `Read, Grep, Glob` to `allowed-tools` (forward-looking
+  permission grant — no current behavior change; enables future edits to
+  read PR templates, changelogs, and release notes without a permission update)
+- `ship`: same as above
 
 ## v3.1.0 — Add branch-agent skill
 

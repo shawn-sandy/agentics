@@ -1,6 +1,7 @@
 ---
 name: planning-skills
 description: Guides users through planning, designing, and scaffolding new Claude Code skills from scratch. Use when the user asks to "plan a skill", "design a skill", "create a new skill", "scaffold a skill", "help me build a skill", or "what design pattern should my skill use". Covers design pattern selection, folder structure, frontmatter drafting, and file generation — not skill review or auditing.
+allowed-tools: AskUserQuestion, Read, TodoWrite, Write
 ---
 
 ## Overview

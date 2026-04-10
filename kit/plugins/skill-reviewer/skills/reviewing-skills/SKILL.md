@@ -1,6 +1,7 @@
 ---
 name: reviewing-skills
 description: Reviews SKILL.md files against Anthropic's official Claude Code skill authoring best practices. Use when the user asks to review, audit, score, or check the quality of a SKILL.md file specifically — not CLAUDE.md, commands, or general markdown. Use when the user says "review my skill", "audit this skill", "check skill quality", "score my SKILL.md", or "does this skill follow best practices".
+allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 
 ## Overview

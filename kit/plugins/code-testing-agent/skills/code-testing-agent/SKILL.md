@@ -7,6 +7,7 @@ description:
   tests should I write", "test this code", "what would you test here", or "help
   me test this feature". Provides test suggestions with rationale and can write
   test files on request — does not run tests or perform code quality reviews.
+allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite, Write
 ---
 
 ---

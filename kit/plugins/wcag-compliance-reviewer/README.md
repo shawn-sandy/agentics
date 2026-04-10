@@ -445,6 +445,8 @@ Highest and most complex level. Not required for general compliance but recommen
 - Web browser with developer tools
 - Optional: Node.js for automated testing tools
 
+The skill declares `allowed-tools` explicitly in its frontmatter for consistent, session-independent tool access.
+
 ## Resources
 
 ### Official WCAG Documentation

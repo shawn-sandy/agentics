@@ -12,7 +12,10 @@ allowed-tools:
 argument-hint:
   Branch name (optional). If omitted and the working tree has uncommitted
   changes, the name is auto-generated from those changes using the
-  `<type>/<scope>-<description>` convention.
+  `<type>/<scope>-<description>` convention. Descriptive phrases are
+  auto-slugified.
+disable-model-invocation: true
+model: Haiku
 ---
 
 Create a new branch from the latest `origin/<default>` with no upstream tracking
@@ -38,16 +41,24 @@ named branch first." and **STOP**.
 
 Read `$ARGUMENTS`.
 
-**Case A — `$ARGUMENTS` is non-empty:** Use it verbatim as the branch name. Do
-not slugify, abbreviate, or transform it. Skip to Step 3.
-
-**Case B — `$ARGUMENTS` is empty or whitespace-only:** Run
+**Case A — `$ARGUMENTS` is empty or whitespace-only:** Run
 `git status --porcelain=v1`.
 
 - **If output is empty** (clean working tree): output "Provide a branch name.
   Example: branch-agent feat/login-fix" and **STOP**.
 - **If output is non-empty** (working tree has changes): auto-generate the
   branch name as described in Step 2a, then proceed to Step 3.
+
+**Case B — `$ARGUMENTS` contains spaces or reads as a descriptive phrase:**
+Convert it to a human-readable slug — lowercase, replace spaces and special
+characters with `-`, collapse consecutive dashes, strip leading/trailing
+dashes, truncate to 30 characters. Example: `"add allowed tools to skills"` →
+`"add-allowed-tools-to-skills"`. Use the slug as the branch name and proceed
+to Step 3.
+
+**Case C — `$ARGUMENTS` is already a valid branch name** (no spaces): Use it
+verbatim as the branch name. Do not slugify, abbreviate, or transform it.
+Proceed to Step 3.
 
 ## Step 2a: Auto-Generate Branch Name from Changes
 

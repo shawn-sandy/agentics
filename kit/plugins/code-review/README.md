@@ -12,6 +12,8 @@ Code review is most effective when it's structured and consistent. This plugin a
 |-------|-----------|
 | `code-review-agent` | Triggers when the user directly asks to review code, check files for problems, look over a PR or diff, assess quality or complexity, find bugs or security issues, detect breaking changes, or evaluate regression risk. Also triggers for informal requests like "take a look at this." |
 
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
 ## Review Checklist Overview
 
 The skill checks across six dimensions:
