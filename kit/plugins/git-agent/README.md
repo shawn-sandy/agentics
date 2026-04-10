@@ -31,10 +31,18 @@ Say any of:
 - "start a branch for dark mode"
 - "branch off main for this feature"
 - "make a fresh branch feat/signup"
+- "branch off main" (with no name — auto-detected from working tree changes)
 
 The skill will:
 1. Guard: check for detached HEAD, verify `origin` remote exists
-2. Read the branch name from your message (`$ARGUMENTS`)
+2. Resolve the branch name:
+   - If you provided a valid branch name, use it verbatim
+   - If you provided a descriptive phrase (with spaces), auto-slugify it to
+     a 30-char kebab-case slug
+   - If you didn't provide one and the working tree has uncommitted changes,
+     auto-generate a `<type>/<scope>-<description>` name from those changes
+     (mirrors `commit-agent`'s conventional types)
+   - If you didn't provide one and the tree is clean, stop and ask for a name
 3. Detect the default branch via `git symbolic-ref`, fall back to `main`/`master`
 4. Run `git fetch origin <default>` to ensure the ref is current
 5. Run `git checkout -b <branch> --no-track origin/<default>` (no upstream set)
