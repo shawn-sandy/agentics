@@ -1,5 +1,22 @@
 # Changelog — git-agent
 
+## v3.2.0 — Auto-detect branch names from working tree changes
+
+- `branch-agent` now auto-generates a branch name when invoked with no
+  argument **and** the working tree has uncommitted changes
+- Generated names follow the conventional `<type>/<scope>-<description>`
+  format, mirroring the type vocabulary used by `commit-agent`
+  (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `style`,
+  `ci`, `build`)
+- Type is inferred from the changed file paths and diff (markdown-only →
+  `docs`, tests-only → `test`, CI-only → `ci`, build manifests → `build`,
+  pure renames → `refactor`, etc.); scope is the most-changed top-level
+  directory and is omitted when changes span more than two top-level dirs
+- Total branch name length capped at 60 characters with word-boundary
+  truncation; falls back to `chore/auto-branch` if validation fails
+- Empty argument with a clean working tree still errors as before; explicit
+  branch names are still used verbatim with no transformation
+
 ## v3.1.0 — Add branch-agent skill
 
 - New skill: `branch-agent` — creates a branch from `origin/<default>` with no upstream tracking ref and switches to it
