@@ -4,6 +4,28 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-04-11
+
+### Added
+- **`auditing-allowed-tools` skill** — Audits a SKILL.md to recommend (or patch)
+  the minimal `allowed-tools` frontmatter it needs so users aren't prompted for
+  permission mid-run. Also parses Claude Code session JSONL transcripts to
+  report what tools Claude actually invoked during a session, and can
+  cross-reference a skill's declared `allowed-tools` against real session usage.
+- **Three operating modes**: static SKILL.md audit, session tool-usage scan,
+  and skill ↔ session cross-reference.
+- **Selection picker** — when no target is specified, globs `**/SKILL.md` under
+  `$PWD` and lets the user pick via `AskUserQuestion`. Handoff from
+  `reviewing-skills` is supported via conversation context.
+- **Three apply modes** for patching `allowed-tools`: add missing only, replace
+  with minimal set, or report-only.
+- **`scripts/session_tool_scan.py`** — standalone Python 3 script (no deps)
+  that streams JSONL line-by-line, tolerates truncated final lines in
+  active sessions, aggregates subagent transcripts on request, and suggests
+  restricted `Bash(<cli> *)` entries when only one CLI family is observed.
+
+---
+
 ## [1.5.0] - 2026-04-09
 
 ### Changed
