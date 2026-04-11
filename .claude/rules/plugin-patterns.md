@@ -33,6 +33,7 @@ Skills use YAML frontmatter with activation criteria:
 ---
 name: skill-name
 description: Use when the user asks to review code, check for bugs, or analyze quality.
+allowed-tools: Bash, Read, Write, Edit
 ---
 
 # Skill Instructions
@@ -43,6 +44,18 @@ The body determines WHAT Claude does when activated.
 
 - File location: `skills/skill-name/SKILL.md`
 - Activation: automatic when user intent matches `description`
+
+### Declaring `allowed-tools`
+
+Declare every tool the skill actually uses in a comma-separated `allowed-tools:` line so the user isn't prompted for permission mid-run. Common entries: `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `TodoWrite`, `WebFetch`, `WebSearch`, `AskUserQuestion`, `NotebookEdit`, `Task`.
+
+When the skill only shells out to one CLI family, prefer the restricted form (see `kit/plugins/git-agent/skills/commit-agent/SKILL.md`):
+
+```yaml
+allowed-tools: Bash(git *)
+```
+
+Use the `auditing-allowed-tools` skill (in the `skill-reviewer` plugin) to recommend or patch a SKILL.md's `allowed-tools` automatically, or to cross-reference a skill against a real session JSONL transcript.
 
 ## Progressive Disclosure in Skills
 

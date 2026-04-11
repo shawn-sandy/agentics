@@ -4,11 +4,12 @@ A Claude Code plugin for auditing SKILL.md files and planning new skills. Aligne
 
 ## Overview
 
-The Skill Reviewer provides three skills:
+The Skill Reviewer provides four skills:
 
 1. **reviewing-skills** — Structured quality audits of SKILL.md files across 5 dimensions (frontmatter, body quality, structure, anti-patterns, discoverability). Scored 0–10 with grades from Excellent to Rewrite.
 2. **planning-skills** — Guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch, including design pattern selection and file generation.
 3. **running-tests** — Adaptive skill that identifies changed files, finds related test files, detects the test framework, runs tests via Bash, and reports pass/fail/error counts. Also detects missing test files and advises on what to create.
+4. **auditing-allowed-tools** — Audits a SKILL.md to recommend (or patch) the minimal `allowed-tools` frontmatter it needs so users aren't prompted for permission mid-run. Also parses Claude Code session JSONL transcripts to report what tools Claude actually invoked, and can cross-reference a skill against a real session.
 
 This plugin is the counterpart to `claude-md-optimizer` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
 
@@ -78,6 +79,28 @@ I want to create a skill that reviews PR descriptions
 What design pattern should I use for a deploy workflow skill?
 ```
 
+### Auditing allowed-tools
+
+```
+What allowed-tools should kit/plugins/foo/skills/bar/SKILL.md have?
+```
+
+```
+Fix the permissions on my skill so users don't get prompted mid-run
+```
+
+```
+Audit allowed-tools for one of my skills
+```
+
+```
+What tools did Claude actually use in this session?
+```
+
+```
+Did foo/bar/SKILL.md actually need everything it declared? Check against the current session.
+```
+
 ### Using Live Guidelines
 
 To fetch the latest criteria from the platform docs instead of the bundled reference:
@@ -106,10 +129,14 @@ plugins/skill-reviewer/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── design-patterns.md
-│   └── running-tests/
+│   ├── running-tests/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── test-runner-guide.md
+│   └── auditing-allowed-tools/
 │       ├── SKILL.md
-│       └── references/
-│           └── test-runner-guide.md
+│       └── scripts/
+│           └── session_tool_scan.py
 ├── README.md
 └── CHANGELOG.md
 ```
@@ -198,3 +225,19 @@ Comprehensive reference for four Anthropic design patterns with recommended SKIL
 ### Reference: `references/test-runner-guide.md`
 
 Per-framework lookup tables covering: test file naming conventions (TS/JS/Python/Go/Rust/Ruby), framework detection signals and run command templates, result parsing patterns, missing test advisory templates, and the monorepo nearest-ancestor tie-breaking rule.
+
+### Skill: `auditing-allowed-tools`
+
+**Auto-activates when:** User asks to audit, recommend, fix, or generate the `allowed-tools` frontmatter for a SKILL.md, or asks what tools/permissions Claude used during a session.
+
+**Does NOT activate for:** General SKILL.md quality audits (use `reviewing-skills`), `settings.json` `permissions` rules, or hook configuration.
+
+**Three operating modes:**
+
+1. **Static audit** — reads a SKILL.md, scans the body for tool-usage signals (code fences, inline backticks, known CLI tokens, MCP references, script paths), and recommends the minimal `allowed-tools` declaration. Suggests restricted `Bash(<cli> *)` when a single CLI family is detected. Offers three apply modes: *add missing only*, *replace with minimal set*, or *report only*.
+2. **Session audit** — resolves a session JSONL (explicit path, UUID, or newest under `~/.claude/projects/<encoded-cwd>/`) and runs `scripts/session_tool_scan.py` to report the tools Claude actually invoked, with a per-command breakdown for `Bash` and optional subagent aggregation.
+3. **Cross-reference** — compares declared vs. statically detected vs. observed usage to flag undocumented runtime dependencies and overly broad declarations.
+
+**Target resolution (Mode 1):** explicit path → conversation context (hand off from `reviewing-skills`) → `Glob`-based picker presented via `AskUserQuestion`.
+
+**Script: `scripts/session_tool_scan.py`** — standalone Python 3, no third-party dependencies, streams JSONL line-by-line, tolerates truncated final lines, and emits structured JSON on stdout.

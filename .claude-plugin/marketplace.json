@@ -93,8 +93,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "1.5.0",
-      "description": "Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage",
+      "version": "1.6.0",
+      "description": "Review and plan Claude Code skills, run tests for changed files, and audit skill permissions — audit SKILL.md files, scaffold new skills, verify test coverage, and recommend minimal allowed-tools declarations",
       "category": "development",
       "tags": [
         "skills",
@@ -105,7 +105,10 @@
         "skill-planning",
         "design-patterns",
         "claude-code",
-        "running-tests"
+        "running-tests",
+        "allowed-tools",
+        "permissions",
+        "session-audit"
       ]
     },
     {
