@@ -9,11 +9,7 @@ allowed-tools:
   - Bash(git *)
   - ToolSearch
   - AskUserQuestion
-argument-hint:
-  Branch name (optional). If omitted and the working tree has uncommitted
-  changes, the name is auto-generated from those changes using the
-  `<type>/<scope>-<description>` convention. Descriptive phrases are
-  auto-slugified.
+argument-hint: "[branch-name] (optional) — omit to auto-generate from uncommitted changes using <type>/<scope>-<description>"
 disable-model-invocation: true
 model: Haiku
 ---
