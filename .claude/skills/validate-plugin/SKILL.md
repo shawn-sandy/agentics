@@ -1,7 +1,7 @@
 ---
 name: validate-plugin
 description: Validate a plugin directory's structure before committing. Checks required files, version conventions, homepage URL format, and marketplace.json registration. Invoke as /validate-plugin <plugin-name>.
-allowed-tools: Read, Grep, Glob, Bash
+allowed-tools: Glob, Grep, Read
 ---
 
 Check the plugin at `plugins/$ARGUMENTS` for these issues:
