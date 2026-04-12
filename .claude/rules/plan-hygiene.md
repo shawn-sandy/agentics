@@ -2,7 +2,6 @@
 description: Run plan file hygiene before committing changes
 paths:
   - "**/plans/**"
-  - "**/planning/**"
 ---
 
 # Pre-Commit Plan Hygiene
