@@ -1,5 +1,12 @@
 # Changelog — git-agent
 
+## v3.3.1 — branch-agent always exits plan mode on entry
+
+- `branch-agent` now calls `ExitPlanMode` as its first step (Step 0) so it
+  can self-bootstrap out of plan mode before running any git mutations
+- Added `ExitPlanMode` to the skill's `allowed-tools` list to prevent
+  mid-run permission prompts
+
 ## v3.3.0 — Auto-detect branch names from working tree changes
 
 - `branch-agent` now auto-generates a branch name when invoked with no

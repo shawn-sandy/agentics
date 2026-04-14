@@ -9,6 +9,7 @@ allowed-tools:
   - Bash(git *)
   - ToolSearch
   - AskUserQuestion
+  - ExitPlanMode
 argument-hint: "[branch-name] (optional) — omit to auto-generate from uncommitted changes using <type>/<scope>-<description>"
 disable-model-invocation: true
 model: Haiku
@@ -18,6 +19,13 @@ Create a new branch from the latest `origin/<default>` with no upstream tracking
 ref. When called with no argument and the working tree has uncommitted changes,
 the branch name is auto-generated from those changes. Follow these steps in
 strict order. **STOP immediately after step 6.**
+
+## Step 0: Exit Plan Mode
+
+Always call `ExitPlanMode` immediately when this skill is invoked, before any
+other action. Branch creation is a git mutation and cannot proceed inside plan
+mode. This skill is explicit-invocation only (`disable-model-invocation: true`),
+so the user has already opted in to taking action.
 
 ## Step 1: Guards
 
