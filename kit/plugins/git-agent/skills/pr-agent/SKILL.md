@@ -42,10 +42,12 @@ git diff <base>...HEAD --stat
 
 Run:
 ```
-gh pr view --json url
+gh pr view --json state,url
 ```
 
-If a PR already exists, output: "A pull request already exists: <url>" and **STOP**. Do not create a duplicate.
+If the result contains `"state":"OPEN"`, output: "A pull request already exists: <url>" and **STOP**. Do not create a duplicate.
+
+If the result contains `"state":"MERGED"` or `"state":"CLOSED"`, or if the command exits non-zero (no PR found), proceed to Step 4.
 
 ## Step 4: Push if Needed
 
