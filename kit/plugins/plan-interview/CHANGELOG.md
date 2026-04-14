@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.13.0] - 2026-04-14
+
+### Added
+
+- New `documenting-plans` skill and command — generates developer-friendly
+  prose documentation at `docs/<slug>.md` from a completed plan file
+- Automatically gates on `status: completed`; delegates to `plan-status` via
+  the `Skill` tool to verify or promote completion when needed
+- Synthesizes the doc from three sources: the plan body (Context, Objective,
+  Steps with *Why:*, Files to Create/Modify), live code inspection of every
+  backtick-cited file path, and a scoped `git log --since/--until` over the
+  plan and its referenced files
+- Output template includes: title + summary blockquote, shipped-date badge,
+  "What shipped" capabilities list (with CHANGELOG citation), "Files changed"
+  table (Created/Modified/Relocated/Missing), "How it works" prose walkthrough,
+  optional "How to use it" (only when user-facing surface exists), commit
+  history table, and a References section
+- Refresh mode preserves hand-edited content outside `<!-- generated:start -->`
+  / `<!-- generated:end -->` markers; overwrites content inside the markers
+- Output slug derived from plan filename verbatim (no prefix-stripping);
+  user confirms before writing
+- Plan link in generated doc is computed as a relative path from the output
+  file to the resolved plan — survives non-default `plansDirectory` settings
+
 ## [1.12.0] - 2026-03-29
 
 ### Added

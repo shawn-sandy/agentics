@@ -19,6 +19,8 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
 | `plan-status` | Skill | Auto-activates on plan status check/update requests |
 | `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
+| `documenting-plans` | Command | `/plan-interview:documenting-plans [plan-file-path]` |
+| `documenting-plans` | Skill | Auto-activates on requests to document, generate docs from, or write reference docs for a plan |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
 ## Usage
@@ -106,6 +108,35 @@ The command presents a summary table of all files and their computed
 status/type before writing anything. Override options let you adjust
 auto-classified artifact plans, documentation-focused plans, or zero-signal
 files before confirming the write.
+
+### Document Completed Plans
+
+Convert a completed plan file into a developer-friendly prose reference document at `docs/<slug>.md`. The doc is synthesized from three sources: the plan body, live code inspection of every cited file path, and a scoped git history window.
+
+```
+/plan-interview:documenting-plans                                              # auto-detects from IDE or settings
+/plan-interview:documenting-plans docs/plans/add-branch-agent-skill.md        # specific plan file
+/plan-interview:documenting-plans ~/.claude/plans/my-feature.md               # absolute path
+```
+
+The skill automatically verifies the plan is `status: completed` before generating docs — if not, it runs `plan-status` first. The generated document includes:
+
+- **What shipped** — capabilities list from Objective + Steps, rewritten in past tense
+- **Files changed** — table of every cited file with Created/Modified/Relocated/Missing status
+- **How it works** — prose walkthrough synthesized from plan Steps and actual code
+- **How to use it** — activation triggers and examples (only when user-facing surface exists)
+- **Commit history** — scoped `git log` window for the plan and its referenced files
+
+Content inside `<!-- generated:start -->` / `<!-- generated:end -->` markers is regenerated on each run. Content outside the markers is preserved (suitable for hand-written notes or additions).
+
+To describe your intent and auto-activate the skill:
+
+```
+Document this plan
+Generate reference docs for this plan
+Turn this completed plan into documentation
+Write developer docs from this plan
+```
 
 ### Deep Grill
 
