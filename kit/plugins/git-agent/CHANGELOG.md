@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v3.3.2 — pr-agent no longer stops on merged PRs
+
+- `pr-agent` Step 3 now checks `state` when inspecting an existing PR;
+  only stops for `state: OPEN` — merged and closed PRs no longer block
+  new PR creation
+
 ## v3.3.1 — branch-agent always exits plan mode on entry
 
 - `branch-agent` now calls `ExitPlanMode` as its first step (Step 0) so it
