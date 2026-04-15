@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.2.0] - 2026-04-14
+
+### Added
+
+- New skill: `tdd-fix` — autonomous test-driven bug-fix loop with a hard cap of 10 iterations
+- Given a bug description, writes a failing test (red phase), iterates hypothesis → edit → re-run until green, then commits with a `fix:` prefix and opens a PR
+- Each iteration logs a one-sentence hypothesis and diff summary in a markdown table
+- Hard stop at 10 failed iterations: no commit or PR is created; full iteration log is surfaced for the user
+- Regression sweep after green: runs the full suite before committing; stops cleanly if regressions are detected
+- Delegates commit and PR creation to `commit-agent` and `pr-agent` from the `git-agent` plugin
+
 ## [3.1.0] - 2026-04-09
 
 ### Changed
