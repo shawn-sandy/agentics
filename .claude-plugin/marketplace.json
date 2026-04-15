@@ -118,7 +118,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.1.0",
+      "version": "3.2.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
@@ -127,7 +127,9 @@
         "reviewing-tests",
         "test-driven",
         "code-analysis",
-        "testability"
+        "testability",
+        "tdd",
+        "bug-fix"
       ]
     },
     {
