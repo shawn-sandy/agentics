@@ -17,9 +17,7 @@ tools:
   - TodoWrite
   - Skill
   - Agent
-  - AskUserQuestion
 model: sonnet
-permissionMode: bypassPermissions
 maxTurns: 50
 ---
 
@@ -76,12 +74,13 @@ If K is 0, report "All completed plans are already documented. Nothing to do." a
 For each plan in the "needs documentation" list (in alphabetical order):
 
 1. Announce: `"[X/K] Documenting: <plan-filename>"`
-2. Try the Skill tool first: `skill: "plan-interview:documenting-plans"`, `args: "<full-plan-file-path>"`
-3. If the Skill tool is not available, fall back to the Agent tool: `subagent_type: "plan-interview:plan-documenter"` is NOT the fallback — instead use a general-purpose agent with a prompt that says: "Invoke the plan-interview:documenting-plans skill on `<full-plan-file-path>`. Accept the default slug and overwrite if the doc already exists."
-4. When the skill asks for slug confirmation, accept the default
-5. When the skill asks about overwrite/refresh for existing docs, choose "Overwrite"
-6. After the skill completes, announce: `"[X/K] Done: docs/<slug>.md"`
-7. If the skill fails or cannot document a plan, log the error and continue to the next plan
+2. Derive the slug: plan filename without `.md` extension (same logic as Step 3)
+3. Try the Skill tool first: `skill: "plan-interview:documenting-plans"`, `args: "<full-plan-file-path> --slug <slug> --overwrite"`
+4. If the Skill tool is not available, fall back to the Agent tool: use a general-purpose agent with a prompt that says: "Invoke the plan-interview:documenting-plans skill on `<full-plan-file-path>`. Use slug `<slug>` and overwrite if the doc already exists. Do not ask for confirmation — accept defaults for all prompts."
+5. After the skill completes, announce: `"[X/K] Done: docs/<slug>.md"`
+6. If the skill fails or cannot document a plan, log the error and continue to the next plan
+
+**Note on permissions:** Plugin agents do not support `permissionMode`. When run interactively (via Agent tool), Write and Edit calls will surface permission prompts that require user approval. When run via remote triggers (scheduled), the trigger's own permission model applies and prompts are not surfaced.
 
 Track successes and failures as you go.
 
@@ -116,3 +115,18 @@ If any plans failed, list them with error details. If the turn limit was reached
 
 - **In scope:** Batch orchestration of the `documenting-plans` skill for completed, undocumented plans
 - **Out of scope:** Modifying plan files, updating plan statuses, creating new plans, reviewing plan quality
+
+## Limitations
+
+Plugin agents do not support `permissionMode` (the field is ignored per the
+[official plugins reference](https://code.claude.com/docs/en/plugins-reference)).
+Permission prompts for Write, Edit, and Bash tools will surface during execution.
+
+| Invocation method | Behavior |
+|---|---|
+| **Interactive** (Agent tool) | Agent runs normally. User approves Write/Edit prompts as they appear. |
+| **Remote trigger** (scheduled) | Trigger clones the repo and executes a prompt directly — bypasses the plugin agent system. Has its own permission model; prompts are not surfaced. |
+
+For fully unattended automation, use a remote trigger with an inline prompt
+rather than delegating to this agent. The agent is best suited for interactive
+batch runs where a user is present to approve permissions.
