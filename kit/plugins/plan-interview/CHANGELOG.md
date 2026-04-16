@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.14.0] - 2026-04-15
+
+### Added
+
+- New `plan-documenter` agent — batch scans the plans directory for completed
+  plans that lack corresponding documentation in `docs/`, then invokes the
+  `documenting-plans` skill for each one automatically
+- Resolves plan directory from `.claude/settings.json` `plansDirectory` setting,
+  falls back to `docs/plans/`
+- Strict pre-filter: only processes plans with explicit `status: completed` in
+  YAML frontmatter
+- Processes alphabetically with partial progress reporting; subsequent runs skip
+  already-documented plans
+- Uses `permissionMode: bypassPermissions` for fully unattended batch operation
+- Designed for scheduled weekly runs via Claude Code remote triggers
+
 ## [1.13.0] - 2026-04-14
 
 ### Added
