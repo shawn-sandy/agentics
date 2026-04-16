@@ -191,6 +191,49 @@ the schedule at https://claude.ai/code/scheduled or run it on-demand:
 /schedule run   # select the "Weekly Plan Documentation Sweep" trigger
 ```
 
+#### Using in other repos
+
+The agent is repo-agnostic — it resolves the plans directory at runtime. To use
+it in another repo:
+
+1. Install the plugin:
+
+```
+/plugin marketplace add shawn-sandy/agentics
+/plugin install plan-interview@agentics-kit
+```
+
+2. (Optional) If your plans aren't in `docs/plans/`, set a custom directory in
+   `.claude/settings.json`:
+
+```json
+{
+  "plansDirectory": "path/to/your/plans"
+}
+```
+
+3. Run the agent on demand — describe your intent or invoke explicitly:
+
+```
+Batch document all completed plans
+```
+
+#### Scheduling for multiple repos
+
+Each repo needs its own scheduled trigger because remote agents clone a single
+repo per run. To add a weekly sweep to another repo:
+
+1. Run `/schedule` and choose "Create"
+2. Set the GitHub URL to the target repo
+3. Use the same prompt:
+   > Scan for completed plans that don't yet have corresponding documentation.
+   > For each completed plan, invoke the documenting-plans skill to generate
+   > the doc. Report a summary when done.
+4. Set the schedule (e.g., `0 10 * * 0` for Sunday 6:00 AM ET)
+
+The agent prompt is identical across repos — only the GitHub URL changes. For
+2-5 repos, individual triggers are the simplest approach.
+
 ### Deep Grill
 
 Walk through every decision branch in a plan with focused questions and codebase
