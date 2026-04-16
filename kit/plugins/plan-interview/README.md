@@ -21,6 +21,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
 | `documenting-plans` | Command | `/plan-interview:documenting-plans [plan-file-path]` |
 | `documenting-plans` | Skill | Auto-activates on requests to document, generate docs from, or write reference docs for a plan |
+| `plan-documenter` | Agent | Invoked via Agent tool: `plan-interview:plan-documenter` |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
 ## Usage
@@ -136,6 +137,58 @@ Document this plan
 Generate reference docs for this plan
 Turn this completed plan into documentation
 Write developer docs from this plan
+```
+
+### Batch Document All Plans (Agent)
+
+The `plan-documenter` agent scans the plans directory for completed plans that
+don't yet have corresponding docs in `docs/`, then runs the `documenting-plans`
+skill for each one automatically.
+
+Invoke via the Agent tool from another agent or automated workflow:
+
+```json
+{
+  "subagent_type": "plan-interview:plan-documenter",
+  "prompt": "Document all completed plans that are missing docs."
+}
+```
+
+The agent resolves the plan directory from `.claude/settings.json`
+(`plansDirectory` key), falling back to `docs/plans/`. It pre-filters to only
+`status: completed` plans without an existing `docs/<slug>.md` file, then
+processes each sequentially in alphabetical order. A summary table is produced
+at the end.
+
+If the turn limit is reached mid-batch, the agent reports partial progress.
+Subsequent runs automatically skip already-documented plans.
+
+#### Running independently
+
+Describe your intent in conversation to auto-activate:
+
+```
+Batch document all completed plans
+Generate docs for all completed plans that are missing documentation
+```
+
+Or invoke explicitly via the Agent tool:
+
+```json
+{
+  "subagent_type": "plan-interview:plan-documenter",
+  "prompt": "Document all completed plans that are missing docs."
+}
+```
+
+#### Weekly scheduled run
+
+A remote trigger runs the agent automatically every Sunday at 6:00 AM ET. The
+schedule clones the repo fresh and processes any newly completed plans. Manage
+the schedule at https://claude.ai/code/scheduled or run it on-demand:
+
+```
+/schedule run   # select the "Weekly Plan Documentation Sweep" trigger
 ```
 
 ### Deep Grill
