@@ -163,6 +163,22 @@ at the end.
 If the turn limit is reached mid-batch, the agent reports partial progress.
 Subsequent runs automatically skip already-documented plans.
 
+#### Permission model
+
+Plugin agents do not support `permissionMode` — the field is ignored per the
+[official plugins reference](https://code.claude.com/docs/en/plugins-reference).
+This affects how the agent behaves depending on how it is invoked:
+
+| Invocation method | Behavior | Unattended? |
+|---|---|---|
+| **Interactive** (Agent tool from conversation) | Agent runs normally. Write/Edit tool calls surface permission prompts that the user approves as they appear. | No |
+| **Remote trigger** (scheduled via claude.ai/code/scheduled) | The trigger clones the repo and executes a prompt directly — it does not go through the plugin agent system. It has its own permission model and prompts are not surfaced. | Yes |
+
+The key distinction: scheduled automation works because remote triggers bypass
+the plugin system entirely, not because of any agent-level permission setting.
+When setting up automation, use a remote trigger with an inline prompt rather
+than expecting the plugin agent to run unattended.
+
 #### Running independently
 
 Describe your intent in conversation to auto-activate:
@@ -183,9 +199,11 @@ Or invoke explicitly via the Agent tool:
 
 #### Weekly scheduled run
 
-A remote trigger runs the agent automatically every Sunday at 6:00 AM ET. The
-schedule clones the repo fresh and processes any newly completed plans. Manage
-the schedule at https://claude.ai/code/scheduled or run it on-demand:
+A remote trigger can run a documentation sweep automatically on a schedule
+(e.g., every Sunday at 6:00 AM ET). The trigger clones the repo fresh and
+executes a prompt directly — it does not invoke the plugin agent, so there are
+no permission prompts to block execution. Manage schedules at
+https://claude.ai/code/scheduled or run on-demand:
 
 ```
 /schedule run   # select the "Weekly Plan Documentation Sweep" trigger
