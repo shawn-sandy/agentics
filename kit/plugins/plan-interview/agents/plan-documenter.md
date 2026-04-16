@@ -40,9 +40,16 @@ Use `Glob` with pattern `<plansDirectory>/*.md` to get the full list of plan fil
 
 ### Step 2 — Filter to completed plans
 
-For each plan file, `Read` the first 10 lines to extract YAML frontmatter. Check for `status: completed` (exact match). Build a list of completed plan paths.
+For each plan file, `Read` from the beginning until the closing `---` delimiter to extract YAML frontmatter. Parse only the content between the opening `---` and closing `---` delimiters. If the file does not start with `---`, it has no frontmatter — skip it immediately.
 
-**Important:** Only include plans with an explicit `status: completed` field. Skip plans with missing frontmatter, missing status, or any other status value (`todo`, `in-progress`, etc.). Do not invoke `plan-status` to resolve ambiguous statuses — that would consume too many turns.
+Within the parsed frontmatter, check for `status: completed` (lowercase, exact match). Build a list of completed plan paths.
+
+**Important:**
+- Only include plans with an explicit `status: completed` field in YAML frontmatter.
+- Skip plans with missing frontmatter delimiters, missing `status` field, or any other status value (`todo`, `in-progress`, `draft`, etc.).
+- Reject non-canonical casing (`Completed`, `COMPLETED`, etc.) — only lowercase `completed` is valid.
+- Ignore any `status: completed` text that appears in the plan body outside of frontmatter.
+- Do not invoke `plan-status` to resolve ambiguous statuses — that would consume too many turns.
 
 ### Step 3 — Check for existing documentation
 
@@ -75,8 +82,8 @@ For each plan in the "needs documentation" list (in alphabetical order):
 
 1. Announce: `"[X/K] Documenting: <plan-filename>"`
 2. Derive the slug: plan filename without `.md` extension (same logic as Step 3)
-3. Try the Skill tool first: `skill: "plan-interview:documenting-plans"`, `args: "<full-plan-file-path> --slug <slug> --overwrite"`
-4. If the Skill tool is not available, fall back to the Agent tool: use a general-purpose agent with a prompt that says: "Invoke the plan-interview:documenting-plans skill on `<full-plan-file-path>`. Use slug `<slug>` and overwrite if the doc already exists. Do not ask for confirmation — accept defaults for all prompts."
+3. Try the Skill tool first: `skill: "plan-interview:documenting-plans"`, `args: "<full-plan-file-path>"`
+4. If the Skill tool is not available, fall back to the Agent tool: use a general-purpose agent with a prompt that says: "Invoke the plan-interview:documenting-plans skill on `<full-plan-file-path>`. Accept defaults for all prompts."
 5. After the skill completes, announce: `"[X/K] Done: docs/<slug>.md"`
 6. If the skill fails or cannot document a plan, log the error and continue to the next plan
 
@@ -105,6 +112,9 @@ If any plans failed, list them with error details. If the turn limit was reached
 
 ## Edge Cases
 
+- **No YAML frontmatter:** If a plan file does not start with `---`, skip it (no frontmatter means no status)
+- **Non-standard status casing:** Only `status: completed` (lowercase) is valid. Skip `Completed`, `COMPLETED`, or any other casing variant
+- **Status in body text:** Only check within the YAML frontmatter block (between `---` delimiters), never in the plan body
 - **Zero completed plans:** Report and stop immediately
 - **Zero undocumented plans:** Report "All completed plans are already documented" and stop
 - **Turn limit approaching:** If you estimate fewer than 5 turns remain, stop processing new plans, output the summary with remaining plans listed, and exit gracefully
