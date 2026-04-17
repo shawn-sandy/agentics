@@ -21,6 +21,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
 | `documenting-plans` | Command | `/plan-interview:documenting-plans [plan-file-path]` |
 | `documenting-plans` | Skill | Auto-activates on requests to document, generate docs from, or write reference docs for a plan |
+| `plan-documenter` | Agent | Invoked via Agent tool: `plan-interview:plan-documenter` |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
 ## Usage
@@ -137,6 +138,119 @@ Generate reference docs for this plan
 Turn this completed plan into documentation
 Write developer docs from this plan
 ```
+
+### Batch Document All Plans (Agent)
+
+The `plan-documenter` agent scans the plans directory for completed plans that
+don't yet have corresponding docs in `docs/`, then runs the `documenting-plans`
+skill for each one automatically.
+
+Invoke via the Agent tool from another agent or automated workflow:
+
+```json
+{
+  "subagent_type": "plan-interview:plan-documenter",
+  "prompt": "Document all completed plans that are missing docs."
+}
+```
+
+The agent resolves the plan directory from `.claude/settings.json`
+(`plansDirectory` key), falling back to `docs/plans/`. It pre-filters to only
+`status: completed` plans without an existing `docs/<slug>.md` file, then
+processes each sequentially in alphabetical order. A summary table is produced
+at the end.
+
+If the turn limit is reached mid-batch, the agent reports partial progress.
+Subsequent runs automatically skip already-documented plans.
+
+#### Permission model
+
+Plugin agents do not support `permissionMode` — the field is ignored per the
+[official plugins reference](https://code.claude.com/docs/en/plugins-reference).
+This affects how the agent behaves depending on how it is invoked:
+
+| Invocation method | Behavior | Unattended? |
+|---|---|---|
+| **Interactive** (Agent tool from conversation) | Agent runs normally. Write/Edit tool calls surface permission prompts that the user approves as they appear. | No |
+| **Remote trigger** (scheduled via claude.ai/code/scheduled) | The trigger clones the repo and executes a prompt directly — it does not go through the plugin agent system. It has its own permission model and prompts are not surfaced. | Yes |
+
+The key distinction: scheduled automation works because remote triggers bypass
+the plugin system entirely, not because of any agent-level permission setting.
+When setting up automation, use a remote trigger with an inline prompt rather
+than expecting the plugin agent to run unattended.
+
+#### Running independently
+
+Describe your intent in conversation to auto-activate:
+
+```
+Batch document all completed plans
+Generate docs for all completed plans that are missing documentation
+```
+
+Or invoke explicitly via the Agent tool:
+
+```json
+{
+  "subagent_type": "plan-interview:plan-documenter",
+  "prompt": "Document all completed plans that are missing docs."
+}
+```
+
+#### Weekly scheduled run
+
+A remote trigger can run a documentation sweep automatically on a schedule
+(e.g., every Sunday at 6:00 AM ET). The trigger clones the repo fresh and
+executes a prompt directly — it does not invoke the plugin agent, so there are
+no permission prompts to block execution. Manage schedules at
+https://claude.ai/code/scheduled or run on-demand:
+
+```
+/schedule run   # select the "Weekly Plan Documentation Sweep" trigger
+```
+
+#### Using in other repos
+
+The agent is repo-agnostic — it resolves the plans directory at runtime. To use
+it in another repo:
+
+1. Install the plugin:
+
+```
+/plugin marketplace add shawn-sandy/agentics
+/plugin install plan-interview@agentics-kit
+```
+
+2. (Optional) If your plans aren't in `docs/plans/`, set a custom directory in
+   `.claude/settings.json`:
+
+```json
+{
+  "plansDirectory": "path/to/your/plans"
+}
+```
+
+3. Run the agent on demand — describe your intent or invoke explicitly:
+
+```
+Batch document all completed plans
+```
+
+#### Scheduling for multiple repos
+
+Each repo needs its own scheduled trigger because remote agents clone a single
+repo per run. To add a weekly sweep to another repo:
+
+1. Run `/schedule` and choose "Create"
+2. Set the GitHub URL to the target repo
+3. Use the same prompt:
+   > Scan for completed plans that don't yet have corresponding documentation.
+   > For each completed plan, invoke the documenting-plans skill to generate
+   > the doc. Report a summary when done.
+4. Set the schedule (e.g., `0 10 * * 0` for Sunday 6:00 AM ET)
+
+The agent prompt is identical across repos — only the GitHub URL changes. For
+2-5 repos, individual triggers are the simplest approach.
 
 ### Deep Grill
 

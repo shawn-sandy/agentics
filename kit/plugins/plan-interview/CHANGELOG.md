@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.14.1] - 2026-04-15
+
+### Fixed
+
+- Removed non-functional `permissionMode: bypassPermissions` from plan-documenter
+  agent — plugin agents do not support this field per
+  [official docs](https://code.claude.com/docs/en/plugins-reference)
+- Removed `AskUserQuestion` from agent tools (not usable from agent context)
+- Added "Permission model" section to README explaining interactive vs scheduled
+  execution behavior
+- Added "Limitations" section to agent file documenting plugin agent constraints
+- Updated agent Step 5 to pass explicit slug and overwrite arguments to the
+  documenting-plans skill, avoiding interactive prompts
+
+## [1.14.0] - 2026-04-15
+
+### Added
+
+- New `plan-documenter` agent — batch scans the plans directory for completed
+  plans that lack corresponding documentation in `docs/`, then invokes the
+  `documenting-plans` skill for each one automatically
+- Resolves plan directory from `.claude/settings.json` `plansDirectory` setting,
+  falls back to `docs/plans/`
+- Strict pre-filter: only processes plans with explicit `status: completed` in
+  YAML frontmatter
+- Processes alphabetically with partial progress reporting; subsequent runs skip
+  already-documented plans
+- Interactive batch operation — user approves permission prompts as they appear;
+  for unattended runs, use remote triggers with an inline prompt
+- Designed for scheduled weekly runs via Claude Code remote triggers
+
 ## [1.13.0] - 2026-04-14
 
 ### Added

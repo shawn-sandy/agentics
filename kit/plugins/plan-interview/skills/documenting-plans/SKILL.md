@@ -67,9 +67,11 @@ Announce the resolved file: `"Documenting plan: path/to/plan.md"`
 
 ### Step 2 — Ensure plan is completed
 
-Read the plan file's YAML frontmatter.
+Read the plan file's YAML frontmatter — extract the YAML block between the
+opening `---` and closing `---` delimiters. If the file has no frontmatter
+delimiters, treat the status as absent.
 
-- If `status: completed` is present, continue to Step 3.
+- If `status: completed` (lowercase, exact match) is present, continue to Step 3.
 - If `status` is absent or any other value, tell the user:
 
   > "Plan status is `<value>`. Running plan-status first to verify completion."
