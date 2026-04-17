@@ -1,5 +1,7 @@
 ---
-status: proposed
+status: completed
+type: artifact
+created: 2026-04-14
 ---
 
 # Ship-Autonomous Skill
