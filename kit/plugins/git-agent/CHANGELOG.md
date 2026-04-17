@@ -1,5 +1,17 @@
 # Changelog — git-agent
 
+## v3.4.0 — branch-agent always appends date suffix
+
+- `branch-agent` now appends a `-YYYY-MM-DD` suffix (today's date) to every
+  branch it creates, regardless of whether the name came from `$ARGUMENTS`,
+  was slugified from a phrase, or was auto-generated from working-tree changes
+- Added `Bash(date *)` to the skill's `allowed-tools` so the `date +%Y-%m-%d`
+  call does not trigger a mid-run permission prompt
+- Auto-generated branch names now cap at 49 characters (down from 60) to
+  reserve room for the 11-character date suffix; the final branch name still
+  stays under 60 chars
+- Example: `feat/login-fix` → `feat/login-fix-2026-04-17`
+
 ## v3.3.2 — pr-agent no longer stops on merged PRs
 
 - `pr-agent` Step 3 now checks `state` when inspecting an existing PR;

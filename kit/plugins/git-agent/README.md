@@ -4,7 +4,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ## Features
 
-- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified (e.g. `"add login page"` → `add-login-page`, max 30 chars). Stops immediately after.
+- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified (e.g. `"add login page"` → `add-login-page`, max 30 chars). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after.
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
@@ -43,10 +43,11 @@ The skill will:
      auto-generate a `<type>/<scope>-<description>` name from those changes
      (mirrors `commit-agent`'s conventional types)
    - If you didn't provide one and the tree is clean, stop and ask for a name
-3. Detect the default branch via `git symbolic-ref`, fall back to `main`/`master`
-4. Run `git fetch origin <default>` to ensure the ref is current
-5. Run `git checkout -b <branch> --no-track origin/<default>` (no upstream set)
-6. Output the created branch name and short SHA
+3. Append a `-YYYY-MM-DD` date suffix (today's date) to the resolved name
+4. Detect the default branch via `git symbolic-ref`, fall back to `main`/`master`
+5. Run `git fetch origin <default>` to ensure the ref is current
+6. Run `git checkout -b <branch> --no-track origin/<default>` (no upstream set)
+7. Output the created branch name and short SHA
 
 **STOPS after branch creation. Does not stage, commit, push, or create PRs.**
 
