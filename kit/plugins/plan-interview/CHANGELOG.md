@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.2] - 2026-04-20
+
+### Fixed
+
+- `plan-interview` skill now activates reliably for the unhyphenated phrasing
+  "stress test" in addition to "stress-test". Expanded the SKILL.md
+  description to surface common user phrasings ("stress test this plan",
+  "stress test plan", "interview my plan", "pressure-test") so the skill
+  matcher triggers consistently regardless of hyphenation.
+
 ## [1.14.1] - 2026-04-15
 
 ### Fixed
