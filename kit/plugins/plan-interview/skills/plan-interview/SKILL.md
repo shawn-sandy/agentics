@@ -2,11 +2,8 @@
 name: plan-interview
 description:
   Use when the user asks to stress-test, stress test, interview, validate,
-  critique, pressure-test, or find gaps and risks in an implementation plan,
-  with phrasings like "stress test this plan", "stress test plan",
-  "interview my plan", "stress-test the plan", or optionally the same
-  phrasings with the word "agentic" (e.g., "stress test my agentic plan").
-  Does not execute the plan or apply fixes.
+  critique, pressure-test, or find gaps and risks in an implementation plan
+  (or agentic plan). Does not execute the plan or apply fixes.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 ---
 

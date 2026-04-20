@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.5] - 2026-04-20
+
+### Changed
+
+- Simplify all four skill descriptions to use the terse `(or agentic plan)`
+  form instead of the verbose "The word 'agentic' is optional in the
+  trigger" phrasing introduced in 1.14.4. Same activation behavior, shorter
+  descriptions.
+
 ## [1.14.4] - 2026-04-20
 
 ### Fixed
