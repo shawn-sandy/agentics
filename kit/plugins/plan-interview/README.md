@@ -273,6 +273,7 @@ Describe your intent and the skill activates:
 
 ```
 Stress-test this plan
+Stress-test my agentic plan
 Interview my implementation plan
 Find gaps and risks in this plan
 Validate my approach before I start coding
@@ -282,6 +283,7 @@ To run a standalone deep grill, describe your intent:
 
 ```
 Deep grill this plan
+Deep grill my agentic plan
 Walk through each decision in my plan
 Examine every branch in my implementation plan
 ```
@@ -291,6 +293,7 @@ activates:
 
 ```
 Check the status of this plan
+Check the status of my agentic plan
 Has this plan been implemented?
 Update the plan status
 What's the lifecycle status of this plan?

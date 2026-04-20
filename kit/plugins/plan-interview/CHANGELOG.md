@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.3] - 2026-04-20
+
+### Added
+
+- Accept "agentic" as an activation trigger across the `plan-interview`,
+  `deep-grill`, `plan-status`, and `documenting-plans` skills so phrasings
+  like "stress test my agentic plan" or "document my agentic plan" reliably
+  match. Also added "agentic" to the marketplace tags, plugin keywords, and
+  README trigger examples.
+
 ## [1.14.2] - 2026-04-20
 
 ### Fixed
