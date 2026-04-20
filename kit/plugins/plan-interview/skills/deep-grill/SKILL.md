@@ -2,8 +2,9 @@
 name: deep-grill
 description:
   Use when the user asks to deep grill a plan, walk through each decision
-  branch, examine design-tree branches, or stress-test individual decisions in
-  an implementation plan.
+  branch, examine design-tree branches, or stress-test individual decisions
+  in an implementation plan — including agentic plans and agentic workflows
+  (e.g., "deep grill my agentic plan").
 allowed-tools: Read, Glob, Grep, AskUserQuestion, TodoWrite
 ---
 

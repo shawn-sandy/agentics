@@ -9,7 +9,8 @@
     "planning",
     "interview",
     "stress-test",
-    "architecture"
+    "architecture",
+    "agentic"
   ],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/plan-interview",
   "repository": "https://github.com/shawn-sandy/agentics"
