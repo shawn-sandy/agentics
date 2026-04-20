@@ -1,6 +1,6 @@
 ---
 name: documenting-plans
-description: Use when the user asks to generate, write, produce, or publish developer-facing documentation from a completed plan file — or asks to "document a plan", "turn a plan into docs", "write docs for this plan", or "create a reference doc from this plan". The word "agentic" is optional in the trigger (e.g., "document my agentic plan"). Synthesizes a prose document at docs/<slug>.md from three sources: the plan body, live code inspection of every cited file path, and a scoped git history window. Does not check or update plan status (use plan-status for that), does not stress-test or critique the plan (use plan-interview), and does not rename plan files (use review-rename-plans).
+description: Use when the user asks to generate, write, produce, or publish developer-facing documentation from a completed plan file (or agentic plan) — or asks to "document a plan", "turn a plan into docs", "write docs for this plan", or "create a reference doc from this plan". Synthesizes a prose document at docs/<slug>.md from three sources: the plan body, live code inspection of every cited file path, and a scoped git history window. Does not check or update plan status (use plan-status for that), does not stress-test or critique the plan (use plan-interview), and does not rename plan files (use review-rename-plans).
 allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
