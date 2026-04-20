@@ -3,8 +3,9 @@ name: deep-grill
 description:
   Use when the user asks to deep grill a plan, walk through each decision
   branch, examine design-tree branches, or stress-test individual decisions
-  in an implementation plan — including agentic plans and agentic workflows
-  (e.g., "deep grill my agentic plan").
+  in an implementation plan. The word "agentic" is optional in the trigger
+  (e.g., "deep grill this plan" or "deep grill my agentic plan" both
+  activate).
 allowed-tools: Read, Glob, Grep, AskUserQuestion, TodoWrite
 ---
 
