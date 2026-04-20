@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.4] - 2026-04-20
+
+### Fixed
+
+- Clarify that "agentic" is an **optional** trigger keyword, not a scope
+  declaration. Previous 1.14.3 phrasings like "including agentic plans and
+  agentic workflows" read as if the skills specifically handle agentic
+  plans. Reworded all four skill descriptions so existing triggers work
+  unchanged and "agentic" is surfaced as an optional variant
+  (e.g., "stress test this plan" and "stress test my agentic plan" both
+  activate).
+
 ## [1.14.3] - 2026-04-20
 
 ### Added
