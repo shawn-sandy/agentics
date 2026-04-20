@@ -1,6 +1,7 @@
 ---
 status: completed
 created: 2026-04-20
+type: standard
 ---
 
 # Plan: Add "agentic" as a trigger keyword across plan-interview skills
