@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.14.5] - 2026-04-20
+
+### Changed
+
+- Simplify all four skill descriptions to use the terse `(or agentic plan)`
+  form instead of the verbose "The word 'agentic' is optional in the
+  trigger" phrasing introduced in 1.14.4. Same activation behavior, shorter
+  descriptions.
+
+## [1.14.4] - 2026-04-20
+
+### Fixed
+
+- Clarify that "agentic" is an **optional** trigger keyword, not a scope
+  declaration. Previous 1.14.3 phrasings like "including agentic plans and
+  agentic workflows" read as if the skills specifically handle agentic
+  plans. Reworded all four skill descriptions so existing triggers work
+  unchanged and "agentic" is surfaced as an optional variant
+  (e.g., "stress test this plan" and "stress test my agentic plan" both
+  activate).
+
+## [1.14.3] - 2026-04-20
+
+### Added
+
+- Accept "agentic" as an activation trigger across the `plan-interview`,
+  `deep-grill`, `plan-status`, and `documenting-plans` skills so phrasings
+  like "stress test my agentic plan" or "document my agentic plan" reliably
+  match. Also added "agentic" to the marketplace tags, plugin keywords, and
+  README trigger examples.
+
+## [1.14.2] - 2026-04-20
+
+### Fixed
+
+- `plan-interview` skill now activates reliably for the unhyphenated phrasing
+  "stress test" in addition to "stress-test". Expanded the SKILL.md
+  description to surface common user phrasings ("stress test this plan",
+  "stress test plan", "interview my plan", "pressure-test") so the skill
+  matcher triggers consistently regardless of hyphenation.
+
 ## [1.14.1] - 2026-04-15
 
 ### Fixed

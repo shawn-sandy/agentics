@@ -54,14 +54,15 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "1.14.1",
+      "version": "1.14.5",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
       "tags": [
         "planning",
         "interview",
         "stress-test",
-        "architecture"
+        "architecture",
+        "agentic"
       ]
     },
     {
@@ -139,7 +140,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.3.3",
+      "version": "3.4.0",
       "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs",
       "category": "development",
       "tags": [

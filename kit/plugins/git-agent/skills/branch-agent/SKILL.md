@@ -7,6 +7,7 @@ description:
   PRs — use commit-agent or pr-agent for that.
 allowed-tools:
   - Bash(git *)
+  - Bash(date *)
   - ToolSearch
   - AskUserQuestion
   - ExitPlanMode
@@ -17,8 +18,10 @@ model: Haiku
 
 Create a new branch from the latest `origin/<default>` with no upstream tracking
 ref. When called with no argument and the working tree has uncommitted changes,
-the branch name is auto-generated from those changes. Follow these steps in
-strict order. **STOP immediately after step 6.**
+the branch name is auto-generated from those changes. A `-YYYY-MM-DD` date
+suffix is always appended to the final branch name so branches sort and group
+chronologically. Follow these steps in strict order. **STOP immediately after
+step 6.**
 
 ## Step 0: Exit Plan Mode
 
@@ -51,23 +54,25 @@ Read `$ARGUMENTS`.
 - **If output is empty** (clean working tree): output "Provide a branch name.
   Example: branch-agent feat/login-fix" and **STOP**.
 - **If output is non-empty** (working tree has changes): auto-generate the
-  branch name as described in Step 2a, then proceed to Step 3.
+  branch name as described in Step 2a, then proceed to Step 2b.
 
 **Case B — `$ARGUMENTS` contains spaces or reads as a descriptive phrase:**
 Convert it to a human-readable slug — lowercase, replace spaces and special
 characters with `-`, collapse consecutive dashes, strip leading/trailing
 dashes, truncate to 30 characters. Example: `"add allowed tools to skills"` →
 `"add-allowed-tools-to-skills"`. Use the slug as the branch name and proceed
-to Step 3.
+to Step 2b.
 
 **Case C — `$ARGUMENTS` is already a valid branch name** (no spaces): Use it
 verbatim as the branch name. Do not slugify, abbreviate, or transform it.
-Proceed to Step 3.
+Proceed to Step 2b.
 
 ## Step 2a: Auto-Generate Branch Name from Changes
 
 Use this format: `<type>/<scope>-<description>` (or `<type>/<description>` if
-the scope is omitted). Total length ≤ 60 characters.
+the scope is omitted). Total length ≤ 49 characters — this reserves 11 chars
+for the `-YYYY-MM-DD` suffix appended in Step 2b so the final branch name
+stays under 60 chars.
 
 **Type inference (first match wins):**
 
@@ -101,7 +106,7 @@ hyphens.
 **Validation:**
 
 - Lowercase only; characters in `[a-z0-9/-]`; no leading/trailing hyphens
-- Total length ≤ 60 chars (truncate the description segment at a word boundary
+- Total length ≤ 49 chars (truncate the description segment at a word boundary
   if needed; never truncate the type or scope)
 - Must contain a `/` separator after the type
 
@@ -112,7 +117,27 @@ Output one line before continuing:
 
 > Auto-generated branch name from working tree changes: `<branch>`
 
-Then proceed to Step 3.
+Then proceed to Step 2b.
+
+## Step 2b: Append Date Suffix
+
+Run:
+
+```
+date +%Y-%m-%d
+```
+
+Append the result to the resolved branch name with a `-` separator, producing
+the final branch name: `<branch>-<YYYY-MM-DD>` (e.g. `feat/login-fix` →
+`feat/login-fix-2026-04-17`). This always runs, regardless of whether the
+name came from Case A, B, or C.
+
+If the final name exceeds 60 characters, truncate the description portion at
+a word boundary until it fits. Never truncate the date suffix, the type
+prefix, or the scope segment.
+
+Use this date-suffixed name as `<branch>` for the rest of the flow. Proceed
+to Step 3.
 
 ## Step 3: Detect Default Branch
 

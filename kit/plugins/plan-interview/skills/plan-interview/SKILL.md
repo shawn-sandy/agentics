@@ -1,8 +1,9 @@
 ---
 name: plan-interview
 description:
-  Use when the user asks to stress-test, validate, critique, or find gaps and
-  risks in an implementation plan. Does not execute the plan or apply fixes.
+  Use when the user asks to stress-test, stress test, interview, validate,
+  critique, pressure-test, or find gaps and risks in an implementation plan
+  (or agentic plan). Does not execute the plan or apply fixes.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
 ---
 
