@@ -1,6 +1,6 @@
 ---
 name: documenting-plans
-description: Use when the user asks to generate, write, produce, or publish developer-facing documentation from a completed plan file — or asks to "document a plan", "turn a plan into docs", "write docs for this plan", or "create a reference doc from this plan". Synthesizes a prose document at docs/<slug>.md from three sources: the plan body, live code inspection of every cited file path, and a scoped git history window. Does not check or update plan status (use plan-status for that), does not stress-test or critique the plan (use plan-interview), and does not rename plan files (use review-rename-plans).
+description: Use when the user asks to document a plan, turn a plan into docs, or create a reference doc from a plan. Only runs on plans with `type: artifact` in their frontmatter. Synthesizes a prose doc at docs/<slug>.md from the plan body, live code inspection, and git history. Use plan-status to set status/type, plan-interview to stress-test, review-rename-plans to rename.
 allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
@@ -17,7 +17,7 @@ Follow these steps exactly.
 
 - [Step 0 — Create progress todos](#step-0--create-progress-todos)
 - [Step 1 — Resolve plan file](#step-1--resolve-plan-file)
-- [Step 2 — Ensure plan is completed](#step-2--ensure-plan-is-completed)
+- [Step 2 — Ensure plan is completed and typed as artifact](#step-2--ensure-plan-is-completed-and-typed-as-artifact)
 - [Step 3 — Parse plan content](#step-3--parse-plan-content)
 - [Step 4 — Derive output slug](#step-4--derive-output-slug)
 - [Step 5 — Inspect shipped files](#step-5--inspect-shipped-files)
@@ -65,13 +65,16 @@ If no file is found via any method, tell the user and stop.
 
 Announce the resolved file: `"Documenting plan: path/to/plan.md"`
 
-### Step 2 — Ensure plan is completed
+### Step 2 — Ensure plan is completed and typed as artifact
 
 Read the plan file's YAML frontmatter — extract the YAML block between the
 opening `---` and closing `---` delimiters. If the file has no frontmatter
-delimiters, treat the status as absent.
+delimiters, treat both `status` and `type` as absent.
 
-- If `status: completed` (lowercase, exact match) is present, continue to Step 3.
+**Status check:**
+
+- If `status: completed` (lowercase, exact match) is present, proceed to the
+  type check below.
 - If `status` is absent or any other value, tell the user:
 
   > "Plan status is `<value>`. Running plan-status first to verify completion."
@@ -81,12 +84,23 @@ delimiters, treat the status as absent.
 
   After `plan-status` finishes, re-read the plan file's frontmatter.
 
-  - If `status: completed`, continue to Step 3.
+  - If `status: completed`, proceed to the type check below.
   - If still not `completed`, stop and tell the user:
 
     > "Plan not yet completed (status: `<x>`). Documentation should only be
     > generated for completed plans. Run `plan-interview` or continue
     > implementation first."
+
+**Type check (only reached when status is `completed`):**
+
+- If `type: artifact` (lowercase, exact match) is present, continue to Step 3.
+- If `type` is absent or any other value, stop and tell the user:
+
+  > "This plan has type `<value>` (or no type). `documenting-plans` only
+  > generates documentation for plans marked `type: artifact` — plans
+  > intentionally preserved as reference documentation. Run
+  > `plan-interview:plan-status` to classify the plan, or set `type: artifact`
+  > manually in the frontmatter if this plan warrants it."
 
 ### Step 3 — Parse plan content
 
