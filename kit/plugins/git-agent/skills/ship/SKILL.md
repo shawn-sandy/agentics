@@ -5,12 +5,17 @@ description: >
   push and PR, ship it, send it, or land their work. Chains commit + push +
   pull/merge request into one flow. Supports GitHub (gh) and GitLab (glab). Use
   commit-agent for commit only or pr-agent for PR only.
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ExitPlanMode
 ---
 
 Stage, commit, push, and create a pull/merge request in one flow. Supports
 GitHub (`gh`) and GitLab (`glab`). Follow these steps in strict order. **STOP
 immediately after step 8.**
+
+## Step 0: Exit Plan Mode
+
+Always call `ExitPlanMode` immediately when this skill is invoked, before any
+other action. Staging, committing, pushing, and creating a pull/merge request are mutations and cannot proceed inside plan mode.
 
 ## Step 1: Pre-flight Guards
 

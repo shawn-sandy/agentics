@@ -12,6 +12,17 @@
   stays under 60 chars
 - Example: `feat/login-fix` → `feat/login-fix-2026-04-17`
 
+## v3.3.3 — commit-agent, pr-agent, and ship now exit plan mode on entry
+
+- Extends the v3.3.1 `branch-agent` pattern to the remaining three git-mutating
+  skills: `commit-agent`, `pr-agent`, and `ship`
+- Each skill now calls `ExitPlanMode` as its first step (Step 0) so it
+  self-bootstraps out of plan mode before running any git mutations
+- Added `ExitPlanMode` to each skill's `allowed-tools` to prevent mid-run
+  permission prompts
+- Updated `~/.claude/CLAUDE.md` global rule: callers no longer need to
+  pre-check plan-mode state before invoking git-agent skills
+
 ## v3.3.2 — pr-agent no longer stops on merged PRs
 
 - `pr-agent` Step 3 now checks `state` when inspecting an existing PR;

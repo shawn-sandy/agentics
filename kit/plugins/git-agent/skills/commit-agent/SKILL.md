@@ -1,10 +1,15 @@
 ---
 name: commit-agent
 description: Use when the user asks to commit changes, stage and commit, commit all changes, commit everything, or save their work to git. Does not push or create PRs — use pr-agent for that.
-allowed-tools: Bash(git *)
+allowed-tools: Bash(git *), ExitPlanMode
 ---
 
 Stage all changes and create a conventional commit message. Follow these steps in strict order. **STOP immediately after step 4.**
+
+## Step 0: Exit Plan Mode
+
+Always call `ExitPlanMode` immediately when this skill is invoked, before any
+other action. Staging and committing are git mutations and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 

@@ -1,10 +1,15 @@
 ---
 name: pr-agent
 description: Use when the user asks to create a PR, open a pull request, make a PR, push and create a PR, or submit their branch for review. Does not commit changes — use commit-agent first.
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ExitPlanMode
 ---
 
 Push the current branch if needed and create a GitHub pull request. This skill does not commit changes or run tests. Follow these steps in strict order. **STOP immediately after step 5.**
+
+## Step 0: Exit Plan Mode
+
+Always call `ExitPlanMode` immediately when this skill is invoked, before any
+other action. Pushing and creating a pull request are remote mutations and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 
