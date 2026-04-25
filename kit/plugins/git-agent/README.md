@@ -4,10 +4,22 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ## Features
 
+### Skills (synchronous)
+
 - **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified (e.g. `"add login page"` → `add-login-page`, max 30 chars). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after.
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
+
+### Subagents (background, fire-and-forget)
+
+For workflows where you want git operations to run in the background while you keep working in the main session, the plugin ships three background subagents that mirror the corresponding skills:
+
+- **agent-commit** — Background version of `commit-agent`.
+- **agent-pr** — Background version of `pr-agent`.
+- **agent-ship** — Background version of `ship` (full commit + push + PR pipeline).
+
+There is no `agent-branch` — branch creation is synchronous by design (you need to be on the new branch before continuing).
 
 ## Installation
 
@@ -108,6 +120,51 @@ The skill will:
 
 Use `commit-agent` or `pr-agent` if you only need one step.
 
+## Background subagents
+
+The skills above run synchronously in the foreground — your session waits for them to complete. The agents in `agents/` are background subagents that run independently while you keep working.
+
+### Skill vs. agent
+
+| Use the skill | Use the agent |
+|---|---|
+| You want the work to finish before you continue. | You want to fire and forget — keep typing while git work happens in the background. |
+| You want to see and approve each step. | You're confident in the operation and don't need to babysit it. |
+| You're driving the operation directly. | An orchestrator (or you) is dispatching the work as part of a larger flow. |
+
+### Available agents
+
+#### agent-commit
+
+Trigger phrases:
+- "commit in the background"
+- "commit and keep going"
+- "fire off a commit while I work"
+
+Mirrors `commit-agent`: guards → `git add -A` → conventional commit message → `git commit`. Reports the commit hash on completion.
+
+#### agent-pr
+
+Trigger phrases:
+- "open a PR in the background"
+- "create an MR summary while I work"
+- "fire off a PR"
+
+Mirrors `pr-agent`: guards → detect base → check for existing PR → push if needed → `gh pr create`. Reports the PR URL on completion.
+
+#### agent-ship
+
+Trigger phrases:
+- "ship it in the background"
+- "ship and keep working"
+- "land my work without blocking me"
+
+Mirrors `ship`: guards → stage → commit → push → check for existing PR/MR → create PR/MR (GitHub via `gh`, GitLab via `glab`). Reports the PR/MR URL on completion.
+
+### Caveat: working-tree snapshot
+
+Background agents commit, push, and ship whatever is in the working tree at the moment they start running. If you keep editing files in the main session after dispatching an agent, those edits **may or may not** be included depending on timing. This is the inherent fire-and-forget tradeoff. If you need a guaranteed snapshot, use the synchronous skill instead.
+
 ## Requirements
 
 - `pr-agent` requires the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`)
@@ -118,6 +175,10 @@ Use `commit-agent` or `pr-agent` if you only need one step.
 plugins/git-agent/
 ├── .claude-plugin/
 │   └── plugin.json
+├── agents/
+│   ├── agent-commit.md
+│   ├── agent-pr.md
+│   └── agent-ship.md
 ├── skills/
 │   ├── branch-agent/
 │   │   └── SKILL.md
