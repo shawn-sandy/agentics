@@ -1,5 +1,19 @@
 # Changelog — git-agent
 
+## v3.6.0 — Slash commands for explicit background dispatch
+
+- New `commands/` directory with three thin-wrapper slash commands that
+  dispatch the v3.5.0 background agents with `run_in_background: true`:
+  - `/git-agent:commit-bg [hint]` → dispatches `agent-commit`
+  - `/git-agent:pr-bg [hint]` → dispatches `agent-pr`
+  - `/git-agent:ship-bg [hint]` → dispatches `agent-ship`
+- Each command accepts an optional hint argument that is passed to the agent
+  as additional context for the commit message or PR summary
+- Commands return control to the user immediately after dispatch — no
+  waiting, no polling; the user is notified automatically on completion
+- Updated `README.md` with a "Slash commands" section documenting invocation
+  syntax and the example `/git-agent:ship-bg fix off-by-one in pagination`
+
 ## v3.5.0 — Background subagents for commit, pr, and ship
 
 - New `agents/` directory with three background subagents that mirror the

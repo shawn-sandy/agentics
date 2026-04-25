@@ -165,6 +165,22 @@ Mirrors `ship`: guards → stage → commit → push → check for existing PR/M
 
 Background agents commit, push, and ship whatever is in the working tree at the moment they start running. If you keep editing files in the main session after dispatching an agent, those edits **may or may not** be included depending on timing. This is the inherent fire-and-forget tradeoff. If you need a guaranteed snapshot, use the synchronous skill instead.
 
+## Slash commands (explicit background dispatch)
+
+Three slash commands give you a one-line way to fire off the background agents without waiting for natural-language matching:
+
+- `/git-agent:commit-bg [hint]` — dispatches `agent-commit` in the background.
+- `/git-agent:pr-bg [hint]` — dispatches `agent-pr` in the background.
+- `/git-agent:ship-bg [hint]` — dispatches `agent-ship` in the background.
+
+Each command invokes the corresponding agent with `run_in_background: true` and returns control immediately; you'll be notified automatically when the agent completes. The optional argument is passed to the agent as a hint for the commit message or PR summary.
+
+Example:
+
+```
+/git-agent:ship-bg fix off-by-one in pagination
+```
+
 ## Requirements
 
 - `pr-agent` requires the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`)
@@ -179,6 +195,10 @@ plugins/git-agent/
 │   ├── agent-commit.md
 │   ├── agent-pr.md
 │   └── agent-ship.md
+├── commands/
+│   ├── commit-bg.md
+│   ├── pr-bg.md
+│   └── ship-bg.md
 ├── skills/
 │   ├── branch-agent/
 │   │   └── SKILL.md

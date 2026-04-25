@@ -140,8 +140,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.5.0",
-      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents for fire-and-forget commit, PR, and ship)",
+      "version": "3.6.0",
+      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
         "git",
@@ -154,7 +154,8 @@
         "automation",
         "ship",
         "subagents",
-        "background"
+        "background",
+        "slash-commands"
       ]
     },
     {
