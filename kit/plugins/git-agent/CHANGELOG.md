@@ -1,5 +1,23 @@
 # Changelog — git-agent
 
+## v3.5.0 — Background subagents for commit, pr, and ship
+
+- New `agents/` directory with three background subagents that mirror the
+  existing skills:
+  - `agent-commit` — background version of `commit-agent`
+  - `agent-pr` — background version of `pr-agent`
+  - `agent-ship` — background version of `ship`
+- Each agent uses `background: true` so the parent session can dispatch the
+  work and keep going while the subagent runs to completion
+- Existing skills (`branch-agent`, `commit-agent`, `pr-agent`, `ship`) are
+  unchanged and remain the synchronous path
+- `branch-agent` is intentionally **not** mirrored as an agent — branch
+  creation is a synchronous setup step (you need to be on the new branch
+  before continuing) and backgrounding it has no benefit
+- Updated `README.md` with a "Background subagents" section, a skill-vs-agent
+  decision table, trigger phrases for each agent, and a caveat about the
+  working-tree snapshot timing tradeoff
+
 ## v3.4.0 — branch-agent always appends date suffix
 
 - `branch-agent` now appends a `-YYYY-MM-DD` suffix (today's date) to every
