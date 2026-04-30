@@ -7,7 +7,7 @@ description: >
   clean up messy code, or optimize structure. Creates a refactoring plan and
   applies approved changes. Does not cover bugs, security vulnerabilities, or
   test coverage — use code-review-agent or code-testing-agent for those.
-allowed-tools: AskUserQuestion, Bash, Edit, EnterPlanMode, ExitPlanMode, Glob, Grep, Read, Write
+allowed-tools: AskUserQuestion, Bash(git *), Edit, EnterPlanMode, ExitPlanMode, Glob, Grep, Read, Write
 ---
 
 Analyze code for structural quality issues and code smells. Create a prioritized

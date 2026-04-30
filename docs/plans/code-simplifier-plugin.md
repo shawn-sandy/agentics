@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-04-30
+---
+
 # Plan: code-simplifier Plugin
 
 ## Context
