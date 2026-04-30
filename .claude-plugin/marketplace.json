@@ -236,6 +236,26 @@
         "plugin-management",
         "claude-code"
       ]
+    },
+    {
+      "name": "code-simplifier",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/code-simplifier"
+      },
+      "version": "1.0.0",
+      "description": "Analyze code for structural quality issues, code smells, and optimization opportunities — dead code, complexity, god classes, duplication, coupling, and performance anti-patterns",
+      "category": "development",
+      "tags": [
+        "code-smells",
+        "refactoring",
+        "complexity",
+        "dead-code",
+        "code-quality",
+        "simplification",
+        "optimization"
+      ]
     }
   ]
 }
