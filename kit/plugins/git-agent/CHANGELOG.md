@@ -1,5 +1,13 @@
 # Changelog — git-agent
 
+## v3.6.1 — Conditional ExitPlanMode detection
+
+- All four git-mutating skills (`branch-agent`, `commit-agent`, `pr-agent`,
+  `ship`) now detect whether plan mode is active before calling
+  `ExitPlanMode`, skipping the call when not in plan mode
+- No behavioral change (ExitPlanMode was already a no-op outside plan mode)
+  but instructions now explicitly model conditional detection and silent exit
+
 ## v3.6.0 — Slash commands for explicit background dispatch
 
 - New `commands/` directory with three thin-wrapper slash commands that

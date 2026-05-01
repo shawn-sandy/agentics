@@ -23,12 +23,12 @@ suffix is always appended to the final branch name so branches sort and group
 chronologically. Follow these steps in strict order. **STOP immediately after
 step 6.**
 
-## Step 0: Exit Plan Mode
+## Step 0: Exit Plan Mode (if active)
 
-Always call `ExitPlanMode` immediately when this skill is invoked, before any
-other action. Branch creation is a git mutation and cannot proceed inside plan
-mode. This skill is explicit-invocation only (`disable-model-invocation: true`),
-so the user has already opted in to taking action.
+If plan mode is active (a system reminder indicates "Plan mode is active"),
+call `ExitPlanMode` silently before any other action. If plan mode is not
+active, skip directly to Step 1. Do not prompt the user — exit silently.
+Branch creation is a git mutation and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 

@@ -6,10 +6,12 @@ allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ExitPlan
 
 Push the current branch if needed and create a GitHub pull request. This skill does not commit changes or run tests. Follow these steps in strict order. **STOP immediately after step 5.**
 
-## Step 0: Exit Plan Mode
+## Step 0: Exit Plan Mode (if active)
 
-Always call `ExitPlanMode` immediately when this skill is invoked, before any
-other action. Pushing and creating a pull request are remote mutations and cannot proceed inside plan mode.
+If plan mode is active (a system reminder indicates "Plan mode is active"),
+call `ExitPlanMode` silently before any other action. If plan mode is not
+active, skip directly to Step 1. Do not prompt the user — exit silently.
+Pushing and creating a pull request are remote mutations and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 

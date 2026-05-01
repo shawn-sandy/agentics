@@ -1,15 +1,7 @@
 ---
 name: plugin-creator
 description: Scaffolds complete Claude Code plugins with guided workflows. Use when the user asks to "create a plugin", "scaffold a plugin", "generate a new plugin", "make a plugin", or "set up a plugin from scratch". Covers plugin manifest, commands, skills, agents, hooks, and MCP server scaffolding. Does NOT scaffold individual skills (use skill-reviewer:planning-skills), individual agents (use agent-creator), or marketplace infrastructure (use marketplace-builder).
-allowed-tools: AskUserQuestion, Glob, Read, Write
----
-
-## Plan Mode Guard
-
-**If plan mode is active, STOP immediately.** Do not proceed to any step below. Instead, respond:
-
-> "The plugin-creator skill writes files and directories, which is not allowed in plan mode. Please exit plan mode first (`/exit-plan`), then invoke this skill again."
-
+allowed-tools: AskUserQuestion, ExitPlanMode, Glob, Read, Write
 ---
 
 ## Overview
@@ -20,16 +12,26 @@ Follow these steps exactly.
 
 ## Table of Contents
 
-- [Step 0: Disambiguation](#step-0-disambiguation)
-- [Step 1: Gather Plugin Requirements](#step-1-gather-plugin-requirements)
-- [Step 2: Gather Component Details](#step-2-gather-component-details)
-- [Step 3: Generate Plugin Manifest](#step-3-generate-plugin-manifest)
-- [Step 4: Generate Plugin Files](#step-4-generate-plugin-files)
-- [Step 5: Register in Marketplace](#step-5-register-in-marketplace)
+- [Step 0: Exit Plan Mode (if active)](#step-0-exit-plan-mode-if-active)
+- [Step 1: Disambiguation](#step-1-disambiguation)
+- [Step 2: Gather Plugin Requirements](#step-2-gather-plugin-requirements)
+- [Step 3: Gather Component Details](#step-3-gather-component-details)
+- [Step 4: Generate Plugin Manifest](#step-4-generate-plugin-manifest)
+- [Step 5: Generate Plugin Files](#step-5-generate-plugin-files)
+- [Step 6: Register in Marketplace](#step-6-register-in-marketplace)
 
 ---
 
-## Step 0: Disambiguation
+## Step 0: Exit Plan Mode (if active)
+
+If plan mode is active (a system reminder indicates "Plan mode is active"),
+call `ExitPlanMode` silently before proceeding. If plan mode is not active,
+skip directly to Step 1. Do not prompt the user — exit silently. Plugin
+scaffolding writes files and directories, which requires exiting plan mode.
+
+---
+
+## Step 1: Disambiguation
 
 Before proceeding, check if the user's intent is ambiguous. If the request could mean something other than creating a full plugin, clarify:
 
@@ -37,11 +39,11 @@ Before proceeding, check if the user's intent is ambiguous. If the request could
 - **"create an agent"** or **"scaffold an agent"** — Ask: "Do you want a full plugin containing an agent, or just add an agent to an existing plugin? For adding a single agent, try `agent-creator`."
 - **"set up a marketplace"** — Redirect: "For marketplace infrastructure, use `marketplace-builder` instead."
 
-If the user clearly wants a full plugin, proceed to Step 1.
+If the user clearly wants a full plugin, proceed to Step 2.
 
 ---
 
-## Step 1: Gather Plugin Requirements
+## Step 2: Gather Plugin Requirements
 
 Ask the user up to 4 questions using `AskUserQuestion` to understand the plugin they want. Skip questions already answered.
 
@@ -69,9 +71,9 @@ After gathering answers, summarize:
 
 ---
 
-## Step 2: Gather Component Details
+## Step 3: Gather Component Details
 
-For each component type selected in Step 1, gather specifics:
+For each component type selected in Step 2, gather specifics:
 
 ### Commands
 
@@ -114,7 +116,7 @@ Present the complete component plan for confirmation before proceeding.
 
 ---
 
-## Step 3: Generate Plugin Manifest
+## Step 4: Generate Plugin Manifest
 
 Generate `plugin.json` using the schema from `references/plugin-json-schema.md`.
 
@@ -138,7 +140,7 @@ Present the manifest for confirmation:
 
 ---
 
-## Step 4: Generate Plugin Files
+## Step 5: Generate Plugin Files
 
 After the user confirms, show the full file list before writing:
 
@@ -153,7 +155,7 @@ After the user confirms, show the full file list before writing:
 
 Write files sequentially using templates from `references/component-templates.md`:
 
-1. `.claude-plugin/plugin.json` — Plugin manifest (from Step 3)
+1. `.claude-plugin/plugin.json` — Plugin manifest (from Step 4)
 2. Component files in order: commands, skills, agents, hooks, MCP servers
 3. `CHANGELOG.md` — Initial entry using [Keep a Changelog](https://keepachangelog.com/) format
 
@@ -171,7 +173,7 @@ Write files sequentially using templates from `references/component-templates.md
 
 ---
 
-## Step 5: Register in Marketplace
+## Step 6: Register in Marketplace
 
 This step is **conditional** — only offer when a `marketplace.json` file exists.
 
