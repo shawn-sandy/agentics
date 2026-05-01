@@ -12,10 +12,12 @@ Stage, commit, push, and create a pull/merge request in one flow. Supports
 GitHub (`gh`) and GitLab (`glab`). Follow these steps in strict order. **STOP
 immediately after step 8.**
 
-## Step 0: Exit Plan Mode
+## Step 0: Exit Plan Mode (if active)
 
-Always call `ExitPlanMode` immediately when this skill is invoked, before any
-other action. Staging, committing, pushing, and creating a pull/merge request are mutations and cannot proceed inside plan mode.
+If plan mode is active (a system reminder indicates "Plan mode is active"),
+call `ExitPlanMode` silently before any other action. If plan mode is not
+active, skip directly to Step 1. Do not prompt the user — exit silently.
+Staging, committing, pushing, and creating a pull/merge request are mutations and cannot proceed inside plan mode.
 
 ## Step 1: Pre-flight Guards
 

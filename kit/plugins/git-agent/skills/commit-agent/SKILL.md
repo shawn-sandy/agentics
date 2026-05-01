@@ -6,10 +6,12 @@ allowed-tools: Bash(git *), ExitPlanMode
 
 Stage all changes and create a conventional commit message. Follow these steps in strict order. **STOP immediately after step 4.**
 
-## Step 0: Exit Plan Mode
+## Step 0: Exit Plan Mode (if active)
 
-Always call `ExitPlanMode` immediately when this skill is invoked, before any
-other action. Staging and committing are git mutations and cannot proceed inside plan mode.
+If plan mode is active (a system reminder indicates "Plan mode is active"),
+call `ExitPlanMode` silently before any other action. If plan mode is not
+active, skip directly to Step 1. Do not prompt the user — exit silently.
+Staging and committing are git mutations and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 

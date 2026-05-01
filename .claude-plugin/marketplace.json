@@ -140,7 +140,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.6.0",
+      "version": "3.6.1",
       "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
@@ -225,7 +225,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agentic-plugin-dev"
       },
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure",
       "category": "development",
       "tags": [
