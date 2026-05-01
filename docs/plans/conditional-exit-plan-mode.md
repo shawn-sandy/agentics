@@ -1,3 +1,9 @@
+---
+status: completed
+created: 2026-05-01
+type: standard
+---
+
 # Refactor ExitPlanMode: Conditional Detection + Silent Exit
 
 ## Context
