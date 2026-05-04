@@ -111,7 +111,9 @@ Use the same priority order as the `memory-doctor` skill:
 2. `.claude/CLAUDE.md` in the current working directory
 3. `~/.claude/CLAUDE.md`
 
-Tell the user which file will be analyzed. If none found, report that no CLAUDE.md was located and offer to proceed with project structure analysis only.
+If both `CLAUDE.md` and `.claude/CLAUDE.md` exist, analyze `CLAUDE.md` (root takes priority) and note that `.claude/CLAUDE.md` was skipped.
+
+Tell the user which file will be analyzed (CLAUDE.md, .claude/CLAUDE.md, or ~/.claude/CLAUDE.md). If none found, report that no CLAUDE.md was located and offer to proceed with project structure analysis only.
 
 **Step 2 — Inventory `.claude/rules/`**
 

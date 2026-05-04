@@ -46,7 +46,7 @@ Optimize the CLAUDE.md at ~/myproject/CLAUDE.md
 
 ## Installation
 
-```
+```bash
 /plugin install memory-tools@agentics-kit
 ```
 

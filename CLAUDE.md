@@ -45,7 +45,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-11 plugins in the marketplace (`agentics-kit` v3.1.0):
+12 plugins in the marketplace (`agentics-kit` v3.1.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -57,6 +57,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `git-agent` | Skills | Branch creation, commit, PR, and ship workflows |
 | `agent-creator` | Agents | Plugin scaffolding agent |
 | `agentic-plugin-dev` | Skills + Commands | Plugin development toolkit |
+| `code-simplifier` | Skills | Structural quality and simplification analysis |
 | `marketplace-builder` | Skills | Marketplace scaffolding |
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
 | `react-perf-analyzer` | Skills | React performance analysis |

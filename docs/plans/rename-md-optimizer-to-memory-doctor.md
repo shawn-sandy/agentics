@@ -1,3 +1,8 @@
+---
+status: completed
+type: standard
+created: 2026-05-04
+---
 
 # Plan: Rename plugin to memory-tools and skill to memory-doctor (v2.0.0) + 9 fixes
 
@@ -71,8 +76,7 @@ This is a **MAJOR breaking change** (`v1.6.0` → `v2.0.0`) per `.claude/rules/m
      `Use when the user asks to audit, optimize, or clean up a CLAUDE.md file, or when Claude appears to ignore project instructions. Does not cover SKILL.md files, slash commands, or general markdown.`
 
 3. **Dimension 6 and Dimension 4 both reference `CLAUDE.local.md`.**
-   - Minor redundancy in `referenc
-   - es/audit-steps.md`. Consolidate the mention in Dimension 6 only.
+   - Minor redundancy in `references/audit-steps.md`. Consolidate the mention in Dimension 6 only.
 
 4. **No evals / test fixtures.**
     - The skill-authoring checklist requires "at least three evaluations." None exist for this skill.
@@ -165,7 +169,7 @@ Skipped from this release: Fix 10 (evals) — tracked as a separate follow-up pl
   - Subject: `feat(kit/plugins/memory-tools)!: 2.0.0 — rename plugin to memory-tools, skill to memory-doctor`
   - Body must include:
 
-    ```
+    ```text
     BREAKING CHANGE: Plugin renamed from claude-md-optimizer to memory-tools.
     Primary skill renamed from md-optimizer to memory-doctor.
     New invocation: memory-tools:memory-doctor.
