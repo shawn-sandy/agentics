@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.0.0] - 2026-05-04
+
+### BREAKING CHANGE
+
+- Plugin renamed from `claude-md-optimizer` to `memory-tools`.
+- Primary skill renamed from `md-optimizer` to `memory-doctor`. New invocation: `memory-tools:memory-doctor`.
+- Existing `@import` references to `skills/claude-md-optimizer/SKILL.md` will break — update to `skills/memory-doctor/SKILL.md`.
+
+### Migration
+
+1. `/plugin uninstall claude-md-optimizer@agentics-kit`
+2. `/plugin install memory-tools@agentics-kit`
+3. Find and update any `@import` references in your CLAUDE.md:
+   - Old: `@<plugin-dir>/skills/claude-md-optimizer/SKILL.md`
+   - New: `@<plugin-dir>/skills/memory-doctor/SKILL.md`
+   - Find references with: `grep -rn 'skills/claude-md-optimizer/SKILL.md' .`
+4. Update `--plugin-dir` paths in any local scripts or `CLAUDE.local.md` from `kit/plugins/claude-md-optimizer` to `kit/plugins/memory-tools`.
+
+### Added
+
+- `Grep` added to `memory-doctor` `allowed-tools`; Step 2 secret scan now uses `Grep -nE` with exact patterns and reports line numbers (no more eyeball-matching on long files)
+- Step 2 `@import` scan now reads each imported file (one level deep) and reports effective line count; imports exceeding 500 lines are skipped with a warning
+- Plan-mode pre-check at top of skill: defers Steps 5–6 writes if system indicates plan mode is active
+- Step 5 and Step 6 prompts now use `AskUserQuestion` for explicit Yes/No gating (replaces prose questions that could be misread as already-confirmed)
+- When Progressive Disclosure scores ≤ 1, Step 4 Top 3 now recommends invoking `memory-tools:path-rules-advisor` as the preferred delegation path; inline flow kept as fallback
+- Step 4 and Step 5 include `path-rules-advisor` delegation recommendation
+
+### Changed
+
+- Frontmatter `name` changed from `md-optimizer` to `memory-doctor`
+- Frontmatter `description` tightened to two sentences; adds "diagnose" and "project memory file" terminology
+- Step 1 priority clarified: when both `CLAUDE.md` and `.claude/CLAUDE.md` exist, root takes priority and alternate location is noted as skipped
+- Operational rules paragraph (audit scope, opt-in steps, memory load order) moved from `references/audit-steps.md` Notes section to top of `SKILL.md` so Claude sees them before Step 3 triggers a Read
+- `references/audit-steps.md` Notes section removed (content now in `SKILL.md` or covered by Dimension 6)
+- `path-rules-advisor`: cross-reference updated from `claude-md-optimizer` to `memory-doctor`
+- Self-reference `@import` path updated to `skills/memory-doctor/SKILL.md`
+
 ## [1.6.0] - 2026-04-09
 
 ### Changed

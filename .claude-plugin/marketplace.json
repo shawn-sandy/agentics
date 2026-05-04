@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -12,17 +12,18 @@
   },
   "plugins": [
     {
-      "name": "claude-md-optimizer",
+      "name": "memory-tools",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/claude-md-optimizer"
+        "path": "kit/plugins/memory-tools"
       },
-      "version": "1.6.0",
-      "description": "Audit and optimize CLAUDE.md files against Claude Code best practices",
+      "version": "2.0.0",
+      "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
       "category": "development",
       "tags": [
         "claude-md",
+        "memory",
         "configuration",
         "optimization",
         "best-practices"

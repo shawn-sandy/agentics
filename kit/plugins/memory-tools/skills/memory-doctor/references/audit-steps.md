@@ -132,12 +132,3 @@ For a 6/12 "Needs work" file:
 3. Remove ESLint rules from the conventions section — they belong in `.eslintrc`.
 ```
 
----
-
-## Notes
-
-- A shorter CLAUDE.md is almost always better than a longer one. Context overflow — not missing instructions — is the most common cause of Claude ignoring directives.
-- Memory load order: project rules → project memory → user memory → `CLAUDE.local.md`. Combined instruction count across all loaded files is what matters.
-- Use `@path/to/file` import syntax to reference external docs without embedding their full content. Use `.claude/rules/*.md` for modular, path-scoped rules. Official reference: <https://code.claude.com/docs/en/memory>
-- To make this optimizer always available in a project, add `@<plugin-dir>/skills/claude-md-optimizer/SKILL.md` to the project's CLAUDE.md (replace `<plugin-dir>` with the actual `--plugin-dir` path).
-- Audit only the file specified. Do not scan the entire project unless asked. Steps 5 and 6 are opt-in — do not rewrite the file without explicit confirmation.
