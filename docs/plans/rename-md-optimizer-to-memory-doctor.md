@@ -183,11 +183,12 @@ After applying changes:
 1. Confirm both directory renames succeeded:
    - `ls kit/plugins/` shows `memory-tools/` (no `claude-md-optimizer/`).
    - `ls kit/plugins/memory-tools/skills/` shows `memory-doctor/` and `path-rules-advisor/`.
-2. Confirm no stragglers (excluding intentional historical/illustrative entries):
-   - `grep -rn "claude-md-optimizer\|md-optimizer" --include="*.md" --include="*.json" .` should return only:
+2. Confirm no stragglers in runtime and doc surfaces (excluding intentional historical/illustrative entries):
+   - `grep -rn "claude-md-optimizer\|md-optimizer" --include="*.md" --include="*.json" --exclude-dir=docs .` should return only:
      - Root `CHANGELOG.md` line 73 (historical entry, intentionally preserved).
      - `kit/plugins/memory-tools/CHANGELOG.md` historical entries pre-2.0.0.
      - `…/best-practices.md` line 52 (`claudemd-optimizer` reserved-word example).
+   - Matches in `docs/plans/` are expected historical artifacts (plan files record the old names at time of writing) — exclude that directory or ignore those matches.
 3. Validate JSON parsing — `marketplace.json` and `plugin.json` parse without errors (project's auto-validate hook fires on save).
 4. Run `/skill-reviewer:reviewing-skills` against the updated `kit/plugins/memory-tools/skills/memory-doctor/SKILL.md` for a scored audit.
 5. Load the renamed plugin: `claude --plugin-dir ./kit/plugins/memory-tools` and confirm the skill activates on:
