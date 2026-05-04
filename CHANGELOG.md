@@ -12,7 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 - **memory-tools v2.0.0** (was `claude-md-optimizer`) — MAJOR rename of plugin and primary skill; see `kit/plugins/memory-tools/CHANGELOG.md` for migration steps
 - **Marketplace** (`agentics-kit`) bumped to v3.1.0 (MINOR — plugin renamed within marketplace)
-- **CLAUDE.md**, **README.md**, **kit/plugins/README.md** — updated all references from `claude-md-optimizer` to `memory-tools` and from `md-optimizer` to `memory-doctor`
+- **CLAUDE.md**, **README.md**, **kit/plugins/README.md** — updated references in root docs and plugin docs from `claude-md-optimizer` to `memory-tools` and from `md-optimizer` to `memory-doctor`
 - **marketplace-builder**, **skill-reviewer** — updated cross-references to renamed plugin and skill
 - **Plan file** renamed from `review-this-skill-and-bright-frog.md` to `rename-md-optimizer-to-memory-doctor.md`
 
