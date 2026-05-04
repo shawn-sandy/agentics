@@ -51,7 +51,7 @@ Read the target file in full (`Read`), then collect these metrics:
 - **Line count** — total lines in the file
 - **Instruction count (estimated)** — count verb-starting bullet points, numbered directives, and bolded imperatives (e.g., `**Always**`, `**Never**`). Acknowledge a ±30–50 variance in your estimate.
 - **Section inventory** — list every `##` heading present
-- **Sensitive data scan** — use `Grep -nE` on the target file with the pattern `sk-|ghp_|AKIA|xoxb-|-----BEGIN|[A-Z_]+=\w{20,}`. Report each match with its line number and a masked value (never print full secret text; show first 4 and last 4 characters with middle replaced by `***`, e.g. `sk-a...b3x4`). If no matches, report "No secrets found."
+- **Sensitive data scan** — use `Grep -nE` on the target file with the pattern `sk-|ghp_|AKIA|xoxb-|-----BEGIN|[A-Z_]+=\w{20,}`. Report each match with its line number and a masked value (never print full secret text). Masking rule: if token length ≥ 8, show first 4 + `***` + last 4 (e.g. `sk-a***b3x4`); if length 4–7, show first 2 + `***` + last 2; if length < 4, show `****`. If no matches, report "No secrets found."
 - **Import scan** — detect any `@path/to/file` references in the file. List each one found. Resolve each import relative to the audited file's directory and reject any path that is absolute or contains `..` traversal or otherwise resolves outside the project root; for rejected paths report "import `<path>` rejected: outside project root" and skip `Read`. For each allowed imported file, attempt to `Read` it and report its line count. If the imported file exceeds 500 lines, skip counting it but include a warning: "import `<path>` has N lines — exceeds 500-line cap, not counted." Sum the counts of all imports under the cap and report as "effective lines (incl. imports): N (approximate, one level deep)." Note that imported content counts toward effective instruction load but is not visible in the raw line count.
 
 Report all five metrics before proceeding to Step 3.
@@ -170,4 +170,6 @@ If the user says no, stop here.
 
 Use `AskUserQuestion` to ask: "Should I write this to disk? Commit or back up your current CLAUDE.md first — this will overwrite it." (Yes / No)
 
-Wait for an explicit second confirmation before writing. Write only the file that was audited in Step 1.
+If the user says yes, use `AskUserQuestion` again with: "Final confirmation: overwrite `<audited file path>` with the optimized version now?" (Yes / No)
+
+Write only the file that was audited in Step 1, and only after both confirmations are affirmative.

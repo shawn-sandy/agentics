@@ -93,7 +93,7 @@ This is a **MAJOR breaking change** (`v1.6.0` → `v2.0.0`) per `.claude/rules/m
 | `kit/plugins/claude-md-optimizer/` (directory) | `git mv` to `kit/plugins/memory-tools/` |
 | `kit/plugins/memory-tools/.claude-plugin/plugin.json` | `name`: `claude-md-optimizer` → `memory-tools`; `homepage`: update `tree/main/kit/plugins/claude-md-optimizer` → `tree/main/kit/plugins/memory-tools` |
 | `kit/plugins/memory-tools/CHANGELOG.md` | Add `## [2.0.0] - 2026-05-04` entry with prominent `### BREAKING CHANGE` and `### Migration` subsections |
-| `kit/plugins/memory-tools/README.md` | Update plugin name in headers, install command (`/plugin install memory-tools@agentics-kit`), Skills table row (skill name `claude-md-optimizer` → `memory-doctor`), and any directory tree examples |
+| `kit/plugins/memory-tools/README.md` | Update plugin name in headers, install command (`/plugin install memory-tools@agentics-kit`), Skills table row (skill name `md-optimizer` → `memory-doctor`), and any directory tree examples |
 | `.claude-plugin/marketplace.json` | Plugin entry: `name` `claude-md-optimizer` → `memory-tools`; `source.path` `kit/plugins/claude-md-optimizer` → `kit/plugins/memory-tools`; `version` `1.6.0` → `2.0.0` |
 
 ### Skill-level changes
