@@ -573,7 +573,7 @@ claude --plugin-dir ./kit/plugins/my-plugin "Run /my-plugin:my-command"
 
 ### Registering Plugins in Marketplace
 
-Add your plugin to `kit/.claude-plugin/marketplace.json`:
+Add your plugin to `.claude-plugin/marketplace.json`:
 
 ```json
 {
