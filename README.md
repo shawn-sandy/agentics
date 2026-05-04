@@ -374,7 +374,7 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 ---
 
-### git-agent `v3.6.0`
+### git-agent `v3.6.1`
 
 Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship).
 
@@ -516,7 +516,7 @@ claude --plugin-dir ./kit/plugins/code-simplifier
 
 ## Marketplace
 
-The `agentics-kit` marketplace is defined in `kit/.claude-plugin/marketplace.json`. Each plugin is sourced via `git-subdir`, enabling sparse cloning of individual plugins without fetching the full repository.
+The `agentics-kit` marketplace is defined in `.claude-plugin/marketplace.json`. Each plugin is sourced via `git-subdir`, enabling sparse cloning of individual plugins without fetching the full repository.
 
 Register the marketplace and install plugins by name:
 
@@ -609,7 +609,7 @@ Add your plugin to `kit/.claude-plugin/marketplace.json`:
 ### Current Features
 
 - 12 example plugin implementations covering commands, skills, and agents
-- `agentics-kit` marketplace v3.0.0 with `git-subdir` sources for sparse cloning
+- `agentics-kit` marketplace v3.1.0 with `git-subdir` sources for sparse cloning
 - Plugin structure documentation and patterns
 - Community infrastructure: contributing guide, code of conduct, security policy, issue templates
 
@@ -621,7 +621,7 @@ Add your plugin to `kit/.claude-plugin/marketplace.json`:
 | wcag-compliance-reviewer | v1.2.0 | 1 skill |
 | skill-reviewer | v1.6.0 | 4 skills |
 | code-testing-agent | v3.2.0 | 4 skills |
-| git-agent | v3.6.0 | 3 commands, 4 skills, 3 agents |
+| git-agent | v3.6.1 | 3 commands, 4 skills, 3 agents |
 | agent-creator | v1.1.0 | 1 skill |
 | react-perf-analyzer | v1.2.0 | 1 command, 1 skill |
 | marketplace-builder | v1.1.0 | 1 skill |
