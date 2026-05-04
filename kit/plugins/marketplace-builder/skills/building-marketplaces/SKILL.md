@@ -1,6 +1,6 @@
 ---
 name: building-marketplaces
-description: Evaluates a repository's structure and scaffolds Claude Code skill marketplace infrastructure. Use when the user asks to build a marketplace, set up a skill marketplace, create a plugin marketplace, scaffold marketplace files, make a repo into a marketplace, or evaluate marketplace readiness. Does not audit individual SKILL.md quality (use skill-reviewer) or CLAUDE.md content quality (use claude-md-optimizer).
+description: Evaluates a repository's structure and scaffolds Claude Code skill marketplace infrastructure. Use when the user asks to build a marketplace, set up a skill marketplace, create a plugin marketplace, scaffold marketplace files, make a repo into a marketplace, or evaluate marketplace readiness. Does not audit individual SKILL.md quality (use skill-reviewer) or CLAUDE.md content quality (use memory-tools).
 allowed-tools: AskUserQuestion, Bash, Glob, Read, Write
 ---
 
@@ -131,7 +131,7 @@ Present a numbered list of what can be scaffolded. For each item, show a code bl
 **Scaffolding options** (offer only what's missing or broken):
 
 1. **`.claude-plugin/marketplace.json`** — if missing or broken. Generate per official schema from [`references/marketplace-templates.md`](references/marketplace-templates.md). Derive `name` from repo directory name, `owner.name` from git config `user.name` or package manifest author. If marketplace.json already exists and is valid, offer to add new plugin entries instead.
-2. **`CLAUDE.md`** — if missing. Generate a minimal stub with section headings and TODO placeholders (Project Overview, Tech Stack, Repository Structure, Common Commands, Conventions). Do not attempt to fill in content — defer to `claude-md-optimizer` for quality.
+2. **`CLAUDE.md`** — if missing. Generate a minimal stub with section headings and TODO placeholders (Project Overview, Tech Stack, Repository Structure, Common Commands, Conventions). Do not attempt to fill in content — defer to `memory-tools` for quality.
 3. **`.claude/rules/` starter files** — if directory is missing. Generate generic starter rules for plugin authoring conventions and marketplace configuration. Content from [`references/marketplace-templates.md`](references/marketplace-templates.md).
 4. **`.gitignore` additions** — if missing entries for `.claude/worktrees/` and `CLAUDE.local.md`.
 5. **Plugin scaffold** — offer to create a new plugin directory structure: `plugins/<name>/.claude-plugin/plugin.json` + `plugins/<name>/skills/<skill-name>/SKILL.md` stub. Ask the user for the plugin name and skill name. Validate proposed plugin name does not duplicate an existing marketplace entry.
@@ -155,7 +155,7 @@ Never batch-write multiple files without individual confirmation. If the user de
 
 After all files are written (or declined), suggest next steps:
 - Run `claude plugin validate .` to verify marketplace structure
-- Use `claude-md-optimizer` to improve the generated CLAUDE.md
+- Use `memory-tools` to improve the generated CLAUDE.md
 - Use `skill-reviewer` to audit any SKILL.md files
 - Test locally: `claude --plugin-dir ./plugins/<name>`
 

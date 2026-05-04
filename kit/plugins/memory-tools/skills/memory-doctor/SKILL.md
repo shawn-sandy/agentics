@@ -1,13 +1,22 @@
 ---
-name: md-optimizer
-description: Use when the user asks to audit, optimize, review, clean up, or improve a CLAUDE.md file. Also use when Claude is ignoring instructions, behaving inconsistently, or the CLAUDE.md appears bloated or overloaded. Does not cover SKILL.md files, plugin commands, or other markdown files.
-allowed-tools: AskUserQuestion, Glob, Read, Write
+name: memory-doctor
+description: Use when the user asks to audit, optimize, clean up, or diagnose a CLAUDE.md / project memory file, or when Claude appears to ignore project instructions. Does not cover SKILL.md files, slash commands, or general markdown.
+allowed-tools: AskUserQuestion, Glob, Grep, Read, Write
 ---
 
 Audit and optimize a CLAUDE.md file against Claude Code best practices.
 
 > **Freedom level: Rigid** — Execute all six steps in the order listed. Do not skip, combine,
 > or reorder them.
+
+> **Plan-mode pre-check** — If the system indicates plan mode is active when reaching Step 5,
+> defer writing until the user exits plan mode. Read-only steps (1–4) may proceed in plan mode.
+
+> **Operational rules** — Audit only the file specified. Do not scan the entire project unless
+> asked. Steps 5 and 6 are opt-in — do not rewrite the file without explicit confirmation.
+> Memory load order: project rules → project memory → user memory → `CLAUDE.local.md`. Combined
+> instruction count across all loaded files is what matters. Use `@path/to/file` import syntax to
+> reference external docs without embedding their full content.
 
 ## Table of Contents
 
@@ -29,6 +38,8 @@ Determine which CLAUDE.md to audit using this priority order:
 3. `.claude/CLAUDE.md` in the current working directory (alternate, checked if primary absent)
 4. `~/.claude/CLAUDE.md` (global user-level)
 
+If both `CLAUDE.md` and `.claude/CLAUDE.md` exist, audit `CLAUDE.md` (root takes priority) and note that the alternate location was skipped.
+
 Tell the user which file will be audited before continuing. If none of the four locations has a file and no argument was given, stop and ask the user to provide a path.
 
 If a path was given but the file does not exist, stop and report the error clearly.
@@ -37,13 +48,13 @@ If a path was given but the file does not exist, stop and report the error clear
 
 ## Step 2 — Read and measure
 
-Read the target file in full, then collect these metrics:
+Read the target file in full (`Read`), then collect these metrics:
 
 - **Line count** — total lines in the file
 - **Instruction count (estimated)** — count verb-starting bullet points, numbered directives, and bolded imperatives (e.g., `**Always**`, `**Never**`). Acknowledge a ±30–50 variance in your estimate.
 - **Section inventory** — list every `##` heading present
-- **Sensitive data scan** — flag any matches for: `sk-`, `ghp_`, `AKIA`, `xoxb-`, `-----BEGIN`, or a label followed by a long alphanumeric string (e.g., `TOKEN=abc123...`). Report matches verbatim so the user can verify.
-- **Import scan** — detect any `@path/to/file` references in the file. List each one found. Note that imported content counts toward effective instruction load but is not visible in the raw line count.
+- **Sensitive data scan** — use `Grep -nE` on the target file with the pattern `sk-|ghp_|AKIA|xoxb-|-----BEGIN|[A-Z_]+=\w{20,}`. Report each match with its line number and the matched text verbatim so the user can verify. If no matches, report "No secrets found."
+- **Import scan** — detect any `@path/to/file` references in the file. List each one found. For each imported file, attempt to `Read` it and report its line count. If the imported file exceeds 500 lines, skip counting it but include a warning: "import `<path>` has N lines — exceeds 500-line cap, not counted." Sum the counts of all imports under the cap and report as "effective lines (incl. imports): N (approximate, one level deep)." Note that imported content counts toward effective instruction load but is not visible in the raw line count.
 
 Report all five metrics before proceeding to Step 3.
 
@@ -98,13 +109,16 @@ After the table:
 2. **Per-dimension findings** — one bullet per dimension with specific observations
 3. **Top 3 recommendations** — the highest-impact changes, in order
 
-> When Progressive Disclosure scores 0 or 1, include as a Top 3 item: "Use Step 5's rule-file generation to break path-specific content into `.claude/rules/` files."
+> When Progressive Disclosure scores 0 or 1, include as a Top 3 item: "Consider invoking the
+> sibling `memory-tools:path-rules-advisor` skill to break path-specific content into
+> `.claude/rules/` files — it is purpose-built for this workflow. You can also use Step 5's
+> inline rule-file generation as a fallback."
 
 ---
 
 ## Step 5 — Offer an optimized version
 
-Ask the user: "Would you like me to generate an optimized version of this file in the chat?"
+Use `AskUserQuestion` to ask: "Would you like me to generate an optimized version of this file in the chat?" (Yes / No)
 
 If the user says yes, generate the optimized content **in a code block in the chat** (do not write to disk yet). Apply these transformations:
 
@@ -132,17 +146,21 @@ paths:
 - Rule bullet 3
 ```
 
-2. Check if `.claude/rules/` exists. If not, ask: "The `.claude/rules/` directory does not exist. Should I create it?"
-3. Ask: "Should I write this to `.claude/rules/<name>.md`?" Wait for explicit confirmation before writing each file.
+2. Check if `.claude/rules/` exists. If not, use `AskUserQuestion` to ask: "The `.claude/rules/` directory does not exist. Should I create it?" (Yes / No)
+3. Use `AskUserQuestion` to ask: "Should I write this to `.claude/rules/<name>.md`?" (Yes / No) Wait for explicit confirmation before writing each file.
+
+> **Path-rules delegation:** If Progressive Disclosure scored ≤ 1, recommend invoking
+> `memory-tools:path-rules-advisor` instead of manually creating rule files here. Keep the
+> inline flow above as a fallback if the user prefers to stay in this skill.
 
 **After the CLAUDE.md code block, show a separate callout:**
 
 ---
-**To make this optimizer always available in your project**, add the following to your CLAUDE.md
+**To make this skill always available in your project**, add the following to your CLAUDE.md
 (replace `<plugin-dir>` with the path passed to `--plugin-dir` when loading this plugin):
 
 ```md
-@<plugin-dir>/skills/claude-md-optimizer/SKILL.md
+@<plugin-dir>/skills/memory-doctor/SKILL.md
 ```
 ---
 
@@ -152,6 +170,6 @@ If the user says no, stop here.
 
 ## Step 6 — Offer to write the optimized file
 
-After showing the optimized version, ask: "Should I write this to disk? Commit or back up your current CLAUDE.md first — this will overwrite it."
+Use `AskUserQuestion` to ask: "Should I write this to disk? Commit or back up your current CLAUDE.md first — this will overwrite it." (Yes / No)
 
 Wait for an explicit second confirmation before writing. Write only the file that was audited in Step 1.

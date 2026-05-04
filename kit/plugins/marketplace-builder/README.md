@@ -102,5 +102,5 @@ Based on what the repository is missing, the skill can generate:
 
 This plugin evaluates **repository-level marketplace readiness**. For deeper analysis of specific files, use:
 
-- **claude-md-optimizer** -- audit and optimize CLAUDE.md content quality
+- **memory-tools** -- audit and optimize CLAUDE.md content quality
 - **skill-reviewer** -- audit SKILL.md files against best practices

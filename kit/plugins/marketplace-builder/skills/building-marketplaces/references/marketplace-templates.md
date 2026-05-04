@@ -152,7 +152,7 @@ description: <Describe what this skill does in third person. Include "Use when..
 
 ## CLAUDE.md Stub
 
-Generate a minimal stub with section headings and TODO placeholders. Do not fill in content — defer to `claude-md-optimizer` for quality optimization.
+Generate a minimal stub with section headings and TODO placeholders. Do not fill in content — defer to `memory-tools` for quality optimization.
 
 ```markdown
 # CLAUDE.md

@@ -1,0 +1,17 @@
+{
+  "name": "memory-tools",
+  "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-md",
+    "memory",
+    "configuration",
+    "optimization",
+    "best-practices"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/memory-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

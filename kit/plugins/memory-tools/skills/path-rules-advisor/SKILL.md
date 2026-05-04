@@ -105,7 +105,7 @@ Use this mode when the user provides no argument.
 
 **Step 1 — Resolve the CLAUDE.md target**
 
-Use the same priority order as the `claude-md-optimizer` skill:
+Use the same priority order as the `memory-doctor` skill:
 
 1. `CLAUDE.md` in the current working directory
 2. `.claude/CLAUDE.md` in the current working directory

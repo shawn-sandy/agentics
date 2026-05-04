@@ -21,11 +21,12 @@ A plugin combining a command and a skill for the same underlying capability.
 
 **Use case:** Understanding command + skill co-location for the same feature
 
-### claude-md-optimizer
-A skill-only plugin that audits and optimizes CLAUDE.md files.
+### memory-tools
+A skill-only plugin that audits and optimizes CLAUDE.md project memory files.
 
 **Components:**
-- Skill: `claude-md-optimizer` - Audit CLAUDE.md files against best practices
+- Skill: `memory-doctor` - Audit CLAUDE.md / project memory files against best practices
+- Skill: `path-rules-advisor` - Create path-specific rule files in `.claude/rules/`
 
 **Use case:** Understanding skills with broad activation criteria and multi-step output
 

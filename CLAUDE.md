@@ -45,11 +45,11 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-11 plugins in the marketplace (`agentics-kit` v3.0.0):
+11 plugins in the marketplace (`agentics-kit` v3.1.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
-| `claude-md-optimizer` | Skills | Auto-activated CLAUDE.md auditing |
+| `memory-tools` | Skills | Auto-activated CLAUDE.md / project memory auditing |
 | `code-review` | Skills + Agents | Auto-activated code review |
 | `plan-interview` | Commands + Skills | Planning workflow with deep-grill |
 | `skill-reviewer` | Skills | Skill file quality checks |

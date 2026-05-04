@@ -65,7 +65,7 @@ agentics/
 │   └── plugins/                      # Plugin source code (12 plugins)
 │       ├── agent-creator/            # Agent-based plugin scaffolding
 │       ├── agentic-plugin-dev/       # Plugin creation and management
-│       ├── claude-md-optimizer/      # CLAUDE.md audit and optimization
+│       ├── memory-tools/             # CLAUDE.md / project memory audit and optimization
 │       ├── code-review/              # Code review skill
 │       ├── code-simplifier/          # Code smell analysis and refactoring
 │       ├── code-testing-agent/       # Test suggestion and review
@@ -282,25 +282,26 @@ claude --plugin-dir ./kit/plugins/plan-interview
 
 ---
 
-### claude-md-optimizer `v1.6.0`
+### memory-tools `v2.0.0`
 
-Audits and optimizes CLAUDE.md files against Claude Code best practices.
+Audits and optimizes CLAUDE.md project memory files against Claude Code best practices.
 
 **Skills** (activate automatically based on your request):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `claude-md-optimizer` | Optimize, audit, or clean up a CLAUDE.md file — also activates when Claude is ignoring instructions |
+| `memory-doctor` | Optimize, audit, clean up, or diagnose a CLAUDE.md / project memory file — also activates when Claude is ignoring instructions |
 | `path-rules-advisor` | Create path-specific rules, organize rules by file type or directory, or check if the project needs scoped rules in `.claude/rules/` |
 
 ```bash
-claude --plugin-dir ./kit/plugins/claude-md-optimizer
+claude --plugin-dir ./kit/plugins/memory-tools
 # "Audit my CLAUDE.md file"
 # "My Claude is ignoring my instructions — what's wrong?"
+# "Diagnose my project memory"
 # "Create path-specific rules for my src/ directory"
 ```
 
-[View Plugin Documentation](./kit/plugins/claude-md-optimizer/README.md)
+[View Plugin Documentation](./kit/plugins/memory-tools/README.md)
 
 ---
 
@@ -523,7 +524,7 @@ Register the marketplace and install plugins by name:
 /plugin marketplace add shawn-sandy/agentics
 /plugin install code-review@agentics-kit
 /plugin install plan-interview@agentics-kit
-/plugin install claude-md-optimizer@agentics-kit
+/plugin install memory-tools@agentics-kit
 /plugin install wcag-compliance-reviewer@agentics-kit
 /plugin install skill-reviewer@agentics-kit
 /plugin install code-testing-agent@agentics-kit
@@ -616,7 +617,7 @@ Add your plugin to `kit/.claude-plugin/marketplace.json`:
 |--------|---------|------------|
 | code-review | v3.2.0 | 1 skill, 1 agent |
 | plan-interview | v1.14.5 | 7 commands, 4 skills |
-| claude-md-optimizer | v1.6.0 | 2 skills |
+| memory-tools | v2.0.0 | 2 skills |
 | wcag-compliance-reviewer | v1.2.0 | 1 skill |
 | skill-reviewer | v1.6.0 | 4 skills |
 | code-testing-agent | v3.2.0 | 4 skills |

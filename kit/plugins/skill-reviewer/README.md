@@ -11,7 +11,7 @@ The Skill Reviewer provides four skills:
 3. **running-tests** — Adaptive skill that identifies changed files, finds related test files, detects the test framework, runs tests via Bash, and reports pass/fail/error counts. Also detects missing test files and advises on what to create.
 4. **auditing-allowed-tools** — Audits a SKILL.md to recommend (or patch) the minimal `allowed-tools` frontmatter it needs so users aren't prompted for permission mid-run. Also parses Claude Code session JSONL transcripts to report what tools Claude actually invoked, and can cross-reference a skill against a real session.
 
-This plugin is the counterpart to `claude-md-optimizer` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
+This plugin is the counterpart to `memory-tools` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
 
 All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
 
