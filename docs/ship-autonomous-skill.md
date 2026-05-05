@@ -28,7 +28,7 @@
 
 ## How it works
 
-**Pre-flight (Step 1)** runs three guards before any mutation. `git status --porcelain` confirms there are uncommitted changes — if the tree is clean the skill stops immediately with "Nothing to ship." `git ls-files --others --modified --exclude-standard docs/plans/` surfaces uncommitted plan files and asks the user to include, stash, or abort. `gh auth status` verifies GitHub CLI authentication. Only when all three guards pass does execution continue.
+**Pre-flight (Step 1)** runs four guards before any mutation. `git status --porcelain` confirms there are uncommitted changes — if the tree is clean the skill stops immediately with "Nothing to ship." `git ls-files --others --modified --exclude-standard docs/plans/` surfaces uncommitted plan files and asks the user to include, stash, or abort. `git branch --show-current` checks for a detached HEAD — if empty, the skill stops with "Cannot ship: repository is in detached HEAD state." `gh auth status` verifies GitHub CLI authentication. Only when all four guards pass does execution continue.
 
 **Branching (Step 2)** is fully delegated to `git-agent:branch-agent`. When the current branch is `main`, `master`, or the repository default, the skill invokes `branch-agent` via the `Skill` tool, which auto-generates a `<type>/<scope>-<desc>` name from uncommitted working-tree changes and creates the branch from `origin/HEAD` with no upstream tracking. If the user is already on a feature branch, the step is skipped.
 
@@ -42,7 +42,7 @@
 
 **Review request (Step 7)** fires when all checks are green: `gh pr ready` (if the PR was opened as draft) and a comment `"CI green, ready for review"`. Using a comment rather than assigning reviewers avoids guessing who should review and works without CODEOWNERS.
 
-**PostToolUse hook** extends the existing `Write|Edit` hook in `.claude/settings.json` with a shell check that outputs a warning whenever `git status --porcelain docs/plans/` reports uncommitted plan files. This keeps plan-hygiene visible in real time without blocking the workflow.
+**PostToolUse hook** extends the existing `Write|Edit` hook in `.claude/settings.json` with a shell check that outputs a warning whenever `git ls-files --others --modified --exclude-standard docs/plans/` reports uncommitted plan files. This keeps plan-hygiene visible in real time without blocking the workflow.
 
 ## How to use it
 
@@ -55,7 +55,7 @@ The skill lives at `.claude/skills/ship-autonomous/SKILL.md` and is loaded from 
 - "auto-fix CI failures"
 - "ship it and fix what breaks"
 
-The skill is also available as a built-in via the `ship-autonomous` skill in settings; see the [system-level skill listing](../CLAUDE.md) for the registered path.
+Load it by starting Claude Code from the project root — `.claude/skills/` is auto-discovered.
 
 ## Commit history
 
