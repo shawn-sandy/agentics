@@ -29,11 +29,11 @@
 
 **Step 1 — Pre-flight guards.** Before any mutation, the skill checks four conditions: (1) the working tree must be dirty (`git status --porcelain`); (2) if uncommitted plan files exist in `docs/plans/`, the user is asked via `AskUserQuestion` whether to include them, stash them, or abort; (3) the repository must not be in detached HEAD state; and (4) `gh auth status` must succeed. Any failed check stops the skill immediately.
 
-**Step 2 — Branch.** If the current branch is the default branch (`main`/`master` or whatever `origin/HEAD` resolves to), the skill delegates to `git-agent:branch-agent`. That skill auto-generates a `<type>/<scope>-<desc>` slug from the working tree diff and creates a new branch from `origin/HEAD --no-track`. If a feature branch is already checked out, the skill continues without branching.
+**Step 2 — Branch.** If the current branch is the default branch (`main`/`master` or whatever `origin/HEAD` resolves to), the skill delegates to `git-agent:branch-agent`. That skill auto-generates a `<type>/<scope>-<desc>-YYYY-MM-DD` slug from the working tree diff (the date suffix is always appended so branches sort chronologically) and creates a new branch from `origin/HEAD --no-track`. If a feature branch is already checked out, the skill continues without branching.
 
 **Step 3 — Commit.** The skill delegates to `git-agent:commit-agent`, which stages all changes, analyses the diff, writes a conventional commit message, and commits. If the pre-commit hook fails, the error is propagated verbatim and the skill stops — `--no-verify` is never used.
 
-**Step 4 — Open PR.** `git-agent:pr-agent` handles the push, checks for an existing open PR (skips creation if one is already open, creates a new one if the last was merged or closed), generates a Summary/Changes body from `git log base..HEAD`, and opens the PR via `gh pr create`. The resulting PR URL is captured for subsequent steps.
+**Step 4 — Open PR.** `git-agent:pr-agent` first checks for an existing open PR (`gh pr view --json state,url`) and stops immediately if one is already open. If the last PR was merged, closed, or none exists, it then pushes the branch (sets upstream with `-u` if not yet tracked), generates a Summary/Changes body from `git log base..HEAD`, and opens the PR via `gh pr create`. The resulting PR URL is captured for subsequent steps.
 
 **Step 5 — Poll CI.** `gh pr checks <pr-url> --watch --fail-fast=false` blocks until all checks reach a terminal state. The structured JSON output is then retrieved and parsed with `jq`. If all conclusions are `SUCCESS` or `SKIPPED`, the skill jumps straight to Step 7. `CANCELLED` or `TIMED_OUT` conclusions escalate to the user.
 
@@ -56,8 +56,7 @@ The skill activates automatically when the user asks to autonomously ship, ship 
 **Allowed tools declared in frontmatter:**
 
 ```yaml
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *),
-               Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion
+allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion
 ```
 
 The skill is installed at `.claude/skills/ship-autonomous/SKILL.md` (not packaged as a plugin), following the precedent of `.claude/skills/validate-plugin/`.
