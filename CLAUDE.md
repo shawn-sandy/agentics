@@ -45,7 +45,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-12 plugins in the marketplace (`agentics-kit` v3.1.0):
+13 plugins in the marketplace (`agentics-kit` v3.2.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -61,6 +61,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `marketplace-builder` | Skills | Marketplace scaffolding |
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
 | `react-perf-analyzer` | Skills | React performance analysis |
+| `agent-reviewer` | Skills | Subagent definition file auditing |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference

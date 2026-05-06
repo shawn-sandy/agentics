@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -256,6 +256,27 @@
         "code-quality",
         "simplification",
         "optimization"
+      ]
+    },
+    {
+      "name": "agent-reviewer",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/agent-reviewer"
+      },
+      "version": "1.0.0",
+      "description": "Review and audit Claude Code subagent definition files (agents/*.md) against official best practices — score frontmatter, tool configuration, description quality, system prompt quality, and security posture",
+      "category": "development",
+      "tags": [
+        "agents",
+        "sub-agents",
+        "best-practices",
+        "agent-review",
+        "quality-audit",
+        "security",
+        "plugin-authoring",
+        "claude-code"
       ]
     }
   ]
