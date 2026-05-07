@@ -1,14 +1,6 @@
 ---
 name: reviewing-agents
-description: >
-  Reviews Claude Code subagent definition files (agents/*.md) against official
-  best practices from code.claude.com/docs/en/sub-agents. Use when the user asks
-  to review, audit, score, or check the quality of an agent definition file --
-  not SKILL.md, CLAUDE.md, or general markdown. Use when the user says "review my
-  agent", "audit this agent", "check agent quality", "score my agent definition",
-  "does this agent follow best practices", or "review this subagent". Does NOT
-  create or scaffold new agents -- use agent-creator for that. Does NOT review
-  SKILL.md files -- use skill-reviewer for that.
+description: "Use when the user asks to review, audit, score, or check an agent definition file (agents/*.md) — or says 'review my agent', 'audit this agent', 'check agent quality', 'score my agent definition', or 'does this agent follow best practices'. Does NOT scaffold agents — use agent-creator. Does NOT review SKILL.md — use skill-reviewer."
 allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 

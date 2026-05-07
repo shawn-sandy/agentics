@@ -1,12 +1,6 @@
 ---
 name: code-simplifier
-description: >
-  Analyzes code for structural quality issues, code smells, and optimization
-  opportunities. Use when the user asks to simplify code, find code smells,
-  reduce complexity, identify refactoring opportunities, check for dead code,
-  clean up messy code, or optimize structure. Creates a refactoring plan and
-  applies approved changes. Does not cover bugs, security vulnerabilities, or
-  test coverage — use code-review-agent or code-testing-agent for those.
+description: "Use when the user asks to simplify code, find code smells, reduce complexity, identify refactoring opportunities, check for dead code, clean up messy code, or optimize code structure. Creates a refactoring plan and applies approved changes. Does not cover bugs, security vulnerabilities, or test coverage — use code-review-agent or code-testing-agent for those."
 allowed-tools: AskUserQuestion, Bash(git *), Edit, EnterPlanMode, ExitPlanMode, Glob, Grep, Read, Write
 ---
 

@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v3.6.2 — Description cleanup and scope boundaries
+
+- Collapsed `branch-agent` and `ship` skill descriptions from multi-line YAML blocks to single-line inline strings starting with "Use when..." for reliable auto-activation
+- Added explicit "Does NOT..." scope clauses to `branch-agent` and `ship` descriptions
+- Dropped implementation-detail tags (`subagents`, `background`, `slash-commands`) from marketplace entry; these describe internals rather than user search intent
+
 ## v3.6.1 — Conditional ExitPlanMode detection
 
 - All four git-mutating skills (`branch-agent`, `commit-agent`, `pr-agent`,

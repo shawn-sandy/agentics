@@ -7,16 +7,7 @@ description: >
   documentation, running a scheduled weekly documentation sweep, or generating
   docs for all completed plans at once. Not intended for documenting a single
   plan — use the documenting-plans skill directly for that.
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
-  - Write
-  - Edit
-  - TodoWrite
-  - Skill
-  - Agent
+tools: Read, Glob, Grep, Bash, Write, Edit, TodoWrite, Skill, Agent
 model: sonnet
 maxTurns: 50
 ---
