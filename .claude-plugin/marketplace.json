@@ -36,7 +36,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-review"
       },
-      "version": "3.2.0",
+      "version": "3.2.1",
       "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
       "tags": [
@@ -73,7 +73,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
       "tags": [
@@ -95,7 +95,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "1.6.1",
+      "version": "1.6.2",
       "description": "Review and plan Claude Code skills, run tests for changed files, and audit skill permissions \u2014 audit SKILL.md files, scaffold new skills, verify test coverage, and recommend minimal allowed-tools declarations",
       "category": "development",
       "tags": [
@@ -117,7 +117,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.2.1",
+      "version": "3.2.2",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent \u2014 not arbitrary coverage",
       "category": "testing",
       "tags": [
@@ -160,7 +160,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agent-creator"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "Scaffold Claude Code agent-based plugins with guided workflows",
       "category": "development",
       "tags": [
@@ -199,7 +199,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/marketplace-builder"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure \u2014 audit readiness, generate missing files, and guide marketplace setup",
       "category": "development",
       "tags": [
@@ -220,7 +220,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agentic-plugin-dev"
       },
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Create, manage, and validate Claude Code plugins \u2014 scaffold new plugins, manage marketplace entries, and audit plugin structure",
       "category": "development",
       "tags": [

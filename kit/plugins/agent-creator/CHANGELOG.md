@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2026-05-07
+
+### Changed
+
+- Collapsed `generating-agents` skill description from inline preamble+trigger to single-line string starting with "Use when..." for reliable auto-activation
+
 ## [1.1.0] - 2026-04-09
 
 ### Changed
