@@ -1,12 +1,7 @@
 ---
 name: branch-agent
 description: "Use when the user asks to create a new branch, start a branch, branch off main, or make a fresh branch. Creates from origin/<default> with no upstream tracking. Does not commit, push, or create PRs — use commit-agent or pr-agent for that."
-allowed-tools:
-  - Bash(git *)
-  - Bash(date *)
-  - ToolSearch
-  - AskUserQuestion
-  - ExitPlanMode
+allowed-tools: Bash(git *), Bash(date *), ToolSearch, AskUserQuestion, ExitPlanMode
 argument-hint: "[branch-name] (optional) — omit to auto-generate from uncommitted changes using <type>/<scope>-<description>"
 disable-model-invocation: true
 model: Haiku

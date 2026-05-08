@@ -1,3 +1,8 @@
+---
+status: implemented
+created: 2026-05-07
+---
+
 # Plan: Plugin & Skill Usability / Adoption Improvements
 
 ## Context
@@ -177,16 +182,18 @@ None — scope is clear. Ready to implement on approval.
 ### Open Risks & Concerns
 
 1. **Activation verification gap** — "Test 2–3 prompts per skill" is the entire quality gate for Phase 1. Without concrete example prompts or pass/fail criteria per skill, a rewrite can pass verification and still silently fail in production.
-2. **Missing CHANGELOG + version bumps** — Six or more plugins will have content or metadata changes. Per `marketplace.md`, these require CHANGELOG entries and PATCH version bumps. The plan has no mention of this.
-3. **README format spec not in plan** — Chosen depth (short paragraph + examples) isn't captured in Phase 2 steps. Implementer reading cold won't know the format.
-4. **No canonical scope statement reference** — Phase 1.2 says to match existing conventions but doesn't name a reference skill.
+2. ~~**Missing CHANGELOG + version bumps**~~ — Resolved: added as Phase 5 in the plan body.
+3. ~~**README format spec not in plan**~~ — Resolved: Phase 2.4 now captures the format (short paragraph + one example invocation per capability).
+4. ~~**No canonical scope statement reference**~~ — Resolved: Phase 1.2 names `skill-reviewer` as the canonical reference.
 
-### Recommended Amendments Before Implementation
+### Amendments Applied Before Implementation
 
-1. Update Phase 1.2 — name `skill-reviewer` as the canonical reference for scope statement format
-2. Update Phase 2 — add: "Each new capability entry = short paragraph + one example invocation"
-3. Add Phase 5 — CHANGELOG + version bump: for each modified plugin, add a PATCH CHANGELOG entry and bump version in `marketplace.json`
-4. Strengthen Verification step 3 — add grep check: `grep -rn "^description:" kit/plugins/*/skills/*/SKILL.md | grep -v "Use when"` — any output indicates a missed rewrite
+All four recommendations from the interview were incorporated into the plan body before implementation began:
+
+1. Phase 1.2 updated — `skill-reviewer` named as canonical scope statement reference
+2. Phase 2.4 updated — format spec added: "short paragraph + one example invocation per capability"
+3. Phase 5 added — CHANGELOG + version bump steps for all affected plugins
+4. Verification strengthened — grep check added to confirm no missed description rewrites
 
 ### Simplification Opportunities
 

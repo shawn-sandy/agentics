@@ -28,7 +28,7 @@ claude --plugin-dir ./kit/plugins/code-review
 
 The agentics project provides:
 
-- **Example Plugins** — 12 reference implementations demonstrating Claude Code plugin structure
+- **Example Plugins** — 13 reference implementations demonstrating Claude Code plugin structure
 - **Test Marketplace** — `agentics-kit` marketplace for testing plugin discovery and installation
 - **Plugin Development Guide** — Documentation and patterns for creating your own plugins
 
@@ -62,7 +62,7 @@ agentics/
 ├── .claude/
 │   └── rules/                        # Scoped authoring rules (plugin patterns, marketplace, testing)
 ├── kit/
-│   └── plugins/                      # Plugin source code (12 plugins)
+│   └── plugins/                      # Plugin source code (13 plugins)
 │       ├── agent-creator/            # Agent-based plugin scaffolding
 │       ├── agentic-plugin-dev/       # Plugin creation and management
 │       ├── memory-tools/             # CLAUDE.md / project memory audit and optimization
@@ -492,6 +492,8 @@ claude --plugin-dir ./kit/plugins/agentic-plugin-dev
 ```
 
 [View Plugin Documentation](./kit/plugins/agentic-plugin-dev/README.md)
+
+---
 
 ### code-simplifier `v1.0.1`
 
