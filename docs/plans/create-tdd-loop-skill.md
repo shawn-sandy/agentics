@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-05-08
+---
+
 # Plan: tdd-loop skill + accessible Tabs demo
 
 ## Context
