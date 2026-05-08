@@ -9,7 +9,7 @@ This file provides guidance to Claude Code when working with this repository.
 Two distinct purposes:
 
 1. **Example Plugins** — Reference implementations in `kit/plugins/` demonstrating Claude Code plugin structure
-2. **Marketplace Infrastructure** — (Planned) API and CLI for discovering and serving these plugins
+2. **Marketplace Infrastructure** — API and CLI for discovering and serving these plugins
 
 ## Tech Stack
 

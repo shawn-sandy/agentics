@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-05-07
+
+### Changed
+
+- Reordered `wcag-compliance-reviewer` skill description to start with "Use when..." for reliable auto-activation
+
 ## [1.2.0] - 2026-04-09
 
 ### Changed

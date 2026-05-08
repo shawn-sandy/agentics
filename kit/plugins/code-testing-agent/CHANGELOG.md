@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.2.2] - 2026-05-07
+
+### Changed
+
+- Reordered `reviewing-tests` skill description to start with "Use when..." for reliable auto-activation
+
+## [3.2.1] - 2026-05-07
+
+### Changed
+
+- Collapsed `code-testing-agent`, `running-tests`, and `tdd-fix` skill descriptions from multi-line YAML to single-line inline strings starting with "Use when..." for reliable auto-activation
+
 ## [3.2.0] - 2026-04-14
 
 ### Added

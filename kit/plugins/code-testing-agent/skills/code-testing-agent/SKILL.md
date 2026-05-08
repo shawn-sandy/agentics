@@ -1,12 +1,6 @@
 ---
 name: code-testing-agent
-description:
-  Suggests targeted, meaningful tests for code based on actual behavior and
-  intent. Use when the user asks to suggest tests, recommend tests, identify
-  what to test, review testability, or find untested behavior — or says "what
-  tests should I write", "test this code", "what would you test here", or "help
-  me test this feature". Provides test suggestions with rationale and can write
-  test files on request — does not run tests or perform code quality reviews.
+description: "Use when the user asks to suggest tests, recommend tests, identify what to test, review testability, or find untested behavior — or says 'what tests should I write', 'test this code', 'what would you test here', or 'help me test this feature'. Suggests targeted tests with rationale and can write test files on request. Does not run tests — use running-tests. Does not review code quality — use code-review-agent."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite, Write
 ---
 

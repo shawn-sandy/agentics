@@ -1,11 +1,6 @@
 ---
 name: running-tests
-description:
-  Detects the test framework, runs scoped tests, and reports pass/fail results
-  with missing-test advisories. Use when the user asks to "run tests",
-  "check if tests pass", "test this file", "verify my changes", or "are there
-  missing tests". Does not review test quality — use reviewing-tests for that.
-  Does not suggest tests — use code-testing-agent for that.
+description: "Use when the user asks to run tests, check if tests pass, test a specific file, verify their changes, or find missing tests. Detects the framework, runs scoped tests, and reports pass/fail results. Does not review test quality — use reviewing-tests. Does not suggest tests — use code-testing-agent."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite
 ---
 

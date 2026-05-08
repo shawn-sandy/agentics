@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.1] - 2026-05-07
+
+### Changed
+
+- Reordered `code-review-agent` skill description to start with "Use when..." for reliable auto-activation
+
 ## [3.2.0] - 2026-04-09
 
 ### Changed

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2026-05-07
+
+### Changed
+
+- Collapsed `code-simplifier` skill description from multi-line YAML block to single-line inline string; "Use when..." trigger now first for reliable auto-activation
+
 ## [1.0.0] - 2026-04-30
 
 ### Added

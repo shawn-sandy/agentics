@@ -28,7 +28,7 @@ claude --plugin-dir ./kit/plugins/code-review
 
 The agentics project provides:
 
-- **Example Plugins** — 12 reference implementations demonstrating Claude Code plugin structure
+- **Example Plugins** — 13 reference implementations demonstrating Claude Code plugin structure
 - **Test Marketplace** — `agentics-kit` marketplace for testing plugin discovery and installation
 - **Plugin Development Guide** — Documentation and patterns for creating your own plugins
 
@@ -62,7 +62,7 @@ agentics/
 ├── .claude/
 │   └── rules/                        # Scoped authoring rules (plugin patterns, marketplace, testing)
 ├── kit/
-│   └── plugins/                      # Plugin source code (12 plugins)
+│   └── plugins/                      # Plugin source code (13 plugins)
 │       ├── agent-creator/            # Agent-based plugin scaffolding
 │       ├── agentic-plugin-dev/       # Plugin creation and management
 │       ├── memory-tools/             # CLAUDE.md / project memory audit and optimization
@@ -225,7 +225,7 @@ Most plugins use skills (automatic activation). Commands are for actions that ne
 
 ## Plugins
 
-### code-review `v3.2.0`
+### code-review `v3.2.1`
 
 Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions.
 
@@ -245,7 +245,7 @@ claude --plugin-dir ./kit/plugins/code-review
 
 ---
 
-### plan-interview `v1.14.5`
+### plan-interview `v1.14.6`
 
 Stress-tests implementation plans with structured multi-round interviews before coding begins.
 
@@ -282,7 +282,7 @@ claude --plugin-dir ./kit/plugins/plan-interview
 
 ---
 
-### memory-tools `v2.0.0`
+### memory-tools `v2.0.1`
 
 Audits and optimizes CLAUDE.md project memory files against Claude Code best practices.
 
@@ -305,7 +305,7 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ---
 
-### wcag-compliance-reviewer `v1.2.0`
+### wcag-compliance-reviewer `v1.2.1`
 
 Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance.
 
@@ -325,7 +325,7 @@ claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 
 ---
 
-### skill-reviewer `v1.6.0`
+### skill-reviewer `v1.6.2`
 
 Reviews and plans Claude Code skills, runs tests for changed files, and audits skill permissions.
 
@@ -350,7 +350,7 @@ claude --plugin-dir ./kit/plugins/skill-reviewer
 
 ---
 
-### code-testing-agent `v3.2.0`
+### code-testing-agent `v3.2.2`
 
 Analyzes code and suggests specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage.
 
@@ -374,7 +374,7 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 ---
 
-### git-agent `v3.6.1`
+### git-agent `v3.6.2`
 
 Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship).
 
@@ -416,7 +416,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 
 ---
 
-### agent-creator `v1.1.0`
+### agent-creator `v1.1.1`
 
 Scaffolds Claude Code agent-based plugins with guided workflows.
 
@@ -454,7 +454,7 @@ claude --plugin-dir ./kit/plugins/react-perf-analyzer
 
 ---
 
-### marketplace-builder `v1.1.0`
+### marketplace-builder `v1.1.1`
 
 Evaluates a repository and scaffolds Claude Code marketplace infrastructure.
 
@@ -473,7 +473,7 @@ claude --plugin-dir ./kit/plugins/marketplace-builder
 
 ---
 
-### agentic-plugin-dev `v1.1.0`
+### agentic-plugin-dev `v1.2.1`
 
 Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure.
 
@@ -493,7 +493,9 @@ claude --plugin-dir ./kit/plugins/agentic-plugin-dev
 
 [View Plugin Documentation](./kit/plugins/agentic-plugin-dev/README.md)
 
-### code-simplifier `v1.0.0`
+---
+
+### code-simplifier `v1.0.1`
 
 Analyze code for structural quality issues, code smells, and optimization opportunities — dead code, complexity, god classes, duplication, coupling, and performance anti-patterns.
 
@@ -511,6 +513,28 @@ claude --plugin-dir ./kit/plugins/code-simplifier
 ```
 
 [View Plugin Documentation](./kit/plugins/code-simplifier/README.md)
+
+---
+
+### agent-reviewer `v1.0.1`
+
+Performs a structured, scored audit of Claude Code subagent definition files (`agents/*.md`) against official best practices — covering frontmatter compliance, tool configuration, description quality, system prompt quality, and security & isolation. Produces a graded report (Excellent / Good / Needs Work / Rewrite) with a unified diff of suggested corrections.
+
+**Skills** (activate automatically based on your request):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `reviewing-agents` | Review, audit, score, or check an agent definition file against best practices |
+
+```bash
+claude --plugin-dir ./kit/plugins/agent-reviewer
+# "Review my agent definition at agents/agent-commit.md"
+# "Audit this agent file"
+# "Score my agent definition"
+# "Does this agent follow best practices?"
+```
+
+[View Plugin Documentation](./kit/plugins/agent-reviewer/README.md)
 
 ---
 
@@ -534,6 +558,7 @@ Register the marketplace and install plugins by name:
 /plugin install marketplace-builder@agentics-kit
 /plugin install agentic-plugin-dev@agentics-kit
 /plugin install code-simplifier@agentics-kit
+/plugin install agent-reviewer@agentics-kit
 ```
 
 ## Development
@@ -608,25 +633,26 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 
 ### Current Features
 
-- 12 example plugin implementations covering commands, skills, and agents
-- `agentics-kit` marketplace v3.1.0 with `git-subdir` sources for sparse cloning
+- 13 example plugin implementations covering commands, skills, and agents
+- `agentics-kit` marketplace v3.2.0 with `git-subdir` sources for sparse cloning
 - Plugin structure documentation and patterns
 - Community infrastructure: contributing guide, code of conduct, security policy, issue templates
 
 | Plugin | Version | Components |
 |--------|---------|------------|
-| code-review | v3.2.0 | 1 skill, 1 agent |
-| plan-interview | v1.14.5 | 7 commands, 4 skills |
-| memory-tools | v2.0.0 | 2 skills |
-| wcag-compliance-reviewer | v1.2.0 | 1 skill |
-| skill-reviewer | v1.6.0 | 4 skills |
-| code-testing-agent | v3.2.0 | 4 skills |
-| git-agent | v3.6.1 | 3 commands, 4 skills, 3 agents |
-| agent-creator | v1.1.0 | 1 skill |
+| code-review | v3.2.1 | 1 skill, 1 agent |
+| plan-interview | v1.14.6 | 7 commands, 4 skills |
+| memory-tools | v2.0.1 | 2 skills |
+| wcag-compliance-reviewer | v1.2.1 | 1 skill |
+| skill-reviewer | v1.6.2 | 4 skills |
+| code-testing-agent | v3.2.2 | 4 skills |
+| git-agent | v3.6.2 | 3 commands, 4 skills, 3 agents |
+| agent-creator | v1.1.1 | 1 skill |
 | react-perf-analyzer | v1.2.0 | 1 command, 1 skill |
-| marketplace-builder | v1.1.0 | 1 skill |
-| agentic-plugin-dev | v1.1.0 | 3 skills |
-| code-simplifier | v1.0.0 | 1 skill |
+| marketplace-builder | v1.1.1 | 1 skill |
+| agentic-plugin-dev | v1.2.1 | 3 skills |
+| code-simplifier | v1.0.1 | 1 skill |
+| agent-reviewer | v1.0.1 | 1 skill |
 
 ### Planned Features
 

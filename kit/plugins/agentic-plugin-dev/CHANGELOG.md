@@ -5,6 +5,12 @@ All notable changes to this plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-05-07
+
+### Changed
+
+- Reordered `plugin-creator`, `plugin-manager`, and `plugin-validator` skill descriptions to start with "Use when..." for reliable auto-activation (preamble sentences moved to second position)
+
 ## [1.2.0] - 2026-05-01
 
 ### Changed

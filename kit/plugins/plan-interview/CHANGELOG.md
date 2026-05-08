@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.6] - 2026-05-07
+
+### Changed
+
+- Collapsed `deep-grill` and `plan-interview` skill descriptions from multi-line YAML to single-line inline strings starting with "Use when..." for reliable auto-activation
+- Converted `plan-documenter` agent `tools:` from YAML list format to inline CSV, matching all other agent definitions in the plugin
+
 ## [1.14.5] - 2026-04-20
 
 ### Changed

@@ -1,6 +1,6 @@
 ---
 name: plugin-validator
-description: Validates Claude Code plugin structure against the official spec. Use when the user asks to "validate a plugin", "check plugin structure", "audit a plugin", "verify plugin setup", or "is this plugin valid". Covers manifest validation, directory structure, and component frontmatter checks. Does NOT review skill quality or content (use skill-reviewer). Does NOT review agent quality (use agent-creator).
+description: "Use when the user asks to validate a plugin, check plugin structure, audit a plugin, verify plugin setup, or check if a plugin is valid. Validates against the official spec: manifest fields, directory structure, and component frontmatter. Does NOT review skill quality (use skill-reviewer). Does NOT review agent quality (use agent-reviewer)."
 allowed-tools: AskUserQuestion, Glob, Read
 ---
 

@@ -2,13 +2,13 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
   "version": "3.2.0",
-  "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
+  "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
     "email": "shawnsandy04@gmail.com"
   },
   "metadata": {
-    "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization"
+    "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization"
   },
   "plugins": [
     {
@@ -18,7 +18,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/memory-tools"
       },
-      "version": "2.0.0",
+      "version": "2.0.1",
       "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
       "category": "development",
       "tags": [
@@ -36,7 +36,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-review"
       },
-      "version": "3.2.0",
+      "version": "3.2.1",
       "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
       "tags": [
@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "1.14.5",
+      "version": "1.14.6",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
       "tags": [
@@ -73,7 +73,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
       "tags": [
@@ -95,8 +95,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "1.6.0",
-      "description": "Review and plan Claude Code skills, run tests for changed files, and audit skill permissions — audit SKILL.md files, scaffold new skills, verify test coverage, and recommend minimal allowed-tools declarations",
+      "version": "1.6.2",
+      "description": "Review and plan Claude Code skills, run tests for changed files, and audit skill permissions \u2014 audit SKILL.md files, scaffold new skills, verify test coverage, and recommend minimal allowed-tools declarations",
       "category": "development",
       "tags": [
         "skills",
@@ -106,11 +106,8 @@
         "quality-audit",
         "skill-planning",
         "design-patterns",
-        "claude-code",
-        "running-tests",
         "allowed-tools",
-        "permissions",
-        "session-audit"
+        "permissions"
       ]
     },
     {
@@ -120,8 +117,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.2.0",
-      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
+      "version": "3.2.2",
+      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent \u2014 not arbitrary coverage",
       "category": "testing",
       "tags": [
         "testing",
@@ -141,8 +138,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.6.1",
-      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
+      "version": "3.6.2",
+      "description": "Automated git workflow \u2014 create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
         "git",
@@ -153,10 +150,7 @@
         "pull-request",
         "conventional-commits",
         "automation",
-        "ship",
-        "subagents",
-        "background",
-        "slash-commands"
+        "ship"
       ]
     },
     {
@@ -166,7 +160,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agent-creator"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "Scaffold Claude Code agent-based plugins with guided workflows",
       "category": "development",
       "tags": [
@@ -185,7 +179,7 @@
         "path": "kit/plugins/react-perf-analyzer"
       },
       "version": "1.2.0",
-      "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores — produces a heuristic report with recommendations",
+      "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores \u2014 produces a heuristic report with recommendations",
       "category": "testing",
       "tags": [
         "react",
@@ -205,8 +199,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/marketplace-builder"
       },
-      "version": "1.1.0",
-      "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure — audit readiness, generate missing files, and guide marketplace setup",
+      "version": "1.1.1",
+      "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure \u2014 audit readiness, generate missing files, and guide marketplace setup",
       "category": "development",
       "tags": [
         "marketplace",
@@ -226,8 +220,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agentic-plugin-dev"
       },
-      "version": "1.2.0",
-      "description": "Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure",
+      "version": "1.2.1",
+      "description": "Create, manage, and validate Claude Code plugins \u2014 scaffold new plugins, manage marketplace entries, and audit plugin structure",
       "category": "development",
       "tags": [
         "plugin-authoring",
@@ -245,8 +239,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-simplifier"
       },
-      "version": "1.0.0",
-      "description": "Analyze code for structural quality issues, code smells, and optimization opportunities — dead code, complexity, god classes, duplication, coupling, and performance anti-patterns",
+      "version": "1.0.1",
+      "description": "Analyze code for structural quality issues, code smells, and optimization opportunities \u2014 dead code, complexity, god classes, duplication, coupling, and performance anti-patterns",
       "category": "development",
       "tags": [
         "code-smells",
@@ -265,8 +259,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/agent-reviewer"
       },
-      "version": "1.0.0",
-      "description": "Review and audit Claude Code subagent definition files (agents/*.md) against official best practices — score frontmatter, tool configuration, description quality, system prompt quality, and security posture",
+      "version": "1.0.1",
+      "description": "Review and audit Claude Code subagent definition files (agents/*.md) against official best practices \u2014 score frontmatter, tool configuration, description quality, system prompt quality, and security posture",
       "category": "development",
       "tags": [
         "agents",
