@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.3.0] - 2026-05-08
+
+### Added
+
+- New skill: `tdd-loop` — test-first feature dev with a bounded autonomous implementation loop
+- Given a feature description, writes a comprehensive failing test suite (red phase), commits it as `test:`, then loops hypothesis → edit → re-run up to 20 iterations until green
+- Each iteration logs a one-sentence hypothesis in the shared iteration-log format (see `references/tdd-log-format.md`)
+- EARLY_GREEN guard: stops if tests pass in iteration 1 (likely too lenient or pre-implemented) — requires human review before committing
+- Test-edit escape hatch: one test correction allowed per loop run, logged loudly, costs 2 iterations against the cap
+- Hard stop at 20 impl iterations or 5 gate-fix iterations: no commit or PR created; branch left intact for manual inspection
+- Quality gates (Step 5): typecheck + lint + full regression sweep, each failure triggers a separate gate-fix loop capped at 5
+- Two-commit outcome: `test: …` followed by `feat: …` on the branch for clean reviewer experience
+- PR body includes the full `## TDD iterations` table and optional `## Gate fixes` section
+- Shared iteration-log format in `references/tdd-log-format.md` (to be backported to `tdd-fix` in a follow-up)
+
 ## [3.2.2] - 2026-05-07
 
 ### Changed

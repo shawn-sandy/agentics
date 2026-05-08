@@ -53,7 +53,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `code-review` | Skills + Agents | Auto-activated code review |
 | `plan-interview` | Commands + Skills | Planning workflow with deep-grill |
 | `skill-reviewer` | Skills | Skill file quality checks |
-| `code-testing-agent` | Skills + Agents | Test suggestion and review |
+| `code-testing-agent` | Skills + Agents | Test suggestion, review, tdd-fix (bug), tdd-loop (feature) |
 | `git-agent` | Skills | Branch creation, commit, PR, and ship workflows |
 | `agent-creator` | Agents | Plugin scaffolding agent |
 | `agentic-plugin-dev` | Skills + Commands | Plugin development toolkit |

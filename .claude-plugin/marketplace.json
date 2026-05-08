@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -117,7 +117,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.2.2",
+      "version": "3.3.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent \u2014 not arbitrary coverage",
       "category": "testing",
       "tags": [
