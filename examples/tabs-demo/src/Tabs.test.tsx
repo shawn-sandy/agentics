@@ -18,7 +18,7 @@ describe("Tabs — criterion 1: structure", () => {
     render(<Tabs tabs={basicTabs} defaultTab="t1" />);
     expect(screen.getByRole("tablist")).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(3);
-    expect(screen.getAllByRole("tabpanel")).toHaveLength(3);
+    expect(screen.getAllByRole("tabpanel", { hidden: true })).toHaveLength(3);
   });
 });
 
