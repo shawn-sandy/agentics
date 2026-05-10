@@ -14,7 +14,7 @@
 - Added one "agentic" example to each trigger block in the plugin `README.md` (`Stress-test my agentic plan`, `Deep grill my agentic plan`, `Check the status of my agentic plan`).
 - Bumped the plugin from v1.14.2 → v1.14.3 (PATCH), then refined the phrasing in two follow-up patches (v1.14.4 and v1.14.5) — settling on the terse `(or agentic plan)` form.
 
-> See [CHANGELOG §1.14.3–1.14.5](../kit/plugins/plan-interview/CHANGELOG.md#114) for the authoritative feature list.
+> See [CHANGELOG §1.14.3–1.14.5](../kit/plugins/plan-interview/CHANGELOG.md) for the authoritative feature list.
 
 ## Files changed
 

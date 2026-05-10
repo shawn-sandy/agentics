@@ -59,14 +59,14 @@ Migration for existing users requires uninstalling the old plugin and reinstalli
 
 **New installation:**
 
-```
+```bash
 /plugin marketplace add shawn-sandy/agentics
 /plugin install memory-tools@agentics-kit
 ```
 
 **Migration from `claude-md-optimizer`:**
 
-```
+```bash
 /plugin uninstall claude-md-optimizer@agentics-kit
 /plugin install memory-tools@agentics-kit
 ```

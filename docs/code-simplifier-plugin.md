@@ -57,7 +57,7 @@ Example phrases:
 
 **Agent delegation:**
 
-```
+```javascript
 Agent({
   subagent_type: "code-simplifier:agent-code-simplifier",
   prompt: "Analyze kit/plugins/code-review/ for structural quality issues"
@@ -66,7 +66,7 @@ Agent({
 
 **Installation:**
 
-```
+```bash
 /plugin marketplace add shawn-sandy/agentics
 /plugin install code-simplifier@agentics-kit
 ```
