@@ -1,5 +1,5 @@
 ---
-name: memory-doctor
+name: agentic-memory-doctor
 description: Use when the user asks to audit, optimize, clean up, or diagnose a CLAUDE.md / project memory file, or when Claude appears to ignore project instructions. Does not cover SKILL.md files, slash commands, or general markdown.
 allowed-tools: AskUserQuestion, Glob, Grep, Read, Write
 ---
@@ -159,7 +159,7 @@ paths:
 (replace `<plugin-dir>` with the path passed to `--plugin-dir` when loading this plugin):
 
 ```md
-@<plugin-dir>/skills/memory-doctor/SKILL.md
+@<plugin-dir>/skills/agentic-memory-doctor/SKILL.md
 ```
 ---
 

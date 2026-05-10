@@ -10,7 +10,7 @@ CLAUDE.md files are loaded as system instructions on every Claude Code session. 
 
 | Skill | Activation |
 |-------|-----------|
-| `memory-doctor` | Triggers when user asks to "optimize", "audit", "review", "clean up", or "diagnose" a CLAUDE.md / project memory file. Also activates when user reports Claude ignoring instructions. |
+| `agentic-memory-doctor` | Triggers when user asks to "optimize", "audit", "review", "clean up", or "diagnose" a CLAUDE.md / project memory file. Also activates when user reports Claude ignoring instructions. |
 | `path-rules-advisor` | Triggers when user wants to create path-specific rules, organize rules by file type or directory, or check if the project needs scoped rules in `.claude/rules/`. |
 
 All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.

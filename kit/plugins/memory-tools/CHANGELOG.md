@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.0.0] - 2026-05-10
+
+### BREAKING CHANGE
+
+- Primary skill renamed from `memory-doctor` to `agentic-memory-doctor`. New invocation: `memory-tools:agentic-memory-doctor`.
+- Existing `@import` references to `skills/memory-doctor/SKILL.md` will break — update to `skills/agentic-memory-doctor/SKILL.md`.
+
+### Migration
+
+1. Find and update any `@import` references in your CLAUDE.md:
+   - Old: `@<plugin-dir>/skills/memory-doctor/SKILL.md`
+   - New: `@<plugin-dir>/skills/agentic-memory-doctor/SKILL.md`
+   - Find references with: `grep -rn 'skills/memory-doctor/SKILL.md' .`
+
 ## [2.0.1] - 2026-05-07
 
 ### Changed
