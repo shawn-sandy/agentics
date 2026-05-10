@@ -18,7 +18,7 @@ Rename the skill `memory-doctor` to `agentic-memory-doctor` across all files in 
 
 ### 1. Rename the skill directory
 
-```
+```text
 kit/plugins/memory-tools/skills/memory-doctor/
   → kit/plugins/memory-tools/skills/agentic-memory-doctor/
 ```
@@ -70,7 +70,7 @@ Change `memory-doctor/` → `agentic-memory-doctor/` in the reference line.
 File: `kit/plugins/memory-tools/CHANGELOG.md`
 
 Add a new `## [3.0.0] — 2026-05-10` section:
-```
+```markdown
 ### BREAKING CHANGE
 - Skill renamed from `memory-doctor` to `agentic-memory-doctor`
 - Update any `@import` paths from `memory-doctor/SKILL.md` to `agentic-memory-doctor/SKILL.md`

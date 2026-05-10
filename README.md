@@ -282,7 +282,7 @@ claude --plugin-dir ./kit/plugins/plan-interview
 
 ---
 
-### memory-tools `v2.0.1`
+### memory-tools `v3.0.0`
 
 Audits and optimizes CLAUDE.md project memory files against Claude Code best practices.
 
@@ -642,7 +642,7 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 |--------|---------|------------|
 | code-review | v3.2.1 | 1 skill, 1 agent |
 | plan-interview | v1.14.6 | 7 commands, 4 skills |
-| memory-tools | v2.0.1 | 2 skills |
+| memory-tools | v3.0.0 | 2 skills |
 | wcag-compliance-reviewer | v1.2.1 | 1 skill |
 | skill-reviewer | v1.6.2 | 4 skills |
 | code-testing-agent | v3.2.2 | 4 skills |
