@@ -1,6 +1,6 @@
 ---
 name: path-rules-advisor
-description: Use when the user wants to create path-specific rules, add rules for specific file types or directories, organize Claude rules by file type, or check whether the current project needs path-specific rules in .claude/rules/. Does NOT create or overwrite global memory entries — use memory-doctor for that.
+description: Use when the user wants to create path-specific rules, add rules for specific file types or directories, organize Claude rules by file type, or check whether the current project needs path-specific rules in .claude/rules/. Does NOT create or overwrite global memory entries — use agentic-memory-doctor for that.
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 
@@ -105,7 +105,7 @@ Use this mode when the user provides no argument.
 
 **Step 1 — Resolve the CLAUDE.md target**
 
-Use the same priority order as the `memory-doctor` skill:
+Use the same priority order as the `agentic-memory-doctor` skill:
 
 1. `CLAUDE.md` in the current working directory
 2. `.claude/CLAUDE.md` in the current working directory
