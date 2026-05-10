@@ -69,5 +69,5 @@ All prior activation phrases continue to work.
 ## References
 
 - Plan: [add-agentic-trigger-to-plan-interview-skills.md](plans/add-agentic-trigger-to-plan-interview-skills.md)
-- Changelog: [plan-interview CHANGELOG §1.14.3](../kit/plugins/plan-interview/CHANGELOG.md)
+- Changelog: [plan-interview CHANGELOG §1.14.3–1.14.5](../kit/plugins/plan-interview/CHANGELOG.md)
 - Related docs: [add-plan-interview-exit-hook.md](add-plan-interview-exit-hook.md)
