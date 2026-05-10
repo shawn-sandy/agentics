@@ -108,7 +108,7 @@ Change `"version": "2.0.1"` → `"version": "3.0.0"` for the `memory-tools` entr
 
 ## Verification
 
-1. `grep -r "memory-doctor" kit/plugins/ README.md .claude-plugin/` returns no matches (all renamed)
+1. `grep -r "memory-doctor" kit/plugins/ README.md .claude-plugin/ --exclude="CHANGELOG.md"` returns no matches (CHANGELOG.md intentionally retains historical references)
 2. `grep -r "agentic-memory-doctor" kit/plugins/memory-tools/` returns hits in `SKILL.md`, `README.md`, `CHANGELOG.md`, and the sibling skill
 3. `cat .claude-plugin/marketplace.json | grep -A2 '"memory-tools"'` shows version `3.0.0`
 4. Directory `kit/plugins/memory-tools/skills/agentic-memory-doctor/` exists; `memory-doctor/` does not
