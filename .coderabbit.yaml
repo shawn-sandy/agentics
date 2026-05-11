@@ -1,8 +1,7 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit configuration for shawn-sandy/agentics
 # Marketplace system for Claude Code plugins
 # https://docs.coderabbit.ai/guides/configure-coderabbit
-
-version: "2"
 
 language: "en-US"
 
