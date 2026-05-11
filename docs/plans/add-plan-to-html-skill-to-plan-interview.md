@@ -35,7 +35,7 @@ The spec must document:
   - `Document` — warm off-white background, sepia/brown accent
   - `Minimal` — pure white background, black text, no accent color
 - **Semantic rules**: `<h1>` plan title, `<h2>` section names, `<h3>` step actions; `<main>`, `<nav>`, `<header>` landmarks; color contrast ≥ 4.5:1 for all text; touch targets ≥ 44×44px for any interactive elements
-- **Metadata row**: title, status badge, created/modified dates, and selected theme name — render `n/a` if frontmatter fields are absent
+- **Metadata row**: title, status badge, `created` date (render `n/a` if absent), selected theme name — `modified` and `type` are omitted from the row entirely when absent (do not render `n/a` for them)
 - **Responsive**: single-column below 768px (sidebar collapses above content), two-column above
 - **Self-contained**: all CSS inline in `<style>`, no `<link>` or `<script src>` to external resources, no JavaScript
 

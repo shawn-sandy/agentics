@@ -146,6 +146,12 @@ layout collapses to single-column below 768px.
 **Self-contained**: All CSS must be inline in a `<style>` block in `<head>`. No
 external stylesheets, no CDN links, no `<script>` tags, no JavaScript.
 
+**Content sanitization**: HTML-escape all text sourced from the plan file before
+embedding it (title, headings, body text). Replace `&` → `&amp;`, `<` → `&lt;`,
+`>` → `&gt;`, `"` → `&quot;`. Any raw HTML tags in the plan source (including
+`<script>`, `<img>`, `<link>`) must be rendered as escaped text, not emitted as
+live HTML. See "Content sanitization" in `reference/html-spec.md`.
+
 Write the completed HTML to the output path via the `Write` tool.
 
 ### Step 6 — Offer to open in browser
@@ -156,13 +162,9 @@ After writing, ask via `AskUserQuestion`:
 
 Options: `Open` / `Skip`.
 
-If the user selects Open, run:
-
-```bash
-open "<output-path>"
-```
-
-(macOS). On other platforms, skip if `open` is not available.
+If the user selects Open, run `open "<output-path>"` (macOS only). This skill
+is macOS-targeted; on other platforms, inform the user that browser-open is not
+supported and skip the `open` call.
 
 ### Step 7 — Report
 
