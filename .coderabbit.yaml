@@ -17,10 +17,10 @@ reviews:
     enabled: true
     drafts: false
     base_branches:
-      - "main"
-      - "feat/*"
-      - "fix/*"
-      - "claude/*"
+      - "^main$"
+      - "^feat/.*$"
+      - "^fix/.*$"
+      - "^claude/.*$"
 
   path_filters:
     - "!**/*.lock"
