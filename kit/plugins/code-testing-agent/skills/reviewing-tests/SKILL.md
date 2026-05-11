@@ -10,7 +10,7 @@ Review existing tests against the source code they cover. Identify quality issue
 
 ## When not to use
 
-Does not suggest new tests — use code-testing-agent. Does not run tests — use running-tests.
+Does not run tests — use running-tests. Does not suggest broad new test suites — use code-testing-agent. It may suggest targeted new P1 tests to cover critical gaps as described in Step 7.
 
 ## Table of Contents
 

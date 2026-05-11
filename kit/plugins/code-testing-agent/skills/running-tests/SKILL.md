@@ -11,7 +11,7 @@ and report pass/fail/error counts. Advise on missing test files.
 
 ## When not to use
 
-Does not review test quality — use reviewing-tests. Does not suggest new tests — use code-testing-agent.
+Does not review test quality — use reviewing-tests. Does not suggest new tests — use reviewing-tests.
 
 ## Table of Contents
 

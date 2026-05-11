@@ -115,7 +115,7 @@ Validate each component found in Step 2:
 | `name` field | Must be present, kebab-case, ≤64 chars | ERROR |
 | `description` field | Must be present, ≤1,024 chars | ERROR |
 | Trigger phrases | Description should contain "Use when..." | WARNING |
-| Scope exclusion | Description should contain "Does NOT..." | WARNING |
+| Scope exclusion | Description or body should contain "Does NOT..." or a `## When not to use` section | WARNING |
 | Directory naming | Directory name should match `name` field | WARNING |
 
 ### Agents (`agents/*.md`)
