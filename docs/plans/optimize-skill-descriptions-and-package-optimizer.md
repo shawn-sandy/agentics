@@ -87,7 +87,7 @@ Files to modify (full list from audit):
 
 **Why:** Completes the optimization pass across the entire marketplace. Moving negative-scope clauses into the body (rather than dropping them) preserves the cross-skill collision guidance that the original authors intended, while clearing the description budget for capability + trigger only.
 
-**Verify:** Re-run the description audit (`grep -r "^description:" kit/plugins/*/skills/*/SKILL.md` with char counts). Every entry ≤160 chars; none lost their "Use when…" trigger. Any skill whose description previously had a "Does NOT…" clause now has a `## When not to use` section in its SKILL.md body containing that information.
+**Verify:** Re-run the description audit with the awk command from the Verification section. Every entry ≤160 chars; none lost their "Use when…" trigger. Any skill whose description previously had a "Does NOT…" clause now has a `## When not to use` section in its SKILL.md body containing that information.
 
 ### 4. Trigger-fidelity spot check on 5 random optimized skills
 
