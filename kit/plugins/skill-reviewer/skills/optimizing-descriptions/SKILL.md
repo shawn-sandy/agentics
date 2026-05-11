@@ -8,6 +8,8 @@ allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob
 
 Rewrites `description:` frontmatter in SKILL.md files to ≤160 characters while preserving the triggers that drive accurate skill activation. Negative-scope clauses ("Does NOT cover X") are relocated to a `## When not to use` body section rather than dropped.
 
+**Why 160 chars?** Claude Code loads all skill descriptions into the context window each turn. The default `skillListingBudgetFraction` setting allocates 1% of the model's context window for this listing — roughly 8,000 characters on a 200K-token model. With 50 skills installed (a realistic mix of plugin sets), that leaves ~160 chars per skill before descriptions start getting dropped. The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry (description + `when_to_use` combined); 160 is a practical target for surviving the default budget, not a platform constraint.
+
 Follow these steps exactly.
 
 ## When not to use
@@ -57,7 +59,9 @@ Apply all five rules in order. Do not proceed to edits until rewrites are drafte
 
 ### Rule 1 — Target ≤160 characters
 
-The description value (not including `description: ` or surrounding quotes) must be ≤160 chars. Count carefully; the ≤160 limit is strict.
+The description value (not including `description: ` or surrounding quotes) must be ≤160 chars. Count carefully.
+
+This is a budget target, not a platform limit. The platform enforces ≤1,024 chars per description. The 160-char target ensures descriptions survive the default `skillListingBudgetFraction` (1% of context window ≈ 8,000 chars total) for users with ~50 skills installed. If the user explicitly wants a higher target, use their stated limit instead — but note that descriptions over ~286 chars may be dropped for users who have installed only the agentics-kit (28 skills) and nothing else.
 
 ### Rule 2 — "Use when…" phrasing
 
@@ -155,4 +159,40 @@ done
 
 Confirm every value ≤160. Report any that exceed the limit for a second rewrite pass.
 
-**Reference:** Anthropic skill authoring best practices — https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+---
+
+### Budget advisory
+
+After verification, count the total number of installed skills:
+
+```bash
+find . -name "SKILL.md" | wc -l
+```
+
+Then output this advisory to the user, substituting the actual count:
+
+> **Skill listing budget check**
+> You have N skills installed. Claude Code's default `skillListingBudgetFraction` allocates 1% of the context window (~8,000 chars on a 200K-token model) for all skill descriptions combined.
+>
+> | Installed skills | Safe avg description length |
+> |---|---|
+> | ≤28 | ~286 chars |
+> | ~50 | ~160 chars |
+> | ~100 | ~80 chars |
+>
+> Run `/doctor` to see whether any descriptions are currently being truncated or dropped.
+>
+> If `/doctor` shows overflow, add this to your `.claude/settings.json`:
+> ```json
+> {
+>   "skillListingBudgetFraction": 0.02
+> }
+> ```
+> This doubles the budget to ~16,000 chars at a cost of ~2,000 tokens of context per turn.
+
+Skip the advisory if the count is ≤28 and all descriptions are already ≤160 chars — no action is needed in that case.
+
+**References:**
+- Skill authoring best practices — https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+- Claude Code settings (`skillListingBudgetFraction`, `maxSkillDescriptionChars`) — https://code.claude.com/docs/en/settings
+- Skill description budgets and `/doctor` command — https://code.claude.com/docs/en/skills
