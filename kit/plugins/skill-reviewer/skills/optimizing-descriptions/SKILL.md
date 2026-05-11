@@ -139,7 +139,7 @@ Read the file, identify the insertion point, then use `Edit` with sufficient sur
 
 **Edit B — Description rewrite:**
 
-Use `Edit` with the full original `description: …` line as `old_string`. Preserve the original quoting style — if the original value was in double quotes, keep double quotes; if unquoted, keep unquoted.
+Use `Edit` with the full original `description: …` line as `old_string`. Preserve the original quoting style — if the original value was in double quotes, keep double quotes; if single-quoted, keep single quotes; if unquoted, keep unquoted.
 
 Confirm each edit succeeded before moving to the next file. If the file has both edits, do body insertion first to avoid line-number drift.
 
