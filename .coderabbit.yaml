@@ -20,7 +20,6 @@ reviews:
       - "^main$"
       - "^feat/.*$"
       - "^fix/.*$"
-      - "^claude/.*$"
 
   path_filters:
     - "!**/*.lock"
@@ -30,57 +29,30 @@ reviews:
   path_instructions:
     - path: ".claude-plugin/marketplace.json"
       instructions: |
-        This is the central plugin registry. Verify:
-        - Each plugin has a unique `name`
-        - `version` is set here and NOT in the plugin's `plugin.json`
-        - `source.path` matches an actual directory under `kit/plugins/`
-        - `category` is one of: development, productivity, learning, testing, documentation, security
-        - `tags` are specific and searchable (avoid generic terms like "tool" or "helper")
-        - No duplicate plugin names exist
-        - Version bumps follow semver: patch=bug fix/typo/metadata correction, minor=new command/skill/agent/hook added, major=removing or renaming a command/skill/agent, or changing argument format or activation behavior
+        Flag if: `version` appears in a plugin.json instead of here, or `source.path` doesn't match an actual `kit/plugins/` directory.
 
     - path: "kit/plugins/**/.claude-plugin/plugin.json"
       instructions: |
-        Plugin manifest file. Verify:
-        - `name` field is present and matches the directory name
-        - `version` is NOT set here (version is managed in marketplace.json)
-        - `homepage` URL points to the plugin directory, not the repo root:
-          format must be `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
+        Flag if: `version` is set here (must be in marketplace.json only), or `homepage` doesn't point to the plugin's own directory.
 
     - path: "kit/plugins/**"
       instructions: |
-        Plugin source code. Check for:
-        - CHANGELOG.md present and updated when plugin logic changes
-        - README.md exists with usage instructions
-        - Skill SKILL.md files must declare every tool they use in a comma-separated `allowed-tools:` frontmatter line (e.g., `allowed-tools: Bash, Read, Write`);
-          when the skill only shells out to one CLI family, prefer the scoped form (e.g., `allowed-tools: Bash(git *)`) over broad `Bash`
-        - Command files live under `commands/<command-name>.md` and are invoked as `/plugin-name:command-name`
-        - Agent files live under `agents/`
-        - Plan files for the change should exist in `docs/plans/` and be included in the commit
+        Flag if: CHANGELOG.md is missing or not updated, or a SKILL.md file lacks an `allowed-tools:` frontmatter line.
 
     - path: "docs/plans/**"
       instructions: |
-        Plan files must be committed alongside the related plugin changes they describe.
-        Check that the plan filename is descriptive (not a generic timestamp) and has frontmatter.
-        Flag stale plan files that reference removed features.
+        Flag if: the plan filename is a bare timestamp or lacks frontmatter.
 
     - path: "tests/**"
       instructions: |
-        Test fixtures and demo scripts. Ensure `tests/fixtures/valid-plugin/` remains a valid
-        reference implementation — it is used by validation logic and must not diverge from
-        current plugin structure conventions.
-
-    - path: ".claude/rules/**"
-      instructions: |
-        Scoped authoring rules for Claude Code. Changes here affect AI-assisted development
-        behaviour across the repo. Review for accuracy and consistency with CLAUDE.md.
+        Flag if: `tests/fixtures/valid-plugin/` diverges from current plugin structure conventions.
 
   finishing_touches:
     docstrings:
       enabled: false
 
 chat:
-  auto_reply: true
+  auto_reply: false
 
 knowledge_base:
   opt_out: false
