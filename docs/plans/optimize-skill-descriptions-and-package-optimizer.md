@@ -1,7 +1,6 @@
 ---
 status: draft
 created: 2026-05-11
-type: standard
 ---
 
 # Plan: Optimize plugin skill descriptions and package the optimizer as a skill
@@ -160,4 +159,3 @@ End-to-end checks before considering the plan complete:
 - Extend `optimizing-descriptions` to optimize **command** and **agent** description fields (same pattern, different file shapes).
 - Add a hook that runs the optimizer on any `SKILL.md` write and warns if the new description exceeds 160 chars.
 - Build a small evaluation suite under `tests/fixtures/` with paired (verbose → expected) descriptions to regression-test future prompt revisions.
-

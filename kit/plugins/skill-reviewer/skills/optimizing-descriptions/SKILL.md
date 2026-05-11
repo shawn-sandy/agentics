@@ -31,8 +31,8 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 Determine which SKILL.md files to optimize using this priority order:
 
 1. **Explicit path** — user provided a path: use it directly.
-2. **Plugin scope** — user named a plugin: glob `kit/plugins/<name>/skills/*/SKILL.md`.
-3. **All skills** — user said "all" or "everything": glob `kit/plugins/*/skills/*/SKILL.md`.
+2. **Plugin scope** — user named a plugin: use `Glob` for `**/plugins/<name>/skills/*/SKILL.md` under `$PWD`. If no results, fall back to `kit/plugins/<name>/skills/*/SKILL.md`.
+3. **All skills** — user said "all" or "everything": use `Glob` for `**/skills/*/SKILL.md` under `$PWD`. If no results, fall back to `kit/plugins/*/skills/*/SKILL.md`.
 4. **Ask if still unclear** — "Which SKILL.md should I optimize? Provide a path or say 'all'."
 
 ---
@@ -45,7 +45,7 @@ Extract the description value from each file's YAML frontmatter and measure its 
 grep -n "^description:" <file>
 ```
 
-Then count the value's character length (excluding the `description: ` prefix).
+Then count the value's character length (excluding the `description:` prefix).
 
 **Skip rule:** if a description is already ≤160 chars AND starts with "Use when" or leads with a capability verb, mark it SKIP — do not rewrite unless the user explicitly asks.
 
@@ -59,7 +59,7 @@ Apply all five rules in order. Do not proceed to edits until rewrites are drafte
 
 ### Rule 1 — Target ≤160 characters
 
-The description value (not including `description: ` or surrounding quotes) must be ≤160 chars. Count carefully.
+The description value (not including `description:` or surrounding quotes) must be ≤160 chars. Count carefully.
 
 This is a budget target, not a platform limit. The platform enforces ≤1,024 chars per description. The 160-char target ensures descriptions survive the default `skillListingBudgetFraction` (1% of context window ≈ 8,000 chars total) for users with ~50 skills installed. If the user explicitly wants a higher target, use their stated limit instead — but note that descriptions over ~286 chars may be dropped for users who have installed only the agentics-kit (28 skills) and nothing else.
 
@@ -98,7 +98,7 @@ Remove:
 ## Worked example
 
 **Before** (486 chars):
-```
+```yaml
 Use when the user asks to audit, recommend, fix, or generate the `allowed-tools`
 frontmatter for a SKILL.md, or to review which tools/permissions Claude requested
 during a Claude Code session. Triggers include "what allowed-tools should this skill
@@ -107,7 +107,7 @@ SKILL.md quality — use reviewing-skills for that.
 ```
 
 **After** (145 chars):
-```
+```yaml
 Use when the user asks to audit, fix, or generate the `allowed-tools` frontmatter
 for a SKILL.md, or review which tools Claude used in a session.
 ```
