@@ -4,16 +4,53 @@ A Claude Code plugin for auditing SKILL.md files and planning new skills. Aligne
 
 ## Overview
 
-The Skill Reviewer provides four skills:
+The Skill Reviewer provides four auto-activating skills, one slash command, and an always-on hook:
 
 1. **reviewing-skills** — Structured quality audits of SKILL.md files across 5 dimensions (frontmatter, body quality, structure, anti-patterns, discoverability). Scored 0–10 with grades from Excellent to Rewrite.
 2. **planning-skills** — Guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch, including design pattern selection and file generation.
 3. **running-tests** — Adaptive skill that identifies changed files, finds related test files, detects the test framework, runs tests via Bash, and reports pass/fail/error counts. Also detects missing test files and advises on what to create.
 4. **auditing-allowed-tools** — Audits a SKILL.md to recommend (or patch) the minimal `allowed-tools` frontmatter it needs so users aren't prompted for permission mid-run. Also parses Claude Code session JSONL transcripts to report what tools Claude actually invoked, and can cross-reference a skill against a real session.
+5. **check-description** (command) — `/skill-reviewer:check-description [path-or-glob]` — on-demand check of `description:` length for one or more SKILL.md files.
+6. **Description-length hook** — fires automatically on every Write/Edit/MultiEdit to any SKILL.md in the current project and warns if the description exceeds 160 chars.
 
 This plugin is the counterpart to `memory-tools` — while that plugin audits CLAUDE.md files, this one audits and helps create skill files.
 
 All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
+## Hooks
+
+### Description-length warning hook
+
+The plugin ships a `PostToolUse` hook in `hooks.json` that fires automatically when Claude writes or edits any `SKILL.md` file in the current project. It warns if the `description:` frontmatter value exceeds the 160-char budget:
+
+```
+OK: SKILL.md description is 142 chars (<=160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md
+WARNING: SKILL.md description is 214 chars (>160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md — run /skill-reviewer:optimizing-descriptions to trim
+```
+
+**Why 160 chars?** Claude Code's default `skillListingBudgetFraction` (1% of the context window) allows roughly 160 chars per description when ~50 skills are installed. Descriptions over budget may be truncated or dropped from the listing at runtime.
+
+**Scope:** only fires on SKILL.md files inside the current git repository. External plugins installed to `~/.claude/plugins/` or other locations outside the repo are skipped.
+
+**Dedup:** fires only when the `description:` line actually changes, not on every write to the file.
+
+**To disable the hook**, add an override to your user or project `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Write|Edit|MultiEdit", "hooks": [] }
+    ]
+  }
+}
+```
+
+Or uninstall the plugin (`/plugin uninstall skill-reviewer`) if you no longer need it.
+
+**Shared script:** the hook delegates to `scripts/measure-description.sh`. This script is also used by the `/skill-reviewer:check-description` command — updating the 160-char threshold or the measurement logic in one place applies to both.
+
+---
 
 ## Features
 
@@ -101,6 +138,16 @@ What tools did Claude actually use in this session?
 Did foo/bar/SKILL.md actually need everything it declared? Check against the current session.
 ```
 
+### Checking Description Lengths
+
+```
+/skill-reviewer:check-description
+```
+
+```
+/skill-reviewer:check-description kit/plugins/my-plugin/skills/my-skill/SKILL.md
+```
+
 ### Using Live Guidelines
 
 To fetch the latest criteria from the platform docs instead of the bundled reference:
@@ -119,6 +166,12 @@ Check my SKILL.md against the current platform docs
 plugins/skill-reviewer/
 ├── .claude-plugin/
 │   └── plugin.json
+├── commands/
+│   └── check-description.md
+├── hooks.json
+├── scripts/
+│   ├── measure-description.sh
+│   └── session_tool_scan.py
 ├── skills/
 │   ├── reviewing-skills/
 │   │   ├── SKILL.md
@@ -241,3 +294,27 @@ Per-framework lookup tables covering: test file naming conventions (TS/JS/Python
 **Target resolution (Mode 1):** explicit path → conversation context (hand off from `reviewing-skills`) → `Glob`-based picker presented via `AskUserQuestion`.
 
 **Script: `scripts/session_tool_scan.py`** — standalone Python 3, no third-party dependencies, streams JSONL line-by-line, tolerates truncated final lines, and emits structured JSON on stdout.
+
+### Command: `check-description`
+
+**Invocation:** `/skill-reviewer:check-description [path-or-glob]`
+
+**Use when:** you want to measure description lengths for SKILL.md files you have not edited this session, or to batch-check many files before committing.
+
+```
+# Check a single file
+/skill-reviewer:check-description kit/plugins/my-plugin/skills/my-skill/SKILL.md
+
+# Check all SKILL.md files in the repo
+/skill-reviewer:check-description
+```
+
+With no argument, globs `**/SKILL.md` from `$PWD` and reports one line per file. For any over-budget file, suggests running `/skill-reviewer:optimizing-descriptions`.
+
+Delegates to `scripts/measure-description.sh` — same logic and threshold as the always-on hook.
+
+### Script: `scripts/measure-description.sh`
+
+Single source of truth for description measurement. Called by both the PostToolUse hook and the `check-description` command. Accepts one file path and emits a single `OK:`, `WARNING:`, or `ERROR:` line. Update the 160-char threshold or measurement logic here to apply the change to both surfaces.
+
+All existing `kit/plugins/` SKILL.md descriptions were audited and trimmed to ≤160 chars before this hook was shipped (see CHANGELOG v1.8.0).

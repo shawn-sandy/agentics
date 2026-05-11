@@ -4,6 +4,22 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-05-11
+
+### Added
+
+- **`hooks.json`** — PostToolUse hook (`Write|Edit|MultiEdit`) that warns when a SKILL.md `description:` exceeds 160 chars. Fires only on files inside the current git repo (external/installed plugins are skipped). Deduplicates on the description line hash so it only fires when the description actually changes.
+- **`commands/check-description.md`** — `/skill-reviewer:check-description [path-or-glob]` slash command for on-demand description-length checks across one or many SKILL.md files.
+- **`scripts/measure-description.sh`** — shared POSIX shell script called by both the hook and the command. Single source of truth for the 160-char threshold and extract/strip logic. Handles missing descriptions (`ERROR`), multi-line/folded YAML (`WARNING: approximate`), and OK/WARNING with char counts. Committed with executable bit (`100755`).
+- **`tests/fixtures/skill-description-hook/`** — bash test harness (`run.sh`) plus five fixture SKILL.md files: exactly 160 chars (boundary OK), 161 chars (boundary WARNING), 200 chars (over-budget), missing description (ERROR), and multi-line/folded YAML (WARNING). All 5 assertions pass.
+
+### Notes
+
+- All `kit/plugins/` SKILL.md descriptions were already ≤160 chars (trimmed in v1.7.0) so the hook ships on a clean baseline.
+- The 160-char target is a budget recommendation, not a platform limit; see `scripts/measure-description.sh` to change the threshold.
+
+---
+
 ## [1.7.0] - 2026-05-11
 
 ### Added

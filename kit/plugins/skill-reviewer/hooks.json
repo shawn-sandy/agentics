@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(jq -r '.tool_input.file_path // .tool_input.edits[0].file_path // empty' 2>/dev/null); case \"$file\" in *SKILL.md) ;; *) exit 0 ;; esac; [ -f \"$file\" ] || exit 0; repo_root=$(git -C \"$(dirname \"$file\")\" rev-parse --show-toplevel 2>/dev/null); [ -n \"$repo_root\" ] && case \"$file\" in \"$repo_root\"/*) ;; *) exit 0 ;; esac; [ -n \"$repo_root\" ] || exit 0; line=$(grep \"^description:\" \"$file\" | head -1); state=\"/tmp/skill-desc-hook-$(printf '%s' \"$file\" | shasum -a 256 | cut -d' ' -f1).hash\"; new=$(printf '%s' \"$line\" | shasum -a 256 | cut -d' ' -f1); old=$(cat \"$state\" 2>/dev/null); [ \"$new\" = \"$old\" ] && exit 0; printf '%s' \"$new\" > \"$state\"; \"${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh\" \"$file\""
+          }
+        ]
+      }
+    ]
+  }
+}
