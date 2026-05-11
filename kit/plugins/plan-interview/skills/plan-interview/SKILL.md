@@ -11,7 +11,7 @@ implementation begins.
 
 ## When not to use
 
-Does not execute the plan or apply fixes — this is a review tool only.
+Does not execute implementation work or apply code fixes from the plan — this is a review tool only. Updating the plan file itself (Step 6) is permitted.
 
 ## Table of Contents
 
