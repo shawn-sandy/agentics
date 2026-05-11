@@ -47,7 +47,9 @@ Mark each todo `status: "completed"` as you finish that step.
 Use the first match from this priority order:
 
 1. **Argument**: If a file path appears in `$ARGUMENTS` or the user's message,
-   use it directly.
+   validate it before proceeding: confirm the file exists, is readable, and has
+   a `.md` extension. If any check fails, tell the user (including the path and
+   reason — missing, unreadable, or not `.md`) and stop.
 2. **Currently open file**: If no path was given, check whether a `.md` file is
    currently open in the IDE. If it looks like a plan (contains headings like
    `## Steps`, `## Context`, `## Objective`, `## Implementation`, or `## Plan`),
@@ -67,8 +69,8 @@ Announce the resolved file: `"Converting plan: path/to/plan.md"`
 
 Read the plan file and extract:
 
-- **H1 title**: first line matching `# ...` — strip leading `# ` and any `Plan:`
-  or `Plan: ` prefix.
+- **H1 title**: first line matching `# ...` — strip leading `# ` and any
+  `Plan:` prefix (with or without a trailing space).
 - **Frontmatter fields**: extract the YAML block between `---` delimiters.
   Capture `status`, `created`, `modified`, `type`. If the file has no
   frontmatter, treat all fields as absent.
