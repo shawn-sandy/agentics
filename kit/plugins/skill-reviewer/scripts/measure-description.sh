@@ -17,9 +17,8 @@ if [ -z "$file" ] || [ ! -r "$file" ]; then
   exit 1
 fi
 
-# Use only the first match — frontmatter always appears before the body,
-# so body lines that also contain "description:" are safely ignored.
-line=$(grep "^description:" "$file" | head -1)
+# Read only from YAML frontmatter (between the first two --- delimiters).
+line=$(awk 'NR==1 && $0=="---" {in_fm=1; next} NR==1 && $0!="---" {exit} in_fm && $0=="---" {exit} in_fm && $0 ~ /^description:/ {print; exit}' "$file")
 
 if [ -z "$line" ]; then
   printf 'ERROR: SKILL.md has no description: frontmatter in %s — required by Claude Code\n' "$file"

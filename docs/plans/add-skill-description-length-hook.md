@@ -144,7 +144,7 @@ Print all script output. For any over-budget file, suggest running `/skill-revie
       <li><code>desc-161.md</code> — description exactly 161 chars → expect <code>WARNING: 161 chars (&gt;160)</code>.</li>
       <li><code>desc-200.md</code> — description 200 chars → expect <code>WARNING: 200 chars (&gt;160)</code>.</li>
       <li><code>desc-missing.md</code> — no <code>description:</code> line → expect <code>ERROR: no description:</code>.</li>
-      <li><code>desc-multiline.md</code> — <code>description: |</code> folded → expect <code>WARNING: multi-line</code>.</li>
+      <li><code>desc-multiline.md</code> — <code>description: |</code> literal block scalar → expect <code>WARNING: multi-line</code>.</li>
       <li><code>run.sh</code> — harness that for each fixture: builds a fake PostToolUse JSON payload, pipes it into the hook command, and asserts the prefix and char-count match.</li>
     </ul>
   </li>
@@ -178,7 +178,7 @@ End-to-end test, run **both** modes (dev `--plugin-dir` AND installed `/plugin i
   <li><strong>Hook — over budget:</strong> Edit the description to a 200-char string. Expect <code>WARNING: 200 chars (&gt;160) — run /skill-reviewer:optimizing-descriptions</code>.</li>
   <li><strong>Hook — dedup:</strong> Edit a non-description part of the same SKILL.md. Expect <strong>no output</strong> (the <code>description:</code> line hash is unchanged).</li>
   <li><strong>Hook — missing description:</strong> Write a SKILL.md with no <code>description:</code> line. Expect <code>ERROR: no description: frontmatter</code>.</li>
-  <li><strong>Hook — multi-line description:</strong> Write a SKILL.md with <code>description: |</code> folded scalar. Expect <code>WARNING: multi-line description detected</code>.</li>
+  <li><strong>Hook — multi-line description:</strong> Write a SKILL.md with <code>description: |</code> literal block scalar. Expect <code>WARNING: multi-line description detected</code>.</li>
   <li><strong>Hook — MultiEdit:</strong> Use a MultiEdit operation to change a SKILL.md's description. Expect the same warning behavior as Edit (the fallback jq path resolves correctly).</li>
   <li><strong>Hook — no-op (wrong file type):</strong> <code>Write</code> a non-SKILL.md file (e.g. README.md). Expect zero output (early <code>exit 0</code>).</li>
   <li><strong>Hook — no-op (external plugin):</strong> Simulate an external SKILL.md path outside the repo root (e.g. <code>/tmp/external-plugin/SKILL.md</code>) by temporarily hardcoding a fake path into the payload. Expect zero output — the git-root guard should reject it silently.</li>
@@ -212,7 +212,7 @@ Conducted via `/plan-interview:plan-interview` on 2026-05-11.
 - **Shared script** at `scripts/measure-description.sh` is the single source of truth; hook and command both call it.
 - **Edge inputs:** missing `description:` → `ERROR`; multi-line/folded YAML → `WARNING: approximate`.
 - **Dedup:** hook fires only when the `description:` line hash changes (state in `/tmp`).
-- **Path scoping:** no scoping — fires on any `*SKILL.md` path.
+- **Path scoping:** repo-local guard — fires only for `*SKILL.md` paths inside the current git repo; external/installed plugin paths are skipped.
 - **Backfill pre-step:** audit and trim existing over-budget SKILL.md files in `kit/plugins/` before shipping the hook.
 - **Test coverage:** unit-style bash fixture at `tests/fixtures/skill-description-hook/` covering 160 / 161 / 200 / missing / multi-line cases.
 
