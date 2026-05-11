@@ -35,14 +35,15 @@ reviews:
         - `version` is set here and NOT in the plugin's `plugin.json`
         - `source.path` matches an actual directory under `kit/plugins/`
         - `category` is one of: development, productivity, learning, testing, documentation, security
-        - `tags` are specific and searchable (no generic terms like "tool" or "helper")
+        - `tags` are specific and searchable (avoid generic terms like "tool" or "helper")
         - No duplicate plugin names exist
+        - Version bumps follow semver: patch=fix/typo, minor=new command/skill/agent, major=breaking rename or removal
 
     - path: "kit/plugins/**/.claude-plugin/plugin.json"
       instructions: |
         Plugin manifest file. Verify:
         - `name` field is present and matches the directory name
-        - `version` is NOT set here (version is managed in marketplace.json for relative-path plugins)
+        - `version` is NOT set here (version is managed in marketplace.json)
         - `homepage` URL points to the plugin directory, not the repo root:
           format must be `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
 
@@ -51,23 +52,23 @@ reviews:
         Plugin source code. Check for:
         - CHANGELOG.md present and updated when plugin logic changes
         - README.md exists with usage instructions
-        - Skill SKILL.md files must declare every tool the skill uses in a comma-separated `allowed-tools:`
-          frontmatter line so users are not prompted for permission mid-run; restricted forms like
-          `Bash(git *)` are preferred when the skill only uses one CLI family
-        - Command files are invoked as `/plugin-name:command-name` and live under `commands/<command-name>.md`
-        - Agent files are under an `agents/` subdirectory
+        - Skill SKILL.md files should declare every tool they use in `allowed-tools:` frontmatter;
+          scoped forms like `Bash(git *)` are preferred over broad `Bash(*)`
+        - Command files live under `commands/<command-name>.md` and are invoked as `/plugin-name:command-name`
+        - Agent files live under `agents/`
+        - Plan files for the change should exist in `docs/plans/` and be included in the commit
 
     - path: "docs/plans/**"
       instructions: |
         Plan files must be committed alongside the related plugin changes they describe.
-        Check that the plan file name is descriptive (not a generic timestamp) and has frontmatter.
-        Flag any plan files that appear to be stale or reference removed features.
+        Check that the plan filename is descriptive (not a generic timestamp) and has frontmatter.
+        Flag stale plan files that reference removed features.
 
     - path: "tests/**"
       instructions: |
         Test fixtures and demo scripts. Ensure `tests/fixtures/valid-plugin/` remains a valid
-        reference implementation — it is used by validation logic and should not diverge from
-        the current plugin structure conventions.
+        reference implementation — it is used by validation logic and must not diverge from
+        current plugin structure conventions.
 
     - path: ".claude/rules/**"
       instructions: |
@@ -80,3 +81,10 @@ reviews:
 
 chat:
   auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
