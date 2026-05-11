@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(jq -r '.tool_input.file_path // .tool_input.edits[0].file_path // empty' 2>/dev/null); case \"$file\" in *SKILL.md) ;; *) exit 0 ;; esac; [ -f \"$file\" ] || exit 0; abs=$(cd \"$(dirname \"$file\")\" 2>/dev/null && printf '%s/%s' \"$(pwd -P)\" \"$(basename \"$file\")\" || realpath \"$file\" 2>/dev/null || readlink -f \"$file\" 2>/dev/null || printf '%s' \"$file\"); repo_root=$(git -C \"$(dirname \"$abs\")\" rev-parse --show-toplevel 2>/dev/null); [ -n \"$repo_root\" ] || exit 0; case \"$abs\" in \"$repo_root\"/*) ;; *) exit 0 ;; esac; desc=$(awk 'NR==1 && $0==\"---\" {in_fm=1; next} NR==1 && $0!=\"---\" {exit} in_fm && $0==\"---\" {exit} in_fm && $0 ~ /^description:/ {print; exit}' \"$abs\"); state=\"/tmp/skill-desc-hook-$(printf '%s' \"$abs\" | (sha256sum 2>/dev/null || shasum -a 256 2>/dev/null) | cut -d' ' -f1).hash\"; new=$(printf '%s' \"$desc\" | (sha256sum 2>/dev/null || shasum -a 256 2>/dev/null) | cut -d' ' -f1); old=$(cat \"$state\" 2>/dev/null); [ \"$new\" = \"$old\" ] && exit 0; out=$(\"${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh\" \"$file\" 2>&1 || true); printf '%s' \"$new\" > \"$state\"; printf '%s\n' \"$out\""
+          }
+        ]
+      }
+    ]
+  }
+}
