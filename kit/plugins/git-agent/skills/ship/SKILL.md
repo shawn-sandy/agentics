@@ -1,12 +1,16 @@
 ---
 name: ship
-description: "Use when the user asks to ship changes, commit and create a PR or MR, ship it, send it, or land their work. Chains commit + push + pull/merge request in one flow. Supports GitHub (gh) and GitLab (glab). Use commit-agent for commit-only or pr-agent for PR-only."
+description: "Use when the user asks to ship changes, commit and create a PR, or land their work. Chains commit + push + PR in one flow for GitHub (gh) and GitLab (glab)."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ExitPlanMode
 ---
 
 Stage, commit, push, and create a pull/merge request in one flow. Supports
 GitHub (`gh`) and GitLab (`glab`). Follow these steps in strict order. **STOP
 immediately after step 8.**
+
+## When not to use
+
+For commit-only use commit-agent, for PR-only use pr-agent.
 
 ## Step 0: Exit Plan Mode (if active)
 

@@ -4,6 +4,17 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-05-11
+
+### Added
+
+- **`optimizing-descriptions` skill** — Rewrites `description:` frontmatter across SKILL.md files to ≤160 characters while preserving activation accuracy. Relocates negative-scope clauses to `## When not to use` body sections. Includes a worked example and a skip rule for already-compliant descriptions.
+
+### Changed
+
+- Trimmed all 28 skill descriptions across the marketplace to ≤160 chars (previously ranging from 181 to 489 chars)
+- Relocated negative-scope clauses ("Does not cover X") from descriptions into `## When not to use` body sections in 22 skills
+
 ## [1.6.2] - 2026-05-07
 
 ### Changed

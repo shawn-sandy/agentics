@@ -1,12 +1,16 @@
 ---
 name: reviewing-tests
-description: "Use when the user asks to review tests, audit test quality, check test coverage, improve tests, or asks 'are my tests good', 'review these tests', 'audit my test suite', or 'how can I improve my tests'. Reviews existing tests for quality, coverage gaps, and alignment with code intent. Does not suggest new tests — use code-testing-agent. Does not run tests — use running-tests."
+description: "Use when the user asks to review tests, audit test quality, or improve a test suite. Reviews for quality, coverage gaps, and alignment with code intent."
 allowed-tools: AskUserQuestion, Bash, Edit, Glob, Read, TodoWrite, Write
 ---
 
 Review existing tests against the source code they cover. Identify quality issues, coverage gaps, and misalignment with developer intent. Every finding is tied to a specific test and explains why it matters.
 
 > **Freedom level: Flexible** — Follow these steps in order. Adapt depth to the test suite's size and the user's request.
+
+## When not to use
+
+Does not suggest new tests — use code-testing-agent. Does not run tests — use running-tests.
 
 ## Table of Contents
 

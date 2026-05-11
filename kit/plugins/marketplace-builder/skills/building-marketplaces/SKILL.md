@@ -1,6 +1,6 @@
 ---
 name: building-marketplaces
-description: "Use when the user asks to build a marketplace, set up a skill marketplace, create a plugin marketplace, scaffold marketplace files, make a repo into a marketplace, or evaluate marketplace readiness. Evaluates the repository and scaffolds marketplace infrastructure. Does not audit SKILL.md quality (use skill-reviewer) or CLAUDE.md content quality (use memory-tools)."
+description: "Use when the user asks to build or scaffold a Claude Code plugin marketplace, evaluate marketplace readiness, or make a repo into a marketplace."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, Write
 ---
 
@@ -8,6 +8,10 @@ Evaluate a repository and scaffold the files needed to turn it into a Claude Cod
 
 > **Freedom level: Rigid** — Execute all six steps in the order listed. Do not skip, combine,
 > or reorder them.
+
+## When not to use
+
+Does not audit SKILL.md quality (use skill-reviewer) or CLAUDE.md content (use memory-tools).
 
 ## Table of Contents
 

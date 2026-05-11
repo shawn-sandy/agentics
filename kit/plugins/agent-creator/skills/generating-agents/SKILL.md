@@ -1,6 +1,6 @@
 ---
 name: generating-agents
-description: "Use when the user asks to create an agent, generate an agent plugin, scaffold an agent, add an agent to a plugin, build a new agent, or make a sub-agent. Scaffolds agent frontmatter, tool selection, system prompt, and files. Does NOT review existing agents — use agent-reviewer for that."
+description: "Use when the user asks to create, scaffold, or generate an agent or sub-agent in a plugin. Scaffolds frontmatter, tool selection, system prompt, and files."
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 
@@ -9,6 +9,10 @@ allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 Walks users through a structured workflow to scaffold a complete Claude Code agent — either as a new plugin or added to an existing one. Produces ready-to-use agent `.md` files with frontmatter and system prompt.
 
 Follow these steps exactly.
+
+## When not to use
+
+Does not review existing agents — use agent-reviewer for that.
 
 ## Table of Contents
 

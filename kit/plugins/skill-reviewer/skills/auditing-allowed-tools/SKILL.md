@@ -1,6 +1,6 @@
 ---
 name: auditing-allowed-tools
-description: Use when the user asks to audit, recommend, fix, or generate the `allowed-tools` frontmatter for a SKILL.md, or to review which tools/permissions Claude requested during a Claude Code session. Triggers include "what allowed-tools should this skill have", "fix skill permissions", "audit tool usage", "check skill permissions", "what tools did Claude use in this session", "review session permissions". Does NOT score or audit general SKILL.md quality — use reviewing-skills for that.
+description: Use when the user asks to audit, fix, or generate the `allowed-tools` frontmatter for a SKILL.md, or review which tools Claude used in a session.
 allowed-tools: AskUserQuestion, Bash, Read, Write, Edit, Glob, Grep
 argument-hint: "[SKILL.md path] [session UUID]"
 ---
@@ -14,6 +14,10 @@ Recommends (and optionally applies) the minimal `allowed-tools:` declaration a S
 - **Mode 3 — Cross-reference**: compare a SKILL.md against a real session to find gaps.
 
 Route on user intent. If the request is ambiguous ("check my skill"), assume Mode 1.
+
+## When not to use
+
+Does not score or audit general SKILL.md quality — use reviewing-skills for that.
 
 ## Mode 1: Static audit
 

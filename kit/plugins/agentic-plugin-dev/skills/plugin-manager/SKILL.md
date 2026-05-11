@@ -1,6 +1,6 @@
 ---
 name: plugin-manager
-description: "Use when the user asks to list marketplace plugins, add a plugin to the marketplace, remove a plugin, bump a plugin version, update plugin metadata, or manage marketplace entries. Manages plugin entries in marketplace.json — list, add, remove, update, and bump versions. Does NOT create marketplace infrastructure (use marketplace-builder). Does NOT touch git."
+description: "Use when the user asks to list, add, remove, bump versions, or update metadata for plugins in marketplace.json."
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 

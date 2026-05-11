@@ -1,6 +1,6 @@
 ---
 name: tdd-loop
-description: Use when the user asks to TDD a feature, write tests first then implement, do a red-green-refactor loop for a new feature, or autonomously build something test-first. Writes a comprehensive failing test suite, commits it, loops on the implementation up to 20 iterations, runs typecheck and lint, then commits the implementation separately and opens a PR. Does not fix existing bugs — use tdd-fix for that. Does not suggest tests without implementing — use code-testing-agent for that.
+description: Use when the user asks to TDD a new feature, write tests first, or run a red-green-refactor loop. Iterates up to 20 rounds, then commits and opens a PR.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, TodoWrite, Skill
 ---
 
@@ -12,6 +12,10 @@ with a separate `feat:` commit, and open a PR.
 
 > **Freedom level: Strict** — Follow these steps in order. Do not skip or
 > combine steps. Stop at each hard-stop marker.
+
+## When not to use
+
+Does not fix existing bugs — use tdd-fix. Does not suggest tests without implementing — use code-testing-agent.
 
 ## Table of Contents
 

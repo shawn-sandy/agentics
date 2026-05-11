@@ -1,6 +1,6 @@
 ---
 name: agentic-memory-doctor
-description: Use when the user asks to audit, optimize, clean up, or diagnose a CLAUDE.md / project memory file, or when Claude appears to ignore project instructions. Does not cover SKILL.md files, slash commands, or general markdown.
+description: Use when the user asks to audit, optimize, or diagnose a CLAUDE.md or project memory file, or when Claude appears to ignore project instructions.
 allowed-tools: AskUserQuestion, Glob, Grep, Read, Write
 ---
 
@@ -16,6 +16,10 @@ Audit and optimize a CLAUDE.md / project memory file against Claude Code best pr
 > Memory load order: project rules → project memory → user memory → `CLAUDE.local.md`. Combined
 > instruction count across all loaded files is what matters. Use `@path/to/file` import syntax to
 > reference external docs without embedding their full content.
+
+## When not to use
+
+Does not cover SKILL.md files, slash commands, or general markdown.
 
 ## Table of Contents
 
