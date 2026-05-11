@@ -6,7 +6,7 @@ allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob
 
 ## Overview
 
-Rewrites `description:` frontmatter in SKILL.md files to ≤160 characters while preserving the triggers that drive accurate skill activation. Negative-scope clauses ("Does NOT cover X") are relocated to a `## When not to use` body section rather than dropped.
+Rewrites `description:` frontmatter in SKILL.md files to ≤160 characters while preserving the triggers that drive accurate skill activation. Negative-scope clauses ("Does NOT cover X") are relocated to a `## When not to use` body section (or an existing equivalent such as `## Scope` or `## Limitations`) rather than dropped.
 
 **Why 160 chars?** Claude Code loads all skill descriptions into the context window each turn. The default `skillListingBudgetFraction` setting allocates 1% of the model's context window for this listing — roughly 8,000 characters on a 200K-token model. With 50 skills installed (a realistic mix of plugin sets), that leaves ~160 chars per skill before descriptions start getting dropped. The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry (description + `when_to_use` combined); 160 is a practical target for surviving the default budget, not a platform constraint.
 
@@ -42,8 +42,10 @@ Determine which SKILL.md files to optimize using this priority order:
 Extract the description value from each file's YAML frontmatter and measure its length:
 
 ```bash
-grep -n "^description:" <file>
+grep -n "^description:" <file> | head -1
 ```
+
+Use only the **first match** — YAML frontmatter always appears before the body, so the first result is the frontmatter `description:`. Body lines (examples, worked output) may also contain `description:` and must be ignored.
 
 Then count the value's character length (excluding the `description:` prefix).
 

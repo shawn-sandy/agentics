@@ -10,6 +10,10 @@ Manages individual plugin entries within an existing `marketplace.json` file. Ha
 
 Follow these steps, adapt as needed for context.
 
+## When not to use
+
+Does not create marketplace infrastructure from scratch — use marketplace-builder. Does not scaffold new plugins — use plugin-creator. Does not commit or push to git — suggests commit messages only.
+
 ---
 
 ## Step 0: Disambiguation
