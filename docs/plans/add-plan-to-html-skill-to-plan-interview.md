@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: standard
 created: 2026-05-11
+modified: 2026-05-11
 ---
 
 # Plan: Add plan-to-html Skill to plan-interview Plugin
