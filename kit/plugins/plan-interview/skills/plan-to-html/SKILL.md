@@ -69,8 +69,8 @@ Announce the resolved file: `"Converting plan: path/to/plan.md"`
 
 Read the plan file and extract:
 
-- **H1 title**: first line matching `# ...` — strip leading `# ` and any
-  `Plan:` prefix (with or without a trailing space).
+- **H1 title**: first line matching `# ...` — strip the leading `#` character
+  and space, then strip any `Plan:` prefix (with or without a trailing space).
 - **Frontmatter fields**: extract the YAML block between `---` delimiters.
   Capture `status`, `created`, `modified`, `type`. If the file has no
   frontmatter, treat all fields as absent.
