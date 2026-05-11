@@ -155,6 +155,8 @@ for f in <edited-files>; do
   val="${line#description: }"
   val="${val%\"}"
   val="${val#\"}"
+  val="${val%\'}"
+  val="${val#\'}"
   echo "${#val} $f"
 done
 ```
