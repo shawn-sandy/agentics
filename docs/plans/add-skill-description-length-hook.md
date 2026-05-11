@@ -26,7 +26,7 @@ Add the following to the `skill-reviewer` plugin:
 1. **`scripts/measure-description.sh`** — single source of truth for description measurement, called by both surfaces. Handles missing description (`ERROR`), multi-line/folded YAML (`WARNING: approximate`), and emits `OK:` / `WARNING:` with character counts.
 2. **`hooks.json`** — PostToolUse hook matching `Write|Edit|MultiEdit`. Extracts `file_path` from the event payload (with a MultiEdit fallback path), invokes the shared script, and dedups so it fires only when the `description:` line actually changes.
 3. **`commands/check-description.md`** — slash command `/skill-reviewer:check-description [path-or-glob]` that calls the shared script on demand for one or many files.
-4. **`tests/fixtures/skill-description-hook/`** — fixture SKILL.md files at 160, 161, and 200 chars, a missing-description fixture, and a multi-line fixture, plus a bash harness (`run.sh`) that calls `scripts/measure-description.sh` directly and asserts on its output. Note: the harness tests the shared script surface, not the hook's dedup or repo-guard logic.
+4. **`tests/fixtures/skill-description-hook/`** — fixture SKILL.md files at 160, 161, and 200 chars, a missing-description fixture, and a multi-line fixture, plus a bash harness (`run.sh`) that calls `scripts/measure-description.sh` directly and asserts on its output. Note: the harness tests the shared script surface, not the hook’s dedup or repo-guard logic.
 
 Prerequisite: audit and trim existing over-budget descriptions in `kit/plugins/` so the hook does not warn on already-shipped content.
 
@@ -49,7 +49,7 @@ Prerequisite: audit and trim existing over-budget descriptions in `kit/plugins/`
   <li>
     <strong>Audit existing SKILL.md files and trim over-budget descriptions.</strong>
     <br/><em>Why:</em> Without this pre-step, the new hook will warn on already-shipped over-budget descriptions the moment a contributor edits an unrelated section of those files — creating churn for problems they did not introduce.
-    <br/><em>Verify:</em> Run an audit one-liner that iterates every <code>kit/plugins/**/SKILL.md</code>, extracts the description value, and prints any file whose value exceeds 160 chars. Confirm zero output. Concretely: a <code>find kit/plugins -name SKILL.md</code> piped through a shell loop that applies the same extract-strip logic as Step 5 of <code>optimizing-descriptions/SKILL.md</code> and echoes <code>"$file: $len"</code> only when <code>$len -gt 160</code>.
+    <br/><em>Verify:</em> Run an audit one-liner that iterates every <code>kit/plugins/**/SKILL.md</code>, extracts the description value, and prints any file whose value exceeds 160 chars. Confirm zero output. Concretely: a <code>find kit/plugins -name SKILL.md</code> piped through a shell loop that applies the same extract-strip logic as Step 5 of <code>optimizing-descriptions/SKILL.md</code> and echoes <code>&quot;$file: $len&quot;</code> only when <code>$len -gt 160</code>.
     <br/><br/>
     For each over-budget file, run <code>/skill-reviewer:optimizing-descriptions</code> on it and apply the rewrite. Commit the audit as its own commit so the hook addition lands on a clean baseline.
   </li>
@@ -78,16 +78,16 @@ Prerequisite: audit and trim existing over-budget descriptions in `kit/plugins/`
 
   <li>
     <strong>Create <code>kit/plugins/skill-reviewer/hooks.json</code></strong> registering a PostToolUse hook that calls the shared script with dedup.
-    <br/><em>Why:</em> The always-on warning surface. Must match <code>Write|Edit|MultiEdit</code> (covers all the ways a SKILL.md gets written), tolerate MultiEdit's different payload shape, and avoid firing on every keystroke-equivalent save by deduping on the <code>description:</code> line hash.
-    <br/><em>Verify:</em> <code>jq empty kit/plugins/skill-reviewer/hooks.json</code> exits 0; the matcher is <code>"Write|Edit|MultiEdit"</code>; the command string includes the dedup state-file logic.
+    <br/><em>Why:</em> The always-on warning surface. Must match <code>Write|Edit|MultiEdit</code> (covers all the ways a SKILL.md gets written), tolerate MultiEdit’s different payload shape, and avoid firing on every keystroke-equivalent save by deduping on the <code>description:</code> line hash.
+    <br/><em>Verify:</em> <code>jq empty kit/plugins/skill-reviewer/hooks.json</code> exits 0; the matcher is <code>&quot;Write|Edit|MultiEdit&quot;</code>; the command string includes the dedup state-file logic.
     <br/><br/>
     Hook command (POSIX shell; reads tool event JSON on stdin):
-    <pre><code>file=$(jq -r '.tool_input.file_path // .tool_input.edits[0].file_path // empty' 2&gt;/dev/null); case "$file" in *SKILL.md) ;; *) exit 0 ;; esac; [ -f "$file" ] || exit 0; repo_root=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2&gt;/dev/null); [ -n "$repo_root" ] &amp;&amp; case "$file" in "$repo_root"/*) ;; *) exit 0 ;; esac; [ -n "$repo_root" ] || exit 0; line=$(grep "^description:" "$file" | head -1); state="/tmp/skill-desc-hook-$(printf '%s' "$file" | shasum -a 256 | cut -d' ' -f1).hash"; new=$(printf '%s' "$line" | shasum -a 256 | cut -d' ' -f1); old=$(cat "$state" 2&gt;/dev/null); [ "$new" = "$old" ] &amp;&amp; exit 0; printf '%s' "$new" &gt; "$state"; "${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh" "$file"</code></pre>
+    <pre><code>file=$(jq -r '.tool_input.file_path // .tool_input.edits[0].file_path // empty' 2&gt;/dev/null); case &quot;$file&quot; in *SKILL.md) ;; *) exit 0 ;; esac; [ -f &quot;$file&quot; ] || exit 0; repo_root=$(git -C &quot;$(dirname &quot;$file&quot;)&quot; rev-parse --show-toplevel 2&gt;/dev/null); [ -n &quot;$repo_root&quot; ] &amp;&amp; case &quot;$file&quot; in &quot;$repo_root&quot;/*) ;; *) exit 0 ;; esac; [ -n &quot;$repo_root&quot; ] || exit 0; line=$(grep &quot;^description:&quot; &quot;$file&quot; | head -1); state=&quot;/tmp/skill-desc-hook-$(printf '%s' &quot;$file&quot; | shasum -a 256 | cut -d' ' -f1).hash&quot;; new=$(printf '%s' &quot;$line&quot; | shasum -a 256 | cut -d' ' -f1); old=$(cat &quot;$state&quot; 2&gt;/dev/null); [ &quot;$new&quot; = &quot;$old&quot; ] &amp;&amp; exit 0; printf '%s' &quot;$new&quot; &gt; &quot;$state&quot;; &quot;${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh&quot; &quot;$file&quot;</code></pre>
     <br/>
     Notes:
     <ul>
       <li><strong>Payload extraction:</strong> falls back through <code>.tool_input.file_path</code> (Write/Edit) then <code>.tool_input.edits[0].file_path</code> (MultiEdit).</li>
-      <li><strong>Repo-local guard (replaces "any *SKILL.md" scoping):</strong> after resolving <code>file</code>, the hook runs <code>git -C "$(dirname "$file")" rev-parse --show-toplevel</code> to find the owning git repository. If the file is not inside a git repo (exit non-zero) OR it is in a different repo than where the hook is running, the hook exits silently. This ensures the hook only fires on SKILL.md files that are actively being developed in the current project — external plugins installed to <code>~/.claude/plugins/</code> or other paths outside the repo root are silently skipped. If <code>git</code> is unavailable, the hook exits silently (fail-safe).</li>
+      <li><strong>Repo-local guard (replaces “any *SKILL.md” scoping):</strong> after resolving <code>file</code>, the hook runs <code>git -C &quot;$(dirname &quot;$file&quot;)&quot; rev-parse --show-toplevel</code> to find the owning git repository. If the file is not inside a git repo (exit non-zero) OR it is in a different repo than where the hook is running, the hook exits silently. This ensures the hook only fires on SKILL.md files that are actively being developed in the current project — external plugins installed to <code>~/.claude/plugins/</code> or other paths outside the repo root are silently skipped. If <code>git</code> is unavailable, the hook exits silently (fail-safe).</li>
       <li><strong>Dedup contract:</strong>
         <ul>
           <li>Key file: <code>/tmp/skill-desc-hook-&lt;sha256-of-absolute-path&gt;.hash</code>.</li>
@@ -97,8 +97,8 @@ Prerequisite: audit and trim existing over-budget descriptions in `kit/plugins/`
           <li>Cleanup: relies on OS <code>/tmp</code> cleanup (macOS purges on boot; Linux varies by tmpfiles config). Stale entries cause at most one missed warning on the first invocation after cleanup, which is acceptable.</li>
         </ul>
       </li>
-      <li><strong>Script reference:</strong> uses <code>${CLAUDE_PLUGIN_ROOT}</code> which Claude Code sets to the plugin's installed root directory. Verify both <code>--plugin-dir</code> dev mode and <code>/plugin install</code> mode in Step 9.</li>
-      <li><strong>Output:</strong> the shared script's one-line message is echoed to the hook's stdout, matching the existing <code>OK:</code> / <code>WARNING:</code> / <code>ERROR:</code> prefix convention used by repo-level hooks.</li>
+      <li><strong>Script reference:</strong> uses <code>${CLAUDE_PLUGIN_ROOT}</code> which Claude Code sets to the plugin’s installed root directory. Verify both <code>--plugin-dir</code> dev mode and <code>/plugin install</code> mode in Step 9.</li>
+      <li><strong>Output:</strong> the shared script’s one-line message is echoed to the hook’s stdout, matching the existing <code>OK:</code> / <code>WARNING:</code> / <code>ERROR:</code> prefix convention used by repo-level hooks.</li>
     </ul>
   </li>
 
@@ -128,21 +128,21 @@ Run the shared measurement script on one or more SKILL.md files.
 For each resolved file, run the shared script:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh" "$file"
+&quot;${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh&quot; &quot;$file&quot;
 ```
 
 This emits one line per file: `OK:`, `WARNING:` (over budget), `WARNING:` (multi-line), or `ERROR:` (missing description).
 
 ## Report
 
-Print all script output. For any over-budget file, suggest running `/skill-reviewer:optimizing-descriptions` to trim it (the script's WARNING message already includes this pointer).
+Print all script output. For any over-budget file, suggest running `/skill-reviewer:optimizing-descriptions` to trim it (the script’s WARNING message already includes this pointer).
 </code></pre>
   </li>
 
   <li>
     <strong>Create <code>tests/fixtures/skill-description-hook/</code></strong> with fixture SKILL.md files and a harness.
     <br/><em>Why:</em> Manual verification in a Claude session catches gross failures but does not exercise edge cases (exactly-160, exactly-161, missing description, multi-line). A bash harness that pipes synthetic PostToolUse JSON into the hook command catches regressions automatically.
-    <br/><em>Verify:</em> Running <code>tests/fixtures/skill-description-hook/run.sh</code> produces zero failed assertions; each fixture file's expected output (recorded inline in the harness) matches actual output.
+    <br/><em>Verify:</em> Running <code>tests/fixtures/skill-description-hook/run.sh</code> produces zero failed assertions; each fixture file’s expected output (recorded inline in the harness) matches actual output.
     <br/><br/>
     Files:
     <ul>
@@ -151,26 +151,26 @@ Print all script output. For any over-budget file, suggest running `/skill-revie
       <li><code>desc-200.md</code> — description 200 chars → expect <code>WARNING: 200 chars (&gt;160)</code>.</li>
       <li><code>desc-missing.md</code> — no <code>description:</code> line → expect <code>ERROR: no description:</code>.</li>
       <li><code>desc-multiline.md</code> — <code>description: |</code> literal block scalar → expect <code>WARNING: multi-line</code>.</li>
-      <li><code>run.sh</code> — harness that for each fixture: builds a fake PostToolUse JSON payload, pipes it into the hook command, and asserts the prefix and char-count match.</li>
+      <li><code>run.sh</code> — harness that for each fixture: calls <code>scripts/measure-description.sh</code> directly and asserts the expected output prefix and char-count match.</li>
     </ul>
   </li>
 
   <li>
     <strong>Update <code>kit/plugins/skill-reviewer/README.md</code></strong> to document every new component.
     <br/><em>Why:</em> Plugin patterns rule requires README documentation of all components. Users seeing the warning need to know its origin and how to silence it.
-    <br/><em>Verify:</em> README contains: a "Hooks" section referencing <code>hooks.json</code> and the 160-char target; a "Commands" entry for <code>/skill-reviewer:check-description</code> with usage; a note about the shared script at <code>scripts/measure-description.sh</code>; a note that existing skills were audited and trimmed; explicit disable instructions (override <code>hooks</code> in user <code>.claude/settings.json</code>).
+    <br/><em>Verify:</em> README contains: a “Hooks” section referencing <code>hooks.json</code> and the 160-char target; a “Commands” entry for <code>/skill-reviewer:check-description</code> with usage; a note about the shared script at <code>scripts/measure-description.sh</code>; a note that existing skills were audited and trimmed; explicit disable instructions (override <code>hooks</code> in user <code>.claude/settings.json</code>).
   </li>
 
   <li>
     <strong>Append a MINOR-bump entry to <code>kit/plugins/skill-reviewer/CHANGELOG.md</code>.</strong>
-    <br/><em>Why:</em> <code>.claude/rules/marketplace.md</code> classifies "new hook" and "new command" each as MINOR; one combined entry covers both.
+    <br/><em>Why:</em> <code>.claude/rules/marketplace.md</code> classifies “new hook” and “new command” each as MINOR; one combined entry covers both.
     <br/><em>Verify:</em> CHANGELOG.md has a new top entry with the bumped version and one-line descriptions of: hook, command, shared script, test fixture, and the existing-skills audit.
   </li>
 
   <li>
     <strong>Bump <code>skill-reviewer</code> version in <code>.claude-plugin/marketplace.json</code>.</strong>
     <br/><em>Why:</em> Version lives in marketplace.json for relative-path plugins; CHANGELOG and marketplace version must agree.
-    <br/><em>Verify:</em> <code>jq '.plugins[] | select(.name=="skill-reviewer") | .version' .claude-plugin/marketplace.json</code> returns the new version and matches the latest CHANGELOG entry.
+    <br/><em>Verify:</em> <code>jq '.plugins[] | select(.name==&quot;skill-reviewer&quot;) | .version' .claude-plugin/marketplace.json</code> returns the new version and matches the latest CHANGELOG entry.
   </li>
 </ol>
 
@@ -185,7 +185,7 @@ End-to-end test, run **both** modes (dev `--plugin-dir` AND installed `/plugin i
   <li><strong>Hook — dedup:</strong> Edit a non-description part of the same SKILL.md. Expect <strong>no output</strong> (the <code>description:</code> line hash is unchanged).</li>
   <li><strong>Hook — missing description:</strong> Write a SKILL.md with no <code>description:</code> line. Expect <code>ERROR: no description: frontmatter</code>.</li>
   <li><strong>Hook — multi-line description:</strong> Write a SKILL.md with <code>description: |</code> literal block scalar. Expect <code>WARNING: multi-line description detected</code>.</li>
-  <li><strong>Hook — MultiEdit:</strong> Use a MultiEdit operation to change a SKILL.md's description. Expect the same warning behavior as Edit (the fallback jq path resolves correctly).</li>
+  <li><strong>Hook — MultiEdit:</strong> Use a MultiEdit operation to change a SKILL.md’s description. Expect the same warning behavior as Edit (the fallback jq path resolves correctly).</li>
   <li><strong>Hook — no-op (wrong file type):</strong> <code>Write</code> a non-SKILL.md file (e.g. README.md). Expect zero output (early <code>exit 0</code>).</li>
   <li><strong>Hook — no-op (external plugin):</strong> Simulate an external SKILL.md path outside the repo root (e.g. <code>/tmp/external-plugin/SKILL.md</code>) by temporarily hardcoding a fake path into the payload. Expect zero output — the git-root guard should reject it silently.</li>
   <li><strong>Installed-mode parity:</strong> <code>/plugin install skill-reviewer@agentics-kit</code> in a fresh session, then repeat tests 2 and 3. Expect identical output. Verifies <code>${CLAUDE_PLUGIN_ROOT}</code> resolves and the script is executable post-install.</li>
@@ -214,7 +214,7 @@ Conducted via `/plan-interview:plan-interview` on 2026-05-11.
 
 - **Filename renamed** from `add-a-hook-that-snappy-petal.md` → `add-skill-description-length-hook.md`.
 - **Both** activation surfaces — always-on hook AND named slash command.
-- **Hook matcher:** `Write|Edit|MultiEdit` with jq fallback path for MultiEdit's `edits[0].file_path` shape.
+- **Hook matcher:** `Write|Edit|MultiEdit` with jq fallback path for MultiEdit’s `edits[0].file_path` shape.
 - **Shared script** at `scripts/measure-description.sh` is the single source of truth; hook and command both call it.
 - **Edge inputs:** missing `description:` → `ERROR`; multi-line/folded YAML → `WARNING: approximate`.
 - **Dedup:** hook fires only when the `description:` line hash changes (state in `/tmp`).
@@ -231,4 +231,4 @@ Conducted via `/plan-interview:plan-interview` on 2026-05-11.
 
 ### Simplification opportunity noted (not adopted)
 
-The scope grew ~5× from the original "warn me if >160" ask. A simpler v1 could ship the hook + shared script only and defer the command, fixture, dedup, and audit to follow-up PRs. The user elected the comprehensive single-PR approach; if implementation feels heavy, the staged approach remains a viable fallback.
+The scope grew ~5× from the original “warn me if >160” ask. A simpler v1 could ship the hook + shared script only and defer the command, fixture, dedup, and audit to follow-up PRs. The user elected the comprehensive single-PR approach; if implementation feels heavy, the staged approach remains a viable fallback.

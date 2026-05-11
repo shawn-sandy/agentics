@@ -17,10 +17,6 @@ assert() {
   expected_prefix="$3"
   expected_count="$4"  # optional: numeric char count that must appear in output
 
-  # Clear any stale dedup state for this file so tests are independent
-  state="/tmp/skill-desc-hook-$(printf '%s' "$file" | (sha256sum 2>/dev/null || shasum -a 256 2>/dev/null) | cut -d' ' -f1).hash"
-  rm -f "$state"
-
   actual=$("$SCRIPT" "$file" 2>&1)
 
   prefix_ok=0
