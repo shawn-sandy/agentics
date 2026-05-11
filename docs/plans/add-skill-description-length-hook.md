@@ -1,3 +1,9 @@
+---
+status: completed
+type: standard
+created: 2026-05-11
+---
+
 # Plan: SKILL.md description-length warning — hook + command
 
 ## Context
@@ -20,7 +26,7 @@ Add the following to the `skill-reviewer` plugin:
 1. **`scripts/measure-description.sh`** — single source of truth for description measurement, called by both surfaces. Handles missing description (`ERROR`), multi-line/folded YAML (`WARNING: approximate`), and emits `OK:` / `WARNING:` with character counts.
 2. **`hooks.json`** — PostToolUse hook matching `Write|Edit|MultiEdit`. Extracts `file_path` from the event payload (with a MultiEdit fallback path), invokes the shared script, and dedups so it fires only when the `description:` line actually changes.
 3. **`commands/check-description.md`** — slash command `/skill-reviewer:check-description [path-or-glob]` that calls the shared script on demand for one or many files.
-4. **`tests/fixtures/skill-description-hook/`** — fixture SKILL.md files at 160, 161, and 200 chars plus a harness that pipes a fake PostToolUse JSON payload into the hook command and asserts the output.
+4. **`tests/fixtures/skill-description-hook/`** — fixture SKILL.md files at 160, 161, and 200 chars, a missing-description fixture, and a multi-line fixture, plus a bash harness (`run.sh`) that calls `scripts/measure-description.sh` directly and asserts on its output. Note: the harness tests the shared script surface, not the hook's dedup or repo-guard logic.
 
 Prerequisite: audit and trim existing over-budget descriptions in `kit/plugins/` so the hook does not warn on already-shipped content.
 
@@ -218,8 +224,8 @@ Conducted via `/plan-interview:plan-interview` on 2026-05-11.
 
 ### Open risks recorded
 
-- `${CLAUDE_PLUGIN_ROOT}` resolution must be verified in both `--plugin-dir` and `/plugin install` modes (Verification step 9).
-- Script exec bit must be committed with `git update-index --chmod=+x` (Verification step 10).
+- `${CLAUDE_PLUGIN_ROOT}` resolution must be verified in both `--plugin-dir` and `/plugin install` modes (Verification step 10).
+- Script exec bit must be committed with `git update-index --chmod=+x` (Verification step 11).
 - Hook output visibility (Claude-side vs. user-side) confirmed by Verification steps 2–7 — if the warning never reaches a human, value is reduced.
 - Dedup state semantics documented in Step 3 (key format, first-write behavior, cleanup policy).
 

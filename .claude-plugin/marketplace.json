@@ -2,13 +2,13 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
   "version": "3.3.0",
-  "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization",
+  "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
     "email": "shawnsandy04@gmail.com"
   },
   "metadata": {
-    "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization"
+    "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization"
   },
   "plugins": [
     {
@@ -95,8 +95,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "1.8.0",
-      "description": "Review and plan Claude Code skills, run tests for changed files, and audit skill permissions \u2014 audit SKILL.md files, scaffold new skills, verify test coverage, and recommend minimal allowed-tools declarations",
+      "version": "1.7.0",
+      "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize descriptions, and enforce the 160-char description-length budget",
       "category": "development",
       "tags": [
         "skills",
@@ -118,7 +118,7 @@
         "path": "kit/plugins/code-testing-agent"
       },
       "version": "3.3.0",
-      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent \u2014 not arbitrary coverage",
+      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
         "testing",
@@ -139,7 +139,7 @@
         "path": "kit/plugins/git-agent"
       },
       "version": "3.6.2",
-      "description": "Automated git workflow \u2014 create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
+      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
         "git",
@@ -179,7 +179,7 @@
         "path": "kit/plugins/react-perf-analyzer"
       },
       "version": "1.2.0",
-      "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores \u2014 produces a heuristic report with recommendations",
+      "description": "Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores — produces a heuristic report with recommendations",
       "category": "testing",
       "tags": [
         "react",
@@ -200,7 +200,7 @@
         "path": "kit/plugins/marketplace-builder"
       },
       "version": "1.1.1",
-      "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure \u2014 audit readiness, generate missing files, and guide marketplace setup",
+      "description": "Evaluate a repository and scaffold Claude Code skill marketplace infrastructure — audit readiness, generate missing files, and guide marketplace setup",
       "category": "development",
       "tags": [
         "marketplace",
@@ -221,7 +221,7 @@
         "path": "kit/plugins/agentic-plugin-dev"
       },
       "version": "1.2.1",
-      "description": "Create, manage, and validate Claude Code plugins \u2014 scaffold new plugins, manage marketplace entries, and audit plugin structure",
+      "description": "Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure",
       "category": "development",
       "tags": [
         "plugin-authoring",
@@ -240,7 +240,7 @@
         "path": "kit/plugins/code-simplifier"
       },
       "version": "1.0.1",
-      "description": "Analyze code for structural quality issues, code smells, and optimization opportunities \u2014 dead code, complexity, god classes, duplication, coupling, and performance anti-patterns",
+      "description": "Analyze code for structural quality issues, code smells, and optimization opportunities — dead code, complexity, god classes, duplication, coupling, and performance anti-patterns",
       "category": "development",
       "tags": [
         "code-smells",
@@ -260,7 +260,7 @@
         "path": "kit/plugins/agent-reviewer"
       },
       "version": "1.0.1",
-      "description": "Review and audit Claude Code subagent definition files (agents/*.md) against official best practices \u2014 score frontmatter, tool configuration, description quality, system prompt quality, and security posture",
+      "description": "Review and audit Claude Code subagent definition files (agents/*.md) against official best practices — score frontmatter, tool configuration, description quality, system prompt quality, and security posture",
       "category": "development",
       "tags": [
         "agents",
