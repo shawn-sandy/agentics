@@ -126,11 +126,7 @@ In this order:
 
 ### 7. Rename this plan file to a descriptive kebab-case name
 
-Run `/plan-hygiene` (or rename manually) — the current filename `bright-sprouting-stream.md` is a random placeholder. A descriptive target name: `optimize-skill-descriptions-and-package-optimizer.md`.
-
-**Why:** Project rule `.claude/rules/plan-hygiene.md` blocks commits with random plan filenames.
-
-**Verify:** `ls docs/plans/` no longer shows `bright-sprouting-stream.md`; the renamed file exists with the same content.
+**Completed:** renamed from `bright-sprouting-stream.md` to `optimize-skill-descriptions-and-package-optimizer.md`.
 
 ---
 
@@ -138,7 +134,7 @@ Run `/plan-hygiene` (or rename manually) — the current filename `bright-sprout
 
 End-to-end checks before considering the plan complete:
 
-- **Char-count audit passes:** `awk -F: '/^description:/ {print length($0)-13, FILENAME}' kit/plugins/*/skills/*/SKILL.md` shows all values ≤160.
+- **Char-count audit passes:** `awk '/^description:/ {v=$2; gsub(/^ /,"",v); gsub(/^"|"$/,"",v); gsub(/^'\''|'\''/,"",v); print length(v), FILENAME}' kit/plugins/*/skills/*/SKILL.md` shows all values ≤160.
 - **Activation-trigger preserved:** every description contains "Use when" OR leads with a capability verb (per spot-check in step 4).
 - **New skill works:** load skill-reviewer locally with `claude --plugin-dir ~/devbox/agentics/kit/plugins/skill-reviewer`, ask "optimize this skill description: <pasted long description>", confirm `optimizing-descriptions` activates and emits a ≤160-char rewrite.
 - **Versioning consistent:** `marketplace.json` shows `1.7.0`, `plugin.json` has no `version`, CHANGELOG has matching dated entry.
