@@ -4,7 +4,7 @@ description: "Use when the user asks to convert a plan to HTML, generate an HTML
 allowed-tools: AskUserQuestion, Bash(open *), Glob, Grep, Read, TodoWrite, Write
 ---
 
-# plan-to-html
+# Plan to HTML
 
 Convert a plan markdown file into a rich, self-contained HTML document that can
 be opened in any browser or shared via a file host.

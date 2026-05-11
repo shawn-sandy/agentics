@@ -4,7 +4,7 @@ allowed-tools: Read, Glob, Grep, Bash(open *), Write, TodoWrite, AskUserQuestion
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
 
-# plan-to-html
+# Plan to HTML
 
 Convert a plan markdown file into a rich, self-contained HTML document with a
 sticky sidebar, color-coded status badge, three-line step cards (action / why /

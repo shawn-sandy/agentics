@@ -51,6 +51,13 @@ source plan.
 No `<script>` tags. No `<link>` or `<script src>` to external resources.
 No JavaScript of any kind.
 
+**Content sanitization**: All text derived from the plan file (title, section
+headings, body text) must be HTML-escaped before embedding. Replace `&` → `&amp;`,
+`<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`. Any raw HTML tags found in the plan
+source (including `<script>`, `<img src="…">`, `<link>`) must be rendered as
+escaped text, not emitted as live HTML — this preserves the self-contained and
+no-JS guarantees even when the plan file itself contains HTML.
+
 ---
 
 ## Header
@@ -144,8 +151,8 @@ Badge style: rounded pill, small font, white text, `padding: 0.2em 0.7em`.
 ## Color Palette Themes
 
 All four themes share the identical layout. Only these CSS custom properties
-change between themes — define them in `:root` and override per theme class
-on `<body>`:
+change between themes. Define them directly on each `body.theme-*` class (no
+`:root` defaults required — a theme class is always present on `<body>`):
 
 | Property | Purpose |
 |---|---|
