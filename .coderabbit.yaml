@@ -37,7 +37,7 @@ reviews:
         - `category` is one of: development, productivity, learning, testing, documentation, security
         - `tags` are specific and searchable (avoid generic terms like "tool" or "helper")
         - No duplicate plugin names exist
-        - Version bumps follow semver: patch=fix/typo, minor=new command/skill/agent, major=breaking rename or removal
+        - Version bumps follow semver: patch=backward-compatible fixes/typos, minor=backward-compatible additions (e.g., new command/skill/agent), major=any backward-incompatible change (including breaking rename or removal)
 
     - path: "kit/plugins/**/.claude-plugin/plugin.json"
       instructions: |
