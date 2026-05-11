@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.15.0] - 2026-05-11
+
+### Added
+
+- New `plan-to-html` skill and command — converts any plan markdown file into a
+  rich, self-contained HTML document with sticky sidebar navigation, color-coded
+  status badge, and three-line step cards (action / why / verify)
+- Four selectable color themes: Default (neutral/blue), Developer (dark/green),
+  Document (warm/sepia), Minimal (pure white/black)
+- New `skills/plan-to-html/reference/html-spec.md` — companion reference file
+  defining the HTML layout contract, semantic requirements (heading hierarchy,
+  landmark elements, ≥4.5:1 contrast), theme CSS custom properties, and
+  responsive breakpoint; keeps `SKILL.md` under 500 lines
+- Overwrite prompt when the output `.html` file already exists
+- Option to open the generated HTML in the browser after writing
+
 ## [1.14.6] - 2026-05-07
 
 ### Changed
