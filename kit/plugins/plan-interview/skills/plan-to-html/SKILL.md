@@ -166,13 +166,13 @@ open "<output-path>"
 
 Output a one-line summary:
 
-```
+```text
 Written to docs/plans/add-auth-flow.html (theme: developer)
 ```
 
 ## Examples
 
-```
+```text
 /plan-interview:plan-to-html                                    # auto-detects from IDE or settings
 /plan-interview:plan-to-html docs/plans/add-auth-flow.md       # specific plan file
 /plan-interview:plan-to-html ~/.claude/plans/my-feature.md     # absolute path

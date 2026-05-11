@@ -27,7 +27,7 @@ source plan.
 
 ## Page Structure
 
-```
+```html
 <html>
   <head>
     <meta charset="UTF-8">
