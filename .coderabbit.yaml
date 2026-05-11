@@ -51,8 +51,10 @@ reviews:
         Plugin source code. Check for:
         - CHANGELOG.md present and updated when plugin logic changes
         - README.md exists with usage instructions
-        - Skill SKILL.md files use `allowed-tools` frontmatter only when tool restriction is necessary
-        - Command files follow `/plugin:name` naming convention
+        - Skill SKILL.md files must declare every tool the skill uses in a comma-separated `allowed-tools:`
+          frontmatter line so users are not prompted for permission mid-run; restricted forms like
+          `Bash(git *)` are preferred when the skill only uses one CLI family
+        - Command files are invoked as `/plugin-name:command-name` and live under `commands/<command-name>.md`
         - Agent files are under an `agents/` subdirectory
 
     - path: "docs/plans/**"
