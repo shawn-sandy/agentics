@@ -20,6 +20,7 @@ reviews:
       - "^main$"
       - "^feat/.*$"
       - "^fix/.*$"
+      - "^claude/.*$"
 
   path_filters:
     - "!**/*.lock"
