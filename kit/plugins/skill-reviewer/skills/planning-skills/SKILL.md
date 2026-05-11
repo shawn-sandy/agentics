@@ -1,6 +1,6 @@
 ---
 name: planning-skills
-description: "Use when the user asks to plan a skill, design a skill, create a new skill, scaffold a skill, help build a skill, or asks what design pattern a skill should use. Guides through pattern selection, folder structure, frontmatter drafting, and file generation. Does NOT review or audit existing skills — use reviewing-skills for that."
+description: "Use when the user asks to plan, design, scaffold, or create a new skill. Guides through pattern selection, folder structure, and frontmatter drafting."
 allowed-tools: AskUserQuestion, Read, TodoWrite, Write
 ---
 
@@ -9,6 +9,10 @@ allowed-tools: AskUserQuestion, Read, TodoWrite, Write
 Walks users through a structured workflow to plan and generate a complete Claude Code skill. Produces a ready-to-use skill folder with SKILL.md, optional reference files, and optional scripts.
 
 Follow these steps exactly.
+
+## When not to use
+
+Does not review or audit existing skills — use reviewing-skills for that.
 
 ## Table of Contents
 

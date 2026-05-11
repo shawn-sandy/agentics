@@ -1,6 +1,6 @@
 ---
 name: plan-status
-description: Use when the user asks to check, update, or determine the status of a plan file (or agentic plan), when entering or exiting plan mode, when creating or updating plans, or when working with plan files in any capacity — not for stress-testing, validating, or critiquing plan content.
+description: Use when the user asks to check, update, or set the status of a plan file, when entering or exiting plan mode, or when creating or updating a plan.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
@@ -11,6 +11,10 @@ Determine whether a plan has been implemented by inspecting the codebase, then
 write the lifecycle status and dates into the plan file's YAML frontmatter.
 
 Follow these steps exactly.
+
+## When not to use
+
+Does not stress-test, validate, or critique plan content — use plan-interview for that.
 
 ## Table of Contents
 

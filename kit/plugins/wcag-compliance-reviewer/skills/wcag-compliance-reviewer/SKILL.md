@@ -1,6 +1,6 @@
 ---
 name: wcag-compliance-reviewer
-description: "Use when the user asks to review code for accessibility, check WCAG compliance, identify accessibility issues, or audit components or pages for a11y standards. Reviews HTML/CSS and React/TypeScript for WCAG 2.2 Level AA compliance."
+description: "Use when the user asks to check WCAG compliance, review accessibility, or audit a11y in HTML/CSS or React/TypeScript components against WCAG 2.2 Level AA."
 allowed-tools: Read
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: plugin-creator
-description: "Use when the user asks to create a plugin, scaffold a plugin, generate a new plugin, make a plugin, or set up a plugin from scratch. Scaffolds the full plugin — manifest, commands, skills, agents, hooks, and MCP server. Does NOT scaffold individual skills (use skill-reviewer:planning-skills), individual agents (use agent-creator), or marketplace infrastructure (use marketplace-builder)."
+description: "Use when the user asks to create, scaffold, or generate a full plugin from scratch. Scaffolds the manifest, commands, skills, agents, hooks, and MCP server."
 allowed-tools: AskUserQuestion, ExitPlanMode, Glob, Read, Write
 ---
 
@@ -9,6 +9,10 @@ allowed-tools: AskUserQuestion, ExitPlanMode, Glob, Read, Write
 Walks users through a structured workflow to scaffold a complete Claude Code plugin — producing a ready-to-use plugin directory with manifest, components, and changelog.
 
 Follow these steps exactly.
+
+## When not to use
+
+Does not scaffold individual skills (use skill-reviewer:planning-skills), individual agents (use agent-creator), or marketplace infrastructure (use marketplace-builder).
 
 ## Table of Contents
 

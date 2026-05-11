@@ -1,6 +1,6 @@
 ---
 name: reviewing-agents
-description: "Use when the user asks to review, audit, score, or check an agent definition file (agents/*.md) — or says 'review my agent', 'audit this agent', 'check agent quality', 'score my agent definition', or 'does this agent follow best practices'. Does NOT scaffold agents — use agent-creator. Does NOT review SKILL.md — use skill-reviewer."
+description: "Use when the user asks to review, audit, score, or check an agent definition file (agents/*.md) for quality and best practices."
 allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 
@@ -11,6 +11,10 @@ against official best practices. Produces a scored report across 5 quality
 dimensions and optionally generates a corrected version.
 
 Follow these steps exactly.
+
+## When not to use
+
+Does not scaffold new agents — use agent-creator. Does not review SKILL.md files — use skill-reviewer.
 
 ## Table of Contents
 

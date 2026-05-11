@@ -46,3 +46,4 @@ temp/
 *.tmp
 The-Complete-Guide-to-Building-Skill-for-Claude.pdf
 tests/sandbox/.gitkeep
+examples/

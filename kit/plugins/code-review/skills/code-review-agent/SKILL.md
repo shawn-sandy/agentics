@@ -1,6 +1,6 @@
 ---
 name: code-review-agent
-description: "Use when the user asks to review code, check a PR or branch diff, find bugs or security issues, or says 'take a look at this'. Reviews for bugs, security issues, quality, complexity, and breaking changes."
+description: "Use when the user asks to review code, check a PR diff, or find bugs and security issues. Reviews for bugs, security, quality, and breaking changes."
 allowed-tools: AskUserQuestion, Bash, Read
 ---
 

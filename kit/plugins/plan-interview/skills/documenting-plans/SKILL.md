@@ -1,6 +1,6 @@
 ---
 name: documenting-plans
-description: Use when the user asks to document a plan, turn a plan into docs, or create a reference doc from a plan. Only runs on plans with `type: artifact` in their frontmatter. Synthesizes a prose doc at docs/<slug>.md from the plan body, live code inspection, and git history. Use plan-status to set status/type, plan-interview to stress-test, review-rename-plans to rename.
+description: Use when the user asks to document a plan or create a reference doc from it. Only runs on plans with `type: artifact` in frontmatter.
 allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
@@ -12,6 +12,10 @@ completed plan file, reflecting what actually shipped by inspecting the codebase
 and git history.
 
 Follow these steps exactly.
+
+## When not to use
+
+Only runs on plans with `type: artifact` in frontmatter — use plan-status to set status/type before running. Use plan-interview to stress-test the plan first, or review-rename-plans to rename the plan file.
 
 ## Table of Contents
 

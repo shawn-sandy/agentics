@@ -1,10 +1,14 @@
 ---
 name: path-rules-advisor
-description: Use when the user wants to create path-specific rules, add rules for specific file types or directories, organize Claude rules by file type, or check whether the current project needs path-specific rules in .claude/rules/. Does NOT create or overwrite global memory entries — use agentic-memory-doctor for that.
+description: Use when the user wants to create path-specific rules, add rules for file types or directories, or organize Claude rules in .claude/rules/.
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 
 Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by the user's message.
+
+## When not to use
+
+Does not create or overwrite global memory entries — use agentic-memory-doctor for that.
 
 ## Table of Contents
 

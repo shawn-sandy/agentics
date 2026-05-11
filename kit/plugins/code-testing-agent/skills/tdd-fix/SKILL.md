@@ -1,6 +1,6 @@
 ---
 name: tdd-fix
-description: "Use when the user asks for a TDD fix, 'write a red test then make it green', reproduce a bug with a failing test, or wants an autonomous red-green cycle capped at N iterations. Does not design tests from scratch — use code-testing-agent. Does not review test quality — use reviewing-tests."
+description: "Use when the user asks to TDD-fix a bug, write a failing test then make it pass, or run an autonomous red-green cycle capped at N iterations."
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TodoWrite, AskUserQuestion
 ---
 
@@ -11,6 +11,10 @@ passing, run the full suite, commit with a `fix:` prefix, and open a PR.
 
 > **Freedom level: Strict** — Follow these steps in order. Do not skip or
 > combine steps. Stop at each hard-stop marker.
+
+## When not to use
+
+Does not design tests from scratch — use code-testing-agent. Does not review test quality — use reviewing-tests.
 
 ## Table of Contents
 
