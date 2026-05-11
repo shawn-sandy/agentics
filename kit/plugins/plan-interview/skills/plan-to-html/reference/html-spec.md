@@ -37,9 +37,12 @@ source plan.
   </head>
   <body>
     <header>          <!-- plan title, status badge, metadata row -->
+    </header>
     <div class="layout">
       <nav aria-label="Plan sections">  <!-- sticky sidebar with anchor links -->
+      </nav>
       <main>          <!-- all section content -->
+      </main>
     </div>
   </body>
 </html>

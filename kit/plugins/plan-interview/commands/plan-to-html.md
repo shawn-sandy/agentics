@@ -1,6 +1,6 @@
 ---
 description: Convert a plan markdown file into a rich, self-contained HTML document viewable in any browser
-allowed-tools: Read, Glob, Grep, Bash, Write, Edit, TodoWrite, AskUserQuestion
+allowed-tools: Read, Glob, Grep, Bash(open *), Write, TodoWrite, AskUserQuestion
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
 
