@@ -66,7 +66,7 @@ The spec must document:
 
 **Create `commands/plan-to-html.md`** — write the command wrapper with frontmatter (`description`, `allowed-tools: Read, Glob, Grep, Bash, Write, Edit, TodoWrite, AskUserQuestion`, `argument-hint: "[plan-file-path]"`), a short description, usage examples, and a reference to the skill file.
 
-- *Why:* Commands are the explicit invocation surface (`/plan-interview:plan-to-html [path]`); `allowed-tools` must live here since SKILL.md doesn't support it.
+- *Why:* Commands are the explicit invocation surface (`/plan-interview:plan-to-html [path]`). Both the skill and the command should declare `allowed-tools` — the skill's declaration prevents mid-run permission prompts; the command's declaration documents the required capabilities for explicit invocation.
 - *Verify:* Read the written file; confirm YAML frontmatter includes `allowed-tools` with `Write` listed, and at least 2 usage examples appear.
 
 </li>
@@ -140,7 +140,7 @@ The spec must document:
 
 - **Copy button contradiction resolved**: original plan included a JS clipboard button; user confirmed no interactivity — removed from spec.
 - **500-line SKILL.md limit**: mitigated by adding `reference/html-spec.md` companion file (Step 1).
-- **Overwrite behavior**: now addressed in Step 2 (collision check via `AskUserQuestion`).
+- **Overwrite behavior**: now addressed in Step 4 (collision check via `AskUserQuestion`).
 - **Interview Summary section**: now explicitly included in Step 2 parse list.
 
 ### Recommended Next Steps

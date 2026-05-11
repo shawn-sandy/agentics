@@ -56,9 +56,19 @@ The `<header>` element contains:
 
 1. `<h1>` — plan title (H1 from source plan, with `Plan:` prefix stripped)
 2. Status badge — see **Status Badge** section below
-3. Metadata row — `Created: {date}` · `Modified: {date}` · `Theme: {name}`
+3. Metadata row — see field rendering rules below
 
-Render absent frontmatter fields as `n/a`.
+**Metadata field rendering:**
+
+| Field | Absent behavior |
+|---|---|
+| `created` | Render as `n/a` |
+| `modified` | Omit from metadata row entirely (absence is normal for new plans) |
+| `type` | Omit from metadata row entirely |
+| `status` | Render badge as `unknown` — see **Status Badge** section |
+
+The Theme name is always shown (it was chosen by the user at runtime, not read
+from frontmatter).
 
 ---
 
@@ -272,13 +282,11 @@ Two-column layout above 768px; single-column below 768px:
 
 ## Graceful Unknown State
 
-When frontmatter fields are absent:
+Never stop or warn the user for missing frontmatter — render gracefully in all
+cases. The authoritative per-field rules are in the **Header** section above
+(metadata field rendering table). Summary:
 
-- `status` absent → render badge as `unknown` (gray, "unknown" label)
-- `created` absent → render as `n/a`
-- `modified` absent → omit the modified date row entirely (do not show `n/a`
-  for modified — its absence is normal for new plans)
-- `type` absent → omit type from the metadata row entirely
-
-Do not stop or warn the user for missing frontmatter — render gracefully and
-continue.
+- `status` absent → badge shows "unknown" in gray
+- `created` absent → `n/a` in metadata row
+- `modified` absent → omit from metadata row (do not show `n/a`)
+- `type` absent → omit from metadata row entirely

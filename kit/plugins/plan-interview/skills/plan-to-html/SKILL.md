@@ -1,6 +1,7 @@
 ---
 name: plan-to-html
 description: "Use when the user asks to convert a plan to HTML, generate an HTML version of a plan, export a plan as a webpage, or make a plan viewable in a browser."
+allowed-tools: AskUserQuestion, Bash(open *), Glob, Grep, Read, TodoWrite, Write
 ---
 
 # plan-to-html
