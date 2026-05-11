@@ -1,0 +1,81 @@
+# CodeRabbit configuration for shawn-sandy/agentics
+# Marketplace system for Claude Code plugins
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+version: "2"
+
+language: "en-US"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "feat/*"
+      - "fix/*"
+      - "claude/*"
+
+  path_filters:
+    - "!**/*.lock"
+    - "!**/node_modules/**"
+    - "!**/.git/**"
+
+  path_instructions:
+    - path: ".claude-plugin/marketplace.json"
+      instructions: |
+        This is the central plugin registry. Verify:
+        - Each plugin has a unique `name`
+        - `version` is set here and NOT in the plugin's `plugin.json`
+        - `source.path` matches an actual directory under `kit/plugins/`
+        - `category` is one of: development, productivity, learning, testing, documentation, security
+        - `tags` are specific and searchable (no generic terms like "tool" or "helper")
+        - No duplicate plugin names exist
+
+    - path: "kit/plugins/**/plugin.json"
+      instructions: |
+        Plugin manifest file. Verify:
+        - `name` field is present and matches the directory name
+        - `version` is NOT set here (version is managed in marketplace.json for relative-path plugins)
+        - `homepage` URL points to the plugin directory, not the repo root:
+          format must be `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
+
+    - path: "kit/plugins/**"
+      instructions: |
+        Plugin source code. Check for:
+        - CHANGELOG.md present and updated when plugin logic changes
+        - README.md exists with usage instructions
+        - Skill SKILL.md files use `allowed-tools` frontmatter only when tool restriction is necessary
+        - Command files follow `/plugin:name` naming convention
+        - Agent files are under an `agents/` subdirectory
+
+    - path: "docs/plans/**"
+      instructions: |
+        Plan files must be committed alongside the related plugin changes they describe.
+        Check that the plan file name is descriptive (not a generic timestamp) and has frontmatter.
+        Flag any plan files that appear to be stale or reference removed features.
+
+    - path: "tests/**"
+      instructions: |
+        Test fixtures and demo scripts. Ensure `tests/fixtures/valid-plugin/` remains a valid
+        reference implementation — it is used by validation logic and should not diverge from
+        the current plugin structure conventions.
+
+    - path: ".claude/rules/**"
+      instructions: |
+        Scoped authoring rules for Claude Code. Changes here affect AI-assisted development
+        behaviour across the repo. Review for accuracy and consistency with CLAUDE.md.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+
+chat:
+  auto_reply: true
