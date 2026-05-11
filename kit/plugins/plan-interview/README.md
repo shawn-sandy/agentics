@@ -21,6 +21,8 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
 | `documenting-plans` | Command | `/plan-interview:documenting-plans [plan-file-path]` |
 | `documenting-plans` | Skill | Auto-activates on requests to document, generate docs from, or write reference docs for a plan |
+| `plan-to-html` | Command | `/plan-interview:plan-to-html [plan-file-path]` |
+| `plan-to-html` | Skill | Auto-activates on requests to convert a plan to HTML or make a plan viewable in a browser |
 | `plan-documenter` | Agent | Invoked via Agent tool: `plan-interview:plan-documenter` |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
@@ -251,6 +253,36 @@ repo per run. To add a weekly sweep to another repo:
 
 The agent prompt is identical across repos — only the GitHub URL changes. For
 2-5 repos, individual triggers are the simplest approach.
+
+### Convert Plan to HTML
+
+Generate a rich, self-contained HTML document from any plan file — viewable in
+any browser, shareable via a file host, with no external dependencies:
+
+```
+/plan-interview:plan-to-html                                    # auto-detects from IDE or settings
+/plan-interview:plan-to-html docs/plans/my-feature.md          # specific plan file
+/plan-interview:plan-to-html ~/.claude/plans/my-feature.md     # absolute path
+```
+
+The skill prompts for a color theme before writing, then generates a file at
+`<plan-basename>.html` in the same directory as the source plan. Features:
+
+- **Sticky sidebar** with anchor links to each section present in the plan
+- **Three-line step cards** — action (bold), why (muted), verify (✓ prefixed)
+- **Color-coded status badge** — gray (todo/unknown), amber (in-progress), green (completed)
+- **Four themes** — Default, Developer, Document, Minimal (color palette only; layout is identical)
+- **Semantic HTML** — `h1→h2→h3` hierarchy, `<nav>`/`<main>`/`<header>` landmarks, `<ol>` for steps
+- **Mobile responsive** — single-column below 768px
+- **Fully self-contained** — all CSS inline, no JavaScript, no external resources
+
+To describe your intent and auto-activate the skill:
+
+```
+Convert this plan to HTML
+Make an HTML version of this plan
+Export this plan as a webpage
+```
 
 ### Deep Grill
 
