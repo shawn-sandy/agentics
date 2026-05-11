@@ -48,6 +48,12 @@ reviews:
       instructions: |
         Flag if: `tests/fixtures/valid-plugin/` diverges from current plugin structure conventions.
 
+  tools:
+    markdownlint:
+      enabled: false
+    yamllint:
+      enabled: false
+
   finishing_touches:
     docstrings:
       enabled: false
