@@ -18,11 +18,27 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 
 ## Table of Contents
 
+- [Step 0: Discover project skills](#step-0-discover-project-skills)
 - [Step 1: Resolve target files](#step-1-resolve-target-files)
 - [Step 2: Measure current descriptions](#step-2-measure-current-descriptions)
 - [Step 3: Rewrite each description](#step-3-rewrite-each-description)
 - [Step 4: Apply edits](#step-4-apply-edits)
 - [Step 5: Verify results](#step-5-verify-results)
+- [Step 6: Offer to optimize the rest of the project](#step-6-offer-to-optimize-the-rest-of-the-project)
+
+---
+
+## Step 0: Discover project skills
+
+Before narrowing scope, enumerate all SKILL.md files in the current project:
+
+```bash
+find . -name "SKILL.md" | sort
+```
+
+If the command returns no results, fall back to `Glob` for `kit/plugins/*/skills/*/SKILL.md`. Store the full list as `$PROJECT_SKILLS` — it is used by Step 6's follow-up prompt.
+
+Output one summary line: `Found N SKILL.md files in this project.`
 
 ---
 
@@ -34,6 +50,8 @@ Determine which SKILL.md files to optimize using this priority order:
 2. **Plugin scope** — user named a plugin: use `Glob` for `**/plugins/<name>/skills/*/SKILL.md` from the current project directory. If no results, fall back to `kit/plugins/<name>/skills/*/SKILL.md`.
 3. **All skills** — user said “all” or “everything”: use `Glob` for `**/skills/*/SKILL.md` from the current project directory. If no results, fall back to `kit/plugins/*/skills/*/SKILL.md`.
 4. **Ask if still unclear** — “Which SKILL.md should I optimize? Provide a path or say ‘all’.”
+
+Targeting the resolved file(s) for this pass. The full project list from Step 0 is held for the follow-up prompt in Step 6.
 
 ---
 
@@ -49,9 +67,15 @@ Use only the **first match** — YAML frontmatter always appears before the body
 
 Then count the value’s character length (excluding the `description:` prefix).
 
-**Skip rule:** if a description is already ≤160 chars AND starts with “Use when” or leads with a capability verb, mark it SKIP — do not rewrite unless the user explicitly asks.
+**Skip rule:** if a description is already ≤160 chars AND starts with “Use when” or leads with a capability verb, the file qualifies for SKIP — but do not exit silently. Instead:
 
-Report a table of files, current char count, and SKIP/REWRITE status before proceeding.
+1. Print a row showing: `{path} | {current chars} | {current description text}`
+2. Call `AskUserQuestion` with three options:
+   - **Rewrite anyway** — proceed to Step 3 for this file
+   - **Keep as-is** — accept the current description and continue to the next file
+   - **Skip all remaining** — stop processing and jump to Step 6
+
+Report a table of all files, current char count, and SKIP/REWRITE status before calling `AskUserQuestion` for each SKIP candidate.
 
 ---
 
@@ -162,6 +186,34 @@ done
 ```
 
 Confirm every value ≤160. Report any that exceed the limit for a second rewrite pass.
+
+---
+
+## Step 6: Offer to optimize the rest of the project
+
+After the targeted file(s) from Step 1 have been handled, re-measure every file from the `$PROJECT_SKILLS` list captured in Step 0:
+
+```bash
+for f in $PROJECT_SKILLS; do
+  line=$(grep "^description:" "$f" | head -1)
+  val="${line#description: }"
+  val="${val%\"}"
+  val="${val#\"}"
+  val="${val%\'}"
+  val="${val#\'}"
+  echo "${#val} $f"
+done
+```
+
+Print a table with columns `path | chars | status` where status is:
+- `DONE` — already processed this session
+- `REWRITE` — >160 chars
+- `SKIP` — ≤160 chars and compliant phrasing
+
+Then call `AskUserQuestion` with three options:
+- **Optimize all over 160** — process every REWRITE file automatically using Steps 3–5
+- **Pick specific files** — prompt for a selection, then loop back to Step 2 with the chosen subset
+- **Stop here** — end the skill run and proceed to the Budget advisory
 
 ---
 

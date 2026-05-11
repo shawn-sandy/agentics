@@ -39,6 +39,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 ## [1.6.0] - 2026-04-11
 
 ### Added
+
 - **`auditing-allowed-tools` skill** — Audits a SKILL.md to recommend (or patch)
   the minimal `allowed-tools` frontmatter it needs so users aren’t prompted for
   permission mid-run. Also parses Claude Code session JSONL transcripts to
@@ -61,6 +62,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 ## [1.5.0] - 2026-04-09
 
 ### Changed
+
 - Explicitly declare `allowed-tools` frontmatter on all skills.
   Makes tool requirements explicit and removes reliance on session baseline
   permissions. No behavior change — tools were already available via session default.

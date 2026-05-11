@@ -1,0 +1,89 @@
+# Plan: Add project-wide skill discovery and visible-SKIP to `optimizing-descriptions`
+
+## Context
+
+When the user ran `optimizing-descriptions`, three failures surfaced:
+
+1. **No discovery** — the skill never enumerates other `SKILL.md` files in the project. Step 1's priority order narrows scope from explicit-path → plugin → "all", so an explicit file is treated as the *only* file. The user expected the skill to also reveal what else exists.
+2. **Silent SKIP** — Step 2's SKIP rule (≤160 chars + starts with "Use when" → "do not rewrite unless explicitly asked") caused the skill to exit without acting. The provided description was already 137 chars, so it was filed under SKIP and never offered for rewrite. This is invisible — the user reads it as "the skill did nothing."
+3. **No follow-through** — after the targeted file, the skill does not loop back to ask whether to optimize anything else in the project.
+
+Sibling skill [auditing-allowed-tools/SKILL.md](../../kit/plugins/skill-reviewer/skills/auditing-allowed-tools/SKILL.md#L31) already uses the `Glob` + `**/SKILL.md` pattern under `$PWD` for project discovery; we will reuse that idiom.
+
+## Objective
+
+Update [optimizing-descriptions/SKILL.md](../../kit/plugins/skill-reviewer/skills/optimizing-descriptions/SKILL.md) to (a) always perform a project-wide discovery pass before scoping, (b) make SKIP visible and ask before exiting, and (c) explicitly loop back to the wider project after the user's targeted request finishes. Scope stays on *descriptions only* — no audit of `allowed-tools`, names, or body length.
+
+## Files to modify
+
+- [kit/plugins/skill-reviewer/skills/optimizing-descriptions/SKILL.md](../../kit/plugins/skill-reviewer/skills/optimizing-descriptions/SKILL.md) — single file, structured changes in Steps 1, 2, 5, and the Table of Contents.
+
+No version bump needed (behavior expansion, no breaking change) — but a CHANGELOG entry should accompany the edit per repo convention. Confirm at execution time whether the plugin tracks a CHANGELOG.
+
+## Steps
+
+<ol>
+<li>
+<strong>Insert a new "Step 0: Discover project skills" section</strong> before the existing Step 1.
+
+  - <em>Why:</em> Make discovery the first action of every invocation so the user sees what exists before scope is narrowed. Mirrors the `auditing-allowed-tools` pattern.
+  - Content: a single `Glob` for `**/SKILL.md` from `$PWD` (fallback `kit/plugins/*/skills/*/SKILL.md`); print total count and store the list for use later in Step 5.
+  - Output: one-line summary like `Found N SKILL.md files in this project.` No table yet (cheap pass).
+  - <em>Verify:</em> re-read the file and confirm a `## Step 0: Discover project skills` heading exists before `## Step 1`, and the Table of Contents lists it.
+</li>
+
+<li>
+<strong>Update Step 1's priority order</strong> so explicit-path no longer suppresses the project-wide list captured in Step 0.
+
+  - <em>Why:</em> The list from Step 0 must remain available for Step 5's follow-through prompt, even when the user gave a single path.
+  - Add a closing sentence to Step 1: "Targeting <code>X</code> for this pass. The full project list from Step 0 is held for the follow-up prompt in Step 5."
+  - <em>Verify:</em> re-read Step 1 and confirm the sentence is present and the priority order itself is unchanged.
+</li>
+
+<li>
+<strong>Rewrite the SKIP rule in Step 2</strong> to be visible and confirmable.
+
+  - <em>Why:</em> Silent SKIP looks like the skill did nothing. Selected user behavior: keep SKIP but show current text + char count, then ask "rewrite anyway?" before exiting.
+  - Replace the existing "Skip rule" paragraph with: when a file would be SKIPPED, print a row showing `{path} | {current chars} | {current description text}` and call `AskUserQuestion` with options "Rewrite anyway", "Keep as-is", "Skip all remaining" before deciding.
+  - <em>Verify:</em> re-read Step 2 and confirm the skip rule now references an `AskUserQuestion` confirmation step and shows the current description text in the report.
+</li>
+
+<li>
+<strong>Add a "Step 6: Offer to optimize the rest of the project" section</strong> after the existing Step 5 (and before the `### Budget advisory` section).
+
+  - <em>Why:</em> Closes the discovery loop. After acting on the user's target, use the Step 0 list to show remaining files with char counts and ask which to optimize next.
+  - Content: re-measure every file from the Step 0 list (reuse the Step 5 bash loop), print a table of `path | chars | status`, then `AskUserQuestion`: "Optimize all over 160", "Pick specific files", "Stop here". On "Pick specific files", loop back to Step 2 with the chosen subset.
+  - <em>Verify:</em> re-read the file and confirm Step 6 exists between Step 5 and `### Budget advisory`, references the Step 0 list, and ends in an `AskUserQuestion` call.
+</li>
+
+<li>
+<strong>Update the Table of Contents</strong> to include Step 0 and Step 6.
+
+  - <em>Why:</em> Keep navigation in sync with the new flow so the skill body stays scannable.
+  - <em>Verify:</em> confirm the TOC has six bullets (Step 0 through Step 5… wait — 7 bullets: Steps 0–6), in order, each anchored to the matching heading.
+</li>
+
+<li>
+<strong>Confirm <code>allowed-tools</code> is sufficient.</strong>
+
+  - <em>Why:</em> The frontmatter already lists `AskUserQuestion, Read, Edit, Bash, Glob` — Step 0's `Glob` and Steps 2/6's `AskUserQuestion` are covered. No change needed unless verification reveals a gap.
+  - <em>Verify:</em> re-read line 4 and confirm `Glob` and `AskUserQuestion` are both present. If absent, add them.
+</li>
+</ol>
+
+## Verification
+
+End-to-end check after the edits land:
+
+1. Run the skill in this repo with an explicit path to a SKILL.md whose description is already ≤160 chars and starts with "Use when" (the case that triggered the original bug). Expected behavior:
+   - Step 0 prints `Found N SKILL.md files in this project.`
+   - Step 2 prints the SKIP report row and asks "rewrite anyway?" instead of silently exiting.
+   - After the targeted file is handled, Step 6 prints the remaining table and asks which to optimize next.
+2. Re-read the modified [SKILL.md](../../kit/plugins/skill-reviewer/skills/optimizing-descriptions/SKILL.md) and confirm all five Required Structure sections (Step 0, updated Step 1, updated Step 2, new Step 6, updated TOC) match the per-step verifies above.
+3. Sanity-check `allowed-tools` against the new flow — every tool the body references must be in the frontmatter.
+
+## Next steps (out of scope)
+
+- Mirror the Step 0 / Step 6 pattern in `auditing-allowed-tools` if the same UX gap exists there (the skill already has a Mode 1 Step 1 `Glob`, but no follow-through prompt).
+- Add a CHANGELOG entry for `skill-reviewer` if the plugin tracks one.
+- Document this UX convention (discover → target → re-offer) as a `.claude/rules/` pattern so future skills inherit it.
