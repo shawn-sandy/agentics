@@ -19,7 +19,7 @@ Does not fix existing bugs — use tdd-fix. Does not suggest tests without imple
 
 ## Table of Contents
 
-- [Step 0: Pre-flight and TodoWrite](#step-0-pre-flight-and-todow-rite)
+- [Step 0: Pre-flight and TodoWrite](#step-0-pre-flight-and-todowrite)
 - [Step 1: Parse Feature Spec and Detect Framework](#step-1-parse-feature-spec-and-detect-framework)
 - [Step 2: Write Failing Test Suite (Red Phase)](#step-2-write-failing-test-suite-red-phase)
 - [Step 3: Commit the Tests](#step-3-commit-the-tests)
