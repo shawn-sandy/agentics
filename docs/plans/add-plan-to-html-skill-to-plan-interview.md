@@ -64,7 +64,7 @@ The spec must document:
 
 <li>
 
-**Create `commands/plan-to-html.md`** — write the command wrapper with frontmatter (`description`, `allowed-tools: Read, Glob, Grep, Bash, Write, Edit, TodoWrite, AskUserQuestion`, `argument-hint: "[plan-file-path]"`), a short description, usage examples, and a reference to the skill file.
+**Create `commands/plan-to-html.md`** — write the command wrapper with frontmatter (`description`, `allowed-tools: Read, Glob, Grep, Bash(open *), Write, TodoWrite, AskUserQuestion`, `argument-hint: "[plan-file-path]"`), a short description, usage examples, and a reference to the skill file.
 
 - *Why:* Commands are the explicit invocation surface (`/plan-interview:plan-to-html [path]`). Both the skill and the command should declare `allowed-tools` — the skill's declaration prevents mid-run permission prompts; the command's declaration documents the required capabilities for explicit invocation.
 - *Verify:* Read the written file; confirm YAML frontmatter includes `allowed-tools` with `Write` listed, and at least 2 usage examples appear.
