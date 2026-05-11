@@ -134,7 +134,7 @@ In this order:
 
 End-to-end checks before considering the plan complete:
 
-- **Char-count audit passes:** `awk '/^description:/ {v=$2; gsub(/^ /,"",v); gsub(/^"|"$/,"",v); gsub(/^'\''|'\''/,"",v); print length(v), FILENAME}' kit/plugins/*/skills/*/SKILL.md` shows all values ≤160.
+- **Char-count audit passes:** `awk '/^description:/ {v=substr($0,index($0,":")+2); gsub(/^[[:space:]"'\'']+|[[:space:]"'\'']+ $/,"",v); print length(v), FILENAME}' kit/plugins/*/skills/*/SKILL.md` shows all values ≤160.
 - **Activation-trigger preserved:** every description contains "Use when" OR leads with a capability verb (per spot-check in step 4).
 - **New skill works:** load skill-reviewer locally with `claude --plugin-dir ~/devbox/agentics/kit/plugins/skill-reviewer`, ask "optimize this skill description: <pasted long description>", confirm `optimizing-descriptions` activates and emits a ≤160-char rewrite.
 - **Versioning consistent:** `marketplace.json` shows `1.7.0`, `plugin.json` has no `version`, CHANGELOG has matching dated entry.

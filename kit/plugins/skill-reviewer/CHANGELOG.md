@@ -12,7 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Version
 
 ### Changed
 
-- Trimmed all 28 skill descriptions across the marketplace to ≤160 chars (previously ranging from 181 to 489 chars)
+- Trimmed all 28 skill descriptions across the marketplace to ≤160 chars
 - Relocated negative-scope clauses ("Does not cover X") from descriptions into `## When not to use` body sections in 22 skills
 
 ## [1.6.2] - 2026-05-07
