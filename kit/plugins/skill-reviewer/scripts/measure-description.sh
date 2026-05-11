@@ -43,9 +43,9 @@ val="${val#\"}"
 val="${val%\'}"
 val="${val#\'}"
 
-# Empty after stripping means the description key has no value
+# Empty after stripping means the description key is present but blank
 if [ -z "$val" ]; then
-  printf 'ERROR: SKILL.md has no description: frontmatter in %s — required by Claude Code\n' "$file"
+  printf 'ERROR: SKILL.md has empty description: value in %s — add a non-empty description string\n' "$file"
   exit 0
 fi
 
