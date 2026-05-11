@@ -37,7 +37,7 @@ reviews:
         - `category` is one of: development, productivity, learning, testing, documentation, security
         - `tags` are specific and searchable (avoid generic terms like "tool" or "helper")
         - No duplicate plugin names exist
-        - Version bumps follow semver: patch=backward-compatible fixes/typos, minor=backward-compatible additions (e.g., new command/skill/agent), major=any backward-incompatible change (including breaking rename or removal)
+        - Version bumps follow semver: patch=bug fix/typo/metadata correction, minor=new command/skill/agent/hook added, major=removing or renaming a command/skill/agent, or changing argument format or activation behavior
 
     - path: "kit/plugins/**/.claude-plugin/plugin.json"
       instructions: |
@@ -52,8 +52,8 @@ reviews:
         Plugin source code. Check for:
         - CHANGELOG.md present and updated when plugin logic changes
         - README.md exists with usage instructions
-        - Skill SKILL.md files should declare every tool they use in `allowed-tools:` frontmatter;
-          scoped forms like `Bash(git *)` are preferred over broad `Bash(*)`
+        - Skill SKILL.md files must declare every tool they use in a comma-separated `allowed-tools:` frontmatter line (e.g., `allowed-tools: Bash, Read, Write`);
+          when the skill only shells out to one CLI family, prefer the scoped form (e.g., `allowed-tools: Bash(git *)`) over broad `Bash`
         - Command files live under `commands/<command-name>.md` and are invoked as `/plugin-name:command-name`
         - Agent files live under `agents/`
         - Plan files for the change should exist in `docs/plans/` and be included in the commit
