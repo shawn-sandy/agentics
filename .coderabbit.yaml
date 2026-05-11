@@ -38,7 +38,7 @@ reviews:
         - `tags` are specific and searchable (no generic terms like "tool" or "helper")
         - No duplicate plugin names exist
 
-    - path: "kit/plugins/**/plugin.json"
+    - path: "kit/plugins/**/.claude-plugin/plugin.json"
       instructions: |
         Plugin manifest file. Verify:
         - `name` field is present and matches the directory name
