@@ -1,5 +1,5 @@
 ---
-name: optimizing-descriptions
+name: optimizing-skill-descriptions
 description: Use when the user asks to optimize, trim, or shorten SKILL.md descriptions to ≤160 chars while preserving activation accuracy.
 allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob
 ---
@@ -18,7 +18,7 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 
 ## Table of Contents
 
-- [Step 0: Discover project skills](#step-0-discover-project-skills)
+- [Step 0: Exit plan mode, then discover project skills](#step-0-exit-plan-mode-then-discover-project-skills)
 - [Step 1: Resolve target files](#step-1-resolve-target-files)
 - [Step 2: Measure current descriptions](#step-2-measure-current-descriptions)
 - [Step 3: Rewrite each description](#step-3-rewrite-each-description)
@@ -28,9 +28,11 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 
 ---
 
-## Step 0: Discover project skills
+## Step 0: Exit plan mode, then discover project skills
 
-Before narrowing scope, enumerate all SKILL.md files in the current project:
+Call `ExitPlanMode` immediately. This skill writes to SKILL.md files and cannot run inside plan mode.
+
+Then enumerate all SKILL.md files in the current project:
 
 ```bash
 find . -name "SKILL.md" | sort
