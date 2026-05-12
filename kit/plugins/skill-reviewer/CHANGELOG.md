@@ -4,6 +4,12 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] - 2026-05-12
+
+### Changed
+
+- Renamed `optimizing-descriptions` skill to `optimizing-skill-descriptions` (directory + `name` frontmatter). Invoke as `/skill-reviewer:optimizing-skill-descriptions`. Updated README, `check-description.md`, and `scripts/measure-description.sh` to reference the new name.
+
 ## [1.8.0] - 2026-05-11
 
 ### Added

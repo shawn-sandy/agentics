@@ -6,8 +6,8 @@
 # Exit 0 in all measurable cases; non-zero only for unreadable file.
 # Output (stdout, one line):
 #   OK: SKILL.md description is N chars (<=160) in <path>
-#   WARNING: SKILL.md description is N chars (>160) in <path> — run /skill-reviewer:optimizing-descriptions to trim
-#   WARNING: multi-line description detected in <path> — measurement may be approximate; run /skill-reviewer:optimizing-descriptions
+#   WARNING: SKILL.md description is N chars (>160) in <path> — run /skill-reviewer:optimizing-skill-descriptions to trim
+#   WARNING: multi-line description detected in <path> — measurement may be approximate; run /skill-reviewer:optimizing-skill-descriptions
 #   ERROR: SKILL.md has no description: frontmatter in <path> — required by Claude Code
 
 file="$1"
@@ -32,7 +32,7 @@ val="${val# }"
 # Detect YAML multi-line / block scalar indicators (| or >)
 case "$val" in
   "|"*|">"*)
-    printf 'WARNING: multi-line description detected in %s — measurement may be approximate; run /skill-reviewer:optimizing-descriptions\n' "$file"
+    printf 'WARNING: multi-line description detected in %s — measurement may be approximate; run /skill-reviewer:optimizing-skill-descriptions\n' "$file"
     exit 0
     ;;
 esac
@@ -52,7 +52,7 @@ fi
 len="${#val}"
 
 if [ "$len" -gt 160 ]; then
-  printf 'WARNING: SKILL.md description is %d chars (>160) in %s — run /skill-reviewer:optimizing-descriptions to trim\n' "$len" "$file"
+  printf 'WARNING: SKILL.md description is %d chars (>160) in %s — run /skill-reviewer:optimizing-skill-descriptions to trim\n' "$len" "$file"
 else
   printf 'OK: SKILL.md description is %d chars (<=160) in %s\n' "$len" "$file"
 fi
