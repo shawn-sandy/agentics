@@ -2,6 +2,7 @@
 name: deep-grill
 description: "Use when the user asks to deep grill a plan, walk through decision branches, or stress-test individual decisions in an implementation or agentic plan."
 allowed-tools: Read, Glob, Grep, AskUserQuestion, TodoWrite
+disable-model-invocation: true
 ---
 
 # Deep Grill

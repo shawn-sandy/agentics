@@ -2,6 +2,7 @@
 name: react-perf-analyzer
 description: Use when the user asks to analyze React component performance, check for INP or CLS issues, or produce a performance report with fix recommendations.
 allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite
+disable-model-invocation: true
 ---
 
 # React Performance Analyzer

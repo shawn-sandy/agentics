@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v3.7.0 — Disable model invocation on workflow skills
+
+- `disable-model-invocation: true` on `commit-agent` — manual invocation only via `/git-agent:commit-agent`; no longer auto-triggers on intent match.
+- `disable-model-invocation: true` on `pr-agent` — manual invocation only via `/git-agent:pr-agent`; no longer auto-triggers on intent match.
+- `disable-model-invocation: true` on `ship` — manual invocation only via `/git-agent:ship`; no longer auto-triggers on intent match.
+
 ## v3.6.2 — Description cleanup and scope boundaries
 
 - Collapsed `branch-agent` and `ship` skill descriptions from multi-line YAML blocks to single-line inline strings starting with "Use when..." for reliable auto-activation
