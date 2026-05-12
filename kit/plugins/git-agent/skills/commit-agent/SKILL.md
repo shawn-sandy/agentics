@@ -10,12 +10,12 @@ Stage all changes and create a conventional commit message. Follow these steps i
 
 Does not push or create PRs — use pr-agent for that.
 
-## Step 0: Exit Plan Mode (if active)
+## Step 0: Exit Plan Mode
 
-If plan mode is active (a system reminder indicates "Plan mode is active"),
-call `ExitPlanMode` silently before any other action. If plan mode is not
-active, skip directly to Step 1. Do not prompt the user — exit silently.
-Staging and committing are git mutations and cannot proceed inside plan mode.
+Call `ExitPlanMode` immediately and silently — always, unconditionally, before
+any other action. Do not prompt the user. This call is a no-op when plan mode
+is already off, so it is safe to call regardless. Staging and committing are
+git mutations and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 

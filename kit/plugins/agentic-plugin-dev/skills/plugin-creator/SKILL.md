@@ -16,7 +16,7 @@ Does not scaffold individual skills (use skill-reviewer:planning-skills), indivi
 
 ## Table of Contents
 
-- [Step 0: Exit Plan Mode (if active)](#step-0-exit-plan-mode-if-active)
+- [Step 0: Exit Plan Mode](#step-0-exit-plan-mode)
 - [Step 1: Disambiguation](#step-1-disambiguation)
 - [Step 2: Gather Plugin Requirements](#step-2-gather-plugin-requirements)
 - [Step 3: Gather Component Details](#step-3-gather-component-details)
@@ -26,12 +26,12 @@ Does not scaffold individual skills (use skill-reviewer:planning-skills), indivi
 
 ---
 
-## Step 0: Exit Plan Mode (if active)
+## Step 0: Exit Plan Mode
 
-If plan mode is active (a system reminder indicates "Plan mode is active"),
-call `ExitPlanMode` silently before proceeding. If plan mode is not active,
-skip directly to Step 1. Do not prompt the user — exit silently. Plugin
-scaffolding writes files and directories, which requires exiting plan mode.
+Call `ExitPlanMode` immediately and silently — always, unconditionally, before
+any other action. Do not prompt the user. This call is a no-op when plan mode
+is already off, so it is safe to call regardless. Plugin scaffolding writes
+files and directories, which requires exiting plan mode.
 
 ---
 
