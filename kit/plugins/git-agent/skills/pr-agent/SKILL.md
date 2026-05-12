@@ -10,12 +10,12 @@ Push the current branch if needed and create a GitHub pull request. This skill d
 
 Does not commit changes — use commit-agent first.
 
-## Step 0: Exit Plan Mode (if active)
+## Step 0: Exit Plan Mode
 
-If plan mode is active (a system reminder indicates "Plan mode is active"),
-call `ExitPlanMode` silently before any other action. If plan mode is not
-active, skip directly to Step 1. Do not prompt the user — exit silently.
-Pushing and creating a pull request are remote mutations and cannot proceed inside plan mode.
+Call `ExitPlanMode` immediately and silently — always, unconditionally, before
+any other action. Do not prompt the user. This call is a no-op when plan mode
+is already off, so it is safe to call regardless. Pushing and creating a pull
+request are remote mutations and cannot proceed inside plan mode.
 
 ## Step 1: Guards
 

@@ -12,12 +12,13 @@ immediately after step 8.**
 
 For commit-only use commit-agent, for PR-only use pr-agent.
 
-## Step 0: Exit Plan Mode (if active)
+## Step 0: Exit Plan Mode
 
-If plan mode is active (a system reminder indicates "Plan mode is active"),
-call `ExitPlanMode` silently before any other action. If plan mode is not
-active, skip directly to Step 1. Do not prompt the user — exit silently.
-Staging, committing, pushing, and creating a pull/merge request are mutations and cannot proceed inside plan mode.
+Call `ExitPlanMode` immediately and silently — always, unconditionally, before
+any other action. Do not prompt the user. This call is a no-op when plan mode
+is already off, so it is safe to call regardless. Staging, committing,
+pushing, and creating a pull/merge request are mutations and cannot proceed
+inside plan mode.
 
 ## Step 1: Pre-flight Guards
 
