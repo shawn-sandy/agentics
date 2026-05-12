@@ -2,6 +2,7 @@
 name: optimizing-skill-descriptions
 description: Use when the user asks to optimize, trim, or shorten SKILL.md descriptions to ≤160 chars while preserving activation accuracy.
 allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob
+disable-model-invocation: true
 ---
 
 ## Overview

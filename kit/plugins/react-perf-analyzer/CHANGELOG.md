@@ -1,5 +1,11 @@
 # Changelog: react-perf-analyzer
 
+## [1.3.0] - 2026-05-12
+
+### Changed
+
+- `disable-model-invocation: true` on `react-perf-analyzer` — manual invocation only via `/react-perf-analyzer:react-perf-analyzer`; no longer auto-triggers on intent match.
+
 ## [1.2.0] - 2026-04-09
 
 ### Changed

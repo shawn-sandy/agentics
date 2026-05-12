@@ -3,6 +3,7 @@ name: documenting-plans
 description: Use when the user asks to document a plan or create a reference doc from it. Only runs on plans with `type: artifact` in frontmatter.
 allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
+disable-model-invocation: true
 ---
 
 # Documenting Plans

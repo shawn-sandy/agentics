@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.0] - 2026-05-12
+
+### Changed
+
+- `disable-model-invocation: true` on `tdd-fix` — manual invocation only via `/code-testing-agent:tdd-fix`; no longer auto-triggers on intent match.
+- `disable-model-invocation: true` on `tdd-loop` — manual invocation only via `/code-testing-agent:tdd-loop`; no longer auto-triggers on intent match.
+
 ## [3.3.0] - 2026-05-08
 
 ### Added

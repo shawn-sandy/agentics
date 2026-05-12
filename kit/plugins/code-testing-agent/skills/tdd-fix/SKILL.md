@@ -2,6 +2,7 @@
 name: tdd-fix
 description: "Use when the user asks to TDD-fix a bug, write a failing test then make it pass, or run an autonomous red-green cycle capped at N iterations."
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TodoWrite, AskUserQuestion
+disable-model-invocation: true
 ---
 
 Given a bug description, write a failing test that reproduces it, then

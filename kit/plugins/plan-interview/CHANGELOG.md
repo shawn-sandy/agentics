@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0] - 2026-05-12
+
+### Changed
+
+- `disable-model-invocation: true` on `deep-grill` — manual invocation only via `/plan-interview:deep-grill`; no longer auto-triggers on intent match.
+- `disable-model-invocation: true` on `documenting-plans` — manual invocation only via `/plan-interview:documenting-plans`; no longer auto-triggers on intent match.
+
 ## [1.15.0] - 2026-05-11
 
 ### Added
