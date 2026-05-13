@@ -30,4 +30,4 @@ After measuring all files, summarize:
 
 - Total files checked
 - Count of `OK` vs `WARNING` vs `ERROR`
-- For any over-budget file: suggest running `/skill-reviewer:optimizing-skill-descriptions` to trim it (the WARNING message already includes this pointer — do not duplicate it)
+- For any over-budget file: suggest running `/skill-reviewer:optimizing-skill-frontmatter` to trim it (the WARNING message already includes this pointer — do not duplicate it)

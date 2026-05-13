@@ -95,7 +95,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "1.9.0",
+      "version": "2.0.0",
       "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize descriptions, and enforce the 160-char budget",
       "category": "development",
       "tags": [
