@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.0] - 2026-05-13
+
+### Added
+
+- `fix-branch` command (`/code-review:fix-branch`) — reviews all branch changes vs the default branch, classifies findings as blocking/major/minor/unfixable using a concrete severity rubric, applies fixes autonomously via `Edit`/`Write`, retries once (cap = 2), and leaves fixes uncommitted with a summary pointing to `git diff` and `/git-agent:commit-agent`.
+
 ## [3.2.1] - 2026-05-07
 
 ### Changed
