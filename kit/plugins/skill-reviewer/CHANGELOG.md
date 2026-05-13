@@ -4,6 +4,26 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - 2026-05-12
+
+### BREAKING
+
+- Skill renamed from `optimizing-skill-descriptions` → `optimizing-skill-frontmatter`. Update any saved invocations from `/skill-reviewer:optimizing-skill-descriptions` to `/skill-reviewer:optimizing-skill-frontmatter`.
+
+### Added
+
+- **Step 4b: Tune invocation control** — after applying description edits, classifies each touched SKILL.md as workflow or advisory using `allowed-tools` and `description:` verb heuristics, then recommends and (on confirmation) applies the correct `disable-model-invocation` value. Confident and ambiguous cases both go through `AskUserQuestion` before any change is written. Never writes `disable-model-invocation: false` — omit-the-field convention is preserved for advisory skills.
+
+### Changed
+
+- Skill `name:` frontmatter: `optimizing-skill-descriptions` → `optimizing-skill-frontmatter`
+- Skill `description:` updated to cover both `description` trimming and `disable-model-invocation` tuning (132 chars)
+- Overview and "When not to use" sections updated to reflect the broader frontmatter scope
+- Table of Contents adds Step 4b entry
+- `scripts/measure-description.sh` WARNING strings now point to `/skill-reviewer:optimizing-skill-frontmatter`
+- `commands/check-description.md` updated to reference new skill name
+- `README.md` skill list entry #4, sample WARNING line, directory tree, and closing usage hint updated
+
 ## [1.9.0] - 2026-05-12
 
 ### Changed

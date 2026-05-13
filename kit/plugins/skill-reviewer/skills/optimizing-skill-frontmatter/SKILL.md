@@ -1,21 +1,23 @@
 ---
-name: optimizing-skill-descriptions
-description: Use when the user asks to optimize, trim, or shorten SKILL.md descriptions to ≤160 chars while preserving activation accuracy.
+name: optimizing-skill-frontmatter
+description: Use when the user asks to optimize SKILL.md frontmatter: trim descriptions to ≤160 chars and set disable-model-invocation correctly.
 allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob
 disable-model-invocation: true
 ---
 
 ## Overview
 
-Rewrites `description:` frontmatter in SKILL.md files to ≤160 characters while preserving the triggers that drive accurate skill activation. Negative-scope clauses (“Does NOT cover X”) are relocated to a `## When not to use` body section (or an existing equivalent such as `## Scope` or `## Limitations`) rather than dropped.
+Optimizes two frontmatter fields in SKILL.md files in a single pass: trims `description:` to ≤160 characters (preserving activation accuracy) and sets `disable-model-invocation` to the correct value based on whether the skill is a write-heavy workflow or a read-only advisory tool.
 
 **Why 160 chars?** Claude Code loads all skill descriptions into the context window each turn. The default `skillListingBudgetFraction` setting allocates 1% of the model’s context window for this listing — roughly 8,000 characters on a 200K-token model. With 50 skills installed (a realistic mix of plugin sets), that leaves ~160 chars per skill before descriptions start getting dropped. The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry (description + `when_to_use` combined); 160 is a practical target for surviving the default budget, not a platform constraint.
+
+**Why `disable-model-invocation`?** This flag controls how a skill activates. `true` forces explicit invocation only (via `/plugin:skill-name`); omitting it lets the model auto-fire the skill when user intent matches. Workflow skills that write files, commit code, or run pipelines should require explicit invocation — auto-firing a deploy on a loose intent match causes unintended side effects. Advisory/read-only skills benefit from auto-activation. Negative-scope clauses (“Does NOT cover X”) are relocated to a `## When not to use` body section rather than dropped.
 
 Follow these steps exactly.
 
 ## When not to use
 
-Does not review overall SKILL.md quality — use reviewing-skills for that. Does not change allowed-tools — use auditing-allowed-tools for that.
+Does not review overall SKILL.md quality — use reviewing-skills for that. Does not change `allowed-tools` values — use auditing-allowed-tools for that. This skill only touches `description:` and `disable-model-invocation`.
 
 ## Table of Contents
 
@@ -24,6 +26,7 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 - [Step 2: Measure current descriptions](#step-2-measure-current-descriptions)
 - [Step 3: Rewrite each description](#step-3-rewrite-each-description)
 - [Step 4: Apply edits](#step-4-apply-edits)
+- [Step 4b: Tune invocation control](#step-4b-tune-invocation-control)
 - [Step 5: Verify results](#step-5-verify-results)
 - [Step 6: Offer to optimize the rest of the project](#step-6-offer-to-optimize-the-rest-of-the-project)
 
@@ -169,6 +172,59 @@ Read the file, identify the insertion point, then use `Edit` with sufficient sur
 Use `Edit` with the full original `description: …` line as `old_string`. Preserve the original quoting style — if the original value was in double quotes, keep double quotes; if single-quoted, keep single quotes; if unquoted, keep unquoted.
 
 Confirm each edit succeeded before moving to the next file. If the file has both edits, do body insertion first to avoid line-number drift.
+
+---
+
+## Step 4b: Tune invocation control
+
+For each SKILL.md touched this pass, classify it as **workflow** or **advisory** using two static signals:
+
+| Signal | Strong workflow → `true` | Strong advisory → omit |
+|---|---|---|
+| `allowed-tools:` | Contains `Edit`, `Write`, or `Bash` with side-effect verbs | Only `Read`, `Glob`, `Grep`, `WebFetch`, `WebSearch`, `AskUserQuestion` |
+| `description:` verbs | commit, push, PR, ship, branch, deploy, migrate, generate, scaffold, iterate, TDD-loop, "writes to" | review, audit, check, analyze, score, advise, report, recommend |
+| Body signals | mentions `ExitPlanMode` Step 0; mentions writing/editing files | "report under N words"; no Edit/Write calls in any step |
+
+**Confidence rules:**
+- Both signals agree → **confident** recommendation; still confirm per policy below.
+- Signals disagree or are mixed → **ambiguous**; surface both in the prompt.
+
+**Never write `disable-model-invocation: false`.** The convention in this repo is: write `true` for workflow skills; omit the field entirely for advisory skills.
+
+### Classification output
+
+Print a compact table — one row per touched SKILL.md:
+
+```
+| Path | Current value | Recommendation | Confidence | Reason |
+|------|---------------|----------------|------------|--------|
+| kit/plugins/foo/skills/bar/SKILL.md | missing | omit (no change) | confident | read-only tools, advisory verbs |
+| kit/plugins/foo/skills/baz/SKILL.md | missing | true | confident | Edit+Bash in allowed-tools, "generates" in description |
+```
+
+Show `true` / `missing` in the **Current value** column. Show `omit (no change)` when the current value already matches the recommendation.
+
+### Confirmation
+
+Call `AskUserQuestion` with three options:
+
+- **Apply recommendations** — apply all non-trivial changes (skip `omit (no change)` rows)
+- **Pick per file** — loop back through each changed row individually, ask per file
+- **Skip invocation changes** — leave all files untouched; proceed to Step 5
+
+### Apply rules (on confirmation)
+
+**To set `true`:** insert `disable-model-invocation: true` on a new line immediately after the `allowed-tools:` line.
+
+```
+# Edit pattern:
+old_string: "allowed-tools: <value>\n"
+new_string: "allowed-tools: <value>\ndisable-model-invocation: true\n"
+```
+
+**To remove an existing `true`:** delete the `disable-model-invocation: true` line entirely (do not replace with `false`).
+
+**Never write `disable-model-invocation: false`** — the omit-the-field convention must be preserved.
 
 ---
 

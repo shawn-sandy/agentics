@@ -9,7 +9,7 @@ The Skill Reviewer provides four auto-activating skills, one slash command, and 
 1. **reviewing-skills** — Structured quality audits of SKILL.md files across 5 dimensions (frontmatter, body quality, structure, anti-patterns, discoverability). Scored 0–10 with grades from Excellent to Rewrite.
 2. **planning-skills** — Guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch, including design pattern selection and file generation.
 3. **auditing-allowed-tools** — Audits a SKILL.md to recommend (or patch) the minimal `allowed-tools` frontmatter it needs so users aren't prompted for permission mid-run. Also parses Claude Code session JSONL transcripts to report what tools Claude actually invoked, and can cross-reference a skill against a real session.
-4. **optimizing-skill-descriptions** — Trims `description:` frontmatter in SKILL.md files to ≤160 chars while preserving activation accuracy. Relocates negative-scope clauses to `## When not to use` sections.
+4. **optimizing-skill-frontmatter** — Optimizes two frontmatter fields in a single pass: trims `description:` to ≤160 chars (preserving activation accuracy) and sets `disable-model-invocation` to the correct value based on whether the skill is a workflow or advisory tool.
 5. **check-description** (command) — `/skill-reviewer:check-description [path-or-glob]` — on-demand check of `description:` length for one or more SKILL.md files.
 6. **Description-length hook** — fires automatically on every Write/Edit/MultiEdit to any SKILL.md in the current project and warns if the description exceeds 160 chars.
 
@@ -25,7 +25,7 @@ The plugin ships a `PostToolUse` hook in `hooks.json` that fires automatically w
 
 ```text
 OK: SKILL.md description is 142 chars (<=160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md
-WARNING: SKILL.md description is 214 chars (>160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md — run /skill-reviewer:optimizing-skill-descriptions to trim
+WARNING: SKILL.md description is 214 chars (>160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md — run /skill-reviewer:optimizing-skill-frontmatter to trim
 ```
 
 **Why 160 chars?** Claude Code's default `skillListingBudgetFraction` (1% of the context window) allows roughly 160 chars per description when ~50 skills are installed. Descriptions over budget may be truncated or dropped from the listing at runtime.
@@ -185,7 +185,7 @@ plugins/skill-reviewer/
 │   │   ├── SKILL.md
 │   │   └── scripts/
 │   │       └── session_tool_scan.py
-│   └── optimizing-skill-descriptions/
+│   └── optimizing-skill-frontmatter/
 │       └── SKILL.md
 ├── README.md
 └── CHANGELOG.md
@@ -288,7 +288,7 @@ Comprehensive reference for four Anthropic design patterns with recommended SKIL
 /skill-reviewer:check-description
 ```
 
-With no argument, globs `**/SKILL.md` from `$PWD` and reports one line per file. For any over-budget file, suggests running `/skill-reviewer:optimizing-skill-descriptions`.
+With no argument, globs `**/SKILL.md` from `$PWD` and reports one line per file. For any over-budget file, suggests running `/skill-reviewer:optimizing-skill-frontmatter`.
 
 Delegates to `scripts/measure-description.sh` — same logic and threshold as the always-on hook.
 
