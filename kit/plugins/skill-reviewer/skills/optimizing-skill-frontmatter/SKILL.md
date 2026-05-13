@@ -177,7 +177,7 @@ Confirm each edit succeeded before moving to the next file. If the file has both
 
 ## Step 4b: Tune invocation control
 
-For each SKILL.md touched this pass, classify it as **workflow** or **advisory** using two static signals:
+For each SKILL.md **resolved in Step 1** (not just files that were rewritten — files that were SKIP'd in Step 2 may still need invocation control tuned), classify it as **workflow** or **advisory** using two static signals:
 
 | Signal | Strong workflow → `true` | Strong advisory → omit |
 |---|---|---|
@@ -214,15 +214,15 @@ Call `AskUserQuestion` with three options:
 
 ### Apply rules (on confirmation)
 
-**To set `true`:** insert `disable-model-invocation: true` on a new line immediately after the `allowed-tools:` line.
+**To set `true`:** first check for any existing `disable-model-invocation:` line (any value — including `false`). If one exists, delete it. Then insert `disable-model-invocation: true` on a new line immediately after the `allowed-tools:` line.
 
 ```
-# Edit pattern:
+# Edit pattern (after removing any existing disable-model-invocation line):
 old_string: "allowed-tools: <value>\n"
 new_string: "allowed-tools: <value>\ndisable-model-invocation: true\n"
 ```
 
-**To remove an existing `true`:** delete the `disable-model-invocation: true` line entirely (do not replace with `false`).
+**To remove an existing `true`:** delete the `disable-model-invocation: true` line entirely (do not replace with `false`). If an existing `false` is present, delete it too — never leave `false` in the file.
 
 **Never write `disable-model-invocation: false`** — the omit-the-field convention must be preserved.
 
