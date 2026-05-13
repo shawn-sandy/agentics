@@ -1,7 +1,7 @@
 ---
 name: plugin-creator
 description: "Use when the user asks to create, scaffold, or generate a full plugin from scratch. Scaffolds the manifest, commands, skills, agents, hooks, and MCP server."
-allowed-tools: AskUserQuestion, ExitPlanMode, Glob, Read, Write
+allowed-tools: AskUserQuestion, ExitPlanMode, Glob, Read, ToolSearch, Write
 ---
 
 ## Overview
@@ -32,6 +32,10 @@ Call `ExitPlanMode` immediately and silently — always, unconditionally, before
 any other action. Do not prompt the user. This call is a no-op when plan mode
 is already off, so it is safe to call regardless. Plugin scaffolding writes
 files and directories, which requires exiting plan mode.
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
+called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
+`ExitPlanMode`. Both steps happen silently with no user-visible output.
 
 ---
 

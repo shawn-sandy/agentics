@@ -50,6 +50,21 @@ Hard validation rules enforced by the skill runtime:
 - `name`: lowercase kebab-case, ≤64 chars, no XML tags, no reserved words (`anthropic`, `claude`)
 - `description`: non-empty, ≤1024 chars, third person, no XML tags
 
+## Deferred tools and `ExitPlanMode`
+
+`ExitPlanMode` (and several other harness tools) are **deferred** — their schemas are not loaded until explicitly fetched. A skill that calls `ExitPlanMode` must:
+
+1. Include both `ToolSearch` **and** `ExitPlanMode` in `allowed-tools`
+2. Document the two-step bootstrap in the relevant step body:
+
+```
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
+called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
+`ExitPlanMode`. Both steps happen silently with no user-visible output.
+```
+
+Omitting `ToolSearch` from `allowed-tools` causes a silent mid-skill permission prompt when the model tries to load the schema.
+
 ## When in doubt
 
 Run `/skill-reviewer:reviewing-skills` on the skill for a scored audit against these criteria.

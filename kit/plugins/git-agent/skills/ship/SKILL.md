@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Use when the user asks to ship changes, commit and create a PR, or land their work. Chains commit + push + PR in one flow for GitHub (gh) and GitLab (glab)."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -20,6 +20,10 @@ any other action. Do not prompt the user. This call is a no-op when plan mode
 is already off, so it is safe to call regardless. Staging, committing,
 pushing, and creating a pull/merge request are mutations and cannot proceed
 inside plan mode.
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
+called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
+`ExitPlanMode`. Both steps happen silently with no user-visible output.
 
 ## Step 1: Pre-flight Guards
 
