@@ -128,7 +128,7 @@ revised findings. Loop until the developer approves or discards.
 **If discarded:**
 
 1. Delete the plan file
-2. Call `ExitPlanMode` (same deferred-tool pattern: ToolSearch → ExitPlanMode)
+2. Call `ExitPlanMode` (`ExitPlanMode` is deferred — use `ToolSearch` with `select:ExitPlanMode` first, then call it)
 3. Confirm: "Plan discarded. No changes were made."
 
 ## Analysis Format

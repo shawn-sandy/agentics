@@ -1,5 +1,5 @@
 ---
-status: todo
+status: completed
 type: standard
 created: 2026-05-13
 ---

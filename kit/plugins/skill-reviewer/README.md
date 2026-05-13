@@ -86,7 +86,7 @@ claude --plugin-dir /path/to/agentics/kit/plugins/skill-reviewer
 
 ## Usage
 
-Once the plugin is loaded, skills activate automatically based on user intent.
+Once the plugin is loaded, most skills activate automatically based on user intent. The exception is `optimizing-skill-frontmatter`, which requires explicit invocation via `/skill-reviewer:optimizing-skill-frontmatter` — it is a write-heavy workflow skill that should not auto-fire on intent match.
 
 ### Reviewing Skills
 

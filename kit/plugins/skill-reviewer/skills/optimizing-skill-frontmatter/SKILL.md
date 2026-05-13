@@ -221,7 +221,12 @@ Call `AskUserQuestion` with three options:
 **To set `true`:** first check for any existing `disable-model-invocation:` line (any value — including `false`). If one exists, delete it. Then insert `disable-model-invocation: true` on a new line immediately after the `allowed-tools:` line.
 
 ```
-# Edit pattern (after removing any existing disable-model-invocation line):
+# Step 1: Delete any existing disable-model-invocation line
+# Use Grep to find the line number, then Edit to remove it:
+old_string: "disable-model-invocation: <any-value>\n"
+new_string: ""
+
+# Step 2: Insert after allowed-tools
 old_string: "allowed-tools: <value>\n"
 new_string: "allowed-tools: <value>\ndisable-model-invocation: true\n"
 ```
