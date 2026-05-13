@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.19.0] - 2026-05-13
+
+### Added
+
+- `skills/plan-interview/SKILL.md` Step 2: after a user-confirmed rename,
+  offers to generate HTML for the renamed plan via `plan-to-html --no-open`;
+  `plan-to-html` prompts for a color theme before writing the `.html` file
+- `skills/plan-interview/SKILL.md` Step 6: after a user-confirmed summary
+  append, offers to generate or regenerate HTML so the artifact reflects the
+  appended `## Interview Summary`; if an `.html` already exists, notes that
+  `plan-to-html` will prompt to overwrite it; passes `--no-open` so no browser
+  tab opens during the interview
+- `Skill` added to `allowed-tools` in `skills/plan-interview/SKILL.md`
+  frontmatter so both `plan-to-html` invocations run without a mid-skill
+  permission prompt
+
 ## [1.18.0] - 2026-05-13
 
 ### Added
