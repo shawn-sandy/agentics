@@ -1,3 +1,10 @@
+---
+status: completed
+type: standard
+created: 2026-05-13
+modified: 2026-05-13
+---
+
 # Plan: Generate HTML after plan rename via plan-to-html skill
 
 > Filename note: keep tracking with the existing slug for now; rename to `add-html-output-to-rename-workflow.md` as a final step (see Step 7).
