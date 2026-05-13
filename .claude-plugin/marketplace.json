@@ -36,7 +36,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-review"
       },
-      "version": "3.2.1",
+      "version": "3.3.0",
       "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
       "tags": [
