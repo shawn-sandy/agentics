@@ -5,6 +5,7 @@ allowed-tools:
   - Read
   - Bash
   - AskUserQuestion
+  - Skill
 argument-hint: "[directory-path] (optional, uses plansDirectory setting by default)"
 ---
 
@@ -60,6 +61,67 @@ Only after receiving explicit user approval:
 2. Commit: `chore: rename plan files to descriptive conventions`
 3. Display summary table with status per file
 4. If all fail, do NOT commit
+
+## HTML Generation (after rename commit)
+
+After the rename commit lands, generate an HTML view for every renamed file.
+This is a separate commit so each concern has its own history entry.
+
+**Step A — Migrate stale HTML artifacts**
+
+For each renamed file, check whether `<old-basename>.html` exists in the same
+directory. If so, rename it to match the new basename to avoid leaving orphaned
+artifacts:
+
+```bash
+git mv <dir>/<old-basename>.html <dir>/<new-basename>.html
+```
+
+Fallback if `git mv` fails (file not tracked): `mv` + `git add` new path +
+`git rm` old path.
+
+**Step B — Choose theme once**
+
+Ask the user once via `AskUserQuestion` which theme to apply to all regenerated
+HTML files:
+
+- **Default** — neutral grays and white, blue accent
+- **Developer** — dark charcoal header, green accent (terminal-inspired)
+- **Document** — warm off-white background, sepia/brown accent
+- **Minimal** — pure white background, black text, no accent color
+
+**Step C — Generate HTML per renamed file**
+
+For each renamed file, invoke the `plan-to-html` skill with the new path, the
+chosen theme, and `--no-open` to suppress per-file browser prompts:
+
+```
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --no-open")
+```
+
+**Step D — Commit regenerated HTML**
+
+Stage all newly written `.html` files (and any `git mv`'d stale artifacts)
+and commit:
+
+```bash
+git add <dir>/*.html
+git commit -m "chore: regenerate plan HTML after rename"
+```
+
+If no `.html` files were written or migrated, skip this commit.
+
+**Step E — Report**
+
+Display a final table:
+
+```markdown
+## HTML Generated
+
+| Plan File | HTML Output | Theme |
+|-----------|-------------|-------|
+| `add-insights-guardrails-to-claude-md.md` | `add-insights-guardrails-to-claude-md.html` | developer |
+```
 
 ## Examples
 
