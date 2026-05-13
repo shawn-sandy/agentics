@@ -57,6 +57,15 @@ allowed-tools: Bash(git *)
 
 Use the `auditing-allowed-tools` skill (in the `skill-reviewer` plugin) to recommend or patch a SKILL.md's `allowed-tools` automatically, or to cross-reference a skill against a real session JSONL transcript.
 
+#### Deferred tools
+
+Some harness tools (including `ExitPlanMode`) are **deferred** — their schemas are not loaded at session start. Any skill that calls a deferred tool must:
+
+- List both `ToolSearch` **and** the deferred tool in `allowed-tools`
+- Include a note in the step body: "use `ToolSearch` with `select:<ToolName>` first, then call `<ToolName>`"
+
+Skipping `ToolSearch` causes a permission prompt mid-skill, breaking the flow.
+
 ## Progressive Disclosure in Skills
 
 Structure skills in layers to avoid overwhelming context:

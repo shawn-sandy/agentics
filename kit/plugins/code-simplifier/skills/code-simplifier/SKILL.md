@@ -1,7 +1,7 @@
 ---
 name: code-simplifier
 description: "Use when the user asks to simplify code, find code smells, reduce complexity, or refactor. Creates a refactoring plan and applies approved changes."
-allowed-tools: AskUserQuestion, Bash(git *), Edit, EnterPlanMode, ExitPlanMode, Glob, Grep, Read, Write
+allowed-tools: AskUserQuestion, Bash(git *), Edit, EnterPlanMode, ExitPlanMode, Glob, Grep, Read, ToolSearch, Write
 ---
 
 Analyze code for structural quality issues and code smells. Create a prioritized
@@ -117,14 +117,14 @@ revised findings. Loop until the developer approves or discards.
 
 **If approved:**
 
-1. Call `ExitPlanMode`
+1. Call `ExitPlanMode` (`ExitPlanMode` is deferred — use `ToolSearch` with `select:ExitPlanMode` first, then call it)
 2. Apply each refactoring step from the plan using `Edit` and `Write`
 3. After applying, briefly summarize what was changed
 
 **If discarded:**
 
 1. Delete the plan file
-2. Call `ExitPlanMode`
+2. Call `ExitPlanMode` (same deferred-tool pattern: ToolSearch → ExitPlanMode)
 3. Confirm: "Plan discarded. No changes were made."
 
 ## Analysis Format

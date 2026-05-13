@@ -1,7 +1,7 @@
 ---
 name: optimizing-skill-frontmatter
 description: Use when the user asks to optimize SKILL.md frontmatter: trim descriptions to ≤160 chars and set disable-model-invocation correctly.
-allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob
+allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -35,6 +35,10 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 ## Step 0: Exit plan mode, then discover project skills
 
 Call `ExitPlanMode` immediately. This skill writes to SKILL.md files and cannot run inside plan mode.
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
+called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
+`ExitPlanMode`. Both steps happen silently with no user-visible output.
 
 Then enumerate all SKILL.md files in the current project:
 
