@@ -7,9 +7,9 @@ argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 # Plan to HTML
 
 Convert a plan markdown file into a rich, self-contained HTML document with a
-sticky sidebar, color-coded status badge, three-line step cards (action / why /
-verify), and a selectable color theme. All styles are inline — no external
-dependencies.
+sticky sidebar, color-coded status badge, interactive step completion checkboxes,
+scroll-spy navigation, inline markdown rendering, and a selectable color theme.
+All styles and scripts are inline — no external dependencies.
 
 Delegates to the full skill instructions in `skills/plan-to-html/SKILL.md`.
 
@@ -37,7 +37,13 @@ project settings → global settings → `~/.claude/plans/`).
 
 Writes `<plan-basename>.html` to the same directory as the source plan. The user
 is prompted to select a color theme before the file is written, and offered the
-option to open the result in the browser afterward.
+option to open the result in the browser afterward. The output includes:
+
+- Interactive step completion checkboxes (state persists in localStorage)
+- Scroll-spy sidebar navigation with active section highlighting
+- Inline markdown rendering (bold, italic, code, links, fenced blocks, lists)
+- Visual progress bar (updates as steps are checked off)
+- Print-friendly styles for PDF export (`Ctrl+P` / `Cmd+P`)
 
 ## Follow the skill instructions
 

@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.17.0] - 2026-05-13
+
+### Changed
+
+- `plan-to-html` skill and command upgraded with richer interactive output,
+  inspired by the "Unreasonable Effectiveness of HTML" approach:
+  - **JavaScript allowed**: inline `<script>` block (no external dependencies)
+    implements scroll-spy navigation and step completion tracking
+  - **Scroll spy**: `IntersectionObserver` highlights the active sidebar section
+    link as the user scrolls
+  - **Step completion checkboxes**: each step card now has a checkbox; checked
+    state persists in `localStorage` keyed by document title; progress bar updates
+    dynamically as steps are checked
+  - **Progress indicator**: thin horizontal bar in `<header>` initialized from
+    plan status (5% todo → 50% in-progress → 100% completed) and updated live by
+    step checkboxes
+  - **Inline markdown rendering**: `**bold**`, `*italic*`, `` `code` ``,
+    `[links](url)`, `~~strikethrough~~`, fenced code blocks, lists, and paragraph
+    breaks are converted to proper HTML elements (applied after HTML-escaping)
+  - **Step card hover**: subtle `box-shadow` lift and `translateY(-1px)` on hover;
+    completed cards show `line-through` on the action text
+  - **Print styles**: `@media print` block hides nav and progress bar, flattens
+    layout, appends link hrefs, and removes card shadows for clean PDF export
+  - **`scroll-behavior: smooth`** on `<html>` for anchor navigation
+  - **Two new CSS variables** added to all four themes: `--color-card-bg` and
+    `--color-code-bg` for step card and inline code backgrounds
+  - **Inline code and fenced code blocks** styled with monospace font and theme-
+    appropriate background (`<code>` and `<pre><code>` elements)
+  - `html-spec.md` reorganized to include JavaScript Features, Markdown Rendering,
+    Progress Indicator, and Print Styles sections
+
 ## [1.16.0] - 2026-05-12
 
 ### Changed
