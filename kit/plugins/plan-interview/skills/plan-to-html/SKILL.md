@@ -63,6 +63,18 @@ Use the first match from this priority order:
 
 If no file is found via any method, tell the user and stop.
 
+**Flag parsing**: After resolving the file path, also scan `$ARGUMENTS` for
+optional flags:
+
+- `--theme=<value>` — accepted values: `default`, `developer`, `document`,
+  `minimal`. If present, store as the pre-selected theme; Step 3 will skip its
+  `AskUserQuestion` and use this value directly. If the value is not one of the
+  four accepted names, ignore the flag and fall back to the Step 3 prompt.
+- `--no-open` — if present, Step 6 will skip the browser-open prompt entirely.
+
+These flags are intended for batch invocation from other commands. When invoked
+interactively without flags, all behavior is unchanged.
+
 Announce the resolved file: `"Converting plan: path/to/plan.md"`
 
 ### Step 2 — Parse plan content
@@ -87,9 +99,11 @@ fields.
 
 ### Step 3 — Prompt for theme
 
-Ask the user which color palette to apply:
+If `--theme=<value>` was parsed in Step 1, skip the `AskUserQuestion` and use
+that value as the selected theme. Proceed directly to Step 4.
 
-Ask via `AskUserQuestion` with four options:
+Otherwise, ask the user which color palette to apply via `AskUserQuestion` with
+four options:
 
 - **Default** — neutral grays and white, blue accent
 - **Developer** — dark charcoal header, green accent (terminal-inspired)
@@ -178,7 +192,9 @@ Write the completed HTML to the output path via the `Write` tool.
 
 ### Step 6 — Offer to open in browser
 
-After writing, ask via `AskUserQuestion`:
+If `--no-open` was set in Step 1, skip this step entirely.
+
+Otherwise, after writing, ask via `AskUserQuestion`:
 
 > "Open `<name>.html` in the browser?"
 
@@ -199,7 +215,9 @@ Written to docs/plans/add-auth-flow.html (theme: developer)
 ## Examples
 
 ```text
-/plan-interview:plan-to-html                                    # auto-detects from IDE or settings
-/plan-interview:plan-to-html docs/plans/add-auth-flow.md       # specific plan file
-/plan-interview:plan-to-html ~/.claude/plans/my-feature.md     # absolute path
+/plan-interview:plan-to-html                                                          # auto-detects from IDE or settings
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md                              # specific plan file
+/plan-interview:plan-to-html ~/.claude/plans/my-feature.md                            # absolute path
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer            # pre-select theme, still prompts for browser-open
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer --no-open  # batch-safe: no prompts fired
 ```

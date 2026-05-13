@@ -1,7 +1,7 @@
 ---
 description: Review plan filenames and offer to rename files whose names don't match their intent
 argument-hint: [plan-file-or-directory] - omit to scan docs/plans/ or configured plansDirectory
-allowed-tools: Read, Glob, Bash, Edit, AskUserQuestion, TodoWrite
+allowed-tools: Read, Glob, Bash, Edit, AskUserQuestion, TodoWrite, Skill
 ---
 
 # /plan-interview:review-rename-plans
@@ -112,6 +112,64 @@ After renaming, show a summary of what was changed:
 |----------|----------|
 | `fuzzy-swimming-pearl.md` | `create-skill-reviewer-plugin.md` |
 | `plan.md` | `refactor-auth-module.md` |
+```
+
+### Step 5 — Generate HTML for renamed files
+
+After the "Renames Applied" summary, automatically generate an HTML view for
+every file that was successfully renamed.
+
+**5a — Migrate stale HTML artifacts**
+
+For each renamed file, check whether `<old-basename>.html` exists in the same
+directory:
+
+```bash
+# example: old path was docs/plans/fuzzy-swimming-pearl.md
+ls docs/plans/fuzzy-swimming-pearl.html 2>/dev/null
+```
+
+If the stale `.html` exists, rename it to match the new basename using
+`git mv` to preserve history:
+
+```bash
+git mv docs/plans/fuzzy-swimming-pearl.html docs/plans/create-skill-reviewer-plugin.html
+```
+
+Fallback if `git mv` fails (file not tracked): `mv` the file then `git add` the
+new path and `git rm` the old path.
+
+**5b — Choose theme once**
+
+Ask the user once via `AskUserQuestion` which theme to apply to all regenerated
+HTML files:
+
+- **Default** — neutral grays and white, blue accent
+- **Developer** — dark charcoal header, green accent (terminal-inspired)
+- **Document** — warm off-white background, sepia/brown accent
+- **Minimal** — pure white background, black text, no accent color
+
+**5c — Generate HTML per renamed file**
+
+For each renamed file, invoke the `plan-to-html` skill, passing the new path,
+the chosen theme, and `--no-open` to suppress browser prompts:
+
+```
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --no-open")
+```
+
+**5d — Report HTML output**
+
+After all invocations complete, append an "HTML Generated" section to the
+summary:
+
+```markdown
+## HTML Generated
+
+| Plan File | HTML Output | Theme |
+|-----------|-------------|-------|
+| `create-skill-reviewer-plugin.md` | `create-skill-reviewer-plugin.html` | developer |
+| `refactor-auth-module.md` | `refactor-auth-module.html` | developer |
 ```
 
 ---

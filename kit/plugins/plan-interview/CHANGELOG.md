@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.18.0] - 2026-05-13
+
+### Added
+
+- `commands/review-rename-plans.md` now invokes the `plan-to-html` skill after
+  each rename (new Step 5 — Generate HTML for renamed files):
+  - Prompts for a theme once up-front (single `AskUserQuestion` across all
+    files), then calls `plan-to-html` with `--no-open` per renamed file so
+    the browser doesn't launch for each one
+  - Stale `.html` files alongside a renamed `.md` are migrated with `git mv`
+    before the new HTML is generated
+  - `Skill` added to `allowed-tools` frontmatter
+- `commands/plan-hygiene.md` now includes an HTML Generation section (Steps
+  A–E) that runs after the rename batch:
+  - Single up-front theme prompt reused across all renamed files
+  - Calls `plan-to-html --no-open` per file; the browser is not opened during
+    batch operation
+  - Stale `.html` migration via `git mv` before regeneration
+  - HTML files are committed in a separate commit from the renames, so git
+    history stays clean
+  - `Skill` added to `allowed-tools` frontmatter
+- Two new `plan-to-html` flags wired in by both commands:
+  - `--theme=<name>` — passes a pre-selected theme, skipping the interactive
+    theme prompt inside the skill
+  - `--no-open` — suppresses the browser-open step; used for batch runs to
+    avoid opening a tab per file
+
 ## [1.17.0] - 2026-05-13
 
 ### Changed
