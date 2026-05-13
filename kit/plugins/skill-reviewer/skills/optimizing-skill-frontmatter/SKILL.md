@@ -221,8 +221,8 @@ Call `AskUserQuestion` with three options:
 **To set `true`:** first check for any existing `disable-model-invocation:` line (any value — including `false`). If one exists, delete it. Then insert `disable-model-invocation: true` on a new line immediately after the `allowed-tools:` line.
 
 Step 1 — delete any existing `disable-model-invocation` line:
-1. Run `Grep` for `^disable-model-invocation:` in the target file to get the exact line content.
-2. Use `Edit` with that exact matched line as `old_string` and `""` as `new_string`.
+1. Extract the YAML frontmatter block first: read lines between the opening `---` (line 1) and the closing `---` (the next `---` after line 1). Run `Grep` for `^disable-model-invocation:` **only within that extracted range** — stop after the first frontmatter block so instruction examples in the body code blocks are not matched.
+2. If found, use `Edit` with that exact matched line as `old_string` and `""` as `new_string`.
 
 ```
 # Example — if grep returned: disable-model-invocation: false
@@ -231,7 +231,7 @@ new_string: ""
 ```
 
 Step 2 — insert after the `allowed-tools:` line:
-1. Run `Grep` for `^allowed-tools:` in the target file to get the exact line content.
+1. Extract the YAML frontmatter block (lines between `---` delimiters as above). Run `Grep` for `^allowed-tools:` within that range to get the exact frontmatter line content.
 2. Use `Edit` with that exact line as `old_string`, appending `disable-model-invocation: true` on the next line.
 
 ```
