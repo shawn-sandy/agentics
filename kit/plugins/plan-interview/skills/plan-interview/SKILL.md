@@ -1,7 +1,7 @@
 ---
 name: plan-interview
 description: "Use when the user asks to stress-test, interview, validate, critique, or find gaps and risks in an implementation or agentic plan."
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill
 ---
 
 # Plan Interview
@@ -157,6 +157,16 @@ If the user confirms:
 - Update the H1 heading in the file using `Edit` (if it was flagged).
 - **Update the resolved file path** for the remainder of the interview so that
   Steps 4–6 (especially Step 6's save operation) reference the new path.
+
+Then ask via `AskUserQuestion`: _"Generate HTML for the renamed plan?
+(`plan-to-html` will prompt for a color theme.)"_ (options: `Yes, generate HTML`
+/ `Skip`). If confirmed, call:
+
+```
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --no-open")
+```
+
+If the user declines, continue to the rest of Step 2.
 
 If the user declines, proceed without changes.
 
@@ -463,7 +473,20 @@ After presenting the Step 5 summary, ask the user:
 **Do not write to the plan file unless the user explicitly confirms.** If they
 confirm, update the plan with suggested changes and append the summary as a new
 `## Interview Summary` section at the end of the plan file using the `Edit`
-tool. If they decline, do not modify the file.
+tool.
+
+After appending the summary, ask via `AskUserQuestion`: _"Generate (or
+regenerate) HTML for the updated plan?"_ (options: `Yes, generate HTML` / `Skip`;
+if an `.html` exists, `plan-to-html` will prompt to overwrite it). If confirmed,
+call with the current resolved path (the renamed path from Step 2, if applicable):
+
+```
+Skill(skill: "plan-interview:plan-to-html", args: "<resolved-plan-path> --no-open")
+```
+
+If declined, fall through to the next block unchanged.
+
+If they decline the summary append, do not modify the file.
 
 **In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
 
