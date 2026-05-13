@@ -19,10 +19,10 @@ Does not create commits or PRs — use `/git-agent:commit-agent` and `/git-agent
 **Refuse on dirty working tree:**
 
 ```bash
-git diff --quiet HEAD
+git status --porcelain --untracked-files=all
 ```
 
-If the command exits non-zero, stop immediately:
+If the output is non-empty (staged, unstaged, or untracked changes), stop immediately:
 
 > ERROR: working tree has uncommitted changes. Commit or stash first so review fixes are isolated from your in-progress work.
 
@@ -33,9 +33,11 @@ If the command exits non-zero, stop immediately:
    ```bash
    git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's,^refs/remotes/origin/,,'
    ```
-3. If that returns empty, try `git rev-parse --verify main 2>/dev/null` → use `main`.
-4. If that fails, try `master`.
-5. If all fail, stop: "Could not detect a default branch. Pass the base branch explicitly: `/code-review:fix-branch main`"
+3. If that returns empty, try local `main`: `git rev-parse --verify main 2>/dev/null` → use `main`.
+4. If that fails, try local `master`.
+5. If that fails, try remote `origin/main` (`git rev-parse --verify origin/main 2>/dev/null`).
+6. If that fails, try `origin/master`.
+7. If all fail, stop: "Could not detect a default branch. Pass the base branch explicitly: `/code-review:fix-branch main`"
 
 **Compute merge base:**
 
@@ -105,7 +107,7 @@ For every `docs/plans/*.md` in `$CHANGED_FILES`, locate the verification section
 - Match any heading whose text contains "verif" (case-insensitive): `## Verification`, `## End-to-end correctness checks`, etc.
 - Also extract `<em>Verify:</em>` lines from within `<li>` blocks.
 
-Execute any shell commands found in those sections. Non-zero exit or "not found" output → **blocking** finding.
+Execute only **read-only** shell commands found in those sections (e.g. `jq`, `grep`, `ls`, `find`, `wc`). Before running any command, confirm it contains no shell metacharacters (`|`, `>`, `>>`, `&`, `;`, backticks, `$()`, `||`, `&&`) and does not modify files. If a command does not meet these criteria, skip execution and surface it as an **unfixable** finding: "Plan verification command requires manual execution: `<command>`". Non-zero exit from an allowed command → **blocking** finding.
 
 ### Delegation for SKILL.md and agent files
 
