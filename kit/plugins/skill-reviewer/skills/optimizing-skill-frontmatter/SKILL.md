@@ -220,16 +220,27 @@ Call `AskUserQuestion` with three options:
 
 **To set `true`:** first check for any existing `disable-model-invocation:` line (any value — including `false`). If one exists, delete it. Then insert `disable-model-invocation: true` on a new line immediately after the `allowed-tools:` line.
 
-```
-# Step 1: Delete any existing disable-model-invocation line
-# Use Grep to find the line number, then Edit to remove it:
-old_string: "disable-model-invocation: <any-value>\n"
-new_string: ""
+Step 1 — delete any existing `disable-model-invocation` line:
+1. Run `Grep` for `^disable-model-invocation:` in the target file to get the exact line content.
+2. Use `Edit` with that exact matched line as `old_string` and `""` as `new_string`.
 
-# Step 2: Insert after allowed-tools
-old_string: "allowed-tools: <value>\n"
-new_string: "allowed-tools: <value>\ndisable-model-invocation: true\n"
 ```
+# Example — if grep returned: disable-model-invocation: false
+old_string: "disable-model-invocation: false\n"
+new_string: ""
+```
+
+Step 2 — insert after the `allowed-tools:` line:
+1. Run `Grep` for `^allowed-tools:` in the target file to get the exact line content.
+2. Use `Edit` with that exact line as `old_string`, appending `disable-model-invocation: true` on the next line.
+
+```
+# Example — if grep returned: allowed-tools: AskUserQuestion, Read, Edit, Bash
+old_string: "allowed-tools: AskUserQuestion, Read, Edit, Bash\n"
+new_string: "allowed-tools: AskUserQuestion, Read, Edit, Bash\ndisable-model-invocation: true\n"
+```
+
+Never use placeholder values like `<value>` — always grep the file for the exact current content and use that as `old_string`.
 
 **To remove an existing `true`:** delete the `disable-model-invocation: true` line entirely (do not replace with `false`). If an existing `false` is present, delete it too — never leave `false` in the file.
 
