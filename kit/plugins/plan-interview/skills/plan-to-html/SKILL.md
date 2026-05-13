@@ -122,35 +122,57 @@ If the file does not exist, proceed directly to Step 5.
 Generate a complete, self-contained HTML document following the layout contract
 in `reference/html-spec.md`. Key requirements:
 
-**Structure**: `<header>` with title + status badge + metadata row, then a
-`.layout` grid with `<nav aria-label="Plan sections">` sidebar and `<main>`
+**Structure**: `<header>` with progress bar + title + status badge + metadata row,
+then a `.layout` grid with `<nav aria-label="Plan sections">` sidebar and `<main>`
 content area containing one `<section>` per plan section.
 
 **Theme**: Apply the CSS custom property values for the selected theme as a class
 on `<body>` (e.g., `<body class="theme-developer">`). Use the exact variable
 names and color values from the theme definitions in `reference/html-spec.md`.
+Include the new `--color-card-bg` and `--color-code-bg` variables.
 
-**Steps**: Render using `<ol class="steps-list">` with `<li class="step-card">`
-per step. Each card has `<h3 class="step-action">` for the action, `<p
-class="step-why">` for the why rationale, and `<p class="step-verify">` for the
-verify line (prefixed with ✓). If a step has no why/verify text, omit those
-elements.
+**Steps**: Render using `<ol class="steps-list">` with `<li class="step-card"
+data-step-id="{plan-slug}-{index}">` per step. Wrap the `<h3 class="step-action">`
+in a `<label class="step-check">` alongside an `<input type="checkbox"
+class="step-checkbox">`. Include `<p class="step-why">` and `<p
+class="step-verify">` (prefixed with ✓) when those lines exist. If a step has no
+why/verify text, omit those elements.
+
+**Progress indicator**: Include `<div class="progress-bar"><div
+class="progress-fill"></div></div>` at the top of `<header>`. Set the initial
+fill width and color from the plan's status field per the table in
+`reference/html-spec.md` ("Progress Indicator" section).
 
 **Semantics**: Follow all rules in the "Semantic Rules" section of
-`reference/html-spec.md` — heading hierarchy, landmark elements, contrast
-requirements.
+`reference/html-spec.md` — `lang="en"` on `<html>`, heading hierarchy, landmark
+elements, `role="progressbar"` and `aria-label` on the progress bar, contrast
+requirements, touch targets.
 
-**Responsive**: Include the media query from `reference/html-spec.md` so the
-layout collapses to single-column below 768px.
+**Responsive + step hover**: Include the full CSS from `reference/html-spec.md`
+— `scroll-behavior: smooth`, step card `box-shadow` and `hover` transition,
+`completed` class strikethrough, inline `<code>` and `<pre>` block styles, and
+the `@media (max-width: 768px)` collapse.
 
-**Self-contained**: All CSS must be inline in a `<style>` block in `<head>`. No
-external stylesheets, no CDN links, no `<script>` tags, no JavaScript.
+**Print styles**: Include the `@media print` block from `reference/html-spec.md`
+so the output is clean when printed or exported to PDF.
 
-**Content sanitization**: HTML-escape all text sourced from the plan file before
-embedding it (title, headings, body text). Replace `&` → `&amp;`, `<` → `&lt;`,
-`>` → `&gt;`, `"` → `&quot;`. Any raw HTML tags in the plan source (including
-`<script>`, `<img>`, `<link>`) must be rendered as escaped text, not emitted as
-live HTML. See "Content sanitization" in `reference/html-spec.md`.
+**Content sanitization + markdown rendering**: HTML-escape all text sourced from
+the plan file first. Then apply the inline markdown rendering rules from
+`reference/html-spec.md` ("Markdown Rendering" section) to convert `**bold**`,
+`*italic*`, `` `code` ``, `[links](url)`, `~~strikethrough~~`, fenced code blocks,
+lists, and paragraph breaks into proper HTML elements. Do not apply markdown
+rendering to the `<h1>` title or `<h2>` section headings (those are already
+handled structurally). Any raw HTML tags in the plan source that survive escaping
+are rendered as escaped text — no live HTML injection.
+
+**JavaScript**: Include a single inline `<script>` block immediately before
+`</body>` implementing the two features from `reference/html-spec.md`
+("JavaScript Features" section):
+1. Scroll spy — `IntersectionObserver` adds `class="active"` to the sidebar link
+   for the currently visible section.
+2. Step completion — checkboxes restore their `localStorage` state on load,
+   toggle the `completed` class on the card, persist changes, and update the
+   progress bar fill percentage.
 
 Write the completed HTML to the output path via the `Write` tool.
 
