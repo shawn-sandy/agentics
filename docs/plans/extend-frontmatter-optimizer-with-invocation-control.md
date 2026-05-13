@@ -1,11 +1,10 @@
 ---
-status: todo
+status: completed
 type: standard
+created: 2026-05-12
 ---
 
 # Plan: Extend description-optimizer skill to also tune `disable-model-invocation`
-
-> Filename note: this file was auto-named (`i-wnat-this-skill-purring-wand.md`). After approval, rename to `extend-frontmatter-optimizer-with-invocation-control.md` per plan-mode.md rule #2.
 
 ## Context
 
@@ -35,12 +34,12 @@ Classify each touched SKILL.md from two static signals:
 
 ## Files to modify
 
-- `/Users/shawnsandy/devbox/agentics/kit/plugins/skill-reviewer/skills/optimizing-skill-descriptions/SKILL.md` — directory renamed to `.../optimizing-skill-frontmatter/`; `name:`, `description:`, body updated; new "Step 4b: Tune invocation control" inserted between current Steps 4 and 5; Table of Contents updated.
-- `/Users/shawnsandy/devbox/agentics/kit/plugins/skill-reviewer/scripts/measure-description.sh` — 4 WARNING strings reference the old skill name; replace with `/skill-reviewer:optimizing-skill-frontmatter`.
-- `/Users/shawnsandy/devbox/agentics/kit/plugins/skill-reviewer/README.md` — 4 references to the old name (entry #4 in the skills list, the example WARNING line, the directory tree on line ~188, and the closing usage hint on line ~291).
-- `/Users/shawnsandy/devbox/agentics/kit/plugins/skill-reviewer/commands/check-description.md` — 1 reference in the "For any over-budget file" bullet.
-- `/Users/shawnsandy/devbox/agentics/kit/plugins/skill-reviewer/CHANGELOG.md` — add a new `## 2.0.0` section at the top describing the rename and the new responsibility. Do **not** edit existing entries.
-- `/Users/shawnsandy/devbox/agentics/.claude-plugin/marketplace.json` — bump skill-reviewer `version` from `1.9.0` → `2.0.0`.
+- `kit/plugins/skill-reviewer/skills/optimizing-skill-descriptions/SKILL.md` — directory renamed to `.../optimizing-skill-frontmatter/`; `name:`, `description:`, body updated; new "Step 4b: Tune invocation control" inserted between current Steps 4 and 5; Table of Contents updated.
+- `kit/plugins/skill-reviewer/scripts/measure-description.sh` — 4 WARNING strings reference the old skill name; replace with `/skill-reviewer:optimizing-skill-frontmatter`.
+- `kit/plugins/skill-reviewer/README.md` — 4 references to the old name (entry #4 in the skills list, the example WARNING line, the directory tree on line ~188, and the closing usage hint on line ~291).
+- `kit/plugins/skill-reviewer/commands/check-description.md` — 1 reference in the "For any over-budget file" bullet.
+- `kit/plugins/skill-reviewer/CHANGELOG.md` — add a new `## 2.0.0` section at the top describing the rename and the new responsibility. Do **not** edit existing entries.
+- `.claude-plugin/marketplace.json` — bump skill-reviewer `version` from `1.9.0` → `2.0.0`.
 
 ## Steps
 

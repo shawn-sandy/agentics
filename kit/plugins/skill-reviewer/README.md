@@ -4,7 +4,7 @@ A Claude Code plugin for auditing SKILL.md files and planning new skills. Aligne
 
 ## Overview
 
-The Skill Reviewer provides four auto-activating skills, one slash command, and an always-on hook:
+The Skill Reviewer provides three auto-activating skills, one explicit-invocation workflow skill, one slash command, and an always-on hook:
 
 1. **reviewing-skills** — Structured quality audits of SKILL.md files across 5 dimensions (frontmatter, body quality, structure, anti-patterns, discoverability). Scored 0–10 with grades from Excellent to Rewrite.
 2. **planning-skills** — Guided workflow for planning, designing, and scaffolding new Claude Code skills from scratch, including design pattern selection and file generation.
