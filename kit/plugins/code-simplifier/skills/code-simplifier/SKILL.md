@@ -53,6 +53,10 @@ Once target files are confirmed, proceed to Step 1.
 
 ## Step 1: Enter Plan Mode
 
+`EnterPlanMode` is a deferred tool whose schema must be loaded before it can be
+called. Use `ToolSearch` with `select:EnterPlanMode` first, then call
+`EnterPlanMode`. Both steps happen silently with no user-visible output.
+
 Call `EnterPlanMode` immediately after resolving target files. All analysis and
 plan creation happen within plan mode to prevent premature edits. Do not read
 or analyze files until plan mode is active.
