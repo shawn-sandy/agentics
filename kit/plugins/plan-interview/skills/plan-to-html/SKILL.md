@@ -1,7 +1,7 @@
 ---
 name: plan-to-html
 description: "Use when the user asks to convert a plan to HTML, generate an HTML version of a plan, export a plan as a webpage, or make a plan viewable in a browser."
-allowed-tools: AskUserQuestion, Bash(open *), Glob, Grep, Read, TodoWrite, Write
+allowed-tools: AskUserQuestion, Bash(open *), Bash(mkdir *), Glob, Grep, Read, TodoWrite, Write
 ---
 
 # Plan to HTML
@@ -18,6 +18,7 @@ lifecycle stage (todo, in-progress, or completed).
 ## Table of Contents
 
 - [Step 0 — Create progress todos](#step-0--create-progress-todos)
+- [Step 0.5 — Setup mode](#step-05--setup-mode)
 - [Step 1 — Resolve the plan file](#step-1--resolve-the-plan-file)
 - [Step 2 — Parse plan content](#step-2--parse-plan-content)
 - [Step 3 — Prompt for theme](#step-3--prompt-for-theme)
@@ -30,7 +31,15 @@ lifecycle stage (todo, in-progress, or completed).
 
 ### Step 0 — Create progress todos
 
-Before doing anything else, use `TodoWrite` to create todos for each step:
+Flag detection note: scanning `$ARGUMENTS` here is a simple string-contains
+check (e.g., does the arguments string include the literal text `--setup`?).
+Full flag parsing with value extraction happens in Step 1; Step 0 only needs to
+know whether `--setup` is present to decide whether to skip todo creation.
+
+Before doing anything else, scan `$ARGUMENTS` for `--setup`. If `--setup` is
+present, skip the todos and jump directly to Step 0.5.
+
+Otherwise, use `TodoWrite` to create todos for each step:
 
 - Step 1: Resolve plan file
 - Step 2: Parse plan content
@@ -41,6 +50,41 @@ Before doing anything else, use `TodoWrite` to create todos for each step:
 - Step 7: Report
 
 Mark each todo `status: "completed"` as you finish that step.
+
+### Step 0.5 — Setup mode
+
+**Only runs when `--setup` is in `$ARGUMENTS`.** This step writes the pre-built
+theme CSS and JavaScript to disk so future invocations can read them directly
+instead of re-deriving them from the spec, significantly reducing synthesis time.
+
+1. Run `mkdir -p $HOME/.claude/plan-to-html` to ensure the directory exists
+   (use the expanded `$HOME` form — tilde is not expanded by shell when passed
+   through Bash restrictions).
+2. Attempt to `Read $HOME/.claude/plan-to-html/themes.css`. If the read
+   succeeds (content is returned), cache files already exist — ask via
+   `AskUserQuestion`: "Cache files already exist in `~/.claude/plan-to-html/`.
+   Re-run setup and overwrite them?" Options: `Overwrite` / `Cancel`. Stop if
+   the user selects Cancel. Use `Read` rather than `Glob` here because `Glob`
+   is scoped to the project workspace and may not match paths outside it.
+3. Write `$HOME/.claude/plan-to-html/themes.css`. The first line must be a
+   version comment: `/* plan-to-html-cache v1.20.0 */`. Then include the four
+   complete theme CSS blocks exactly as defined in `reference/html-spec.md`
+   under "Color Palette Themes" (all four `body.theme-*` rule sets).
+4. Write `$HOME/.claude/plan-to-html/scripts.js`. The first line must be a
+   version comment: `/* plan-to-html-cache v1.20.0 */`. Then include both
+   JavaScript feature blocks exactly as defined in `reference/html-spec.md`
+   under "JavaScript Features" (scroll-spy IIFE + step-completion IIFE,
+   separated by a blank line).
+5. Report:
+
+   ```text
+   Setup complete.
+     $HOME/.claude/plan-to-html/themes.css  — four theme palettes
+     $HOME/.claude/plan-to-html/scripts.js  — scroll-spy + step completion
+   Re-run --setup after upgrading the plan-interview plugin to refresh cached files.
+   ```
+
+6. Stop — do not continue to Step 1.
 
 ### Step 1 — Resolve the plan file
 
@@ -71,6 +115,12 @@ optional flags:
   `AskUserQuestion` and use this value directly. If the value is not one of the
   four accepted names, ignore the flag and fall back to the Step 3 prompt.
 - `--no-open` — if present, Step 6 will skip the browser-open prompt entirely.
+- `--background` — enables fully non-interactive mode: auto-selects the
+  `default` theme (unless `--theme` is also set), auto-overwrites any existing
+  output file without prompting, and implies `--no-open`. Use for automated or
+  batch runs where no user interaction is possible.
+- `--setup` — handled in Step 0.5 before this step is reached; documented here
+  for completeness.
 
 These flags are intended for batch invocation from other commands. When invoked
 interactively without flags, all behavior is unchanged.
@@ -102,6 +152,9 @@ fields.
 If `--theme=<value>` was parsed in Step 1, skip the `AskUserQuestion` and use
 that value as the selected theme. Proceed directly to Step 4.
 
+If `--background` was parsed and no `--theme` was specified, use `default`
+without prompting. Proceed directly to Step 4.
+
 Otherwise, ask the user which color palette to apply via `AskUserQuestion` with
 four options:
 
@@ -121,7 +174,10 @@ Example: `docs/plans/add-auth-flow.md` → `docs/plans/add-auth-flow.html`
 
 Use `Glob` to check whether the output file already exists.
 
-If it exists, ask via `AskUserQuestion`:
+If `--background` was parsed and the file exists, overwrite it automatically
+without prompting. Proceed directly to Step 5.
+
+If the file exists and `--background` was not set, ask via `AskUserQuestion`:
 
 > "Output file `<name>.html` already exists. Overwrite?"
 
@@ -132,6 +188,25 @@ Stop if the user selects Cancel. Proceed if they select Overwrite.
 If the file does not exist, proceed directly to Step 5.
 
 ### Step 5 — Synthesize and write HTML
+
+**Theme CSS and JavaScript cache check (run before synthesizing):**
+Always use the expanded `$HOME` form — tilde is not expanded by `Read` or
+`Glob`, and `Glob` is scoped to the project workspace so it may not match paths
+outside it. Use `Read` with error semantics for both checks: attempt the read
+and branch on whether content is returned.
+
+- Attempt to `Read $HOME/.claude/plan-to-html/themes.css`. If the read succeeds,
+  embed its content verbatim as the **theme variables block** inside `<style>`
+  — skip re-deriving the four `body.theme-*` rule sets from `reference/html-spec.md`.
+  If the read fails (file not found), derive the theme blocks from the spec as usual.
+- Attempt to `Read $HOME/.claude/plan-to-html/scripts.js`. If the read succeeds,
+  embed it verbatim immediately before `</body>` — **skip the JavaScript section
+  below entirely**. If the read fails, generate the JS from the spec as described
+  in the JavaScript section below.
+
+Note: the cache covers only theme variable blocks and JavaScript. Layout CSS,
+responsive styles, and print styles are always derived from `reference/html-spec.md`
+regardless of whether cache files are present.
 
 Generate a complete, self-contained HTML document following the layout contract
 in `reference/html-spec.md`. Key requirements:
@@ -179,8 +254,9 @@ rendering to the `<h1>` title or `<h2>` section headings (those are already
 handled structurally). Any raw HTML tags in the plan source that survive escaping
 are rendered as escaped text — no live HTML injection.
 
-**JavaScript**: Include a single inline `<script>` block immediately before
-`</body>` implementing the two features from `reference/html-spec.md`
+**JavaScript**: Skip this section if `scripts.js` was read from cache (see cache
+check above). Otherwise, include a single inline `<script>` block immediately
+before `</body>` implementing the two features from `reference/html-spec.md`
 ("JavaScript Features" section):
 1. Scroll spy — `IntersectionObserver` adds `class="active"` to the sidebar link
    for the currently visible section.
@@ -192,7 +268,7 @@ Write the completed HTML to the output path via the `Write` tool.
 
 ### Step 6 — Offer to open in browser
 
-If `--no-open` was set in Step 1, skip this step entirely.
+If `--no-open` or `--background` was set in Step 1, skip this step entirely.
 
 Otherwise, after writing, ask via `AskUserQuestion`:
 
@@ -215,9 +291,12 @@ Written to docs/plans/add-auth-flow.html (theme: developer)
 ## Examples
 
 ```text
-/plan-interview:plan-to-html                                                          # auto-detects from IDE or settings
-/plan-interview:plan-to-html docs/plans/add-auth-flow.md                              # specific plan file
-/plan-interview:plan-to-html ~/.claude/plans/my-feature.md                            # absolute path
-/plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer            # pre-select theme, still prompts for browser-open
-/plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer --no-open  # batch-safe: no prompts fired
+/plan-interview:plan-to-html --setup                                                          # write theme CSS + JS to ~/.claude/plan-to-html/ (one-time setup)
+/plan-interview:plan-to-html                                                                  # auto-detects from IDE or settings
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md                                      # specific plan file
+/plan-interview:plan-to-html ~/.claude/plans/my-feature.md                                    # absolute path
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer                    # pre-select theme, still prompts for browser-open
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer --no-open          # batch-safe: no prompts fired
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --background                         # fully non-interactive: default theme, auto-overwrite, no browser open
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --background --theme=developer       # non-interactive with explicit theme
 ```

@@ -1,6 +1,6 @@
 ---
 description: Convert a plan markdown file into a rich, self-contained HTML document viewable in any browser
-allowed-tools: Read, Glob, Grep, Bash(open *), Write, TodoWrite, AskUserQuestion
+allowed-tools: Read, Glob, Grep, Bash(open *), Bash(mkdir *), Write, TodoWrite, AskUserQuestion
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
 
@@ -22,9 +22,11 @@ plan lifecycle stage (todo, in-progress, or completed).
 ## Usage
 
 ```bash
-/plan-interview:plan-to-html                                    # auto-detects from IDE or settings
-/plan-interview:plan-to-html docs/plans/add-auth-flow.md       # specific plan file
-/plan-interview:plan-to-html ~/.claude/plans/my-feature.md     # absolute path
+/plan-interview:plan-to-html --setup                                   # one-time setup: cache theme CSS + JS to disk
+/plan-interview:plan-to-html                                           # auto-detects from IDE or settings
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md              # specific plan file
+/plan-interview:plan-to-html ~/.claude/plans/my-feature.md            # absolute path
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --background # non-interactive, no prompts
 ```
 
 ## Arguments
@@ -32,6 +34,18 @@ plan lifecycle stage (todo, in-progress, or completed).
 `[plan-file-path]` — path to the plan `.md` file. Omit to auto-detect using the
 same 5-step priority order as all other plan-interview commands (IDE open file →
 project settings → global settings → `~/.claude/plans/`).
+
+**Flags:**
+
+- `--setup` — writes pre-built theme CSS and JavaScript to
+  `~/.claude/plan-to-html/`. No plan file required. Run once to speed up all
+  future conversions (the skill reads cached files instead of re-synthesizing).
+- `--theme=<value>` — `default` | `developer` | `document` | `minimal`. Skips
+  the theme-selection prompt.
+- `--background` — fully non-interactive: uses `default` theme (unless
+  `--theme` is set), auto-overwrites existing output, skips browser-open prompt.
+  Suitable for automated or batch invocations.
+- `--no-open` — skips the browser-open prompt after writing.
 
 ## Output
 

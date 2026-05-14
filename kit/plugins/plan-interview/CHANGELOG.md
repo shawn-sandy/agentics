@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.20.0] - 2026-05-14
+
+### Added
+
+- `skills/plan-to-html/SKILL.md` Step 0.5: new `--setup` flag writes pre-built
+  theme CSS and JavaScript to `~/.claude/plan-to-html/` for caching; future
+  runs read these files directly instead of re-synthesizing CSS/JS from the spec
+- `skills/plan-to-html/SKILL.md` Step 1: `--background` flag for fully
+  non-interactive mode — auto-selects `default` theme, auto-overwrites existing
+  output, implies `--no-open`; intended for batch or automated invocations
+- `skills/plan-to-html/SKILL.md` Step 5: cache check reads
+  `~/.claude/plan-to-html/themes.css` and `scripts.js` when present, skipping
+  re-derivation of CSS/JS from the spec
+- `commands/plan-to-html.md`: documented `--setup`, `--background`, `--theme`,
+  and `--no-open` flags in the Arguments section with usage examples
+
 ## [1.19.0] - 2026-05-13
 
 ### Added
