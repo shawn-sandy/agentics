@@ -1,7 +1,7 @@
 ---
 name: plan-to-html
 description: "Use when the user asks to convert a plan to HTML, generate an HTML version of a plan, export a plan as a webpage, or make a plan viewable in a browser."
-allowed-tools: AskUserQuestion, Bash(open *, mkdir *), Glob, Grep, Read, TodoWrite, Write
+allowed-tools: AskUserQuestion, Bash(open *), Bash(mkdir *), Glob, Grep, Read, TodoWrite, Write
 ---
 
 # Plan to HTML
@@ -52,19 +52,21 @@ Mark each todo `status: "completed"` as you finish that step.
 theme CSS and JavaScript to disk so future invocations can read them directly
 instead of re-deriving them from the spec, significantly reducing synthesis time.
 
-1. Run `mkdir -p ~/.claude/plan-to-html` to ensure the directory exists.
-2. Write `~/.claude/plan-to-html/themes.css` containing the four complete
+1. Run `mkdir -p $HOME/.claude/plan-to-html` to ensure the directory exists
+   (use the expanded `$HOME` form — tilde is not expanded by shell when passed
+   through Bash restrictions).
+2. Write `$HOME/.claude/plan-to-html/themes.css` containing the four complete
    theme CSS blocks exactly as defined in `reference/html-spec.md` under
    "Color Palette Themes" (all four `body.theme-*` rule sets).
-3. Write `~/.claude/plan-to-html/scripts.js` containing both JavaScript feature
+3. Write `$HOME/.claude/plan-to-html/scripts.js` containing both JavaScript feature
    blocks exactly as defined in `reference/html-spec.md` under "JavaScript
    Features" (scroll-spy IIFE + step-completion IIFE, separated by a blank line).
 4. Report:
 
    ```
    Setup complete.
-     ~/.claude/plan-to-html/themes.css  — four theme palettes
-     ~/.claude/plan-to-html/scripts.js  — scroll-spy + step completion
+     $HOME/.claude/plan-to-html/themes.css  — four theme palettes
+     $HOME/.claude/plan-to-html/scripts.js  — scroll-spy + step completion
    Run the skill normally to generate HTML; cached files will be used automatically.
    ```
 
@@ -174,10 +176,12 @@ If the file does not exist, proceed directly to Step 5.
 ### Step 5 — Synthesize and write HTML
 
 **Theme CSS and JavaScript cache check (run before synthesizing):**
-Use `Glob` to check whether `~/.claude/plan-to-html/themes.css` exists. If it
+Resolve the cache directory to an absolute path: use `$HOME/.claude/plan-to-html/`
+(tilde is not expanded by `Glob` or `Read`; always use the expanded form).
+Use `Glob` to check whether `$HOME/.claude/plan-to-html/themes.css` exists. If it
 does, read it with `Read` and use its content verbatim as the theme CSS block
 in the `<style>` section — do not re-derive theme rules from `reference/html-spec.md`.
-Similarly, check for `~/.claude/plan-to-html/scripts.js`; if found, read and
+Similarly, check for `$HOME/.claude/plan-to-html/scripts.js`; if found, read and
 embed it verbatim before `</body>` instead of re-generating the JS. This makes
 Step 5 significantly faster after a `--setup` run.
 
