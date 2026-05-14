@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.22.0] - 2026-05-14
+
+### Added
+
+- `skills/plan-to-html/SKILL.md` frontmatter: `Agent` added to `allowed-tools`
+  so the skill can spawn background agents
+- `skills/plan-to-html/SKILL.md` Step 1: `--async` flag — when present, spawns
+  a background `Agent` after theme resolution and returns immediately; the agent
+  re-invokes the skill with `--background` to complete HTML generation without
+  blocking the main thread
+- `skills/plan-to-html/SKILL.md` Step 3: async dispatch block — after the theme
+  is resolved (via flag, `--background` default, or `AskUserQuestion`), checks
+  for `--async` and calls `Agent(run_in_background: true)` if set; combining
+  `--async --theme=<value>` gives a fully hands-off fire-and-forget invocation
+- `commands/plan-to-html.md`: `Agent` added to `allowed-tools`; `--async` flag
+  documented in Arguments section with usage examples
+
 ## [1.21.0] - 2026-05-14
 
 ### Added

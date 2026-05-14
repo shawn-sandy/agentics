@@ -1,6 +1,6 @@
 ---
 description: Convert a plan markdown file into a rich, self-contained HTML document viewable in any browser
-allowed-tools: Read, Glob, Grep, Bash(open *), Bash(mkdir *), Write, TodoWrite, AskUserQuestion
+allowed-tools: Agent, Read, Glob, Grep, Bash(open *), Bash(mkdir *), Write, TodoWrite, AskUserQuestion
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
 
@@ -26,7 +26,9 @@ plan lifecycle stage (todo, in-progress, or completed).
 /plan-interview:plan-to-html                                           # auto-detects from IDE or settings
 /plan-interview:plan-to-html docs/plans/add-auth-flow.md              # specific plan file
 /plan-interview:plan-to-html ~/.claude/plans/my-feature.md            # absolute path
-/plan-interview:plan-to-html docs/plans/add-auth-flow.md --background # non-interactive, no prompts
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --background          # non-interactive, no prompts
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --async               # prompts for theme, then runs in background
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --async --theme=developer # fully hands-off background
 ```
 
 ## Arguments
@@ -46,6 +48,10 @@ project settings → global settings → `~/.claude/plans/`).
   `--theme` is set), auto-overwrites existing output, skips browser-open prompt.
   Suitable for automated or batch invocations.
 - `--no-open` — skips the browser-open prompt after writing.
+- `--async` — prompts for a theme in the foreground (unless `--theme` is also
+  set), then spawns a background agent to generate the HTML and returns
+  immediately. Use when you want to keep the main thread free. Combine with
+  `--theme` for a fully hands-off fire-and-forget invocation.
 
 ## Output
 
