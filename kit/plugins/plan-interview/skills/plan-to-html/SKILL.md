@@ -171,22 +171,31 @@ four options:
 
 Store the selected theme name (lowercase, hyphenated) for use in Step 5.
 
-**Async dispatch** (only if `--async` was parsed in Step 1): now that the theme
-is known, spawn a background agent and stop. Call the `Agent` tool with
-`run_in_background: true`, `description: "plan-to-html background conversion"`,
-and a self-contained `prompt` instructing the agent to invoke:
+**Async dispatch** (only if `--async` was parsed in Step 1 AND `--background`
+was NOT also parsed): now that the theme is known, spawn a background agent and
+stop. If both `--async` and `--background` are present, skip this block and
+continue to Step 4 — `--background` takes precedence to keep the workflow
+synchronous for batch callers.
 
-```
-Skill(skill: "plan-interview:plan-to-html",
-      args: "<resolved-path> --theme=<selected-theme> --no-open --background")
-```
+Call the `Agent` tool, substituting the actual resolved file path and selected
+theme name for the angle-bracket placeholders below:
+
+- `subagent_type`: `"general-purpose"`
+- `run_in_background`: `true`
+- `description`: `"plan-to-html background conversion"`
+- `prompt`: a self-contained string such as — `"Invoke
+  Skill(skill: \"plan-interview:plan-to-html\", args: \"/actual/path/to/plan.md
+  --theme=developer --no-open --background\") to convert the plan to HTML
+  non-interactively."` — replace `/actual/path/to/plan.md` and `developer` with
+  the real resolved path and selected theme. Quote the path in the `args` string
+  if it contains spaces.
 
 The agent re-invokes the skill in `--background` mode (non-interactive, no
 `--async` in the args) so it runs the full HTML generation workflow without
-spawning a further agent. Then output:
+spawning a further agent. Then output a confirmation using the actual values:
 
 ```
-Background conversion started: <resolved-path> (theme: <selected-theme>)
+Background conversion started: /actual/path/to/plan.md (theme: developer)
 ```
 
 Stop here — do not proceed to Steps 4–7. The background agent completes all
