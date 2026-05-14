@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.21.0] - 2026-05-14
+
+### Added
+
+- `skills/plan-interview/SKILL.md` Step 2: fourth filename criterion "Verb-led" — flags
+  filenames that don't start with an imperative verb and requires suggested names to be
+  verb-led
+- `skills/plan-interview/SKILL.md` Step 2: "Step structure" extraction point — counts
+  steps missing a `*Verify:*` line
+- `skills/plan-interview/SKILL.md` Step 5: optional "Step Structure" summary section
+  showing count of incomplete steps and a corrected three-part example
+- `skills/plan-interview/SKILL.md` Step 6: three-part format string required when writing
+  or amending steps (`**Action** — description. *Why:* rationale. *Verify:* criteria.`)
+- `commands/review-rename-plans.md` Step 2: fourth filename criterion "Verb-led" — same
+  rule as plan-interview, applied to batch filename review
+- `commands/plan-hygiene.md` Name Generation: verb-led output check — if generated name is
+  noun-led, the dominant action verb is extracted from the heading and prepended
+
 ## [1.20.0] - 2026-05-14
 
 ### Added

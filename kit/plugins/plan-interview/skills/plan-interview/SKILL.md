@@ -113,6 +113,12 @@ plan's filename and H1 heading accurately describe the plan's content.
      adjectives — the key test is whether the words relate to the plan content.
    - **Not too generic**: Not a placeholder like `plan.md`, `untitled.md`,
      `draft.md`, `temp.md`, or `new-plan.md`.
+   - **Verb-led**: Starts with an imperative verb. Good: `add-dark-mode-toggle`,
+     `fix-auth-redirect`, `create-skill-reviewer-plugin`. Bad:
+     `branch-agent-append-date-suffix` (noun-led), `auth-module-changes`
+     (noun-led). Common verbs: `add`, `fix`, `create`, `build`, `implement`,
+     `update`, `refactor`, `migrate`, `configure`, `remove`, `enable`,
+     `disable`, `move`, `rename`, `extract`, `deploy`, `document`, `integrate`.
 
 4. **Evaluate the H1 heading**:
    - Does an H1 heading exist?
@@ -131,8 +137,9 @@ plan's filename and H1 heading accurately describe the plan's content.
    - **Needs attention**: One or both are non-descriptive, generic, or
      misaligned. Record:
      - Which element(s) failed (filename, heading, or both)
-     - Why (random pattern, too generic, misaligned, or missing)
-     - A **suggested filename** in kebab-case derived from the plan's goal
+     - Why (random pattern, too generic, misaligned, not verb-led, or missing)
+     - A **suggested filename** in kebab-case derived from the plan's goal — must
+       start with an imperative verb (e.g., `add-`, `fix-`, `create-`)
      - A **suggested H1 heading** in `# Plan: [Description]` format
 
 If the name needs attention, present the finding immediately before continuing:
@@ -182,6 +189,10 @@ Extract the following to guide question generation:
 - **UI involvement**: Does the plan reference components, pages, forms, styles,
   or HTML? (Used to determine whether Round 2 runs regardless of scope.)
 - **Open questions**: Any unresolved questions listed in the plan?
+- **Step structure**: Does the `## Steps` section exist? For each numbered step,
+  check whether it includes both a `*Why:*` line and a `*Verify:*` (or
+  `- Verify:`) line. Record the count of steps missing a verify line (e.g.,
+  "3 of 5 steps lack a verify").
 
 Also extract **complexity signals** from the plan:
 
@@ -440,6 +451,17 @@ the name passed validation.]
 
 [List risks, unknowns, or concerns surfaced — with brief context]
 
+### Step Structure
+
+[Include only if Step 2 found steps missing a verify line. State the count
+(e.g., "3 of 5 steps lack a *Verify:* line") and show a corrected example:
+
+**Corrected example:**
+1. **[Action]** — [description]. *Why:* [rationale]. *Verify:* [how to confirm
+   this step succeeded].
+
+Omit this section entirely if all steps already carry action + why + verify.]
+
 ### Recommended Next Steps
 
 [Amendments to the plan, additional spikes, or clarifications needed before
@@ -473,7 +495,9 @@ After presenting the Step 5 summary, ask the user:
 **Do not write to the plan file unless the user explicitly confirms.** If they
 confirm, update the plan with suggested changes and append the summary as a new
 `## Interview Summary` section at the end of the plan file using the `Edit`
-tool.
+tool. When writing or amending steps, use the three-part format required by
+`plan-mode.md`:
+`**[Action]** — [description]. *Why:* [rationale]. *Verify:* [confirmation criteria].`
 
 After appending the summary, ask via `AskUserQuestion`: _"Generate (or
 regenerate) HTML for the updated plan?"_ (options: `Yes, generate HTML` / `Skip`;
