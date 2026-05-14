@@ -192,10 +192,10 @@ Locate the `plan-interview` plugin entry and change `"version": "1.20.0"` to `"v
 ## Verification
 
 1. Load the updated plugin: `claude --plugin-dir ./kit/plugins/plan-interview`
-2. Run `/plan-interview:plan-interview` on a plan file whose filename is noun-led (e.g., `branch-agent-append-date-suffix.md`) — confirm the "Plan Name Review" table now includes a "Verb-led" issue row with a verb-led suggested name.
-3. Run `/plan-interview:plan-interview` on a plan file whose steps lack `*Verify:*` lines — confirm the Step 5 summary includes a "Step Structure" section showing the count of incomplete steps and the corrected example format.
-4. Run `/plan-interview:review-rename-plans` on a directory containing a noun-led plan — confirm the Needs Attention table flags it with "Not verb-led" in the Issue column.
-5. Run `/plan-interview:plan-hygiene` on a directory containing plans with noun-only headings — confirm generated name proposals start with a verb.
+2. Invoke `/plan-interview:plan-interview` on a plan file whose filename is noun-led (e.g., `branch-agent-append-date-suffix.md`) — confirm the "Plan Name Review" table now includes a "Verb-led" issue row with a verb-led suggested name.
+3. Invoke `/plan-interview:plan-interview` on a plan file whose steps lack `*Verify:*` lines — confirm the Step 5 summary includes a "Step Structure" section showing the count of incomplete steps and the corrected example format.
+4. Execute `/plan-interview:review-rename-plans` on a directory containing a noun-led plan — confirm the Needs Attention table flags it with "Not verb-led" in the Issue column.
+5. Test `/plan-interview:plan-hygiene` on a directory containing plans with noun-only headings — confirm generated name proposals start with a verb.
 6. Confirm `.claude-plugin/marketplace.json` reports `1.21.0` for `plan-interview`.
 
 ## Next Steps

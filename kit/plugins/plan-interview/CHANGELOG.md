@@ -12,7 +12,7 @@
 - `skills/plan-interview/SKILL.md` Step 5: optional "Step Structure" summary section
   showing count of incomplete steps and a corrected three-part example
 - `skills/plan-interview/SKILL.md` Step 6: three-part format string required when writing
-  or amending steps (`**Action** — description. *Why:* rationale. *Verify:* criteria.`)
+  or amending steps (`**[Action]** — [description]. *Why:* [rationale]. *Verify:* [confirmation criteria].`)
 - `commands/review-rename-plans.md` Step 2: fourth filename criterion "Verb-led" — same
   rule as plan-interview, applied to batch filename review
 - `commands/plan-hygiene.md` Name Generation: verb-led output check — if generated name is
