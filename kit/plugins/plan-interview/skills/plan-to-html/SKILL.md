@@ -31,6 +31,11 @@ lifecycle stage (todo, in-progress, or completed).
 
 ### Step 0 — Create progress todos
 
+Flag detection note: scanning `$ARGUMENTS` here is a simple string-contains
+check (e.g., does the arguments string include the literal text `--setup`?).
+Full flag parsing with value extraction happens in Step 1; Step 0 only needs to
+know whether `--setup` is present to decide whether to skip todo creation.
+
 Before doing anything else, scan `$ARGUMENTS` for `--setup`. If `--setup` is
 present, skip the todos and jump directly to Step 0.5.
 
@@ -55,23 +60,28 @@ instead of re-deriving them from the spec, significantly reducing synthesis time
 1. Run `mkdir -p $HOME/.claude/plan-to-html` to ensure the directory exists
    (use the expanded `$HOME` form — tilde is not expanded by shell when passed
    through Bash restrictions).
-2. Use `Glob` to check whether `$HOME/.claude/plan-to-html/themes.css` already
-   exists. If it does, ask via `AskUserQuestion`: "Cache files already exist in
-   `~/.claude/plan-to-html/`. Re-run setup and overwrite them?" Options:
-   `Overwrite` / `Cancel`. Stop if the user selects Cancel.
-3. Write `$HOME/.claude/plan-to-html/themes.css` containing the four complete
-   theme CSS blocks exactly as defined in `reference/html-spec.md` under
-   "Color Palette Themes" (all four `body.theme-*` rule sets).
-4. Write `$HOME/.claude/plan-to-html/scripts.js` containing both JavaScript feature
-   blocks exactly as defined in `reference/html-spec.md` under "JavaScript
-   Features" (scroll-spy IIFE + step-completion IIFE, separated by a blank line).
+2. Attempt to `Read $HOME/.claude/plan-to-html/themes.css`. If the read
+   succeeds (content is returned), cache files already exist — ask via
+   `AskUserQuestion`: "Cache files already exist in `~/.claude/plan-to-html/`.
+   Re-run setup and overwrite them?" Options: `Overwrite` / `Cancel`. Stop if
+   the user selects Cancel. Use `Read` rather than `Glob` here because `Glob`
+   is scoped to the project workspace and may not match paths outside it.
+3. Write `$HOME/.claude/plan-to-html/themes.css`. The first line must be a
+   version comment: `/* plan-to-html-cache v1.20.0 */`. Then include the four
+   complete theme CSS blocks exactly as defined in `reference/html-spec.md`
+   under "Color Palette Themes" (all four `body.theme-*` rule sets).
+4. Write `$HOME/.claude/plan-to-html/scripts.js`. The first line must be a
+   version comment: `/* plan-to-html-cache v1.20.0 */`. Then include both
+   JavaScript feature blocks exactly as defined in `reference/html-spec.md`
+   under "JavaScript Features" (scroll-spy IIFE + step-completion IIFE,
+   separated by a blank line).
 5. Report:
 
    ```
    Setup complete.
      $HOME/.claude/plan-to-html/themes.css  — four theme palettes
      $HOME/.claude/plan-to-html/scripts.js  — scroll-spy + step completion
-   Run the skill normally to generate HTML; cached files will be used automatically.
+   Re-run --setup after upgrading the plan-interview plugin to refresh cached files.
    ```
 
 6. Stop — do not continue to Step 1.
@@ -180,18 +190,19 @@ If the file does not exist, proceed directly to Step 5.
 ### Step 5 — Synthesize and write HTML
 
 **Theme CSS and JavaScript cache check (run before synthesizing):**
-Resolve the cache directory to an absolute path: use `$HOME/.claude/plan-to-html/`
-(tilde is not expanded by `Glob` or `Read`; always use the expanded form).
+Always use the expanded `$HOME` form — tilde is not expanded by `Read` or
+`Glob`, and `Glob` is scoped to the project workspace so it may not match paths
+outside it. Use `Read` with error semantics for both checks: attempt the read
+and branch on whether content is returned.
 
-- Check `$HOME/.claude/plan-to-html/themes.css` via `Glob`. If it exists, read
-  it with `Read` and embed its content verbatim as the **theme variables block**
-  inside `<style>` — skip re-deriving the four `body.theme-*` rule sets from
-  `reference/html-spec.md`. If it does not exist, derive the theme blocks from
-  the spec as usual.
-- Check `$HOME/.claude/plan-to-html/scripts.js` via `Glob`. If it exists, read
-  it and embed it verbatim immediately before `</body>` — **skip the JavaScript
-  section below entirely**. If it does not exist, generate the JS from the spec
-  as described in the JavaScript section below.
+- Attempt to `Read $HOME/.claude/plan-to-html/themes.css`. If the read succeeds,
+  embed its content verbatim as the **theme variables block** inside `<style>`
+  — skip re-deriving the four `body.theme-*` rule sets from `reference/html-spec.md`.
+  If the read fails (file not found), derive the theme blocks from the spec as usual.
+- Attempt to `Read $HOME/.claude/plan-to-html/scripts.js`. If the read succeeds,
+  embed it verbatim immediately before `</body>` — **skip the JavaScript section
+  below entirely**. If the read fails, generate the JS from the spec as described
+  in the JavaScript section below.
 
 Note: the cache covers only theme variable blocks and JavaScript. Layout CSS,
 responsive styles, and print styles are always derived from `reference/html-spec.md`
@@ -257,7 +268,7 @@ Write the completed HTML to the output path via the `Write` tool.
 
 ### Step 6 — Offer to open in browser
 
-If `--no-open` was set in Step 1, skip this step entirely.
+If `--no-open` or `--background` was set in Step 1, skip this step entirely.
 
 Otherwise, after writing, ask via `AskUserQuestion`:
 
