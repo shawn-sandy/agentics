@@ -77,7 +77,7 @@ instead of re-deriving them from the spec, significantly reducing synthesis time
    separated by a blank line).
 5. Report:
 
-   ```
+   ```text
    Setup complete.
      $HOME/.claude/plan-to-html/themes.css  — four theme palettes
      $HOME/.claude/plan-to-html/scripts.js  — scroll-spy + step completion
