@@ -32,7 +32,16 @@ If none found, report "All plan files have descriptive names." and stop.
 
 1. Read first 10 lines of each detected file
 2. Extract first `# Plan: ...` or `# ...` heading
-3. Convert to kebab-case: lowercase, spaces to hyphens, strip special chars, collapse hyphens, max 60 chars at word boundary, append `.md`
+3. Convert to kebab-case: lowercase, spaces to hyphens, strip special chars,
+   collapse hyphens, max 60 chars at word boundary, append `.md`. Then apply a
+   **verb-led check**: if the first word of the result is not an imperative
+   verb, extract the dominant action from the heading and prepend it. Examples:
+   heading `Auth Module Refactor` → `refactor-auth-module.md`; heading
+   `User Dashboard` → `add-user-dashboard.md`; heading `Plugin Settings Screen`
+   → `add-plugin-settings-screen.md`. Common verbs: `add`, `fix`, `create`,
+   `build`, `implement`, `update`, `refactor`, `migrate`, `configure`, `remove`,
+   `enable`, `disable`, `move`, `rename`, `extract`, `deploy`, `document`,
+   `integrate`.
 4. If name exists, append `-v2` (increment as needed)
 5. No heading found? Skip file, note in output
 
