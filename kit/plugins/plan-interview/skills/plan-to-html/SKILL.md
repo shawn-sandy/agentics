@@ -55,13 +55,17 @@ instead of re-deriving them from the spec, significantly reducing synthesis time
 1. Run `mkdir -p $HOME/.claude/plan-to-html` to ensure the directory exists
    (use the expanded `$HOME` form — tilde is not expanded by shell when passed
    through Bash restrictions).
-2. Write `$HOME/.claude/plan-to-html/themes.css` containing the four complete
+2. Use `Glob` to check whether `$HOME/.claude/plan-to-html/themes.css` already
+   exists. If it does, ask via `AskUserQuestion`: "Cache files already exist in
+   `~/.claude/plan-to-html/`. Re-run setup and overwrite them?" Options:
+   `Overwrite` / `Cancel`. Stop if the user selects Cancel.
+3. Write `$HOME/.claude/plan-to-html/themes.css` containing the four complete
    theme CSS blocks exactly as defined in `reference/html-spec.md` under
    "Color Palette Themes" (all four `body.theme-*` rule sets).
-3. Write `$HOME/.claude/plan-to-html/scripts.js` containing both JavaScript feature
+4. Write `$HOME/.claude/plan-to-html/scripts.js` containing both JavaScript feature
    blocks exactly as defined in `reference/html-spec.md` under "JavaScript
    Features" (scroll-spy IIFE + step-completion IIFE, separated by a blank line).
-4. Report:
+5. Report:
 
    ```
    Setup complete.
@@ -70,7 +74,7 @@ instead of re-deriving them from the spec, significantly reducing synthesis time
    Run the skill normally to generate HTML; cached files will be used automatically.
    ```
 
-5. Stop — do not continue to Step 1.
+6. Stop — do not continue to Step 1.
 
 ### Step 1 — Resolve the plan file
 
@@ -178,12 +182,20 @@ If the file does not exist, proceed directly to Step 5.
 **Theme CSS and JavaScript cache check (run before synthesizing):**
 Resolve the cache directory to an absolute path: use `$HOME/.claude/plan-to-html/`
 (tilde is not expanded by `Glob` or `Read`; always use the expanded form).
-Use `Glob` to check whether `$HOME/.claude/plan-to-html/themes.css` exists. If it
-does, read it with `Read` and use its content verbatim as the theme CSS block
-in the `<style>` section — do not re-derive theme rules from `reference/html-spec.md`.
-Similarly, check for `$HOME/.claude/plan-to-html/scripts.js`; if found, read and
-embed it verbatim before `</body>` instead of re-generating the JS. This makes
-Step 5 significantly faster after a `--setup` run.
+
+- Check `$HOME/.claude/plan-to-html/themes.css` via `Glob`. If it exists, read
+  it with `Read` and embed its content verbatim as the **theme variables block**
+  inside `<style>` — skip re-deriving the four `body.theme-*` rule sets from
+  `reference/html-spec.md`. If it does not exist, derive the theme blocks from
+  the spec as usual.
+- Check `$HOME/.claude/plan-to-html/scripts.js` via `Glob`. If it exists, read
+  it and embed it verbatim immediately before `</body>` — **skip the JavaScript
+  section below entirely**. If it does not exist, generate the JS from the spec
+  as described in the JavaScript section below.
+
+Note: the cache covers only theme variable blocks and JavaScript. Layout CSS,
+responsive styles, and print styles are always derived from `reference/html-spec.md`
+regardless of whether cache files are present.
 
 Generate a complete, self-contained HTML document following the layout contract
 in `reference/html-spec.md`. Key requirements:
@@ -231,8 +243,9 @@ rendering to the `<h1>` title or `<h2>` section headings (those are already
 handled structurally). Any raw HTML tags in the plan source that survive escaping
 are rendered as escaped text — no live HTML injection.
 
-**JavaScript**: Include a single inline `<script>` block immediately before
-`</body>` implementing the two features from `reference/html-spec.md`
+**JavaScript**: Skip this section if `scripts.js` was read from cache (see cache
+check above). Otherwise, include a single inline `<script>` block immediately
+before `</body>` implementing the two features from `reference/html-spec.md`
 ("JavaScript Features" section):
 1. Scroll spy — `IntersectionObserver` adds `class="active"` to the sidebar link
    for the currently visible section.
