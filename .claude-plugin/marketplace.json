@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "1.21.0",
+      "version": "1.22.0",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
       "category": "development",
       "tags": [

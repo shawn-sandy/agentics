@@ -1,7 +1,7 @@
 ---
 name: plan-to-html
 description: "Use when the user asks to convert a plan to HTML, generate an HTML version of a plan, export a plan as a webpage, or make a plan viewable in a browser."
-allowed-tools: AskUserQuestion, Bash(open *), Bash(mkdir *), Glob, Grep, Read, TodoWrite, Write
+allowed-tools: Agent, AskUserQuestion, Bash(open *), Bash(mkdir *), Glob, Grep, Read, TodoWrite, Write
 ---
 
 # Plan to HTML
@@ -119,6 +119,12 @@ optional flags:
   `default` theme (unless `--theme` is also set), auto-overwrites any existing
   output file without prompting, and implies `--no-open`. Use for automated or
   batch runs where no user interaction is possible.
+- `--async` — if present, spawns a background `Agent` after the theme is
+  resolved in Step 3, then stops immediately. The main thread returns with a
+  "Background conversion started" message; the agent completes HTML generation
+  using `--background` mode. Does not imply `--background` on the main thread —
+  if `--theme` is not also set, Step 3 still prompts for a theme in the
+  foreground before spawning.
 - `--setup` — handled in Step 0.5 before this step is reached; documented here
   for completeness.
 
@@ -150,10 +156,10 @@ fields.
 ### Step 3 — Prompt for theme
 
 If `--theme=<value>` was parsed in Step 1, skip the `AskUserQuestion` and use
-that value as the selected theme. Proceed directly to Step 4.
+that value as the selected theme. Proceed directly to the async check below.
 
 If `--background` was parsed and no `--theme` was specified, use `default`
-without prompting. Proceed directly to Step 4.
+without prompting. Proceed directly to the async check below.
 
 Otherwise, ask the user which color palette to apply via `AskUserQuestion` with
 four options:
@@ -164,6 +170,36 @@ four options:
 - **Minimal** — pure white background, black text, no accent color
 
 Store the selected theme name (lowercase, hyphenated) for use in Step 5.
+
+**Async dispatch** (only if `--async` was parsed in Step 1 AND `--background`
+was NOT also parsed): now that the theme is known, spawn a background agent and
+stop. If both `--async` and `--background` are present, skip this block and
+continue to Step 4 — `--background` takes precedence to keep the workflow
+synchronous for batch callers.
+
+Call the `Agent` tool, substituting the actual resolved file path and selected
+theme name for the angle-bracket placeholders below:
+
+- `subagent_type`: `"general-purpose"`
+- `run_in_background`: `true`
+- `description`: `"plan-to-html background conversion"`
+- `prompt`: a self-contained string such as — `"Invoke
+  Skill(skill: \"plan-interview:plan-to-html\", args: \"/actual/path/to/plan.md
+  --theme=developer --no-open --background\") to convert the plan to HTML
+  non-interactively."` — replace `/actual/path/to/plan.md` and `developer` with
+  the real resolved path and selected theme. Quote the path in the `args` string
+  if it contains spaces.
+
+The agent re-invokes the skill in `--background` mode (non-interactive, no
+`--async` in the args) so it runs the full HTML generation workflow without
+spawning a further agent. Then output a confirmation using the actual values:
+
+```
+Background conversion started: /actual/path/to/plan.md (theme: developer)
+```
+
+Stop here — do not proceed to Steps 4–7. The background agent completes all
+remaining work.
 
 ### Step 4 — Check for existing output file
 
@@ -299,4 +335,6 @@ Written to docs/plans/add-auth-flow.html (theme: developer)
 /plan-interview:plan-to-html docs/plans/add-auth-flow.md --theme=developer --no-open          # batch-safe: no prompts fired
 /plan-interview:plan-to-html docs/plans/add-auth-flow.md --background                         # fully non-interactive: default theme, auto-overwrite, no browser open
 /plan-interview:plan-to-html docs/plans/add-auth-flow.md --background --theme=developer       # non-interactive with explicit theme
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --async                              # prompts for theme, then spawns background agent and returns immediately
+/plan-interview:plan-to-html docs/plans/add-auth-flow.md --async --theme=developer            # fully hands-off: no prompts, spawns background agent immediately
 ```
