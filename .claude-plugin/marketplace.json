@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -271,6 +271,27 @@
         "security",
         "plugin-authoring",
         "claude-code"
+      ]
+    },
+    {
+      "name": "product-plan-review-panel",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/product-plan-review-panel"
+      },
+      "version": "1.0.0",
+      "description": "Review product plans, PRDs, and feature proposals using a simulated cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility) that produces a 14-section consolidated report and revised plan",
+      "category": "productivity",
+      "tags": [
+        "panel-review",
+        "multi-reviewer",
+        "agent-team",
+        "product-plan",
+        "prd",
+        "ux",
+        "accessibility",
+        "review"
       ]
     }
   ]
