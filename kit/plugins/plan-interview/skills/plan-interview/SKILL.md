@@ -501,11 +501,11 @@ tool. When writing or amending steps, use the three-part format required by
 
 If they decline the summary append, do not modify the file.
 
-After handling the save decision (whether confirmed or declined), ask via
-`AskUserQuestion`: _"Generate (or regenerate) HTML for this plan?"_ (options:
-`Yes, generate HTML` / `Skip`; if an `.html` exists, `plan-to-html` will prompt
-to overwrite it). If confirmed, call with the current resolved path (the renamed
-path from Step 2, if applicable):
+**In `plan-review` mode only**: after handling the save decision (whether
+confirmed or declined), ask via `AskUserQuestion`: _"Generate (or regenerate)
+HTML for this plan?"_ (options: `Yes, generate HTML` / `Skip`; if an `.html`
+exists, `plan-to-html` will prompt to overwrite it). If confirmed, call with
+the current resolved path (the renamed path from Step 2, if applicable):
 
 ```
 Skill(skill: "plan-interview:plan-to-html", args: "<resolved-plan-path> --no-open")

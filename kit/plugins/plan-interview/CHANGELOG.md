@@ -7,8 +7,8 @@
 - `skills/plan-interview/SKILL.md` Step 6: HTML generation offer was nested
   inside the "confirm save findings" branch, so it was unreachable when the
   user declined to append the summary. Moved the `AskUserQuestion` for
-  plan-to-html after both the confirm and decline branches so it runs
-  unconditionally at the end of Step 6.
+  plan-to-html after both the confirm and decline branches, gated to
+  `plan-review` mode only (skill reviews do not produce plan HTML).
 
 ## [1.22.0] - 2026-05-14
 
