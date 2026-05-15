@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.2] - 2026-05-15
+
+### Fixed
+
+- `commands/plan-interview.md`: HTML generation offer was missing from the slash-command
+  flow (`/plan-interview:plan-interview`). Backported the post-rename HTML prompt (Step 2)
+  and the post-summary HTML prompt (Step 6, `plan-review` mode only) from
+  `skills/plan-interview/SKILL.md`, matching the wording and `Skill(...)` invocation verbatim.
+- `commands/plan-interview.md` frontmatter: Added `Skill` to `allowed-tools` so the
+  `Skill(skill: "plan-interview:plan-to-html", ...)` calls in Steps 2 and 6 do not trigger
+  a mid-flow permission prompt.
+
 ## [1.22.1] - 2026-05-15
 
 ### Fixed

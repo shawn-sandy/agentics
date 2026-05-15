@@ -1,7 +1,7 @@
 ---
 description: Stress-test a plan with a structured interview across technical, UX, edge case, and out-of-scope domains
 argument-hint: [plan-file-path] - omit to auto-detect from IDE or ~/.claude/plans/
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill
 ---
 
 
@@ -128,6 +128,16 @@ If the user confirms:
 - Update the H1 heading in the file using `Edit` (if it was flagged).
 - **Update the resolved file path** for the remainder of the interview so that
   Steps 4–6 (especially Step 6's save operation) reference the new path.
+
+Then ask via `AskUserQuestion`: _"Generate HTML for the renamed plan?
+(`plan-to-html` will prompt for a color theme.)"_ (options: `Yes, generate HTML`
+/ `Skip`). If confirmed, call:
+
+```
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --no-open")
+```
+
+If the user declines, continue to the rest of Step 2.
 
 If the user declines, proceed without changes.
 
@@ -336,6 +346,16 @@ After presenting the summary, ask the user:
 > "Would you like me to append this interview summary to the plan file?"
 
 **Do not write to the plan file unless the user explicitly confirms.** If they confirm, append the summary as a new `## Interview Summary` section at the end of the plan file using the `Edit` tool.
+
+**In `plan-review` mode only**: after handling the save decision (whether
+confirmed or declined), ask via `AskUserQuestion`: _"Generate (or regenerate)
+HTML for this plan?"_ (options: `Yes, generate HTML` / `Skip`; if an `.html`
+exists, `plan-to-html` will prompt to overwrite it). If confirmed, call with
+the current resolved path (the renamed path from Step 2, if applicable):
+
+```
+Skill(skill: "plan-interview:plan-to-html", args: "<resolved-plan-path> --no-open")
+```
 
 **In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
 
