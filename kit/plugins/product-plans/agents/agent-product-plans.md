@@ -1,8 +1,8 @@
 ---
 name: agent-product-plans
 description: >
-  Background product-plan panel agent. Runs the full five-reviewer
-  cross-functional panel (PM, Dev, UX, Frontend, Accessibility) on a
+  Background product-plan panel agent. Runs the full six-reviewer
+  cross-functional panel (PM, Dev, UX, Frontend, Accessibility, Security) on a
   product plan, PRD, or feature proposal without blocking the parent
   session. Use when the user asks to "run the panel in the background",
   "fire off the review panel", or "review this plan and keep working".

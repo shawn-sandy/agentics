@@ -1,122 +1,203 @@
 ---
-status: completed
-modified: 2026-05-14
-type: refactor
+status: todo
+type: feature
 created: 2026-05-14
 ---
 
-# Plan: Rename `product-plan-review-panel` → `product-plans` and tighten skill triggers
+# Plan: Add background-mode + agent variant to `product-plans` (v2.1.0)
 
 ## Context
 
-The `product-plan-review-panel` plugin (added in PR #119, v1.0.0) ships a
-single skill whose `description` overlaps heavily with the existing
-`plan-interview` skill — both advertise "stress-test, validate, critique
-a plan." When trigger phrases overlap, Claude Code's skill router can
-auto-activate the wrong one. The user wants the plugin (and its inner
-skill) renamed to `product-plans`, and the skill description rewritten
-so its triggers are unique vs. `plan-interview` and `code-review`.
+The `product-plans` skill (just renamed in v2.0.0 — see commit `05d892c`)
+runs a five-reviewer Agent Team panel and produces a 14-section report
+plus an optional revised plan. Today it can only be invoked
+synchronously — it blocks the user's chat for the duration of the panel
+and asks 2–3 `AskUserQuestion` prompts (output mode, revised-plan
+destination) that prevent unattended execution.
 
-Because the plugin's external `name` is what users type into
-`/plugin install`, renaming is a **breaking change** for anyone who
-installed v1.0.0. The marketplace entry must bump to a new major.
+The user wants to fire the panel off and keep working: `/product-plans-bg
+docs/plans/my-feature.md` should dispatch a background agent that runs
+the whole panel and writes the revised plan to a sibling file, returning
+immediately.
+
+Two patterns already exist in this repo for this:
+
+- `plan-interview/plan-to-html` ships `--background` / `--async` flags
+  directly on the skill (`kit/plugins/plan-interview/skills/plan-to-html/SKILL.md`).
+- `git-agent` ships paired `agent-*` subagents
+  (`kit/plugins/git-agent/agents/agent-ship.md` et al.) with
+  `background: true` frontmatter, dispatched by a thin `commands/*-bg.md`
+  wrapper.
+
+This plan adopts a **hybrid**: a `--background` flag on the skill (one
+source of truth, no duplicated workflow body), a thin background-agent
+wrapper that invokes the skill via the `Skill` tool, and a slash-command
+dispatcher. Bumps the plugin to **v2.1.0** (MINOR — additive only).
 
 ## Objective
 
-Rename the plugin directory, the inner skill directory, and every
-identifier that points at `product-plan-review-panel` to `product-plans`.
-Rewrite the skill `description` to use panel/team-specific verbs that do
-not collide with `plan-interview` or `code-review`. Bump the marketplace
-version to `2.0.0` and record the breaking change in the CHANGELOG.
+Ship three additive surfaces so `product-plans` can run unattended:
+
+1. A `--background` flag on the skill that suppresses all
+   `AskUserQuestion` calls and uses fixed defaults.
+2. An `agents/agent-product-plans.md` subagent (`background: true`,
+   `tools: Skill, Read`) that wraps a single `Skill` invocation.
+3. A `commands/product-plans-bg.md` slash-command dispatcher
+   (`allowed-tools: Agent`) that fires the agent with
+   `run_in_background: true`.
+
+No breaking changes. Foreground behaviour is preserved exactly.
+
+## Files to create
+
+- `kit/plugins/product-plans/commands/product-plans-bg.md` — slash-command dispatcher
+- `kit/plugins/product-plans/agents/agent-product-plans.md` — background wrapper agent
 
 ## Files to modify
 
-Source moves (single `git mv` each):
+- `kit/plugins/product-plans/skills/product-plans/SKILL.md` — add `--background` flag handling in Steps 0, 1, 2, 7
+- `kit/plugins/product-plans/CHANGELOG.md` — prepend `2.1.0` entry
+- `kit/plugins/product-plans/README.md` — document the new flag, agent, command in **Features**, **Usage**, **Components**
+- `.claude-plugin/marketplace.json` — bump `product-plans` entry version `2.0.0` → `2.1.0`
+- `CLAUDE.md` — update reference-implementations table row to include "Commands"
 
-- `kit/plugins/product-plan-review-panel/` → `kit/plugins/product-plans/`
-- `kit/plugins/product-plans/skills/product-plan-review-panel/` → `kit/plugins/product-plans/skills/product-plans/`
+## Defaults when `--background` is set
 
-Files whose contents must be edited:
+| Step | Foreground (current) | Background (new) |
+|------|----------------------|------------------|
+| 1 — plan file | falls through 5-stage resolution; tells user + stops if none found | requires explicit path in `$ARGUMENTS`; errors out fast with `Background mode requires a plan path` if missing |
+| 2 — output mode | `AskUserQuestion` (default `Review + revised plan`) | hard-coded to `review + revised plan` — no question |
+| 7 — write destination | `AskUserQuestion` (Sibling / Overwrite / Append) | hard-coded to **sibling file** (`<stem>-revised.md`); non-destructive |
+| 5 — teammate failure | respawn once, mark unavailable | unchanged (respawn cap of 1 already prevents loops) |
 
-- `kit/plugins/product-plans/.claude-plugin/plugin.json` — `name`, `homepage`
-- `kit/plugins/product-plans/skills/product-plans/SKILL.md` — `name:` field + rewrite `description:`
-- `kit/plugins/product-plans/README.md` — plugin name, paths, install command
-- `kit/plugins/product-plans/CHANGELOG.md` — add `2.0.0` entry (breaking rename)
-- `kit/plugins/product-plans/agents/product-reviewer-pm.md`
-- `kit/plugins/product-plans/agents/product-reviewer-lead-developer.md`
-- `kit/plugins/product-plans/agents/product-reviewer-ux-designer.md`
-- `kit/plugins/product-plans/agents/product-reviewer-frontend-engineer.md`
-- `kit/plugins/product-plans/agents/product-reviewer-accessibility-expert.md`
-- `.claude-plugin/marketplace.json` — entry `name`, `source.path`, bump `version` to `2.0.0`
-- `CLAUDE.md` — reference-implementations table row
-- `.claude/settings.local.json` — any literal `product-plan-review-panel` strings
+`--background` is a string-contains check on `$ARGUMENTS` (mirrors
+`plan-to-html`'s `--setup` detection).
 
-Files **not** to modify (historical artifacts):
-
-- `docs/plans/create-product-plan-review-panel-plugin.md`
-- `docs/plans/create-product-plan-review-panel-plugin-revised.md`
-
-## Proposed new skill description
+## Proposed agent shape (`agents/agent-product-plans.md`)
 
 ```yaml
-description: "Use when the user asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility team review of a product plan, PRD, feature proposal, or implementation plan."
+---
+name: agent-product-plans
+description: >
+  Background product-plan panel agent. Runs the full five-reviewer
+  cross-functional panel (PM, Dev, UX, Frontend, Accessibility) on a
+  product plan, PRD, or feature proposal without blocking the parent
+  session. Use when the user asks to "run the panel in the background",
+  "fire off the review panel", or "review this plan and keep working".
+  Mirrors the product-plans skill but runs as a background subagent.
+tools: Skill, Read
+model: sonnet
+maxTurns: 30
+background: true
+---
 ```
 
-Rationale: drops the overlapping verbs (`stress-test`, `validate`,
-`critique` alone, `review`) that `plan-interview` and `code-review`
-own, and adds discriminators that those skills don't claim:
-`panel`, `multi-role`, `cross-functional`, and the five explicit role
-names (PM, Dev, UX, Frontend, Accessibility).
+Body: ~20 lines. Role / Caveat / single workflow step that calls
+`Skill(skill: "product-plans:product-plans", args: "<path> --background")`
+and reports the resolved sibling-file path back when complete. No
+workflow duplication.
+
+`tools: Read` is included so the agent can sanity-check the plan path
+exists before dispatching the skill. `maxTurns: 30` accommodates the
+skill's 8 steps plus the 5 teammate spawn/synthesis cycles.
+
+## Proposed command shape (`commands/product-plans-bg.md`)
+
+```yaml
+---
+description: Run the product-plans review panel in the background. Pass the plan path as argument.
+allowed-tools: Agent
+---
+```
+
+Body: invoke `Agent` with `subagent_type: "agent-product-plans"`,
+`run_in_background: true`, `description: "Background product-plan panel review"`,
+and a prompt embedding `$ARGUMENTS` (the plan path). Return a single-line
+ack: `Background panel review started: <path>`. No polling.
 
 ## Steps
 
-1. **Rename plugin and skill directories with `git mv`** — *Why:* preserves git history for both directories and keeps the rename atomic. *Verify:* `git status --porcelain` shows renames (`R  old → new`) for both paths and `ls kit/plugins/product-plans/skills/product-plans/SKILL.md` succeeds.
+1. **Add `--background` flag detection at the top of Step 0 in `SKILL.md`** — scan `$ARGUMENTS` for the literal `--background`; set `mode = background` (else `mode = interactive`). Add `Skill` and `Read` to nothing — only the skill side changes its own behaviour. — *Why:* the rest of the steps need to branch on `mode` without re-parsing args each time. *Verify:* `grep -n '\\-\\-background' kit/plugins/product-plans/skills/product-plans/SKILL.md` returns the new detection line in Step 0.
 
-2. **Update `kit/plugins/product-plans/skills/product-plans/SKILL.md`** — change `name: product-plan-review-panel` to `name: product-plans` and replace the `description:` line with the new panel/team-specific phrasing above. *Why:* the skill folder name must match `name:`, and the description is what gates auto-activation. *Verify:* `grep -E '^(name|description):' kit/plugins/product-plans/skills/product-plans/SKILL.md` shows the new values; `grep "stress-test\|critique" kit/plugins/product-plans/skills/product-plans/SKILL.md` returns nothing on the frontmatter lines.
+2. **Modify Step 1 (plan file resolution) in `SKILL.md`** — when `mode = background`, only accept a path from `$ARGUMENTS`; skip the IDE / settings / glob fallbacks and emit `Background mode requires a plan path` then stop if absent. — *Why:* the 5-stage fallback can silently pick the wrong file when no human is watching. *Verify:* the relevant Step 1 paragraph names `mode = background` as a branch and shows the stop message.
 
-3. **Update `kit/plugins/product-plans/.claude-plugin/plugin.json`** — set `name` to `product-plans` and update `homepage` to `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/product-plans`. *Why:* `name` in `plugin.json` is the plugin identifier; `homepage` per the project convention must point at the plugin's directory. *Verify:* `jq -r '.name, .homepage' kit/plugins/product-plans/.claude-plugin/plugin.json` prints `product-plans` and the new URL.
+3. **Modify Step 2 (output mode) in `SKILL.md`** — when `mode = background`, set `output_mode = "review + revised plan"` without calling `AskUserQuestion`. — *Why:* `AskUserQuestion` hangs forever in a backgrounded subagent. *Verify:* `grep -n 'AskUserQuestion' kit/plugins/product-plans/skills/product-plans/SKILL.md` shows the Step 2 reference is gated by `mode = interactive`.
 
-4. **Update `.claude-plugin/marketplace.json`** — change the matching plugin entry's `name` to `product-plans`, `source.path` to `kit/plugins/product-plans`, and bump `version` from `1.0.0` to `2.0.0`. *Why:* marketplace.json is the registration entry users see; renaming the install identifier is a breaking change and requires a major bump per `.claude/rules/marketplace.md`. *Verify:* `jq '.plugins[] | select(.name=="product-plans") | {name, path: .source.path, version}' .claude-plugin/marketplace.json` shows all three fields correct, and no entry with the old name remains.
+4. **Modify Step 7 (revised-plan destination) in `SKILL.md`** — when `mode = background`, write to `<original-stem>-revised.md` (sibling, non-destructive) via `Write`; skip the destination `AskUserQuestion` and the overwrite/append branches. — *Why:* same as Step 3 — no human to answer. Sibling is the safest default since it never destroys the source. *Verify:* the Step 7 prose explicitly states that background mode goes straight to sibling write.
 
-5. **Update `kit/plugins/product-plans/CHANGELOG.md`** — prepend a `## 2.0.0` entry noting: breaking rename of plugin and skill from `product-plan-review-panel` to `product-plans`, and the description rewrite for trigger uniqueness. *Why:* CHANGELOG is the user-facing record of the breaking change. *Verify:* `head -20 kit/plugins/product-plans/CHANGELOG.md` shows the `2.0.0` heading at the top with the rename note.
+5. **Create `kit/plugins/product-plans/agents/agent-product-plans.md`** — frontmatter from the **Proposed agent shape** section above. Body has three short sections: Role (background panel agent), Caveat (fire-and-forget; in-progress edits to the plan after dispatch may or may not be reflected), Workflow (a single bullet that calls `Skill(product-plans:product-plans, "<path> --background")` and reports the resulting sibling path). — *Why:* gives the slash command a named subagent_type to dispatch and isolates background execution from the user's session. *Verify:* the file exists; `grep -E '^(name|background|tools|maxTurns):' kit/plugins/product-plans/agents/agent-product-plans.md` shows all four fields.
 
-6. **Update `kit/plugins/product-plans/README.md`** — replace every literal `product-plan-review-panel` with `product-plans` (plugin name, install commands, paths, headings). *Why:* the README is the primary install/usage doc. *Verify:* `grep -c "product-plan-review-panel" kit/plugins/product-plans/README.md` returns `0`.
+6. **Create `kit/plugins/product-plans/commands/product-plans-bg.md`** — frontmatter from the **Proposed command shape** section above. Body: a `## Workflow` section with one Agent tool call (`subagent_type: "agent-product-plans"`, `run_in_background: true`, prompt embedding `$ARGUMENTS`) plus the ack line format. — *Why:* gives the user a one-liner `/product-plans:product-plans-bg <path>` entry point. *Verify:* `ls kit/plugins/product-plans/commands/product-plans-bg.md` succeeds; the body explicitly sets `run_in_background: true`.
 
-7. **Update the five `kit/plugins/product-plans/agents/product-reviewer-*.md` files** — replace any `product-plan-review-panel` reference with `product-plans` (subagent prompts reference the parent skill in some files). *Why:* role prompts cite the parent skill or plugin by name in places. *Verify:* `grep -rn "product-plan-review-panel" kit/plugins/product-plans/agents/` returns no results.
+7. **Update `kit/plugins/product-plans/CHANGELOG.md`** — prepend a `## 2.1.0 — 2026-05-14` entry listing the three new surfaces (flag, agent, command) and the background defaults table. — *Why:* CHANGELOG is the user-facing record of what shipped. *Verify:* `head -20 kit/plugins/product-plans/CHANGELOG.md` shows the `2.1.0` heading at the top.
 
-8. **Update `CLAUDE.md` and `.claude/settings.local.json`** — change the reference-implementations table row in `CLAUDE.md` to `product-plans`, and update any literal `product-plan-review-panel` strings in `.claude/settings.local.json`. *Why:* `CLAUDE.md` is read into every session's context; stale settings entries can grant or block tools by the wrong name. *Verify:* `grep -n "product-plan-review-panel" CLAUDE.md .claude/settings.local.json` returns no results.
+8. **Update `kit/plugins/product-plans/README.md`** — add a "Background mode" subsection under **Features** mentioning the flag + slash command, add a usage example block under **Usage**, and add `Command: product-plans-bg` + `Agent: agent-product-plans` entries under **Components**. — *Why:* README is the primary install/usage doc. *Verify:* `grep -nE 'background|product-plans-bg|agent-product-plans' kit/plugins/product-plans/README.md` returns matches in three sections.
 
-9. **Repo-wide sweep for stragglers** — *Why:* catches any reference missed by steps 2–8 (excluding the two historical plan files explicitly out of scope). *Verify:* `grep -rn "product-plan-review-panel" . --exclude-dir=node_modules --exclude-dir=.git --include='*.md' --include='*.json' | grep -v 'docs/plans/create-product-plan-review-panel'` returns no results.
+9. **Bump `.claude-plugin/marketplace.json`** — change `product-plans` entry `version` from `2.0.0` to `2.1.0`. — *Why:* MINOR bump per `.claude/rules/marketplace.md` (additive command + agent + flag, no breaking changes). *Verify:* `jq -r '.plugins[] | select(.name=="product-plans") | .version' .claude-plugin/marketplace.json` prints `2.1.0`.
 
-10. **Bump skill `description` review against neighbors** — diff the new description against `kit/plugins/plan-interview/skills/plan-interview/SKILL.md` and `kit/plugins/code-review/skills/code-review/SKILL.md` to confirm no shared trigger verbs remain. *Why:* the whole point of the rewrite is non-overlapping triggers; a quick diff catches accidental overlap. *Verify:* `grep -E '^description:' kit/plugins/{product-plans,plan-interview,code-review}/skills/*/SKILL.md` — confirm the three descriptions share no common activation verb (e.g., `panel` / `multi-role` appear only in `product-plans`; `interview` / `stress-test` only in `plan-interview`; `code review` / `pull request` only in `code-review`).
+10. **Update `CLAUDE.md` reference-implementations row** — change the `product-plans` row's type column from `Skills + Agents` to `Skills + Agents + Commands` and amend the notes to mention background-mode panel. — *Why:* `CLAUDE.md` is loaded into every session; the table is how future-you discovers what each plugin contains. *Verify:* `grep -n 'product-plans' CLAUDE.md` shows the updated row.
 
 ## Verification
 
 End-to-end:
 
-1. Run `jq -e '.plugins[] | select(.name=="product-plans" and .version=="2.0.0" and .source.path=="kit/plugins/product-plans")' .claude-plugin/marketplace.json` — must exit `0`.
-2. Run `claude --plugin-dir ./kit/plugins/product-plans` to load the renamed plugin locally and confirm the skill registers (no "skill name mismatch" warning).
-3. In that session, ask: "Run a cross-functional panel review on `docs/plans/<some-plan>.md`" — `product-plans` should activate, not `plan-interview`.
-4. Ask: "Stress-test this plan in an interview" — `plan-interview` should still activate (i.e., the rename did not steal its triggers).
-5. Run `grep -rn "product-plan-review-panel" . --exclude-dir=.git --exclude-dir=node_modules --include='*.md' --include='*.json'`. Only the two historical files under `docs/plans/` should match.
-6. Run `git diff --stat` to confirm the change set matches the file list above.
+1. Run `claude --plugin-dir ./kit/plugins/product-plans` to load the
+   updated plugin locally. Confirm Claude Code prints no manifest or
+   skill-name errors.
+2. **Foreground regression check** — in that session, run the skill
+   without any flag on a small plan file. Confirm it still asks the two
+   `AskUserQuestion` prompts (Steps 2 and 7) and behaves identically to
+   v2.0.0.
+3. **Background flag check** — call the skill directly with
+   `--background` and a plan path: confirm no `AskUserQuestion` fires,
+   the panel runs, and a `<stem>-revised.md` file lands next to the
+   source.
+4. **Slash-command check** — run
+   `/product-plans:product-plans-bg docs/plans/<some-plan>.md` and
+   confirm the chat returns the one-line ack immediately, then a
+   background-task completion notification arrives later when the
+   sibling file is written.
+5. **No-path error path** — run `/product-plans:product-plans-bg`
+   with no argument; confirm the agent returns
+   `Background mode requires a plan path` and exits without spawning
+   the panel.
+6. **Cleanup check** — confirm Step 8's `Clean up the team.` directive
+   in the skill still fires inside the backgrounded run (no orphaned
+   teammates in `claude /agents` output).
+7. **Marketplace registration** — `jq -e '.plugins[] | select(.name=="product-plans" and .version=="2.1.0")' .claude-plugin/marketplace.json` exits `0`.
 
 ## Next steps *(optional)*
 
-- Backfill rename in install instructions for users on v1.0.0:
+- Add `--mode` and `--write` explicit flags:
   ```text
-  Draft a short migration note for kit/plugins/product-plans/README.md
-  (or a top-level MIGRATION.md if the README is already long) explaining
-  that users who installed product-plan-review-panel@agentics-kit before
-  2026-05-14 must uninstall the old name and install product-plans@agentics-kit.
-  Use the same tone as the existing README. No code changes — docs only.
+  Extend the product-plans skill --background mode with optional
+  --mode=review|revised and --write=sibling|overwrite|append CLI flags
+  so background users can override the hard-coded defaults documented in
+  the v2.1.0 CHANGELOG. Mirror the flag-parsing pattern used in
+  kit/plugins/plan-interview/skills/plan-to-html/SKILL.md Step 1.
   ```
 
-- Audit other plugin skills for trigger overlap:
+- Apply the same hybrid pattern to `plan-interview`:
   ```text
-  Scan every SKILL.md under kit/plugins/*/skills/*/ and produce a table
-  of (skill name, activation verbs from `description`). Group skills
-  whose verb sets overlap by 2+ shared verbs and recommend the
-  discriminator each should add. Out of scope: rewriting them — just
-  the audit table and recommendations.
+  Audit kit/plugins/plan-interview/skills/plan-interview/SKILL.md for
+  AskUserQuestion blockers that prevent unattended runs. If any exist,
+  propose a --background flag + agents/agent-plan-interview.md +
+  commands/plan-interview-bg.md mirroring the product-plans v2.1.0
+  pattern. Out of scope: actually implementing it — just the plan.
+  ```
+
+## Unresolved questions *(omit if none)*
+
+- Skill-tool availability inside a backgrounded subagent:
+  ```text
+  Verify that a subagent with `background: true` in its frontmatter and
+  `tools: Skill, Read` can successfully invoke the Skill tool to run
+  another skill (specifically product-plans:product-plans). The
+  plan-interview/plan-to-html --async pattern uses `subagent_type:
+  "general-purpose"` instead of a named agent — find out whether that
+  choice was deliberate (Skill tool unavailable in custom subagents?)
+  or incidental. If custom subagents cannot call Skill, the hybrid
+  plan's agent must fall back to either (a) using general-purpose as
+  the dispatch type or (b) duplicating the skill workflow into the
+  agent body (git-agent pattern). Report back with the result.
   ```

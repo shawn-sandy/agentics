@@ -1,7 +1,7 @@
 # Final Report Template
 
 The lead reproduces the fenced block below verbatim after collecting findings
-from all five reviewers. Replace placeholder text inside `[brackets]`. Section
+from all six reviewers. Replace placeholder text inside `[brackets]`. Section
 14 is omitted when the user chose review-only mode at Step 2.
 
 Any reviewer whose section opens with `Reviewer unavailable — not assessed`
@@ -14,7 +14,7 @@ section 3 (Highest-risk issues).
 ## Product Plan Review — [Plan filename or title]
 
 *Reviewed by: PM · Lead Developer · UX Designer · Frontend Engineer ·
-Accessibility Expert — coordinated by Lead Coordinator*
+Accessibility Expert · Security Expert — coordinated by Lead Coordinator*
 
 ---
 
@@ -47,6 +47,10 @@ was unavailable; that domain was not assessed."]
 #### Accessibility Expert
 
 [Reproduce the Accessibility Expert reviewer's full output schema findings here.]
+
+#### Security Expert
+
+[Reproduce the Security Expert reviewer's full output schema findings here.]
 
 ---
 
@@ -95,29 +99,37 @@ List as actionable items.]
 
 ---
 
-### 9. Technical Feasibility Concerns
+### 9. Security Requirements
+
+[Consolidated security guidance from the Security Expert reviewer. List as
+actionable items, noting any OWASP Top 10 categories or compliance obligations
+where applicable.]
+
+---
+
+### 10. Technical Feasibility Concerns
 
 [Consolidated technical guidance from the Lead Developer reviewer. List as
 actionable items.]
 
 ---
 
-### 10. Open Questions Before Development
+### 11. Open Questions Before Development
 
-[Compile every "Questions that must be answered" item from all five
+[Compile every "Questions that must be answered" item from all six
 reviewers, grouped by role. Deduplicate overlapping questions.]
 
 ---
 
-### 11. Recommended Changes to the Plan
+### 12. Recommended Changes to the Plan
 
-[Concrete amendments the lead recommends based on synthesis across all five
+[Concrete amendments the lead recommends based on synthesis across all six
 reviewers. Write as a numbered list of specific edits to the plan, not
 abstract guidance.]
 
 ---
 
-### 12. Conflicts or Tradeoffs Between Reviewer Recommendations
+### 13. Conflicts or Tradeoffs Between Reviewer Recommendations
 
 [Name any cases where reviewer recommendations conflict or create tradeoffs.
 For each conflict, explain the tradeoff and recommend how to resolve it.
@@ -125,7 +137,7 @@ If no conflicts exist, write "No conflicts identified."]
 
 ---
 
-### 13. Final Decision
+### 14. Final Decision
 
 Final decision: **[Approve / Approve with revisions / Reject]**
 
@@ -134,12 +146,12 @@ approval (if applicable), and which issues are blocking vs non-blocking.]
 
 ---
 
-### 14. Revised Product Plan
+### 15. Revised Product Plan
 
 *(Omit this section if the user chose review-only mode at Step 2.)*
 
 [Write a complete, revised version of the product plan incorporating all
-recommended changes from section 11. The revised plan replaces the original
+recommended changes from section 12. The revised plan replaces the original
 in spirit — it is not a diff. Write it as a standalone plan the development
 team can act on directly.]
 ```

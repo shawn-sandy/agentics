@@ -6,7 +6,7 @@ allowed-tools: Agent
 # Background Product Plans
 
 Dispatch the `agent-product-plans` subagent in the background. The user wants
-the full five-reviewer cross-functional panel to run while they keep working —
+the full six-reviewer cross-functional panel to run while they keep working —
 do not wait for it to finish.
 
 ## Workflow

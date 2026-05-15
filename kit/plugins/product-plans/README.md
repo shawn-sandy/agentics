@@ -2,11 +2,11 @@
 
 Review product plans, PRDs, and feature proposals using a simulated
 cross-functional team — coordinated by a lead that synthesizes all findings
-into a structured 14-section report and (by default) a revised plan.
+into a structured 15-section report and (by default) a revised plan.
 
 ## Overview
 
-`product-plans` spawns a Claude Code Agent Team of five
+`product-plans` spawns a Claude Code Agent Team of six
 specialist reviewers working in parallel:
 
 | Role | Domain |
@@ -16,9 +16,10 @@ specialist reviewers working in parallel:
 | UX Designer | Flows, usability, onboarding, empty/error states |
 | Lead Frontend Engineer | Component design, state, performance, standards |
 | Accessibility Expert | WCAG 2.2 AA, keyboard, screen reader, contrast |
+| Security Expert | Auth, data handling, input validation, threat modeling |
 
 A lead coordinator assigns work, collects findings, synthesizes across all
-five dimensions, and writes the final report.
+six dimensions, and writes the final report.
 
 **Requires**: Claude Code ≥ v2.1.32 and
 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in settings. Agent Teams is
@@ -26,9 +27,9 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
 
 ## Features
 
-- **Five parallel reviewers** — each runs in its own context window, truly
+- **Six parallel reviewers** — each runs in its own context window, truly
   independent (no role-bleed).
-- **14-section consolidated report** — executive summary through final
+- **15-section consolidated report** — executive summary through final
   decision.
 - **Reviewer failure handling** — dead reviewers are respawned once; if
   unavailable, the gap is flagged in three places.
@@ -39,7 +40,7 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
   revised plan to `<stem>-revised.md` (sibling, non-destructive). Fire via
   `/product-plans:product-plans-bg <path>` to run the whole panel unattended.
 - **Auto-activation** — triggers on prompts asking for a cross-functional
-  panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility
+  panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security
   team review of a product plan, PRD, or feature proposal.
 
 ## Installation
@@ -180,7 +181,7 @@ completion. Dispatched by the `product-plans-bg` command.
 
 ### Subagent definitions (teammate-only)
 
-The five `agents/product-reviewer-*.md` files define the reviewer roles. They
+The six `agents/product-reviewer-*.md` files define the reviewer roles. They
 are designed exclusively for use as Agent Team teammates spawned by the
 `product-plans` skill. They are not intended for standalone invocation via
 the `Task` tool or direct `subagent_type` references outside this skill.

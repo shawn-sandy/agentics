@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.2.0 — 2026-05-15
+
+**Additive — no breaking changes.** All existing reviewer behavior is unchanged.
+
+New team member:
+
+- **`product-reviewer-security-expert` agent** — reviews authentication and
+  authorization design, data handling and privacy, input validation, dependency
+  risk, secrets management, threat modeling, compliance implications, and
+  security unknowns.
+- **Spawn prompt** added to `references/role-prompts.md`.
+- **Output template** updated: Security Expert added to the reviewer roster and
+  a new **Section 9 — Security Requirements** inserted; subsequent sections
+  renumbered (10–15). The Revised Plan is now section 15.
+- **`product-plans` skill** updated: spawn directive now lists six subagent
+  types; synthesis and section references updated to match.
+- **`agent-product-plans` background agent** description updated to reflect
+  six-reviewer panel.
+
 ## 2.1.0 — 2026-05-14
 
 **Additive — no breaking changes.** Foreground skill behavior is unchanged.
