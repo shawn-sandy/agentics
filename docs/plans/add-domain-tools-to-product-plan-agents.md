@@ -1,3 +1,10 @@
+---
+status: completed
+type: feature
+created: 2026-05-15
+modified: 2026-05-15
+---
+
 # Add Domain-Specific Tools to Product-Plan Reviewer Agents
 
 ## Goal
