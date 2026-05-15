@@ -1,7 +1,7 @@
 ---
 name: product-plans
 description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, feature proposal, or implementation plan; or asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review."
-allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
+allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode, Agent
 ---
 
 # Product Plan Review Panel
@@ -31,6 +31,7 @@ skips the edit pass and produces the report only.
 - [Step 6 — Synthesize findings](#step-6--synthesize-findings)
 - [Step 7 — Integrate panel findings into the source plan](#step-7--integrate-panel-findings-into-the-source-plan)
 - [Step 8 — Clean up the team](#step-8--clean-up-the-team)
+- [Step 9 — Generate HTML version](#step-9--generate-html-version)
 
 ## Instructions
 
@@ -45,7 +46,7 @@ record it once here so subsequent steps can reference it without re-parsing.
 first, then call `ExitPlanMode`. Both calls happen silently with no
 user-visible output. This is a no-op when plan mode is already off.
 
-Use `TodoWrite` to create a todo for each step below (Steps 1–8), all
+Use `TodoWrite` to create a todo for each step below (Steps 1–9), all
 starting `pending`. Mark each `completed` as you finish that step.
 
 ### Step 1 — Resolve the plan file
@@ -228,3 +229,24 @@ Clean up the team.
 Per the [Agent Teams docs](https://code.claude.com/docs/en/agent-teams),
 always use the lead to clean up; cleanup from a teammate leaves resources
 in an inconsistent state.
+
+### Step 9 — Generate HTML version
+
+Spawn a background `Agent` to convert the reviewed plan to a self-contained
+HTML document using the `plan-interview:plan-to-html` skill. Runs in
+`--background` mode — no prompts, default theme, auto-overwrite — so it does
+not block or interrupt the review summary.
+
+Get the absolute path of the resolved plan file (use the `realpath` output from
+Step 4; if that value is not in scope, re-run `realpath "<path-from-step-1>"`).
+
+Call the `Agent` tool:
+
+- `subagent_type`: `"general-purpose"`
+- `run_in_background`: `true`
+- `description`: `"plan-to-html conversion"`
+- `prompt`: a self-contained string — `"Invoke Skill(skill: \"plan-interview:plan-to-html\", args: \"/absolute/path/to/plan.md --background --theme=default\") to convert the plan to HTML non-interactively."` — replace `/absolute/path/to/plan.md` with the actual absolute path. Quote the path if it contains spaces.
+
+Announce:
+
+> `HTML conversion started: <resolved-path>.html (background, theme: default)`

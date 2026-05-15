@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.1.0 — 2026-05-15
+
+**Additive — no breaking changes.**
+
+After completing the review and updating the source plan, the skill now
+automatically generates an HTML version of the plan by spawning a background
+`plan-interview:plan-to-html` conversion. The conversion runs non-interactively
+(`--background --theme=default`) and does not block the review summary.
+
+Changes:
+
+- **`product-plans` skill** — added Step 9 ("Generate HTML version"). Spawns a
+  background `Agent` that invokes `Skill(skill: "plan-interview:plan-to-html",
+  args: "<absolute-path> --background --theme=default")` after Step 8 cleanup.
+- **`allowed-tools`** — added `Agent` so the skill can spawn the background
+  conversion agent without a permission prompt.
+- **Step 0 todo list** — now creates todos for Steps 1–9 (was 1–8).
+
 ## 3.0.0 — 2026-05-15
 
 **BREAKING CHANGE**: Skill activation behavior changed. The `product-plans`
