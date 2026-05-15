@@ -7,7 +7,7 @@ description: >
   session. Use when the user asks to "run the panel in the background",
   "fire off the review panel", or "review this plan and keep working".
   Mirrors the product-plans skill but runs as a background subagent.
-tools: Skill, Read
+tools: Skill, Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 maxTurns: 30
 background: true

@@ -2,7 +2,8 @@
 
 The lead reproduces the fenced block below verbatim after collecting findings
 from all six reviewers. Replace placeholder text inside `[brackets]`. Section
-14 is omitted when the user chose review-only mode at Step 2.
+15 (Revised Product Plan) is omitted when the user chose review-only mode at
+Step 2.
 
 Any reviewer whose section opens with `Reviewer unavailable — not assessed`
 must also be named in section 1 (Executive summary) and listed as a risk in

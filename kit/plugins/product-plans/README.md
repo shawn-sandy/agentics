@@ -104,27 +104,28 @@ Review this plan in the background: docs/plans/my-feature.md --background
 
 The skill produces:
 
-1. A **14-section consolidated review** in the chat, ending with a
+1. A **15-section consolidated review** in the chat, ending with a
    `Final decision: approve / approve with revisions / reject` line.
 2. Optionally, a **revised plan** written to a file destination of your
    choice (sibling, overwrite, or append).
 
-The 14 sections are:
+The 15 sections are:
 
 1. Executive summary
-2. Role-by-role review (5 subsections)
+2. Role-by-role review (6 subsections)
 3. Highest-risk issues
 4. Blocking issues
 5. Important but non-blocking improvements
 6. UX recommendations
 7. Accessibility requirements
 8. Frontend implementation considerations
-9. Technical feasibility concerns
-10. Open questions before development
-11. Recommended changes to the plan
-12. Conflicts or tradeoffs between reviewers
-13. Final decision
-14. Revised product plan _(review + revised plan mode only)_
+9. Security requirements
+10. Technical feasibility concerns
+11. Open questions before development
+12. Recommended changes to the plan
+13. Conflicts or tradeoffs between reviewers
+14. Final decision
+15. Revised product plan _(review + revised plan mode only)_
 
 ## Plugin Structure
 
@@ -138,7 +139,8 @@ product-plans/
 │   ├── product-reviewer-lead-developer.md
 │   ├── product-reviewer-ux-designer.md
 │   ├── product-reviewer-frontend-engineer.md
-│   └── product-reviewer-accessibility-expert.md
+│   ├── product-reviewer-accessibility-expert.md
+│   └── product-reviewer-security-expert.md
 ├── commands/
 │   └── product-plans-bg.md          # /product-plans:product-plans-bg dispatcher
 ├── skills/
@@ -146,7 +148,7 @@ product-plans/
 │       ├── SKILL.md                 # Skill entry point (auto-activating)
 │       └── references/
 │           ├── role-prompts.md      # Per-role spawn-prompt templates
-│           └── output-template.md  # Verbatim 14-section report template
+│           └── output-template.md  # Verbatim 15-section report template
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -156,8 +158,8 @@ product-plans/
 ### Skill: `product-plans`
 
 Auto-activates when the user asks for a cross-functional panel review,
-multi-role critique, or PM/Dev/UX/Frontend/Accessibility team review of
-a product plan, PRD, feature proposal, or implementation plan.
+multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review
+of a product plan, PRD, feature proposal, or implementation plan.
 
 Triggers include: "cross-functional panel review", "multi-role critique",
 "get the team's take on this PRD", "PM/Dev/UX review of this proposal".

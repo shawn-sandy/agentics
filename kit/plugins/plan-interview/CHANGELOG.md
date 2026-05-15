@@ -10,6 +10,19 @@
   plan-to-html after both the confirm and decline branches, gated to
   `plan-review` mode only (skill reviews do not produce plan HTML).
 
+### Changed
+
+- `commands/plan-hygiene.md`, `commands/review-rename-plans.md`: Switched
+  `plan-to-html` invocation flag from `--no-open` to `--background`. This is
+  a user-visible behavior change: `--background` suppresses the theme-selection
+  prompt in addition to skipping the browser open; callers no longer choose a
+  theme for auto-generated HTML outputs from these commands (default theme is
+  applied).
+- `commands/plan-hygiene.md`, `commands/review-rename-plans.md`: Replaced the
+  `git add <dir>/*.html` glob with explicit per-file `git add` for generated
+  HTML outputs, reducing the risk of accidentally staging unrelated HTML files
+  in the same directory.
+
 ## [1.22.0] - 2026-05-14
 
 ### Added

@@ -49,8 +49,10 @@ starting `pending`. Mark each `completed` as you finish that step.
 ### Step 1 — Resolve the plan file
 
 When `mode = background`: require an explicit file path in `$ARGUMENTS`.
-Extract the path (everything in `$ARGUMENTS` before any `--` flag). If no
-path is present, output:
+Parse the path by splitting `$ARGUMENTS` on whitespace, discarding any token
+that starts with `--`, and taking the first remaining token as the path. This
+handles all orderings (`<path>`, `<path> --background`, `--background <path>`).
+If no non-flag token is present, output:
 
 > `Background mode requires a plan path`
 
