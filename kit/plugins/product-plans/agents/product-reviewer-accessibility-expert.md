@@ -2,7 +2,7 @@
 name: product-reviewer-accessibility-expert
 description: "Accessibility Expert reviewer for the plan-review-agents skill. Reviews WCAG 2.2 AA alignment, semantic HTML, keyboard navigation, focus management, screen reader behavior, color contrast, form accessibility, motion sensitivity, error messaging, and inclusive design. Teammate-only — designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *), WebSearch, WebFetch
-model: inherit
+model: sonnet
 ---
 
 ## Role
