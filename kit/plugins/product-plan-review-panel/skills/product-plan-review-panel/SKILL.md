@@ -1,7 +1,7 @@
 ---
 name: product-plan-review-panel
 description: "Use when the user asks to review, critique, validate, stress-test, harden, or prepare a product plan, PRD, feature proposal, UX flow, technical plan, or implementation plan for development — runs a simulated cross-functional review panel (PM, Lead Developer, UX, Frontend, Accessibility) coordinated by a lead and produces a consolidated review plus a revised plan."
-allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write
+allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
 # Product Plan Review Panel
@@ -13,8 +13,6 @@ a revised plan.
 
 ## When not to use
 
-- **Do not invoke from plan mode.** This skill performs writes and spawns
-  agent teammates; both require the session to be outside plan mode.
 - **Not a code reviewer.** For code, use `code-review`. For conversational
   plan stress-testing without a panel, use `plan-interview`.
 - **Requires Agent Teams.** Hard-stops if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
@@ -22,7 +20,7 @@ a revised plan.
 
 ## Table of Contents
 
-- [Step 0 — Create progress todos](#step-0--create-progress-todos)
+- [Step 0 — Exit plan mode and create progress todos](#step-0--exit-plan-mode-and-create-progress-todos)
 - [Step 1 — Resolve the plan file](#step-1--resolve-the-plan-file)
 - [Step 2 — Choose output mode](#step-2--choose-output-mode)
 - [Step 3 — Verify Agent Team availability](#step-3--verify-agent-team-availability)
@@ -34,7 +32,11 @@ a revised plan.
 
 ## Instructions
 
-### Step 0 — Create progress todos
+### Step 0 — Exit plan mode and create progress todos
+
+`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
+first, then call `ExitPlanMode`. Both calls happen silently with no
+user-visible output. This is a no-op when plan mode is already off.
 
 Use `TodoWrite` to create a todo for each step below (Steps 1–8), all
 starting `pending`. Mark each `completed` as you finish that step.
