@@ -2,7 +2,7 @@
 name: product-reviewer-pm
 description: "Product Manager reviewer for the plan-review-agents skill. Reviews user value, product strategy, business goals, scope, prioritization, success metrics, assumptions, release readiness, risks, and tradeoffs. Teammate-only — designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *), WebSearch, WebFetch
-model: inherit
+model: sonnet
 ---
 
 ## Role

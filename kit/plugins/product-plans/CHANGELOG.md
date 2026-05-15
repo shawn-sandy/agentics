@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.2.1 — 2026-05-15
+
+**Role-optimized model assignments for all six reviewer agents.**
+
+Replaced `model: inherit` with an explicit model on each reviewer, chosen
+to match the cognitive demands of the role:
+
+- **product-reviewer-lead-developer** — `opus` (deep architectural
+  reasoning, complex feasibility/tradeoff analysis, system-level risk
+  assessment)
+- **product-reviewer-security-expert** — `opus` (adversarial threat
+  modeling, multi-step attack reasoning, compliance/regulation analysis)
+- **product-reviewer-pm** — `sonnet` (strategic and business-value
+  analysis with balanced reasoning)
+- **product-reviewer-ux-designer** — `sonnet` (pattern-based design
+  judgment and flow analysis)
+- **product-reviewer-frontend-engineer** — `sonnet` (component patterns,
+  framework conventions, performance tradeoffs)
+- **product-reviewer-accessibility-expert** — `sonnet` (WCAG nuance plus
+  semantic and focus-management judgment)
+
+Each reviewer now runs on the model best suited to its discipline rather
+than inheriting the parent session's model, improving consistency of
+review quality regardless of where the panel is invoked from.
+
 ## 3.2.0 — 2026-05-15
 
 **Domain-specific research tools added to all six reviewer agents.**
