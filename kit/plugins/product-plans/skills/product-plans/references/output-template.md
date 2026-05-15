@@ -147,6 +147,25 @@ approval (if applicable), and which issues are blocking vs non-blocking.]
 
 ---
 
+### 15a. Inline Edits to Apply
+
+*(This section drives the integration pass in Step 7. Omit if
+`output_mode = review only`. The lead generates a numbered list of
+discrete edits derived from the recommendations in section 12. Each
+entry identifies a section in the source plan, the action to perform,
+and the verbatim content to write. Apply in order using `Edit`.)*
+
+| # | Section heading | Action | Content |
+|---|-----------------|--------|---------|
+| 1 | [exact `##` or `###` heading from the source plan, e.g. `## Steps`] | `edit` \| `append` \| `insert after "[anchor heading]"` | [verbatim content to write — replacement body for `edit`, trailing addition for `append`, new section for `insert`] |
+| 2 | … | … | … |
+
+*(Add rows for each recommended change from section 12 that maps to a
+specific section. Omit rows for changes that have no clear section
+anchor — those are addressed by the revised plan in section 15.)*
+
+---
+
 ### 15. Revised Product Plan
 
 *(Omit this section if the user chose review-only mode at Step 2.)*
