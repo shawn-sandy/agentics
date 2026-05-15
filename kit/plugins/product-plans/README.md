@@ -1,4 +1,4 @@
-# product-plan-review-panel
+# product-plans
 
 Review product plans, PRDs, and feature proposals using a simulated
 cross-functional team — coordinated by a lead that synthesizes all findings
@@ -6,7 +6,7 @@ into a structured 14-section report and (by default) a revised plan.
 
 ## Overview
 
-`product-plan-review-panel` spawns a Claude Code Agent Team of five
+`product-plans` spawns a Claude Code Agent Team of five
 specialist reviewers working in parallel:
 
 | Role | Domain |
@@ -34,19 +34,20 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
   unavailable, the gap is flagged in three places.
 - **Revised plan output** — by default the skill asks where to save the
   revised plan (sibling file, overwrite with git-safety check, or append).
-- **Auto-activation** — triggers on any prompt asking to review, critique,
-  validate, or stress-test a product plan, PRD, or feature proposal.
+- **Auto-activation** — triggers on prompts asking for a cross-functional
+  panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility
+  team review of a product plan, PRD, or feature proposal.
 
 ## Installation
 
 ```bash
-/plugin install product-plan-review-panel@agentics-kit
+/plugin install product-plans@agentics-kit
 ```
 
 Or load locally for testing:
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/product-plan-review-panel
+claude --plugin-dir ~/devbox/agentics/kit/plugins/product-plans
 ```
 
 ## Enable Agent Teams
@@ -63,12 +64,12 @@ Add to `~/.claude/settings.json` before using this skill:
 
 ## Usage
 
-The skill activates automatically when you describe a review task:
+The skill activates automatically when you ask for a panel or team review:
 
 ```
-Review this PRD and tell me what the team thinks.
-Stress-test the plan at docs/plans/new-feature.md.
-Critique this feature proposal before we start building.
+Run a cross-functional panel review on this PRD.
+Get the PM, Dev, and UX team's take on this feature proposal.
+I need a multi-role critique of docs/plans/new-feature.md.
 ```
 
 Or point it at a specific file:
@@ -106,7 +107,7 @@ The 14 sections are:
 ## Plugin Structure
 
 ```
-product-plan-review-panel/
+product-plans/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── agents/                          # Teammate-only subagent definitions
@@ -116,7 +117,7 @@ product-plan-review-panel/
 │   ├── product-reviewer-frontend-engineer.md
 │   └── product-reviewer-accessibility-expert.md
 ├── skills/
-│   └── product-plan-review-panel/
+│   └── product-plans/
 │       ├── SKILL.md                 # Skill entry point (auto-activating)
 │       └── references/
 │           ├── role-prompts.md      # Per-role spawn-prompt templates
@@ -127,20 +128,20 @@ product-plan-review-panel/
 
 ## Components
 
-### Skill: `product-plan-review-panel`
+### Skill: `product-plans`
 
-Auto-activates when the user asks to review, critique, validate,
-stress-test, harden, or prepare a product plan, PRD, or feature proposal.
+Auto-activates when the user asks for a cross-functional panel review,
+multi-role critique, or PM/Dev/UX/Frontend/Accessibility team review of
+a product plan, PRD, feature proposal, or implementation plan.
 
-Triggers include: "review this plan", "critique the PRD", "stress-test
-this proposal", "validate this feature spec", "prepare this plan for
-development".
+Triggers include: "cross-functional panel review", "multi-role critique",
+"get the team's take on this PRD", "PM/Dev/UX review of this proposal".
 
 ### Subagent definitions (teammate-only)
 
 The five `agents/*.md` files define the reviewer roles. They are designed
 exclusively for use as Agent Team teammates spawned by the
-`product-plan-review-panel` skill. They are not intended for standalone
+`product-plans` skill. They are not intended for standalone
 invocation via the `Task` tool or direct `subagent_type` references outside
 this skill.
 

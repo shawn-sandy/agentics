@@ -1,6 +1,6 @@
 ---
 name: product-reviewer-pm
-description: "Product Manager reviewer for the product-plan-review-panel skill. Reviews user value, product strategy, business goals, scope, prioritization, success metrics, assumptions, release readiness, risks, and tradeoffs. Teammate-only — designed to run inside an Agent Team led by the product-plan-review-panel skill; not for standalone invocation."
+description: "Product Manager reviewer for the product-plans skill. Reviews user value, product strategy, business goals, scope, prioritization, success metrics, assumptions, release readiness, risks, and tradeoffs. Teammate-only — designed to run inside an Agent Team led by the product-plans skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *)
 model: inherit
 ---
