@@ -1,6 +1,6 @@
 ---
 name: product-plans
-description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, feature proposal, or implementation plan; or asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility team review."
+description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, feature proposal, or implementation plan; or asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
@@ -9,8 +9,9 @@ allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSe
 **Primary purpose: improve, optimize, and update the plan.** Orchestrate a
 six-reviewer Agent Team — Product Manager, Lead Developer, UX Designer,
 Lead Frontend Engineer, Accessibility Expert, Security Expert — coordinated by
-a lead that synthesizes findings into a 15-section report and applies concrete
-improvements directly to the source plan.
+a lead that synthesizes findings into a 15-section report and (by default)
+applies concrete improvements directly to the source plan. Review-only mode
+skips the edit pass and produces the report only.
 
 ## When not to use
 

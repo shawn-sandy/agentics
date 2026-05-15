@@ -132,9 +132,11 @@ reviewers, grouped by role. Deduplicate overlapping questions.]
 
 [Concrete amendments the lead recommends based on synthesis across all six
 reviewers. Write as a numbered list of specific edits to the plan, not
-abstract guidance. Every item here must have a corresponding row in section
-15a — use `insert after` for new sections rather than routing anything to
-15b only.]
+abstract guidance. When `output_mode = review + update plan in place`, every
+item here must have a corresponding row in section 15a — use `insert after`
+for new sections rather than routing anything to 15b only. In review-only
+mode, sections 15a and 15b are omitted; this list serves as the improvement
+record for the reader.]
 
 ---
 
