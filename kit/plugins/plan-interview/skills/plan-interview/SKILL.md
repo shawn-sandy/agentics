@@ -499,18 +499,17 @@ tool. When writing or amending steps, use the three-part format required by
 `plan-mode.md`:
 `**[Action]** — [description]. *Why:* [rationale]. *Verify:* [confirmation criteria].`
 
-After appending the summary, ask via `AskUserQuestion`: _"Generate (or
-regenerate) HTML for the updated plan?"_ (options: `Yes, generate HTML` / `Skip`;
-if an `.html` exists, `plan-to-html` will prompt to overwrite it). If confirmed,
-call with the current resolved path (the renamed path from Step 2, if applicable):
+If they decline the summary append, do not modify the file.
+
+After handling the save decision (whether confirmed or declined), ask via
+`AskUserQuestion`: _"Generate (or regenerate) HTML for this plan?"_ (options:
+`Yes, generate HTML` / `Skip`; if an `.html` exists, `plan-to-html` will prompt
+to overwrite it). If confirmed, call with the current resolved path (the renamed
+path from Step 2, if applicable):
 
 ```
 Skill(skill: "plan-interview:plan-to-html", args: "<resolved-plan-path> --no-open")
 ```
-
-If declined, fall through to the next block unchanged.
-
-If they decline the summary append, do not modify the file.
 
 **In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
 
