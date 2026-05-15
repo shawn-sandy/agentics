@@ -132,8 +132,9 @@ reviewers, grouped by role. Deduplicate overlapping questions.]
 
 [Concrete amendments the lead recommends based on synthesis across all six
 reviewers. Write as a numbered list of specific edits to the plan, not
-abstract guidance. These drive section 15a — every item here must map to
-an actionable inline edit or a revision in section 15b.]
+abstract guidance. Every item here must have a corresponding row in section
+15a — use `insert after` for new sections rather than routing anything to
+15b only.]
 
 ---
 
@@ -168,9 +169,11 @@ order using `Edit` in Step 7 Pass 1.)*
 | 1 | [exact `##` or `###` heading from the source plan, e.g. `## Steps`] | `edit` \| `append` \| `insert after "[anchor heading]"` | [verbatim content to write — replacement body for `edit`, trailing addition for `append`, new section for `insert`] |
 | 2 | … | … | … |
 
-*(Add rows for each recommended change from section 12 that maps to a
-specific section. Omit rows for changes that have no clear section
-anchor — those belong in section 15b instead.)*
+*(Every recommended change from section 12 must have a row here. For
+recommendations that add entirely new content rather than editing an existing
+section, use `insert after "[nearest anchor heading]"` to append a new section
+at the appropriate position in the plan. Do not omit rows for unmapped changes
+— that would leave the plan unmodified for those items.)*
 
 ---
 
@@ -178,9 +181,12 @@ anchor — those belong in section 15b instead.)*
 
 *(Omit this section if the user chose review-only mode at Step 2.)*
 
+*(This is a reference view only — all actual plan edits are driven by section
+15a rows applied in Step 7 Pass 1. Do not route any recommendations here
+instead of 15a; they will not be applied to the source file.)*
+
 [Write a complete, revised version of the product plan incorporating all
-recommended changes from section 12 — including any improvements that could
-not be mapped to a specific inline edit in 15a. The revised plan replaces
-the original in spirit — it is not a diff. Write it as a standalone plan
-the development team can act on directly.]
+recommended changes from section 12. The revised plan replaces the original
+in spirit — it is not a diff. Write it as a standalone plan the development
+team can act on directly.]
 ```
