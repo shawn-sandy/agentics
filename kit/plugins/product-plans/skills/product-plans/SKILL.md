@@ -80,7 +80,7 @@ Announce: `"Reviewing plan: <resolved-path>"`
 
 ### Step 2 — Choose output mode
 
-When `mode = background`: set `output_mode = "review + revised plan"` without
+When `mode = background`: set `output_mode = "review + update plan in place"` without
 calling `AskUserQuestion`. Continue to Step 3.
 
 When `mode = interactive`: ask the user:
