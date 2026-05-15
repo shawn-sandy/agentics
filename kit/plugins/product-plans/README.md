@@ -150,7 +150,7 @@ product-plans/
 ├── commands/
 │   └── product-plans-bg.md          # /product-plans:product-plans-bg dispatcher
 ├── skills/
-│   └── product-plans/
+│   └── plan-review-agents/
 │       ├── SKILL.md                 # Skill entry point (auto-activating)
 │       └── references/
 │           ├── role-prompts.md      # Per-role spawn-prompt templates
@@ -161,7 +161,7 @@ product-plans/
 
 ## Components
 
-### Skill: `product-plans`
+### Skill: `plan-review-agents`
 
 Auto-activates when the user asks to improve, optimize, or update a product
 plan, PRD, feature proposal, or implementation plan — or asks for a
@@ -187,7 +187,7 @@ If no path is provided, outputs a usage error and stops without dispatching.
 
 Background wrapper agent (`background: true`,
 `tools: Skill, Read, Write, Edit, Glob, Grep, Bash`, `maxTurns: 30`).
-Confirms the plan file exists, then invokes the `product-plans` skill with
+Confirms the plan file exists, then invokes the `plan-review-agents` skill with
 `--background` and reports the updated path on completion. Dispatched by
 the `product-plans-bg` command.
 

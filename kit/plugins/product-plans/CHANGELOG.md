@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.1.0 — 2026-05-15
+
+**Skill renamed** — the `product-plans` skill is now `plan-review-agents`. The skill
+is invoked as `product-plans:plan-review-agents`. The plugin name, agent names,
+command name, and install command are all unchanged.
+
+Changes:
+
+- **Skill folder** renamed: `skills/product-plans/` → `skills/plan-review-agents/`
+- **SKILL.md frontmatter** `name:` updated from `product-plans` to `plan-review-agents`
+- **`agent-product-plans`** skill invocation updated to `product-plans:plan-review-agents`
+- **`product-plans-bg` command** skill invocation updated to `product-plans:plan-review-agents`
+- **All six reviewer agents** — description phrase updated from "for the product-plans skill"
+  to "for the plan-review-agents skill"
+- **README** skill section header and directory tree updated
+
+**Migration for existing installers**: if your `.claude/settings.local.json` contains a
+`Skill(product-plans:product-plans)` permission entry, re-key it to
+`Skill(product-plans:plan-review-agents)`. Without this change the renamed skill will
+prompt for permission on every invocation rather than using your saved approval.
+
+The plugin name (`product-plans`), all seven agent names (`agent-product-plans`,
+`product-reviewer-pm`, `product-reviewer-lead-developer`, `product-reviewer-ux-designer`,
+`product-reviewer-frontend-engineer`, `product-reviewer-accessibility-expert`,
+`product-reviewer-security-expert`), the command name (`product-plans-bg`), and the
+install command (`/plugin install product-plans@agentics-kit`) are all unchanged.
+
 ## 3.0.0 — 2026-05-15
 
 **BREAKING CHANGE**: Skill activation behavior changed. The `product-plans`
