@@ -48,6 +48,12 @@ For each plan file, perform this analysis:
    - **Not random**: Does not follow a random adjective-noun or adjective-verb-noun pattern with no connection to the plan's subject matter.
      Note: `add-dark-mode-toggle` is descriptive even though it contains adjectives — the key test is whether the words relate to the plan content.
    - **Not too generic**: Not a placeholder like `plan.md`, `untitled.md`, `draft.md`, `temp.md`, or `new-plan.md`.
+   - **Verb-led**: Starts with an imperative verb. Good: `add-dark-mode-toggle`,
+     `fix-auth-redirect`, `create-skill-reviewer-plugin`. Bad:
+     `branch-agent-append-date-suffix` (noun-led), `auth-module-changes`
+     (noun-led). Common verbs: `add`, `fix`, `create`, `build`, `implement`,
+     `update`, `refactor`, `migrate`, `configure`, `remove`, `enable`,
+     `disable`, `move`, `rename`, `extract`, `deploy`, `document`, `integrate`.
 
 4. **Evaluate the H1 heading**:
    - Does an H1 heading exist?
@@ -60,8 +66,9 @@ For each plan file, perform this analysis:
    - **Pass**: Both filename and heading are descriptive and aligned.
    - **Needs attention**: One or both are non-descriptive, generic, or misaligned. Record:
      - Which element(s) failed (filename, heading, or both)
-     - Why (random pattern, too generic, misaligned, or missing)
-     - A **suggested filename** in kebab-case derived from the plan's goal
+     - Why (random pattern, too generic, misaligned, not verb-led, or missing)
+     - A **suggested filename** in kebab-case derived from the plan's goal — must
+       start with an imperative verb (e.g., `add-`, `fix-`, `create-`)
      - A **suggested H1 heading** in `# Plan: [Description]` format
 
 ### Step 3 — Present the review summary
@@ -137,7 +144,7 @@ git mv docs/plans/fuzzy-swimming-pearl.html docs/plans/create-skill-reviewer-plu
 ```
 
 Fallback if `git mv` fails (file not tracked): `mv` the file then `git add` the
-new path and `rm -f` the old path.
+new path and `git rm` the old path.
 
 **5b — Choose theme once**
 
@@ -155,7 +162,7 @@ For each renamed file, invoke the `plan-to-html` skill, passing the new path,
 the chosen theme, and `--no-open` to suppress browser prompts:
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --no-open")
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --background")
 ```
 
 **5d — Report HTML output**

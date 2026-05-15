@@ -1,5 +1,56 @@
 # Changelog
 
+## [1.22.0] - 2026-05-14
+
+### Added
+
+- `skills/plan-to-html/SKILL.md` frontmatter: `Agent` added to `allowed-tools`
+  so the skill can spawn background agents
+- `skills/plan-to-html/SKILL.md` Step 1: `--async` flag — when present, spawns
+  a background `Agent` after theme resolution and returns immediately; the agent
+  re-invokes the skill with `--background` to complete HTML generation without
+  blocking the main thread
+- `skills/plan-to-html/SKILL.md` Step 3: async dispatch block — after the theme
+  is resolved (via flag, `--background` default, or `AskUserQuestion`), checks
+  for `--async` and calls `Agent(run_in_background: true)` if set; combining
+  `--async --theme=<value>` gives a fully hands-off fire-and-forget invocation
+- `commands/plan-to-html.md`: `Agent` added to `allowed-tools`; `--async` flag
+  documented in Arguments section with usage examples
+
+## [1.21.0] - 2026-05-14
+
+### Added
+
+- `skills/plan-interview/SKILL.md` Step 2: fourth filename criterion "Verb-led" — flags
+  filenames that don't start with an imperative verb and requires suggested names to be
+  verb-led
+- `skills/plan-interview/SKILL.md` Step 2: "Step structure" extraction point — counts
+  steps missing a `*Verify:*` line
+- `skills/plan-interview/SKILL.md` Step 5: optional "Step Structure" summary section
+  showing count of incomplete steps and a corrected three-part example
+- `skills/plan-interview/SKILL.md` Step 6: three-part format string required when writing
+  or amending steps (`**[Action]** — [description]. *Why:* [rationale]. *Verify:* [confirmation criteria].`)
+- `commands/review-rename-plans.md` Step 2: fourth filename criterion "Verb-led" — same
+  rule as plan-interview, applied to batch filename review
+- `commands/plan-hygiene.md` Name Generation: verb-led output check — if generated name is
+  noun-led, the dominant action verb is extracted from the heading and prepended
+
+## [1.20.0] - 2026-05-14
+
+### Added
+
+- `skills/plan-to-html/SKILL.md` Step 0.5: new `--setup` flag writes pre-built
+  theme CSS and JavaScript to `~/.claude/plan-to-html/` for caching; future
+  runs read these files directly instead of re-synthesizing CSS/JS from the spec
+- `skills/plan-to-html/SKILL.md` Step 1: `--background` flag for fully
+  non-interactive mode — auto-selects `default` theme, auto-overwrites existing
+  output, implies `--no-open`; intended for batch or automated invocations
+- `skills/plan-to-html/SKILL.md` Step 5: cache check reads
+  `~/.claude/plan-to-html/themes.css` and `scripts.js` when present, skipping
+  re-derivation of CSS/JS from the spec
+- `commands/plan-to-html.md`: documented `--setup`, `--background`, `--theme`,
+  and `--no-open` flags in the Arguments section with usage examples
+
 ## [1.19.0] - 2026-05-13
 
 ### Added

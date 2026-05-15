@@ -2,16 +2,9 @@
 status: completed
 type: feature
 created: 2026-05-14
-modified: 2026-05-14
 ---
 
 # Plan: Create the `product-plan-review-panel` plugin
-
-> **Note**: This file is scheduled to be renamed to
-> `create-product-plan-review-panel-plugin.md` as the first post-approval
-> action. The current `pure-tide` suffix is the random adjective-noun pattern
-> flagged by [`/.claude/rules/plan-mode.md`](../../.claude/rules/plan-mode.md);
-> filesystem changes are deferred until plan mode is exited.
 
 ## Context
 

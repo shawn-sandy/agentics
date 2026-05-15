@@ -2,7 +2,6 @@
 status: completed
 type: standard
 created: 2026-05-13
-modified: 2026-05-13
 ---
 
 # Plan: Generate HTML after plan rename via plan-to-html skill

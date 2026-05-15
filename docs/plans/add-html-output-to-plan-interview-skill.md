@@ -2,7 +2,6 @@
 status: completed
 type: standard
 created: 2026-05-13
-modified: 2026-05-13
 ---
 
 # Plan: Add HTML output to the plan-interview skill (rename + save findings)

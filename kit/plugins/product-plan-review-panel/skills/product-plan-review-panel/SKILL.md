@@ -1,6 +1,6 @@
 ---
 name: product-plan-review-panel
-description: "Use when the user asks to review, critique, validate, stress-test, harden, or prepare a product plan, PRD, feature proposal, UX flow, technical plan, or implementation plan for development — runs a simulated cross-functional review panel (PM, Lead Developer, UX, Frontend, Accessibility) coordinated by a lead and produces a consolidated review plus a revised plan."
+description: "Use when the user asks to review, critique, validate, or stress-test a product plan, PRD, feature proposal, UX flow, or implementation plan using a cross-functional review panel."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
