@@ -280,7 +280,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/product-plans"
       },
-      "version": "2.2.0",
+      "version": "2.2.1",
       "description": "Review product plans, PRDs, and feature proposals using a simulated cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) that produces a 15-section consolidated report and revised plan",
       "category": "productivity",
       "tags": [

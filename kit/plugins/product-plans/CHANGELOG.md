@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.2.1 — 2026-05-15
+
+**Behavior change (Step 7):** The skill now integrates panel findings
+directly into the source plan. Both interactive and background modes share
+a single path — no prompts, no sibling file. Two passes:
+
+1. **Inline edits** — section 15a of the synthesized report lists discrete
+   `(section, action, content)` edits; the lead applies them to the source
+   plan via `Edit` in order.
+2. **Append panel review** — the full 15-section synthesized report is
+   appended as a `## Panel Review` section at the end of the source plan.
+
+This mirrors how `plan-interview` integrates its findings into the plans it
+reviews.
+
+**Removed:** the `AskUserQuestion` prompt in Step 7, the **Sibling file**,
+**Overwrite original**, and **Append to original** options, the
+`git status --porcelain` safety guard, and the background-mode
+`<stem>-revised.md` sibling-write.
+
+**Added:** section 15a ("Inline Edits to Apply") in
+`references/output-template.md` — a structured table the lead fills with
+discrete edits derived from section 12 recommendations.
+
 ## 2.2.0 — 2026-05-15
 
 **Additive — no breaking changes.** All existing reviewer behavior is unchanged.

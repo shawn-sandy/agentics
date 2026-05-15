@@ -27,7 +27,7 @@ coordinated by a lead that synthesizes findings into a 15-section report and
 - [Step 4 — Spawn the review team](#step-4--spawn-the-review-team)
 - [Step 5 — Wait, collect, and handle failures](#step-5--wait-collect-and-handle-failures)
 - [Step 6 — Synthesize findings](#step-6--synthesize-findings)
-- [Step 7 — Persist the revised plan](#step-7--persist-the-revised-plan)
+- [Step 7 — Integrate panel findings into the source plan](#step-7--integrate-panel-findings-into-the-source-plan)
 - [Step 8 — Clean up the team](#step-8--clean-up-the-team)
 
 ## Instructions
@@ -184,32 +184,35 @@ Before filling the template, compare the six reviewers' findings:
 Reproduce the verbatim template with findings filled in. Omit section 15
 if `output_mode = review only`.
 
-### Step 7 — Persist the revised plan
+### Step 7 — Integrate panel findings into the source plan
 
 Skip entirely if `output_mode = review only`.
 
-When `mode = background`: write the revised plan directly to
-`<original-stem>-revised.md` (sibling file next to the source) without
-calling `AskUserQuestion`. This is non-destructive — the source file is
-never modified. Use `Write` with the sibling path. The content is section 15
-of the synthesized output, written verbatim. Announce:
+Integrate the synthesized findings into the source plan file at the
+resolved path from Step 1. Two passes, both using `Edit`:
 
-> `Revised plan written to: <sibling-path>`
+**Pass 1 — Apply inline edits.** Read section 15a ("Inline Edits to
+Apply") of the synthesized output. For each row in the table, apply one
+`Edit` call against the resolved plan path:
 
-When `mode = interactive`: ask the user where to write the revised plan
-(`AskUserQuestion`):
+- `edit` — replace the matched section's body with the given content.
+- `append` — add the given content to the end of the named section.
+- `insert after "[anchor]"` — insert the given content as a new section
+  immediately after the named anchor heading.
 
-- **Sibling file** — write `<original-stem>-revised.md` next to the
-  source. Non-destructive; user diffs and picks the keeper.
-- **Overwrite original** — replace the source in place. Only proceed if
-  `git status --porcelain "<resolved-path>"` returns empty (source is
-  clean). If the check fails, explain and fall back to the sibling option.
-- **Append to original** — add `## Revised Plan` as a new section at the
-  end of the source file.
+Apply rows in order. Skip any row whose section heading cannot be matched
+in the source plan (log a one-line warning; do not stop).
 
-Write using `Write` (sibling or overwrite) or `Edit` (append). The content
-is section 15 of the synthesized output, written verbatim — do not
-re-generate.
+**Pass 2 — Append panel review.** Use `Edit` to append a new
+`## Panel Review` section at the very end of the source plan. The content
+is the full verbatim synthesized report (sections 1–15a, including the
+inline-edits table). Do not re-generate; copy from synthesis.
+
+Both interactive and background modes share this path. There is no
+`AskUserQuestion`, no sibling file, no `git status --porcelain` guard.
+Announce:
+
+> `Plan updated in place: <resolved-path> (inline edits applied + Panel Review appended)`
 
 ### Step 8 — Clean up the team
 
