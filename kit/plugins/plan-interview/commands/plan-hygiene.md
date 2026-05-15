@@ -78,7 +78,7 @@ git mv <dir>/<old-basename>.html <dir>/<new-basename>.html
 ```
 
 Fallback if `git mv` fails (file not tracked): `mv` + `git add` new path +
-`git rm` old path.
+`rm -f` old path.
 
 **Step B — Choose theme once**
 
@@ -101,11 +101,11 @@ Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> -
 
 **Step D — Commit regenerated HTML**
 
-Stage all newly written `.html` files (and any `git mv`'d stale artifacts)
-and commit:
+Stage the exact regenerated/migrated `.html` paths collected during Steps A/C
+(across all processed directories), then commit:
 
 ```bash
-git add <dir>/*.html
+git add <path1>.html <path2>.html ...
 git commit -m "chore: regenerate plan HTML after rename"
 ```
 

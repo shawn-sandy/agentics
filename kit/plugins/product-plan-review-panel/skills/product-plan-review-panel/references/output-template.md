@@ -127,7 +127,7 @@ If no conflicts exist, write "No conflicts identified."]
 
 ### 13. Final Decision
 
-**[Approve / Approve with revisions / Reject]**
+Final decision: **[Approve / Approve with revisions / Reject]**
 
 [One or two sentences explaining the decision, the key condition(s) for
 approval (if applicable), and which issues are blocking vs non-blocking.]

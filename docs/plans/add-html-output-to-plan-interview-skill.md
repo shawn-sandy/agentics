@@ -7,8 +7,8 @@ modified: 2026-05-13
 
 # Plan: Add HTML output to the plan-interview skill (rename + save findings)
 
-> Filename note: this file uses the plan-mode placeholder slug. Step 6 renames
-> it to `add-html-output-to-plan-interview-skill.md` before commit.
+> Filename note: this plan has been finalized as
+> `add-html-output-to-plan-interview-skill.md`.
 
 ## Context
 

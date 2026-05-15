@@ -137,7 +137,7 @@ git mv docs/plans/fuzzy-swimming-pearl.html docs/plans/create-skill-reviewer-plu
 ```
 
 Fallback if `git mv` fails (file not tracked): `mv` the file then `git add` the
-new path and `git rm` the old path.
+new path and `rm -f` the old path.
 
 **5b — Choose theme once**
 

@@ -97,10 +97,11 @@ Do not fall back to in-prompt role-play.
 
 ### Step 4 — Spawn the review team
 
-Get the absolute path of the resolved plan file:
+Get the absolute path of the resolved plan file by substituting the path
+from Step 1 into the command below:
 
 ```bash
-realpath "<resolved-path>"
+realpath "<path-from-step-1>"
 ```
 
 Read [references/role-prompts.md](references/role-prompts.md) to get the
