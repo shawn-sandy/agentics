@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.1.0 — 2026-05-14
+
+**Additive — no breaking changes.** Foreground skill behavior is unchanged.
+
+New surfaces for unattended (background) panel execution:
+
+- **`--background` flag on the `product-plans` skill** — suppresses all
+  `AskUserQuestion` calls and uses fixed defaults (see table below). Pass
+  any explicit plan path in the same argument string.
+- **`agent-product-plans` subagent** — background wrapper agent
+  (`background: true`, `tools: Skill, Read`, `maxTurns: 30`). Invokes the
+  skill via the `Skill` tool. Named dispatch target for the command below.
+- **`/product-plans:product-plans-bg <path>` command** — one-liner that
+  fires `agent-product-plans` with `run_in_background: true` and returns
+  an ack immediately.
+
+Background mode defaults:
+
+| Step | Foreground | Background |
+|------|------------|------------|
+| Plan file resolution | 5-stage fallback (message → IDE → settings → glob) | Explicit path in `$ARGUMENTS` only; stops with `Background mode requires a plan path` if absent |
+| Output mode (Step 2) | `AskUserQuestion` (default: review + revised plan) | Hard-coded `review + revised plan` |
+| Write destination (Step 7) | `AskUserQuestion` (sibling / overwrite / append) | Hard-coded sibling file (`<stem>-revised.md`), non-destructive |
+
 ## 2.0.0 — 2026-05-14
 
 **Breaking change**: plugin and skill renamed from `product-plan-review-panel`

@@ -34,6 +34,11 @@ a revised plan.
 
 ### Step 0 — Exit plan mode and create progress todos
 
+**Background flag detection**: Scan `$ARGUMENTS` for the literal text
+`--background`. If found, set `mode = background`; otherwise set
+`mode = interactive`. This flag governs branching in Steps 1, 2, and 7 —
+record it once here so subsequent steps can reference it without re-parsing.
+
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
 first, then call `ExitPlanMode`. Both calls happen silently with no
 user-visible output. This is a no-op when plan mode is already off.
@@ -43,7 +48,16 @@ starting `pending`. Mark each `completed` as you finish that step.
 
 ### Step 1 — Resolve the plan file
 
-Use the first match from this priority order:
+When `mode = background`: require an explicit file path in `$ARGUMENTS`.
+Extract the path (everything in `$ARGUMENTS` before any `--` flag). If no
+path is present, output:
+
+> `Background mode requires a plan path`
+
+and stop. Do not attempt the IDE, settings, or glob fallbacks — silent
+file selection is unsafe when no human is watching.
+
+When `mode = interactive`: use the first match from this priority order:
 
 1. **User message** — an explicit file path in the user's message.
 2. **Open IDE file** — a `.md` file currently open in the editor whose
@@ -60,7 +74,10 @@ Announce: `"Reviewing plan: <resolved-path>"`
 
 ### Step 2 — Choose output mode
 
-Ask the user:
+When `mode = background`: set `output_mode = "review + revised plan"` without
+calling `AskUserQuestion`. Continue to Step 3.
+
+When `mode = interactive`: ask the user:
 
 > "After the panel review, should I produce a revised plan?"
 
@@ -166,7 +183,16 @@ if `output_mode = review only`.
 
 Skip entirely if `output_mode = review only`.
 
-Ask the user where to write the revised plan (`AskUserQuestion`):
+When `mode = background`: write the revised plan directly to
+`<original-stem>-revised.md` (sibling file next to the source) without
+calling `AskUserQuestion`. This is non-destructive — the source file is
+never modified. Use `Write` with the sibling path. The content is section 14
+of the synthesized output, written verbatim. Announce:
+
+> `Revised plan written to: <sibling-path>`
+
+When `mode = interactive`: ask the user where to write the revised plan
+(`AskUserQuestion`):
 
 - **Sibling file** — write `<original-stem>-revised.md` next to the
   source. Non-destructive; user diffs and picks the keeper.
