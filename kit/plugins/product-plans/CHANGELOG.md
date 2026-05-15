@@ -1,5 +1,44 @@
 # Changelog
 
+## 3.0.0 — 2026-05-15
+
+**BREAKING CHANGE**: Skill activation behavior changed. The `product-plans`
+skill now triggers on "improve", "optimize", and "update" plan requests in
+addition to "cross-functional panel review" phrasing. Users relying on the
+prior description to suppress activation should update their workflows.
+
+**Plan improvement is now the primary purpose.** All reviewer agents, role
+prompts, skill description, and output template updated to make plan
+improvement (not just critique) the explicit goal.
+
+Changes:
+
+- **Skill description** updated — now triggers on "improve", "optimize", or
+  "update" a plan, in addition to "cross-functional panel review".
+- **Skill Step 2** option renamed from "Review + revised plan" to
+  "Review + update plan in place" to reflect the in-place update model.
+- **All six reviewer agents** — added a "Your primary goal is plan
+  improvement" rule. Every `Recommended improvement` must be a concrete,
+  implementable change; the lead uses findings to improve the plan.
+- **Role prompts** updated — each spawn prompt now says "Review and improve
+  the product plan". Wording is mode-neutral: findings feed the lead's
+  synthesis in both update-in-place and review-only modes.
+- **Output template** — section 15 renamed to **15b** (Complete Revised
+  Plan) to distinguish it from 15a (Inline Edits). Every section 12
+  recommendation must have a 15a row; use `insert after` for new sections
+  rather than deferring to 15b (which is a reference view only, not an
+  edit mechanism). Section 12 note conditioned on `output_mode`.
+- **`agent-product-plans` background agent** — fixed a bug where step 3
+  reported `<stem>-revised.md` (a sibling file) as the output; now
+  correctly reports "Plan updated in place: `<path>`".
+- **`background output_mode`** aligned to `"review + update plan in place"`
+  from the stale `"review + revised plan"`.
+- **`commands/product-plans-bg.md`** dispatch prompt updated to say "report
+  the path updated in place" instead of "report the sibling file path".
+- **README and plugin.json** fully updated to reflect in-place update model.
+- **Marketplace description** updated; added `plan-improvement`,
+  `plan-optimization` tags.
+
 ## 2.2.1 — 2026-05-15
 
 **Behavior change (Step 7):** The skill now integrates panel findings

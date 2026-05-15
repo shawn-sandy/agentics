@@ -38,7 +38,7 @@ already off.
      ```
      Run the product-plans review panel on $ARGUMENTS in background mode.
      Invoke Skill(skill: "product-plans:product-plans", args: "$ARGUMENTS --background")
-     and report the sibling file path when done.
+     and report the path updated in place when done.
      ```
 
 3. As soon as the agent is dispatched, return control with a single-line ack:

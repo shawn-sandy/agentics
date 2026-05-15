@@ -1,15 +1,17 @@
 ---
 name: product-plans
-description: "Use when the user asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility team review of a product plan, PRD, feature proposal, or implementation plan."
+description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, feature proposal, or implementation plan; or asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
 # Product Plan Review Panel
 
-Orchestrate a six-reviewer Agent Team — Product Manager, Lead Developer,
-UX Designer, Lead Frontend Engineer, Accessibility Expert, Security Expert —
-coordinated by a lead that synthesizes findings into a 15-section report and
-(by default) a revised plan.
+**Primary purpose: improve, optimize, and update the plan.** Orchestrate a
+six-reviewer Agent Team — Product Manager, Lead Developer, UX Designer,
+Lead Frontend Engineer, Accessibility Expert, Security Expert — coordinated by
+a lead that synthesizes findings into a 15-section report and (by default)
+applies concrete improvements directly to the source plan. Review-only mode
+skips the edit pass and produces the report only.
 
 ## When not to use
 
@@ -78,15 +80,15 @@ Announce: `"Reviewing plan: <resolved-path>"`
 
 ### Step 2 — Choose output mode
 
-When `mode = background`: set `output_mode = "review + revised plan"` without
+When `mode = background`: set `output_mode = "review + update plan in place"` without
 calling `AskUserQuestion`. Continue to Step 3.
 
 When `mode = interactive`: ask the user:
 
-> "After the panel review, should I produce a revised plan?"
+> "After the panel review, should I apply the improvements directly to the plan?"
 
 Options (use `AskUserQuestion`):
-- **Review + revised plan** _(preselected)_
+- **Review + update plan in place** _(preselected)_
 - **Review only**
 
 Record the choice as `output_mode` and continue.
@@ -205,8 +207,9 @@ in the source plan (log a one-line warning; do not stop).
 
 **Pass 2 — Append panel review.** Use `Edit` to append a new
 `## Panel Review` section at the very end of the source plan. The content
-is the full verbatim synthesized report (sections 1–15a, including the
-inline-edits table). Do not re-generate; copy from synthesis.
+is the full verbatim synthesized report (sections 1–15b, including the
+inline-edits table and the complete revised plan). Do not re-generate;
+copy from synthesis.
 
 Both interactive and background modes share this path. There is no
 `AskUserQuestion`, no sibling file, no `git status --porcelain` guard.

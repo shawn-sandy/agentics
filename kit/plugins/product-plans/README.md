@@ -1,8 +1,9 @@
 # product-plans
 
-Review product plans, PRDs, and feature proposals using a simulated
-cross-functional team — coordinated by a lead that synthesizes all findings
-into a structured 15-section report and (by default) a revised plan.
+Improve, optimize, and update product plans, PRDs, and feature proposals using
+a simulated cross-functional team — coordinated by a lead that synthesizes all
+findings into a structured 15-section report and (by default) applies
+improvements directly to the source plan.
 
 ## Overview
 
@@ -33,11 +34,12 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
   decision.
 - **Reviewer failure handling** — dead reviewers are respawned once; if
   unavailable, the gap is flagged in three places.
-- **Revised plan output** — by default the skill asks where to save the
-  revised plan (sibling file, overwrite with git-safety check, or append).
+- **In-place plan update** — by default the skill applies panel improvements
+  directly to the source plan (inline edits + appended Panel Review section).
+  Choose "Review only" to get the report without modifying the file.
 - **Background mode** — pass `--background` to suppress all interactive
-  prompts: auto-selects `review + revised plan` output mode and writes the
-  revised plan to `<stem>-revised.md` (sibling, non-destructive). Fire via
+  prompts: auto-selects update-in-place mode and updates the source plan
+  without blocking the session. Fire via
   `/product-plans:product-plans-bg <path>` to run the whole panel unattended.
 - **Auto-activation** — triggers on prompts asking for a cross-functional
   panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security
@@ -69,9 +71,12 @@ Add to `~/.claude/settings.json` before using this skill:
 
 ## Usage
 
-The skill activates automatically when you ask for a panel or team review:
+The skill activates automatically when you ask to improve, optimize, or review a plan:
 
 ```
+Improve this product plan.
+Optimize docs/plans/new-feature.md before we start building.
+Update this PRD based on expert feedback.
 Run a cross-functional panel review on this PRD.
 Get the PM, Dev, and UX team's take on this feature proposal.
 I need a multi-role critique of docs/plans/new-feature.md.
@@ -92,7 +97,7 @@ Fire the panel unattended and keep working:
 ```
 
 Returns immediately with a one-line ack. Claude notifies you when the panel
-finishes and the revised plan is written to `docs/plans/my-feature-revised.md`.
+finishes and the plan has been updated in place at the path you provided.
 
 You can also call the skill directly with the flag:
 
@@ -106,8 +111,8 @@ The skill produces:
 
 1. A **15-section consolidated review** in the chat, ending with a
    `Final decision: approve / approve with revisions / reject` line.
-2. Optionally, a **revised plan** written to a file destination of your
-   choice (sibling, overwrite, or append).
+2. By default (update-in-place mode): inline edits applied to the source plan
+   + a `## Panel Review` section appended. Choose "Review only" to skip this.
 
 The 15 sections are:
 
@@ -125,7 +130,8 @@ The 15 sections are:
 12. Recommended changes to the plan
 13. Conflicts or tradeoffs between reviewers
 14. Final decision
-15. Revised product plan _(review + revised plan mode only)_
+15a. Inline edits to apply _(update-in-place mode only)_
+15b. Complete revised plan _(update-in-place mode only)_
 
 ## Plugin Structure
 
@@ -157,20 +163,23 @@ product-plans/
 
 ### Skill: `product-plans`
 
-Auto-activates when the user asks for a cross-functional panel review,
-multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review
-of a product plan, PRD, feature proposal, or implementation plan.
+Auto-activates when the user asks to improve, optimize, or update a product
+plan, PRD, feature proposal, or implementation plan — or asks for a
+cross-functional panel review, multi-role critique, or
+PM/Dev/UX/Frontend/Accessibility/Security team review.
 
-Triggers include: "cross-functional panel review", "multi-role critique",
-"get the team's take on this PRD", "PM/Dev/UX review of this proposal".
+Triggers include: "improve this plan", "optimize this PRD",
+"update this proposal based on expert feedback", "cross-functional panel
+review", "multi-role critique", "get the team's take on this PRD",
+"PM/Dev/UX review of this proposal".
 
 ### Command: `product-plans-bg`
 
 Invoke as `/product-plans:product-plans-bg <path>`.
 
 Dispatches `agent-product-plans` with `run_in_background: true` and returns
-a one-line ack immediately. The agent runs the full panel and writes the
-revised plan to `<stem>-revised.md` without blocking the user's session.
+a one-line ack immediately. The agent runs the full panel and updates the
+source plan in place without blocking the user's session.
 
 If no path is provided, outputs a usage error and stops without dispatching.
 
@@ -179,7 +188,7 @@ If no path is provided, outputs a usage error and stops without dispatching.
 Background wrapper agent (`background: true`,
 `tools: Skill, Read, Write, Edit, Glob, Grep, Bash`, `maxTurns: 30`).
 Confirms the plan file exists, then invokes the `product-plans` skill with
-`--background` and reports the sibling path on completion. Dispatched by
+`--background` and reports the updated path on completion. Dispatched by
 the `product-plans-bg` command.
 
 ### Subagent definitions (teammate-only)
