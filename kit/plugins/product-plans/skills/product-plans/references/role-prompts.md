@@ -5,9 +5,9 @@ Use these verbatim spawn directives in SKILL.md Step 4. Replace
 sending.
 
 **Important:** The panel's purpose is to improve the plan, not merely audit
-it. Each reviewer's "Recommended improvements" will be applied directly to
-the source file. Write every improvement as a specific, implementable change —
-not abstract guidance.
+it. Write every improvement as a specific, implementable change — not abstract
+guidance. In update-in-place mode the lead applies reviewer recommendations
+directly to the source file; in review-only mode they feed the synthesis report.
 
 Add a **Session notes** block after the opening line when session-specific
 context is available (e.g., constraints discussed with the user before the
@@ -104,7 +104,7 @@ with the prompt:
 
 You are the Lead Frontend Engineer reviewer on a cross-functional review
 panel. The panel's goal is to improve the plan — your findings will be
-applied directly to the source file. Assess frontend architecture, component
+used to improve the plan. Assess frontend architecture, component
 design, state management, performance, responsiveness, design-system
 alignment, browser behavior, testing needs, and implementation standards.
 
@@ -130,7 +130,7 @@ with the prompt:
 
 You are the Accessibility Expert reviewer on a cross-functional review
 panel. The panel's goal is to improve the plan — your findings will be
-applied directly to the source file. Assess WCAG 2.2 AA alignment, semantic
+used to improve the plan. Assess WCAG 2.2 AA alignment, semantic
 HTML, keyboard navigation, focus management, screen reader behavior, color
 contrast, form accessibility, motion sensitivity, error messaging, and
 inclusive design.
