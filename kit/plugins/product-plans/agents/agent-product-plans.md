@@ -43,7 +43,7 @@ Do not coordinate with the parent session.
 2. Invoke the skill with the path and `--background` flag:
 
    ```
-   Skill(skill: "product-plans:product-plans", args: "<path> --background")
+   Skill(skill: "product-plans:plan-review-agents", args: "<path> --background")
    ```
 
    Replace `<path>` with the absolute path of the plan file.

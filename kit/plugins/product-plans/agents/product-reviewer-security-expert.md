@@ -1,6 +1,6 @@
 ---
 name: product-reviewer-security-expert
-description: "Security Expert reviewer for the product-plans skill. Reviews authentication and authorization design, data handling and privacy, input validation, dependency risk, secrets management, threat modeling, compliance implications, and security unknowns. Teammate-only — designed to run inside an Agent Team led by the product-plans skill; not for standalone invocation."
+description: "Security Expert reviewer for the plan-review-agents skill. Reviews authentication and authorization design, data handling and privacy, input validation, dependency risk, secrets management, threat modeling, compliance implications, and security unknowns. Teammate-only — designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *)
 model: inherit
 ---

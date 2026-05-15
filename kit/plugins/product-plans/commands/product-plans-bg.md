@@ -37,7 +37,7 @@ already off.
 
      ```
      Run the product-plans review panel on $ARGUMENTS in background mode.
-     Invoke Skill(skill: "product-plans:product-plans", args: "$ARGUMENTS --background")
+     Invoke Skill(skill: "product-plans:plan-review-agents", args: "$ARGUMENTS --background")
      and report the path updated in place when done.
      ```
 

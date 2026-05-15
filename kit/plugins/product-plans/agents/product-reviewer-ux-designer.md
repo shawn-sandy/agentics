@@ -1,6 +1,6 @@
 ---
 name: product-reviewer-ux-designer
-description: "UX Designer reviewer for the product-plans skill. Reviews user flows, usability, interaction design, information architecture, friction points, clarity, onboarding, empty states, error states, and overall user experience quality. Teammate-only — designed to run inside an Agent Team led by the product-plans skill; not for standalone invocation."
+description: "UX Designer reviewer for the plan-review-agents skill. Reviews user flows, usability, interaction design, information architecture, friction points, clarity, onboarding, empty states, error states, and overall user experience quality. Teammate-only — designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *)
 model: inherit
 ---
