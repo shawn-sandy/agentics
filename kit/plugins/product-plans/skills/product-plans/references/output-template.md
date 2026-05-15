@@ -5,7 +5,7 @@ from all six reviewers. Replace placeholder text inside `[brackets]`.
 
 **Plan improvement flow:** Section 12 drives the specific improvements. Section
 15a is the structured inline-edits table that Step 7 applies directly to the
-source plan. Section 15b (Complete Revised Plan) is omitted when the user chose
+source plan. Sections 15a and 15b are both omitted when the user chose
 review-only mode at Step 2.
 
 Any reviewer whose section opens with `Reviewer unavailable — not assessed`
