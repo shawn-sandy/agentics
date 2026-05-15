@@ -62,7 +62,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
 | `react-perf-analyzer` | Skills | React performance analysis |
 | `agent-reviewer` | Skills | Subagent definition file auditing |
-| `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y); background-mode panel via `/product-plans:product-plans-bg` |
+| `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg` |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference

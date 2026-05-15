@@ -14,7 +14,7 @@ section 3 (Highest-risk issues).
 ```markdown
 ## Product Plan Review — [Plan filename or title]
 
-*Reviewed by: PM · Lead Developer · UX Designer · Frontend Engineer ·
+*Reviewed by: PM · Lead Developer · UX Designer · Lead Frontend Engineer ·
 Accessibility Expert · Security Expert — coordinated by Lead Coordinator*
 
 ---

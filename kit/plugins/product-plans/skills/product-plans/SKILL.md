@@ -49,9 +49,11 @@ starting `pending`. Mark each `completed` as you finish that step.
 ### Step 1 — Resolve the plan file
 
 When `mode = background`: require an explicit file path in `$ARGUMENTS`.
-Parse the path by splitting `$ARGUMENTS` on whitespace, discarding any token
-that starts with `--`, and taking the first remaining token as the path. This
-handles all orderings (`<path>`, `<path> --background`, `--background <path>`).
+Parse `$ARGUMENTS` using shell-style tokenization (respect quoted strings so
+paths with spaces are preserved), discard tokens that start with `--`, and
+take the first remaining token as the path (strip surrounding quotes if any).
+This handles all orderings (`<path>`, `<path> --background`,
+`--background <path>`) and quoted paths such as `"docs/plans/My Plan.md"`.
 If no non-flag token is present, output:
 
 > `Background mode requires a plan path`
