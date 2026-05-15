@@ -29,8 +29,11 @@ New surfaces for unattended (background) panel execution:
   `AskUserQuestion` calls and uses fixed defaults (see table below). Pass
   any explicit plan path in the same argument string.
 - **`agent-product-plans` subagent** — background wrapper agent
-  (`background: true`, `tools: Skill, Read`, `maxTurns: 30`). Invokes the
-  skill via the `Skill` tool. Named dispatch target for the command below.
+  (`background: true`, `tools: Skill, Read, Write, Edit, Glob, Grep, Bash`,
+  `maxTurns: 30`). Tool list widened from `Skill, Read` so the inner skill's
+  `Write`/`Edit` calls succeed (subagent tool grants are not transitive
+  across `Skill` invocations). Invokes the skill via the `Skill` tool.
+  Named dispatch target for the command below.
 - **`/product-plans:product-plans-bg <path>` command** — one-liner that
   fires `agent-product-plans` with `run_in_background: true` and returns
   an ack immediately.
@@ -39,7 +42,7 @@ Background mode defaults:
 
 | Step | Foreground | Background |
 |------|------------|------------|
-| Plan file resolution | 5-stage fallback (message → IDE → settings → glob) | Explicit path in `$ARGUMENTS` only; stops with `Background mode requires a plan path` if absent |
+| Plan file resolution | 4-stage fallback (message → IDE → settings → glob) | Explicit path in `$ARGUMENTS` only; stops with `Background mode requires a plan path` if absent |
 | Output mode (Step 2) | `AskUserQuestion` (default: review + revised plan) | Hard-coded `review + revised plan` |
 | Write destination (Step 7) | `AskUserQuestion` (sibling / overwrite / append) | Hard-coded sibling file (`<stem>-revised.md`), non-destructive |
 

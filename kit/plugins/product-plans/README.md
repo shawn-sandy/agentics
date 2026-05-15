@@ -176,10 +176,11 @@ If no path is provided, outputs a usage error and stops without dispatching.
 
 ### Agent: `agent-product-plans`
 
-Background wrapper agent (`background: true`, `tools: Skill, Read`,
-`maxTurns: 30`). Confirms the plan file exists, then invokes the
-`product-plans` skill with `--background` and reports the sibling path on
-completion. Dispatched by the `product-plans-bg` command.
+Background wrapper agent (`background: true`,
+`tools: Skill, Read, Write, Edit, Glob, Grep, Bash`, `maxTurns: 30`).
+Confirms the plan file exists, then invokes the `product-plans` skill with
+`--background` and reports the sibling path on completion. Dispatched by
+the `product-plans-bg` command.
 
 ### Subagent definitions (teammate-only)
 

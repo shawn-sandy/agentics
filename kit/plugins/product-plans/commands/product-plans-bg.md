@@ -20,7 +20,8 @@ already off.
 
 ### Step 1 — Validate arguments
 
-1. If `$ARGUMENTS` is empty, output:
+1. If `$ARGUMENTS` is empty, or if `$ARGUMENTS` contains only flag tokens
+   (tokens starting with `--`) and no non-flag token, output:
 
    ```
    Background mode requires a plan path. Usage: /product-plans:product-plans-bg <path>
