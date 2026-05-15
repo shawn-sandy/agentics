@@ -2,7 +2,6 @@
 status: completed
 type: refactor
 created: 2026-05-15
-modified: 2026-05-15
 ---
 
 # Plan: Rename product-plans skill to plan-review-agents
@@ -60,8 +59,7 @@ Rename the skill from `product-plans` to `plan-review-agents`, update every plac
 
 10. **Final scoped grep** for any straggler references to the old skill invocation or skill folder path within tracked working files (exclude `docs/plans/` historical artifacts and CHANGELOG history entries before 3.1.0): `git grep -nE "product-plans:product-plans|skills/product-plans" -- ':!docs/plans' ':!kit/plugins/product-plans/CHANGELOG.md'`. — *Why:* catches anything missed by the targeted edits in steps 2–9. Note: we deliberately do NOT grep for the bare string `product-plans` because the plugin name itself remains and would create false positives. *Verify:* command returns no lines, or only intentional historical references in files the user explicitly asked to preserve.
 
-11. **Stage and commit as a single atomic commit** including the plan file itself, per repo policy (`CLAUDE.md`: "Always include the plan file in commits for plugin changes"). Use a conventional-commit message of the form `feat(kit/plugins/product-plans): rename skill to plan-review-agents (v3.1.0)` with a body that explains the skill rename and includes t
-12. he settings.local.json migration note from the CHANGELOG. — *Why:* one commit captures the entire change so reviewers see the full picture and `git bisect` lands on a working state. This is a `feat` (not `feat!`) because the plugin's external surface (install command, plugin name) is unchanged — only the skill activation name changes, which existing skill permission entries will gracefully fail-open from (they'll prompt) rather than silently break. *Verify:* `git log -1 --stat` shows a single commit touching the renamed skill folder (R100), the plan file, marketplace.json, CHANGELOG, and the 6 reviewer agent files. `.claude/settings.local.json` is NOT in the commit (it's gitignored — expected). `git status` is clean afterward.
+11. **Stage and commit as a single atomic commit** including the plan file itself, per repo policy (`CLAUDE.md`: "Always include the plan file in commits for plugin changes"). Use a conventional-commit message of the form `feat(kit/plugins/product-plans): rename skill to plan-review-agents (v3.1.0)` with a body that explains the skill rename and includes the settings.local.json migration note from the CHANGELOG. — *Why:* one commit captures the entire change so reviewers see the full picture and `git bisect` lands on a working state. This is a `feat` (not `feat!`) because the plugin's external surface (install command, plugin name) is unchanged — only the skill activation name changes, which existing skill permission entries will gracefully fail-open from (they'll prompt) rather than silently break. *Verify:* `git log -1 --stat` shows a single commit touching the renamed skill folder (R100), the plan file, marketplace.json, CHANGELOG, and the 6 reviewer agent files. `.claude/settings.local.json` is NOT in the commit (it's gitignored — expected). `git status` is clean afterward.
 
 ## Verification
 

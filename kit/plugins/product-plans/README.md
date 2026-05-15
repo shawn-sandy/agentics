@@ -195,7 +195,7 @@ the `product-plans-bg` command.
 
 The six `agents/product-reviewer-*.md` files define the reviewer roles. They
 are designed exclusively for use as Agent Team teammates spawned by the
-`product-plans` skill. They are not intended for standalone invocation via
+`plan-review-agents` skill. They are not intended for standalone invocation via
 the `Task` tool or direct `subagent_type` references outside this skill.
 
 Each reviewer runs in its own context window, has `tools: Read, Glob, Grep,

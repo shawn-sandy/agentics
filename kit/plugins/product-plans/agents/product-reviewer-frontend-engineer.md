@@ -1,6 +1,6 @@
 ---
 name: product-reviewer-frontend-engineer
-description: "Lead Frontend Engineer reviewer for the plan-review-agents skill. Reviews frontend architecture, component design, state management, performance, responsiveness, design-system alignment, browser behavior, testing needs, and implementation standards. Teammate-only — designed to run inside an Agent Team led by the product-plans skill; not for standalone invocation."
+description: "Lead Frontend Engineer reviewer for the plan-review-agents skill. Reviews frontend architecture, component design, state management, performance, responsiveness, design-system alignment, browser behavior, testing needs, and implementation standards. Teammate-only — designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *)
 model: inherit
 ---
