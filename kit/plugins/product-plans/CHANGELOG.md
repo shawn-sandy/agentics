@@ -10,15 +10,19 @@ evidence-grounded reviews instead of assertion-only findings:
 - **product-reviewer-ux-designer** — added `WebSearch`, `WebFetch` for
   looking up platform HIG (Apple, Material Design, Fluent), Nielsen's heuristics,
   and authoritative UX pattern references during review
-- **product-reviewer-lead-developer** — added full `Bash` (for codebase
-  investigation: `package.json`, config files, directory structure) and `WebSearch`
-  for technology tradeoff and library research
+- **product-reviewer-lead-developer** — added `WebSearch` for technology
+  tradeoff and library research; codebase inspection (`package.json`, config
+  files) uses the existing `Read` + `Glob` tools; `Bash` remains restricted
+  to `git *` to prevent prompt-injection risk from untrusted plan content
 - **product-reviewer-security-expert** — added `WebSearch`, `WebFetch` for
   OWASP Top 10 guidance, CVE/NVD advisories, CWE definitions, and compliance
   regulation (GDPR, HIPAA, CCPA, PCI-DSS) references
-- **product-reviewer-frontend-engineer** — added full `Bash` (for reading
-  `package.json`, `tsconfig.json`, bundler and linting configs) and `WebSearch`
-  for MDN compatibility tables and framework/library ecosystem research
+- **product-reviewer-frontend-engineer** — added `WebSearch` for MDN
+  compatibility tables, bundle-size benchmarks, and framework ecosystem
+  research; dependency and config inspection (`package.json`, `tsconfig.json`,
+  bundler configs) uses the existing `Read` + `Glob` tools; `Bash` remains
+  restricted to `git *` to prevent prompt-injection risk from untrusted plan
+  content
 - **product-reviewer-accessibility-expert** — added `WebSearch`, `WebFetch`
   for WCAG 2.2 Understanding documents, ARIA APG patterns, and AT compatibility
   notes from w3.org primary sources

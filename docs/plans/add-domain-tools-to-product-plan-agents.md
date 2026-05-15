@@ -28,12 +28,14 @@ becomes "this violates [specific guideline, linked]."
 
 ### product-reviewer-lead-developer
 
-**Added:** full `Bash`, `WebSearch`
+**Added:** `WebSearch`
 
-Use case: inspect the project's real dependency manifest (`package.json`,
-`go.mod`, etc.) and configuration files to verify architectural assumptions;
-use WebSearch to look up technology tradeoffs, library alternatives, and
-ecosystem maturity. Replaces the restricted `Bash(git *)` with full Bash.
+Use case: look up technology tradeoffs, library alternatives, known scaling
+limits, and ecosystem maturity when the plan makes specific technology choices.
+Codebase inspection (`package.json`, `go.mod`, config files) uses the existing
+`Read` + `Glob` tools. `Bash` stays restricted to `git *` — unrestricted shell
+access on agents that ingest untrusted plan text creates a prompt-injection risk
+that advisory instructions cannot enforce.
 
 ### product-reviewer-security-expert
 
@@ -46,12 +48,13 @@ the CWE and links the OWASP cheat sheet.
 
 ### product-reviewer-frontend-engineer
 
-**Added:** full `Bash`, `WebSearch`
+**Added:** `WebSearch`
 
-Use case: read `package.json`, `tsconfig.json`, bundler configs, and linting
-rules to verify plan assumptions match the real frontend stack; use WebSearch
-for MDN compatibility tables, bundle-size benchmarks, and framework patterns.
-Replaces the restricted `Bash(git *)` with full Bash.
+Use case: research browser compatibility (MDN), framework performance patterns,
+bundle-size benchmarks, and ecosystem alternatives. Dependency and config
+inspection (`package.json`, `tsconfig.json`, bundler/lint configs) uses the
+existing `Read` + `Glob` tools. `Bash` stays restricted to `git *` for the
+same prompt-injection safety reason as the Lead Developer.
 
 ### product-reviewer-accessibility-expert
 
