@@ -1,5 +1,34 @@
 # Changelog
 
+## 3.2.0 — 2026-05-15
+
+**Domain-specific research tools added to all six reviewer agents.**
+
+Each reviewer agent now has tools matched to their discipline, enabling
+evidence-grounded reviews instead of assertion-only findings:
+
+- **product-reviewer-ux-designer** — added `WebSearch`, `WebFetch` for
+  looking up platform HIG (Apple, Material Design, Fluent), Nielsen's heuristics,
+  and authoritative UX pattern references during review
+- **product-reviewer-lead-developer** — added full `Bash` (for codebase
+  investigation: `package.json`, config files, directory structure) and `WebSearch`
+  for technology tradeoff and library research
+- **product-reviewer-security-expert** — added `WebSearch`, `WebFetch` for
+  OWASP Top 10 guidance, CVE/NVD advisories, CWE definitions, and compliance
+  regulation (GDPR, HIPAA, CCPA, PCI-DSS) references
+- **product-reviewer-frontend-engineer** — added full `Bash` (for reading
+  `package.json`, `tsconfig.json`, bundler and linting configs) and `WebSearch`
+  for MDN compatibility tables and framework/library ecosystem research
+- **product-reviewer-accessibility-expert** — added `WebSearch`, `WebFetch`
+  for WCAG 2.2 Understanding documents, ARIA APG patterns, and AT compatibility
+  notes from w3.org primary sources
+- **product-reviewer-pm** — added `WebSearch`, `WebFetch` for competitive
+  landscape research, industry benchmarks, and market context to stress-test
+  business assumptions
+
+Each agent file also received a new **Domain Research** section explaining when
+and how to use the new tools and requiring citations in output.
+
 ## 3.1.0 — 2026-05-15
 
 **Skill renamed** — the `product-plans` skill is now `plan-review-agents`. The skill
