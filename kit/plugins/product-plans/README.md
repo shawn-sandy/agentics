@@ -71,9 +71,12 @@ Add to `~/.claude/settings.json` before using this skill:
 
 ## Usage
 
-The skill activates automatically when you ask for a panel or team review:
+The skill activates automatically when you ask to improve, optimize, or review a plan:
 
 ```
+Improve this product plan.
+Optimize docs/plans/new-feature.md before we start building.
+Update this PRD based on expert feedback.
 Run a cross-functional panel review on this PRD.
 Get the PM, Dev, and UX team's take on this feature proposal.
 I need a multi-role critique of docs/plans/new-feature.md.
