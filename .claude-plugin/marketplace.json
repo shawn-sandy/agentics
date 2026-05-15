@@ -274,14 +274,14 @@
       ]
     },
     {
-      "name": "product-plan-review-panel",
+      "name": "product-plans",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/product-plan-review-panel"
+        "path": "kit/plugins/product-plans"
       },
-      "version": "1.0.0",
-      "description": "Review product plans, PRDs, and feature proposals using a simulated cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility) that produces a 14-section consolidated report and revised plan",
+      "version": "2.2.0",
+      "description": "Review product plans, PRDs, and feature proposals using a simulated cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) that produces a 15-section consolidated report and revised plan",
       "category": "productivity",
       "tags": [
         "panel-review",
@@ -291,6 +291,7 @@
         "prd",
         "ux",
         "accessibility",
+        "security",
         "review"
       ]
     }

@@ -1,9 +1,0 @@
-{
-  "name": "product-plan-review-panel",
-  "description": "Review product plans, PRDs, and feature proposals using a simulated cross-functional team — PM, Lead Developer, UX Designer, Frontend Engineer, and Accessibility Expert — coordinated by a lead that synthesizes all findings into a structured report and revised plan.",
-  "author": { "name": "Agentics Project" },
-  "license": "MIT",
-  "keywords": ["review", "panel", "product-plan", "prd", "agent-team", "multi-reviewer", "ux", "accessibility"],
-  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/product-plan-review-panel",
-  "repository": "https://github.com/shawn-sandy/agentics"
-}

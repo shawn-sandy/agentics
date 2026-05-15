@@ -1,6 +1,6 @@
 ---
 name: product-reviewer-lead-developer
-description: "Lead Developer reviewer for the product-plan-review-panel skill. Reviews technical feasibility, architecture, backend and system concerns, dependencies, implementation complexity, scalability, maintainability, integration risks, and technical unknowns. Teammate-only — designed to run inside an Agent Team led by the product-plan-review-panel skill; not for standalone invocation."
+description: "Lead Developer reviewer for the product-plans skill. Reviews technical feasibility, architecture, backend and system concerns, dependencies, implementation complexity, scalability, maintainability, integration risks, and technical unknowns. Teammate-only — designed to run inside an Agent Team led by the product-plans skill; not for standalone invocation."
 tools: Read, Glob, Grep, Bash(git *)
 model: inherit
 ---

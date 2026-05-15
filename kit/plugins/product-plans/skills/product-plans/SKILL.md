@@ -1,15 +1,15 @@
 ---
-name: product-plan-review-panel
-description: "Use when the user asks to review, critique, validate, or stress-test a product plan, PRD, feature proposal, UX flow, or implementation plan using a cross-functional review panel."
+name: product-plans
+description: "Use when the user asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility team review of a product plan, PRD, feature proposal, or implementation plan."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
 # Product Plan Review Panel
 
-Orchestrate a five-reviewer Agent Team — Product Manager, Lead Developer,
-UX Designer, Lead Frontend Engineer, Accessibility Expert — coordinated by
-a lead that synthesizes findings into a 14-section report and (by default)
-a revised plan.
+Orchestrate a six-reviewer Agent Team — Product Manager, Lead Developer,
+UX Designer, Lead Frontend Engineer, Accessibility Expert, Security Expert —
+coordinated by a lead that synthesizes findings into a 15-section report and
+(by default) a revised plan.
 
 ## When not to use
 
@@ -34,6 +34,11 @@ a revised plan.
 
 ### Step 0 — Exit plan mode and create progress todos
 
+**Background flag detection**: Scan `$ARGUMENTS` for the literal text
+`--background`. If found, set `mode = background`; otherwise set
+`mode = interactive`. This flag governs branching in Steps 1, 2, and 7 —
+record it once here so subsequent steps can reference it without re-parsing.
+
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
 first, then call `ExitPlanMode`. Both calls happen silently with no
 user-visible output. This is a no-op when plan mode is already off.
@@ -43,7 +48,20 @@ starting `pending`. Mark each `completed` as you finish that step.
 
 ### Step 1 — Resolve the plan file
 
-Use the first match from this priority order:
+When `mode = background`: require an explicit file path in `$ARGUMENTS`.
+Parse `$ARGUMENTS` using shell-style tokenization (respect quoted strings so
+paths with spaces are preserved), discard tokens that start with `--`, and
+take the first remaining token as the path (strip surrounding quotes if any).
+This handles all orderings (`<path>`, `<path> --background`,
+`--background <path>`) and quoted paths such as `"docs/plans/My Plan.md"`.
+If no non-flag token is present, output:
+
+> `Background mode requires a plan path`
+
+and stop. Do not attempt the IDE, settings, or glob fallbacks — silent
+file selection is unsafe when no human is watching.
+
+When `mode = interactive`: use the first match from this priority order:
 
 1. **User message** — an explicit file path in the user's message.
 2. **Open IDE file** — a `.md` file currently open in the editor whose
@@ -60,7 +78,10 @@ Announce: `"Reviewing plan: <resolved-path>"`
 
 ### Step 2 — Choose output mode
 
-Ask the user:
+When `mode = background`: set `output_mode = "review + revised plan"` without
+calling `AskUserQuestion`. Continue to Step 3.
+
+When `mode = interactive`: ask the user:
 
 > "After the panel review, should I produce a revised plan?"
 
@@ -107,7 +128,7 @@ realpath "<path-from-step-1>"
 ```
 
 Read [references/role-prompts.md](references/role-prompts.md) to get the
-five spawn-prompt templates. Substitute `<ABSOLUTE_PATH>` with the
+six spawn-prompt templates. Substitute `<ABSOLUTE_PATH>` with the
 `realpath` output. If session-specific constraints were discussed before
 this skill started, add a `Session notes:` block to each prompt as
 described at the top of the reference file.
@@ -116,21 +137,22 @@ Execute this directive:
 
 ```text
 Create an agent team to review the product plan at <ABSOLUTE_PATH>.
-Spawn all five teammates immediately so they review in parallel, using
+Spawn all six teammates immediately so they review in parallel, using
 these subagent types:
   - product-reviewer-pm
   - product-reviewer-lead-developer
   - product-reviewer-ux-designer
   - product-reviewer-frontend-engineer
   - product-reviewer-accessibility-expert
+  - product-reviewer-security-expert
 Brief each teammate with the matching spawn prompt from
 references/role-prompts.md (with <ABSOLUTE_PATH> already substituted).
-Wait for all five teammates to send their findings before synthesizing.
+Wait for all six teammates to send their findings before synthesizing.
 ```
 
 ### Step 5 — Wait, collect, and handle failures
 
-Wait for all five teammates to mark their tasks complete on the shared
+Wait for all six teammates to mark their tasks complete on the shared
 task list.
 
 **If a teammate stops on an error or goes idle without findings:**
@@ -141,14 +163,14 @@ task list.
    Summary (section 1), that role's section in Role-by-Role Review
    (section 2), and as a named line item in Highest-Risk Issues (section 3).
 
-Do not begin synthesis until all five roles are either complete or
+Do not begin synthesis until all six roles are either complete or
 explicitly marked unavailable.
 
 ### Step 6 — Synthesize findings
 
 Read [references/output-template.md](references/output-template.md).
 
-Before filling the template, compare the five reviewers' findings:
+Before filling the template, compare the six reviewers' findings:
 
 - **Agree**: where multiple reviewers flag the same issue, amplify it as
   a confirmed concern and note the overlap.
@@ -157,16 +179,25 @@ Before filling the template, compare the five reviewers' findings:
 - **Assumptions**: challenge any weak or unstated assumption surfaced by
   any reviewer.
 - **Balance**: do not let the most technical perspective dominate —
-  all five roles must be equally represented.
+  all six roles must be equally represented.
 
-Reproduce the verbatim template with findings filled in. Omit section 14
+Reproduce the verbatim template with findings filled in. Omit section 15
 if `output_mode = review only`.
 
 ### Step 7 — Persist the revised plan
 
 Skip entirely if `output_mode = review only`.
 
-Ask the user where to write the revised plan (`AskUserQuestion`):
+When `mode = background`: write the revised plan directly to
+`<original-stem>-revised.md` (sibling file next to the source) without
+calling `AskUserQuestion`. This is non-destructive — the source file is
+never modified. Use `Write` with the sibling path. The content is section 15
+of the synthesized output, written verbatim. Announce:
+
+> `Revised plan written to: <sibling-path>`
+
+When `mode = interactive`: ask the user where to write the revised plan
+(`AskUserQuestion`):
 
 - **Sibling file** — write `<original-stem>-revised.md` next to the
   source. Non-destructive; user diffs and picks the keeper.
@@ -177,7 +208,7 @@ Ask the user where to write the revised plan (`AskUserQuestion`):
   end of the source file.
 
 Write using `Write` (sibling or overwrite) or `Edit` (append). The content
-is section 14 of the synthesized output, written verbatim — do not
+is section 15 of the synthesized output, written verbatim — do not
 re-generate.
 
 ### Step 8 — Clean up the team
