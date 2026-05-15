@@ -162,7 +162,7 @@ For each renamed file, invoke the `plan-to-html` skill, passing the new path,
 the chosen theme, and `--no-open` to suppress browser prompts:
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --no-open")
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --background")
 ```
 
 **5d — Report HTML output**

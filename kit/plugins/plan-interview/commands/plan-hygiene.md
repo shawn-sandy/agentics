@@ -105,16 +105,16 @@ For each renamed file, invoke the `plan-to-html` skill with the new path, the
 chosen theme, and `--no-open` to suppress per-file browser prompts:
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --no-open")
+Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --background")
 ```
 
 **Step D — Commit regenerated HTML**
 
-Stage all newly written `.html` files (and any `git mv`'d stale artifacts)
-and commit:
+Stage the exact regenerated/migrated `.html` paths collected during Steps A/C
+(across all processed directories), then commit:
 
 ```bash
-git add <dir>/*.html
+git add <path1>.html <path2>.html ...
 git commit -m "chore: regenerate plan HTML after rename"
 ```
 

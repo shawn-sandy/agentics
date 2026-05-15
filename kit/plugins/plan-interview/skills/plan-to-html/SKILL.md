@@ -161,6 +161,7 @@ that value as the selected theme. Proceed directly to the async check below.
 If `--background` was parsed and no `--theme` was specified, use `default`
 without prompting. Proceed directly to the async check below.
 
+
 Otherwise, ask the user which color palette to apply via `AskUserQuestion` with
 four options:
 
