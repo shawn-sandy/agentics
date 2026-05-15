@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.3.0 — 2026-05-15
+
+**Plan improvement is now the primary purpose.** All reviewer agents, role
+prompts, skill description, and output template updated to make plan
+improvement (not just critique) the explicit goal.
+
+Changes:
+
+- **Skill description** updated — now triggers on "improve", "optimize", or
+  "update" a plan, in addition to "cross-functional panel review".
+- **Skill Step 2** option renamed from "Review + revised plan" to
+  "Review + update plan in place" to reflect the in-place update model.
+- **All six reviewer agents** — added a "Your primary goal is plan
+  improvement" rule to each agent's Rules section. Every `Recommended
+  improvement` must now be a concrete, implementable change.
+- **Role prompts** updated — each spawn prompt now says "Review and improve
+  the product plan" and includes the improvement mandate so reviewers
+  know their output drives direct plan edits.
+- **Output template** — section 15 renamed to **15b** (Complete Revised
+  Plan) to distinguish it from 15a (Inline Edits). Section 12 notes that
+  every item must map to a 15a inline edit or a 15b revision. Header note
+  clarifies that sections 12 and 15a drive the improvement mechanism.
+- **`agent-product-plans` background agent** — fixed a bug where step 3
+  reported `<stem>-revised.md` (a sibling file) as the output; it now
+  correctly reports "Plan updated in place: `<path>`" matching the
+  in-place edit behavior introduced in 2.2.1.
+- **Marketplace description** updated to lead with "Improve, optimize, and
+  update" and added `plan-improvement`, `plan-optimization` tags.
+
 ## 2.2.1 — 2026-05-15
 
 **Behavior change (Step 7):** The skill now integrates panel findings

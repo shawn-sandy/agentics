@@ -1,13 +1,19 @@
 # Final Report Template
 
 The lead reproduces the fenced block below verbatim after collecting findings
-from all six reviewers. Replace placeholder text inside `[brackets]`. Section
-15 (Revised Product Plan) is omitted when the user chose review-only mode at
-Step 2.
+from all six reviewers. Replace placeholder text inside `[brackets]`.
+
+**Plan improvement flow:** Section 12 drives the specific improvements. Section
+15a is the structured inline-edits table that Step 7 applies directly to the
+source plan. Section 15b (Complete Revised Plan) is omitted when the user chose
+review-only mode at Step 2.
 
 Any reviewer whose section opens with `Reviewer unavailable — not assessed`
 must also be named in section 1 (Executive summary) and listed as a risk in
 section 3 (Highest-risk issues).
+
+The report's primary deliverable is an improved plan. Sections 12 and 15a
+must be filled with enough specificity to drive concrete file edits.
 
 ---
 
@@ -126,7 +132,8 @@ reviewers, grouped by role. Deduplicate overlapping questions.]
 
 [Concrete amendments the lead recommends based on synthesis across all six
 reviewers. Write as a numbered list of specific edits to the plan, not
-abstract guidance.]
+abstract guidance. These drive section 15a — every item here must map to
+an actionable inline edit or a revision in section 15b.]
 
 ---
 
@@ -149,11 +156,12 @@ approval (if applicable), and which issues are blocking vs non-blocking.]
 
 ### 15a. Inline Edits to Apply
 
-*(This section drives the integration pass in Step 7. Omit if
-`output_mode = review only`. The lead generates a numbered list of
-discrete edits derived from the recommendations in section 12. Each
-entry identifies a section in the source plan, the action to perform,
-and the verbatim content to write. Apply in order using `Edit`.)*
+*(This section drives the integration pass in Step 7 — it is the mechanism
+by which panel findings improve the plan. Omit if `output_mode = review only`.
+The lead generates a numbered list of discrete edits derived from the
+recommendations in section 12. Each entry identifies a section in the source
+plan, the action to perform, and the verbatim content to write. Applied in
+order using `Edit` in Step 7 Pass 1.)*
 
 | # | Section heading | Action | Content |
 |---|-----------------|--------|---------|
@@ -162,16 +170,17 @@ and the verbatim content to write. Apply in order using `Edit`.)*
 
 *(Add rows for each recommended change from section 12 that maps to a
 specific section. Omit rows for changes that have no clear section
-anchor — those are addressed by the revised plan in section 15.)*
+anchor — those belong in section 15b instead.)*
 
 ---
 
-### 15. Revised Product Plan
+### 15b. Complete Revised Plan
 
 *(Omit this section if the user chose review-only mode at Step 2.)*
 
 [Write a complete, revised version of the product plan incorporating all
-recommended changes from section 12. The revised plan replaces the original
-in spirit — it is not a diff. Write it as a standalone plan the development
-team can act on directly.]
+recommended changes from section 12 — including any improvements that could
+not be mapped to a specific inline edit in 15a. The revised plan replaces
+the original in spirit — it is not a diff. Write it as a standalone plan
+the development team can act on directly.]
 ```
