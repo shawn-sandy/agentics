@@ -1,6 +1,11 @@
+---
+status: completed
+type: standard
+created: 2026-05-16
+---
+
 # Assign role-optimized models to product-plan reviewer agents
 
-**Status:** completed
 **Plugin:** product-plans
 **Version bump:** 3.2.0 → 3.2.1 (patch)
 
@@ -42,9 +47,12 @@ needs to interpret a free-form plan and produce structured judgment.
 | product-reviewer-frontend-engineer | sonnet | Component patterns, framework conventions, performance tradeoffs |
 | product-reviewer-accessibility-expert | sonnet | WCAG 2.2 AA checking plus semantic/focus-management judgment |
 
-The two orchestrator agents (`agent-product-plans`, `plan-documenter`)
-already had `model: sonnet` and were left unchanged — `sonnet` is the
-right tier for orchestration and file editing across the panel.
+Within `product-plans`, the only non-reviewer agent is the panel
+orchestrator `agent-product-plans`, which already had `model: sonnet`
+and was left unchanged — `sonnet` is the right tier for orchestration
+and file editing across the panel. (The separate `plan-documenter`
+agent in `kit/plugins/plan-interview/agents/` was out of scope for
+this change; it likewise already runs on `sonnet`.)
 
 ## Files Changed
 
