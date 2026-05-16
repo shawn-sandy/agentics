@@ -3,7 +3,9 @@
         "allow": [
             "Bash(tree:*)",
             "Bash(git ls-files)",
-            "Bash(agent-browser:*)"
+            "Bash(agent-browser:*)",
+            "Bash(git symbolic-ref refs/remotes/origin/HEAD *)",
+            "Bash(claude --version)"
         ]
     },
     "plansDirectory": "docs/plans",
