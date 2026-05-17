@@ -16,7 +16,7 @@
 - Reverted a duplicate blank line in `kit/plugins/plan-interview/skills/plan-to-html/SKILL.md` (lines 163-165).
 - Expanded `kit/plugins/plan-interview/CHANGELOG.md` v1.22.1 entry with bullets for the `--background` flag switch (`--no-open` → `--background`) and the `git add` reorganization.
 - Deleted three stale plan files carrying the `directoryt` typo and non-descriptive auto-generated slugs (`rename-the-skill-directoryt-joyful-puffin.md`, `rename-the-skill-directoryt-joyful-puffin-revised.md`, `docs-plans-rename-the-skill-directoryt-j-immutable-anchor.md`); the descriptive replacement `add-background-mode-product-plans.md` was kept.
-- Corrected `kit/plugins/product-plans/skills/product-plans/references/output-template.md:5` — "Section 14 is omitted" → "Section 15 (Revised Product Plan) is omitted" (pre-step already applied before this plan was written).
+- Corrected `kit/plugins/product-plans/skills/plan-review-agents/references/output-template.md:5` — "Section 14 is omitted" → "Section 15 (Revised Product Plan) is omitted" (pre-step already applied before this plan was written; the skill directory had already been renamed from `product-plans` to `plan-review-agents` by this point).
 
 ## Files changed
 
@@ -24,7 +24,7 @@
 |------|------|--------|
 | `kit/plugins/product-plans/agents/agent-product-plans.md` | Agent definition | Modified |
 | `kit/plugins/product-plans/commands/product-plans-bg.md` | Command wrapper | Modified |
-| `kit/plugins/product-plans/skills/plan-review-agents/SKILL.md` | Skill instructions | Missing |
+| `kit/plugins/product-plans/skills/plan-review-agents/SKILL.md` | Skill instructions | Modified |
 | `kit/plugins/product-plans/README.md` | Plugin documentation | Modified |
 | `kit/plugins/product-plans/CHANGELOG.md` | Changelog | Modified |
 | `kit/plugins/plan-interview/skills/plan-to-html/SKILL.md` | Skill instructions | Modified |
