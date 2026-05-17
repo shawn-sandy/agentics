@@ -1,6 +1,6 @@
 ---
 status: completed
-type: standard
+type: artifact
 created: 2026-05-16
 ---
 

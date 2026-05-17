@@ -1,7 +1,7 @@
 ---
 status: completed
 created: 2026-05-10
-type: standard
+type: artifact
 ---
 
 # Plan: Rename `memory-doctor` to `agentic-memory-doctor`
