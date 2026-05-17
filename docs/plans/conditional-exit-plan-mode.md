@@ -1,7 +1,7 @@
 ---
 status: completed
 created: 2026-05-01
-type: standard
+type: artifact
 ---
 
 # Refactor ExitPlanMode: Conditional Detection + Silent Exit

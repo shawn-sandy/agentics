@@ -1,6 +1,6 @@
 ---
 status: completed
-type: refactor
+type: artifact
 created: 2026-05-15
 ---
 
