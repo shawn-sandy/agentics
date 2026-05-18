@@ -249,7 +249,8 @@ the skill's frontmatter.
 
    ```
    Read, Write, Edit, MultiEdit, Glob, Grep, Bash, AskUserQuestion,
-   TodoWrite, Agent, WebFetch, WebSearch, NotebookRead, NotebookEdit
+   TodoWrite, Agent, WebFetch, WebSearch, NotebookRead, NotebookEdit,
+   ToolSearch, ExitPlanMode
    ```
 
    Also detect filtered patterns such as `Bash(git *)` or `Bash(gh *)`.
