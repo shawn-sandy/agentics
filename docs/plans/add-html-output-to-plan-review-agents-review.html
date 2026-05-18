@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta name="generator" content="product-plans v3.3.0">
+  <title>Plan: Emit self-contained HTML artifact from plan-review-agents</title>
+  <style>
+    /* ── reset ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif;
+           background: var(--bg); color: var(--text); line-height: 1.65;
+           font-size: 1rem; }
+
+    /* ── theme-default ───────────────────────────────────── */
+    body.theme-default {
+      --bg: #ffffff; --surface: #f5f7fa; --border: #d0d5dd;
+      --text: #101828; --text-muted: #475467;
+      --accent: #1d4ed8; --accent-fg: #ffffff;
+      --badge-approve: #15803d; --badge-revise: #92400e;
+      --badge-reject: #b91c1c; --badge-fg: #ffffff;
+    }
+
+    /* ── layout ──────────────────────────────────────────── */
+    .page-wrap  { max-width: 1140px; margin: 0 auto; padding: 1.5rem 1.5rem 0; }
+    .layout     { display: grid; grid-template-columns: 230px 1fr;
+                  gap: 2.5rem; margin-top: 1.5rem; }
+    @media (max-width: 768px) {
+      .layout   { grid-template-columns: 1fr; }
+      .sidebar  { position: static !important; }
+    }
+
+    /* ── sidebar / toc ───────────────────────────────────── */
+    .sidebar    { position: sticky; top: 1.5rem; align-self: start;
+                  background: var(--surface); border: 1px solid var(--border);
+                  border-radius: .5rem; padding: 1rem; }
+    .sidebar h2 { font-size: .7rem; text-transform: uppercase;
+                  letter-spacing: .08em; color: var(--text-muted);
+                  margin-bottom: .75rem; }
+    .toc        { list-style: none; }
+    .toc li     { margin: .2rem 0; }
+    .toc a      { font-size: .85rem; color: var(--accent); text-decoration: none;
+                  display: block; padding: .15rem .3rem; border-radius: .25rem; }
+    .toc a:hover, .toc a[aria-current] {
+                  background: var(--border); color: var(--text); }
+
+    /* ── main content ────────────────────────────────────── */
+    main        { min-width: 0; }
+    main h2     { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 .6rem;
+                  padding-bottom: .35rem; border-bottom: 2px solid var(--border);
+                  color: var(--text); scroll-margin-top: 1rem; }
+    main h3     { font-size: 1.05rem; font-weight: 600; margin: 1.4rem 0 .4rem; }
+    main p      { margin: .6rem 0; color: var(--text); }
+    main ul, main ol { margin: .6rem 0 .6rem 1.4rem; }
+    main li     { margin: .3rem 0; }
+    main code   { background: var(--surface); border: 1px solid var(--border);
+                  border-radius: .2rem; padding: .1em .35em; font-size: .875em;
+                  font-family: ui-monospace, monospace; }
+    main pre    { background: var(--surface); border: 1px solid var(--border);
+                  border-radius: .4rem; padding: 1rem; overflow-x: auto;
+                  margin: .75rem 0; }
+    main pre code { background: none; border: none; padding: 0; font-size: .85em; }
+    main strong { font-weight: 650; }
+    main blockquote { border-left: 3px solid var(--border); padding-left: 1rem;
+                      color: var(--text-muted); margin: .75rem 0; }
+
+    /* ── header ──────────────────────────────────────────── */
+    .page-header { padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; line-height: 1.3;
+                      margin-bottom: .6rem; }
+    .provenance { font-size: .8rem; color: var(--text-muted); margin-top: .5rem; }
+    .provenance code { font-size: .8em; }
+
+    /* ── decision badge ──────────────────────────────────── */
+    .badge        { display: inline-block; padding: .3em .9em; border-radius: .3em;
+                    font-size: .9rem; color: var(--badge-fg);
+                    margin-bottom: .4rem; }
+    .badge-approve{ background: var(--badge-approve); }
+    .badge-revise { background: var(--badge-revise); }
+    .badge-reject { background: var(--badge-reject); }
+
+    /* ── reviewer cards ──────────────────────────────────── */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                  gap: 1rem; margin: 1rem 0; }
+    .reviewer-card { background: var(--surface); border: 1px solid var(--border);
+                     border-radius: .5rem; padding: 1rem; }
+    .reviewer-card h3 { font-size: .95rem; margin: 0 0 .6rem; }
+    .reviewer-card dl { font-size: .875rem; }
+    .reviewer-card dt { font-weight: 600; color: var(--text-muted);
+                        font-size: .75rem; text-transform: uppercase;
+                        letter-spacing: .05em; margin-top: .5rem; }
+    .reviewer-card dd { margin: .15rem 0 0 0; }
+    .approval-badge { display: inline-block; font-size: .75rem; font-weight: 600;
+                      padding: .15em .5em; border-radius: .2em;
+                      background: var(--badge-revise); color: var(--badge-fg); }
+    .unavailable-pill { display: inline-flex; align-items: center; gap: .4em;
+                        padding: .25em .75em; border-radius: 9999px;
+                        background: var(--surface); border: 1px solid var(--border);
+                        font-size: .875rem; color: var(--text-muted); }
+
+    /* ── tables ──────────────────────────────────────────── */
+    table       { width: 100%; border-collapse: collapse; font-size: .875rem;
+                  margin: .75rem 0; }
+    th, td      { padding: .5em .75em; border: 1px solid var(--border);
+                  text-align: left; vertical-align: top; }
+    thead th    { background: var(--surface); font-weight: 600; }
+    td ul       { margin: 0; padding-left: 1.2em; }
+    td li       { margin: .15rem 0; }
+
+    /* ── appendix toggle ─────────────────────────────────── */
+    details     { margin: 1.5rem 0; border: 1px solid var(--border);
+                  border-radius: .5rem; }
+    details > summary { cursor: pointer; font-weight: 600;
+                        padding: .85rem 1rem; color: var(--accent);
+                        list-style: none; display: flex; align-items: center;
+                        gap: .5rem; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▶"; font-size: .7em; }
+    details[open] > summary::before { content: "▼"; }
+    .appendix-body { padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+    .appendix-body h2 { font-size: 1.1rem; }
+    .appendix-body h3 { font-size: .95rem; }
+    .appendix-body p, .appendix-body li { font-size: .9rem; }
+
+    /* ── focus ───────────────────────────────────────────── */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    :focus:not(:focus-visible) { outline: none; }
+
+    /* ── footer ──────────────────────────────────────────── */
+    .site-footer { margin-top: 3rem; padding: 1rem 1.5rem;
+                   border-top: 1px solid var(--border);
+                   font-size: .8rem; color: var(--text-muted); }
+
+    /* ── meta pill ───────────────────────────────────────── */
+    .meta-row   { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 1rem; }
+    .pill       { display: inline-block; font-size: .75rem; padding: .2em .6em;
+                  border-radius: 9999px; background: var(--surface);
+                  border: 1px solid var(--border); color: var(--text-muted); }
+
+    /* ── section divider ─────────────────────────────────── */
+    .section-sep { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ── print ───────────────────────────────────────────── */
+    @media print {
+      .sidebar          { display: none; }
+      .layout           { display: block; }
+      details           { display: block; }
+      summary           { display: none; }
+      ::details-content { content-visibility: visible; }
+    }
+  </style>
+</head>
+<body class="theme-default">
+
+  <div class="page-wrap">
+    <header class="page-header">
+      <div class="meta-row">
+        <span class="pill">feature</span>
+        <span class="pill">product-plans v3.3.0</span>
+        <span class="pill">2026-05-17</span>
+      </div>
+      <h1>Plan: Emit self-contained HTML artifact from plan-review-agents</h1>
+      <span class="badge badge-revise"><strong>Approve with revisions</strong></span>
+      <p class="provenance">
+        Generated: 2026-05-17T00:00:00Z &middot;
+        Source: <code>docs/plans/add-html-output-to-plan-review-agents.md</code>
+      </p>
+    </header>
+
+    <div class="layout">
+
+      <aside class="sidebar">
+        <h2>Contents</h2>
+        <nav aria-label="Table of contents">
+          <ol class="toc">
+            <li><a href="#context">Context</a></li>
+            <li><a href="#objective">Objective</a></li>
+            <li><a href="#files-to-modify">Files to Modify</a></li>
+            <li><a href="#reuse-notes">Reuse Notes</a></li>
+            <li><a href="#steps">Steps</a></li>
+            <li><a href="#verification">Verification</a></li>
+            <li><a href="#next-steps">Next Steps</a></li>
+            <li><a href="#unresolved-questions">Unresolved Questions</a></li>
+            <li><a href="#appendix">Panel Review (appendix)</a></li>
+          </ol>
+        </nav>
+      </aside>
+
+      <main id="main-content">
+
+        <h2 id="context">Context</h2>
+        <p>The <code>product-plans:plan-review-agents</code> skill currently produces two outputs: a 15-section markdown panel report (echoed in chat) and an in-place mutation of the source plan file (Pass 1 inline edits + Pass 2 appended <code>## Panel Review</code> section). Sharing reviews outside a Claude Code session requires the reader to either render the plan file themselves or read the chat transcript.</p>
+        <p>The user wants a third, <strong>shareable, browser-openable artifact</strong>: a media-rich, self-contained HTML document combining the revised plan (section 15b) as the primary surface with the full 15-section panel review available as an appendix. The artifact must open in any browser with no external dependencies (no CDN CSS, no external fonts, no remote scripts) so it can be uploaded to any static file host or attached to a ticket.</p>
+        <p>Design decisions confirmed with the user:</p>
+        <ul>
+          <li><strong>Content scope:</strong> revised plan as primary, full review as appendix in the same file.</li>
+          <li><strong>Output mode:</strong> additive &mdash; the existing in-place plan update continues to happen in all modes; the HTML sibling is always emitted (no new Step 2 prompt).</li>
+          <li><strong>Render approach:</strong> a dedicated HTML layout spec bundled inside this skill (purpose-built for review-report shape &mdash; decision badge, six reviewer cards, conflicts table, reviewer-unavailable pills). No cross-plugin dependency on <code>plan-interview:plan-to-html</code>, though we mirror its self-contained-single-file pattern.</li>
+        </ul>
+        <p>Sibling-file emission was explicitly removed from this skill in a prior cleanup (CHANGELOG 3.x). The HTML sibling re-introduces a sibling file deliberately, with a distinct extension (<code>.html</code>) so it cannot collide with markdown plan files in the same directory.</p>
+
+        <hr class="section-sep">
+
+        <h2 id="objective">Objective</h2>
+        <p>Add a self-contained HTML output mode to the <code>product-plans:plan-review-agents</code> skill that always emits <code>&lt;plan-stem&gt;-review.html</code> next to the source plan, containing the revised plan as the primary document and the full panel review as a collapsible/secondary appendix, rendered per a new bundled layout spec.</p>
+
+        <hr class="section-sep">
+
+        <h2 id="files-to-modify">Files to Modify</h2>
+        <ul>
+          <li><code>kit/plugins/product-plans/skills/plan-review-agents/SKILL.md</code> &mdash; add new step, update table of contents, update opening summary, update final announcement.</li>
+          <li><code>kit/plugins/product-plans/skills/plan-review-agents/references/html-spec.md</code> &mdash; <strong>new file</strong>. The full HTML layout contract: head, themes, two-column layout, decision badge, reviewer cards, conflicts table, inline-edits table, reviewer-unavailable pills, print styles, inlined CSS/JS.</li>
+          <li><code>kit/plugins/product-plans/README.md</code> &mdash; document the new HTML output.</li>
+          <li><code>kit/plugins/product-plans/CHANGELOG.md</code> &mdash; new MINOR entry (3.3.0).</li>
+          <li><code>.claude-plugin/marketplace.json</code> &mdash; bump <code>product-plans</code> version <code>3.2.1</code> &rarr; <code>3.3.0</code>.</li>
+        </ul>
+
+        <hr class="section-sep">
+
+        <h2 id="reuse-notes">Reuse Notes</h2>
+        <ul>
+          <li>The HTML synthesis must draw from the <strong>same in-memory synthesized report</strong> produced in Step 6, not re-synthesize from reviewer outputs &mdash; keeps the chat report, the appended <code>## Panel Review</code> section, and the new HTML file consistent.</li>
+          <li>Mirror the cache pattern from <code>kit/plugins/plan-interview/skills/plan-to-html/reference/html-spec.md</code> (long-form layout contract in a <code>reference/</code>/<code>references/</code> file, short SKILL.md step that walks parse &rarr; synthesize &rarr; write). Do <strong>not</strong> read or import that file &mdash; we build a tailored spec.</li>
+          <li>The skill already declares <code>Write</code> in <code>allowed-tools</code>, so no manifest changes are required for file emission.</li>
+          <li>The synthesized report from Step 6 must be retained as a named string <code>synthesized_report</code> available to Steps 7 and 8 without regeneration. Neither step re-synthesizes from reviewer outputs. Step 8 reads this retained string directly &mdash; do not regenerate.</li>
+        </ul>
+
+        <hr class="section-sep">
+
+        <h2 id="steps">Steps</h2>
+        <ol>
+          <li><strong>Create <code>references/html-spec.md</code></strong> with the full HTML layout contract organized into nine required sections (themes, layout, decision badge, reviewer cards, tables, appendix toggle, print, no-external-deps, Security &amp; Escaping Contract). Include a reference HTML skeleton with injection-point comments. <em>Status: complete.</em></li>
+          <li><strong>Update SKILL.md opening summary and table of contents</strong> &mdash; add HTML artifact mention; add Step 8 to TOC; renumber old Step 8 (cleanup) to Step 9. <em>Status: complete.</em></li>
+          <li><strong>Insert new Step 8 body in SKILL.md</strong> with mode clause (skip when <code>review only</code>), synthesis instruction, path derivation, escaping requirement, write failure-mode announcement, and success announcement. <em>Status: complete.</em></li>
+          <li><strong>Renumber current &#8220;Clean up the team&#8221; step to Step 9</strong> &mdash; update heading only; body unchanged. <em>Status: complete.</em></li>
+          <li><strong>Update Step 0 todo-creation guidance</strong> &mdash; change &#8220;Steps 1&ndash;8&#8221; to &#8220;Steps 1&ndash;9&#8221;. <em>Status: complete.</em></li>
+          <li><strong>Update Step 7 closing announcement</strong> &mdash; append brief mention that HTML artifact path will be announced in Step 8. <em>Status: complete.</em></li>
+          <li><strong>Update <code>kit/plugins/product-plans/README.md</code></strong> &mdash; add third output bullet for HTML artifact. <em>Status: complete.</em></li>
+          <li><strong>Add CHANGELOG entry</strong> for version <code>3.3.0</code>, dated <code>2026-05-17</code>. <em>Status: complete.</em></li>
+          <li><strong>Bump version in <code>.claude-plugin/marketplace.json</code></strong> from <code>3.2.1</code> to <code>3.3.0</code>. <em>Status: complete.</em></li>
+        </ol>
+
+        <hr class="section-sep">
+
+        <h2 id="verification">Verification</h2>
+        <ol>
+          <li><strong>Spec exists and is referenced:</strong> <code>ls kit/plugins/product-plans/skills/plan-review-agents/references/html-spec.md</code> succeeds and <code>grep -n "html-spec.md" ...SKILL.md</code> returns at least one match. &mdash; <em>Passed.</em></li>
+          <li><strong>Step structure is intact:</strong> <code>grep -n "^### Step" ...SKILL.md</code> lists Steps 0 through 9 in order. &mdash; <em>Passed.</em></li>
+          <li><strong>TOC matches body:</strong> TOC anchors resolve to existing headings. &mdash; <em>Passed.</em></li>
+          <li><strong>Version is bumped:</strong> <code>jq -r '... | .version' .claude-plugin/marketplace.json</code> outputs <code>3.3.0</code>. &mdash; <em>Passed.</em></li>
+          <li><strong>CHANGELOG is dated correctly:</strong> top <code>##</code> header reads <code>## 3.3.0 &mdash; 2026-05-17</code>. &mdash; <em>Passed.</em></li>
+          <li><strong>Live smoke test (manual):</strong> invoke skill on fixture plan; confirm chat report, in-place update, and HTML sibling all appear; no console errors; decision badge readable; reviewer cards render; appendix collapsed by default.</li>
+          <li><strong>Keyboard accessibility (manual):</strong> tab through rendered HTML; all interactive elements receive visible focus; Space/Enter on appendix summary opens/closes it.</li>
+          <li><strong>XSS smoke test (manual):</strong> invoke skill on plan whose title is <code>Test &lt;script&gt;alert(1)&lt;/script&gt;</code>; confirm no alert fires; <code>view-source</code> shows escaped entities.</li>
+        </ol>
+
+        <hr class="section-sep">
+
+        <h2 id="next-steps">Next Steps</h2>
+        <ul>
+          <li><strong>Rename plan file</strong> before first implementation commit &mdash; use <code>git mv</code> to rename from random name to <code>add-html-output-to-plan-review-agents.md</code>. <em>(Completed.)</em></li>
+          <li><strong>Add theme selection</strong> &mdash; <code>--theme=&lt;default|developer|document|minimal&gt;</code> flag in Step 0, defaulting to <code>default</code>.</li>
+          <li><strong>Cross-link HTML artifact</strong> from the appended <code>## Panel Review</code> section in the source plan (relative link).</li>
+          <li><strong>html-spec.md parity</strong> &mdash; compare with <code>plan-interview/skills/plan-to-html/reference/html-spec.md</code> for shared layout primitives.</li>
+          <li><strong>Dark mode</strong> &mdash; <code>@media (prefers-color-scheme: dark)</code> block mapping to <code>developer</code> theme palette. Target v3.4.0.</li>
+        </ul>
+
+        <hr class="section-sep">
+
+        <h2 id="unresolved-questions">Unresolved Questions</h2>
+        <ol>
+          <li><strong>Markdown rendering trust boundary</strong> &mdash; should the revised plan section be rendered from markdown to HTML, or shown as <code>&lt;pre&gt;</code> preformatted text? If rendered: which renderer, and how are security constraints enforced?</li>
+          <li><strong>Review-only mode HTML output</strong> &mdash; confirm &#8220;skip Step 8 entirely&#8221; is the desired behavior when <code>output_mode = review only</code> (section 15b absent), or specify a degraded alternative.</li>
+          <li><strong>Background-mode HTML path surfacing</strong> &mdash; should the final status message in <code>/product-plans:product-plans-bg</code> surface the HTML artifact path alongside the existing in-place update line?</li>
+        </ol>
+
+        <hr class="section-sep">
+
+        <!-- ── appendix ─────────────────────────────────── -->
+        <details id="appendix">
+          <summary>Panel Review &mdash; full 15-section report</summary>
+          <div class="appendix-body">
+
+            <p><em>Reviewed by: PM &middot; Lead Developer &middot; UX Designer &middot; Lead Frontend Engineer &middot; Accessibility Expert &middot; Security Expert &mdash; coordinated by Lead Coordinator</em></p>
+
+            <h2 id="exec-summary">1. Executive Summary</h2>
+            <p>High-quality, well-scoped plan with a clear user problem and additive design. The panel unanimously approves with revisions. The plan&#39;s core decisions &mdash; self-contained artifact, deterministic filename, in-memory synthesis reuse, additive emission &mdash; are sound. Three cross-cutting gaps require resolution before implementation: (1) no HTML-escaping or CSP contract for user-controlled content flowing into the artifact, creating a real stored-XSS vector when the artifact is shared to static hosts; (2) no WCAG accessibility baseline in the <code>html-spec.md</code> scope, despite this being a professionally shared document; (3) no explicit named-variable contract guaranteeing the Step 6 synthesis is preserved for Steps 7 and 8. All three are now addressed as inline edits applied to this plan. No reviewers rejected the plan.</p>
+
+            <h2 id="role-review">2. Role-by-Role Review</h2>
+            <div class="cards-grid">
+
+              <article class="reviewer-card" aria-labelledby="card-pm">
+                <h3 id="card-pm">Product Manager</h3>
+                <dl>
+                  <dt>Approval</dt>
+                  <dd><span class="approval-badge">Approve with revisions</span></dd>
+                  <dt>Works well</dt>
+                  <dd>Clear user problem statement; additive non-breaking design; self-contained constraint explicit and verifiable; deterministic filename convention; correct MINOR version bump.</dd>
+                  <dt>Critical concerns</dt>
+                  <dd>No fallback for Write failures. <code>html-spec.md</code> relied upon without content-quality gate. <em>Both addressed.</em></dd>
+                  <dt>Missing (addressed)</dt>
+                  <dd>Accessibility baseline; reviewer-unavailable trigger definition; overwrite behavior.</dd>
+                </dl>
+              </article>
+
+              <article class="reviewer-card" aria-labelledby="card-dev">
+                <h3 id="card-dev">Lead Developer</h3>
+                <dl>
+                  <dt>Approval</dt>
+                  <dd><span class="approval-badge">Approve with revisions</span></dd>
+                  <dt>Works well</dt>
+                  <dd>Scope touches exactly five files; in-memory reuse strategy correct; <code>Write</code> already in <code>allowed-tools</code>; cleanup-last invariant preserved.</dd>
+                  <dt>Critical concerns</dt>
+                  <dd>None. Implementation is technically sound.</dd>
+                  <dt>Missing (addressed)</dt>
+                  <dd>Named-variable synthesis contract; Write failure handling; no accessibility floor.</dd>
+                </dl>
+              </article>
+
+              <article class="reviewer-card" aria-labelledby="card-ux">
+                <h3 id="card-ux">UX Designer</h3>
+                <dl>
+                  <dt>Approval</dt>
+                  <dd><span class="approval-badge">Approve with revisions</span></dd>
+                  <dt>Works well</dt>
+                  <dd>Additive-only design eliminates new prompts; self-contained removes render friction; sidebar TOC + collapsible appendix addresses information hierarchy.</dd>
+                  <dt>Critical concerns</dt>
+                  <dd>No error state for HTML Write failure. Smoke test path was machine-specific. <em>Both addressed.</em></dd>
+                  <dt>Missing (addressed)</dt>
+                  <dd>Accessibility spec; charset declaration; <code>&lt;title&gt;</code> element spec.</dd>
+                </dl>
+              </article>
+
+              <article class="reviewer-card" aria-labelledby="card-fe">
+                <h3 id="card-fe">Lead Frontend Engineer</h3>
+                <dl>
+                  <dt>Approval</dt>
+                  <dd><span class="approval-badge">Approve with revisions</span></dd>
+                  <dt>Works well</dt>
+                  <dd>Self-contained constraint explicit; single source-of-truth rendering sound; CSS-variable theme approach correct; filename pattern deterministic.</dd>
+                  <dt>Critical concerns</dt>
+                  <dd>No accessibility spec. No progressive-enhancement clause or CSP. No reference skeleton. <em>All addressed.</em></dd>
+                  <dt>Missing (addressed)</dt>
+                  <dd>Charset; viewport meta; HTML escaping; dark mode policy (added as out-of-scope).</dd>
+                </dl>
+              </article>
+
+              <article class="reviewer-card" aria-labelledby="card-a11y">
+                <h3 id="card-a11y">Accessibility Expert</h3>
+                <dl>
+                  <dt>Approval</dt>
+                  <dd><span class="approval-badge">Approve with revisions</span></dd>
+                  <dt>Works well</dt>
+                  <dd>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> is the right choice; no-external-deps eliminates third-party a11y regressions; reviewer-unavailable pills better than blank cells.</dd>
+                  <dt>Critical concerns</dt>
+                  <dd>No WCAG conformance target. Zero accessibility checks in Verification. No <code>:focus-visible</code> styles. <em>All addressed.</em></dd>
+                  <dt>Missing (addressed)</dt>
+                  <dd>Keyboard nav contract; scroll-spy focus-management policy; TOC landmark spec; language attribute.</dd>
+                </dl>
+              </article>
+
+              <article class="reviewer-card" aria-labelledby="card-sec">
+                <h3 id="card-sec">Security Expert</h3>
+                <dl>
+                  <dt>Approval</dt>
+                  <dd><span class="approval-badge">Approve with revisions &mdash; blocking on XSS/CSP (resolved)</span></dd>
+                  <dt>Works well</dt>
+                  <dd>Self-contained/no-external-deps eliminates supply-chain risks; deterministic scoped output location; distinct <code>.html</code> extension.</dd>
+                  <dt>Critical concerns</dt>
+                  <dd>XSS via unescaped user content (OWASP A03). No threat model for shareable attack surface. <em>Both resolved by Security &amp; Escaping Contract in html-spec.md.</em></dd>
+                  <dt>Missing (addressed)</dt>
+                  <dd>HTML escaping rule; CSP meta tag; filename normalization; write-safety contract; provenance metadata.</dd>
+                </dl>
+              </article>
+
+            </div><!-- /cards-grid -->
+
+            <h2 id="risk-issues">3. Highest-Risk Issues</h2>
+            <ol>
+              <li><strong>Stored XSS via unescaped user content</strong> &mdash; plan body and reviewer outputs flowed into HTML without escaping. OWASP A03 stored-XSS on static hosts. <em>Resolved: Security &amp; Escaping Contract added to Step 1.</em></li>
+              <li><strong>No WCAG accessibility baseline in <code>html-spec.md</code></strong> &mdash; zero semantic HTML, landmark, contrast, focus, or language requirements. <em>Resolved: nine-section spec now includes full WCAG AA requirements.</em></li>
+              <li><strong>In-memory synthesis continuity not guaranteed</strong> &mdash; Step 6 &rarr; 7 &rarr; 8 reuse was emergent behavior, not a runtime contract. <em>Resolved: named-variable contract added to Reuse notes.</em></li>
+              <li><strong>Write failure left &#8220;always emitted&#8221; invariant undefined</strong> &mdash; disk-full or permissions error had no recovery path. <em>Resolved: failure-mode clause added to Step 3.</em></li>
+              <li><strong><code>html-spec.md</code> had no content-quality gate</strong> &mdash; &#8220;&gt;200 lines&#8221; check did not verify required sections exist. <em>Resolved: section-presence grep replacing line-count verify.</em></li>
+            </ol>
+
+            <h2 id="blocking">4. Blocking Issues</h2>
+            <p>All blocking issues resolved by inline edits applied in Pass 1:</p>
+            <ol>
+              <li><strong>HTML escaping and CSP contract</strong> &mdash; mandatory Security &amp; Escaping Contract added to Step 1 and Step 3. <em>(Resolved)</em></li>
+              <li><strong>Write failure mode</strong> &mdash; announce error and continue to Step 9. <em>(Resolved)</em></li>
+              <li><strong>Named-variable synthesis contract</strong> &mdash; <code>synthesized_report</code> contract added to Reuse notes. <em>(Resolved)</em></li>
+            </ol>
+
+            <h2 id="improvements">5. Important but Non-Blocking Improvements</h2>
+            <p>Applied in Pass 1: default theme (<code>theme-default</code>); <code>review only</code> skip clause; appendix collapsed on load, expanded in print; smoke test fixture path; <code>jq</code> version check; section-presence grep; responsive breakpoint; <code>&lt;meta charset&gt;</code>, viewport, generator; provenance footer; rename note formalized; dark mode marked out-of-scope; Unresolved Questions section added.</p>
+
+            <h2 id="ux-recs">6. UX Recommendations</h2>
+            <ul>
+              <li>Appendix <code>&lt;details&gt;</code> collapsed by default; expanded in <code>@media print</code>.</li>
+              <li>Default theme <code>theme-default</code> applied explicitly in Step 3.</li>
+              <li>Compact footer disclaimer included in spec requirements.</li>
+              <li>Regression check: source plan must still contain <code>## Panel Review</code> after Step 8 runs.</li>
+            </ul>
+
+            <h2 id="a11y-reqs">7. Accessibility Requirements</h2>
+            <ul>
+              <li><code>&lt;html lang="en"&gt;</code> (WCAG 3.1.1)</li>
+              <li>Landmark regions: <code>&lt;nav aria-label="Table of contents"&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;aside&gt;</code> (WCAG 1.3.6, 2.4.1)</li>
+              <li>Heading hierarchy: h1/h2/h3 (WCAG 1.3.1, 2.4.6)</li>
+              <li><code>:focus-visible</code> on all interactive elements (WCAG 2.4.11)</li>
+              <li>WCAG AA contrast for all four themes (WCAG 1.4.3, 1.4.11)</li>
+              <li>Non-color decision badge: full text label required (WCAG 1.4.1)</li>
+              <li>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> exclusively for collapsibles (WCAG 2.1.1)</li>
+              <li>Scroll-spy must not move keyboard focus (WCAG 2.4.3)</li>
+            </ul>
+
+            <h2 id="frontend">8. Frontend Implementation Considerations</h2>
+            <ul>
+              <li>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> exclusively; JS for scroll-spy only.</li>
+              <li>Progressive enhancement: content readable without JS.</li>
+              <li>Reference HTML skeleton required in spec (injection-point approach).</li>
+              <li>Responsive breakpoint at &le;768px.</li>
+              <li>Dark mode explicitly out-of-scope for v3.3.0.</li>
+            </ul>
+
+            <h2 id="security-reqs">9. Security Requirements</h2>
+            <ul>
+              <li>HTML escaping rule for all interpolated values (OWASP A03)</li>
+              <li>CSP <code>&lt;meta&gt;</code> tag in <code>&lt;head&gt;</code> (OWASP A05)</li>
+              <li>Self-containment verification grep (OWASP A06)</li>
+              <li>Filename normalization to <code>[A-Za-z0-9._-]</code> (OWASP A01, A03)</li>
+              <li>Sensitive content footer notice (GDPR Art. 5(1)(f))</li>
+              <li>XSS smoke test added to Verification item 8</li>
+            </ul>
+
+            <h2 id="feasibility">10. Technical Feasibility Concerns</h2>
+            <p>No critical technical blockers. Implementation is feasible with existing skill capabilities. Spec drift risk: two parallel <code>html-spec.md</code> files will diverge; consolidation recommended before v3.4.0.</p>
+
+            <h2 id="open-questions">11. Open Questions Before Development</h2>
+            <p>Moved to formal <code>## Unresolved Questions</code> section. Key decisions: appendix default state (collapsed, addressed); <code>review only</code> mode (skip Step 8, addressed); default theme (<code>theme-default</code>, addressed); markdown rendering (open); in-memory synthesis continuity (addressed); Write failure (addressed); background-mode HTML path surfacing (open).</p>
+
+            <h2 id="rec-changes">12. Recommended Changes to the Plan</h2>
+            <p>All 19 recommendations applied in Pass 1 inline edits. See verification plan <code>verify-panel-review-html-output-integration.md</code> for full cross-check table.</p>
+
+            <h2 id="conflicts">13. Conflicts or Tradeoffs Between Reviewer Recommendations</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Topic</th>
+                  <th scope="col">Conflict</th>
+                  <th scope="col">Resolution</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Collapsible appendix mechanism</td>
+                  <td>A11y required native <code>&lt;details&gt;</code>. Frontend said pick one (simultaneous JS + native causes interaction conflicts). Security noted event-handler XSS surface.</td>
+                  <td>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> exclusively; JS restricted to scroll-spy only (progressive enhancement).</td>
+                </tr>
+                <tr>
+                  <td>Sensitive content warning level</td>
+                  <td>Security wanted visible printable banner. UX wanted minimal friction on primary surface.</td>
+                  <td>Compact footer disclaimer that prints &mdash; not a modal overlay or full-page banner.</td>
+                </tr>
+                <tr>
+                  <td><code>html-spec.md</code> generation approach</td>
+                  <td>Frontend, A11y, and Dev converged on scaffold-fill. PM implied freehand but had not committed.</td>
+                  <td>Reference HTML skeleton with injection-point comments required as part of Step 1 spec scope.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h2 id="final-decision">14. Final Decision</h2>
+            <p><strong>Final decision: Approve with revisions</strong></p>
+            <p>The plan is technically sound, correctly scoped, and the additive design holds up under cross-functional scrutiny. All three blocking issues (XSS/escaping/CSP, Write failure mode, named-variable synthesis contract) have been resolved by the inline edits applied in Pass 1. The plan is ready to implement once the three open Unresolved Questions are decided before Step 1 authoring begins.</p>
+
+            <h2 id="inline-edits">15a. Inline Edits Applied</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Section</th>
+                  <th scope="col">Action</th>
+                  <th scope="col">Content summary</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td><code>## Reuse notes</code></td><td>append</td><td>Named-variable contract for <code>synthesized_report</code></td></tr>
+                <tr><td>2</td><td>Step 1</td><td>edit</td><td>Nine-section spec scope with security, accessibility, head requirements, skeleton requirement, section-presence verify</td></tr>
+                <tr><td>3</td><td>Step 3</td><td>edit</td><td>Review-only skip, failure mode, default theme, progressive enhancement, path-safety clauses</td></tr>
+                <tr><td>4</td><td>Verification item 4</td><td>edit</td><td><code>jq</code> command replacing fragile grep</td></tr>
+                <tr><td>5</td><td>Verification item 6</td><td>edit</td><td>Fixture path, regression check, extended self-containment grep</td></tr>
+                <tr><td>6</td><td>Verification</td><td>append</td><td>Items 7 (keyboard a11y) and 8 (XSS smoke test)</td></tr>
+                <tr><td>7</td><td>Plan title blockquote</td><td>edit</td><td>Removed floating filename-rename blockquote</td></tr>
+                <tr><td>8</td><td><code>## Next Steps</code></td><td>edit</td><td>Rename entry now formal with fenced prompt</td></tr>
+                <tr><td>9</td><td><code>## Next Steps</code></td><td>append</td><td>Dark mode out-of-scope + Next Steps entry</td></tr>
+                <tr><td>10</td><td><code>## Next Steps</code></td><td>insert after</td><td><code>## Unresolved Questions</code> section with three open decisions</td></tr>
+              </tbody>
+            </table>
+
+            <h2 id="revised-plan">15b. Complete Revised Plan</h2>
+            <p><em>The source plan file reflects all inline edits. This section is a reference view of the plan as it stands after Pass 1. Key additions from the panel:</em></p>
+            <ul>
+              <li><code>## Reuse notes</code>: named-variable contract (<code>synthesized_report</code> retained through Steps 7 and 8)</li>
+              <li>Step 1: nine-section spec scope including Security &amp; Escaping Contract and full WCAG AA accessibility requirements; reference skeleton required; section-presence verify</li>
+              <li>Step 3: review-only skip clause, Write failure mode, default theme, progressive enhancement, path-safety normalization</li>
+              <li>Verification: <code>jq</code>-based version check; fixture-based smoke test; items 7 (keyboard a11y) and 8 (XSS smoke test)</li>
+              <li>Next Steps: formal rename entry, dark mode out-of-scope entry</li>
+              <li><code>## Unresolved Questions</code>: markdown rendering trust boundary, review-only mode output, background-mode path surfacing</li>
+            </ul>
+
+          </div><!-- /appendix-body -->
+        </details>
+
+      </main>
+    </div><!-- /layout -->
+  </div><!-- /page-wrap -->
+
+  <footer class="site-footer">
+    <p class="disclaimer">This document may contain confidential plan content and reviewer findings. Classify before sharing.</p>
+  </footer>
+
+  <script>
+    /* Scroll-spy: toggles aria-current on active TOC anchor. No focus movement. */
+    (function () {
+      var headings = document.querySelectorAll('main h2[id]');
+      var links = document.querySelectorAll('nav a[href^="#"]');
+      if (!headings.length || !links.length || !window.IntersectionObserver) return;
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (l) { l.removeAttribute('aria-current'); });
+          var target = document.querySelector('nav a[href="#' + e.target.id + '"]');
+          if (target) target.setAttribute('aria-current', 'location');
+        });
+      }, { rootMargin: '0px 0px -55% 0px', threshold: 0 });
+      headings.forEach(function (h) { obs.observe(h); });
+    })();
+
+    /* Print fallback: set open on all details before printing (older browsers). */
+    (function () {
+      function openAll()  { document.querySelectorAll('details').forEach(function(d){ d.open = true; }); }
+      function closeAll() { document.querySelectorAll('details').forEach(function(d){ d.removeAttribute('open'); }); }
+      window.addEventListener('beforeprint', openAll);
+      window.addEventListener('afterprint',  closeAll);
+    })();
+  </script>
+
+</body>
+</html>

@@ -113,6 +113,13 @@ The skill produces:
    `Final decision: approve / approve with revisions / reject` line.
 2. By default (update-in-place mode): inline edits applied to the source plan
    + a `## Panel Review` section appended. Choose "Review only" to skip this.
+3. A **self-contained HTML review artifact** (`<plan-stem>-review.html`)
+   written next to the source plan. Combines the revised plan (section 15b)
+   as the primary document with the full 15-section panel review as a
+   collapsible appendix. Opens in any browser with no external dependencies —
+   safe to upload to any static file host or attach to a ticket. Always
+   emitted alongside the in-place plan update; skipped only in "Review only"
+   mode.
 
 The 15 sections are:
 
