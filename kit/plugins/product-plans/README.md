@@ -35,8 +35,16 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
 - **Reviewer failure handling** — dead reviewers are respawned once; if
   unavailable, the gap is flagged in three places.
 - **In-place plan update** — by default the skill applies panel improvements
-  directly to the source plan (inline edits + appended Panel Review section).
-  Choose "Review only" to get the report without modifying the file.
+  directly to the source plan (inline edits + appended Panel Review section
+  with dated heading). Choose "Review only" to get the report without
+  modifying the file.
+- **Rejection remediation** — when the panel rejects a plan, section 14
+  includes a consolidated Rejection Summary and a self-contained Remediation
+  Prompt (fenced `text` block) the user can copy-paste into a fresh Claude
+  session to fix the issues and re-run the review.
+- **Decision banner** — the HTML artifact shows a color-coded decision banner
+  (green/amber/red) for all outcomes. Reject banners include the remediation
+  prompt with a copy button and clipboard fallback.
 - **Background mode** — pass `--background` to suppress all interactive
   prompts: auto-selects update-in-place mode and updates the source plan
   without blocking the session. Fire via
@@ -112,7 +120,9 @@ The skill produces:
 1. A **15-section consolidated review** in the chat, ending with a
    `Final decision: approve / approve with revisions / reject` line.
 2. By default (update-in-place mode): inline edits applied to the source plan
-   + a `## Panel Review` section appended. Choose "Review only" to skip this.
+   + a dated `## Panel Review (YYYY-MM-DD HH:MM:SS UTC)` section appended.
+   Re-runs append new dated sections without stripping old ones — reviewers
+   see historical reviews for context. Choose "Review only" to skip this.
 3. A **self-contained HTML review artifact** (`<plan-stem>-review.html`)
    written next to the source plan. Combines the revised plan (section 15b)
    as the primary document with the full 15-section panel review as a
@@ -136,7 +146,7 @@ The 15 sections are:
 11. Open questions before development
 12. Recommended changes to the plan
 13. Conflicts or tradeoffs between reviewers
-14. Final decision
+14. Final decision _(includes Rejection Summary and Remediation Prompt when rejected)_
 15a. Inline edits to apply _(update-in-place mode only)_
 15b. Complete revised plan _(update-in-place mode only)_
 
@@ -161,7 +171,8 @@ product-plans/
 │       ├── SKILL.md                 # Skill entry point (auto-activating)
 │       └── references/
 │           ├── role-prompts.md      # Per-role spawn-prompt templates
-│           └── output-template.md  # Verbatim 15-section report template
+│           ├── output-template.md  # Verbatim 15-section report template
+│           └── html-spec.md       # HTML artifact layout/a11y/security spec
 ├── CHANGELOG.md
 └── README.md
 ```
