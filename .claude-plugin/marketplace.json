@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -295,6 +295,27 @@
         "accessibility",
         "security",
         "review"
+      ]
+    },
+    {
+      "name": "settings-sync",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/settings-sync"
+      },
+      "version": "1.0.0",
+      "description": "Back up and restore Claude Code user settings to a dedicated git repo — routine-compatible for automated backups",
+      "category": "productivity",
+      "tags": [
+        "settings",
+        "backup",
+        "restore",
+        "sync",
+        "dotfiles",
+        "configuration",
+        "routine",
+        "portable"
       ]
     }
   ]
