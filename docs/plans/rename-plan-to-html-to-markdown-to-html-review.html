@@ -102,6 +102,11 @@
                      border-left: 4px solid var(--badge-reject);
                      background: var(--surface); border-radius: 0 .3em .3em 0; }
     .risk-list li.non-blocking { border-left-color: var(--badge-revise); }
+    .risk-list li.resolved     { border-left-color: var(--badge-approve);
+                                  opacity: .7; text-decoration: line-through; }
+    .resolved-notice { background: var(--surface); border: 1px solid var(--badge-approve);
+                       border-left: 4px solid var(--badge-approve); border-radius: .3em;
+                       padding: .6rem .75rem; margin-bottom: 1rem; font-size: .9rem; }
 
     table        { width: 100%; border-collapse: collapse; font-size: .9rem; margin: .75rem 0; }
     th, td       { padding: .5em .75em; border: 1px solid var(--border);
@@ -138,9 +143,11 @@
 
   <header>
     <h1>Plan: Rename plan-to-html &rarr; markdown-to-html, bundle assets, HTML5-first rendering</h1>
-    <span class="badge badge-reject"><strong>Reject &mdash; resubmit after addressing Blocking Issues</strong></span>
+    <span class="badge badge-reject"><strong>Panel decision: Reject</strong></span>
+    <span class="badge badge-approve"><strong>All Blocking Issues Resolved &mdash; Ready for Implementation</strong></span>
     <p class="provenance">
       Generated: 2026-05-18T00:00:00Z &middot;
+      Updated: 2026-05-18 (blocking issues resolved) &middot;
       Source: <code>rename-plan-to-html-to-markdown-to-html.md</code> &middot;
       Reviewers: PM &middot; Lead Developer &middot; UX Designer (unavailable) &middot; Lead Frontend Engineer &middot; Accessibility Expert &middot; Security Expert
     </p>
@@ -186,7 +193,7 @@
         in the output contract, not edge cases.</p>
         <p><strong>Note: the UX Designer reviewer was unavailable after two spawn
         attempts; that domain was not assessed.</strong></p>
-        <p>Panel decision: <span class="badge badge-reject"><strong>Reject &mdash; resubmit after addressing Blocking Issues</strong></span></p>
+        <p>Panel decision: <span class="badge badge-reject"><strong>Reject</strong></span> &rarr; <span class="badge badge-approve"><strong>All Blocking Issues Resolved</strong></span></p>
       </section>
 
       <section class="section-block" aria-labelledby="sec-reviewers">
@@ -265,26 +272,27 @@
       <section class="section-block" aria-labelledby="sec-risks">
         <h2 id="sec-risks">3. Highest-Risk Issues</h2>
         <ul class="risk-list">
-          <li><strong>[Security / CWE-79]</strong> No HTML output-encoding policy. Every generated HTML file is an XSS vector. Applies to every invocation. <strong>Blocking.</strong></li>
-          <li><strong>[A11y / SC 1.3.1]</strong> Step checkboxes are unlabeled. Screen reader users are completely excluded from the primary plan-tracking feature. <strong>Blocking.</strong></li>
-          <li><strong>[A11y / SC 2.4.7+2.4.11]</strong> No focus indicators in bundled CSS. All keyboard users cannot determine focus position on any interactive element. <strong>Blocking.</strong></li>
-          <li><strong>[Lead Dev + Frontend]</strong> Build script extraction is architecturally fragile. Silently malformed <code>themes.css</code> causes the browser to drop the entire <code>&lt;style&gt;</code> block with no user-facing error. <strong>Blocking.</strong></li>
-          <li><strong>[A11y / SC 3.1.1 + 2.4.2 + 2.4.1]</strong> Three WCAG Level A failures in every generated HTML document: missing <code>lang</code>, missing <code>&lt;title&gt;</code>, missing skip navigation. Legal exposure under ADA Title III / European Accessibility Act (June 2025). <strong>Blocking.</strong></li>
+          <li class="resolved"><strong>[Security / CWE-79]</strong> No HTML output-encoding policy. Every generated HTML file is an XSS vector. <strong>Resolved: Step 0.</strong></li>
+          <li class="resolved"><strong>[A11y / SC 1.3.1]</strong> Step checkboxes are unlabeled. Screen reader users are completely excluded from the primary plan-tracking feature. <strong>Resolved: Step 0.5.</strong></li>
+          <li class="resolved"><strong>[A11y / SC 2.4.7+2.4.11]</strong> No focus indicators in bundled CSS. All keyboard users cannot determine focus position on any interactive element. <strong>Resolved: Step 0.75.</strong></li>
+          <li class="resolved"><strong>[Lead Dev + Frontend]</strong> Build script extraction is architecturally fragile. Silently malformed <code>themes.css</code> causes the browser to drop the entire <code>&lt;style&gt;</code> block with no user-facing error. <strong>Resolved: Step 5.</strong></li>
+          <li class="resolved"><strong>[A11y / SC 3.1.1 + 2.4.2 + 2.4.1]</strong> Four WCAG Level A failures in every generated HTML document: missing <code>lang</code>, <code>&lt;title&gt;</code>, skip navigation, unlabeled checkboxes. Legal exposure under ADA Title III / European Accessibility Act (June 2025). <strong>Resolved: Steps 0.5, 0.75.</strong></li>
           <li class="non-blocking"><strong>[UX]</strong> Unassessed domain: UX Designer review not conducted. Usability, information architecture, onboarding, and error states are unknown risks.</li>
         </ul>
       </section>
 
       <section class="section-block" aria-labelledby="sec-blocking">
         <h2 id="sec-blocking">4. Blocking Issues</h2>
+        <p class="resolved-notice"><strong>All 8 blocking issues resolved</strong> &mdash; addressed in plan steps on 2026-05-18. Plan status updated to <code>in-progress</code>.</p>
         <ol>
-          <li><strong>[Security + Frontend]</strong> No output-encoding/sanitization policy. Add <code>## Security and Encoding</code> to <code>reference/html-spec.md</code> before any implementation step begins.</li>
-          <li><strong>[A11y]</strong> No focus indicators in <code>assets/themes.css</code>. Add <code>:focus-visible</code> styles for all interactive elements (SC 2.4.7 + SC 2.4.11).</li>
-          <li><strong>[A11y]</strong> Step checkboxes lack label association. Specify <code>&lt;label&gt;&lt;input type=&quot;checkbox&quot;&gt;&hellip;&lt;/label&gt;</code> in <code>html-spec.md</code>.</li>
-          <li><strong>[A11y]</strong> WCAG Level A omissions. Add <code>&lt;html lang&gt;</code>, <code>&lt;title&gt;</code>, skip nav link to HTML template.</li>
-          <li><strong>[Lead Dev + Frontend]</strong> Build script extraction algorithm unspecified. Adopt <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> marker approach.</li>
-          <li><strong>[PM]</strong> Version baseline ambiguity. State &ldquo;Current: 1.22.1 &rarr; New: 2.0.0&rdquo; in Context.</li>
-          <li><strong>[A11y + Security]</strong> Scroll-spy IIFE omits <code>aria-current</code>. Extend IIFE to toggle <code>aria-current=&quot;true&quot;</code> on the active sidebar link.</li>
-          <li><strong>[Security]</strong> No path traversal defense. Add to SKILL.md Step 1: <code>realpath</code> validation, workspace boundary check, symlink rejection.</li>
+          <li class="resolved"><strong>[Security + Frontend]</strong> No output-encoding/sanitization policy. &rarr; <em>Resolved: Step 0 adds <code>## Security and Encoding</code> to <code>reference/html-spec.md</code>.</em></li>
+          <li class="resolved"><strong>[A11y]</strong> No focus indicators in <code>assets/themes.css</code>. &rarr; <em>Resolved: Step 0.75 adds <code>:focus-visible</code> styles for all interactive elements (SC 2.4.7 + SC 2.4.11).</em></li>
+          <li class="resolved"><strong>[A11y]</strong> Step checkboxes lack label association. &rarr; <em>Resolved: Step 0.5 now specifies <code>&lt;label class=&quot;step-label&quot;&gt;&lt;input class=&quot;step-checkbox&quot; type=&quot;checkbox&quot;&gt;&hellip;&lt;/label&gt;</code> (SC 1.3.1); Step 12 cross-references.</em></li>
+          <li class="resolved"><strong>[A11y]</strong> WCAG Level A omissions. &rarr; <em>Resolved: Step 0.5 adds <code>&lt;html lang&gt;</code>, <code>&lt;title&gt;</code>, skip nav link to HTML template.</em></li>
+          <li class="resolved"><strong>[Lead Dev + Frontend]</strong> Build script extraction algorithm unspecified. &rarr; <em>Resolved: Step 5 adopts <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> marker approach.</em></li>
+          <li class="resolved"><strong>[PM]</strong> Version baseline ambiguity. &rarr; <em>Resolved: Context states &ldquo;Current: 1.22.1 &rarr; New: 2.0.0&rdquo;.</em></li>
+          <li class="resolved"><strong>[A11y + Security]</strong> Scroll-spy IIFE omits <code>aria-current</code>. &rarr; <em>Resolved: Step 6 extends IIFE to toggle <code>aria-current=&quot;true&quot;</code> alongside <code>.active</code> class.</em></li>
+          <li class="resolved"><strong>[Security]</strong> No path traversal defense. &rarr; <em>Resolved: Step 0.9 adds <code>realpath</code> validation, workspace boundary check, symlink rejection (CWE-22).</em></li>
         </ol>
       </section>
 
@@ -470,9 +478,9 @@
 
       <section class="section-block" aria-labelledby="sec-decision">
         <h2 id="sec-decision">14. Final Decision</h2>
-        <p>Final decision: <span class="badge badge-reject"><strong>Reject &mdash; resubmit after addressing Blocking Issues</strong></span></p>
-        <p>The plan is detailed, well-researched, and correctly applies all project conventions for versioning, git operations, and plugin structure. However, two domains issued hard rejections on grounds that apply to every HTML file the skill generates: the Security Expert rejected due to the absence of an output-encoding policy (XSS risk in every invocation) and a missing path traversal defense; the Accessibility Expert rejected due to three WCAG Level A failures (<code>lang</code>, <code>&lt;title&gt;</code>, skip navigation), unlabeled step checkboxes, and no focus indicators in bundled CSS.</p>
-        <p>All inline edits from the panel have been applied to the source plan file. Address the eight Blocking Issues in Section 4 and resubmit.</p>
+        <p>Panel decision: <span class="badge badge-reject"><strong>Reject</strong></span> &rarr; <span class="badge badge-approve"><strong>All Blocking Issues Resolved &mdash; Ready for Implementation</strong></span></p>
+        <p>The plan is detailed, well-researched, and correctly applies all project conventions for versioning, git operations, and plugin structure. Two domains issued hard rejections on grounds that applied to every HTML file the skill generates: the Security Expert rejected due to the absence of an output-encoding policy (XSS risk in every invocation) and a missing path traversal defense; the Accessibility Expert rejected due to four WCAG Level A failures (<code>lang</code>, <code>&lt;title&gt;</code>, skip navigation, unlabeled step checkboxes) and no focus indicators in bundled CSS.</p>
+        <p>All eight blocking issues have been addressed in the plan&rsquo;s implementation steps (2026-05-18). Plan status updated to <code>in-progress</code> with <code>panel-review: reject-resolved</code>. Implementation may proceed.</p>
       </section>
 
       <details id="appendix">
