@@ -289,8 +289,8 @@ Make an HTML version of this plan
 Export this markdown as a webpage
 ```
 
-> **Migration:** The old `/plan-interview:plan-to-html` command still works via a
-> backward-compat alias but is deprecated. Update scripts to use `markdown-to-html`.
+> **Migration:** `/plan-interview:plan-to-html` is deprecated — the command now
+> delegates to `markdown-to-html`. Update invocations to use `markdown-to-html` directly.
 
 ### Deep Grill
 

@@ -14,27 +14,27 @@ fi
 
 mkdir -p "$ASSETS"
 
+# Writes extracted block to stdout; callers redirect as needed.
 extract() {
   local tag="$1"
-  local outfile="$2"
   awk "/<!-- BUILD-EXTRACT:${tag} START -->/{found=1;next} \
        /<!-- BUILD-EXTRACT:${tag} END -->/{found=0} \
        found" "$SPEC" \
-    | sed '/^```css$/d; /^```javascript$/d; /^```$/d' \
-    > "$outfile"
+    | sed '/^```css$/d; /^```javascript$/d; /^```$/d'
 }
 
 # themes.css — all four body.theme-* rule sets
-extract "THEMES" "$ASSETS/themes.css"
-echo "/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */" \
-  | cat - "$ASSETS/themes.css" > /tmp/mth_themes && mv /tmp/mth_themes "$ASSETS/themes.css"
+{
+  echo "/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */"
+  extract "THEMES"
+} > "$ASSETS/themes.css"
 
 # scripts.js — scroll-spy + step-completion IIFEs
 {
   echo "/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */"
-  extract "SCROLL-SPY" /dev/stdout
+  extract "SCROLL-SPY"
   echo ""
-  extract "STEP-COMPLETION" /dev/stdout
+  extract "STEP-COMPLETION"
 } > "$ASSETS/scripts.js"
 
 echo "Built:"

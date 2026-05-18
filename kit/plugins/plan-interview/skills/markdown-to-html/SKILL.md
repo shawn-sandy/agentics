@@ -20,14 +20,14 @@ This skill converts the source markdown into a viewable HTML file at any lifecyc
 
 ## Table of Contents
 
-- [Step 0 — Create progress todos](#step-0)
-- [Step 1 — Resolve the source file](#step-1)
-- [Step 2 — Parse content and detect render mode](#step-2)
-- [Step 3 — Resolve theme](#step-3)
-- [Step 4 — Check for existing output file](#step-4)
-- [Step 5 — Synthesize and write HTML](#step-5)
-- [Step 6 — Offer to open in browser](#step-6)
-- [Step 7 — Report](#step-7)
+- [Step 0 — Create progress todos](#step-0--create-progress-todos)
+- [Step 1 — Resolve the source file](#step-1--resolve-the-source-file)
+- [Step 2 — Parse content and detect render mode](#step-2--parse-content-and-detect-render-mode)
+- [Step 3 — Resolve theme](#step-3--resolve-theme)
+- [Step 4 — Check for existing output file](#step-4--check-for-existing-output-file)
+- [Step 5 — Synthesize and write HTML](#step-5--synthesize-and-write-html)
+- [Step 6 — Offer to open in browser](#step-6--offer-to-open-in-browser)
+- [Step 7 — Report](#step-7--report)
 
 ## Instructions
 
@@ -99,7 +99,10 @@ Announce the resolved file: `"Converting: path/to/file.md"`
 
 Read the resolved file and extract:
 
-- **H1 title**: first line matching `# …` — strip leading `# ` and any `Plan:` prefix.
+- **Raw H1**: first line matching `# …` — strip only the leading `# ` character.
+  Keep the `Plan:` prefix intact at this stage; it is needed for mode detection below.
+- **Display title**: derive from raw H1 by stripping any `Plan:` prefix (with or
+  without trailing space). Use this for rendering only, not for detection.
 - **Frontmatter**: YAML block between `---` delimiters. Capture `status`, `created`,
   `modified`, `type`. Treat all as absent if no frontmatter.
 - **Sections**: every `## Heading` and content until the next `## Heading` or EOF.
@@ -111,7 +114,7 @@ Read the resolved file and extract:
 
 Set mode to **plan** when any of:
 - Source contains a `## Steps` section, OR
-- Frontmatter has a `status:` key AND H1 starts with `Plan:`
+- Frontmatter has a `status:` key AND **raw H1** starts with `Plan:`
 
 Otherwise set mode to **doc**.
 

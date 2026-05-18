@@ -7,9 +7,10 @@
 - **`plan-to-html` skill renamed to `markdown-to-html`** — all existing invocations of
   `Skill(skill: "plan-interview:plan-to-html", ...)` must be updated to
   `Skill(skill: "plan-interview:markdown-to-html", ...)`.
-- **`/plan-interview:plan-to-html` command replaced by `/plan-interview:markdown-to-html`** —
-  the old command file is removed; a backward-compat alias skill remains at
-  `skills/plan-to-html/SKILL.md` for automated callers.
+- **`/plan-interview:plan-to-html` command deprecated** — the command file now
+  delegates to `markdown-to-html --mode=plan`. A backward-compat skill alias also
+  remains at `skills/plan-to-html/SKILL.md` for `Skill(...)` callers. Both will be
+  removed in a future major release.
 - **`--setup` flag removed** — the `~/.claude/plan-to-html/` cache directory and
   one-time setup flow are eliminated. Theme CSS and JS are now bundled in
   `skills/markdown-to-html/assets/` and regenerated via `scripts/build-assets.sh`.

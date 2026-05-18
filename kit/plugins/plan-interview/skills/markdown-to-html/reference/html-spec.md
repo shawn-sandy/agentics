@@ -598,7 +598,6 @@ nav {
   position: sticky;
   top: 1rem;
   align-self: start;
-  position: relative;
   background: var(--color-nav-bg);
   border-radius: 8px;
   padding: 0.75rem 0;

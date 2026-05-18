@@ -66,9 +66,9 @@ Writes `<basename>.html` to the same directory as the source file. Plan-mode out
 
 ## Migration from plan-to-html
 
-The `plan-to-html` skill has been renamed to `markdown-to-html`. The old invocation
-`/plan-interview:plan-to-html` still works via a backward-compat alias but is deprecated.
-Update any automated scripts or command references to use `markdown-to-html`.
+The `plan-to-html` skill has been renamed to `markdown-to-html`. The old
+`/plan-interview:plan-to-html` command is deprecated and delegates here — it will be
+removed in a future major release. Update invocations to use `markdown-to-html` directly.
 
 ## Follow the skill instructions
 
