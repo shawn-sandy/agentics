@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.3.0 — 2026-05-17
+
+**Self-contained HTML review artifact.**
+
+The skill now always emits `<plan-stem>-review.html` next to the source plan
+after integrating panel findings (Step 8). The file is a fully self-contained
+HTML document — no CDN dependencies, no external fonts, no remote scripts —
+combining the revised plan (section 15b) as the primary surface with the full
+15-section panel review as a collapsible appendix.
+
+- **Filename pattern:** `<plan-stem>-review.html` in the same directory as
+  the source plan. The stem is basename-normalized to `[A-Za-z0-9._-]`.
+- **Content:** revised plan as primary document; full panel review under a
+  collapsed `<details>` appendix.
+- **Additive:** does not replace or alter the existing in-place plan update
+  (inline edits + `## Panel Review` append). Both outputs continue to be
+  produced.
+- **Skipped** only when `output_mode = review only` (section 15b absent).
+- **No manifest changes required:** `Write` was already declared in
+  `allowed-tools`.
+- **New reference file:** `references/html-spec.md` — bundled HTML layout,
+  theme, accessibility (WCAG AA), and security (escaping/CSP) contract used
+  by Step 8 synthesis.
+
 ## 3.2.1 — 2026-05-15
 
 **Role-optimized model assignments for all six reviewer agents.**

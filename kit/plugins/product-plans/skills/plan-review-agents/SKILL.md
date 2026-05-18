@@ -11,7 +11,9 @@ six-reviewer Agent Team — Product Manager, Lead Developer, UX Designer,
 Lead Frontend Engineer, Accessibility Expert, Security Expert — coordinated by
 a lead that synthesizes findings into a 15-section report and (by default)
 applies concrete improvements directly to the source plan. Review-only mode
-skips the edit pass and produces the report only.
+skips the edit pass and produces the report only. After integrating findings,
+a self-contained HTML review artifact (`<plan-stem>-review.html`) is emitted
+next to the source plan as a shareable, browser-openable companion.
 
 ## When not to use
 
@@ -30,7 +32,8 @@ skips the edit pass and produces the report only.
 - [Step 5 — Wait, collect, and handle failures](#step-5--wait-collect-and-handle-failures)
 - [Step 6 — Synthesize findings](#step-6--synthesize-findings)
 - [Step 7 — Integrate panel findings into the source plan](#step-7--integrate-panel-findings-into-the-source-plan)
-- [Step 8 — Clean up the team](#step-8--clean-up-the-team)
+- [Step 8 — Emit self-contained HTML artifact](#step-8--emit-self-contained-html-artifact)
+- [Step 9 — Clean up the team](#step-9--clean-up-the-team)
 
 ## Instructions
 
@@ -45,7 +48,7 @@ record it once here so subsequent steps can reference it without re-parsing.
 first, then call `ExitPlanMode`. Both calls happen silently with no
 user-visible output. This is a no-op when plan mode is already off.
 
-Use `TodoWrite` to create a todo for each step below (Steps 1–8), all
+Use `TodoWrite` to create a todo for each step below (Steps 1–9), all
 starting `pending`. Mark each `completed` as you finish that step.
 
 ### Step 1 — Resolve the plan file
@@ -217,7 +220,51 @@ Announce:
 
 > `Plan updated in place: <resolved-path> (inline edits applied + Panel Review appended)`
 
-### Step 8 — Clean up the team
+The HTML review artifact will be announced separately in Step 8.
+
+### Step 8 — Emit self-contained HTML artifact
+
+When `output_mode = review only`, skip this step entirely (section 15b does
+not exist; there is no revised plan to use as the primary surface). Otherwise,
+this step runs in both interactive and background modes regardless of
+`output_mode`.
+
+Read [references/html-spec.md](references/html-spec.md). Synthesize a single
+self-contained HTML string from the retained `synthesized_report` string
+produced in Step 6. Do **not** re-synthesize from reviewer outputs; do
+**not** read external CSS. Apply `body class="theme-default"` (theme
+selection is out of scope for v3.3.0).
+
+**Derive the output path:**
+
+1. Take the absolute path of the resolved plan file from Step 1.
+2. Extract the basename (filename only, no directory).
+3. Strip the `.md` extension.
+4. Replace any character outside `[A-Za-z0-9._-]` with `-`.
+5. Append `-review.html`.
+6. Confirm the target directory is the same as the source plan's directory
+   and is not a symlink.
+
+**Write the file:**
+
+All plan content and reviewer output interpolated into the HTML MUST be
+HTML-escaped per the "Security & Escaping Contract" section of
+`references/html-spec.md`. All content must be readable without JavaScript;
+JS provides scroll-spy active-state in the TOC only (progressive enhancement).
+
+Write the HTML string via `Write`; if the file already exists, overwrite it
+silently. If `Write` fails (read-only directory, disk full, permission
+denied), announce:
+
+> `HTML artifact could not be written: <path> — <reason>`
+
+and continue to Step 9 (cleanup must still run).
+
+On success, announce:
+
+> `HTML review artifact written: <resolved-html-path>`
+
+### Step 9 — Clean up the team
 
 Ensure all active teammates have finished or been shut down, then issue:
 
