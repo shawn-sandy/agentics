@@ -23,7 +23,7 @@ Does not stress-test, validate, or critique plan content — use plan-interview 
 - [Step 2 — Get file dates from git](#step-2--get-file-dates-from-git)
 - [Step 3 — Read existing frontmatter](#step-3--read-existing-frontmatter)
 - [Step 4 — Analyze codebase for implementation evidence](#step-4--analyze-codebase-for-implementation-evidence)
-- [Step 5 — Artifact check](#step-5--artifact-check-only-when-status-resolves-to-completed)
+- [Step 5 — Type classification](#step-5--type-classification-only-when-status-resolves-to-completed)
 - [Step 6 — Present findings and confirm](#step-6--present-findings-and-confirm)
 - [Step 7 — Update plan file frontmatter](#step-7--update-plan-file-frontmatter)
 
@@ -139,7 +139,7 @@ analysis entirely. Instead, ask the user via `AskUserQuestion`:
 > "No extractable implementation signals found in this plan (no backtick-quoted
 > file paths or names). Please set the status manually."
 
-Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `artifact`. Use the
+Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `draft`. Use the
 user-selected value as the status and proceed to Step 6.
 
 **For each extracted token**, check both:
@@ -154,20 +154,21 @@ user-selected value as the status and proceed to Step 6.
 - 1–79% of tokens found → status = `in-progress`
 - 80%+ of tokens found → status = `completed`
 
-### Step 5 — Artifact check _(only when status resolves to `completed`)_
+### Step 5 — Type classification _(only when status resolves to `completed`)_
 
-Compute days since the `modified` date (proxy for completion date):
+Infer content type from the plan's filename, H1 heading, and first 200 words
+of body text. Apply the first matching rule:
 
-- If modified date = created date (no modification recorded), use the created
-  date.
-- If ≥ 30 days have passed, ask the user via `AskUserQuestion`:
+| Signal | Inferred type |
+|--------|---------------|
+| Filename starts with `fix-`, `bugfix-`, or H1/body contains "bug", "fix", "patch", "regression" | `fix` |
+| Filename starts with `refactor-`, `restructure-`, `simplify-`, or H1/body contains "refactor", "restructure", "simplify" | `refactor` |
+| Filename starts with `document-`, `add-docs-`, `update-readme-`, or H1/body contains "documentation", "readme", "guide", "changelog" | `docs` |
+| Filename starts with `bump-`, `rename-`, `update-version-`, `cleanup-`, or H1/body contains "chore", "housekeeping", "version bump", "rename" | `chore` |
+| Default (no strong signal or filename starts with `add-`, `create-`, `implement-`, `build-`) | `feature` |
 
-  > "This plan appears to have been completed 30+ days ago. Would you like to
-  > mark it as `artifact` (preserved as valuable project documentation) rather
-  > than `completed`?"
-
-- If user confirms → status = `artifact`
-- If user declines → status stays `completed`
+If the file already has a valid content type (`feature`, `fix`, `refactor`,
+`docs`, `chore`), keep it.
 
 ### Step 6 — Present findings and confirm
 

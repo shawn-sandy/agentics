@@ -29,15 +29,16 @@ You are a batch documentation agent that processes all completed plan files and 
 
 Use `Glob` with pattern `<plansDirectory>/*.md` to get the full list of plan files. Sort alphabetically.
 
-### Step 2 — Filter to completed plans
+### Step 2 — Filter to eligible plans (completed + 30d old)
 
 For each plan file, `Read` from the beginning until the closing `---` delimiter to extract YAML frontmatter. Parse only the content between the opening `---` and closing `---` delimiters. If the file does not start with `---`, it has no frontmatter — skip it immediately.
 
-Within the parsed frontmatter, check for `status: completed` (lowercase, exact match). Build a list of completed plan paths.
+Within the parsed frontmatter, check for `status: completed` (lowercase, exact match) AND that the plan is 30+ days old (using `modified` date if present, otherwise `created`). If neither date is in frontmatter, use `git log -1 --format="%Y-%m-%d"` on the file. Build a list of eligible plan paths.
 
 **Important:**
-- Only include plans with an explicit `status: completed` field in YAML frontmatter.
+- Only include plans with an explicit `status: completed` field in YAML frontmatter that are 30+ days old.
 - Skip plans with missing frontmatter delimiters, missing `status` field, or any other status value (`todo`, `in-progress`, `draft`, etc.).
+- Skip recently completed plans (< 30 days old) — they need time for follow-up changes to settle.
 - Reject non-canonical casing (`Completed`, `COMPLETED`, etc.) — only lowercase `completed` is valid.
 - Ignore any `status: completed` text that appears in the plan body outside of frontmatter.
 - Do not invoke `plan-status` to resolve ambiguous statuses — that would consume too many turns.

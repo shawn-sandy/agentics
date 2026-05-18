@@ -48,7 +48,7 @@ If zero files found, tell the user and stop.
 ### Step 2 — Triage files into groups
 
 Read the first 10 lines of each file to check for YAML frontmatter. Classify
-every file into one of five groups:
+every file into one of six groups:
 
 | Group | Condition | Default action |
 |-------|-----------|----------------|
@@ -56,7 +56,19 @@ every file into one of five groups:
 | B | Frontmatter, no `status` field | Analyze and add `status` |
 | C | `status: todo` or `status: in-progress` | Skip (unless `--force`) |
 | D | `status: completed` | Skip (unless `--force`) |
-| E | `status: artifact` (legacy) | Always process — normalize |
+| E | `status: draft` | Skip (unless `--force`) |
+| F | Non-canonical `status` or `type` value | Always process — normalize |
+
+**Group F detection:** A file belongs to Group F if its frontmatter contains:
+
+- A non-canonical `status` value (anything other than `todo`,
+  `in-progress`, `completed`, `draft`). Common legacy values:
+  - `implemented` → normalize to `completed`
+  - `ready` → normalize to `in-progress`
+  - `proposed` → normalize to `draft`
+  - `artifact` → normalize to `completed`
+- A non-canonical `type` value (`standard` or `artifact`). These legacy
+  lifecycle values are replaced with inferred content types in Step 5.
 
 Present a triage summary:
 
@@ -69,9 +81,10 @@ Plan file triage (N files in docs/plans/):
   B  Frontmatter, no status       1  Will analyze + add status
   C  Has status (todo/wip)        0  Skip (use --force to re-analyze)
   D  Completed                    3  Skip (use --force to re-analyze)
-  E  Legacy artifact              0  Will normalize to completed + type
+  E  Draft                        0  Skip (use --force to re-analyze)
+  F  Non-canonical values         3  Will normalize status/type
 
-  Processing: 81 files
+  Processing: 84 files
   Skipping:    3 files
 ```
 
@@ -141,18 +154,28 @@ Do NOT prompt per-file — the user can override in Step 6.
 
 ### Step 5 — Type classification (batch)
 
-Run this step for all files that scored `completed` in Step 4, including
-legacy `status: artifact` files from Group E.
+Run this step for all files that scored `completed` in Step 4, all Group F
+files with normalized status `completed`, and any file being re-analyzed via
+`--force` that has `status: completed`.
 
-- If a file already has `type: artifact` in its existing frontmatter, keep it
-  and skip.
-- Compute days since the `modified` date (use `created` if `modified` is
-  absent).
-- Apply default rule without prompting:
-  - ≥ 30 days since last modification → default `type: artifact`
-    (flag as `30d+ old` in summary)
-  - Otherwise → default `type: standard`
-- Legacy `status: artifact` files (Group E) → `type: artifact` automatically
+Infer content type from the plan's filename, H1 heading, and first 200 words
+of body text. Apply the first matching rule:
+
+| Signal | Inferred type |
+|--------|---------------|
+| Filename starts with `fix-`, `bugfix-`, or H1/body contains "bug", "fix", "patch", "regression" | `fix` |
+| Filename starts with `refactor-`, `restructure-`, `simplify-`, or H1/body contains "refactor", "restructure", "simplify", "reorganize" | `refactor` |
+| Filename starts with `document-`, `add-docs-`, `update-readme-`, or H1/body contains "documentation", "readme", "guide", "changelog" | `docs` |
+| Filename starts with `bump-`, `rename-`, `update-version-`, `cleanup-`, or H1/body contains "chore", "housekeeping", "version bump", "dependency", "rename" | `chore` |
+| Default (no strong signal or filename starts with `add-`, `create-`, `implement-`, `build-`) | `feature` |
+
+**Handling existing non-canonical type values:** If a file already has
+`type: standard` or `type: artifact` (legacy lifecycle values from Group F),
+always re-infer the content type using the rules above — do not preserve the
+legacy value.
+
+If a file already has a valid content type (`feature`, `fix`, `refactor`,
+`docs`, `chore`) and is not in Group F, keep it and skip (unless `--force`).
 
 All type assignments are overridable in Step 6.
 
@@ -165,34 +188,36 @@ Batch Status Analysis — 81 files processed
 
  #  File                                  Status        Type      Tokens  Evidence  Created     Modified    Flags
 ──  ────────────────────────────────────  ────────────  ────────  ──────  ────────  ──────────  ──────────  ────────────
- 1  add-allowed-tools-recommendation.md   completed     standard  8/8     100%      2026-03-26  —
+ 1  add-allowed-tools-recommendation.md   completed     feature   8/8     100%      2026-03-26  —
  2  add-argument-support.md               in-progress   —         3/7     43%       2026-02-15  2026-03-01
  3  implement-marketplace-api.md          todo          —         0/5     0%        2026-01-20  —
- 4  document-plugin-version-bump.md       completed     standard  5/5     100%      2026-03-15  —           docs plan
- 5  agent-creator-plugin.md               completed     artifact  6/6     100%      2026-01-10  —           30d+ old
+ 4  document-plugin-version-bump.md       completed     docs      5/5     100%      2026-03-15  —           docs plan
+ 5  fix-login-redirect.md                 completed     fix       6/6     100%      2026-01-10  —
+ 6  bump-marketplace-version.md           completed     chore     4/4     100%      2026-02-20  —           normalized
 ...
 ```
 
 **Flags:**
 
-- `30d+ old` — completed plan modified 30+ days ago; auto-classified as
-  `type: artifact`
 - `no signals` — no qualifying tokens found after filtering; defaulted to
   `todo`
 - `docs plan` — plan title contains "document", "readme", "guide", "enhance",
   or similar documentation terms; token-based scoring may be inaccurate —
   review recommended
+- `normalized` — status or type was non-canonical and has been normalized
+  (Group F). Shows the old → new mapping in the details.
 
 After the table, output aggregated stats:
 
 ```
 Summary:
-  completed:    52 files (38 standard, 14 artifact)
+  completed:    52 files (32 feature, 8 fix, 5 chore, 4 docs, 3 refactor)
   in-progress:  18 files
   todo:         11 files (6 no-signals)
+  draft:         2 files
 
 Flags:
-  30d+ old (auto-artifact):   14 files
+  normalized (Group F):        3 files
   docs plan (review):          6 files
   no signals (defaulted todo): 6 files
 ```
@@ -212,8 +237,10 @@ Options:
 Ask: "Which group would you like to override?"
 
 Options:
-- "Auto-artifacts" — review plans auto-classified as `type: artifact`
-  (30d+ old flag); set each to `standard` or `artifact`
+- "Normalized" — review plans whose status or type was auto-normalized
+  (Group F); confirm or override each
+- "Type mismatches" — review plans whose inferred content type may be wrong;
+  set each to `feature`, `fix`, `refactor`, `docs`, or `chore`
 - "Review-flagged" — review plans with `docs plan` flag; set status manually
 - "No-signals" — set status for all zero-signal files at once
 - "Specific files" — enter file numbers from the table above
@@ -232,12 +259,17 @@ Only on user confirmation.
 
 Apply the same field rules as single-file `plan-status`:
 
-- Include `type` only when `status` is `completed`. Valid values: `standard`,
-  `artifact`. Omit `type` for `todo` and `in-progress`.
+- Include `type` only when `status` is `completed`. Valid content type values:
+  `feature`, `fix`, `refactor`, `docs`, `chore`. Omit `type` for `todo`,
+  `in-progress`, and `draft`.
 - Omit `modified` if it equals `created`.
 - Preserve all other existing frontmatter fields exactly as-is.
-- When normalizing legacy `status: artifact`, write `status: completed` +
-  `type: artifact`.
+- When normalizing Group F files:
+  - Non-canonical `status` values: write the canonical equivalent
+    (`implemented` → `completed`, `ready` → `in-progress`,
+    `proposed` → `draft`, `artifact` → `completed`).
+  - Non-canonical `type` values (`standard`, `artifact`): replace with
+    the inferred content type from Step 5.
 
 **Hybrid write strategy:**
 
@@ -258,7 +290,7 @@ Apply the same field rules as single-file `plan-status`:
 
   insert_frontmatter "docs/plans/file2.md" "---
   status: completed
-  type: standard
+  type: feature
   created: 2026-03-01
   ---"
   # ... one call per file
