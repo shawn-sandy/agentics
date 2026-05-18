@@ -98,26 +98,8 @@ Read the plan file and parse its YAML frontmatter if present.
   - If the user chooses to re-analyze, continue from Step 4.
 - If no frontmatter or no `status` field exists, continue from Step 4.
 
-**Type inference**: After resolving the `status` decision, determine the plan `type`:
-
-- If a `type` field already exists in frontmatter, preserve it and skip inference.
-- If no `type` exists, infer it by scanning the plan filename (without extension),
-  H1 heading, and first 200 words of the body for keywords (in that order, first
-  match wins):
-
-  | Keywords (case-insensitive)                                               | Type           |
-  |---------------------------------------------------------------------------|----------------|
-  | `fix`, `bug`, `patch`, `defect`                                           | `bug-fix`      |
-  | `refactor`, `restructure`, `reorganize`, `cleanup`, `clean up`            | `refactor`     |
-  | `architecture`, `migrate`, `migration`, `infrastructure`, `system design` | `architecture` |
-  | `docs`, `documentation`, `readme`, `changelog`, `guide`                  | `docs`         |
-  | `chore`, `maintenance`, `upgrade`, `tooling`, `dependency`, `dependencies`| `chore`        |
-  | All other cases                                                            | `feature`      |
-
-- If multiple type keywords are detected at the same scan level (ambiguous),
-  use `AskUserQuestion` to confirm:
-  > "I inferred this plan's type as `[type]` — does that look right?"
-  > Options: `feature`, `bug-fix`, `refactor`, `architecture`, `chore`, `docs`
+**Type**: Type is classified in **Step 5 only**, and only when status resolves
+to `completed`. Do not infer or write `type` during this step.
 
 ### Step 4 — Analyze codebase for implementation evidence
 

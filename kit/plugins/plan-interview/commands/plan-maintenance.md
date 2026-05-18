@@ -91,8 +91,10 @@ For "Apply recommendation":
 If any files were removed:
 
 ```
-git add -A docs/plans/ && git commit -m "chore(plans): consolidate N variant plan files"
+git add -A <plansDir>/ && git commit -m "chore(plans): consolidate N variant plan files"
 ```
+
+Where `<plansDir>` is the resolved plans directory from Step 0.
 
 If no changes were made, skip the commit silently.
 
@@ -166,8 +168,8 @@ For each candidate:
 3. Invoke the `markdown-to-html` skill with `--mode=plan` on the source file.
    The skill writes `<slug>.html` next to the source `.md` in the plans
    directory.
-4. `mv docs/plans/<slug>.html docs/archive/<type>/<slug>.html`
-5. `git rm docs/plans/<slug>.md`
+4. `mv <plansDir>/<slug>.html docs/archive/<type>/<slug>.html`
+5. `git rm <plansDir>/<slug>.md`
 6. If a matching `-review.html` exists, move it to the same type folder.
 7. Output progress: `"Archived 12/33: <slug>.html → docs/archive/features/"`
 
@@ -181,7 +183,7 @@ until ALL files are processed. If any render fails mid-batch:
 On full success:
 
 ```
-git add -A docs/plans/ docs/archive/ && git commit -m "chore(plans): archive N completed plans as HTML"
+git add -A <plansDir>/ docs/archive/ && git commit -m "chore(plans): archive N completed plans as HTML"
 ```
 
 **Background (with `--background` flag):**
