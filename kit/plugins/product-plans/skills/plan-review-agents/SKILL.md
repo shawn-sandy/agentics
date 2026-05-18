@@ -226,8 +226,7 @@ The HTML review artifact will be announced separately in Step 8.
 
 When `output_mode = review only`, skip this step entirely (section 15b does
 not exist; there is no revised plan to use as the primary surface). Otherwise,
-this step runs in both interactive and background modes regardless of
-`output_mode`.
+this step runs in both interactive and background modes.
 
 Read [references/html-spec.md](references/html-spec.md). Synthesize a single
 self-contained HTML string from the retained `synthesized_report` string

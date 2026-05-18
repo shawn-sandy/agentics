@@ -2,7 +2,6 @@
 status: completed
 type: feature
 created: 2026-05-17
-modified: 2026-05-17
 ---
 
 # Plan: Emit self-contained HTML artifact from plan-review-agents

@@ -248,16 +248,22 @@ details[open] > summary::before { content: "▼ "; }
 
 1. Hide the sidebar: `.sidebar { display: none; }`.
 2. Collapse the two-column grid to single-column: `.layout { display: block; }`.
-3. Expand all `<details>`: `details { display: block; } summary { display: none; }`.
+3. Expand all `<details>`: set `details { display: block; }` and
+   `summary { display: none; }`. Also add `::details-content { content-visibility: visible; }`
+   to force the hidden slot to render (supported in Chrome 131+, Firefox 136+).
+   For older browser coverage, add `beforeprint`/`afterprint` JS listeners that
+   set and remove the `open` attribute on every `<details>` element (see the
+   Reference HTML Skeleton `<script>` block).
 4. Remove sticky positioning: `.sidebar { position: static; }` (redundant with
    `display:none` but included for robustness).
 
 ```css
 @media print {
-  .sidebar   { display: none; }
-  .layout    { display: block; }
-  details    { display: block; }
-  summary    { display: none; }
+  .sidebar          { display: none; }
+  .layout           { display: block; }
+  details           { display: block; }
+  summary           { display: none; }
+  ::details-content { content-visibility: visible; }
 }
 ```
 
@@ -379,10 +385,11 @@ alter landmark nesting, heading levels, or the `<head>` element order.
 
     /* ── print ───────────────────────────────────────────────── */
     @media print {
-      .sidebar { display: none; }
-      .layout  { display: block; }
-      details  { display: block; }
-      summary  { display: none; }
+      .sidebar          { display: none; }
+      .layout           { display: block; }
+      details           { display: block; }
+      summary           { display: none; }
+      ::details-content { content-visibility: visible; }
     }
   </style>
 </head>
@@ -461,6 +468,15 @@ alter landmark nesting, heading levels, or the `<head>` element order.
         });
       }, { rootMargin: '0px 0px -60% 0px', threshold: 0 });
       headings.forEach(function (h) { obs.observe(h); });
+    })();
+
+    /* Print fallback: set open attribute on all details before printing
+       so older browsers (pre-::details-content support) expand them. */
+    (function () {
+      function openAll()  { document.querySelectorAll('details').forEach(function(d){ d.open = true; }); }
+      function closeAll() { document.querySelectorAll('details').forEach(function(d){ d.removeAttribute('open'); }); }
+      window.addEventListener('beforeprint', openAll);
+      window.addEventListener('afterprint',  closeAll);
     })();
   </script>
 

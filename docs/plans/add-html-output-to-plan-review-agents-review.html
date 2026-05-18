@@ -144,10 +144,11 @@
 
     /* ── print ───────────────────────────────────────────── */
     @media print {
-      .sidebar  { display: none; }
-      .layout   { display: block; }
-      details   { display: block; }
-      summary   { display: none; }
+      .sidebar          { display: none; }
+      .layout           { display: block; }
+      details           { display: block; }
+      summary           { display: none; }
+      ::details-content { content-visibility: visible; }
     }
   </style>
 </head>
@@ -537,6 +538,14 @@
         });
       }, { rootMargin: '0px 0px -55% 0px', threshold: 0 });
       headings.forEach(function (h) { obs.observe(h); });
+    })();
+
+    /* Print fallback: set open on all details before printing (older browsers). */
+    (function () {
+      function openAll()  { document.querySelectorAll('details').forEach(function(d){ d.open = true; }); }
+      function closeAll() { document.querySelectorAll('details').forEach(function(d){ d.removeAttribute('open'); }); }
+      window.addEventListener('beforeprint', openAll);
+      window.addEventListener('afterprint',  closeAll);
     })();
   </script>
 

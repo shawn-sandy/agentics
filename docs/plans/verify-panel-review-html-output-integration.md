@@ -8,7 +8,7 @@ created: 2026-05-17
 
 ## Context
 
-The plan file `docs/plans/the-kit-plugins-product-plans-skills-pla-merry-tome.md`
+The plan file `docs/plans/add-html-output-to-plan-review-agents.md`
 went through the `product-plans:plan-review-agents` skill, which appended a
 full `## Panel Review` section (lines 427–722) with a "Recommended Changes
 to the Plan" subsection listing 19 specific edits the panel said were applied
@@ -67,18 +67,14 @@ These are the legitimate open decisions, not missing integrations.
 
 ## Verification
 
-- `grep -nE '^### |^## ' docs/plans/the-kit-plugins-product-plans-skills-pla-merry-tome.md`
+- `grep -nE '^### |^## ' docs/plans/add-html-output-to-plan-review-agents.md`
   confirms the body sections referenced above are present in the order claimed.
 - Spot-check rows 1, 7, 8, 13, 15 against the line numbers above — each
   recommendation's claimed location contains the recommendation's content.
 
 ## Next Steps *(optional)*
 
-- Rename `the-kit-plugins-product-plans-skills-pla-merry-tome.md` per its own
-  Next Steps entry (line 330) before the first implementation commit:
-  ```text
-  Rename docs/plans/the-kit-plugins-product-plans-skills-pla-merry-tome.md
-  to docs/plans/add-html-output-to-plan-review-agents.md using `git mv` so
-  history is preserved. Per plan-hygiene.md, random-named plan files must be
-  renamed before the first commit for the feature.
-  ```
+- Plan file already renamed from `the-kit-plugins-product-plans-skills-pla-merry-tome.md`
+  to `add-html-output-to-plan-review-agents.md` before the first implementation
+  commit (per plan-hygiene.md). Rename was done via filesystem `mv` + `git add`
+  since the file was untracked; history preserved within the branch.
