@@ -1,5 +1,67 @@
 # Changelog
 
+## [2.0.0] - 2026-05-18
+
+### Breaking Changes
+
+- **`plan-to-html` skill renamed to `markdown-to-html`** — all existing invocations of
+  `Skill(skill: "plan-interview:plan-to-html", ...)` must be updated to
+  `Skill(skill: "plan-interview:markdown-to-html", ...)`.
+- **`/plan-interview:plan-to-html` command replaced by `/plan-interview:markdown-to-html`** —
+  the old command file is removed; a backward-compat alias skill remains at
+  `skills/plan-to-html/SKILL.md` for automated callers.
+- **`--setup` flag removed** — the `~/.claude/plan-to-html/` cache directory and
+  one-time setup flow are eliminated. Theme CSS and JS are now bundled in
+  `skills/markdown-to-html/assets/` and regenerated via `scripts/build-assets.sh`.
+
+### Added
+
+- **`skills/markdown-to-html/`** — renamed skill with broadened scope (plan + doc modes)
+- **Render mode auto-detection** — plan mode (step cards, timeline, SVG diagram) activates
+  automatically when source has `## Steps` or `status:` + `Plan:` H1; falls back to doc mode
+- **`--mode=auto|plan|doc`** flag to force render mode
+- **CSS step timeline** — vertical connector line + circle node per step via `::before`
+  pseudo-elements; filled circle on completed steps
+- **Status chip** — `<span class="step-chip">` real element (not `::after`) shows
+  `todo` / `done`; freed both pseudo-elements for the timeline
+- **Scroll rail** — `<div class="scroll-rail">` in sidebar tracks page scroll progress
+  via `--scroll-pct` CSS custom property updated by JS
+- **SVG section diagram** — auto-compact node graph when ≥2 sections present;
+  geometry scales with section count; nodes link to sections on click
+- **WCAG Level A** — skip link (`<a href="#main-content">`), `lang="en"`, `<title>`,
+  each checkbox wrapped in `<label>`, `aria-current="true"` on active nav link,
+  `aria-labelledby` on each `<section>`, `aria-live` step-status live region
+- **`aria-current="true"`** on active sidebar `<a>` (SC 4.1.2)
+- **`--list-themes`** flag — prints theme names and descriptions, then stops
+- **`--mode=plan`** appended to all callers** — `plan-hygiene`, `review-rename-plans`,
+  `plan-interview` SKILL.md now pass `--mode=plan` to prevent doc-mode regression
+- **`scripts/build-assets.sh`** — awk-based extractor generates `assets/themes.css`
+  and `assets/scripts.js` from `BUILD-EXTRACT` comment markers in `html-spec.md`
+- **`skills/plan-to-html/SKILL.md`** — backward-compat alias that delegates to
+  `markdown-to-html` with `--mode=plan`
+- **`commands/markdown-to-html.md`** — new command file with updated flags and features
+- **`reference/html-spec.md`** — comprehensive rewrite covering security, render modes,
+  WCAG requirements, visuals (timeline, chips, rail, SVG), and updated JS features
+
+### Security
+
+- **Per-sink HTML encoding** for all user-controlled content (body text, attributes,
+  SVG `<text>`) — prevents XSS (CWE-79)
+- **URL allow-list** — only `http://`, `https://`, `mailto:`, `#` emit `<a href>`;
+  all other schemes render as plain text
+- **Theme allow-list** — validated before interpolation into `<body class="theme-…">`
+- **Path traversal defense** (`realpath` + workspace boundary check) in Step 1
+
+### Changed
+
+- `reference/html-spec.md` is now the authoritative spec; `assets/` files are generated
+  artifacts — always regenerate via `build-assets.sh` after spec changes
+- Scroll-spy now sets both `class="active"` AND `aria-current="true"` on active nav links
+- Progress bar retains custom `.progress-fill` div (native `<progress>` + `accent-color`
+  discordant on dark themes)
+- `prefers-reduced-motion` disables all transitions (step cards, progress fill, scroll rail)
+- `Bash(mkdir *)` removed from `allowed-tools`; `Bash(realpath *)` added
+
 ## [1.22.1] - 2026-05-15
 
 ### Fixed

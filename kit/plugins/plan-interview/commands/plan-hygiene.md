@@ -101,7 +101,7 @@ HTML files:
 
 **Step C — Generate HTML per renamed file**
 
-For each renamed file, invoke the `plan-to-html` skill with the new path, the
+For each renamed file, invoke the `markdown-to-html` skill with the new path, the
 chosen theme, and `--no-open` to suppress per-file browser prompts:
 
 ```

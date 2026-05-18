@@ -158,7 +158,7 @@ HTML files:
 
 **5c — Generate HTML per renamed file**
 
-For each renamed file, invoke the `plan-to-html` skill, passing the new path,
+For each renamed file, invoke the `markdown-to-html` skill, passing the new path,
 the chosen theme, and `--no-open` to suppress browser prompts:
 
 ```
