@@ -1,7 +1,7 @@
 ---
 status: completed
 created: 2026-05-14
-type: feature
+type: artifact
 ---
 
 # Plan: Optimize plan-to-html Skill Performance
