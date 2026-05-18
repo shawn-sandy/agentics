@@ -1,7 +1,7 @@
 ---
 name: plan-interview
 description: "Use when the user asks to stress-test, interview, validate, critique, or find gaps and risks in an implementation or agentic plan."
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill, ToolSearch, ExitPlanMode
 ---
 
 # Plan Interview
@@ -15,7 +15,7 @@ Does not execute implementation work or apply code fixes from the plan — this 
 
 ## Table of Contents
 
-- [Step 0 — Create progress todos](#step-0--create-progress-todos)
+- [Step 0 — Exit plan mode and create progress todos](#step-0--exit-plan-mode-and-create-progress-todos)
 - [Step 1 — Resolve the plan file](#step-1--resolve-the-plan-file)
 - [Step 2 — Read, validate plan name, and analyze the plan](#step-2--read-validate-plan-name-and-analyze-the-plan)
 - [Step 2.5 — Skill tool analysis](#step-25--skill-tool-analysis-skill-review-mode-only)
@@ -27,7 +27,11 @@ Does not execute implementation work or apply code fixes from the plan — this 
 
 ## Instructions
 
-### Step 0 — Create progress todos
+### Step 0 — Exit plan mode and create progress todos
+
+`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
+first, then call `ExitPlanMode`. Both steps happen silently with no user-visible
+output. This is a no-op when plan mode is already off.
 
 Before doing any other work, use `TodoWrite` to create todos for each step of
 this interview. This gives the user visibility into progress and ensures no step
