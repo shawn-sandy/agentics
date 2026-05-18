@@ -91,31 +91,104 @@ to hide mouse-click rings while preserving keyboard outlines:
 
 ---
 
-## decision badge
+## decision banner
 
 Rendered from the `Final decision:` line in section 14 of the synthesized
 report. Verdict strings: `Approve`, `Approve with revisions`, `Reject`.
+
+The decision banner is a `<div role="status">` placed in `<main>` between
+the plan body and the `<details id="appendix">` toggle. It is the **sole**
+decision announcement point — there is no badge in `<header>`.
 
 **Rules:**
 
 - The full verdict text label must be rendered as visible content — do not
   convey the decision through color alone (WCAG 1.4.1).
-- Badge is a `<span class="badge badge-approve|badge-revise|badge-reject">`.
-- Badge text is a `<strong>` wrapping the full label, e.g.:
-  `<span class="badge badge-approve"><strong>Approve</strong></span>`
-- Badge colors use `--badge-approve`, `--badge-revise`, `--badge-reject` (text
-  `--badge-fg`). Do not remove or visually hide the text label.
-- Place the badge in the `<header>` below the `<h1>`, adjacent to the
-  plan title, so it is the first element a reader encounters.
+- Render for **all three outcomes**: Approve (green), Approve with revisions
+  (amber), Reject (red + remediation prompt).
+- Banner colors use `--badge-approve`, `--badge-revise`, `--badge-reject`
+  (text `--badge-fg`). Do not remove or visually hide the text label.
+- When the decision is `Reject`, the banner also contains the remediation
+  section (see the `## remediation prompt` section below).
 
 ```css
-.badge         { display: inline-block; padding: .25em .75em;
-                 border-radius: .25em; font-size: .9rem;
-                 color: var(--badge-fg); }
-.badge-approve { background: var(--badge-approve); }
-.badge-revise  { background: var(--badge-revise); }
-.badge-reject  { background: var(--badge-reject); }
+.decision-banner { padding: 1em 1.25em; border-radius: .5em; margin: 1.5em 0;
+                   color: var(--badge-fg); }
+.decision-banner strong { font-size: 1.1rem; }
+.decision-banner.banner-approve { background: var(--badge-approve); }
+.decision-banner.banner-revise  { background: var(--badge-revise); }
+.decision-banner.banner-reject  { background: var(--badge-reject); }
 ```
+
+```html
+<div class="decision-banner banner-approve|banner-revise|banner-reject" role="status">
+  <strong>Approve|Approve with revisions|Reject</strong>
+  <p>[Rationale sentence from section 14]</p>
+  <!-- remediation section here when Reject — see below -->
+</div>
+```
+
+---
+
+## remediation prompt
+
+Rendered **only** when the final decision is `Reject`. Placed inside the
+decision banner `<div>`, after the rationale paragraph.
+
+**Structure:**
+
+```html
+<div class="remediation">
+  <h3>Remediation Prompt</h3>
+  <p>Copy the prompt below and paste it into a fresh Claude session to fix
+  the plan and re-run the review.</p>
+  <div style="position: relative;">
+    <pre role="region" aria-label="Remediation prompt text" tabindex="0">[HTML-escaped prompt text from section 14 #### Remediation Prompt]</pre>
+    <button class="copy-btn" aria-label="Copy remediation prompt to clipboard">Copy</button>
+  </div>
+  <span class="sr-only" aria-live="polite"></span>
+</div>
+```
+
+**CSS:**
+
+```css
+.remediation     { margin-top: 1em; padding: 1em; border-radius: .375em;
+                   border-left: 4px solid var(--badge-reject);
+                   background: var(--surface);
+                   background: color-mix(in srgb, var(--badge-reject) 5%, var(--surface));
+                   color: var(--text); }
+.remediation h3  { font-size: 1rem; margin-bottom: .5em; }
+.remediation pre { max-height: 300px; overflow-y: auto; padding: .75em;
+                   background: var(--bg); border: 1px solid var(--border);
+                   border-radius: .25em; font-size: .85rem;
+                   white-space: pre-wrap; word-wrap: break-word; }
+.remediation pre:focus-visible { outline: 2px solid var(--accent);
+                                  outline-offset: 2px; }
+.copy-btn        { position: absolute; top: .5em; right: .5em;
+                   padding: .25em .75em; border: 1px solid var(--border);
+                   border-radius: .25em; background: var(--surface);
+                   color: var(--text); cursor: pointer; font-size: .8rem; }
+.copy-btn:hover  { background: var(--border); }
+.sr-only         { position: absolute; width: 1px; height: 1px;
+                   padding: 0; margin: -1px; overflow: hidden;
+                   clip: rect(0,0,0,0); white-space: nowrap;
+                   border: 0; }
+```
+
+**Accessibility:**
+
+- The `<pre>` has `tabindex="0"` for keyboard scrolling and
+  `role="region" aria-label="Remediation prompt text"`.
+- The copy button has `aria-label="Copy remediation prompt to clipboard"`
+  (WCAG 4.1.2).
+- The `<span class="sr-only" aria-live="polite">` **must pre-exist in the
+  DOM** from initial render (not dynamically created) so assistive technology
+  registers it before content changes (WCAG 4.1.3). On clipboard success it
+  receives the text "Copied"; on failure it receives "Could not copy —
+  select the text manually".
+
+**Print:** `.copy-btn { display: none; }` in `@media print`.
 
 ---
 
@@ -242,6 +315,30 @@ details[open] > summary::before { content: "▼ "; }
 
 ---
 
+## historical reviews
+
+When the plan file contains multiple `## Panel Review (timestamp)` sections
+(from re-runs), each one renders as its own collapsed `<details>` element
+inside the appendix, **newest first** (reverse chronological order). The
+most recent review is the primary appendix `<details>`; older reviews are
+nested after it.
+
+```html
+<details class="historical-review">
+  <summary>Panel Review (2026-05-18 14:30:00 UTC)</summary>
+  <div class="appendix-body">
+    <!-- older review content, HTML-escaped -->
+  </div>
+</details>
+```
+
+```css
+.historical-review { margin-top: 1em; border: 1px solid var(--border);
+                     border-radius: .375em; padding: .5em; }
+```
+
+---
+
 ## print
 
 `@media print` must:
@@ -264,6 +361,7 @@ details[open] > summary::before { content: "▼ "; }
   details           { display: block; }
   summary           { display: none; }
   ::details-content { content-visibility: visible; }
+  .copy-btn         { display: none; }
 }
 ```
 
@@ -286,7 +384,8 @@ The file must be fully self-contained. The following are forbidden:
 | Remote font loading | Google Fonts, Typekit, etc. |
 
 All CSS must be in a single `<style>` block inside `<head>`. All JS must be
-in a single `<script>` block at the bottom of `<body>` (scroll-spy only).
+in a single `<script>` block at the bottom of `<body>` (scroll-spy,
+print fallback, and clipboard handler only).
 Images embedded as `data:image/*` base64 are permitted.
 
 Verification grep (must return no matches on the emitted file):
@@ -300,8 +399,9 @@ grep -E '<link |<script[^>]*src=|<iframe|<object |<embed |@import|url\(https?:|<
 ## Security & Escaping Contract
 
 **All interpolated values** — plan body, reviewer outputs, decision strings,
-table cell content, reviewer names, plan title, filename stem — **must be
-HTML-escaped before insertion**:
+table cell content, reviewer names, plan title, filename stem,
+**remediation prompt content** (reproduced from plan sections 3/4/12) —
+**must be HTML-escaped before insertion**:
 
 | Raw character | Escaped form |
 |---|---|
@@ -330,8 +430,19 @@ inline `<style>`:
                base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
 ```
 
-**Scroll-spy JS** — the only permitted JavaScript is scroll-spy that updates
-`aria-current="location"` on the active TOC anchor. It must not:
+**Permitted JS** — the only permitted JavaScript is:
+
+1. **Scroll-spy** that updates `aria-current="location"` on the active TOC
+   anchor.
+2. **Print fallback** that sets/removes the `open` attribute on `<details>`
+   elements around `beforeprint`/`afterprint` events.
+3. **Clipboard handler** for the copy button (reject decision only): uses
+   `navigator.clipboard.writeText()` with a `document.execCommand('copy')`
+   fallback for `file://` origins. On success, sets the `aria-live` span
+   text to "Copied"; on failure, sets it to "Could not copy — select the
+   text manually". The `aria-live` span must pre-exist in the DOM.
+
+All JS must not:
 - Move keyboard focus programmatically (WCAG 2.4.3).
 - Dynamically load external resources.
 - Use dynamic code execution or `innerHTML` with unsanitized strings.
@@ -353,7 +464,7 @@ alter landmark nesting, heading levels, or the `<head>` element order.
         content="default-src 'none'; style-src 'self' 'unsafe-inline';
                  script-src 'self' 'unsafe-inline'; img-src data:;
                  base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
-  <meta name="generator" content="product-plans v3.3.0">
+  <meta name="generator" content="product-plans v3.4.0">
   <title><!-- plan H1 heading text (HTML-escaped), or filename stem if no H1 --></title>
   <style>
     /* ── reset ──────────────────────────────────────────────── */
@@ -367,8 +478,11 @@ alter landmark nesting, heading levels, or the `<head>` element order.
     /* ── layout (injection point) ───────────────────────────── */
     /* paste layout CSS from the layout section */
 
-    /* ── decision badge (injection point) ───────────────────── */
-    /* paste badge CSS from the decision badge section */
+    /* ── decision banner (injection point) ──────────────────── */
+    /* paste banner CSS from the decision banner section */
+
+    /* ── remediation (injection point) ───────────────────────── */
+    /* paste remediation CSS from the remediation prompt section */
 
     /* ── reviewer cards (injection point) ───────────────────── */
     /* paste reviewer card / unavailable pill CSS */
@@ -390,6 +504,7 @@ alter landmark nesting, heading levels, or the `<head>` element order.
       details           { display: block; }
       summary           { display: none; }
       ::details-content { content-visibility: visible; }
+      .copy-btn         { display: none; }
     }
   </style>
 </head>
@@ -397,10 +512,6 @@ alter landmark nesting, heading levels, or the `<head>` element order.
 
   <header>
     <h1><!-- plan title (HTML-escaped) --></h1>
-    <!-- injection point: decision badge
-         <span class="badge badge-approve|badge-revise|badge-reject">
-           <strong>Approve|Approve with revisions|Reject</strong>
-         </span> -->
     <p class="provenance">
       Generated: <!-- ISO-8601 UTC timestamp --> &middot;
       Source: <code><!-- source plan filename (HTML-escaped) --></code>
@@ -424,6 +535,14 @@ alter landmark nesting, heading levels, or the `<head>` element order.
            Use <h2> for top-level plan sections, <h3> for sub-sections.
            All content HTML-escaped (or safely rendered from markdown). -->
 
+      <!-- injection point: decision banner
+           <div class="decision-banner banner-approve|banner-revise|banner-reject" role="status">
+             <strong>Approve|Approve with revisions|Reject</strong>
+             <p>[Rationale from section 14]</p>
+             (when Reject, include remediation section here — see remediation prompt spec)
+           </div> -->
+      <span class="sr-only" aria-live="polite"></span>
+
       <details id="appendix">
         <summary>Panel Review (full 15-section report)</summary>
         <div class="appendix-body">
@@ -443,6 +562,10 @@ alter landmark nesting, heading levels, or the `<head>` element order.
 
         </div>
       </details>
+
+      <!-- injection point: historical reviews (if any).
+           Each ## Panel Review (timestamp) section from the plan file
+           renders as its own collapsed <details>, newest first. -->
 
     </main>
   </div>
@@ -477,6 +600,43 @@ alter landmark nesting, heading levels, or the `<head>` element order.
       function closeAll() { document.querySelectorAll('details').forEach(function(d){ d.removeAttribute('open'); }); }
       window.addEventListener('beforeprint', openAll);
       window.addEventListener('afterprint',  closeAll);
+    })();
+
+    /* Clipboard handler for remediation prompt copy button.
+       Uses navigator.clipboard with execCommand fallback for file:// origins.
+       aria-live span must pre-exist in DOM. */
+    (function () {
+      var btn = document.querySelector('.copy-btn');
+      if (!btn) return;
+      var pre = document.querySelector('.remediation pre');
+      var live = document.querySelector('[aria-live="polite"]');
+      if (!pre || !live) return;
+      btn.addEventListener('click', function () {
+        var text = pre.textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function () { live.textContent = 'Copied'; },
+            function () { fallback(text); }
+          );
+        } else {
+          fallback(text);
+        }
+      });
+      function fallback(text) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          var ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          live.textContent = ok ? 'Copied' : 'Could not copy — select the text manually';
+        } catch (e) {
+          live.textContent = 'Could not copy — select the text manually';
+        }
+      }
     })();
   </script>
 

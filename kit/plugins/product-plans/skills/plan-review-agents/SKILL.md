@@ -189,6 +189,24 @@ Before filling the template, compare the six reviewers' findings:
 Reproduce the verbatim template with findings filled in. Omit section 15
 if `output_mode = review only`.
 
+**Rejection remediation:** When the final decision is `Reject`, populate the
+reject-only subsections in section 14:
+
+- **Rejection Summary** — reproduce (do not summarize) the blocking issues
+  from section 4 and the critical concerns from section 3 that drove the
+  rejection. Prefix each item with the originating reviewer role in square
+  brackets (e.g. `[Lead Dev]`, `[Security]`). If section 4 is empty, use
+  the highest-risk issues from section 3 as the blocking-issue equivalent
+  and add the explanatory note from the template.
+- **Remediation Prompt** — select the interactive or background variant
+  based on `mode` from Step 0. Substitute `<plan-path>` with the resolved
+  plan path from Step 1. Reproduce items from sections 3, 4, and 12
+  verbatim into the prompt's issue lists.
+
+When the decision is `Approve` or `Approve with revisions`, omit
+everything between the `<!-- BEGIN reject-only -->` and
+`<!-- END reject-only -->` comments.
+
 ### Step 7 — Integrate panel findings into the source plan
 
 Skip entirely if `output_mode = review only`.
@@ -206,13 +224,21 @@ Apply") of the synthesized output. For each row in the table, apply one
   immediately after the named anchor heading.
 
 Apply rows in order. Skip any row whose section heading cannot be matched
-in the source plan (log a one-line warning; do not stop).
+in the source plan (log a one-line warning; do not stop). When the decision
+is `Reject`, some 15a edits may target sections that no longer match if
+the plan was previously edited by an earlier review — this is expected and
+non-fatal; skip and log a warning.
 
-**Pass 2 — Append panel review.** Use `Edit` to append a new
-`## Panel Review` section at the very end of the source plan. The content
-is the full verbatim synthesized report (sections 1–15b, including the
-inline-edits table and the complete revised plan). Do not re-generate;
-copy from synthesis.
+**Pass 2 — Append panel review.** Use `Edit` to append a new dated
+`## Panel Review (YYYY-MM-DD HH:MM:SS UTC)` section at the very end of
+the source plan, using the current UTC timestamp with seconds precision.
+The content is the full verbatim synthesized report (sections 1–15b,
+including the inline-edits table and the complete revised plan). Do not
+re-generate; copy from synthesis.
+
+Do not strip or modify any existing `## Panel Review` sections — each
+re-run appends a new dated section. Reviewers in subsequent runs see all
+historical reviews for context.
 
 Both interactive and background modes share this path. There is no
 `AskUserQuestion`, no sibling file, no `git status --porcelain` guard.
@@ -228,11 +254,17 @@ When `output_mode = review only`, skip this step entirely (section 15b does
 not exist; there is no revised plan to use as the primary surface). Otherwise,
 this step runs in both interactive and background modes.
 
+**Re-read the plan file.** Before generating the HTML, re-read the resolved
+plan file path from Step 1. Step 7 modified the file (inline edits + Panel
+Review append), and the HTML artifact needs the current file state —
+including any historical `## Panel Review (timestamp)` sections — to render
+them as collapsed `<details>` elements in the appendix.
+
 Read [references/html-spec.md](references/html-spec.md). Synthesize a single
-self-contained HTML string from the retained `synthesized_report` string
-produced in Step 6. Do **not** re-synthesize from reviewer outputs; do
-**not** read external CSS. Apply `body class="theme-default"` (theme
-selection is out of scope for v3.3.0).
+self-contained HTML string from both the re-read plan file content and the
+retained `synthesized_report` string produced in Step 6. Do **not**
+re-synthesize from reviewer outputs; do **not** read external CSS. Apply
+`body class="theme-default"` (theme selection is out of scope for v3.4.0).
 
 **Derive the output path:**
 
