@@ -21,8 +21,9 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
 | `documenting-plans` | Command | `/plan-interview:documenting-plans [plan-file-path]` |
 | `documenting-plans` | Skill | Auto-activates on requests to document, generate docs from, or write reference docs for a plan |
-| `plan-to-html` | Command | `/plan-interview:plan-to-html [plan-file-path]` |
-| `plan-to-html` | Skill | Auto-activates on requests to convert a plan to HTML or make a plan viewable in a browser |
+| `markdown-to-html` | Command | `/plan-interview:markdown-to-html [file-path]` |
+| `markdown-to-html` | Skill | Auto-activates on requests to convert a plan or markdown doc to HTML or make it viewable in a browser |
+| `plan-to-html` | Skill | Deprecated alias — delegates to `markdown-to-html` with `--mode=plan` |
 | `plan-documenter` | Agent | Invoked via Agent tool: `plan-interview:plan-documenter` |
 | `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
 
@@ -254,35 +255,42 @@ repo per run. To add a weekly sweep to another repo:
 The agent prompt is identical across repos — only the GitHub URL changes. For
 2-5 repos, individual triggers are the simplest approach.
 
-### Convert Plan to HTML
+### Convert Markdown to HTML
 
-Generate a rich, self-contained HTML document from any plan file — viewable in
-any browser, shareable via a file host, with no external dependencies:
+Generate a rich, self-contained HTML document from any plan or markdown file —
+viewable in any browser, shareable via a file host, with no external dependencies:
 
 ```
-/plan-interview:plan-to-html                                    # auto-detects from IDE or settings
-/plan-interview:plan-to-html docs/plans/my-feature.md          # specific plan file
-/plan-interview:plan-to-html ~/.claude/plans/my-feature.md     # absolute path
+/plan-interview:markdown-to-html                                    # auto-detects from IDE or settings
+/plan-interview:markdown-to-html docs/plans/my-feature.md          # specific plan file
+/plan-interview:markdown-to-html README.md --mode=doc               # any markdown doc in doc mode
+/plan-interview:markdown-to-html docs/plans/my-feature.md --background  # non-interactive batch
+/plan-interview:markdown-to-html --list-themes                      # see available themes
 ```
 
-The skill prompts for a color theme before writing, then generates a file at
-`<plan-basename>.html` in the same directory as the source plan. Features:
+The skill auto-detects plan files and enables the full plan-mode visual suite. Features:
 
-- **Sticky sidebar** with anchor links to each section present in the plan
+- **Sticky sidebar** with anchor links and a scroll-rail progress indicator (plan mode)
+- **CSS step timeline** — vertical connector lines and circle nodes per step (plan mode)
+- **Status chips** — `todo` / `done` pill per step, updated on checkbox change (plan mode)
+- **SVG section diagram** — auto-compact node graph when ≥2 sections present (plan mode)
 - **Three-line step cards** — action (bold), why (muted), verify (✓ prefixed)
 - **Color-coded status badge** — gray (todo/unknown), amber (in-progress), green (completed)
-- **Four themes** — Default, Developer, Document, Minimal (color palette only; layout is identical)
-- **Semantic HTML** — `h1→h2→h3` hierarchy, `<nav>`/`<main>`/`<header>` landmarks, `<ol>` for steps
+- **Four themes** — Default, Developer, Document, Minimal
+- **WCAG Level A** — skip link, `lang="en"`, labeled checkboxes, `aria-current` on active nav
 - **Mobile responsive** — single-column below 768px
-- **Fully self-contained** — all CSS inline, no JavaScript, no external resources
+- **Fully self-contained** — all CSS and JS inline, no external resources
 
 To describe your intent and auto-activate the skill:
 
 ```
 Convert this plan to HTML
 Make an HTML version of this plan
-Export this plan as a webpage
+Export this markdown as a webpage
 ```
+
+> **Migration:** `/plan-interview:plan-to-html` is deprecated — the command now
+> delegates to `markdown-to-html`. Update invocations to use `markdown-to-html` directly.
 
 ### Deep Grill
 
@@ -392,6 +400,8 @@ If random-named plan files exist, run `/plan-hygiene` first and complete the ren
 ```
 
 ## Installation
+
+**Requires:** Claude Code 1.0.33 or later.
 
 ```
 /plugin install plan-interview@agentics-kit

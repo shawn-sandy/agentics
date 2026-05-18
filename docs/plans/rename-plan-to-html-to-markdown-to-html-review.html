@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self' 'unsafe-inline';
+                 script-src 'self' 'unsafe-inline'; img-src data:;
+                 base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta name="generator" content="product-plans v3.4.0">
+  <title>Plan: Rename plan-to-html &rarr; markdown-to-html &mdash; Panel Review</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg);
+           color: var(--text); line-height: 1.6; }
+
+    body.theme-default  { --bg: #ffffff; --surface: #f5f7fa; --border: #d0d5dd;
+                          --text: #101828; --text-muted: #475467;
+                          --accent: #1d4ed8; --accent-fg: #ffffff;
+                          --badge-approve: #15803d; --badge-revise: #92400e;
+                          --badge-reject: #b91c1c; --badge-fg: #ffffff; }
+
+    body.theme-developer{ --bg: #0d1117; --surface: #161b22; --border: #30363d;
+                          --text: #e6edf3; --text-muted: #8b949e;
+                          --accent: #58a6ff; --accent-fg: #0d1117;
+                          --badge-approve: #2ea043; --badge-revise: #d29922;
+                          --badge-reject: #f85149; --badge-fg: #ffffff; }
+
+    body.theme-document { --bg: #faf9f6; --surface: #f0ede8; --border: #ccc7be;
+                          --text: #1a1a1a; --text-muted: #5a5a5a;
+                          --accent: #2563eb; --accent-fg: #ffffff;
+                          --badge-approve: #166534; --badge-revise: #78350f;
+                          --badge-reject: #991b1b; --badge-fg: #ffffff; }
+
+    body.theme-minimal  { --bg: #ffffff; --surface: #ffffff; --border: #e5e7eb;
+                          --text: #111111; --text-muted: #6b7280;
+                          --accent: #000000; --accent-fg: #ffffff;
+                          --badge-approve: #166534; --badge-revise: #92400e;
+                          --badge-reject: #991b1b; --badge-fg: #ffffff; }
+
+    .layout        { display: grid;
+                     grid-template-columns: 240px 1fr;
+                     gap: 2rem; max-width: 1100px;
+                     margin: 0 auto; padding: 1.5rem; }
+    @media (max-width: 768px) {
+      .layout      { grid-template-columns: 1fr; }
+      .sidebar     { position: static; }
+    }
+    .sidebar       { position: sticky; top: 1.5rem; align-self: start; }
+    nav ol         { list-style: none; padding: 0; }
+    nav ol li      { margin: .3rem 0; }
+    nav a          { color: var(--accent); text-decoration: none; font-size: .875rem; }
+    nav a:hover    { text-decoration: underline; }
+    nav a[aria-current="location"] { font-weight: 700; }
+
+    header         { background: var(--surface); border-bottom: 1px solid var(--border);
+                     padding: 1.5rem; margin-bottom: 0; }
+    header h1      { font-size: 1.4rem; line-height: 1.3; margin-bottom: .5rem; }
+    .provenance    { font-size: .8rem; color: var(--text-muted); margin-top: .4rem; }
+
+    .badge         { display: inline-block; padding: .25em .75em;
+                     border-radius: .25em; font-size: .9rem;
+                     color: var(--badge-fg); margin-bottom: .4rem; }
+    .badge-approve { background: var(--badge-approve); }
+    .badge-revise  { background: var(--badge-revise); }
+    .badge-reject  { background: var(--badge-reject); }
+
+    main           { padding: 1rem 0; }
+    main h2        { font-size: 1.2rem; margin: 1.5rem 0 .5rem;
+                     padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+    main h3        { font-size: 1rem; margin: 1.2rem 0 .4rem; color: var(--text); }
+    main p, main li { margin: .4rem 0; font-size: .95rem; }
+    main ul, main ol { padding-left: 1.5rem; margin: .5rem 0; }
+    main code      { font-family: monospace; background: var(--surface);
+                     padding: .1em .3em; border-radius: .2em;
+                     font-size: .875rem; }
+    main pre       { background: var(--surface); border: 1px solid var(--border);
+                     padding: 1rem; border-radius: .4em; overflow-x: auto;
+                     font-size: .85rem; margin: .75rem 0; }
+    main pre code  { background: none; padding: 0; }
+    main blockquote { border-left: 3px solid var(--accent); padding-left: 1rem;
+                      color: var(--text-muted); margin: .75rem 0; }
+
+    .reviewer-card { background: var(--surface); border: 1px solid var(--border);
+                     border-radius: .5em; padding: 1rem; margin-bottom: 1rem; }
+    .reviewer-card h3 { font-size: 1rem; margin-bottom: .5rem; color: var(--accent); }
+    .reviewer-card dl { display: grid; grid-template-columns: 10rem 1fr; gap: .3rem .75rem; }
+    .reviewer-card dt { font-weight: 600; font-size: .875rem; color: var(--text-muted); }
+    .reviewer-card dd { font-size: .875rem; }
+    @media (max-width: 600px) {
+      .reviewer-card dl { grid-template-columns: 1fr; }
+      .reviewer-card dt { margin-top: .4rem; }
+    }
+
+    .unavailable-pill  { display: inline-flex; align-items: center; gap: .4em;
+                         padding: .25em .75em; border-radius: 9999px;
+                         background: var(--surface); border: 1px solid var(--border);
+                         font-size: .875rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+    .risk-list     { list-style: none; padding: 0; }
+    .risk-list li  { padding: .6rem .75rem; margin-bottom: .4rem;
+                     border-left: 4px solid var(--badge-reject);
+                     background: var(--surface); border-radius: 0 .3em .3em 0; }
+    .risk-list li.non-blocking { border-left-color: var(--badge-revise); }
+    .risk-list li.resolved     { border-left-color: var(--badge-approve);
+                                  opacity: .7; text-decoration: line-through; }
+    .resolved-notice { background: var(--surface); border: 1px solid var(--badge-approve);
+                       border-left: 4px solid var(--badge-approve); border-radius: .3em;
+                       padding: .6rem .75rem; margin-bottom: 1rem; font-size: .9rem; }
+
+    table        { width: 100%; border-collapse: collapse; font-size: .9rem; margin: .75rem 0; }
+    th, td       { padding: .5em .75em; border: 1px solid var(--border);
+                   text-align: left; vertical-align: top; }
+    thead th     { background: var(--surface); color: var(--text); font-weight: 600; }
+
+    details > summary { cursor: pointer; font-weight: 600;
+                        padding: .5em 0; color: var(--accent);
+                        list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "\25B6  "; font-size: .75em; }
+    details[open] > summary::before { content: "\25BC  "; }
+    .appendix-body { padding-top: 1rem; }
+
+    .section-block { margin-bottom: 1.5rem; }
+
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    :focus:not(:focus-visible) { outline: none; }
+
+    footer { padding: 1rem 1.5rem; text-align: center;
+             font-size: .8rem; color: var(--text-muted);
+             border-top: 1px solid var(--border); margin-top: 2rem; }
+
+    @media print {
+      .sidebar          { display: none; }
+      .layout           { display: block; }
+      details           { display: block; }
+      summary           { display: none; }
+      ::details-content { content-visibility: visible; }
+    }
+  </style>
+</head>
+<body class="theme-default">
+
+  <header>
+    <h1>Plan: Rename plan-to-html &rarr; markdown-to-html, bundle assets, HTML5-first rendering</h1>
+    <span class="badge badge-reject"><strong>Panel decision: Reject</strong></span>
+    <span class="badge badge-approve"><strong>All Blocking Issues Resolved &mdash; Ready for Implementation</strong></span>
+    <p class="provenance">
+      Generated: 2026-05-18T00:00:00Z &middot;
+      Updated: 2026-05-18 (blocking issues resolved) &middot;
+      Source: <code>rename-plan-to-html-to-markdown-to-html.md</code> &middot;
+      Reviewers: PM &middot; Lead Developer &middot; UX Designer (unavailable) &middot; Lead Frontend Engineer &middot; Accessibility Expert &middot; Security Expert
+    </p>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav aria-label="Table of contents">
+        <ol>
+          <li><a href="#sec-summary">1. Executive Summary</a></li>
+          <li><a href="#sec-reviewers">2. Role-by-Role Review</a></li>
+          <li><a href="#sec-risks">3. Highest-Risk Issues</a></li>
+          <li><a href="#sec-blocking">4. Blocking Issues</a></li>
+          <li><a href="#sec-nonblocking">5. Non-Blocking Improvements</a></li>
+          <li><a href="#sec-ux">6. UX Recommendations</a></li>
+          <li><a href="#sec-a11y">7. Accessibility Requirements</a></li>
+          <li><a href="#sec-frontend">8. Frontend Considerations</a></li>
+          <li><a href="#sec-security">9. Security Requirements</a></li>
+          <li><a href="#sec-tech">10. Technical Feasibility</a></li>
+          <li><a href="#sec-questions">11. Open Questions</a></li>
+          <li><a href="#sec-changes">12. Recommended Changes</a></li>
+          <li><a href="#sec-conflicts">13. Conflicts &amp; Tradeoffs</a></li>
+          <li><a href="#sec-decision">14. Final Decision</a></li>
+          <li><a href="#appendix">Full Report (appendix)</a></li>
+        </ol>
+      </nav>
+    </aside>
+
+    <main id="main-content">
+
+      <section class="section-block" aria-labelledby="sec-summary">
+        <h2 id="sec-summary">1. Executive Summary</h2>
+        <p>The plan is technically detailed, cites correct project conventions throughout,
+        and identifies a real and valid problem set (rename friction, setup fragility,
+        asset drift). Four of five available reviewers recommended &ldquo;approve with
+        changes.&rdquo; Two reviewers &mdash; Accessibility Expert and Security Expert
+        &mdash; issued outright <strong>reject</strong> verdicts on grounds that apply
+        to every single HTML file the skill would generate: no output-encoding policy
+        (stored-XSS risk), no path-safety validation, no WCAG Level A requirements
+        (<code>lang</code>, <code>&lt;title&gt;</code>, skip navigation), unlabeled step
+        checkboxes, and no focus indicators in bundled CSS. These are systematic failures
+        in the output contract, not edge cases.</p>
+        <p><strong>Note: the UX Designer reviewer was unavailable after two spawn
+        attempts; that domain was not assessed.</strong></p>
+        <p>Panel decision: <span class="badge badge-reject"><strong>Reject</strong></span> &rarr; <span class="badge badge-approve"><strong>All Blocking Issues Resolved</strong></span></p>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-reviewers">
+        <h2 id="sec-reviewers">2. Role-by-Role Review</h2>
+
+        <article class="reviewer-card" aria-labelledby="card-pm">
+          <h3 id="card-pm">Product Manager</h3>
+          <dl>
+            <dt>Approval</dt><dd><strong>Approve with changes</strong></dd>
+            <dt>Works well</dt><dd>MAJOR version bump correctly identified; <code>--setup</code> deprecation handler is right; all steps follow three-part structure with machine-checkable verify lines; Interview Summary preserves rationale for non-obvious choices.</dd>
+            <dt>Critical concerns</dt><dd>Version mismatch (1.22.1 vs. 1.23.0 reference in Step 19 creates ambiguity); no backward-compat alias for renamed command; build script fragility is silent for users.</dd>
+            <dt>Missing requirements</dt><dd>Success metrics; release readiness / rollout strategy; business goals for the change.</dd>
+            <dt>Key improvements</dt><dd>Add &ldquo;Current version: 1.22.1 &rarr; New: 2.0.0&rdquo; to Context; add runtime asset validation in SKILL.md Step 1; convert &ldquo;split into two PRs&rdquo; to blocking Unresolved Question; add Success Metrics section.</dd>
+          </dl>
+        </article>
+
+        <article class="reviewer-card" aria-labelledby="card-dev">
+          <h3 id="card-dev">Lead Developer</h3>
+          <dl>
+            <dt>Approval</dt><dd><strong>Approve with changes</strong></dd>
+            <dt>Works well</dt><dd>Correct <code>git mv</code> preserving history; graceful degrade on missing <code>## Steps</code>; SVG geometry is numeric eliminating LLM drift; <code>--setup</code> deprecation handler is correct.</dd>
+            <dt>Critical concerns</dt><dd><code>accent-color</code>-only <code>&lt;progress&gt;</code> is a UX regression on dark themes; build script has no deterministic extraction algorithm; mode detection ANY-of-three is too permissive for ADRs/RFCs.</dd>
+            <dt>Key improvements</dt><dd>Revert to custom <code>.progress-fill</code> div; replace extraction heuristic with <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> markers; tighten mode detection; add backward-compat alias skill (Step 7.5); add <code>plugin.json</code> version-field check (Step 19.5).</dd>
+          </dl>
+        </article>
+
+        <span class="unavailable-pill">
+          <span class="unavailable-icon" aria-hidden="true">&#9888;</span>
+          <span class="unavailable-label">UX Designer &mdash; Reviewer unavailable &mdash; not assessed</span>
+        </span>
+
+        <article class="reviewer-card" aria-labelledby="card-fe">
+          <h3 id="card-fe">Lead Frontend Engineer</h3>
+          <dl>
+            <dt>Approval</dt><dd><strong>Approve with changes</strong></dd>
+            <dt>Works well</dt><dd><code>accent-color</code> browser support rationale correct; <code>IntersectionObserver</code> kept over <code>:target</code> CSS is technically correct; <code>&lt;details open&gt;</code> first-section default is sound; print rules for all new visuals are specific and complete.</dd>
+            <dt>Critical concerns</dt><dd>Build script extraction fragility &mdash; silently malformed <code>themes.css</code> causes browser to drop entire <code>&lt;style&gt;</code> block; pseudo-element ownership conflict in Step 12 causes non-deterministic LLM output.</dd>
+            <dt>Key improvements</dt><dd>Use <code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element (frees both pseudo-elements); add scroll-rail IIFE extension step before build step; define <code>--color-success</code> in all four themes; add complete <code>allowed-tools</code> list.</dd>
+          </dl>
+        </article>
+
+        <article class="reviewer-card" aria-labelledby="card-a11y">
+          <h3 id="card-a11y">Accessibility Expert</h3>
+          <dl>
+            <dt>Approval</dt><dd><strong>Reject</strong></dd>
+            <dt>Works well</dt><dd>SC 1.4.1 color+icon for status chips is correct; native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> is right; <code>&lt;progress&gt;</code> exposes <code>role=&quot;progressbar&quot;</code> automatically; &ldquo;Expand all&rdquo; mitigates screen reader section-expansion burden.</dd>
+            <dt>Critical concerns</dt><dd>
+              <ul>
+                <li><strong>CC-1 (SC 1.1.1):</strong> SVG uses <code>aria-label</code> only &mdash; must add <code>&lt;title id=&quot;&hellip;&quot;&gt;</code> child + <code>aria-labelledby</code>.</li>
+                <li><strong>CC-2 (SC 4.1.2):</strong> Scroll-spy toggles <code>.active</code> CSS class only; <code>aria-current=&quot;true&quot;</code> must be toggled programmatically.</li>
+                <li><strong>CC-3 (SC 1.3.1):</strong> Step checkboxes have no confirmed <code>&lt;label&gt;</code> wrapping; screen reader users completely excluded from primary plan-tracking feature.</li>
+                <li><strong>CC-4 (SC 2.4.7/2.4.11):</strong> No <code>:focus-visible</code> styles in <code>assets/themes.css</code>; all keyboard users cannot determine focus position.</li>
+              </ul>
+            </dd>
+            <dt>Missing Level A</dt><dd><code>&lt;html lang&gt;</code> (SC 3.1.1), <code>&lt;title&gt;</code> element (SC 2.4.2), skip navigation link (SC 2.4.1) &mdash; all absent from every generated HTML document.</dd>
+          </dl>
+        </article>
+
+        <article class="reviewer-card" aria-labelledby="card-sec">
+          <h3 id="card-sec">Security Expert</h3>
+          <dl>
+            <dt>Approval</dt><dd><strong>Reject</strong></dd>
+            <dt>Works well</dt><dd>Dropping <code>Bash(mkdir *)</code> satisfies least privilege; deprecating <code>--setup</code> eliminates the user-writable cache as an attack surface; bundled assets improve supply-chain integrity.</dd>
+            <dt>Critical concerns</dt><dd>
+              <ul>
+                <li><strong>CWE-79 (OWASP A03):</strong> No HTML encoding policy &mdash; markdown with <code>&lt;script&gt;</code>, <code>javascript:</code> links, or <code>&lt;img onerror&gt;</code> produces stored-XSS in every generated file.</li>
+                <li><strong>CWE-79 SVG sub-case:</strong> Section titles in SVG <code>&lt;text&gt;</code> without encoding allow <code>&lt;/text&gt;&lt;script&gt;&hellip;</code> breakouts.</li>
+                <li><strong>CWE-1287:</strong> Build script extracts JS from 577-line markdown spec; contributor editing <code>html-spec.md</code> can inject JS into every plugin install.</li>
+                <li><strong>CWE-22:</strong> No path traversal validation; skill reads arbitrary paths from <code>$ARGUMENTS</code>.</li>
+              </ul>
+            </dd>
+          </dl>
+        </article>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-risks">
+        <h2 id="sec-risks">3. Highest-Risk Issues</h2>
+        <ul class="risk-list">
+          <li class="resolved"><strong>[Security / CWE-79]</strong> No HTML output-encoding policy. Every generated HTML file is an XSS vector. <strong>Resolved: Step 0.</strong></li>
+          <li class="resolved"><strong>[A11y / SC 1.3.1]</strong> Step checkboxes are unlabeled. Screen reader users are completely excluded from the primary plan-tracking feature. <strong>Resolved: Step 0.5.</strong></li>
+          <li class="resolved"><strong>[A11y / SC 2.4.7+2.4.11]</strong> No focus indicators in bundled CSS. All keyboard users cannot determine focus position on any interactive element. <strong>Resolved: Step 0.75.</strong></li>
+          <li class="resolved"><strong>[Lead Dev + Frontend]</strong> Build script extraction is architecturally fragile. Silently malformed <code>themes.css</code> causes the browser to drop the entire <code>&lt;style&gt;</code> block with no user-facing error. <strong>Resolved: Step 5.</strong></li>
+          <li class="resolved"><strong>[A11y / SC 3.1.1 + 2.4.2 + 2.4.1]</strong> Four WCAG Level A failures in every generated HTML document: missing <code>lang</code>, <code>&lt;title&gt;</code>, skip navigation, unlabeled checkboxes. Legal exposure under ADA Title III / European Accessibility Act (June 2025). <strong>Resolved: Steps 0.5, 0.75.</strong></li>
+          <li class="non-blocking"><strong>[UX]</strong> Unassessed domain: UX Designer review not conducted. Usability, information architecture, onboarding, and error states are unknown risks.</li>
+        </ul>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-blocking">
+        <h2 id="sec-blocking">4. Blocking Issues</h2>
+        <p class="resolved-notice"><strong>All 8 blocking issues resolved</strong> &mdash; addressed in plan steps on 2026-05-18. Plan status updated to <code>in-progress</code>.</p>
+        <ol>
+          <li class="resolved"><strong>[Security + Frontend]</strong> No output-encoding/sanitization policy. &rarr; <em>Resolved: Step 0 adds <code>## Security and Encoding</code> to <code>reference/html-spec.md</code>.</em></li>
+          <li class="resolved"><strong>[A11y]</strong> No focus indicators in <code>assets/themes.css</code>. &rarr; <em>Resolved: Step 0.75 adds <code>:focus-visible</code> styles for all interactive elements (SC 2.4.7 + SC 2.4.11).</em></li>
+          <li class="resolved"><strong>[A11y]</strong> Step checkboxes lack label association. &rarr; <em>Resolved: Step 0.5 now specifies <code>&lt;label class=&quot;step-label&quot;&gt;&lt;input class=&quot;step-checkbox&quot; type=&quot;checkbox&quot;&gt;&hellip;&lt;/label&gt;</code> (SC 1.3.1); Step 12 cross-references.</em></li>
+          <li class="resolved"><strong>[A11y]</strong> WCAG Level A omissions. &rarr; <em>Resolved: Step 0.5 adds <code>&lt;html lang&gt;</code>, <code>&lt;title&gt;</code>, skip nav link to HTML template.</em></li>
+          <li class="resolved"><strong>[Lead Dev + Frontend]</strong> Build script extraction algorithm unspecified. &rarr; <em>Resolved: Step 5 adopts <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> marker approach.</em></li>
+          <li class="resolved"><strong>[PM]</strong> Version baseline ambiguity. &rarr; <em>Resolved: Context states &ldquo;Current: 1.22.1 &rarr; New: 2.0.0&rdquo;.</em></li>
+          <li class="resolved"><strong>[A11y + Security]</strong> Scroll-spy IIFE omits <code>aria-current</code>. &rarr; <em>Resolved: Step 6 extends IIFE to toggle <code>aria-current=&quot;true&quot;</code> alongside <code>.active</code> class.</em></li>
+          <li class="resolved"><strong>[Security]</strong> No path traversal defense. &rarr; <em>Resolved: Step 0.9 adds <code>realpath</code> validation, workspace boundary check, symlink rejection (CWE-22).</em></li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-nonblocking">
+        <h2 id="sec-nonblocking">5. Important but Non-Blocking Improvements</h2>
+        <ol>
+          <li><strong>[PM]</strong> Convert &ldquo;split into two PRs&rdquo; from Next Step to a blocking Unresolved Question gating implementation.</li>
+          <li><strong>[Lead Dev]</strong> Add backward-compat alias skill for <code>plan-to-html</code> &mdash; delegation + deprecation notice; remove in 3.0.0.</li>
+          <li><strong>[Lead Dev]</strong> Tighten mode detection from ANY-of-three to <code>(## Steps exists)</code> OR <code>(status: AND Plan: H1)</code>.</li>
+          <li><strong>[Lead Dev + Frontend]</strong> Revert <code>&lt;progress&gt;</code> to custom <code>.progress-fill</code> div &mdash; <code>accent-color</code> regression on dark themes.</li>
+          <li><strong>[Frontend]</strong> Use <code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element for status chip (frees both pseudo-elements for timeline).</li>
+          <li><strong>[Frontend]</strong> Add complete <code>allowed-tools</code> list to Step 3.</li>
+          <li><strong>[PM]</strong> Add Success Metrics section.</li>
+          <li><strong>[Security]</strong> Add CSP meta tag to generated HTML.</li>
+          <li><strong>[A11y]</strong> Add <code>prefers-reduced-motion</code> block to <code>assets/themes.css</code>.</li>
+          <li><strong>[Lead Dev + Frontend]</strong> New step: author JS (aria-current, scroll-rail, &ldquo;Expand all&rdquo;) in spec before build step &mdash; ordering bug in original plan.</li>
+          <li><strong>[A11y]</strong> <code>&lt;section aria-labelledby&gt;</code> on every generated section.</li>
+          <li><strong>[A11y]</strong> <code>&lt;nav aria-label=&quot;Page sections&quot;&gt;</code> on sidebar nav.</li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-ux">
+        <h2 id="sec-ux">6. UX Recommendations</h2>
+        <p><em>UX Designer unavailable &mdash; the following are UX-adjacent concerns from other reviewers.</em></p>
+        <ol>
+          <li><strong>[PM]</strong> Add one-sentence doc-mode value proposition: &ldquo;targets users who want plan + generic markdown rendering inside Claude Code without leaving the session to invoke Pandoc or mdconvert.&rdquo;</li>
+          <li><strong>[A11y]</strong> &ldquo;Expand all&rdquo; button must reflect toggle state via <code>aria-expanded</code> or text switching (&ldquo;Expand all&rdquo; / &ldquo;Collapse all&rdquo;).</li>
+          <li><strong>[A11y]</strong> &ldquo;Expand all&rdquo; JS must use <code>details.open = true/false</code> &mdash; not CSS class toggling &mdash; so AT announces the <code>open</code> attribute change.</li>
+          <li><strong>[PM]</strong> Add empty/error state message for unrecognised input: &ldquo;Could not determine render mode; defaulting to doc-mode.&rdquo;</li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-a11y">
+        <h2 id="sec-a11y">7. Accessibility Requirements</h2>
+        <h3>Level A (must-fix, blocking)</h3>
+        <ul>
+          <li><strong>SC 3.1.1</strong> &mdash; <code>&lt;html lang=&quot;&hellip;&quot;&gt;</code> on every generated document.</li>
+          <li><strong>SC 2.4.2</strong> &mdash; <code>&lt;title&gt;{H1 text} &mdash; markdown-to-html&lt;/title&gt;</code> in <code>&lt;head&gt;</code>.</li>
+          <li><strong>SC 2.4.1</strong> &mdash; Skip nav link as first focusable body element.</li>
+          <li><strong>SC 1.3.1</strong> &mdash; Each step checkbox wrapped in <code>&lt;label&gt;</code> or associated via <code>aria-labelledby</code>.</li>
+          <li><strong>SC 1.1.1</strong> &mdash; SVG: <code>&lt;title id=&quot;&hellip;&quot;&gt;</code> child referenced by <code>aria-labelledby</code>.</li>
+        </ul>
+        <h3>Level AA (must-fix, blocking)</h3>
+        <ul>
+          <li><strong>SC 2.4.7 / 2.4.11</strong> &mdash; <code>:focus-visible</code> styles for all interactive elements.</li>
+          <li><strong>SC 4.1.2</strong> &mdash; Scroll-spy IIFE: toggle <code>aria-current=&quot;true&quot;</code> on active nav link.</li>
+          <li><strong>SC 4.1.2</strong> &mdash; &ldquo;Expand all&rdquo; button: <code>aria-expanded=&quot;false/true&quot;</code>, stable label.</li>
+          <li><strong>SC 1.4.3 / 1.4.11</strong> &mdash; Document contrast ratios for all four themes.</li>
+          <li><strong>SC 1.4.12</strong> &mdash; No <code>height:</code> on text-containing containers; require <code>min-height:</code>.</li>
+        </ul>
+        <h3>Level AA (important, non-blocking)</h3>
+        <ul>
+          <li>Each <code>&lt;section&gt;</code> carries <code>aria-labelledby=&quot;{heading-id}&quot;</code>.</li>
+          <li>Sidebar <code>&lt;nav aria-label=&quot;Page sections&quot;&gt;</code>.</li>
+          <li><code>&lt;span class=&quot;step-status&quot; aria-live=&quot;polite&quot;&gt;</code> updated by checkbox IIFE.</li>
+          <li><code>@media (prefers-reduced-motion: reduce)</code> block in <code>assets/themes.css</code>.</li>
+        </ul>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-frontend">
+        <h2 id="sec-frontend">8. Frontend Implementation Considerations</h2>
+        <ol>
+          <li><strong>Pseudo-element ownership:</strong> <code>::before</code> = timeline dot; <code>::after</code> = timeline connector; status chip = <code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element.</li>
+          <li><strong>Build script fence handling:</strong> Use <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> markers; awk extraction; strip fence delimiter lines before writing to <code>assets/</code>.</li>
+          <li><strong>Scroll-spy extension must precede build step</strong> (ordering bug in original plan &mdash; Step 6 now inserted).</li>
+          <li><strong><code>--color-success</code></strong> must be defined in all four <code>body.theme-*</code> blocks.</li>
+          <li><strong>SKILL.md line-count budget:</strong> current 340 lines + additions may approach 500-line limit; move flag-parsing to <code>reference/rendering-modes.md</code> if needed.</li>
+          <li><strong>Complete <code>allowed-tools</code>:</strong> <code>Agent, AskUserQuestion, Bash(open *), Bash(./scripts/build-assets.sh *), Glob, Grep, Read, TodoWrite, Write</code>.</li>
+          <li><strong><code>--async</code> flag carry-forward</strong> must be explicitly resolved in Step 9 flag inventory.</li>
+          <li><strong>Mobile breakpoint alignment:</strong> verify 768px matches existing <code>## Responsive Layout</code> breakpoint in <code>html-spec.md</code>.</li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-security">
+        <h2 id="sec-security">9. Security Requirements</h2>
+        <h3>Blocking</h3>
+        <ol>
+          <li><strong>Output encoding policy</strong> in <code>reference/html-spec.md</code>: body text/headings/step text &rarr; HTML-entity encode <code>&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;#39;</code>; attribute values &rarr; attribute-encode; SVG <code>&lt;text&gt;</code> &rarr; entity-encode; link URLs &rarr; allow only <code>http</code>, <code>https</code>, <code>mailto</code>, <code>#</code>-fragments; code blocks &rarr; <code>&lt;pre&gt;&lt;code&gt;</code> entity-encoded; raw HTML &rarr; escaped as literal text.</li>
+          <li><strong>Path traversal defense</strong> in SKILL.md Step 1: <code>realpath</code>, workspace boundary check, <code>.md</code> extension check, symlink rejection.</li>
+          <li><strong><code>--theme=</code> allow-list validation</strong> before interpolating into <code>&lt;body class=&quot;theme-{value}&quot;&gt;</code>.</li>
+        </ol>
+        <h3>Important, non-blocking</h3>
+        <ol>
+          <li>CSP meta tag in generated HTML.</li>
+          <li><code>localStorage</code> per-document scoping via hash of <code>location.pathname</code>.</li>
+          <li><code>set -euo pipefail</code> + quoted variable expansions in <code>build-assets.sh</code>.</li>
+          <li><code>assets/scripts.js</code> capability allow-list (no <code>fetch</code>, <code>XMLHttpRequest</code>, <code>eval</code>, <code>Function</code>); CI lint enforces.</li>
+          <li>Adversarial test fixtures in Step 20 (<code>xss-suite.md</code>).</li>
+          <li>README security model subsection.</li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-tech">
+        <h2 id="sec-tech">10. Technical Feasibility Concerns</h2>
+        <ol>
+          <li>Build script extraction must use explicit markers (not heuristics) &mdash; resolved in updated Step 5.</li>
+          <li><code>&lt;progress&gt;</code> <code>accent-color</code> is a regression on dark themes &mdash; resolved in updated Step 8 (revert to custom <code>.progress-fill</code> div).</li>
+          <li>Mode detection tightened from ANY-of-three to <code>(## Steps)</code> OR <code>(status: AND Plan: H1)</code> &mdash; resolved in updated Step 9.</li>
+          <li>P1/P2 scope split must be answered before implementation &mdash; added to Unresolved Questions.</li>
+          <li>SVG output determinism requires golden-output test fixture.</li>
+          <li><code>plugin.json</code> must not contain a <code>version</code> field &mdash; Step 19.5 added.</li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-questions">
+        <h2 id="sec-questions">11. Open Questions Before Development</h2>
+        <h3>Scope</h3>
+        <ul>
+          <li>Should this be split into P1 (rename + bundle) and P2 (doc-mode + visuals)? <em>Must be answered before implementation begins.</em></li>
+          <li>Is the current <code>plan-interview</code> marketplace.json version definitively <code>1.22.1</code> with no in-flight work?</li>
+          <li>Has the hard-rename (no alias) decision been confirmed? Is the external caller population known?</li>
+          <li>Is doc-mode in scope for this release, or a separate follow-on?</li>
+        </ul>
+        <h3>Technical</h3>
+        <ul>
+          <li>Are <code>themes.css</code> / <code>scripts.js</code> linked as external files or inlined verbatim in output HTML?</li>
+          <li>Does <code>--async</code> carry forward to <code>markdown-to-html</code>?</li>
+          <li>What is the existing responsive breakpoint in <code>html-spec.md</code>?</li>
+          <li>Is <code>--color-success</code> a new CSS variable added to all four themes?</li>
+        </ul>
+        <h3>Accessibility &amp; Security</h3>
+        <ul>
+          <li>Which screen readers/browsers are in the designated support matrix?</li>
+          <li>Is generated HTML for public distribution or internal only? (Determines legal exposure profile.)</li>
+          <li>Is <code>assets/scripts.js</code> inlined or linked?</li>
+          <li>Is there an input markdown size cap?</li>
+          <li>Are generated HTML files ever served from an authenticated web origin?</li>
+        </ul>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-changes">
+        <h2 id="sec-changes">12. Recommended Changes to the Plan</h2>
+        <p><em>All changes below have been applied as inline edits to the source plan file.</em></p>
+        <ol>
+          <li>Added version baseline (&ldquo;Current: 1.22.1 &rarr; New: 2.0.0&rdquo; + user-impact statement) to Context.</li>
+          <li>Added Step 0: <code>## Security and Encoding</code> prerequisite to <code>reference/html-spec.md</code>.</li>
+          <li>Added Step 0.5: WCAG Level A requirements (<code>lang</code>, <code>&lt;title&gt;</code>, skip nav) to HTML template.</li>
+          <li>Added Step 0.75: <code>:focus-visible</code> styles requirement to <code>assets/themes.css</code> specification.</li>
+          <li>Added Step 0.9: path traversal defense to SKILL.md Step 1.</li>
+          <li>Replaced Step 5 vague extraction description with explicit <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> marker approach + dynamic version comment via <code>jq</code>.</li>
+          <li>Added Step 6: author JS (aria-current, scroll-rail, &ldquo;Expand all&rdquo;) in <code>html-spec.md</code> before build step.</li>
+          <li>Added Step 7.5: backward-compat alias skill for <code>plan-to-html</code>.</li>
+          <li>Updated Step 8: revert <code>&lt;progress&gt;</code> to custom <code>.progress-fill</code> div; documented as deliberate non-swap.</li>
+          <li>Updated Step 9: tightened mode detection to <code>(## Steps)</code> OR <code>(status: AND Plan: H1)</code>.</li>
+          <li>Updated Step 12: <code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element + <code>&lt;span class=&quot;step-status&quot; aria-live=&quot;polite&quot;&gt;</code>; SVG with <code>&lt;title&gt;</code> + <code>aria-labelledby</code>.</li>
+          <li>Added Step 19.5: verify <code>plugin.json</code> has no <code>version</code> field.</li>
+          <li>Added Step 18: security + accessibility verification to end-to-end test.</li>
+          <li>Added Success Metrics section.</li>
+          <li>Promoted &ldquo;split into two PRs&rdquo; to blocking Unresolved Question.</li>
+          <li>Updated Interview Summary table to reflect three panel decision overrides.</li>
+        </ol>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-conflicts">
+        <h2 id="sec-conflicts">13. Conflicts or Tradeoffs Between Reviewer Recommendations</h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Topic</th>
+              <th scope="col">Conflict</th>
+              <th scope="col">Resolution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Build script extraction approach</td>
+              <td>Lead Dev: <code>&lt;!-- BUILD-EXTRACT --&gt;</code> markers + awk. Frontend: awk fence heuristics. Security: invert direction, make <code>assets/scripts.js</code> canonical source.</td>
+              <td>Adopt <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> marker approach (Lead Dev + Frontend aligned). Add CI lint for forbidden JS patterns in <code>assets/scripts.js</code> to address Security&rsquo;s supply-chain concern without inverting the spec-canonical principle.</td>
+            </tr>
+            <tr>
+              <td><code>&lt;progress&gt;</code> accent-color parity</td>
+              <td>Lead Dev: visual regression on dark themes; revert to custom div or add vendor selectors. Frontend: accent-color is acceptable progressive enhancement.</td>
+              <td>Revert to custom <code>.progress-fill</code> div and document as deliberate non-swap. Rationale: the unfilled track browser-default gray is perceptible and user-reported themes will be dark-leaning.</td>
+            </tr>
+            <tr>
+              <td>Status chip implementation</td>
+              <td>A11y: <code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element + <code>aria-live</code> supplement. Frontend: <code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element. Both aligned on element choice.</td>
+              <td>No conflict &mdash; use real element AND add <code>aria-live=&quot;polite&quot;</code> supplement as A11y specifies.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section-block" aria-labelledby="sec-decision">
+        <h2 id="sec-decision">14. Final Decision</h2>
+        <p>Panel decision: <span class="badge badge-reject"><strong>Reject</strong></span> &rarr; <span class="badge badge-approve"><strong>All Blocking Issues Resolved &mdash; Ready for Implementation</strong></span></p>
+        <p>The plan is detailed, well-researched, and correctly applies all project conventions for versioning, git operations, and plugin structure. Two domains issued hard rejections on grounds that applied to every HTML file the skill generates: the Security Expert rejected due to the absence of an output-encoding policy (XSS risk in every invocation) and a missing path traversal defense; the Accessibility Expert rejected due to four WCAG Level A failures (<code>lang</code>, <code>&lt;title&gt;</code>, skip navigation, unlabeled step checkboxes) and no focus indicators in bundled CSS.</p>
+        <p>All eight blocking issues have been addressed in the plan&rsquo;s implementation steps (2026-05-18). Plan status updated to <code>in-progress</code> with <code>panel-review: reject-resolved</code>. Implementation may proceed.</p>
+      </section>
+
+      <details id="appendix">
+        <summary>Full Panel Review (15-section report)</summary>
+        <div class="appendix-body">
+
+          <p>The full synthesized report is appended to the source plan file at
+          <code>docs/plans/rename-plan-to-html-to-markdown-to-html.md</code>
+          under the <code>## Panel Review</code> section. The sections above
+          (1&ndash;14) constitute the complete panel findings; the source plan
+          contains the inline edits applied per Section 15a and the revised plan
+          reference view (Section 15b).</p>
+
+          <h2 id="sec-a-roles">Role Coverage Summary</h2>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Product Manager</td><td>Complete</td><td>Approve with changes</td></tr>
+              <tr><td>Lead Developer</td><td>Complete</td><td>Approve with changes</td></tr>
+              <tr><td>UX Designer</td><td>Unavailable (two spawn attempts)</td><td>Not assessed</td></tr>
+              <tr><td>Lead Frontend Engineer</td><td>Complete</td><td>Approve with changes</td></tr>
+              <tr><td>Accessibility Expert</td><td>Complete (respawn)</td><td>Reject</td></tr>
+              <tr><td>Security Expert</td><td>Complete</td><td>Reject</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="sec-a-edits">Inline Edits Applied (Section 15a)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Section</th>
+                <th scope="col">Action</th>
+                <th scope="col">Summary</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td><code>## Context</code></td><td>append</td><td>Added version baseline (1.22.1 &rarr; 2.0.0) + user-impact statement for external callers + doc-mode positioning sentence.</td></tr>
+              <tr><td>2</td><td><code>## Steps</code></td><td>insert at top</td><td>Added Step 0: Security and Encoding prerequisite for <code>html-spec.md</code>.</td></tr>
+              <tr><td>3</td><td><code>## Steps</code></td><td>insert at top</td><td>Added Step 0.5: WCAG Level A requirements (<code>lang</code>, <code>&lt;title&gt;</code>, skip nav).</td></tr>
+              <tr><td>4</td><td><code>## Steps</code></td><td>insert at top</td><td>Added Step 0.75: <code>:focus-visible</code> styles requirement for <code>assets/themes.css</code>.</td></tr>
+              <tr><td>5</td><td><code>## Steps</code></td><td>insert at top</td><td>Added Step 0.9: path traversal defense for SKILL.md Step 1.</td></tr>
+              <tr><td>6</td><td>Step 5</td><td>edit</td><td>Replaced vague extraction description with <code>&lt;!-- BUILD-EXTRACT:NAME START/END --&gt;</code> marker approach + dynamic version comment via <code>jq</code>.</td></tr>
+              <tr><td>7</td><td>Step 6</td><td>insert before 6.5</td><td>New step: author JS (aria-current, scroll-rail, &ldquo;Expand all&rdquo;) in <code>html-spec.md</code> before build step.</td></tr>
+              <tr><td>8</td><td>After Step 7</td><td>insert</td><td>Step 7.5: backward-compat alias skill for <code>plan-to-html</code>.</td></tr>
+              <tr><td>9</td><td>Step 8 progress bar item</td><td>edit</td><td>Reverted to custom <code>.progress-fill</code> div; documented as deliberate non-swap with reasoning.</td></tr>
+              <tr><td>10</td><td>Step 9 mode detection</td><td>edit</td><td>Tightened from ANY-of-three to <code>(## Steps)</code> OR <code>(status: AND Plan: H1)</code>.</td></tr>
+              <tr><td>11</td><td>Step 12 status chip</td><td>edit</td><td><code>&lt;span class=&quot;step-chip&quot;&gt;</code> real element + <code>&lt;span aria-live=&quot;polite&quot;&gt;</code>; explicit pseudo-element ownership.</td></tr>
+              <tr><td>12</td><td>Step 12 SVG</td><td>edit</td><td>SVG updated to <code>aria-labelledby</code> + <code>&lt;title id=&quot;&hellip;&quot;&gt;</code> child pattern.</td></tr>
+              <tr><td>13</td><td>After Step 19</td><td>insert</td><td>Step 19.5: verify <code>plugin.json</code> has no <code>version</code> field.</td></tr>
+              <tr><td>14</td><td><code>## Verification</code></td><td>append</td><td>Step 18: security + accessibility verification checks added.</td></tr>
+              <tr><td>15</td><td>After Verification</td><td>insert</td><td>New <code>## Success Metrics</code> section.</td></tr>
+              <tr><td>16</td><td><code>## Unresolved Questions</code></td><td>append</td><td>Added P1/P2 split as blocking Unresolved Question.</td></tr>
+              <tr><td>17</td><td>Interview Summary table</td><td>edit</td><td>Updated three rows to reflect panel decision overrides (mode detection, build extraction, <code>&lt;progress&gt;</code>).</td></tr>
+            </tbody>
+          </table>
+
+        </div>
+      </details>
+
+    </main>
+  </div>
+
+  <footer>
+    <p class="disclaimer">This document may contain confidential plan content and reviewer findings.
+    Classify before sharing. &middot; Generated by product-plans v3.4.0 on 2026-05-18.</p>
+  </footer>
+
+  <script>
+    /* Scroll-spy: updates aria-current="location" on active TOC anchor.
+       Does NOT move keyboard focus. Uses IntersectionObserver. */
+    (function () {
+      var headings = document.querySelectorAll('main h2[id]');
+      var links = document.querySelectorAll('nav a[href^="#"]');
+      if (!headings.length || !links.length) return;
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (l) { l.removeAttribute('aria-current'); });
+          var active = document.querySelector('nav a[href="#' + e.target.id + '"]');
+          if (active) active.setAttribute('aria-current', 'location');
+        });
+      }, { rootMargin: '0px 0px -60% 0px', threshold: 0 });
+      headings.forEach(function (h) { obs.observe(h); });
+    })();
+
+    /* Print fallback: set open attribute on all details before printing. */
+    (function () {
+      function openAll()  { document.querySelectorAll('details').forEach(function(d){ d.open = true; }); }
+      function closeAll() { document.querySelectorAll('details').forEach(function(d){ d.removeAttribute('open'); }); }
+      window.addEventListener('beforeprint', openAll);
+      window.addEventListener('afterprint',  closeAll);
+    })();
+  </script>
+
+</body>
+</html>

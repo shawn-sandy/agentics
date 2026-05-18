@@ -1,0 +1,60 @@
+/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */
+body.theme-default {
+  --color-header-bg: #1e293b;
+  --color-header-text: #f8fafc;
+  --color-nav-bg: #f1f5f9;
+  --color-nav-text: #334155;
+  --color-nav-hover: #2563eb;
+  --color-accent: #2563eb;
+  --color-body-bg: #ffffff;
+  --color-body-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-card-bg: #f8fafc;
+  --color-code-bg: #e2e8f0;
+}
+
+body.theme-developer {
+  --color-header-bg: #0d1117;
+  --color-header-text: #e6edf3;
+  --color-nav-bg: #161b22;
+  --color-nav-text: #8b949e;
+  --color-nav-hover: #3fb950;
+  --color-accent: #3fb950;
+  --color-body-bg: #0d1117;
+  --color-body-text: #e6edf3;
+  --color-muted: #8b949e;
+  --color-border: #30363d;
+  --color-card-bg: #161b22;
+  --color-code-bg: #21262d;
+}
+
+body.theme-document {
+  --color-header-bg: #4a3728;
+  --color-header-text: #fdf6ec;
+  --color-nav-bg: #fdf6ec;
+  --color-nav-text: #4a3728;
+  --color-nav-hover: #8b5e3c;
+  --color-accent: #8b5e3c;
+  --color-body-bg: #fdf6ec;
+  --color-body-text: #2c1a0e;
+  --color-muted: #6b4c38;
+  --color-border: #d4b896;
+  --color-card-bg: #f5eddf;
+  --color-code-bg: #ede0cc;
+}
+
+body.theme-minimal {
+  --color-header-bg: #000000;
+  --color-header-text: #ffffff;
+  --color-nav-bg: #ffffff;
+  --color-nav-text: #000000;
+  --color-nav-hover: #333333;
+  --color-accent: #000000;
+  --color-body-bg: #ffffff;
+  --color-body-text: #000000;
+  --color-muted: #555555;
+  --color-border: #dddddd;
+  --color-card-bg: #f9f9f9;
+  --color-code-bg: #eeeeee;
+}

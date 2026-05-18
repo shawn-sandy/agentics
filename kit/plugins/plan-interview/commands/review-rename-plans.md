@@ -158,11 +158,11 @@ HTML files:
 
 **5c — Generate HTML per renamed file**
 
-For each renamed file, invoke the `plan-to-html` skill, passing the new path,
-the chosen theme, and `--no-open` to suppress browser prompts:
+For each renamed file, invoke the `markdown-to-html` skill, passing the new path,
+the chosen theme, and `--background` to suppress all prompts (overwrite, browser open):
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --background")
+Skill(skill: "plan-interview:markdown-to-html", args: "<new-path> --theme=<chosen> --background --mode=plan")
 ```
 
 **5d — Report HTML output**
