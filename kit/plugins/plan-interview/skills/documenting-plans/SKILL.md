@@ -1,6 +1,6 @@
 ---
 name: documenting-plans
-description: Use when the user asks to document a plan or create a reference doc from it. Only runs on plans with `type: artifact` in frontmatter.
+description: Use when the user asks to document a plan or create a reference doc from it. Only runs on completed plans that are 30+ days old.
 allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 disable-model-invocation: true
@@ -16,13 +16,16 @@ Follow these steps exactly.
 
 ## When not to use
 
-Only runs on plans with `type: artifact` in frontmatter — use plan-status to set status/type before running. Use plan-interview to stress-test the plan first, or review-rename-plans to rename the plan file.
+Only runs on completed plans that are 30+ days old (based on `created` or
+`modified` date in frontmatter). Use plan-status to set status before running.
+Use plan-interview to stress-test the plan first, or review-rename-plans to
+rename the plan file.
 
 ## Table of Contents
 
 - [Step 0 — Create progress todos](#step-0--create-progress-todos)
 - [Step 1 — Resolve plan file](#step-1--resolve-plan-file)
-- [Step 2 — Ensure plan is completed and typed as artifact](#step-2--ensure-plan-is-completed-and-typed-as-artifact)
+- [Step 2 — Ensure plan is completed and old enough](#step-2--ensure-plan-is-completed-and-old-enough)
 - [Step 3 — Parse plan content](#step-3--parse-plan-content)
 - [Step 4 — Derive output slug](#step-4--derive-output-slug)
 - [Step 5 — Inspect shipped files](#step-5--inspect-shipped-files)
@@ -70,16 +73,16 @@ If no file is found via any method, tell the user and stop.
 
 Announce the resolved file: `"Documenting plan: path/to/plan.md"`
 
-### Step 2 — Ensure plan is completed and typed as artifact
+### Step 2 — Ensure plan is completed and old enough
 
 Read the plan file's YAML frontmatter — extract the YAML block between the
 opening `---` and closing `---` delimiters. If the file has no frontmatter
-delimiters, treat both `status` and `type` as absent.
+delimiters, treat both `status` and dates as absent.
 
 **Status check:**
 
 - If `status: completed` (lowercase, exact match) is present, proceed to the
-  type check below.
+  age check below.
 - If `status` is absent or any other value, tell the user:
 
   > "Plan status is `<value>`. Running plan-status first to verify completion."
@@ -88,23 +91,25 @@ delimiters, treat both `status` and `type` as absent.
   passing the resolved plan path as the argument. Wait for it to complete.
 
   After `plan-status` finishes, re-read the plan file's frontmatter.
-  - If `status: completed`, proceed to the type check below.
+  - If `status: completed`, proceed to the age check below.
   - If still not `completed`, stop and tell the user:
 
     > "Plan not yet completed (status: `<x>`). Documentation should only be
     > generated for completed plans. Run `plan-interview` or continue
     > implementation first."
 
-**Type check (only reached when status is `completed`):**
+**Age check (only reached when status is `completed`):**
 
-- If `type: artifact` (lowercase, exact match) is present, continue to Step 3.
-- If `type` is absent or any other value, stop and tell the user:
+Compute the plan's age using the `modified` date if present, otherwise
+`created`. If neither date is in frontmatter, use `git log -1 --format="%cd" --date=short`
+on the file.
 
-  > "This plan has type `<value>` (or no type). `documenting-plans` only
-  > generates documentation for plans marked `type: artifact` — plans
-  > intentionally preserved as reference documentation. Run
-  > `plan-interview:plan-status` to classify the plan, or set `type: artifact`
-  > manually in the frontmatter if this plan warrants it."
+- If the plan is 30+ days old, continue to Step 3.
+- If the plan is less than 30 days old, stop and tell the user:
+
+  > "This plan was completed recently (`<date>`). `documenting-plans` only
+  > generates documentation for plans that are 30+ days old — giving time for
+  > follow-up changes to settle. The plan will become eligible on `<date + 30d>`."
 
 ### Step 3 — Parse plan content
 
@@ -178,7 +183,7 @@ Determine the time window from the plan frontmatter:
 
 - `since` = `created` date from frontmatter, or fall back to:
   ```bash
-  git log --follow --diff-filter=A --format="%Y-%m-%d" -- <plan-file> | tail -1
+  git log --follow --diff-filter=A --format="%cd" --date=short -- <plan-file> | tail -1
   ```
 - `until` = `modified` date from frontmatter, or today's date if absent.
 
@@ -197,7 +202,7 @@ pathspecs, capped at 20.
 Also collect the shipped date (last commit touching the plan file):
 
 ```bash
-git log -1 --format="%Y-%m-%d" --date=short -- <plan-file>
+git log -1 --format="%cd" --date=short -- <plan-file>
 ```
 
 ### Step 7 — Check target doc

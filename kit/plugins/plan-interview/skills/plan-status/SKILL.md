@@ -23,7 +23,7 @@ Does not stress-test, validate, or critique plan content — use plan-interview 
 - [Step 2 — Get file dates from git](#step-2--get-file-dates-from-git)
 - [Step 3 — Read existing frontmatter](#step-3--read-existing-frontmatter)
 - [Step 4 — Analyze codebase for implementation evidence](#step-4--analyze-codebase-for-implementation-evidence)
-- [Step 5 — Artifact check](#step-5--artifact-check-only-when-status-resolves-to-completed)
+- [Step 5 — Type classification](#step-5--type-classification-only-when-status-resolves-to-completed)
 - [Step 6 — Present findings and confirm](#step-6--present-findings-and-confirm)
 - [Step 7 — Update plan file frontmatter](#step-7--update-plan-file-frontmatter)
 
@@ -71,7 +71,7 @@ Use `Bash` to run git commands. Do not use `stat` — it is not cross-platform.
 **Created date** (first in order that succeeds):
 
 ```bash
-git log --follow --diff-filter=A --format="%Y-%m-%d" -- <file> | tail -1
+git log --follow --diff-filter=A --format="%cd" --date=short -- <file> | tail -1
 ```
 
 If the command returns empty (file not tracked by git), use today's date as the
@@ -80,7 +80,7 @@ created date.
 **Modified date**:
 
 ```bash
-git log -1 --format="%Y-%m-%d" -- <file>
+git log -1 --format="%cd" --date=short -- <file>
 ```
 
 If the modified date equals the created date, treat `modified` as absent (omit
@@ -98,26 +98,8 @@ Read the plan file and parse its YAML frontmatter if present.
   - If the user chooses to re-analyze, continue from Step 4.
 - If no frontmatter or no `status` field exists, continue from Step 4.
 
-**Type inference**: After resolving the `status` decision, determine the plan `type`:
-
-- If a `type` field already exists in frontmatter, preserve it and skip inference.
-- If no `type` exists, infer it by scanning the plan filename (without extension),
-  H1 heading, and first 200 words of the body for keywords (in that order, first
-  match wins):
-
-  | Keywords (case-insensitive)                                               | Type           |
-  |---------------------------------------------------------------------------|----------------|
-  | `fix`, `bug`, `patch`, `defect`                                           | `bug-fix`      |
-  | `refactor`, `restructure`, `reorganize`, `cleanup`, `clean up`            | `refactor`     |
-  | `architecture`, `migrate`, `migration`, `infrastructure`, `system design` | `architecture` |
-  | `docs`, `documentation`, `readme`, `changelog`, `guide`                  | `docs`         |
-  | `chore`, `maintenance`, `upgrade`, `tooling`, `dependency`, `dependencies`| `chore`        |
-  | All other cases                                                            | `feature`      |
-
-- If multiple type keywords are detected at the same scan level (ambiguous),
-  use `AskUserQuestion` to confirm:
-  > "I inferred this plan's type as `[type]` — does that look right?"
-  > Options: `feature`, `bug-fix`, `refactor`, `architecture`, `chore`, `docs`
+**Type**: Type is classified in **Step 5 only**, and only when status resolves
+to `completed`. Do not infer or write `type` during this step.
 
 ### Step 4 — Analyze codebase for implementation evidence
 
@@ -139,7 +121,7 @@ analysis entirely. Instead, ask the user via `AskUserQuestion`:
 > "No extractable implementation signals found in this plan (no backtick-quoted
 > file paths or names). Please set the status manually."
 
-Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `artifact`. Use the
+Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `draft`. Use the
 user-selected value as the status and proceed to Step 6.
 
 **For each extracted token**, check both:
@@ -154,20 +136,21 @@ user-selected value as the status and proceed to Step 6.
 - 1–79% of tokens found → status = `in-progress`
 - 80%+ of tokens found → status = `completed`
 
-### Step 5 — Artifact check _(only when status resolves to `completed`)_
+### Step 5 — Type classification _(only when status resolves to `completed`)_
 
-Compute days since the `modified` date (proxy for completion date):
+Infer content type from the plan's filename, H1 heading, and first 200 words
+of body text. Apply the first matching rule:
 
-- If modified date = created date (no modification recorded), use the created
-  date.
-- If ≥ 30 days have passed, ask the user via `AskUserQuestion`:
+| Signal | Inferred type |
+|--------|---------------|
+| Filename starts with `fix-`, `bugfix-`, or H1/body contains "bug", "fix", "patch", "regression" | `fix` |
+| Filename starts with `refactor-`, `restructure-`, `simplify-`, or H1/body contains "refactor", "restructure", "simplify" | `refactor` |
+| Filename starts with `document-`, `add-docs-`, `update-readme-`, or H1/body contains "documentation", "readme", "guide", "changelog" | `docs` |
+| Filename starts with `bump-`, `rename-`, `update-version-`, `cleanup-`, or H1/body contains "chore", "housekeeping", "version bump", "rename" | `chore` |
+| Default (no strong signal or filename starts with `add-`, `create-`, `implement-`, `build-`) | `feature` |
 
-  > "This plan appears to have been completed 30+ days ago. Would you like to
-  > mark it as `artifact` (preserved as valuable project documentation) rather
-  > than `completed`?"
-
-- If user confirms → status = `artifact`
-- If user declines → status stays `completed`
+If the file already has a valid content type (`feature`, `fix`, `refactor`,
+`docs`, `chore`), keep it.
 
 ### Step 6 — Present findings and confirm
 

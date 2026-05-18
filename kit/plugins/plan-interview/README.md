@@ -16,6 +16,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 | `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
 | `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
 | `deep-grill` | Command | `/plan-interview:deep-grill [plan-file-path]` |
+| `plan-maintenance` | Command | `/plan-interview:plan-maintenance [--archive] [--index] [--variants] [--all] [--background]` |
 | `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
 | `plan-status` | Skill | Auto-activates on plan status check/update requests |
 | `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
@@ -75,12 +76,15 @@ Status values:
 | `in-progress` | 1–79% of plan signals found in codebase |
 | `completed` | 80%+ of plan signals found in codebase |
 
-Type values (set for completed plans only):
+Type values (set for completed plans only — inferred from filename/content):
 
 | Type | Meaning |
 |------|---------|
-| `standard` | Default — a completed plan |
-| `artifact` | Valuable reference documentation preserved long-term |
+| `feature` | New capability or enhancement |
+| `fix` | Bug fix, patch, or regression fix |
+| `refactor` | Structural change without behavior change |
+| `docs` | Documentation-only change |
+| `chore` | Housekeeping, version bumps, renames |
 
 After analysis, the skill writes YAML frontmatter to the plan file (with user
 confirmation):
@@ -88,7 +92,7 @@ confirmation):
 ```yaml
 ---
 status: completed
-type: standard
+type: feature
 created: 2026-01-15
 modified: 2026-03-26
 ---
@@ -112,6 +116,36 @@ The command presents a summary table of all files and their computed
 status/type before writing anything. Override options let you adjust
 auto-classified artifact plans, documentation-focused plans, or zero-signal
 files before confirming the write.
+
+### Plan Maintenance
+
+Archive completed plans as browsable HTML, generate a directory index, and
+review variant/duplicate files:
+
+```
+/plan-interview:plan-maintenance                     # runs --all (variants → archive → index)
+/plan-interview:plan-maintenance --archive           # archive completed 30d+ plans as HTML
+/plan-interview:plan-maintenance --index             # regenerate docs/plans/README.md index
+/plan-interview:plan-maintenance --variants          # review and consolidate variant files
+/plan-interview:plan-maintenance --all --background  # full cycle, rendering in background
+```
+
+**Sub-workflows (executed in order for `--all`):**
+
+1. **Variants** — detects `-alt`, `-revised`, `-v2` suffix patterns and
+   semantic clusters (files sharing 3+ word prefixes). Presents recommendations
+   per cluster.
+2. **Archive** — identifies completed plans 30+ days old, converts each to
+   self-contained HTML via `markdown-to-html --mode=plan`, and stores them in
+   type-based folders under `docs/archive/` (`features/`, `fixes/`,
+   `refactors/`, `docs/`, `chores/`, `general/`). Source `.md` files are
+   `git rm`'d (git history preserves originals). Progress shown as
+   `"Archived 12/33: slug.html"`.
+3. **Index** — generates `docs/plans/README.md` with active plans grouped by
+   status and archived plan counts per type folder.
+
+Use `--background` with `--archive` or `--all` to spawn the rendering as a
+background agent.
 
 ### Document Completed Plans
 

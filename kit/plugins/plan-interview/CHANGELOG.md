@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.1.0] - 2026-05-18
+
+### Added
+
+- **`plan-maintenance` command** — archive completed plans as browsable HTML, generate a
+  directory index, and review variant/duplicate files. Three sub-workflows: `--variants`
+  (consolidate `-alt`/`-revised`/`-v2` duplicates), `--archive` (convert completed 30d+
+  plans to HTML in type-based folders under `docs/archive/`), `--index` (generate
+  `docs/plans/README.md` with grouped tables). Use `--all` for the full cycle, `--background`
+  for non-blocking rendering.
+- **Group F status/type normalization** in `update-plan-status` — non-canonical status values
+  (`implemented`, `ready`, `proposed`, `artifact`) are normalized to canonical values
+  (`completed`, `in-progress`, `draft`). Non-canonical type values (`standard`, `artifact`)
+  are replaced with inferred content types.
+
+### Changed
+
+- **`type` field reclaimed as content type** — `update-plan-status` now writes content types
+  (`feature`, `fix`, `refactor`, `docs`, `chore`) instead of lifecycle states (`standard`,
+  `artifact`). Existing plans are normalized via Group F on the next `--force` run.
+- **`documenting-plans` eligibility** — changed from `type: artifact` to `status: completed`
+  with 30+ day age. All completed plans that are old enough are now eligible regardless of
+  type.
+- **`plan-documenter` agent** — updated to match the new date-based eligibility criteria.
+
 ## [2.0.0] - 2026-05-18
 
 ### Breaking Changes
