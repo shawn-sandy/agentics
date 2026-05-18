@@ -33,7 +33,7 @@ Use `Glob` with pattern `<plansDirectory>/*.md` to get the full list of plan fil
 
 For each plan file, `Read` from the beginning until the closing `---` delimiter to extract YAML frontmatter. Parse only the content between the opening `---` and closing `---` delimiters. If the file does not start with `---`, it has no frontmatter — skip it immediately.
 
-Within the parsed frontmatter, check for `status: completed` (lowercase, exact match) AND that the plan is 30+ days old (using `modified` date if present, otherwise `created`). If neither date is in frontmatter, use `git log -1 --format="%Y-%m-%d"` on the file. Build a list of eligible plan paths.
+Within the parsed frontmatter, check for `status: completed` (lowercase, exact match) AND that the plan is 30+ days old (using `modified` date if present, otherwise `created`). If neither date is in frontmatter, use `git log -1 --format="%cd" --date=short` on the file. Build a list of eligible plan paths.
 
 **Important:**
 - Only include plans with an explicit `status: completed` field in YAML frontmatter that are 30+ days old.

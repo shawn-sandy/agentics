@@ -52,7 +52,7 @@ Use `Bash` to run git commands. Do not use `stat` — it is not cross-platform.
 **Created date** (first in order that succeeds):
 
 ```bash
-git log --follow --diff-filter=A --format="%Y-%m-%d" -- <file> | tail -1
+git log --follow --diff-filter=A --format="%cd" --date=short -- <file> | tail -1
 ```
 
 If the command returns empty (file not tracked by git), use today's date as the
@@ -61,7 +61,7 @@ created date.
 **Modified date**:
 
 ```bash
-git log -1 --format="%Y-%m-%d" -- <file>
+git log -1 --format="%cd" --date=short -- <file>
 ```
 
 If the modified date equals the created date, treat `modified` as absent (omit

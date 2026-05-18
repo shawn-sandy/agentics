@@ -101,7 +101,7 @@ delimiters, treat both `status` and dates as absent.
 **Age check (only reached when status is `completed`):**
 
 Compute the plan's age using the `modified` date if present, otherwise
-`created`. If neither date is in frontmatter, use `git log -1 --format="%Y-%m-%d"`
+`created`. If neither date is in frontmatter, use `git log -1 --format="%cd" --date=short`
 on the file.
 
 - If the plan is 30+ days old, continue to Step 3.
@@ -183,7 +183,7 @@ Determine the time window from the plan frontmatter:
 
 - `since` = `created` date from frontmatter, or fall back to:
   ```bash
-  git log --follow --diff-filter=A --format="%Y-%m-%d" -- <plan-file> | tail -1
+  git log --follow --diff-filter=A --format="%cd" --date=short -- <plan-file> | tail -1
   ```
 - `until` = `modified` date from frontmatter, or today's date if absent.
 
@@ -202,7 +202,7 @@ pathspecs, capped at 20.
 Also collect the shipped date (last commit touching the plan file):
 
 ```bash
-git log -1 --format="%Y-%m-%d" --date=short -- <plan-file>
+git log -1 --format="%cd" --date=short -- <plan-file>
 ```
 
 ### Step 7 — Check target doc

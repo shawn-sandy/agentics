@@ -104,8 +104,8 @@ Bash shell loop (not one call per file):
 
 ```bash
 for f in file1.md file2.md ...; do
-  created=$(git log --follow --diff-filter=A --format="%Y-%m-%d" -- "$f" 2>/dev/null | tail -1)
-  modified=$(git log -1 --format="%Y-%m-%d" -- "$f" 2>/dev/null)
+  created=$(git log --follow --diff-filter=A --format="%cd" --date=short -- "$f" 2>/dev/null | tail -1)
+  modified=$(git log -1 --format="%cd" --date=short -- "$f" 2>/dev/null)
   echo "$f|${created}|${modified}"
 done
 ```

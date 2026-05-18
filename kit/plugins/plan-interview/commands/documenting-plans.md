@@ -59,7 +59,7 @@ git log --since=<created> --until=<modified-or-today> \
 ```
 
 Cap at 20 commits. Also collect the shipped date:
-`git log -1 --format="%Y-%m-%d" --date=short -- <plan-file>`
+`git log -1 --format="%cd" --date=short -- <plan-file>`
 
 ### Step 7 — Check target doc
 
