@@ -401,6 +401,8 @@ If random-named plan files exist, run `/plan-hygiene` first and complete the ren
 
 ## Installation
 
+**Requires:** Claude Code 1.0.33 or later.
+
 ```
 /plugin install plan-interview@agentics-kit
 ```

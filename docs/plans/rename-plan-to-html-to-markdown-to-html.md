@@ -40,10 +40,13 @@ drift.
 The skill rename is a **breaking change** to the plugin's public surface and
 warrants a **MAJOR** version bump per `.claude/rules/marketplace.md`.
 
-**Current plugin version: `1.22.1`; this plan bumps to `2.0.0`.** Known
-external callers of `/plan-interview:plan-to-html` will receive a
-skill-not-found error at 2.0.0 with no alias provided; they must update their
-invocations manually. Internal callers are updated in Step 16. Doc-mode
+**Current plugin version: `1.22.1`; this plan bumps to `2.0.0`.** External
+callers of `Skill(skill: "plan-interview:plan-to-html", ...)` are protected by
+the backward-compat alias skill added in Step 7.5 — that alias delegates to
+`markdown-to-html --mode=plan` through at least the 3.0.0 major release.
+Slash-command callers (`/plan-interview:plan-to-html`) continue to work via
+the deprecated `commands/plan-to-html.md` delegation shim. Internal callers
+are updated in Step 16. Internal callers are updated in Step 16. Doc-mode
 targets users who want plan + generic markdown rendering inside Claude Code
 without leaving the session to invoke an external tool (Pandoc, mdconvert).
 

@@ -23,9 +23,8 @@ introduces a new build script + bundled assets — high blast radius. A
 six-reviewer panel (PM, Dev, UX, Frontend, A11y, Security) is the right
 gate before execution begins.
 
-Plan mode is currently active. Per the user's
-[feedback_skill_plan_mode memory](file:///Users/shawnsandy/.claude/projects/-Users-shawnsandy-devbox-agentics/memory/feedback_skill_plan_mode.md),
-write-heavy skills must not run inside plan mode. This meta-plan exists
+Plan mode is currently active. Per the `feedback_skill_plan_mode` project
+memory, write-heavy skills must not run inside plan mode. This meta-plan exists
 solely to surface the panel run for explicit approval via `ExitPlanMode`.
 
 ## Objective
