@@ -37,6 +37,7 @@ These are auto-generated, machine-specific, or reinstallable:
 
 ## Copy behavior
 
-- **Symlinks**: follow and copy resolved content (`cp -rL` / `rsync -L`)
+- **Symlinks**: follow and copy resolved content (`cp -aL` / `rsync -aL`)
 - **Missing sources**: skip silently — not every user has all targets
-- **Permissions**: preserve source permissions
+- **Permissions**: preserve source permissions (`-a` flag on both cp and rsync)
+- **Path safety**: always quote paths in shell commands

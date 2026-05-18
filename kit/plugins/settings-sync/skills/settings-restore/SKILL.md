@@ -41,9 +41,12 @@ Verify the directory exists and is a git repo:
 "Not a git repo: `<repo-path>`. Run settings-backup first to initialize." and
 **STOP**.
 
+**Path safety:** always quote the resolved repo path in all shell commands
+(git, rsync, cp, rm) to handle spaces and special characters.
+
 ### Step 2 — Pull latest from remote
 
-Check if a remote exists: `git -C <repo-path> remote get-url origin 2>/dev/null`.
+Check if a remote exists: `git -C "<repo-path>" remote get-url origin 2>/dev/null`.
 
 If a remote exists, run `git -C <repo-path> pull --ff-only`.
 
@@ -77,14 +80,17 @@ Track which files exist in the repo and which are missing.
 For each file/directory that exists in the repo, compare against the local
 `~/.claude/` target:
 
-**Files** — use `diff -q` to determine status:
+**Files** — compare each file:
 - **New**: exists in repo but not locally → label as `+ added`
-- **Modified**: exists in both, content differs → label as `~ modified`
+- **Modified**: exists in both, content differs (`diff -q`) → label as `~ modified`
 - **Unchanged**: exists in both, content matches → label as `= unchanged`
+- **Deleted**: exists locally but **not** in backup → label as `- deleted`
 
-**Directories** — use `diff -rq` to summarize:
-- Count files that are new, modified, or unchanged within the directory
-- Summarize as: `rules/ — 3 files (1 new, 1 modified, 1 unchanged)`
+**Directories** — list local and repo files, then classify each:
+- Use `find` on both the repo subdir and the local `~/.claude/` subdir to get
+  complete file lists, then compare to derive added/modified/unchanged/deleted
+  counts. (`diff -rq` alone misses unchanged files and local-only deletions.)
+- Summarize as: `rules/ — 5 files (1 new, 1 modified, 2 unchanged, 1 deleted)`
 
 Present the summary:
 
@@ -93,16 +99,22 @@ Restore preview:
   + settings.json (new)
   ~ CLAUDE.md (modified)
   = keybindings.json (unchanged)
-  ~ rules/ — 5 files (2 modified, 3 unchanged)
+  ~ rules/ — 5 files (1 new, 1 modified, 2 unchanged, 1 deleted)
   + commands/ — 2 files (2 new)
   skills/ — not in backup (skipped)
 ```
+
+**Important:** the `--delete` flag (rsync) and `rm -rf` (cp fallback) mean
+files that exist locally in `rules/`, `commands/`, or `skills/` but are **not**
+in the backup will be removed. Always surface these as `- deleted` in the
+preview so the user knows what will be lost.
 
 ### Step 5 — Confirm with user
 
 Use `AskUserQuestion`:
 
-> "Restore these settings to `~/.claude/`? This will overwrite existing files."
+> "Restore these settings to `~/.claude/`? This will overwrite existing files
+> and delete local files not present in the backup (see deleted items above)."
 
 Options:
 - "Restore all" — proceed with full restore

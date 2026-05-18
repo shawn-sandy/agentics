@@ -37,8 +37,15 @@ Determine the target repo using this priority order:
    `~/.claude/settings-sync.json` or pass a path argument." and **STOP**.
 
 Once resolved, expand `~` to the full home directory path and confirm the
-directory exists. If it does not exist, ask the user if they'd like to create it
-(interactive only).
+directory exists. If it does not exist:
+
+- **Interactive**: ask the user if they'd like to create it with `mkdir -p`.
+- **Routine / unattended**: output: "Repo directory does not exist:
+  `<repo-path>`. Create it manually or update `repoPath` in
+  `~/.claude/settings-sync.json`." and **STOP**.
+
+**Path safety:** always quote the resolved repo path in all shell commands
+(git, rsync, cp, rm) to handle spaces and special characters.
 
 After resolving, persist the path to `~/.claude/settings-sync.json`:
 
