@@ -140,7 +140,7 @@ For each file target: `cp -fL <repo-path>/<file> ~/.claude/<file>`.
 For each directory target, remove then replace to mirror rsync `--delete`:
 
 ```bash
-rm -rf ~/.claude/<dir> && cp -rL <repo-path>/<dir> ~/.claude/<dir>
+rm -rf ~/.claude/<dir> && cp -aL <repo-path>/<dir> ~/.claude/<dir>
 ```
 
 If the `cp` fails after `rm -rf`, report the error immediately — the user can

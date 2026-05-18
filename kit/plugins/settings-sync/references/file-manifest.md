@@ -26,7 +26,7 @@ These are auto-generated, machine-specific, or reinstallable:
 
 - `~/.claude/sessions/` — session transcripts and metadata
 - `~/.claude/history.jsonl` — command history
-- `~/.claude/cache/`, `paste-cache/` — transient caches
+- `~/.claude/cache/`, `~/.claude/paste-cache/` — transient caches
 - `~/.claude/daemon.*` — daemon process state
 - `~/.claude/plugins/` — installed plugins (reinstallable from marketplaces)
 - `~/.claude/projects/` — project-specific memory (lives with each project)

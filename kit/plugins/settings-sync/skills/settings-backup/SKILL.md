@@ -144,7 +144,7 @@ For each file target, use `cp -fL <source> <repo-path>/<filename>`.
 For each directory target, use:
 
 ```bash
-rm -rf <repo-path>/<dir> && cp -rL ~/.claude/<dir> <repo-path>/<dir>
+rm -rf <repo-path>/<dir> && cp -aL ~/.claude/<dir> <repo-path>/<dir>
 ```
 
 The `rm -rf` before copy ensures deleted source files don't persist in the

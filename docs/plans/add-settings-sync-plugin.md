@@ -37,7 +37,7 @@ Create a `settings-sync` plugin with two skills (`settings-backup` and `settings
    - If no argument, reads stored path from `~/.claude/settings-sync.json`
    - If neither exists, prompts user for path and saves it (interactive only)
    - Validates target is a git repo (or offers to `git init`); creates `.gitignore` (`.DS_Store`, `*.swp`) on first setup
-   - Checks for `rsync`; falls back to `cp -rL` + `mkdir -p` when absent
+   - Checks for `rsync`; falls back to `cp -aL` + `mkdir -p` when absent
    - Follows symlinks and copies resolved content (backups are self-contained)
    - Scans `settings.json` for common secret patterns (`sk-`, `ghp_`, `AKIA`) and warns before first commit
    - Writes `.settings-sync-meta.json` with machine hostname, backup timestamp, and Claude Code version
@@ -96,7 +96,7 @@ Create a `settings-sync` plugin with two skills (`settings-backup` and `settings
 
 ## Key Design Decisions
 
-- **rsync with cp fallback**: prefer rsync for cleaner handling, but fall back to `cp -rL` + `mkdir -p` when rsync isn't installed — keeps the skill portable across minimal Linux installs and WSL
+- **rsync with cp fallback**: prefer rsync for cleaner handling, but fall back to `cp -aL` + `mkdir -p` when rsync isn't installed — keeps the skill portable across minimal Linux installs and WSL
 - **Exclude `settings.local.json` by default**: machine-specific overrides are not backed up unless explicitly opted in via `"includeLocalSettings": true` in `settings-sync.json`
 - **Config file only**: `~/.claude/settings-sync.json` is the single source for the repo path — no environment variable support, no ambiguity about precedence
 - **Push conflicts fail and report**: don't auto-resolve with rebase or force push — report the conflict and let the user handle it manually
@@ -142,7 +142,7 @@ Create a `settings-sync` plugin with two skills (`settings-backup` and `settings
 
 ### Key Decisions Confirmed
 
-- **rsync with cp fallback**: check for rsync availability; fall back to `cp -rL` + `mkdir -p` when absent
+- **rsync with cp fallback**: check for rsync availability; fall back to `cp -aL` + `mkdir -p` when absent
 - **Exclude `settings.local.json` by default**: machine-specific overrides not backed up unless user sets `"includeLocalSettings": true` in `settings-sync.json`
 - **Config file only**: `~/.claude/settings-sync.json` is the single source for repo path — no env var support
 - **Push conflicts fail and report**: don't auto-resolve — report the conflict and let the user handle it
