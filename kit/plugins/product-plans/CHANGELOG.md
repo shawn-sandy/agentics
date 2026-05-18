@@ -1,5 +1,41 @@
 # Changelog
 
+## 3.4.0 — 2026-05-18
+
+**Rejection remediation prompt, decision banner, dated Panel Review headings.**
+
+When the final decision is `Reject`, section 14 of the report now includes
+two additional subsections:
+
+- **Rejection Summary** — consolidated blocking issues and critical concerns
+  with reviewer attribution.
+- **Remediation Prompt** — a self-contained, fenced `text` block the user can
+  copy-paste into a fresh Claude session to fix the plan and re-run the panel.
+  Context-aware: interactive mode says "paste into Claude"; background mode
+  says "re-run the panel".
+
+Additional changes:
+
+- **Decision banner** — the HTML artifact shows a color-coded `<div role="status">`
+  banner (green/amber/red) for all three outcomes, placed in `<main>` before the
+  appendix. Replaces the old badge in `<header>` (no duplicate announcements).
+  Reject banners include the remediation prompt with a copy button and clipboard
+  fallback (`execCommand('copy')` for `file://` origins).
+- **Dated Panel Review headings** — Step 7 appends `## Panel Review (YYYY-MM-DD
+  HH:MM:SS UTC)` with seconds precision. Re-runs append new sections without
+  stripping old ones. Historical reviews render as collapsed `<details>` in the
+  HTML artifact, newest first.
+- **5-backtick outer fence** — `output-template.md` uses 5-backtick fences so
+  inner `text` blocks nest safely per CommonMark spec.
+- **Accessibility** — `aria-live="polite"` span pre-exists in DOM (WCAG 4.1.3);
+  copy button has `aria-label` (WCAG 4.1.2); scrollable `<pre>` has
+  `tabindex="0"`, `role="region"`.
+- **Security** — Security & Escaping Contract extended to cover remediation
+  prompt content.
+- **Step 8 re-read** — the lead re-reads the plan file after Step 7 modifies it,
+  so historical Panel Review sections appear in the HTML artifact.
+- **CSS** — `.remediation` uses `color-mix()` with `var(--surface)` fallback.
+
 ## 3.3.0 — 2026-05-17
 
 **Self-contained HTML review artifact.**
