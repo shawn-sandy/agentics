@@ -1,0 +1,19 @@
+{
+  "name": "settings-sync",
+  "description": "Back up and restore Claude Code user settings to a dedicated git repo. Routine-compatible for automated backups.",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "settings",
+    "backup",
+    "restore",
+    "sync",
+    "dotfiles",
+    "configuration",
+    "routine"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/settings-sync",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
