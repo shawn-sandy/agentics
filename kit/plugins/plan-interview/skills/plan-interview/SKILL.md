@@ -166,11 +166,11 @@ If the user confirms:
   Steps 4–6 (especially Step 6's save operation) reference the new path.
 
 Then ask via `AskUserQuestion`: _"Generate HTML for the renamed plan?
-(`plan-to-html` will prompt for a color theme.)"_ (options: `Yes, generate HTML`
+(`markdown-to-html` will prompt for a color theme.)"_ (options: `Yes, generate HTML`
 / `Skip`). If confirmed, call:
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --no-open")
+Skill(skill: "plan-interview:markdown-to-html", args: "<new-path> --no-open --mode=plan")
 ```
 
 If the user declines, continue to the rest of Step 2.
@@ -504,11 +504,11 @@ If they decline the summary append, do not modify the file.
 **In `plan-review` mode only**: after handling the save decision (whether
 confirmed or declined), ask via `AskUserQuestion`: _"Generate (or regenerate)
 HTML for this plan?"_ (options: `Yes, generate HTML` / `Skip`; if an `.html`
-exists, `plan-to-html` will prompt to overwrite it). If confirmed, call with
+exists, `markdown-to-html` will prompt to overwrite it). If confirmed, call with
 the current resolved path (the renamed path from Step 2, if applicable):
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<resolved-plan-path> --no-open")
+Skill(skill: "plan-interview:markdown-to-html", args: "<resolved-plan-path> --no-open --mode=plan")
 ```
 
 **In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:

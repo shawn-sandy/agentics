@@ -105,7 +105,7 @@ For each renamed file, invoke the `plan-to-html` skill with the new path, the
 chosen theme, and `--no-open` to suppress per-file browser prompts:
 
 ```
-Skill(skill: "plan-interview:plan-to-html", args: "<new-path> --theme=<chosen> --background")
+Skill(skill: "plan-interview:markdown-to-html", args: "<new-path> --theme=<chosen> --background --mode=plan")
 ```
 
 **Step D — Commit regenerated HTML**

@@ -60,6 +60,9 @@ spec.
   two-column layout, decision badge, reviewer cards, conflicts table,
   inline-edits table, reviewer-unavailable pills, print styles,
   inlined CSS/JS.
+- `kit/plugins/product-plans/commands/product-plans-bg.md` — update
+  the final-summary prompt in Step 2 to surface the HTML artifact
+  path alongside the in-place update path.
 - `kit/plugins/product-plans/README.md` — document the new HTML output.
 - `kit/plugins/product-plans/CHANGELOG.md` — new MINOR entry (3.3.0).
 - `.claude-plugin/marketplace.json` — bump `product-plans` version
@@ -195,6 +198,18 @@ spec.
    plan and is not a symlink. All plan content and reviewer output
    interpolated into the HTML MUST be HTML-escaped per the
    "Security & Escaping Contract" section of `references/html-spec.md`.
+   The revised plan section (section 15b) MUST be rendered from
+   markdown to HTML (not shown as preformatted text). Supported
+   markdown features: headings 1–6, fenced code blocks with
+   language class (`<pre><code class="language-X">`), ordered/
+   unordered lists with nesting, tables with `<thead>`/`<tbody>`,
+   inline code, bold/italic, links with `rel="noopener noreferrer"`
+   (strip `javascript:`/`vbscript:` URIs per the Security &
+   Escaping Contract), blockquotes, horizontal rules. Raw HTML
+   passthrough in the markdown source is disabled — all literal
+   `<` characters are HTML-escaped per the Security & Escaping
+   Contract.
+
    All content must be readable without JavaScript; JS provides
    scroll-spy active-state in the TOC only (progressive
    enhancement). Write the HTML string via `Write`; if the file
@@ -203,8 +218,13 @@ spec.
    `HTML artifact could not be written: <path> — <reason>` and
    continue to Step 9 (cleanup must still run).
 
-   (c) **Announcement line** — `HTML review artifact written:
-   <resolved-html-path>`.
+   (c) **Announcement line** — emit both lines:
+   ```
+   HTML review artifact written: <resolved-html-path>
+   ```
+   In background mode, the `product-plans-bg` command wrapper
+   surfaces this path alongside the in-place update path (see
+   Step 10).
 
    — *Why:* ensures the step has an explicit security contract,
    deterministic path derivation, a defined failure mode, and a
@@ -270,6 +290,23 @@ spec.
    `"version": "3.3.0"` and the file passes the auto-validation
    hook on save.
 
+10. **Update `kit/plugins/product-plans/commands/product-plans-bg.md`** —
+    in Step 2, change the final-summary prompt from "report the
+    path updated in place when done" to "report both the in-place
+    update path and the HTML artifact path when done". The prompt
+    template should become:
+    ```
+    Run the product-plans review panel on $ARGUMENTS in background mode.
+    Invoke Skill(skill: "product-plans:plan-review-agents", args: "$ARGUMENTS --background")
+    and report both the path updated in place and the HTML artifact
+    path when done.
+    ```
+    — *Why:* the background wrapper's agent prompt drives what it
+    surfaces to the invoker; without this change the HTML path is
+    silently swallowed when the skill runs detached. — *Verify:*
+    `grep "HTML artifact" kit/plugins/product-plans/commands/product-plans-bg.md`
+    returns at least one match in the Step 2 prompt block.
+
 ## Verification
 
 End-to-end confirmation that the plan was executed correctly:
@@ -324,6 +361,28 @@ End-to-end confirmation that the plan was executed correctly:
    In `view-source`, confirm the title text shows
    `&lt;script&gt;alert(1)&lt;/script&gt;` rather than raw
    `<script>`.
+
+## Acceptance Criteria
+
+- [ ] Running the skill on any plan produces a `<stem>-review.html`
+      file in the same directory as the source plan.
+- [ ] The HTML file opens in any modern browser with no console
+      errors and no outbound network requests.
+- [ ] The revised plan (section 15b) is rendered as the primary
+      view with markdown formatting applied; the full panel review
+      is accessible via the collapsible appendix.
+- [ ] The appendix `<details>` is collapsed by default on load and
+      expands fully in print preview.
+- [ ] All four themes are visually distinct; the `default` theme
+      meets WCAG AA color contrast for body text and UI components.
+- [ ] The HTML file passes the self-containment check: `grep -E
+      '<link |<script[^>]*src=|<iframe|@import|url\(https?:'`
+      returns no matches.
+- [ ] Running with `output_mode = review only` produces no HTML
+      file and emits no HTML path announcement.
+- [ ] Running `/product-plans:product-plans-bg` on a plan surfaces
+      the HTML artifact path in the final background-agent status
+      message alongside the in-place update path.
 
 ## Next Steps *(optional)*
 
@@ -385,43 +444,6 @@ End-to-end confirmation that the plan was executed correctly:
   block is present and that all four themes still meet WCAG AA
   contrast. Dark mode is explicitly out of scope for v3.3.0 —
   target v3.4.0 or later.
-  ```
-
-## Unresolved Questions
-
-- Markdown rendering trust boundary — decide before Step 1 authoring:
-  ```text
-  For the plan-review-agents HTML artifact, should the revised plan
-  section (section 15b) be rendered from markdown to HTML, or shown
-  as preformatted text? If rendered: which markdown renderer or
-  configuration should be used, and how are the security constraints
-  from the Security & Escaping Contract section enforced (no raw HTML
-  passthrough, no javascript: URIs, event-handler stripping)? If
-  preformatted text: confirm the plan body reads acceptably as a
-  <pre> block. Recommend one approach with reasoning before
-  references/html-spec.md is authored.
-  ```
-
-- Review-only mode HTML output — decide before Step 3 authoring:
-  ```text
-  When plan-review-agents is run with output_mode = review only,
-  section 15b (the revised plan) does not exist. The current plan
-  says Step 8 should be skipped entirely in that case. Confirm this
-  is the correct behavior, or specify an alternative (e.g., render
-  a degraded HTML using only the chat report sections 1–14 as the
-  primary surface with a notice that no revised plan was generated).
-  Changing this decision affects Step 3's mode clause in SKILL.md.
-  ```
-
-- Background-mode HTML path surfacing — decide before Step 3 authoring:
-  ```text
-  When /product-plans:product-plans-bg runs the panel in background
-  mode, does the final status message surface the HTML artifact path
-  (alongside the existing "Plan updated in place: <path>" line)?
-  Confirm the expected behavior and, if yes, identify which part of
-  the background-mode command or wrapper needs to be updated to echo
-  the HTML path. This affects Step 3c of this plan (SKILL.md step
-  body) and potentially the product-plans-bg command file.
   ```
 
 ## Panel Review
