@@ -163,10 +163,10 @@ deterministically in sync with the spec.
    - Raw HTML in markdown → escaped as literal text, not passed through
 
 0.5. **Add WCAG Level A requirements to `reference/html-spec.md` HTML
-   template.** *Why:* three Level A failures in every generated file create
+   template.** *Why:* four Level A failures in every generated file create
    legal exposure under ADA Title III and the European Accessibility Act
    (effective June 2025). *Verify:* grep generated HTML for `lang=`, `<title>`,
-   and `skip-link`; each returns 1.
+   `skip-link`, and `step-label`; each returns ≥ 1.
    - `<html lang="{frontmatter lang field or 'en'}">` — SC 3.1.1 Language of Page
    - `<title>{H1 text} — markdown-to-html</title>` in `<head>` — SC 2.4.2 Page Titled
    - As the first focusable body element: `<a href="#main-content"
@@ -174,6 +174,13 @@ deterministically in sync with the spec.
      `.skip-link { position: absolute; left: -10000px; top: auto; }
      .skip-link:focus { position: static; }` in `assets/themes.css`; add
      `id="main-content"` to the `<main>` element — SC 2.4.1 Bypass Blocks
+   - Each step checkbox wrapped in a labelling element in the step-card
+     template: `<label class="step-label"><input class="step-checkbox"
+     type="checkbox">Step N: {title text}</label>` — SC 1.3.1 Info and
+     Relationships. Screen readers must announce the step identity alongside
+     "checkbox, unchecked", not just "checkbox, unchecked" with no context.
+     The `~` sibling selector used by the chip and status spans works
+     unchanged with `<label>` as the containing parent.
 
 0.75. **Require focus indicator styles in the `assets/themes.css` specification.**
    *Why:* SC 2.4.7 Focus Visible and SC 2.4.11 Focus Appearance Minimum (WCAG
@@ -428,6 +435,9 @@ deterministically in sync with the spec.
       `textContent` to `"Complete"` or `""` via JS on checkbox toggle
       — SC 4.1.2 requires programmatic state change, not just CSS. **Color +
       icon + live region together** — satisfies WCAG 1.4.1 and 4.1.2.
+      The `<input class="step-checkbox">` and chip span must both be children
+      of `<label class="step-label">` (see Step 0.5 — SC 1.3.1); the `~`
+      general-sibling selector operates within the `<label>` parent unchanged.
     - **Sidebar scroll rail / mini-map**: a 4px vertical bar inside
       `<nav>` (`.scroll-rail`) whose fill height tracks the active
       section. Driven by the same scroll-spy IIFE that updates `.active`
