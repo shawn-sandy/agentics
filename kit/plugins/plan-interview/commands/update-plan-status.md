@@ -184,7 +184,7 @@ All type assignments are overridable in Step 6.
 Output a results table:
 
 ```
-Batch Status Analysis — 81 files processed
+Batch Status Analysis — 83 files processed
 
  #  File                                  Status        Type      Tokens  Evidence  Created     Modified    Flags
 ──  ────────────────────────────────────  ────────────  ────────  ──────  ────────  ──────────  ──────────  ────────────
@@ -215,6 +215,7 @@ Summary:
   in-progress:  18 files
   todo:         11 files (6 no-signals)
   draft:         2 files
+  Total:        83 files
 
 Flags:
   normalized (Group F):        3 files
