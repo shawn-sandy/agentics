@@ -1,6 +1,5 @@
 ---
 status: completed
-modified: 2026-05-18
 type: feature
 created: 2026-05-18
 ---

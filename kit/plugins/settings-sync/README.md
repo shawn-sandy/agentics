@@ -55,10 +55,11 @@ restore my claude settings from ~/dotfiles/claude-settings
 
 ### Routine (automated backup)
 
-Schedule a daily backup:
+Schedule a daily backup using `/schedule`, then choose **Create** and provide
+the prompt:
 
 ```
-/schedule — "Back up my Claude settings to ~/dotfiles/claude-settings"
+Back up my Claude settings to ~/dotfiles/claude-settings
 ```
 
 The backup skill runs without prompts when the repo path is configured in

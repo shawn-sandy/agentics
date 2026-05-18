@@ -1,7 +1,7 @@
 ---
 name: settings-backup
 description: "Use when the user asks to back up, save, export, or sync their Claude Code settings to a git repo. Also activates for routine-scheduled setting backups."
-allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Glob
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 argument-hint: "[repo-path]"
 ---
 
@@ -31,13 +31,10 @@ Determine the target repo using this priority order:
    message), expand `~` and use it directly.
 2. **Config file**: read `~/.claude/settings-sync.json`. If it exists and
    contains a `"repoPath"` key, use that value.
-3. **Interactive prompt**: if neither is available **and** this is an interactive
-   session, use `AskUserQuestion` to ask the user for the repo path.
-
-**Routine detection**: if both argument and config file are empty, assume this
-is an unattended routine run. Do **not** call `AskUserQuestion` — output:
-"No repo path configured. Set `repoPath` in `~/.claude/settings-sync.json`
-or pass a path argument." and **STOP**.
+3. **Interactive prompt**: if neither is available, use `AskUserQuestion` to ask
+   the user for the repo path. If `AskUserQuestion` is unavailable (routine /
+   unattended context), output: "No repo path configured. Set `repoPath` in
+   `~/.claude/settings-sync.json` or pass a path argument." and **STOP**.
 
 Once resolved, expand `~` to the full home directory path and confirm the
 directory exists. If it does not exist, ask the user if they'd like to create it
@@ -125,12 +122,17 @@ command -v rsync >/dev/null 2>&1
 
 **If rsync is available:**
 
+For single files (no `--delete` — it would remove unrelated repo-root files):
+
 ```bash
-rsync -aL --delete \
-  ~/.claude/settings.json \
-  ~/.claude/CLAUDE.md \
-  ~/.claude/keybindings.json \
-  <repo-path>/
+rsync -aL ~/.claude/settings.json <repo-path>/settings.json
+rsync -aL ~/.claude/CLAUDE.md <repo-path>/CLAUDE.md
+rsync -aL ~/.claude/keybindings.json <repo-path>/keybindings.json
+```
+
+For directories (`--delete` is safe here — scoped to the target subdir):
+
+```bash
 rsync -aL --delete ~/.claude/rules/ <repo-path>/rules/
 rsync -aL --delete ~/.claude/commands/ <repo-path>/commands/
 rsync -aL --delete ~/.claude/skills/ <repo-path>/skills/
@@ -138,7 +140,7 @@ rsync -aL --delete ~/.claude/skills/ <repo-path>/skills/
 
 **If rsync is not available (cp fallback):**
 
-For each file target, use `cp -fL <source> <repo-path>/`.
+For each file target, use `cp -fL <source> <repo-path>/<filename>`.
 For each directory target, use:
 
 ```bash
@@ -148,7 +150,18 @@ rm -rf <repo-path>/<dir> && cp -rL ~/.claude/<dir> <repo-path>/<dir>
 The `rm -rf` before copy ensures deleted source files don't persist in the
 backup (mirrors rsync `--delete` behavior).
 
-Skip any source that does not exist — do not error.
+**Cleanup for deleted sources:** for each file target that does **not** exist
+locally but **does** exist in the repo, remove it from the repo so the backup
+reflects the current local state:
+
+```bash
+[ ! -f ~/.claude/keybindings.json ] && [ -f <repo-path>/keybindings.json ] && rm <repo-path>/keybindings.json
+```
+
+Apply this check to every single-file target (settings.json, CLAUDE.md,
+keybindings.json, and settings.local.json if opt-in is enabled).
+
+Skip any source that does not exist — do not error on copy.
 
 If `includeLocalSettings` is true, also copy `~/.claude/settings.local.json`.
 
