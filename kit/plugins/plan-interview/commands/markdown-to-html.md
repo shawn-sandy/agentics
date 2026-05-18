@@ -10,7 +10,17 @@ Convert any markdown file — plan or generic document — into a rich, self-con
 HTML page with a sticky sidebar, interactive navigation, inline markdown rendering,
 and a selectable color theme. All styles and scripts are inline — no external dependencies.
 
-Delegates to the full skill instructions in `skills/markdown-to-html/SKILL.md`.
+## Instructions
+
+Invoke the markdown-to-html skill, forwarding all arguments:
+
+```
+Skill(skill: "plan-interview:markdown-to-html", args: "$ARGUMENTS")
+```
+
+The skill handles all steps — file resolution, mode detection, theme selection,
+HTML generation, and browser open offer. See `skills/markdown-to-html/SKILL.md`
+for the full step-by-step workflow.
 
 ## When to use
 

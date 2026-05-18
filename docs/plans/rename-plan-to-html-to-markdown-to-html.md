@@ -2,7 +2,6 @@
 status: completed
 type: refactor
 created: 2026-05-18
-modified: 2026-05-18
 panel-review: reject-resolved
 panel-review-date: 2026-05-18
 ---

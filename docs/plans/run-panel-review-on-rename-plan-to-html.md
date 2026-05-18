@@ -1,6 +1,5 @@
 ---
 status: todo
-type: chore
 created: 2026-05-18
 ---
 

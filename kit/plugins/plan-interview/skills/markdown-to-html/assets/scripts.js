@@ -48,12 +48,18 @@
   try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) {}
 
   function updateProgress() {
+    var bar = document.querySelector('.progress-bar[role="progressbar"]');
     var fill = document.querySelector('.progress-fill');
     if (!fill) return;
     var boxes = document.querySelectorAll('.step-checkbox');
     if (!boxes.length) return;
     var checked = Array.from(boxes).filter(function (b) { return b.checked; }).length;
-    fill.style.width = Math.round((checked / boxes.length) * 100) + '%';
+    var pct = Math.round((checked / boxes.length) * 100);
+    fill.style.width = pct + '%';
+    if (bar) {
+      bar.setAttribute('aria-valuenow', String(pct));
+      bar.setAttribute('aria-valuetext', pct + '% complete');
+    }
   }
 
   document.querySelectorAll('.step-card').forEach(function (card, idx) {

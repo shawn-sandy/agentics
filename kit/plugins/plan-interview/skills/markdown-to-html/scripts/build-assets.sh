@@ -15,11 +15,20 @@ fi
 mkdir -p "$ASSETS"
 
 # Writes extracted block to stdout; callers redirect as needed.
+# Exits non-zero if START or END marker is missing (prevents silent empty output).
 extract() {
   local tag="$1"
-  awk "/<!-- BUILD-EXTRACT:${tag} START -->/{found=1;next} \
-       /<!-- BUILD-EXTRACT:${tag} END -->/{found=0} \
-       found" "$SPEC" \
+  awk -v tag="$tag" '
+    $0 ~ "<!-- BUILD-EXTRACT:" tag " START -->" { found=1; saw_start=1; next }
+    $0 ~ "<!-- BUILD-EXTRACT:" tag " END -->"   { found=0; saw_end=1;   next }
+    found { print }
+    END {
+      if (!saw_start || !saw_end) {
+        printf "Error: missing or unclosed BUILD-EXTRACT markers for tag %s\n", tag > "/dev/stderr"
+        exit 1
+      }
+    }
+  ' "$SPEC" \
     | sed '/^```css$/d; /^```javascript$/d; /^```$/d'
 }
 

@@ -60,7 +60,7 @@ Mark each todo `status: "completed"` as you finish that step.
 
 If a file path appears in `$ARGUMENTS`:
 1. Run `realpath "<path>"` to get the canonical absolute path.
-2. Confirm the result is under `$PWD` or `$CLAUDE_PROJECT_DIR`. If not, print
+2. Confirm the result is under `$PWD`. If not, print
    "Error: path is outside the workspace" and stop.
 3. Confirm the extension is `.md` or `.markdown`. If not, print
    "Error: file must be a .md or .markdown file" and stop.

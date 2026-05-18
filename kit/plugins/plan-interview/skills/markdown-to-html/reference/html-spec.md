@@ -49,7 +49,7 @@ an unvalidated value into a class attribute.
 Before reading any input file (SKILL.md Step 1):
 
 1. Resolve the absolute path with `realpath`.
-2. Confirm it is under `$PWD` or `$CLAUDE_PROJECT_DIR`.
+2. Confirm it is under `$PWD`.
 3. Confirm the extension is `.md` or `.markdown`.
 4. Confirm it is not a symlink pointing outside the workspace.
 
@@ -792,12 +792,18 @@ pre code { background: none; padding: 0; font-size: 0.85em; }
   try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) {}
 
   function updateProgress() {
+    var bar = document.querySelector('.progress-bar[role="progressbar"]');
     var fill = document.querySelector('.progress-fill');
     if (!fill) return;
     var boxes = document.querySelectorAll('.step-checkbox');
     if (!boxes.length) return;
     var checked = Array.from(boxes).filter(function (b) { return b.checked; }).length;
-    fill.style.width = Math.round((checked / boxes.length) * 100) + '%';
+    var pct = Math.round((checked / boxes.length) * 100);
+    fill.style.width = pct + '%';
+    if (bar) {
+      bar.setAttribute('aria-valuenow', String(pct));
+      bar.setAttribute('aria-valuetext', pct + '% complete');
+    }
   }
 
   document.querySelectorAll('.step-card').forEach(function (card, idx) {

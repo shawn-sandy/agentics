@@ -13,10 +13,11 @@ and generic markdown documents.
 
 ## Instructions
 
-Immediately call:
+Strip any `--mode=...` flag from `$ARGUMENTS` (to avoid duplicate flags), then call
+with `--mode=plan` prepended so plan mode is always enforced:
 
 ```
-Skill(skill: "plan-interview:markdown-to-html", args: "$ARGUMENTS --mode=plan")
+Skill(skill: "plan-interview:markdown-to-html", args: "--mode=plan {$ARGUMENTS minus any --mode=...}")
 ```
 
 Do not emit any other output before or after the delegation. The `markdown-to-html`
