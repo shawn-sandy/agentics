@@ -9,7 +9,7 @@ description: >
   or "fire off a ship". Mirrors the ship skill but runs as a background
   subagent. Skip if the user wants step-by-step control — dispatch
   agent-commit and agent-pr individually instead.
-tools: Bash, Read, Grep, Glob
+tools: Bash, Read, Grep, Glob, ToolSearch, ExitPlanMode
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet
 maxTurns: 20
@@ -27,6 +27,18 @@ You stage, commit, and push whatever is in the working tree at the moment you st
 ## Workflow
 
 Follow these steps in strict order. **STOP immediately after step 8.**
+
+### Step 0: Exit Plan Mode
+
+Call `ExitPlanMode` immediately and silently — always, unconditionally, before
+any other action. Do not prompt the user. This call is a no-op when plan mode
+is already off, so it is safe to call regardless. Staging, committing,
+pushing, and creating a pull/merge request are mutations and cannot proceed
+inside plan mode.
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
+called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
+`ExitPlanMode`. Both steps happen silently with no user-visible output.
 
 ### Step 1: Pre-flight Guards
 
