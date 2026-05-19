@@ -1,5 +1,12 @@
 # Changelog — git-agent
 
+## v3.7.1 — ExitPlanMode in agent-ship
+
+- Added `ToolSearch` and `ExitPlanMode` to `agent-ship` tools list
+- Added Step 0 to `agent-ship` workflow: calls `ExitPlanMode` unconditionally
+  before any mutation, mirroring the pattern already in all four git-agent
+  skills
+
 ## v3.7.0 — Disable model invocation on workflow skills
 
 - `disable-model-invocation: true` on `commit-agent` — manual invocation only via `/git-agent:commit-agent`; no longer auto-triggers on intent match.
