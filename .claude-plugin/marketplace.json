@@ -55,8 +55,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "2.1.0",
-      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins",
+      "version": "2.1.1",
+      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins — always emits an interview HTML artifact after review",
       "category": "development",
       "tags": [
         "planning",
@@ -280,8 +280,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/product-plans"
       },
-      "version": "3.4.0",
-      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report and applies improvements directly to the source plan",
+      "version": "3.4.1",
+      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
       "category": "productivity",
       "tags": [
         "panel-review",

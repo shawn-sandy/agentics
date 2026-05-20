@@ -1,6 +1,6 @@
 ---
 name: plan-review-agents
-description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, feature proposal, or implementation plan; or asks for a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review."
+description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, or feature proposal; or requests a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review of a product or design document. For quick single-agent technical validation of an implementation plan before coding, use plan-interview:plan-interview instead."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
@@ -269,11 +269,18 @@ re-synthesize from reviewer outputs; do **not** read external CSS. Apply
 **Derive the output path:**
 
 1. Take the absolute path of the resolved plan file from Step 1.
-2. Extract the basename (filename only, no directory).
-3. Strip the `.md` extension.
-4. Replace any character outside `[A-Za-z0-9._-]` with `-`.
-5. Append `-review.html`.
-6. Confirm the target directory is the same as the source plan's directory
+2. Extract the basename (filename only, no directory) and the directory.
+3. Strip the `.md` extension to get `plan_stem`.
+4. Replace any character outside `[A-Za-z0-9._-]` in `plan_stem` with `-`.
+5. Check whether `<plan_dir>/<plan_stem>-interview.html` already exists
+   (a prior `plan-interview` run creates this file):
+   ```bash
+   test -f "<plan_dir>/<plan_stem>-interview.html" && echo "exists"
+   ```
+6. Set the output path:
+   - **If the interview HTML exists**: output path = `<plan_dir>/<plan_stem>-interview.html`
+   - **Otherwise**: output path = `<plan_dir>/<plan_stem>-review.html`
+7. Confirm the target directory is the same as the source plan's directory
    and is not a symlink.
 
 **Write the file:**
@@ -283,9 +290,17 @@ HTML-escaped per the "Security & Escaping Contract" section of
 `references/html-spec.md`. All content must be readable without JavaScript;
 JS provides scroll-spy active-state in the TOC only (progressive enhancement).
 
-Write the HTML string via `Write`; if the file already exists, overwrite it
-silently. If `Write` fails (read-only directory, disk full, permission
-denied), announce:
+When writing to an existing `*-interview.html` file (case 5 above): read the
+existing file, locate the `</body>` tag, and inject the synthesized review HTML
+as a new `<section id="panel-review">` block immediately before `</body>` rather
+than overwriting the entire file. This preserves the plan-interview step timeline
+and adds the panel findings as a new section below it.
+
+Otherwise (no prior interview HTML): `Write` the full artifact to the derived
+`*-review.html` path. If the file already exists, overwrite it silently.
+
+If `Write` (or the injection `Edit`) fails (read-only directory, disk full,
+permission denied), announce:
 
 > `HTML artifact could not be written: <path> — <reason>`
 
@@ -306,3 +321,18 @@ Clean up the team.
 Per the [Agent Teams docs](https://code.claude.com/docs/en/agent-teams),
 always use the lead to clean up; cleanup from a teammate leaves resources
 in an inconsistent state.
+
+---
+
+**When to use this skill vs. `plan-interview`:**
+
+| Situation | Use |
+|-----------|-----|
+| Quick single-agent technical gap check before coding | `plan-interview:plan-interview` |
+| Product plan, PRD, or feature proposal | `plan-review-agents` (this skill) |
+| Comprehensive PM / UX / Security / A11y review | `plan-review-agents` (this skill) |
+| Walk every decision branch interactively | `plan-interview:deep-grill` |
+
+If the resolved plan looks like a technical implementation plan (contains `## Steps`,
+`## Files to Create/Modify`, file paths, or code identifiers but no product-level
+signals), consider suggesting `plan-interview:plan-interview` to the user instead.

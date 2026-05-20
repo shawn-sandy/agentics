@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.1.1] - 2026-05-20
+
+### Changed
+
+- **Skill description narrowed** — `plan-interview` skill now explicitly scopes to technical
+  implementation plans (code, files, APIs). The description advises users to reach for
+  `product-plans:plan-review-agents` for product plans, PRDs, and feature proposals.
+- **HTML artifact is now mandatory** — Step 6 always generates `<plan-stem>-interview.html`
+  after the interview summary (regardless of whether the user saves findings to the plan file).
+  This file is the shared living document: if `product-plans:plan-review-agents` is later run
+  on the same plan, it detects this file and appends its panel findings to it.
+- **Step 5.5 (product-plan scope check)** — after compiling the summary, the skill now scans
+  for product-plan signals (user stories, success metrics, business goals, etc.). When 2+
+  signals are found, a note is appended to the summary suggesting `plan-review-agents`.
+- **README: "Which tool to use?" section** — new comparison table clarifying when to use
+  `plan-interview` vs. `product-plans`.
+
 ## [2.1.0] - 2026-05-18
 
 ### Added

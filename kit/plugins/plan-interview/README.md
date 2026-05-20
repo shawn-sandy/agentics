@@ -6,6 +6,18 @@ Stress-tests implementation plans with structured multi-round interviews before 
 
 Writing a plan is not the same as stress-testing one. This plugin conducts a structured interview — asking targeted questions derived from the plan's own content — to expose gaps, over-engineering, and implicit assumptions before you commit to implementation. It's the difference between a plan that survives first contact with the code and one that doesn't. Also stress-tests `SKILL.md` files by auditing tool usage and generating `allowed-tools` recommendations.
 
+## Which tool to use?
+
+| Situation | Use |
+|-----------|-----|
+| Technical implementation plan (code, files, APIs) | **`plan-interview`** (this plugin) |
+| Product plan, PRD, or feature proposal | [`product-plans`](../product-plans/README.md) |
+| Comprehensive PM / UX / Security / A11y review | [`product-plans`](../product-plans/README.md) |
+| Quick pre-coding gap check (single agent, fast) | **`plan-interview`** (this plugin) |
+| Walk every decision branch interactively | **`plan-interview:deep-grill`** |
+
+`plan-interview` is a single-agent, interactive Q&A interview optimised for technical implementation plans. `product-plans` runs six specialist agents in parallel and is optimised for product-level documents with stakeholder concerns.
+
 ## Components
 
 | Component | Type | Invocation |

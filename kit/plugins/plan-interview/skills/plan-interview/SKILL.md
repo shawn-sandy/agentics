@@ -1,6 +1,6 @@
 ---
 name: plan-interview
-description: "Use when the user asks to stress-test, interview, validate, critique, or find gaps and risks in an implementation or agentic plan."
+description: "Use when the user asks to stress-test, interview, validate, critique, or find technical gaps and risks in an implementation plan or agentic plan — plans describing code to write, files to modify, or technical approaches to execute. Not for product plans, PRDs, or stakeholder proposals (use product-plans:plan-review-agents for those)."
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill, ToolSearch, ExitPlanMode
 ---
 
@@ -490,9 +490,38 @@ Step 2.5, plus the suggested `allowed-tools` line for any paired command file.
 Omit this section entirely when reviewing a plan file.]
 ```
 
+### Step 5.5 — Check for product-plan scope _(plan-review mode only)_
+
+Skip this step entirely when `mode = skill-review`.
+
+Scan the plan content for product-plan signals:
+
+- Headings: `## User Stories`, `## Success Metrics`, `## Business Goals`,
+  `## Personas`, `## Requirements`, `## Acceptance Criteria`, `## KPIs`,
+  `## OKRs`, `## Go-to-Market`, `## Launch Plan`
+- Body keywords: "stakeholder", "product manager", "market research", "user
+  research", "A/B test", "go-to-market", "business objective", "customer segment"
+
+If 2 or more signals are found, append this note to the Step 5 summary output
+(do not block or re-prompt; just surface it):
+
+```markdown
+---
+**Note — Product-Level Scope Detected**
+This plan contains product-level elements (user stories, success metrics, or
+business goals). For a comprehensive cross-functional review from PM, UX,
+Frontend, Accessibility, and Security perspectives, consider running the panel
+review:
+
+> `product-plans:plan-review-agents` — or describe your intent: "Run a panel
+> review on this plan."
+```
+
+If fewer than 2 signals are found, skip this step silently.
+
 ### Step 6 — Offer to save findings
 
-After presenting the Step 5 summary, ask the user:
+After presenting the Step 5 summary (and the Step 5.5 note, if any), ask the user:
 
 > "Would you like me to update the plan with suggested changes and append this
 > interview summary to the plan file?"
@@ -507,14 +536,32 @@ tool. When writing or amending steps, use the three-part format required by
 If they decline the summary append, do not modify the file.
 
 **In `plan-review` mode only**: after handling the save decision (whether
-confirmed or declined), ask via `AskUserQuestion`: _"Generate (or regenerate)
-HTML for this plan?"_ (options: `Yes, generate HTML` / `Skip`; if an `.html`
-exists, `markdown-to-html` will prompt to overwrite it). If confirmed, call with
-the current resolved path (the renamed path from Step 2, if applicable):
+confirmed or declined), always generate an interview HTML artifact. Use the
+resolved plan path (the renamed path from Step 2, if applicable):
 
-```
-Skill(skill: "plan-interview:markdown-to-html", args: "<resolved-plan-path> --no-open --mode=plan")
-```
+1. Derive paths from the resolved plan file:
+   - `plan_dir` = directory containing the plan file
+   - `plan_stem` = filename without the `.md` extension
+
+2. Invoke the markdown-to-html skill to render the plan:
+   ```
+   Skill(skill: "plan-interview:markdown-to-html", args: "<resolved-plan-path> --no-open --mode=plan")
+   ```
+
+3. Rename the default output to the interview-scoped filename:
+   ```bash
+   mv "<plan_dir>/<plan_stem>.html" "<plan_dir>/<plan_stem>-interview.html"
+   ```
+   If `mv` fails (e.g. markdown-to-html wrote to a different path), announce the
+   actual path that was written instead.
+
+4. Announce:
+   > `Interview HTML written: <plan_dir>/<plan_stem>-interview.html`
+
+   This artifact is the shared living document — if you later run
+   `product-plans:plan-review-agents` on this plan, it will detect this file
+   and append the panel findings to it rather than creating a separate
+   `<plan-stem>-review.html`.
 
 **In `skill-review` mode**: if Step 2.5 identified missing tools, also ask:
 

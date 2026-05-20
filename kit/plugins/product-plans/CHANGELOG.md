@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.4.1 — 2026-05-20
+
+### Changed
+
+- **Skill description narrowed** — `plan-review-agents` skill now explicitly scopes to product
+  plans, PRDs, and feature proposals. The description advises users to reach for
+  `plan-interview:plan-interview` for quick single-agent technical validation of implementation
+  plans before coding.
+- **Step 8 — shared HTML artifact** — if `<plan-stem>-interview.html` exists in the same
+  directory as the plan (written by a prior `plan-interview` run), Step 8 now injects the
+  Panel Review section into that file rather than creating a separate `<plan-stem>-review.html`.
+  When no prior interview HTML exists, behavior is unchanged.
+- **Step 9 — "which tool to use?" guidance** — a summary table is appended after the cleanup
+  step so the SKILL.md is self-documenting about tool scope.
+- **README: "Which tool to use?" section** — new comparison table clarifying when to use
+  `product-plans` vs. `plan-interview`.
+
 ## 3.4.0 — 2026-05-18
 
 **Rejection remediation prompt, decision banner, dated Panel Review headings.**
