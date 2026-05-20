@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.4.2 — 2026-05-20
+
+**Fixed: WebFetch/WebSearch permission prompts blocking review panel execution.**
+
+Removed `WebFetch` and `WebSearch` from all six reviewer agents. Web tool
+permission prompts (especially for `WebFetch` with domain-scoped allowlists)
+blocked subagent execution in both interactive and background mode, halting
+the review panel.
+
+Each agent's "Domain Research" section has been rewritten to use codebase-only
+research (`Read` + `Glob`) and domain expertise from training knowledge. Agents
+still cite standards by identifier (CWE numbers, WCAG SC numbers, Nielsen
+heuristics, platform guidelines) but note that URLs from training knowledge
+may be stale.
+
+This reverts the web tool additions from v3.2.0. The `Read` + `Glob` codebase
+research guidance introduced in that release is preserved and extended to all
+six agents.
+
 ## 3.4.1 — 2026-05-20
 
 ### Changed
