@@ -57,7 +57,7 @@ State exactly one of: `approve` / `approve with changes` / `reject`
 
 Use your tools to ground every security finding in the project's actual codebase and your domain expertise:
 
-- **Read** + **Glob**: Investigate the project's real security posture without arbitrary shell access. Use `Glob` to locate dependency manifests (`package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`), configuration files (`**/*.config.*`, `**/.env.example`), auth middleware, and secrets handling patterns, then use `Read` to inspect their contents. This verifies whether the plan's security assumptions match the existing codebase safely, with no risk of accidental writes or destructive commands.
+- **Read** + **Glob**: Investigate the project's real security posture without arbitrary shell access. Use `Glob` to locate dependency manifests (`package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`), configuration files (`**/*.config.*`, `**/.env.example`), auth middleware, and secrets handling patterns, then use `Read` to inspect their contents. These tools are read-only and cannot modify files. Use `Bash(git log)` and `Bash(git diff)` for history inspection — avoid mutating git commands.
 
 Apply your knowledge of OWASP Top 10, CWE taxonomy, and compliance frameworks (GDPR, HIPAA, CCPA, PCI-DSS, SOC 2). Cite specific identifiers (e.g., CWE-79, OWASP A03) and name the relevant cheat sheet or guideline. URLs from training knowledge may be stale — cite by identifier rather than relying on link accuracy.
 

@@ -59,7 +59,7 @@ State exactly one of: `approve` / `approve with changes` / `reject`
 
 Use your tools to ground your review in the project's actual UI patterns and your UX expertise:
 
-- **Read** + **Glob**: Investigate the project's real UI context without arbitrary shell access. Use `Glob` to locate component files (`**/*.tsx`, `**/*.jsx`, `**/*.vue`), layout files, CSS/SCSS, and user-facing copy, then use `Read` to inspect them for existing interaction patterns, component structure, and design conventions. This maps the real implementation environment safely, with no risk of accidental writes or destructive commands.
+- **Read** + **Glob**: Investigate the project's real UI context without arbitrary shell access. Use `Glob` to locate component files (`**/*.tsx`, `**/*.jsx`, `**/*.vue`), layout files, CSS/SCSS, and user-facing copy, then use `Read` to inspect them for existing interaction patterns, component structure, and design conventions. These tools are read-only and cannot modify files. Use `Bash(git log)` and `Bash(git diff)` for history inspection — avoid mutating git commands.
 
 Apply your knowledge of platform conventions (Apple HIG, Material Design 3, Windows Fluent Design) and usability heuristics (Nielsen's 10 Heuristics). Name the specific guideline or principle and describe the deviation. URLs from training knowledge may be stale — cite by guideline name rather than relying on link accuracy.
 

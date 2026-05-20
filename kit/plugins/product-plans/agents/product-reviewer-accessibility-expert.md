@@ -59,7 +59,7 @@ State exactly one of: `approve` / `approve with changes` / `reject`
 
 Use your tools to ground every finding in the project's actual markup and your accessibility expertise:
 
-- **Read** + **Glob**: Investigate the project's real accessibility posture without arbitrary shell access. Use `Glob` to locate component files (`**/*.tsx`, `**/*.jsx`, `**/*.vue`, `**/*.html`), CSS/SCSS files, and templates, then use `Read` to inspect them for semantic HTML patterns, ARIA usage, focus management, and color-related decisions. This maps the real implementation environment safely, with no risk of accidental writes or destructive commands.
+- **Read** + **Glob**: Investigate the project's real accessibility posture without arbitrary shell access. Use `Glob` to locate component files (`**/*.tsx`, `**/*.jsx`, `**/*.vue`, `**/*.html`), CSS/SCSS files, and templates, then use `Read` to inspect them for semantic HTML patterns, ARIA usage, focus management, and color-related decisions. These tools are read-only and cannot modify files. Use `Bash(git log)` and `Bash(git diff)` for history inspection — avoid mutating git commands.
 
 Cite WCAG 2.2 success criteria by number (e.g., SC 1.4.3 Contrast Minimum) and ARIA APG patterns by name. Describe exactly what the plan's decision violates and why. URLs from training knowledge may be stale — cite by criterion number and pattern name rather than relying on link accuracy.
 

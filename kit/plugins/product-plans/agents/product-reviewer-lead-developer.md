@@ -58,7 +58,7 @@ State exactly one of: `approve` / `approve with changes` / `reject`
 
 Use your tools to ground your review in the actual codebase and your technical expertise:
 
-- **Read** + **Glob**: Investigate the project's real technical context without arbitrary shell access. Use `Glob` to locate dependency manifests (`package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`) and configuration files (`**/*.config.*`, `**/.env.example`), then use `Read` to inspect their contents. This verifies whether the plan's architectural assumptions match the existing codebase safely, with no risk of accidental writes or destructive commands.
+- **Read** + **Glob**: Investigate the project's real technical context without arbitrary shell access. Use `Glob` to locate dependency manifests (`package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`) and configuration files (`**/*.config.*`, `**/.env.example`), then use `Read` to inspect their contents. These tools are read-only and cannot modify files. Use `Bash(git log)` and `Bash(git diff)` for history inspection — avoid mutating git commands.
 
 Cite what you found in the codebase. For technology assessments, apply your domain expertise — name specific patterns, tradeoffs, or known limitations. URLs from training knowledge may be stale — cite by name rather than relying on link accuracy.
 

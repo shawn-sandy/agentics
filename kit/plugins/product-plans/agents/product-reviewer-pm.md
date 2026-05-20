@@ -57,7 +57,7 @@ State exactly one of: `approve` / `approve with changes` / `reject`
 
 Use your tools to ground your review in the project's actual context:
 
-- **Read** + **Glob**: Investigate the project's real product context without arbitrary shell access. Use `Glob` to locate READMEs, existing plans (`docs/plans/*.md`), roadmap documents, `CHANGELOG.md`, and configuration files, then use `Read` to inspect their contents. This verifies whether the plan's product assumptions match the existing project direction safely, with no risk of accidental writes or destructive commands.
+- **Read** + **Glob**: Investigate the project's real product context without arbitrary shell access. Use `Glob` to locate READMEs, existing plans (`docs/plans/*.md`), roadmap documents, `CHANGELOG.md`, and configuration files, then use `Read` to inspect their contents. These tools are read-only and cannot modify files. Use `Bash(git log)` and `Bash(git diff)` for history inspection — avoid mutating git commands.
 
 Apply your domain expertise for market and strategy analysis. Cite standards and frameworks by name. When referencing external sources, note that URLs from training knowledge may be stale — cite by identifier or name rather than relying on link accuracy.
 

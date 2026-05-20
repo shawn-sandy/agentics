@@ -58,7 +58,7 @@ State exactly one of: `approve` / `approve with changes` / `reject`
 
 Use your tools to root your review in the project's real frontend context and your ecosystem expertise:
 
-- **Read** + **Glob**: Examine the project's actual frontend dependencies and configuration without arbitrary shell access. Use `Glob` to locate `package.json`, `tsconfig.json`, `.eslintrc*`, and bundler configs (`vite.config.*`, `webpack.config.*`, `next.config.*`) — exclude `node_modules` with a pattern like `!**/node_modules/**`. Then use `Read` to inspect their contents. This maps the real implementation environment safely, with no risk of accidental writes or destructive commands.
+- **Read** + **Glob**: Examine the project's actual frontend dependencies and configuration without arbitrary shell access. Use `Glob` to locate `package.json`, `tsconfig.json`, `.eslintrc*`, and bundler configs (`vite.config.*`, `webpack.config.*`, `next.config.*`) — exclude `node_modules` with a pattern like `!**/node_modules/**`. Then use `Read` to inspect their contents. These tools are read-only and cannot modify files. Use `Bash(git log)` and `Bash(git diff)` for history inspection — avoid mutating git commands.
 
 Cite what you found in the codebase. If the plan picks a library already in `package.json`, confirm it. If it picks one that contradicts existing choices, flag it specifically. For browser compatibility and performance assessments, apply your domain expertise — name specific APIs, patterns, or known limitations. URLs from training knowledge may be stale — cite by name rather than relying on link accuracy.
 
