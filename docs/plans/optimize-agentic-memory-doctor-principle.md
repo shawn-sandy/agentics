@@ -2,15 +2,9 @@
 status: completed
 type: docs
 created: 2026-05-20
-modified: 2026-05-20
 ---
 
 # Plan: Teach `agentic-memory-doctor` what "optimize" means
-
-> Filename should be renamed before commit to something like
-> `optimize-agentic-memory-doctor-principle.md` (the auto-generated slug is
-> meaningless). Plan-mode currently restricts edits to this single file, so the
-> rename will happen at execute time.
 
 ## Context
 

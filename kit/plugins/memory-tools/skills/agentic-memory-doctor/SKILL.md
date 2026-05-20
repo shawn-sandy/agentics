@@ -123,8 +123,7 @@ After the table:
 > inline rule-file generation as a fallback."
 
 > When Safety & Hygiene scores below 2 due to default-restating rules, name them explicitly in
-> the per-dimension finding: quote one or two examples from the file and label them "default-
-> restating" so the user can recognise the pattern and apply the same cut test to the rest.
+> the per-dimension finding: quote one or two examples from the file and label them "default-restating" so the user can recognise the pattern and apply the same cut test to the rest.
 
 ---
 
