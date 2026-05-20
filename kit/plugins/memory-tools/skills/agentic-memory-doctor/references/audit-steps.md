@@ -65,11 +65,12 @@ Use `paths:` only when the rule truly applies to specific file types — avoid o
 
 ## Dimension 5 — Safety and Hygiene (max 2)
 
-Check for three hygiene issues:
+Check for four hygiene issues:
 
 1. **Secrets** — any sensitive credentials (caught in Step 2)
 2. **Linter-replaceable rules** — style rules that belong in `.eslintrc`, `prettier.config.js`, or similar (e.g., "always use 2-space indentation", "never use semicolons")
 3. **Inferable content** — facts Claude can deduce from reading the codebase (e.g., "this project uses React" when `package.json` is present)
+4. **Default-restating rules** — instructions that merely restate Claude's built-in behavior and would not change what Claude does without them. Examples: "write clear and readable code", "add tests for new features", "use descriptive variable names", "be concise", "prefer composition over inheritance". A rule passes if it is specific enough that removing it would change Claude's behavior on this project.
 
 - No hygiene issues = 2
 - 1 issue = 1

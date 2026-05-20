@@ -18,7 +18,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/memory-tools"
       },
-      "version": "3.0.0",
+      "version": "3.1.0",
       "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
       "category": "development",
       "tags": [

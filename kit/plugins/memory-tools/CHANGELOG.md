@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.0] - 2026-05-20
+
+### Changed
+
+- `agentic-memory-doctor`: Added an explicit **optimization principle** near the top of `SKILL.md` — "keep only rules that change Claude's behavior vs. built-in defaults; tighten load-bearing rules to crisp imperatives."
+- `agentic-memory-doctor`: Added **Default-restating rules** as a 4th hygiene item in Dimension 5 (`references/audit-steps.md`). Includes a concrete definition and examples; existing 0 / 1 / 2+ scoring scale is unchanged.
+- `agentic-memory-doctor`: Added two new transformation bullets to Step 5 — "cut default-restating rules" and "tighten kept rules to crisp imperatives" — so the principle is enforced during the in-chat rewrite.
+- `agentic-memory-doctor`: Added a Step 4 callout instructing the model to name "default-restating rules" by phrase when they drive a Dimension 5 deduction, so the audit report and the rewrite use consistent vocabulary.
+
 ## [3.0.0] - 2026-05-10
 
 ### BREAKING CHANGE
