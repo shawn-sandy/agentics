@@ -1,7 +1,7 @@
 ---
 description: Stress-test a plan with a structured interview across technical, UX, edge case, and out-of-scope domains
 argument-hint: [plan-file-path] - omit to auto-detect from IDE or ~/.claude/plans/
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill, ToolSearch
 ---
 
 
@@ -14,16 +14,23 @@ Stress-test a plan through a structured conversational interview before implemen
 ```
 /plan-interview:plan-interview                                        # auto-detects from IDE or latest in ~/.claude/plans/
 /plan-interview:plan-interview ~/.claude/plans/my-feature.md          # use a specific plan file
+/plan-interview:plan-interview --quick docs/plans/my-plan.md          # skip routing, always run the technical interview
 ```
 
 ## Instructions
 
 ### Step 0 — Create progress todos
 
+**Flag detection**: Scan `$ARGUMENTS` for the literal text `--quick`. If
+present, set `quick_mode = true`; otherwise `quick_mode = false`. When
+`quick_mode = true`, strip `--quick` from the arguments before parsing the
+file path in Step 1.
+
 Before doing any other work, use `TodoWrite` to create todos for each step of this interview. This gives the user visibility into progress and ensures no step is skipped.
 
 Create the following todos (all starting with `status: "pending"`):
 
+- Step 1.5: Classify and route (plan-review mode only)
 - Step 2: Read, validate plan name, and analyze the plan
 - Step 2.5: Skill tool analysis (skill-review mode only)
 - Step 3a: Round 1 — Technical & Trade-offs
@@ -60,6 +67,44 @@ Announce the file and mode:
 - Skill: `"Reviewing skill: path/to/SKILL.md"`
 
 If no file can be found via any of these methods, tell the user and stop.
+
+### Step 1.5 — Classify and route _(plan-review mode only)_
+
+Skip this step entirely when `mode = skill-review` or `quick_mode = true`.
+
+Use `Read` with a small limit (first 80 lines) to scan the resolved plan for
+**product-plan signals**.
+
+**Signals — headings** (case-insensitive):
+`## User Stories`, `## Success Metrics`, `## Business Goals`, `## Personas`,
+`## Requirements`, `## Acceptance Criteria`, `## KPIs`, `## OKRs`,
+`## Go-to-Market`, `## Launch Plan`
+
+**Signals — body keywords:**
+"stakeholder", "product manager", "market research", "user research",
+"A/B test", "go-to-market", "business objective", "customer segment"
+
+Count distinct signals found.
+
+**If 2 or more signals are detected**, ask the user via `AskUserQuestion`:
+
+> "This plan contains product-level content ([list the 2–3 strongest signals]).
+> How would you like to review it?"
+
+Options:
+- **Full panel review** — route to `product-plans:plan-review-agents` (six
+  specialist agents: PM, Dev, UX, Frontend, A11y, Security run in parallel)
+- **Quick technical interview** — continue here (single-agent, focused on
+  implementation gaps and decision trade-offs)
+
+If **Full panel review** is chosen, invoke the panel skill and stop:
+
+```
+Skill(skill: "product-plans:plan-review-agents", args: "<resolved-path>")
+```
+
+If **Quick technical interview** is chosen, or fewer than 2 signals are found,
+continue to Step 2 without comment.
 
 ### Step 2 — Read, validate plan name, and analyze the plan
 

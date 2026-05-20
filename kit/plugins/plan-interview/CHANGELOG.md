@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.2.0] - 2026-05-20
+
+### Added
+
+- **Plan-type router (Step 1.5)** — both the `plan-interview` skill and command now classify the
+  resolved plan before starting the interview. When 2+ product-plan signals are detected (user
+  stories, success metrics, business goals, stakeholder language, etc.), the user is asked to
+  choose between the full cross-functional panel (`product-plans:plan-review-agents`) and the
+  quick technical interview. Routing invokes the panel skill directly via `Skill` and stops.
+- **`--quick` flag** — pass `--quick` to bypass the routing step and always run the technical
+  interview immediately, without the classification prompt.
+
+### Removed
+
+- **Step 5.5** — the late-stage product-plan note appended to the summary has been removed.
+  Detection and routing now happen at Step 1.5, before the interview begins.
+
+## [2.1.1] - 2026-05-20
+
+### Changed
+
+- **Skill description narrowed** — `plan-interview` skill now explicitly scopes to technical
+  implementation plans (code, files, APIs). The description advises users to reach for
+  `product-plans:plan-review-agents` for product plans, PRDs, and feature proposals.
+- **HTML artifact is now mandatory** — Step 6 always generates `<plan-stem>-interview.html`
+  after the interview summary (regardless of whether the user saves findings to the plan file).
+  This file is the shared living document: if `product-plans:plan-review-agents` is later run
+  on the same plan, it detects this file and appends its panel findings to it.
+- **Step 5.5 (product-plan scope check)** — after compiling the summary, the skill now scans
+  for product-plan signals (user stories, success metrics, business goals, etc.). When 2+
+  signals are found, a note is appended to the summary suggesting `plan-review-agents`.
+- **README: "Which tool to use?" section** — new comparison table clarifying when to use
+  `plan-interview` vs. `product-plans`.
+
 ## [2.1.0] - 2026-05-18
 
 ### Added

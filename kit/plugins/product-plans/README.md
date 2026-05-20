@@ -5,6 +5,18 @@ a simulated cross-functional team — coordinated by a lead that synthesizes all
 findings into a structured 15-section report and (by default) applies
 improvements directly to the source plan.
 
+## Which tool to use?
+
+| Situation | Use |
+|-----------|-----|
+| Product plan, PRD, or feature proposal | **`product-plans`** (this plugin) |
+| Comprehensive PM / UX / Security / A11y review | **`product-plans`** (this plugin) |
+| Technical implementation plan (code, files, APIs) | [`plan-interview`](../plan-interview/README.md) |
+| Quick pre-coding gap check (single agent, fast) | [`plan-interview`](../plan-interview/README.md) |
+| Walk every decision branch interactively | [`plan-interview:deep-grill`](../plan-interview/README.md) |
+
+`product-plans` runs six specialist agents in parallel and is optimised for product-level documents with PM, UX, security, and accessibility concerns. `plan-interview` is a single-agent, interactive Q&A interview optimised for technical implementation plans and is faster to run.
+
 ## Overview
 
 `product-plans` spawns a Claude Code Agent Team of six
@@ -182,11 +194,11 @@ product-plans/
 ### Skill: `plan-review-agents`
 
 Auto-activates when the user asks to improve, optimize, or update a product
-plan, PRD, feature proposal, or implementation plan — or asks for a
-cross-functional panel review, multi-role critique, or
-PM/Dev/UX/Frontend/Accessibility/Security team review.
+plan, PRD, or feature proposal — or asks for a cross-functional panel review,
+multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review.
+For technical implementation plans, use `plan-interview:plan-interview` instead.
 
-Triggers include: "improve this plan", "optimize this PRD",
+Triggers include: "improve this product plan", "optimize this PRD",
 "update this proposal based on expert feedback", "cross-functional panel
 review", "multi-role critique", "get the team's take on this PRD",
 "PM/Dev/UX review of this proposal".
