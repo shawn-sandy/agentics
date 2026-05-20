@@ -17,6 +17,7 @@ Does not execute implementation work or apply code fixes from the plan — this 
 
 - [Step 0 — Exit plan mode and create progress todos](#step-0--exit-plan-mode-and-create-progress-todos)
 - [Step 1 — Resolve the plan file](#step-1--resolve-the-plan-file)
+- [Step 1.5 — Classify and route](#step-15--classify-and-route)
 - [Step 2 — Read, validate plan name, and analyze the plan](#step-2--read-validate-plan-name-and-analyze-the-plan)
 - [Step 2.5 — Skill tool analysis](#step-25--skill-tool-analysis-skill-review-mode-only)
 - [Step 2.6 — Skill quality checklist](#step-26--skill-quality-checklist-skill-review-mode-only)
@@ -29,6 +30,11 @@ Does not execute implementation work or apply code fixes from the plan — this 
 
 ### Step 0 — Exit plan mode and create progress todos
 
+**Flag detection**: Scan the activation message and any arguments for the
+literal text `--quick`. If present, set `quick_mode = true`; otherwise
+`quick_mode = false`. Record this once here — subsequent steps reference it
+without re-parsing.
+
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
 first, then call `ExitPlanMode`. Both steps happen silently with no user-visible
 output. This is a no-op when plan mode is already off.
@@ -39,6 +45,7 @@ is skipped.
 
 Create the following todos (all starting with `status: "pending"`):
 
+- Step 1.5: Classify and route (plan-review mode only)
 - Step 2: Read, validate plan name, and analyze the plan
 - Step 2.5: Skill tool analysis (skill-review mode only)
 - Step 2.6: Skill quality checklist (skill-review mode only)
@@ -90,6 +97,51 @@ Announce the file and mode:
 - Skill: `"Reviewing skill: path/to/SKILL.md"`
 
 If no file can be found via any of these methods, tell the user and stop.
+
+### Step 1.5 — Classify and route _(plan-review mode only)_
+
+Skip this step entirely when `mode = skill-review` or `quick_mode = true`.
+
+Do a lightweight scan of the resolved plan file to detect its type. Use `Read`
+with a small limit (first 80 lines) to extract headings and opening content
+without loading the full file.
+
+**Product-plan signals — headings** (match case-insensitively):
+`## User Stories`, `## Success Metrics`, `## Business Goals`, `## Personas`,
+`## Requirements`, `## Acceptance Criteria`, `## KPIs`, `## OKRs`,
+`## Go-to-Market`, `## Launch Plan`
+
+**Product-plan signals — body keywords:**
+"stakeholder", "product manager", "market research", "user research",
+"A/B test", "go-to-market", "business objective", "customer segment"
+
+Count distinct signals found across the first 80 lines.
+
+**If 2 or more signals are detected**, ask the user via `AskUserQuestion`:
+
+> "This plan contains product-level content ([list the 2–3 strongest signals]).
+> How would you like to review it?"
+
+Options:
+- **Full panel review** — route to `product-plans:plan-review-agents` (six
+  specialist agents: PM, Dev, UX, Frontend, A11y, Security run in parallel)
+- **Quick technical interview** — continue here (single-agent, focused on
+  implementation gaps and decision trade-offs)
+
+If the user chooses **Full panel review**, invoke the panel skill and stop:
+
+```
+Skill(skill: "product-plans:plan-review-agents", args: "<resolved-path>")
+```
+
+Do not run any further steps of this skill — the panel skill owns the session
+from this point.
+
+If the user chooses **Quick technical interview**, or if fewer than 2 signals
+are found, continue to Step 2 without comment.
+
+> **Tip:** To skip this routing check and always run the technical interview,
+> pass `--quick` in the invocation: `/plan-interview:plan-interview --quick [path]`
 
 ### Step 2 — Read, validate plan name, and analyze the plan
 
@@ -490,38 +542,9 @@ Step 2.5, plus the suggested `allowed-tools` line for any paired command file.
 Omit this section entirely when reviewing a plan file.]
 ```
 
-### Step 5.5 — Check for product-plan scope _(plan-review mode only)_
-
-Skip this step entirely when `mode = skill-review`.
-
-Scan the plan content for product-plan signals:
-
-- Headings: `## User Stories`, `## Success Metrics`, `## Business Goals`,
-  `## Personas`, `## Requirements`, `## Acceptance Criteria`, `## KPIs`,
-  `## OKRs`, `## Go-to-Market`, `## Launch Plan`
-- Body keywords: "stakeholder", "product manager", "market research", "user
-  research", "A/B test", "go-to-market", "business objective", "customer segment"
-
-If 2 or more signals are found, append this note to the Step 5 summary output
-(do not block or re-prompt; just surface it):
-
-```markdown
----
-**Note — Product-Level Scope Detected**
-This plan contains product-level elements (user stories, success metrics, or
-business goals). For a comprehensive cross-functional review from PM, UX,
-Frontend, Accessibility, and Security perspectives, consider running the panel
-review:
-
-> `product-plans:plan-review-agents` — or describe your intent: "Run a panel
-> review on this plan."
-```
-
-If fewer than 2 signals are found, skip this step silently.
-
 ### Step 6 — Offer to save findings
 
-After presenting the Step 5 summary (and the Step 5.5 note, if any), ask the user:
+After presenting the Step 5 summary, ask the user:
 
 > "Would you like me to update the plan with suggested changes and append this
 > interview summary to the plan file?"

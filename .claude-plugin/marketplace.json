@@ -55,8 +55,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "2.1.1",
-      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins — always emits an interview HTML artifact after review",
+      "version": "2.2.0",
+      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins — auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
       "category": "development",
       "tags": [
         "planning",

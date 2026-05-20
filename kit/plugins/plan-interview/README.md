@@ -48,7 +48,13 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 /plan-interview:plan-interview                                   # auto-detects latest plan
 /plan-interview:plan-interview ~/.claude/plans/my-feature.md     # specific plan file
 /plan-interview:plan-interview docs/plans/refactor-plan.md       # project-relative path
+/plan-interview:plan-interview --quick docs/plans/my-plan.md     # skip routing, always run technical interview
 ```
+
+When the resolved plan contains product-level content (user stories, success
+metrics, business goals, etc.), `plan-interview` will ask whether to route to
+the full `product-plans:plan-review-agents` panel or continue with the quick
+technical interview. Pass `--quick` to skip this prompt.
 
 ### Review & Rename Plans
 
