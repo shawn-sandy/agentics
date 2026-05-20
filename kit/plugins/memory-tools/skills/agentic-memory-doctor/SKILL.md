@@ -6,6 +6,11 @@ allowed-tools: AskUserQuestion, Glob, Grep, Read, Write
 
 Audit and optimize a CLAUDE.md / project memory file against Claude Code best practices.
 
+> **Optimization principle** — Keep only rules that would change Claude's behavior versus its
+> built-in defaults; cut everything else. Tighten the rules that survive so each load-bearing
+> instruction reads crisply: verb-first, one idea per bullet, no hedging. This principle governs
+> both the audit (what to flag) and the rewrite (what to keep or cut in Step 5).
+
 > **Freedom level: Rigid** — Execute all six steps in the order listed. Do not skip, combine,
 > or reorder them.
 > **Plan-mode pre-check** — If the system indicates plan mode is active when reaching Step 5,
@@ -117,6 +122,9 @@ After the table:
 > `.claude/rules/` files — it is purpose-built for this workflow. You can also use Step 5's
 > inline rule-file generation as a fallback."
 
+> When Safety & Hygiene scores below 2 due to default-restating rules, name them explicitly in
+> the per-dimension finding: quote one or two examples from the file and label them "default-restating" so the user can recognise the pattern and apply the same cut test to the rest.
+
 ---
 
 ## Step 5 — Offer an optimized version
@@ -129,6 +137,8 @@ If the user says yes, generate the optimized content **in a code block in the ch
 - Extract 80%-rule violations and path-specific content — these will be offered as `.claude/rules/` files below, not embedded in the CLAUDE.md output
 - Condense padded or overly verbose sections (summarize rather than reproduce)
 - Add stub headings for any missing key sections from Dimension 2
+- Cut rules that only restate Claude's built-in behavior — keep only rules that would change what Claude does by default (e.g., "write clear code" is a default; "never abbreviate variable names in this codebase" is a rule)
+- Tighten kept rules to crisp imperatives — verb-first, one idea per bullet, no hedging or padding; preserve the user's stated intent and any constraint they called out explicitly
 - Do not invent new content — preserve the user's intent and wording where possible
 
 **Offer to generate `.claude/rules/` files:**
