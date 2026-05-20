@@ -1,3 +1,9 @@
+---
+status: completed
+type: feature
+created: 2026-05-20
+---
+
 # Consolidate plan-interview Skill and plan-review-agents Overlap
 
 ## Context

@@ -568,7 +568,7 @@ resolved plan path (the renamed path from Step 2, if applicable):
 
 2. Invoke the markdown-to-html skill to render the plan:
    ```
-   Skill(skill: "plan-interview:markdown-to-html", args: "<resolved-plan-path> --no-open --mode=plan")
+   Skill(skill: "plan-interview:markdown-to-html", args: "<resolved-plan-path> --background --mode=plan")
    ```
 
 3. Rename the default output to the interview-scoped filename:

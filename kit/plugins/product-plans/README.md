@@ -194,11 +194,11 @@ product-plans/
 ### Skill: `plan-review-agents`
 
 Auto-activates when the user asks to improve, optimize, or update a product
-plan, PRD, feature proposal, or implementation plan — or asks for a
-cross-functional panel review, multi-role critique, or
-PM/Dev/UX/Frontend/Accessibility/Security team review.
+plan, PRD, or feature proposal — or asks for a cross-functional panel review,
+multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review.
+For technical implementation plans, use `plan-interview:plan-interview` instead.
 
-Triggers include: "improve this plan", "optimize this PRD",
+Triggers include: "improve this product plan", "optimize this PRD",
 "update this proposal based on expert feedback", "cross-functional panel
 review", "multi-role critique", "get the team's take on this PRD",
 "PM/Dev/UX review of this proposal".

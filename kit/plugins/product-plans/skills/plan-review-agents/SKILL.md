@@ -270,17 +270,18 @@ re-synthesize from reviewer outputs; do **not** read external CSS. Apply
 
 1. Take the absolute path of the resolved plan file from Step 1.
 2. Extract the basename (filename only, no directory) and the directory.
-3. Strip the `.md` extension to get `plan_stem`.
-4. Replace any character outside `[A-Za-z0-9._-]` in `plan_stem` with `-`.
-5. Check whether `<plan_dir>/<plan_stem>-interview.html` already exists
+3. Strip the `.md` extension to get `plan_stem`. Do not apply any further
+   normalization — use the raw stem exactly as derived from the filename so it
+   matches what `plan-interview` used when it wrote `<plan_stem>-interview.html`.
+4. Check whether `<plan_dir>/<plan_stem>-interview.html` already exists
    (a prior `plan-interview` run creates this file):
    ```bash
    test -f "<plan_dir>/<plan_stem>-interview.html" && echo "exists"
    ```
-6. Set the output path:
+5. Set the output path:
    - **If the interview HTML exists**: output path = `<plan_dir>/<plan_stem>-interview.html`
    - **Otherwise**: output path = `<plan_dir>/<plan_stem>-review.html`
-7. Confirm the target directory is the same as the source plan's directory
+6. Confirm the target directory is the same as the source plan's directory
    and is not a symlink.
 
 **Write the file:**
@@ -290,7 +291,7 @@ HTML-escaped per the "Security & Escaping Contract" section of
 `references/html-spec.md`. All content must be readable without JavaScript;
 JS provides scroll-spy active-state in the TOC only (progressive enhancement).
 
-When writing to an existing `*-interview.html` file (case 5 above): read the
+When writing to an existing `*-interview.html` file (case 4 above): read the
 existing file, locate the `</body>` tag, and inject the synthesized review HTML
 as a new `<section id="panel-review">` block immediately before `</body>` rather
 than overwriting the entire file. This preserves the plan-interview step timeline
