@@ -1,5 +1,19 @@
 # Changelog — git-agent
 
+## v3.8.0 — ship-autonomous moved into plugin
+
+- New skill: `ship-autonomous` — supervised full pipeline (branch if on
+  default, commit, open PR, poll CI, autofix lint/typecheck/peer-deps ≤3
+  iterations, request review when green)
+- Moved from project-level `.claude/skills/ship-autonomous/` into
+  `kit/plugins/git-agent/skills/ship-autonomous/` so it ships with the plugin
+  and is installable by marketplace users
+- No behavior changes — content is identical to the project-level version
+  (already had Step 0 `ExitPlanMode` and `ToolSearch`/`ExitPlanMode` in
+  `allowed-tools` from the prior fix)
+- Updated README with `ship-autonomous` in the Skills list, usage section, and
+  Plugin Structure tree
+
 ## v3.7.1 — ExitPlanMode in agent-ship
 
 - Added `ToolSearch` and `ExitPlanMode` to `agent-ship` tools list

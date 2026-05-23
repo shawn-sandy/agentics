@@ -10,6 +10,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
+- **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens PR, polls CI, auto-fixes lint/typecheck/peer-deps failures (≤3 iterations), and requests review when green. Use when you want to ship and walk away.
 
 ### Subagents (background, fire-and-forget)
 
@@ -120,6 +121,32 @@ The skill will:
 
 Use `commit-agent` or `pr-agent` if you only need one step.
 
+### ship-autonomous
+
+Say any of:
+- "ship it autonomously"
+- "ship and watch CI"
+- "ship and fix what breaks"
+- "auto-fix CI failures"
+
+The skill will:
+1. Exit plan mode (Step 0) — no-op when already off
+2. Guard: check for clean tree, uncommitted plan files, detached HEAD, `gh` auth
+3. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
+4. Commit via `commit-agent` (stages, conventional message, commits)
+5. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
+6. Poll CI with `gh pr checks --watch` until all checks reach a terminal state
+7. Autofix loop (≤3 iterations) for allow-listed failure classes:
+   - `lint` — runs the project's lint-fix script
+   - `typecheck` — applies minimal TS fixes (no `any`, no type loosening)
+   - `peer-deps` — reinstalls lockfile only
+   - Anything else → escalates with the first 20 log lines and **STOPs**
+8. When all checks are green: marks PR ready, posts "CI is green — ready for review.", outputs PR URL
+
+**STOPS after step 8. Does not analyze code, suggest follow-ups, or take further action.**
+
+Use `ship` if you don't need CI polling or autofix — it's simpler and stops after PR creation.
+
 ## Background subagents
 
 The skills above run synchronously in the foreground — your session waits for them to complete. The agents in `agents/` are background subagents that run independently while you keep working.
@@ -206,7 +233,9 @@ plugins/git-agent/
 │   │   └── SKILL.md
 │   ├── pr-agent/
 │   │   └── SKILL.md
-│   └── ship/
+│   ├── ship/
+│   │   └── SKILL.md
+│   └── ship-autonomous/
 │       └── SKILL.md
 ├── CHANGELOG.md
 └── README.md
