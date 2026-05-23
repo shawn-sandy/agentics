@@ -1,66 +1,73 @@
-# Plan: Add ExitPlanMode Permission to ship-autonomous Skill
+# Plan: Move ship-autonomous into the git-agent Plugin
 
 ## Context
 
-When Plan Mode is active, the `ship-autonomous` skill cannot proceed because
-committing, pushing, and opening PRs are mutations that are blocked in plan
-mode. The skill needs to call `ExitPlanMode` at the start to exit plan mode
-before any mutations run.
+`ship-autonomous` is currently at `.claude/skills/ship-autonomous/SKILL.md` —
+a project-level skill that is not installable by anyone else. This is an
+anti-pattern: the skill is an orchestrator built entirely on top of
+`git-agent` sub-skills (`branch-agent`, `commit-agent`, `pr-agent`) and is
+conceptually part of the same git workflow family. Keeping it at the project
+level siloes it from the plugin it depends on and prevents distribution.
 
-`ExitPlanMode` is a **deferred tool** — its schema is not loaded at session
-start. The harness rules (`plugin-patterns.md`) require:
-1. Both `ToolSearch` **and** `ExitPlanMode` listed in `allowed-tools`
-2. A step that calls `ToolSearch` with `select:ExitPlanMode` before calling
-   `ExitPlanMode`
+The previous fix (adding `ToolSearch`/`ExitPlanMode` to `allowed-tools` and
+inserting Step 0) was already committed. The new task is to relocate the skill
+into `kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` so it ships with
+the plugin and can be installed by any user of the marketplace.
 
-Currently the skill's `allowed-tools` has neither, so the harness prompts the
-user for permission mid-run (or blocks the skill entirely in plan mode).
+The existing `ship` skill in the plugin covers the basic flow (branch → commit
+→ push → PR). `ship-autonomous` is a distinct superset: it adds CI polling,
+a bounded autofix loop (lint/typecheck/peer-deps), and a review-request step.
+They are complementary and should coexist.
 
-## File to Modify
+## Files to Change
 
-`/home/user/agentics/.claude/skills/ship-autonomous/SKILL.md`
+| Action | Path |
+|--------|------|
+| **Create** | `kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` |
+| **Delete** | `.claude/skills/ship-autonomous/SKILL.md` (and empty dir) |
+| **Update** | `kit/plugins/git-agent/README.md` — add skill to Skills table and add a component docs section |
+| **Update** | `.claude-plugin/marketplace.json` — bump git-agent version `3.7.1 → 3.8.0` |
+| **Update** | `kit/plugins/git-agent/CHANGELOG.md` — add `3.8.0` entry |
 
-## Changes
+## Skill Content
 
-### 1. Frontmatter — add `ToolSearch` and `ExitPlanMode` to `allowed-tools`
+The SKILL.md content stays identical to the already-fixed version at
+`.claude/skills/ship-autonomous/SKILL.md` (which already has Step 0,
+`ToolSearch`, and `ExitPlanMode` in `allowed-tools`). No edits to the skill
+body are needed — just the file move.
 
-Current line 7:
+## README Update
+
+Add a row to the Skills table in `kit/plugins/git-agent/README.md`:
+
 ```
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion
+| `ship-autonomous` | Supervised full pipeline: branch (if on default), commit, open PR, poll CI, auto-fix lint/typecheck/peer-deps (≤3 iterations), request review | "ship it autonomously", "ship and watch CI", "ship and fix what breaks" |
 ```
 
-New:
-```
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
-```
+Add a component docs section describing the CI autofix loop and escalation
+conditions (mirrors the existing `ship` section style).
 
-### 2. Body — insert Step 0 before Step 1
+## Version Bump
 
-Add a new `## Step 0: Exit Plan Mode` section immediately before
-`## Step 1: Pre-flight Guards` (mirrors the pattern already used in
-`agent-ship.md`):
+New skill → minor bump: `3.7.1 → 3.8.0` in `.claude-plugin/marketplace.json`.
+
+CHANGELOG entry:
 
 ```markdown
-## Step 0: Exit Plan Mode
+## [3.8.0] - 2026-05-23
 
-Call `ExitPlanMode` immediately and silently — always, unconditionally, before
-any other action. This is a no-op when plan mode is already off, so it is safe
-to call regardless. Committing, pushing, and opening a PR are mutations that
-cannot proceed inside plan mode.
-
-`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
-first to load its schema, then call `ExitPlanMode`. Both steps run silently
-with no user-visible output.
-
----
+### Added
+- `ship-autonomous` skill: supervised full-pipeline ship with CI polling,
+  bounded autofix loop (lint/typecheck/peer-deps, ≤3 iterations), and
+  review-request step; replaces the project-level `.claude/skills/ship-autonomous/`
 ```
 
 ## Verification
 
-- Load the skill locally: `claude --plugin-dir ./kit/plugins/git-agent`
-  (ship-autonomous lives in `.claude/skills/` so it's always active, no plugin
-  flag needed)
-- Activate plan mode (`/plan`) and then trigger the skill by saying "ship it"
-- Confirm Step 0 runs without a permission prompt and plan mode is exited
-  before the pre-flight guards run
-- Confirm the rest of the ship flow completes normally
+1. `git diff HEAD -- kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` —
+   confirm skill file exists in the plugin
+2. Confirm `.claude/skills/ship-autonomous/` directory is gone
+3. `cat .claude-plugin/marketplace.json | jq '.plugins[] | select(.name=="git-agent") | .version'`
+   — should return `"3.8.0"`
+4. Load the plugin locally and say "ship it autonomously" — skill activates
+   without permission prompts and exits plan mode in Step 0
