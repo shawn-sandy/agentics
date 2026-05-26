@@ -1,7 +1,6 @@
 ---
 name: code-share
-description: "Use when the user wants to create, draft, or generate a social media post (LinkedIn, Twitter/X, Bluesky) with a styled visual card. Also triggers on: 'write a LinkedIn post', 'tweet about this', 'social card for this change', 'post about this release'. Generates platform-aware copy and a dark-mode card image via Playwright screenshot."
-version: 0.1.0
+description: "Generates social media copy and a dark-mode card image for LinkedIn, Twitter/X, or Bluesky. Use when asked to write a post, tweet, or share a code change."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile
 ---
 
@@ -24,11 +23,29 @@ Draft platform-aware social media copy and generate a styled dark-mode card imag
 
 ## Phase 1 — Clarify
 
-If the user has not supplied **platform**, **content context**, and **tone**, use `AskUserQuestion` to collect them before proceeding. Batch all questions in a single call.
+### Step 1a — Auto-detect content context
+
+Run these commands silently before asking the user anything:
+
+```bash
+git diff HEAD~1 --stat 2>/dev/null | head -20
+git log --oneline -5 2>/dev/null
+head -30 CHANGELOG.md 2>/dev/null
+```
+
+Use the results to pre-populate inputs:
+- Non-empty diff stat → auto-select `diff-card`
+- Commit with `feat:` prefix or version bump → auto-select `feature-card`
+- If context is found, summarise it in one sentence, then only ask for **platform** and **tone**
+- If no context is found, ask for all three inputs
+
+### Step 1b — Collect remaining inputs
+
+Use `AskUserQuestion` to collect whatever Step 1a did not resolve. Batch all questions in a single call.
 
 Required inputs:
 - **Platform**: LinkedIn, Twitter/X, or Bluesky
-- **Content type** (auto-detect first; ask only if ambiguous):
+- **Content type** (only if not auto-detected above):
   - Diff / rule change / config update → `diff-card`
   - Release / feature announcement / version bump → `feature-card`
   - Insight / opinion / quote / thought leadership → `quote-card`
@@ -94,11 +111,14 @@ mkdir -p ~/.claude/tmp
 
 ### 5a — Get a free port
 
+Derive `PLUGIN_DIR` from `TEMPLATES_DIR` (set in Phase 3), then run the helper:
+
 ```bash
+PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
 python3 "$PLUGIN_DIR/scripts/find_free_port.py"
 ```
 
-`PLUGIN_DIR` is the parent of `templates/` found in Phase 3. Capture the integer as `$PORT`.
+Capture the printed integer as `$PORT`.
 
 ### 5b — Start HTTP server and capture PID
 
@@ -142,3 +162,5 @@ If Playwright tools are unavailable or the screenshot fails, tell the user:
 3. Character count: `[NNN / max chars]` — warn if over limit
 4. Attach `~/.claude/tmp/code-share-card.png` via `SendUserFile` (if screenshot succeeded)
 5. HTML path for reference: `~/.claude/tmp/code-share-card.html`
+
+**STOP.** Do not run further git commands, open browsers, or take any action beyond delivering the copy and card image.

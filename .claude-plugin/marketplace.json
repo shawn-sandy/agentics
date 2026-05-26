@@ -325,7 +325,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Draft platform-aware social media copy and generate styled dark-mode card images for LinkedIn, Twitter/X, and Bluesky — three card types (diff, feature, quote) with Playwright screenshot pipeline",
       "category": "productivity",
       "tags": [
