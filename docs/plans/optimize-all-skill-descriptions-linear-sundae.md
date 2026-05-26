@@ -1,6 +1,6 @@
 ---
 title: Optimize All Skill Descriptions
-status: proposed
+status: completed
 created: 2026-05-26
 ---
 

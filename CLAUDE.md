@@ -45,26 +45,26 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-16 plugins in the marketplace (`agentics-kit` v3.6.0):
+16 plugins in the marketplace (`agentics-kit` v3.7.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
-| `memory-tools` | Skills | Auto-activated CLAUDE.md / project memory auditing |
-| `code-review` | Skills + Agents | Auto-activated code review |
-| `plan-interview` | Commands + Skills | Planning workflow with deep-grill |
-| `skill-reviewer` | Skills | Skill file quality checks |
-| `code-testing-agent` | Skills + Agents | Test suggestion, review, tdd-fix (bug), tdd-loop (feature) |
-| `git-agent` | Skills | Branch creation, commit, PR, and ship workflows |
+| `memory-tools` | Skills | Auto-activated CLAUDE.md / project memory auditing; enforces optimization principle (keep only rules that change Claude's behavior) |
+| `code-review` | Skills + Agents + Commands | Auto-activated code review; `/code-review:fix-branch` autonomously reviews and applies fixes across the whole branch |
+| `plan-interview` | Commands + Skills | Stress-test plans with deep-grill interview; auto-routes product plans to panel review (Step 1.5 router); `--quick` flag bypasses routing |
+| `skill-reviewer` | Skills | Audit and optimize skill files — enforces two-sentence description format (capability + trigger phrase, ≤160 chars) |
+| `code-testing-agent` | Skills + Agents | Test suggestion, review, tdd-fix (bug), tdd-loop (feature); tdd-fix and tdd-loop are manual-invoke only (`disable-model-invocation`) |
+| `git-agent` | Skills + Agents + Commands | Branch creation, commit, PR, and ship workflows; background commands: `commit-bg`, `pr-bg`, `ship-bg`; `ship-autonomous` for supervised full pipeline |
 | `agent-creator` | Agents | Plugin scaffolding agent |
 | `agentic-plugin-dev` | Skills + Commands | Plugin development toolkit |
 | `code-simplifier` | Skills | Structural quality and simplification analysis |
 | `marketplace-builder` | Skills | Marketplace scaffolding |
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
-| `react-perf-analyzer` | Skills | React performance analysis |
+| `react-perf-analyzer` | Skills | React performance analysis; manual-invoke only (`disable-model-invocation`) |
 | `agent-reviewer` | Skills | Subagent definition file auditing |
-| `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg` |
+| `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
-| `code-share` | Skills | Draft LinkedIn/Twitter/Bluesky copy + dark-mode card image (diff, feature, quote) via Playwright |
+| `code-share` | Skills + Commands + Agents | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky; `/code-share:digest` and `/code-share:digest-bg` for interactive and background digest scanning |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
