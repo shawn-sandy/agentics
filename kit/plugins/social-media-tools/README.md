@@ -1,4 +1,6 @@
-# social-media-tools
+# code-share
+
+> Plugin directory: `kit/plugins/social-media-tools`
 
 Draft platform-aware social media copy and generate styled dark-mode card images for LinkedIn, Twitter/X, and Bluesky. Three card types (diff, feature, quote) with a Playwright screenshot pipeline.
 
