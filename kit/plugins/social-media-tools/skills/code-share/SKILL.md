@@ -1,6 +1,6 @@
 ---
 name: code-share
-description: "Use when the user wants to create, draft, or generate a social media post (LinkedIn, Twitter/X, Bluesky) with a styled visual card. Also triggers on: 'write a LinkedIn post', 'tweet about this', 'social card for this change', 'post about this release'. Generates platform-aware copy and a dark-mode card image via Playwright screenshot."
+description: "Drafts social copy and generates a dark-mode card image for LinkedIn, Twitter/X, or Bluesky. Use when the user asks to create or draft a social media post."
 version: 0.1.0
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile
 ---

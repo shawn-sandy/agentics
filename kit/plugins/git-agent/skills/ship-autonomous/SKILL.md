@@ -1,9 +1,6 @@
 ---
 name: ship-autonomous
-description: >
-  Use when the user asks to autonomously ship, ship and watch CI, auto-fix CI
-  failures, or ship it and fix what breaks. Chains branch creation (if needed),
-  commit, PR, CI polling, and a bounded autofix loop into one supervised flow.
+description: "Chains branch, commit, PR, CI polling, and bounded autofix into one supervised flow. Use when the user asks to autonomously ship or ship and watch CI."
 allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 

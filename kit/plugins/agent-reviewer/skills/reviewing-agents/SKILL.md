@@ -1,6 +1,6 @@
 ---
 name: reviewing-agents
-description: "Use when the user asks to review, audit, score, or check an agent definition file (agents/*.md) for quality and best practices."
+description: "Audits Claude Code agent files for quality across 5 dimensions, with optional fixes. Use when the user asks to review, audit, or score an agent definition."
 allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: agentic-memory-doctor
-description: Use when the user asks to audit, optimize, or diagnose a CLAUDE.md or project memory file, or when Claude appears to ignore project instructions.
+description: "Audits and optimizes CLAUDE.md project memory files against Claude Code best practices. Use when the user asks to audit, optimize, or diagnose a CLAUDE.md."
 allowed-tools: AskUserQuestion, Glob, Grep, Read, Write
 ---
 

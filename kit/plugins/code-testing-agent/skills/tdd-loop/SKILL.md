@@ -1,6 +1,6 @@
 ---
 name: tdd-loop
-description: Use when the user asks to TDD a new feature, write tests first, or run a red-green-refactor loop. Iterates up to 20 rounds, then commits and opens a PR.
+description: "Writes failing tests then loops up to 20 red-green-refactor rounds to implement a feature. Use when the user asks to TDD a new feature or write tests first."
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, TodoWrite, Skill
 disable-model-invocation: true
 ---

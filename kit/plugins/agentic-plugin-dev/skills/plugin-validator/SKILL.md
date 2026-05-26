@@ -1,6 +1,6 @@
 ---
 name: plugin-validator
-description: "Use when the user asks to validate or audit a plugin. Checks manifest fields, directory structure, and component frontmatter against the official spec."
+description: "Validates plugin manifest, directory structure, and frontmatter against the official spec. Use when the user asks to validate or audit a plugin."
 allowed-tools: AskUserQuestion, Glob, Read
 ---
 

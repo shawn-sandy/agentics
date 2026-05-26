@@ -1,6 +1,6 @@
 ---
 name: react-perf-analyzer
-description: Use when the user asks to analyze React component performance, check for INP or CLS issues, or produce a performance report with fix recommendations.
+description: "Identifies React patterns correlated with poor INP, CLS, and Long Tasks. Use when the user asks to analyze React performance or produce a performance report."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite
 disable-model-invocation: true
 ---
