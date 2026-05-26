@@ -1,5 +1,16 @@
 # Changelog — social-media-tools
 
+## v0.2.0 — 2026-05-26
+
+Added discovery and security-scrub layer upstream of the `code-share` skill.
+
+- `scan-for-shares` skill: discovers shareable commits or codebase patterns in two modes — history mode (`git log` on current branch) and codebase mode (`--codebase <path>`); scores candidates, runs security scrub, presents multi-select review gate, writes `.claude/digests/code-digest-YYYY-MM-DD.md`
+- `security-scrub` skill: standalone secret/credential scanner; detects HIGH/MEDIUM/LOW patterns across 20+ categories; masks values before reporting; emits structured `SCRUB RESULT` block for callers
+- `/code-share:digest` command: interactive front-end for `scan-for-shares`
+- `/code-share:digest-bg` command: fire-and-forget background variant via `agent-digest`
+- `agent-digest` background agent: runs digest scan without user interaction; proactively reports output path on completion
+- Scheduling note: GitHub Actions / cron / Claude routines can run `digest-bg` on a schedule; human review always required before posting
+
 ## v0.1.1 — 2026-05-26
 
 - Auto-detect project context (git diff, recent commits, CHANGELOG) in Phase 1 before prompting

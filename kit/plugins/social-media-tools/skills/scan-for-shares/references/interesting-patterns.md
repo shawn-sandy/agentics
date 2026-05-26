@@ -1,0 +1,96 @@
+# Interesting Patterns Reference
+
+Scoring tables for `scan-for-shares`. Re-read on every run so users can tune weights without editing the skill.
+
+---
+
+## History Mode — Commit Scoring
+
+| Pattern | Score | Notes |
+|---------|-------|-------|
+| `feat:` or `feature:` prefix | +3 | New capability — high share value |
+| New skill/agent/command file added | +3 | Plugin authoring — developer audience |
+| New public API surface | +3 | New function/class exported | 
+| `refactor:` with >50 lines changed | +2 | Architecture improvement |
+| `perf:` prefix | +2 | Performance wins resonate |
+| Algorithm or data structure change | +2 | Intellectual content |
+| `fix:` prefix for a non-trivial bug | +1 | Interesting root-cause story |
+| `fix:` prefix for a trivial typo/lint | -3 | Low share value |
+| `chore:` or `ci:` or `build:` prefix | -5 | Rarely interesting to outside readers |
+| `docs:` prefix | -3 | Usually not visual enough for a card |
+| `test:` or `spec:` only changes | -3 | Test-only changes rarely share well |
+| Merge commit (`Merge branch`) | -10 | Never share merge commits |
+| Revert commit (`Revert "`) | -10 | Never share reverts |
+| Single file changed, <5 lines | -2 | Low signal |
+
+**Inclusion threshold:** score ≥ 2. If fewer than 3 candidates meet this, include score ≥ 1 as fill-ups up to 3 total.
+
+---
+
+## Codebase Mode — File/Function Scoring
+
+| Pattern | Score | Notes |
+|---------|-------|-------|
+| Public exported function/class with JSDoc or docstring | +3 | Well-documented API = easy to share |
+| Algorithm with explicit complexity comment (`O(n)`) | +3 | Technical depth readers love |
+| Custom hook, decorator, or higher-order function | +3 | Advanced pattern |
+| Utility function with clear single responsibility | +2 | Elegant, concise code |
+| State machine or FSM implementation | +2 | Architectural interest |
+| Functional composition chain (>3 transforms) | +2 | Clever use of language |
+| Configuration-driven design (data over code) | +2 | Design pattern |
+| Test file with property-based or generative tests | +2 | Advanced testing pattern |
+| File >500 lines (likely a god class) | -3 | Too large to share cleanly |
+| File with >5 TODO / FIXME / HACK comments | -3 | Work in progress |
+| Generated file (auto-generated header comment) | -10 | Never share generated code |
+| Minified/bundled file | -10 | Never share minified output |
+| Migration file (db schema migration) | -5 | Database internals |
+| Lock file (`package-lock.json`, `yarn.lock`) | -10 | Never share lock files |
+
+**Inclusion threshold:** same as history mode — score ≥ 2, fill-up to ≥ 1.
+
+---
+
+## Card-Type Decision Tree
+
+Use this to pick the card template for each candidate:
+
+```
+Is it a diff / line-by-line change showing before/after?
+  YES → diff-card
+
+Is it a new feature, release, version bump, or capability announcement?
+  YES → feature-card
+
+Is it a code insight, elegant pattern, clever technique, or design lesson?
+  YES → quote-card
+
+Default → feature-card
+```
+
+---
+
+## Platform Heuristics
+
+| Content type | Best platform | Format hint |
+|-------------|--------------|-------------|
+| New feature / release | LinkedIn | Story arc: problem → solution → outcome |
+| Elegant algorithm | Twitter/X | One punchy line + code snippet |
+| Developer insight / opinion | Bluesky | Conversational, 2-3 sentences |
+| Architecture decision | LinkedIn | Narrative with context |
+| Quick tip / trick | Twitter/X or Bluesky | Punchy + hashtag |
+| Open-source contribution | LinkedIn | Context + impact |
+
+---
+
+## Code-Share Prompt Template
+
+Each digest entry should include a ready-to-paste prompt:
+
+```
+/code-share:code-share <card-type> for <platform>: <one-sentence description of what to share>
+```
+
+Example:
+```
+/code-share:code-share feature-card for LinkedIn: the new scan-for-shares skill that finds shareable commits from git history
+```

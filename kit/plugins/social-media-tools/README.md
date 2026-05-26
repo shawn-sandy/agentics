@@ -2,13 +2,18 @@
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
-Draft platform-aware social media copy and generate styled dark-mode card images for LinkedIn, Twitter/X, and Bluesky. Three card types (diff, feature, quote) with a Playwright screenshot pipeline.
+Discover shareable code, scrub for secrets, and generate styled dark-mode social media cards for LinkedIn, Twitter/X, and Bluesky. Two complementary workflows: a **discovery pipeline** (scan git history or a codebase path → scrub → review → digest) and a **card generation pipeline** (draft copy → render dark-mode card image).
 
 ## Features
 
-| Skill | Trigger phrases | Output |
-|-------|----------------|--------|
-| `code-share` | "write a LinkedIn post", "tweet about this", "share this change", "post about this release" | Platform-aware copy + dark-mode PNG card |
+| Component | Type | Description |
+|-----------|------|-------------|
+| `code-share` | Skill | Draft platform-aware copy + render dark-mode card (diff, feature, or quote) |
+| `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
+| `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
+| `/code-share:digest` | Command | Interactive discovery scan with multi-select candidate review |
+| `/code-share:digest-bg` | Command | Fire-and-forget background digest scan |
+| `agent-digest` | Agent | Background agent; proactively reports output path when done |
 
 ## Installation
 
@@ -23,7 +28,28 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 ## Usage
 
-The skill activates automatically when you ask to share or post about code changes. It auto-detects context from your git history before asking questions.
+### Discover what's worth sharing
+
+```bash
+# Scan the last 7 days of git history (interactive review gate)
+/code-share:digest
+
+# Scan further back or against a specific base branch
+/code-share:digest --days=14
+/code-share:digest --base=develop
+
+# Scan a codebase path instead of git history
+/code-share:digest --codebase src/auth/
+
+# Run in the background while you keep working
+/code-share:digest-bg --days=7
+```
+
+The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/code-share:code-share` prompt.
+
+### Generate a social media post
+
+The `code-share` skill activates automatically when you ask to share or post about code changes:
 
 **Share a recent diff:**
 > "Write a LinkedIn post about today's changes"
@@ -33,6 +59,16 @@ The skill activates automatically when you ask to share or post about code chang
 
 **Share a thought leadership quote:**
 > "Post a Bluesky quote about this approach"
+
+**Use a prompt from the digest:**
+> `/code-share:code-share feature-card for LinkedIn: the new security-scrub skill`
+
+### Scrub code for secrets before sharing
+
+The `security-scrub` skill activates automatically when you ask to check code for leaks:
+
+> "Check this diff for credentials before I share it"  
+> "Scrub this file for sensitive data"
 
 ## Card Types
 
@@ -52,13 +88,26 @@ social-media-tools/
 │   └── plugin.json
 ├── CHANGELOG.md
 ├── README.md
+├── agents/
+│   └── agent-digest.md           ← background digest agent
+├── commands/
+│   ├── digest.md                  ← /code-share:digest
+│   └── digest-bg.md               ← /code-share:digest-bg
 ├── scripts/
-│   └── find_free_port.py
+│   └── find_free_port.py          ← port helper for Playwright
 ├── skills/
-│   └── code-share/
+│   ├── code-share/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── variables.md       ← template variable reference
+│   ├── scan-for-shares/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── interesting-patterns.md  ← scoring table (user-tunable)
+│   └── security-scrub/
 │       ├── SKILL.md
 │       └── references/
-│           └── variables.md
+│           └── scrub-rules.md     ← pattern table and block list
 └── templates/
     ├── diff-card.html
     ├── feature-card.html
@@ -66,6 +115,64 @@ social-media-tools/
 ```
 
 ## Components
+
+### Skill: `scan-for-shares`
+
+**File:** `skills/scan-for-shares/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to find commits worth sharing, create a code digest, or generate a post from the codebase.
+
+**Two modes:**
+
+| Arguments | Mode | Source |
+|-----------|------|--------|
+| *(default)* | History | `git log` on current branch |
+| `--codebase <path>` | Codebase | `Read`/`Glob` on given path |
+
+Scoring weights (commit type, codebase patterns, card-type decision tree, platform heuristics) are stored in `skills/scan-for-shares/references/interesting-patterns.md` and re-read on every run — edit that file to tune what surfaces in your digests.
+
+Security scrub is mandatory on every candidate. The review gate presents all candidates in a single multi-select prompt. Output goes to `.claude/digests/code-digest-YYYY-MM-DD.md`.
+
+---
+
+### Skill: `security-scrub`
+
+**File:** `skills/security-scrub/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to check code for secrets or before sharing any code change.
+
+Scans for 20+ pattern categories (API keys, JWTs, private keys, DB connection strings, internal IPs). Masks matched values (`sk-a***WXYZ`) before reporting. Emits a structured `SCRUB RESULT` block with a separate `ALLOWLIST verdict` — callers treat either `BLOCKED` as a hard stop.
+
+Pattern table and file-path block list are in `skills/security-scrub/references/scrub-rules.md`.
+
+---
+
+### Command: `/code-share:digest`
+
+**File:** `commands/digest.md`  
+Interactive front-end for `scan-for-shares`. Runs the scan, presents candidates for review, and writes the approved entries to `.claude/digests/`.
+
+```
+/code-share:digest [--days=7] [--base=main] [--max=20] | --codebase <path>
+```
+
+---
+
+### Command: `/code-share:digest-bg`
+
+**File:** `commands/digest-bg.md`  
+Background variant. Dispatches `agent-digest` and returns immediately; the agent reports the output path on completion.
+
+```
+/code-share:digest-bg [--days=7] [--base=main] [--max=20] | --codebase <path>
+```
+
+---
+
+### Agent: `agent-digest`
+
+**File:** `agents/agent-digest.md`  
+Dispatched by `/code-share:digest-bg`. Runs `scan-for-shares --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke `code-share`.
+
+---
 
 ### Skill: `code-share`
 
@@ -90,6 +197,23 @@ social-media-tools/
 6. **Deliver** — presents copy in a fenced block with character count, attaches the PNG via `SendUserFile`
 
 **Fallback:** if Playwright MCP is unavailable, the skill skips the screenshot and provides the HTML path for a manual browser screenshot.
+
+## Scheduling
+
+Claude Code has no native timer, but `/code-share:digest-bg` works well with external schedulers:
+
+```yaml
+# GitHub Actions — weekly digest on Monday at 9am
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+jobs:
+  digest:
+    steps:
+      - run: claude --plugin-dir kit/plugins/social-media-tools -p "/code-share:digest-bg --days=7"
+```
+
+Human review is always required before posting — no path in this plugin auto-posts.
 
 ## Requirements
 
