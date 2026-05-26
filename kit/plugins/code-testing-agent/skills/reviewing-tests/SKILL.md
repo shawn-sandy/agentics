@@ -1,6 +1,6 @@
 ---
 name: reviewing-tests
-description: "Use when the user asks to review tests, audit test quality, or improve a test suite. Reviews for quality, coverage gaps, and alignment with code intent."
+description: "Audits tests for quality, coverage gaps, and alignment with code intent. Use when the user asks to review tests, audit test quality, or improve a test suite."
 allowed-tools: AskUserQuestion, Bash, Edit, Glob, Read, TodoWrite, Write
 ---
 

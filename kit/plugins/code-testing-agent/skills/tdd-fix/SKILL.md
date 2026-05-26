@@ -1,6 +1,6 @@
 ---
 name: tdd-fix
-description: "Use when the user asks to TDD-fix a bug, write a failing test then make it pass, or run an autonomous red-green cycle capped at N iterations."
+description: "Writes a failing test then autonomously red-greens it up to 10 iterations to fix a bug. Use when the user asks to TDD-fix a bug or run a red-green cycle."
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TodoWrite, AskUserQuestion
 disable-model-invocation: true
 ---

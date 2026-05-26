@@ -1,6 +1,6 @@
 ---
 name: running-tests
-description: "Use when the user asks to run tests, check if tests pass, or verify changes. Detects the test framework, runs scoped tests, and reports pass/fail results."
+description: "Detects the test framework, runs scoped tests, and reports pass/fail results. Use when the user asks to run tests, check if tests pass, or verify changes."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: path-rules-advisor
-description: Use when the user wants to create path-specific rules, add rules for file types or directories, or organize Claude rules in .claude/rules/.
+description: "Creates path-specific rule files in .claude/rules/ based on project analysis. Use when the user wants to add rules for specific file types or directories."
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 

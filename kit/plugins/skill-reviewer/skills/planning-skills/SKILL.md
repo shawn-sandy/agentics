@@ -1,6 +1,6 @@
 ---
 name: planning-skills
-description: "Use when the user asks to plan, design, scaffold, or create a new skill. Guides through pattern selection, folder structure, and frontmatter drafting."
+description: "Walks through a structured workflow to scaffold a new skill with SKILL.md and supporting files. Use when the user asks to plan, design, or scaffold a new skill."
 allowed-tools: AskUserQuestion, Read, TodoWrite, Write
 ---
 

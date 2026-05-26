@@ -1,6 +1,6 @@
 ---
 name: plan-review-agents
-description: "Use when the user asks to review, improve, optimize, or update a product plan, PRD, or feature proposal; or requests a cross-functional panel review, multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review of a product or design document. For quick single-agent technical validation of an implementation plan before coding, use plan-interview:plan-interview instead."
+description: "Runs a six-role Agent Team to improve PRDs, feature proposals, and product plans in place. Use when the user asks to review or optimize a product plan."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 
@@ -18,7 +18,9 @@ next to the source plan as a shareable, browser-openable companion.
 ## When not to use
 
 - **Not a code reviewer.** For code, use `code-review`. For conversational
-  plan stress-testing without a panel, use `plan-interview`.
+  plan stress-testing without a panel, use `plan-interview`. For quick
+  single-agent technical validation of an implementation plan before coding,
+  use `plan-interview:plan-interview` instead.
 - **Requires Agent Teams.** Hard-stops if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
   is not set or Claude Code is below v2.1.32. See Step 3.
 

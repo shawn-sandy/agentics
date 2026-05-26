@@ -1,6 +1,6 @@
 ---
 name: commit-agent
-description: Use when the user asks to commit changes, stage and commit, commit all changes, or save their work to git.
+description: "Stages all changes and creates a conventional commit message. Use when the user asks to commit changes, stage and commit, or save work to git."
 allowed-tools: Bash(git *), ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---

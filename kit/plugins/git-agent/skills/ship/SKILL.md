@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Use when the user asks to ship changes, commit and create a PR, or land their work. Chains commit + push + PR in one flow for GitHub (gh) and GitLab (glab)."
+description: "Stages, commits, pushes, and creates a PR in one flow for GitHub and GitLab. Use when the user asks to ship changes, commit and create a PR, or land their work."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---

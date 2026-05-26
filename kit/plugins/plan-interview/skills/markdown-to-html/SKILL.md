@@ -1,6 +1,6 @@
 ---
 name: markdown-to-html
-description: "Use when the user asks to convert a markdown file or plan to HTML, generate an HTML version of a plan or document, export a markdown file as a webpage, or make a plan or doc viewable in a browser."
+description: "Converts a markdown file into a rich, self-contained HTML page viewable in any browser. Use when the user asks to convert a markdown file or plan to HTML."
 allowed-tools: Agent, AskUserQuestion, Bash(open *), Bash(realpath *), Glob, Grep, Read, TodoWrite, Write
 ---
 
