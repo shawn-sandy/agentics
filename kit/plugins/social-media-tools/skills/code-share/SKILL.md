@@ -12,7 +12,7 @@ Draft platform-aware social media copy and generate a styled dark-mode card imag
 
 | Phase | Action |
 |-------|--------|
-| 1 — Clarify | Ask for platform/tone if missing |
+| 1 — Clarify | Auto-detect from git; ask platform + tone (context found) or all three inputs (no context) |
 | 2 — Draft | Write platform-aware copy |
 | 3 — Pick template | diff → diff-card, feature → feature-card, insight → quote-card |
 | 4 — Populate | Read template, substitute `{{VARIABLES}}` |
