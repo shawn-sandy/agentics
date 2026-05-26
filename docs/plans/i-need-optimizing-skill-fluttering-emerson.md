@@ -1,3 +1,8 @@
+---
+status: completed
+created: 2026-05-26
+---
+
 # Plan: Two-Sentence Description Format for `optimizing-skill-frontmatter`
 
 ## Context
