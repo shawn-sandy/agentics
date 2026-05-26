@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+  quote-card.html — Dark-mode pull-quote card for social posts.
+  Suited for insights, opinions, thought leadership, and memorable one-liners.
+
+  Variables to substitute:
+    {{CONTEXT}}       — Small tag line at top (e.g. Developer Insight, Claude Code)
+    {{QUOTE}}         — The pull quote text — no surrounding quotes needed; template adds them
+    {{ATTRIBUTION}}   — Author or source (e.g. Shawn Sandy, @shawnsandy)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Card</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --quote-mark: #1f6feb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 600px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .context-tag {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      padding: 16px 32px 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-weight: 600;
+    }
+
+    .quote-body {
+      padding: 32px 48px;
+    }
+
+    .quote-mark {
+      font-size: 72px;
+      line-height: 0.8;
+      color: var(--quote-mark);
+      opacity: 0.6;
+      font-family: Georgia, serif;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    blockquote {
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin: 16px auto;
+      border-radius: 1px;
+    }
+
+    .attribution {
+      padding: 0 48px 28px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .attribution::before {
+      content: '— ';
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="context-tag">{{CONTEXT}}</span>
+    <div class="quote-body">
+      <span class="quote-mark">"</span>
+      <blockquote>{{QUOTE}}</blockquote>
+    </div>
+    <div class="divider"></div>
+    <p class="attribution">{{ATTRIBUTION}}</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "code-share",
+  "description": "Draft platform-aware social media copy and generate styled dark-mode card images for LinkedIn, Twitter/X, and Bluesky",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "social-media",
+    "linkedin",
+    "twitter",
+    "bluesky",
+    "content",
+    "card",
+    "screenshot",
+    "marketing"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/social-media-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

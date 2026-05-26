@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--
+  diff-card.html — Dark-mode GitHub-style diff card for social posts.
+
+  Variables to substitute:
+    {{FILENAME}}          — File path or rule name (e.g. plan-mode.md)
+    {{BADGE}}             — Top-right label (e.g. v3.4.1, feat, fix)
+    {{HUNK_1_HEADER}}     — First hunk header (e.g. @@ Workflow §3 @@)
+    {{HUNK_1_ROWS}}       — HTML <tr> rows for first hunk (see row format below)
+    {{HUNK_2_HEADER}}     — Second hunk header (omit <tr> block above if unused)
+    {{HUNK_2_ROWS}}       — HTML <tr> rows for second hunk
+    {{STAT_ADD}}          — Integer: lines added
+    {{STAT_DEL}}          — Integer: lines removed
+    {{WORKFLOW_SUMMARY}}  — One-line footer summary
+
+  Row format:
+    <tr class="add"><td class="ln">+</td><td class="code">  line content</td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">  line content</td></tr>
+    <tr class="ctx"><td class="ln"> </td><td class="code">  context line</td></tr>
+
+  Inline highlights within td.code:
+    <span class="hl-add">added word</span>
+    <span class="hl-del">removed word</span>
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{FILENAME}}</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --add-bg: rgba(46, 160, 67, 0.15);
+      --del-bg: rgba(248, 81, 73, 0.15);
+      --add-fg: #3fb950;
+      --del-fg: #f85149;
+      --ctx-fg: #8b949e;
+      --hunk-bg: #1c2d3f;
+      --hunk-fg: #79c0ff;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 760px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .filename {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0.9;
+    }
+
+    .badge {
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .diff-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    td.hunk-header {
+      background: var(--hunk-bg);
+      color: var(--hunk-fg);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    tr.add { background: var(--add-bg); }
+    tr.del { background: var(--del-bg); }
+    tr.ctx { background: transparent; }
+
+    td.ln {
+      width: 20px;
+      padding: 0 8px 0 16px;
+      color: var(--muted);
+      user-select: none;
+      font-size: 11px;
+    }
+
+    tr.add td.ln { color: var(--add-fg); }
+    tr.del td.ln { color: var(--del-fg); }
+
+    td.code {
+      padding: 1px 12px 1px 0;
+      color: var(--text);
+      white-space: pre;
+    }
+
+    tr.add td.code { color: var(--add-fg); }
+    tr.del td.code { color: var(--del-fg); }
+    tr.ctx td.code { color: var(--ctx-fg); }
+
+    .hl-add {
+      background: rgba(46, 160, 67, 0.35);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .hl-del {
+      background: rgba(248, 81, 73, 0.35);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .stat-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .stat-pills { display: flex; gap: 8px; }
+
+    .pill-add {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(46, 160, 67, 0.15);
+      color: var(--add-fg);
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .pill-del {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--del-fg);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .summary {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <span class="filename">{{FILENAME}}</span>
+      <span class="badge">{{BADGE}}</span>
+    </div>
+
+    <table class="diff-table">
+      <tbody>
+        <tr><td colspan="2" class="hunk-header">{{HUNK_1_HEADER}}</td></tr>
+        {{HUNK_1_ROWS}}
+        <tr><td colspan="2" class="hunk-header">{{HUNK_2_HEADER}}</td></tr>
+        {{HUNK_2_ROWS}}
+      </tbody>
+    </table>
+
+    <div class="stat-bar">
+      <div class="stat-pills">
+        <span class="pill-add">+{{STAT_ADD}}</span>
+        <span class="pill-del">-{{STAT_DEL}}</span>
+      </div>
+      <span class="summary">{{WORKFLOW_SUMMARY}}</span>
+    </div>
+  </div>
+</body>
+</html>

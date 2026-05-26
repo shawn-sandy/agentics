@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -316,6 +316,28 @@
         "configuration",
         "routine",
         "portable"
+      ]
+    },
+    {
+      "name": "code-share",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/social-media-tools"
+      },
+      "version": "0.1.0",
+      "description": "Draft platform-aware social media copy and generate styled dark-mode card images for LinkedIn, Twitter/X, and Bluesky — three card types (diff, feature, quote) with Playwright screenshot pipeline",
+      "category": "productivity",
+      "tags": [
+        "social-media",
+        "linkedin",
+        "twitter",
+        "bluesky",
+        "content-creation",
+        "card",
+        "screenshot",
+        "marketing",
+        "copywriting"
       ]
     }
   ]
