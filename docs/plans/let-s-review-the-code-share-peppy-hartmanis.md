@@ -1,3 +1,9 @@
+---
+status: completed
+type: artifact
+created: 2026-05-26
+---
+
 # Plan: code-share skill review and optimization
 
 ## Context
