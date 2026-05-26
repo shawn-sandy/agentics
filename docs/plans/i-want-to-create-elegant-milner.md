@@ -1,3 +1,9 @@
+---
+status: in-progress
+type: feature
+created: 2026-05-26
+---
+
 # Plan: Add Discovery + Security-Scrub Skills to `social-media-tools`
 
 ## Context
