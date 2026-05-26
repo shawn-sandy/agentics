@@ -32,14 +32,14 @@ Skills use YAML frontmatter with activation criteria:
 ```markdown
 ---
 name: skill-name
-description: Use when the user asks to review code, check for bugs, or analyze quality.
+description: "Reviews code for bugs, security issues, and quality. Use when the user asks to review code or check for bugs."
 allowed-tools: Bash, Read, Write, Edit
 ---
 
 # Skill Instructions
 
-The description field determines WHEN the skill activates.
-The body determines WHAT Claude does when activated.
+The description field determines WHEN the skill activates and describes WHAT it does.
+The body determines HOW Claude does it when activated.
 ```
 
 - File location: `skills/skill-name/SKILL.md`
@@ -89,7 +89,7 @@ Each plugin must have a `README.md` with:
 
 - **README First** — Write the plugin README before implementing complex features
 - **Command Descriptions** — Keep frontmatter descriptions to one sentence
-- **Skill Activation** — Make descriptions clear about WHEN (not what) the skill activates
+- **Skill Description Format** — Include both WHEN (trigger) and WHAT (capability). Use the two-sentence format: `[Capability statement.] Use when the user asks to [trigger].` Source the capability sentence from the skill body's `## Overview` section. Total budget: ≤160 chars.
 - **Examples Matter** — Include concrete usage examples in every component
 - **Progressive Disclosure** — Start simple, add detail progressively in skills
 

@@ -127,6 +127,7 @@ Use this for rapid pre-audit assessment:
 - [ ] `description:` field present, ≤1024 chars
 - [ ] Description written in third person
 - [ ] "Use when..." trigger phrase present in description
+- [ ] Description contains a capability statement (not only the trigger phrase)
 
 **Body**
 - [ ] Total lines <500

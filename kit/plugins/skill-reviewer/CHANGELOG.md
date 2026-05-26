@@ -4,6 +4,27 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-05-26
+
+### Added
+
+- **Two-sentence description format** — `optimizing-skill-frontmatter` now requires and produces descriptions with both a capability sentence *and* a trigger phrase, aligning with Anthropic's authoring checklist ("Description includes both what the Skill does and when to use it"). A trigger-only description (≤160 chars but missing the capability component) is now a REWRITE candidate, not a SKIP.
+- **Rule 2 rewritten** — targets two-sentence format (capability first, trigger second per Pattern 1 in best-practices). Either order accepted; preferred: `[Capability.] Use when the user asks to [trigger].`
+- **Rule 2b (new)** — generates a missing capability sentence from the skill body's `## Overview` section when only a trigger phrase is present; generates a missing trigger phrase when only capability is present.
+- **Rule 5 updated** — explicitly excludes capability sentences from stripping. "Implementation-detail sentences" are no longer removed from descriptions — they are the required capability component.
+- **Worked example B** — new example demonstrating Rule 2b: adding a capability sentence to a trigger-only description (131 → 136 chars).
+- **`reviewing-skills` Dimension 1** — new check: description should contain a capability statement, not only "Use when…". Missing capability → Warning → 1 pt instead of 2 pts.
+- **`reviewing-skills` Quick Reference Checklist** — new item: "Description contains a capability statement (not only the trigger phrase)."
+- **`references/best-practices.md`** — added `Capability statement` row to the Description Field requirements table; replaced old single-sentence Trigger phrase examples with three named patterns (Pattern 1: two-sentence recommended; Pattern 2: trigger-first; Pattern 3: explicit phrases fallback).
+
+### Changed
+
+- `optimizing-skill-frontmatter` description updated to self-demonstrate the two-sentence format: `"Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter."` (was trigger-only, 131 chars)
+- Skip rule tightened: SKIP now requires both trigger AND capability; trigger-only descriptions are REWRITE regardless of char count
+- `plugin-patterns.md` "Skill Activation" bullet — removed "WHEN (not what)" guidance that contradicted Anthropic's own checklist; replaced with "Skill Description Format" covering the two-sentence pattern
+- `plugin-patterns.md` code example updated to show two-sentence description format
+- Worked example A retitled (was "Worked example"); updated After to 159-char two-sentence format
+
 ## [2.0.0] - 2026-05-12
 
 ### BREAKING
