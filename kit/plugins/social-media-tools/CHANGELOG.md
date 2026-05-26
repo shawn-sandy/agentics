@@ -15,8 +15,8 @@ Added discovery and security-scrub layer upstream of the `code-share` skill.
 
 Initial release.
 
-- `social-media-tools` skill: draft platform-aware copy for LinkedIn, Twitter/X, and Bluesky
+- `code-share` skill: draft platform-aware copy for LinkedIn, Twitter/X, and Bluesky
 - Three dark-mode HTML card templates: `diff-card`, `feature-card`, `quote-card`
 - Playwright-based screenshot pipeline with automatic port selection
-- Fallback embedded template specs when plugin directory is not resolvable
+- Fallback message with HTML path when Playwright screenshot is unavailable
 - `find_free_port.py` helper script to avoid port collisions
