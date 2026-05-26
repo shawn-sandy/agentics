@@ -2,8 +2,9 @@
 name: agent-digest
 description: >
   Background digest agent. Runs scan-for-shares in background mode and writes
-  the digest file to .claude/digests/ without user interaction. Dispatched by
-  the digest-bg command so the main session can keep working.
+  the digest file to .claude/digests/ without user interaction. Use when the
+  digest-bg command needs to scan git history or a codebase path while the
+  main session keeps working.
 tools: Skill, Bash, Read, Grep, Glob, Write
 model: sonnet
 maxTurns: 20
