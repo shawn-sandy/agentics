@@ -13,7 +13,7 @@
 
 Initial release.
 
-- `social-media-tools` skill: draft platform-aware copy for LinkedIn, Twitter/X, and Bluesky
+- `code-share` skill: draft platform-aware copy for LinkedIn, Twitter/X, and Bluesky
 - Three dark-mode HTML card templates: `diff-card`, `feature-card`, `quote-card`
 - Playwright-based screenshot pipeline with automatic port selection
 - Fallback message with HTML path when Playwright screenshot is unavailable
