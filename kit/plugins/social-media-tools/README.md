@@ -65,6 +65,32 @@ social-media-tools/
     └── quote-card.html
 ```
 
+## Components
+
+### Skill: `code-share`
+
+**File:** `skills/code-share/SKILL.md`
+**Activation:** automatic — triggers when the user asks to write a post, tweet, or share a code change.
+
+**Inputs (collected automatically or via prompt):**
+
+| Input | Values | Default |
+|-------|--------|---------|
+| Platform | `LinkedIn`, `Twitter/X`, `Bluesky` | — (required) |
+| Content type | `diff-card`, `feature-card`, `quote-card` | auto-detected from git |
+| Tone | `Professional`, `Casual`, `Punchy` | Professional (LinkedIn), Punchy (Twitter/X, Bluesky) |
+
+**Workflow (6 phases):**
+
+1. **Clarify** — runs `git diff`, `git log`, and `CHANGELOG.md` to auto-detect content type; only asks for what it can't infer
+2. **Draft copy** — writes platform-aware copy within character limits (LinkedIn 1,500 / Twitter 280 / Bluesky 300)
+3. **Pick template** — selects `diff-card`, `feature-card`, or `quote-card` and locates the `templates/` directory
+4. **Populate** — substitutes `{{VARIABLES}}` in the HTML template and writes to `~/.claude/tmp/code-share-card.html`
+5. **Screenshot** — starts a local HTTP server, takes a Playwright screenshot to `~/.claude/tmp/code-share-card.png`, then kills the server
+6. **Deliver** — presents copy in a fenced block with character count, attaches the PNG via `SendUserFile`
+
+**Fallback:** if Playwright MCP is unavailable, the skill skips the screenshot and provides the HTML path for a manual browser screenshot.
+
 ## Requirements
 
 - **Playwright MCP** — required for the screenshot pipeline. If unavailable, the skill falls back to providing the HTML path for a manual screenshot.
