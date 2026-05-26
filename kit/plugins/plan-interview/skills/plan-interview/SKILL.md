@@ -1,6 +1,6 @@
 ---
 name: plan-interview
-description: "Use when the user asks to stress-test, interview, validate, critique, or find technical gaps and risks in an implementation plan or agentic plan — plans describing code to write, files to modify, or technical approaches to execute. Not for product plans, PRDs, or stakeholder proposals (use product-plans:plan-review-agents for those)."
+description: "Stress-tests implementation plans through structured interviews to surface gaps and risks. Use when the user asks to stress-test or validate a technical plan."
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill, ToolSearch, ExitPlanMode
 ---
 
@@ -11,7 +11,7 @@ implementation begins.
 
 ## When not to use
 
-Does not execute implementation work or apply code fixes from the plan — this is a review tool only. Updating the plan file itself (Step 6) is permitted.
+Does not execute implementation work or apply code fixes from the plan — this is a review tool only. Updating the plan file itself (Step 6) is permitted. Not for product plans, PRDs, or stakeholder proposals — use `product-plans:plan-review-agents` for those.
 
 ## Table of Contents
 

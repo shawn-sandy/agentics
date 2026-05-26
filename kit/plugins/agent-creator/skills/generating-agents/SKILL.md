@@ -1,6 +1,6 @@
 ---
 name: generating-agents
-description: "Use when the user asks to create, scaffold, or generate an agent or sub-agent in a plugin. Scaffolds frontmatter, tool selection, system prompt, and files."
+description: "Scaffolds a complete Claude Code agent with frontmatter and system prompt. Use when the user asks to create, scaffold, or generate an agent."
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 

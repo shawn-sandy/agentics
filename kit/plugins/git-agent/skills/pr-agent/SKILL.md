@@ -1,6 +1,6 @@
 ---
 name: pr-agent
-description: Use when the user asks to create a PR, open a pull request, push and create a PR, or submit their branch for review.
+description: "Pushes the branch and creates a pull request via gh or glab. Use when the user asks to create a PR, open a pull request, or submit for review."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---

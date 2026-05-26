@@ -1,6 +1,6 @@
 ---
 name: plugin-creator
-description: "Use when the user asks to create, scaffold, or generate a full plugin from scratch. Scaffolds the manifest, commands, skills, agents, hooks, and MCP server."
+description: "Scaffolds a complete Claude Code plugin with manifest and all component types. Use when the user asks to create or scaffold a new plugin from scratch."
 allowed-tools: AskUserQuestion, ExitPlanMode, Glob, Read, ToolSearch, Write
 ---
 

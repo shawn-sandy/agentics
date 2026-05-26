@@ -1,6 +1,6 @@
 ---
 name: reviewing-skills
-description: "Use when the user asks to review, audit, or score a SKILL.md for quality. Reviews against Anthropic's official authoring best practices."
+description: "Scores SKILL.md files across 5 quality dimensions against Anthropic's authoring best practices. Use when the user asks to review, audit, or score a skill."
 allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 
