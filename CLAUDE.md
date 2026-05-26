@@ -45,7 +45,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-15 plugins in the marketplace (`agentics-kit` v3.5.0):
+16 plugins in the marketplace (`agentics-kit` v3.6.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -64,6 +64,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `agent-reviewer` | Skills | Subagent definition file auditing |
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg` |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
+| `code-share` | Skills | Draft LinkedIn/Twitter/Bluesky copy + dark-mode card image (diff, feature, quote) via Playwright |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
