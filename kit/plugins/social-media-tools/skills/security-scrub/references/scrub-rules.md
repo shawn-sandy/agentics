@@ -10,7 +10,7 @@
 | HIGH | `AKIA[A-Z0-9]{16}` | AWS access key IDs | BLOCK |
 | HIGH | `xoxb-[0-9]{11}-[0-9]{11}-[A-Za-z0-9]{24}` | Slack bot tokens | BLOCK |
 | HIGH | `xoxp-[A-Za-z0-9-]{72,}` | Slack user tokens | BLOCK |
-| HIGH | `-----BEGIN (RSA\|EC\|OPENSSH\|PGP) PRIVATE KEY` | Private keys | BLOCK |
+| HIGH | `-----BEGIN (RSA|EC|OPENSSH|PGP) PRIVATE KEY` | Private keys | BLOCK |
 | HIGH | `[A-Z_]{3,}=[[:alnum:]_\-]{32,}` | Generic long env var values | BLOCK |
 | HIGH | `eyJ[A-Za-z0-9_\-]{20,}\.eyJ` | JWT tokens | BLOCK |
 | HIGH | `mongodb(\+srv)?://[^/\s]+:[^@\s]+@` | MongoDB connection strings with credentials | BLOCK |
@@ -22,7 +22,7 @@
 | MEDIUM | `private_key\s*[=:]\s*\S{8,}` | Private key assignments | WARN |
 | LOW | `10\.[0-9]+\.[0-9]+\.[0-9]+` | Internal IP (10.x.x.x) | NOTE |
 | LOW | `192\.168\.[0-9]+\.[0-9]+` | Internal IP (192.168.x.x) | NOTE |
-| LOW | `172\.(1[6-9]\|2[0-9]\|3[01])\.[0-9]+\.[0-9]+` | Internal IP (172.16-31.x.x) | NOTE |
+| LOW | `172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+` | Internal IP (172.16-31.x.x) | NOTE |
 | LOW | `\.internal\b` | Internal service hostnames | NOTE |
 | LOW | `localhost:[0-9]{4,5}` | Localhost port references | NOTE |
 

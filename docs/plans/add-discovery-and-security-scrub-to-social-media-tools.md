@@ -1,6 +1,5 @@
 ---
 status: in-progress
-type: feature
 created: 2026-05-26
 ---
 
@@ -217,6 +216,6 @@ All new files go inside `kit/plugins/social-media-tools/`:
 4. Confirm a commit (or file) containing a fake secret pattern (e.g. `sk-test1234abcd`) is BLOCKED by `security-scrub`
 5. Confirm a clean `feat:` commit or well-documented function produces a PASS scrub result and a valid digest entry
 6. Run `/code-share:digest-bg --days=7` — confirm it returns immediately and `.claude/digests/` file appears with a proactive completion message
-6. Copy a `code-share-prompt` from the digest and run `/code-share:code-share [prompt]` — confirm card generation works end-to-end
-7. Run `/validate-plugin social-media-tools` to check plugin structure
-8. Confirm `marketplace.json` JSON is valid (auto-validated by `.claude/settings.json` hook on save)
+7. Copy a `code-share-prompt` from the digest and run `/code-share:code-share [prompt]` — confirm card generation works end-to-end
+8. Run `/validate-plugin social-media-tools` to check plugin structure
+9. Confirm `marketplace.json` JSON is valid (auto-validated by `.claude/settings.json` hook on save)

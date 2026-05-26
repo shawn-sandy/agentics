@@ -27,7 +27,7 @@ Read `$ARGUMENTS` passed from the dispatch prompt. Pass them through to `scan-fo
 
 Call `Skill` with:
 - `skill: "code-share:scan-for-shares"`
-- `args: "<$ARGUMENTS> --background"`
+- `args: "$ARGUMENTS --background"`
 
 ### Step 3 — Report completion
 

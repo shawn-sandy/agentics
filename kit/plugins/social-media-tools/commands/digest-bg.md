@@ -25,7 +25,7 @@ Dispatch the digest scan to a background agent and return immediately.
 ### Step 1 — Dispatch background agent
 
 Invoke the `Agent` tool with:
-- `subagent_type: "code-share:agent-digest"`
+- `subagent_type: "agent-digest"`
 - `run_in_background: true`
 - `description: "Background code digest scan"`
 - `prompt`: A self-contained instruction embedding `$ARGUMENTS`. Example:

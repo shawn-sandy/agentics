@@ -27,14 +27,19 @@ sk-[A-Za-z0-9]{20,}
 ghp_[A-Za-z0-9]{36}
 ghs_[A-Za-z0-9]{36}
 AKIA[A-Z0-9]{16}
-xoxb-|xoxp-
------BEGIN .* PRIVATE KEY
+xoxb-[0-9]{11}-[0-9]{11}-[A-Za-z0-9]{24}
+xoxp-[A-Za-z0-9-]{72,}
 eyJ[A-Za-z0-9_-]{20,}\.eyJ
 [A-Z_]{3,}=[[:alnum:]_-]{32,}
 password\s*[=:]\s*\S{4,}
 secret\s*[=:]\s*\S{4,}
 token\s*[=:]\s*\S{8,}
 api_key\s*[=:]\s*\S{8,}
+```
+
+For the private-key pattern (`-----BEGIN ...`), pass via `-e` to avoid the leading dash being parsed as a grep option:
+```
+grep -E -e '-----BEGIN (RSA|EC|OPENSSH|PGP) PRIVATE KEY'
 ```
 
 File path patterns to block: `.env`, `credentials`, `id_rsa`, `.pem`, `~/.ssh/`, `~/.aws/credentials`
@@ -45,12 +50,13 @@ Classify each match as HIGH / MEDIUM / LOW per the pattern table in `references/
 
 - Any HIGH finding → overall result is `BLOCKED`
 - Any MEDIUM finding with no HIGH → overall result is `WARN`
+- LOW findings only (no HIGH or MEDIUM) → overall result is `PASS`; list findings as informational notes
 - No findings → overall result is `PASS`
 
 ## Step 4 — Mask values before reporting
 
 For any matched value: show first 4 chars + `***` + last 4 chars.
-Example: `sk-abcdefgh1234WXYZ` → `sk-a***WXYZ`
+Example: `sk-abcdefgh1234wxyz` → `sk-a***wxyz`
 
 Never output unmasked secret values.
 

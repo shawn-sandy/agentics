@@ -11,6 +11,15 @@ Added discovery and security-scrub layer upstream of the `code-share` skill.
 - `agent-digest` background agent: runs digest scan without user interaction; proactively reports output path on completion
 - Scheduling note: GitHub Actions / cron / Claude routines can run `digest-bg` on a schedule; human review always required before posting
 
+## v0.1.1 — 2026-05-26
+
+- Auto-detect project context (git diff, recent commits, CHANGELOG) in Phase 1 before prompting
+- Fix `$PLUGIN_DIR` derivation in Phase 5a — now explicitly set as `$(dirname "$TEMPLATES_DIR")`
+- Rewrite skill description to ≤160 chars (two-sentence format)
+- Remove non-standard `version` field from SKILL.md frontmatter
+- Add explicit STOP boundary after Phase 6
+- Add `README.md` to plugin root
+
 ## v0.1.0 — 2026-05-26
 
 Initial release.

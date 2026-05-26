@@ -49,8 +49,9 @@ git log --oneline [base]..HEAD --format="%H %s"
 
 Deduplicate by hash. For each unique hash get stats:
 ```bash
-git diff [hash]~1 [hash] --stat
+git show --stat --format="" [hash]
 ```
+(`git show` handles root commits safely; `git diff [hash]~1` fails when there is no parent.)
 
 Limit to `--max` candidates before scoring.
 
@@ -78,7 +79,7 @@ Include candidates with score ≥ 2. If fewer than 3 qualify, fill up with score
 For each candidate:
 
 1. Get the content:
-   - History: `git diff [hash]~1 [hash] -U3`
+   - History: `git show --format="" -U3 [hash]`
    - Codebase: the file excerpt from Step 2
 2. Invoke the `security-scrub` skill on the content.
 3. Check both fields of the result:
