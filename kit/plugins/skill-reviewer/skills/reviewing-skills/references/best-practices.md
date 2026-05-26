@@ -70,14 +70,25 @@ description: Reviews X for Y. Use when the user asks to...
 | Length | ≤1024 characters | (1025+ char description) | (clear, concise description) |
 | Person | Third person — no "I", "you", "we", "your" | "I will review your skill." | "Reviews SKILL.md files for quality." |
 | Trigger phrase | Must contain "Use when..." | "This skill reviews code." | "Reviews code. Use when the user asks to check quality." |
+| Capability statement | Third-person verb clause describing what the skill does/produces — distinct from the trigger phrase | "Use when the user asks to review SKILL.md files." (trigger-only) | "Reviews SKILL.md files for quality. Use when the user asks to audit a skill." |
 | No XML tags | No `<example>`, `<user>`, or other XML | "Use when <user> asks..." | "Use when the user asks..." |
 | No newlines | Single-paragraph description | Multi-line with `\n` | Single continuous sentence or two |
 
 **Trigger phrase patterns (good examples):**
 
+Pattern 1 — two-sentence (recommended): capability statement first, then trigger:
 ```
-Use when the user asks to review a SKILL.md file.
-Use when the user asks to audit, score, or check skill quality.
+Reviews SKILL.md files against authoring best practices. Use when the user asks to audit, score, or check skill quality.
+Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter.
+```
+
+Pattern 2 — trigger first, capability second:
+```
+Use when the user asks to review a SKILL.md file. Scores frontmatter, body quality, structure, anti-patterns, and discoverability.
+```
+
+Pattern 3 — explicit trigger phrases (acceptable when no natural capability summary fits ≤160 chars):
+```
 Use when the user says "review my skill", "check this SKILL.md", or "does my skill follow best practices".
 ```
 

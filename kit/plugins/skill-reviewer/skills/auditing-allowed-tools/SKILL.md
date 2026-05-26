@@ -1,6 +1,6 @@
 ---
 name: auditing-allowed-tools
-description: Use when the user asks to audit, fix, or generate the `allowed-tools` frontmatter for a SKILL.md, or review which tools Claude used in a session.
+description: "Audits and fixes `allowed-tools` declarations for SKILL.md files. Use when the user asks to audit, fix, or review tool permissions for a skill or session."
 allowed-tools: AskUserQuestion, Bash, Read, Write, Edit, Glob, Grep
 argument-hint: "[SKILL.md path] [session UUID]"
 ---

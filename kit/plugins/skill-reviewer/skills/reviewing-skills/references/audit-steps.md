@@ -87,10 +87,11 @@ Apply the criteria from `references/best-practices.md` when evaluating each dime
 | `description` length | ≤1024 characters | Error if exceeded |
 | `description` person | Must be third person (no "I", "you", "we", "your") | Error if violated |
 | `description` trigger | Must contain "Use when..." phrase | Warning if absent |
+| `description` capability | Should contain a capability statement describing what the skill does/produces — not only "Use when…" | Warning if absent |
 
 **Scoring:**
-- **2 pts** — No errors; description has "Use when..." and is third person
-- **1 pt** — Minor issues (missing trigger phrase, description slightly long)
+- **2 pts** — No errors; description has "Use when…" trigger AND a capability statement; third person
+- **1 pt** — Minor issues: trigger present but capability absent, or description slightly long
 - **0 pts** — Missing required fields, reserved word in name, first/second person
 
 ---
