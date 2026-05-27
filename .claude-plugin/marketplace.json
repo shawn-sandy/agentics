@@ -325,8 +325,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "0.2.0",
-      "description": "Discover shareable code from git history or a codebase path, scrub for secrets, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky — with interactive digest review and background scan mode",
+      "version": "0.3.0",
+      "description": "Discover shareable code, blog posts, videos, and GitHub snippets — scrub for secrets, draft platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky",
       "category": "productivity",
       "tags": [
         "social-media",
@@ -340,7 +340,11 @@
         "copywriting",
         "git-history",
         "secret-scanning",
-        "digest"
+        "digest",
+        "blog",
+        "video",
+        "youtube",
+        "github-snippet"
       ]
     }
   ]

@@ -2,13 +2,18 @@
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
-Discover shareable code, scrub for secrets, and generate styled dark-mode social media cards for LinkedIn, Twitter/X, and Bluesky. Two complementary workflows: a **discovery pipeline** (scan git history or a codebase path → scrub → review → digest) and a **card generation pipeline** (draft copy → render dark-mode card image).
+Discover shareable code, blog posts, videos, and GitHub snippets — scrub for secrets, draft platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky.
+
+Two complementary workflows: a **discovery pipeline** (scan git history or a codebase path → scrub → review → digest) and a **card generation pipeline** (draft copy → render dark-mode card image).
 
 ## Features
 
 | Component | Type | Description |
 |-----------|------|-------------|
-| `code-share` | Skill | Draft platform-aware copy + render dark-mode card (diff, feature, or quote) |
+| `code-share` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
+| `blog-share` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
+| `video-share` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
+| `github-code-share` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
 | `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
 | `/code-share:digest` | Command | Interactive discovery scan with multi-select candidate review |
@@ -49,16 +54,23 @@ The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry
 
 ### Generate a social media post
 
-The `code-share` skill activates automatically when you ask to share or post about code changes:
+Skills activate automatically — just describe what you want to share.
 
-**Share a recent diff:**
+**Share a code change (git-based):**
 > "Write a LinkedIn post about today's changes"
+> "Tweet about the v0.3.0 release"
 
-**Announce a release:**
-> "Tweet about the v0.1.1 release"
+**Share a blog post or article:**
+> "Share this blog post: https://dev.to/example/my-article"
+> "Write a LinkedIn post about ./posts/my-article.md"
 
-**Share a thought leadership quote:**
-> "Post a Bluesky quote about this approach"
+**Share a video:**
+> "Write a tweet about this YouTube talk: https://youtu.be/abc123"
+> "Post about this Vimeo video on LinkedIn"
+
+**Share a GitHub code snippet:**
+> "Share this function on Twitter: https://github.com/owner/repo/blob/main/src/auth.ts#L42-L68"
+> "Post about this file: https://github.com/owner/repo/blob/main/src/parser.py"
 
 **Use a prompt from the digest:**
 > `/code-share:code-share feature-card for LinkedIn: the new security-scrub skill`
@@ -77,6 +89,9 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 | `diff-card` | Code changes, rule updates, config diffs | `templates/diff-card.html` |
 | `feature-card` | Releases, new features, version announcements | `templates/feature-card.html` |
 | `quote-card` | Insights, opinions, pull quotes | `templates/quote-card.html` |
+| `blog-card` | Blog post or article shares | `templates/blog-card.html` |
+| `video-card` | YouTube or Vimeo video shares | `templates/video-card.html` |
+| `snippet-card` | GitHub code file or snippet shares | `templates/snippet-card.html` |
 
 See [`skills/code-share/references/variables.md`](skills/code-share/references/variables.md) for the full variable reference for each card type.
 
@@ -89,32 +104,95 @@ social-media-tools/
 ├── CHANGELOG.md
 ├── README.md
 ├── agents/
-│   └── agent-digest.md           ← background digest agent
+│   └── agent-digest.md                    ← background digest agent
 ├── commands/
-│   ├── digest.md                  ← /code-share:digest
-│   └── digest-bg.md               ← /code-share:digest-bg
+│   ├── digest.md                           ← /code-share:digest
+│   └── digest-bg.md                        ← /code-share:digest-bg
 ├── scripts/
-│   └── find_free_port.py          ← port helper for Playwright
+│   └── find_free_port.py                   ← port helper for Playwright
 ├── skills/
+│   ├── blog-share/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── platforms.md               ← LinkedIn/Twitter/Bluesky format rules
 │   ├── code-share/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       └── variables.md       ← template variable reference
+│   │       └── variables.md               ← template variable reference (all 6 cards)
+│   ├── github-code-share/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── language-map.md            ← file extension → language + badge colour
 │   ├── scan-for-shares/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       └── interesting-patterns.md  ← scoring table (user-tunable)
-│   └── security-scrub/
+│   │       └── interesting-patterns.md    ← scoring table (user-tunable)
+│   ├── security-scrub/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── scrub-rules.md             ← pattern table and block list
+│   └── video-share/
 │       ├── SKILL.md
 │       └── references/
-│           └── scrub-rules.md     ← pattern table and block list
+│           └── platforms.md               ← oEmbed endpoints + copy format rules
 └── templates/
+    ├── blog-card.html
     ├── diff-card.html
     ├── feature-card.html
-    └── quote-card.html
+    ├── quote-card.html
+    ├── snippet-card.html
+    └── video-card.html
 ```
 
 ## Components
+
+### Skill: `blog-share`
+
+**File:** `skills/blog-share/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share or post a blog post or article.
+
+**Inputs:**
+
+| Input | Values | Notes |
+|-------|--------|-------|
+| Source | URL or local `.md` path | Relative paths resolved via `realpath` |
+| Platform | LinkedIn, Twitter/X, Bluesky | Required |
+| Tone | Professional, Casual, Punchy | Default varies by platform |
+| Hook angle | Free text | Optional framing direction |
+
+**Workflow:** fetch OG metadata (URL) or read front matter (local file) → draft copy per platform rules in `references/platforms.md` → populate `blog-card.html` → Playwright screenshot → deliver copy + PNG.
+
+`READ_TIME` is only computed for local `.md` files (word count / 200 wpm). For URL sources it is omitted — HTML body parsing is too fragile. All fetched text is HTML-escaped before card substitution.
+
+---
+
+### Skill: `video-share`
+
+**File:** `skills/video-share/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share a video, post about a talk, or promote video content.
+
+**Supported platforms:** YouTube (`youtube.com`, `youtu.be`) and Vimeo (`vimeo.com`).
+
+**Workflow:** fetch metadata via oEmbed API → if 4xx (private/deleted), ask user for title and channel → draft copy → populate `video-card.html` (with conditional thumbnail zone) → Playwright screenshot → deliver copy + PNG.
+
+`PLATFORM_COLOR` is hardcoded from URL detection only (`#ff0000` YouTube, `#1ab7ea` Vimeo) — never sourced from fetched content.
+
+---
+
+### Skill: `github-code-share`
+
+**File:** `skills/github-code-share/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share a code file or snippet from a GitHub repository.
+
+**Public repositories only.** Private repos return a 4xx from the raw URL — the skill stops with a clear error message.
+
+**Accepted URL forms:**
+- `https://github.com/{owner}/{repo}/blob/{branch}/{path}#L10-L25` (standard + optional line range)
+- `https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}` (raw URL, skip conversion)
+
+**Workflow:** parse URL fragment (`#L10-L25`) from string before any network call → fetch raw content → extract line range (or first 80 lines) → write to temp file → `security-scrub` → draft copy → HTML-escape code → populate `snippet-card.html` → Playwright screenshot → deliver copy + PNG.
+
+---
 
 ### Skill: `scan-for-shares`
 

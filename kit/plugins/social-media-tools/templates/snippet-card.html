@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!--
+  snippet-card.html — Dark-mode syntax-highlighted code snippet card for social posts.
+  Distinct from diff-card.html (which shows before/after diffs).
+
+  Static variables (all code content must be HTML-escaped by the skill before substitution):
+    {{FILENAME}}       — File name, e.g. "auth.ts" (HTML-escaped)
+    {{LANGUAGE}}       — Display name, e.g. "TypeScript" (also used as hljs class)
+    {{LANGUAGE_COLOR}} — Hex color for language badge, e.g. "#3178c6" (hardcoded from language-map.md)
+    {{CODE_LINES}}     — Code content, MUST be HTML-escaped (&amp; &lt; &gt; &quot;)
+                         Skill escapes in order: & first, then < > "
+    {{LINE_RANGE}}     — e.g. "L10–L25" or "lines 1–80"
+    {{REPO_SLUG}}      — e.g. "owner/repo"
+    {{GITHUB_URL}}     — Original GitHub URL (fragment stripped)
+
+  Syntax highlighting:
+    Uses highlight.js via CDN (github-dark theme). Playwright screenshots are taken
+    in a local browser that fetches the CDN over the network — this works for the
+    normal screenshot pipeline. If the CDN is unreachable, the code block still renders
+    correctly in dark-mode (the inline CSS provides bg/text styling); only token
+    colouring is absent.
+
+    To make the card fully offline: download highlight.js github-dark CSS and common
+    languages bundle and replace the CDN <link> and <script> tags with inline <style>
+    and <script> blocks.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{FILENAME}}</title>
+
+  <!-- highlight.js: github-dark theme + common languages bundle -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+        crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"
+          crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+    });
+  </script>
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 720px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Header ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filename {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .lang-badge {
+      display: inline-block;
+      background-color: {{LANGUAGE_COLOR}};
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg);
+      padding: 20px 24px;
+      overflow-x: auto;
+      max-height: 400px;
+    }
+
+    /* Override hljs background so our --bg colour shows through */
+    .code-block pre,
+    .code-block .hljs {
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0;
+    }
+
+    .code-block pre code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      /* Fallback colours when hljs is offline */
+      color: var(--text);
+      white-space: pre;
+      tab-size: 2;
+    }
+
+    /* ── Footer ── */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .repo-slug {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .line-range {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .github-link {
+      font-size: 11px;
+      color: var(--accent);
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="card-header">
+      <span class="filename">{{FILENAME}}</span>
+      <span class="lang-badge">{{LANGUAGE}}</span>
+    </div>
+
+    <div class="code-block">
+      <pre><code class="language-{{LANGUAGE}}">{{CODE_LINES}}</code></pre>
+    </div>
+
+    <div class="card-footer">
+      <span class="repo-slug">{{REPO_SLUG}}</span>
+      <div class="footer-right">
+        <span class="line-range">{{LINE_RANGE}}</span>
+        <span class="github-link">{{GITHUB_URL}}</span>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

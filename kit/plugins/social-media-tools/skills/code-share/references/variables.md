@@ -61,3 +61,82 @@ Inline highlights inside `<td class="code">`:
 | `{{CONTEXT}}` | Small tag line at top (e.g., `Developer Insight`, `Claude Code`) |
 | `{{QUOTE}}` | The pull quote — no surrounding quotes needed; template adds them |
 | `{{ATTRIBUTION}}` | Author or source (e.g., `Shawn Sandy`, `@shawnsandy`) |
+
+---
+
+## blog-card.html
+
+> Used by `blog-share` skill. All text values must be HTML-escaped before substitution.
+
+### Static variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{TITLE}}` | Blog post headline (HTML-escaped) |
+| `{{EXCERPT}}` | Short description or first paragraph, truncated to 280 chars (HTML-escaped) |
+| `{{AUTHOR}}` | Author name (HTML-escaped) — empty string if not found |
+| `{{DATE}}` | Publication date formatted as `MMM D, YYYY` (HTML-escaped) — empty string if not found |
+| `{{SOURCE_DOMAIN}}` | Hostname of the source URL with `www.` stripped (HTML-escaped) |
+
+### Conditional element variables
+
+The skill injects a full HTML element **or an empty string `""`** — do not use CSS tricks.
+
+| Variable | Inject when | HTML to inject |
+|----------|-------------|----------------|
+| `{{READ_TIME_BADGE}}` | `READ_TIME` is non-empty (local .md files only) | `<span class="read-time">N min read</span>` |
+| `{{TAGS_FOOTER}}` | At least one tag exists | `<div class="card-footer"><span class="tag">tag1</span>...</div>` — each tag value HTML-escaped |
+
+---
+
+## video-card.html
+
+> Used by `video-share` skill. `PLATFORM_COLOR` must come from the hardcoded map in the skill — never from fetched content.
+
+### Static variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{VIDEO_TITLE}}` | Video title (HTML-escaped) |
+| `{{CHANNEL}}` | Channel or creator name from oEmbed `author_name` (HTML-escaped) |
+| `{{PLATFORM_BADGE}}` | `"YouTube"` or `"Vimeo"` (hardcoded by skill from URL detection) |
+| `{{PLATFORM_COLOR}}` | `#ff0000` (YouTube) or `#1ab7ea` (Vimeo) — hardcoded by skill, never user-sourced |
+| `{{DESCRIPTION_SNIPPET}}` | First 150 chars of video description (HTML-escaped) — empty string if unavailable |
+| `{{CTA}}` | `"▶ Watch on YouTube"` or `"▶ Watch on Vimeo"` (hardcoded by skill) |
+
+### Conditional element variable
+
+| Variable | Inject when | HTML to inject |
+|----------|-------------|----------------|
+| `{{THUMBNAIL_ZONE}}` | `thumbnail_url` is non-empty | `<div class="video-thumbnail"><img src="URL" alt="Video thumbnail"><div class="play-overlay"><span class="play-icon">&#9654;</span></div></div>` |
+
+---
+
+## snippet-card.html
+
+> Used by `github-code-share` skill. `{{CODE_LINES}}` **must** be HTML-escaped before substitution — unescaped code breaks card rendering.
+
+### HTML-escape order (mandatory)
+
+Apply to `CODE_LINES` in this exact order:
+1. `&` → `&amp;` ← first, to prevent double-escaping
+2. `<` → `&lt;`
+3. `>` → `&gt;`
+4. `"` → `&quot;`
+
+### Variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{FILENAME}}` | File basename, e.g. `auth.ts` (HTML-escaped) |
+| `{{LANGUAGE}}` | **Lowercase hljs alias** for the `<code>` class attribute: `typescript`, `python`, `go`, `csharp`, `cpp`, `bash`, etc. |
+| `{{LANGUAGE_COLOR}}` | Hex colour from `language-map.md` (e.g. `#3178c6`) — hardcoded, never user-sourced |
+| `{{CODE_LINES}}` | HTML-escaped code content |
+| `{{LINE_RANGE}}` | e.g. `"L10–L25"` or `"lines 1–80"` |
+| `{{REPO_SLUG}}` | `"owner/repo"` (HTML-escaped) |
+| `{{GITHUB_URL}}` | Original GitHub URL with fragment stripped |
+
+### Notes
+
+- The `{{LANGUAGE}}` variable fills both the display badge text and the `language-{{LANGUAGE}}` CSS class on the `<code>` element. Pass the lowercase hljs alias (`typescript`), not the display name (`TypeScript`).
+- `LANGUAGE_COLOR` is sourced exclusively from `skills/github-code-share/references/language-map.md` — never from fetched content or user input.

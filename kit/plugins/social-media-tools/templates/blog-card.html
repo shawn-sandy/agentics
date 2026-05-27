@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<!--
+  blog-card.html — Dark-mode blog post / article card for social posts.
+
+  Static variables (always substituted):
+    {{TITLE}}          — Headline of the blog post (og:title or YAML front matter title)
+    {{EXCERPT}}        — Short excerpt or description (og:description or first paragraph)
+    {{AUTHOR}}         — Author name (article:author, byline, or YAML author field)
+    {{DATE}}           — Publication date (article:published_time or YAML date field)
+    {{SOURCE_DOMAIN}}  — Domain of the source URL, e.g. "dev.to" (strip www.)
+
+  Conditional element variables (skill injects full HTML element or empty string ""):
+    {{READ_TIME_BADGE}} — '<span class="read-time">N min read</span>' or ""
+                          Only computed for local .md files (word count / 200 wpm).
+                          Leave "" for URL sources.
+    {{TAGS_FOOTER}}     — Full '<div class="card-footer">...</div>' block with tag chips,
+                          or "" if no tags. Each tag value must be HTML-escaped by the skill.
+                          Chip format: <span class="tag">{escaped_tag}</span>
+
+  Note: all text values substituted into this template must be HTML-escaped by the skill
+  before substitution (& → &amp;, < → &lt;, > → &gt;).
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --tag-bg: rgba(56, 139, 253, 0.12);
+      --tag-fg: #79c0ff;
+      --excerpt-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Header ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .domain-pill {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.2px;
+    }
+
+    .read-time {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Body ── */
+    .card-body {
+      padding: 28px 32px 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      margin-bottom: 14px;
+    }
+
+    .excerpt {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+      border-left: 3px solid var(--excerpt-accent);
+      padding-left: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ── Meta row ── */
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-author {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .meta-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Tags footer (conditional — injected by skill or omitted entirely) ── */
+    .card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px 32px 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--tag-fg);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="label">Blog Post</span>
+        <span class="domain-pill">{{SOURCE_DOMAIN}}</span>
+      </div>
+      {{READ_TIME_BADGE}}
+    </div>
+
+    <div class="card-body">
+      <h1>{{TITLE}}</h1>
+      <p class="excerpt">{{EXCERPT}}</p>
+    </div>
+
+    <div class="card-meta">
+      <span class="meta-author">{{AUTHOR}}</span>
+      <span class="meta-date">{{DATE}}</span>
+    </div>
+
+    {{TAGS_FOOTER}}
+
+  </div>
+</body>
+</html>

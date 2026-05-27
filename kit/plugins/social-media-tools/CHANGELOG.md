@@ -1,5 +1,17 @@
 # Changelog — social-media-tools
 
+## v0.3.0 — 2026-05-27
+
+Extended the plugin to support three new content types beyond code changes.
+
+- `blog-share` skill: generate social posts from a blog post URL or local `.md` file; fetches OG metadata via WebFetch; `READ_TIME` computed for local files only; relative paths resolved via `realpath`; all extracted text HTML-escaped before card substitution
+- `video-share` skill: generate social posts from YouTube or Vimeo URLs; fetches title/channel/thumbnail via oEmbed API; graceful 4xx fallback to manual title/channel input; `PLATFORM_COLOR` hardcoded from URL detection only
+- `github-code-share` skill: generate social posts for specific GitHub file or snippet URLs; public repos only; URL fragment (`#L10-L25`) parsed before WebFetch; code HTML-escaped before card substitution; mandatory `security-scrub` via temp file with explicit args
+- `blog-card.html` template: headline + excerpt + conditional read-time badge + conditional tag chips footer (Option A conditional rendering)
+- `video-card.html` template: conditional thumbnail zone with CSS play-button overlay + channel + platform badge
+- `snippet-card.html` template: syntax-highlighted code card using CDN highlight.js (github-dark theme) with inline CSS fallback for offline use
+- Updated `skills/code-share/references/variables.md` with variable tables for the three new card templates
+
 ## v0.2.0 — 2026-05-26
 
 Added discovery and security-scrub layer upstream of the `code-share` skill.
