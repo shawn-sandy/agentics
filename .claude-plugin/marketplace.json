@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.7.0",
+  "version": "3.8.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -348,6 +348,27 @@
         "project-share",
         "features",
         "changelog"
+      ]
+    },
+    {
+      "name": "plan-mode",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/plan-mode"
+      },
+      "version": "0.1.0",
+      "description": "Plan Mode authoring conventions — auto-activating skill and filename validation hook for implementation plans",
+      "category": "productivity",
+      "tags": [
+        "planning",
+        "plan-mode",
+        "conventions",
+        "filename-validation",
+        "workflow",
+        "authoring",
+        "verb-target",
+        "kebab-case"
       ]
     }
   ]

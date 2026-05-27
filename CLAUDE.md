@@ -45,7 +45,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-16 plugins in the marketplace (`agentics-kit` v3.7.0):
+17 plugins in the marketplace (`agentics-kit` v3.8.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -65,6 +65,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
 | `code-share` | Skills + Commands + Agents | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky; `/code-share:digest` and `/code-share:digest-bg` for interactive and background digest scanning |
+| `plan-mode` | Skills + Hooks | Auto-activating plan-authoring conventions (§0–§7 workflow, required structure, writing style); automatic `verb-target` filename hook on `Write`/`Edit`; optional pairing with `plan-interview:plan-status` |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference

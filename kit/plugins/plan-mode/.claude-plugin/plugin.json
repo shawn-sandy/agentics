@@ -1,0 +1,17 @@
+{
+  "name": "plan-mode",
+  "description": "Plan Mode authoring conventions — auto-activating skill and filename validation hook for implementation plans",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "planning",
+    "plan-mode",
+    "conventions",
+    "filename-validation",
+    "workflow"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/plan-mode",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
