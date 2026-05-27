@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>project-share skill — social-media-tools</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #388bfd;
+        --badge-bg: #1f6feb;
+        --badge-fg: #ffffff;
+        --bullet-accent: #3fb950;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+      .card {
+        width: 680px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      }
+      .card-header {
+        padding: 28px 32px 20px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+      }
+      .badge {
+        display: inline-block;
+        background: var(--badge-bg);
+        color: var(--badge-fg);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 12px;
+        border-radius: 20px;
+        margin-bottom: 14px;
+        letter-spacing: 0.4px;
+      }
+      h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.3;
+        margin-bottom: 6px;
+      }
+      .subtitle {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .bullets {
+        padding: 20px 32px;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .bullets li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 14px;
+        color: var(--text);
+        padding: 10px 14px;
+        background: rgba(56, 139, 253, 0.05);
+        border-left: 3px solid var(--bullet-accent);
+        border-radius: 0 6px 6px 0;
+        line-height: 1.5;
+      }
+      .bullets li::before {
+        content: "→";
+        color: var(--bullet-accent);
+        flex-shrink: 0;
+        margin-top: 1px;
+        font-weight: 600;
+      }
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 32px;
+        border-top: 1px solid var(--border);
+        background: var(--bg);
+      }
+      .footer-note {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .footer-badge {
+        font-size: 11px;
+        color: var(--accent);
+        font-weight: 500;
+      }
+      .copy-panel {
+        width: 680px;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      .copy-label {
+        color: #8b949e;
+        font-size: 12px;
+        margin: 0 0 8px;
+      }
+      .post-copy-text {
+        width: 100%;
+        min-height: 80px;
+        background: #0d1117;
+        color: #e6edf3;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        resize: vertical;
+        box-sizing: border-box;
+        display: block;
+      }
+      .copy-btn {
+        margin-top: 8px;
+        padding: 6px 16px;
+        background: #238636;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .copy-btn:hover {
+        background: #2ea043;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-header">
+        <div class="badge">New Skill</div>
+        <h1>project-share — social-media-tools</h1>
+        <p class="subtitle">
+          Topic-based social posts for Claude Code projects, now in the
+          agentics-kit marketplace
+        </p>
+      </div>
+      <ul class="bullets">
+        <li>
+          Write posts about your project by topic — architecture, decisions,
+          features — not tied to any git diff
+        </li>
+        <li>
+          Complements /code-share: event-driven (what changed) vs. topic-driven
+          (what it is)
+        </li>
+        <li>
+          Platform-aware copy for LinkedIn, Twitter/X, and Bluesky with
+          dark-mode card images
+        </li>
+        <li>
+          Includes a curated topic guide (references/topics.md) to spark post
+          ideas from any project
+        </li>
+      </ul>
+      <div class="card-footer">
+        <span class="footer-note">github.com/shawn-sandy/agentics</span>
+        <span class="footer-badge">New Skill</span>
+      </div>
+    </div>
+    <div class="copy-panel">
+      <p class="copy-label">Social media post</p>
+      <textarea readonly class="post-copy-text" id="post-copy">
+Just shipped a new skill to the agentics-kit plugin marketplace: /project-share.
+
+If you use Claude Code and find yourself wanting to write a LinkedIn post about your project — not tied to any specific commit or diff, just "here's what this thing does" — that's exactly what project-share is for.
+
+It works alongside /code-share (which generates social cards from your git history). The difference: code-share is event-driven (what just changed), project-share is topic-driven (what this project IS). You pick a topic — architecture, design decisions, a specific feature, the problem it solves — and it drafts platform-aware copy + generates a styled dark-mode card image.
+
+The agentics-kit marketplace now has 17 plugins. If you're building on Claude Code and want to make your work more shareable without manually writing posts, this might be worth a look.
+
+#ClaudeCode #DeveloperTools #AITools #OpenSource</textarea
+      >
+      <button
+        class="copy-btn"
+        onclick="
+          var t = document.getElementById('post-copy'),
+            btn = this;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(t.value).then(function () {
+              btn.textContent = 'Copied ✓';
+              setTimeout(function () {
+                btn.textContent = 'Copy post';
+              }, 2000);
+            });
+          } else {
+            t.select();
+            document.execCommand('copy');
+            btn.textContent = 'Copied ✓';
+            setTimeout(function () {
+              btn.textContent = 'Copy post';
+            }, 2000);
+          }
+        "
+      >
+        Copy post
+      </button>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: New Skill
+      - heading "project-share — social-media-tools" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Topic-based social posts for Claude Code projects, now in the agentics-kit marketplace
+    - list [ref=e7]:
+      - listitem [ref=e8]: → Write posts about your project by topic — architecture, decisions, features — not tied to any git diff
+      - listitem [ref=e9]: "→ Complements /code-share: event-driven (what changed) vs. topic-driven (what it is)"
+      - listitem [ref=e10]: → Platform-aware copy for LinkedIn, Twitter/X, and Bluesky with dark-mode card images
+      - listitem [ref=e11]: → Includes a curated topic guide (references/topics.md) to spark post ideas from any project
+    - generic [ref=e12]:
+      - generic [ref=e13]: github.com/shawn-sandy/agentics
+      - generic [ref=e14]: New Skill
+  - generic [ref=e15]:
+    - paragraph [ref=e16]: Social media post
+    - textbox [ref=e17]: "Just shipped a new skill to the agentics-kit plugin marketplace: /project-share. If you use Claude Code and find yourself wanting to write a LinkedIn post about your project — not tied to any specific commit or diff, just \"here's what this thing does\" — that's exactly what project-share is for. It works alongside /code-share (which generates social cards from your git history). The difference: code-share is event-driven (what just changed), project-share is topic-driven (what this project IS). You pick a topic — architecture, design decisions, a specific feature, the problem it solves — and it drafts platform-aware copy + generates a styled dark-mode card image. The agentics-kit marketplace now has 17 plugins. If you're building on Claude Code and want to make your work more shareable without manually writing posts, this might be worth a look. #ClaudeCode #DeveloperTools #AITools #OpenSource"
+    - button "Copy post" [ref=e18] [cursor=pointer]
