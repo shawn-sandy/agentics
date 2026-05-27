@@ -1,17 +1,23 @@
 ---
 name: optimizing-skill-frontmatter
-description: "Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter."
+description: "Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤256 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter."
 allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
 ## Overview
 
-Optimizes two frontmatter fields in SKILL.md files in a single pass: trims `description:` to ≤160 characters (preserving activation accuracy) and sets `disable-model-invocation` to the correct value based on whether the skill is a write-heavy workflow or a read-only advisory tool.
+Optimizes two frontmatter fields in SKILL.md files in a single pass: rewrites `description:` to the **three-part format** (≤256 chars total, short description ≤80 chars) and sets `disable-model-invocation` to the correct value based on whether the skill is a write-heavy workflow or a read-only advisory tool.
 
-The description rewrite targets the **two-sentence format**: a capability sentence describing what the skill does, followed by the "Use when…" trigger phrase — aligning with Anthropic's authoring checklist requirement that descriptions include both *what the skill does* and *when to use it* (Pattern 1 in `references/best-practices.md`).
+The description rewrite targets the **three-part format**: a short description (≤80 chars) capturing the essential function, followed by a capability sentence with richer detail, followed by the "Use when…" trigger phrase — aligning with Anthropic's authoring checklist requirement that descriptions include both *what the skill does* and *when to use it* (Pattern 1 in `references/best-practices.md`).
 
-**Why 160 chars?** Claude Code loads all skill descriptions into the context window each turn. The default `skillListingBudgetFraction` setting allocates 1% of the model’s context window for this listing — roughly 8,000 characters on a 200K-token model. With 50 skills installed (a realistic mix of plugin sets), that leaves ~160 chars per skill before descriptions start getting dropped. The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry (description + `when_to_use` combined); 160 is a practical target for surviving the default budget, not a platform constraint.
+**Why three-part format?** Claude Code loads all skill descriptions into the context window each turn. The default `skillListingBudgetFraction` allocates 1% of the model’s context window — roughly 8,000 characters on a 200K-token model. The three-part format is designed around this budget:
+
+- **Short description ≤80 chars**: survives at ~100 skills installed (8,000 ÷ 100 = 80 chars/skill). Always the first sentence so truncation still leaves a meaningful label.
+- **Total ≤256 chars**: fits the full three-part description for ~31 skills (8,000 ÷ 256 ≈ 31). Users with the agentics-kit alone (~16 skills) have headroom to spare.
+- **Legacy ≤160 target**: still safe for ~50 skills installed; remains the recommendation in the budget advisory table.
+
+The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry; 256 is a practical target for surviving the default budget, not a platform constraint.
 
 **Why `disable-model-invocation`?** This flag controls how a skill activates. `true` forces explicit invocation only (via `/plugin:skill-name`); omitting it lets the model auto-fire the skill when user intent matches. Workflow skills that write files, commit code, or run pipelines should require explicit invocation — auto-firing a deploy on a loose intent match causes unintended side effects. Advisory/read-only skills benefit from auto-activation. Negative-scope clauses (“Does NOT cover X”) are relocated to a `## When not to use` body section rather than dropped.
 
@@ -79,7 +85,7 @@ Use only the **first match** — YAML frontmatter always appears before the body
 
 Then count the value’s character length (excluding the `description:` prefix).
 
-**Skip rule:** if a description is already ≤160 chars AND contains both (a) a “Use when…” trigger phrase and (b) a capability sentence (a third-person verb clause that is *not* the trigger phrase itself), the file qualifies for SKIP — but do not exit silently. Files with only a trigger phrase are REWRITE candidates even if ≤160 chars, because they are missing the capability component. Instead:
+**Skip rule:** a file qualifies for SKIP only if it meets **all three** conditions: (1) total description ≤256 chars, (2) short description (first sentence) ≤80 chars, and (3) all three components present — a short description, a capability sentence, and a “Use when…” trigger phrase. A file is a REWRITE candidate if any condition fails: total >256, first sentence >80, missing short description, missing capability, or missing trigger. Do not exit silently. Instead:
 
 1. Print a row showing: `{path} | {current chars} | {current description text}`
 2. Call `AskUserQuestion` with three options:
@@ -95,33 +101,37 @@ Report a table of all files, current char count, and SKIP/REWRITE status before 
 
 Apply all five rules in order. Do not proceed to edits until rewrites are drafted.
 
-### Rule 1 — Target ≤160 characters
+### Rule 1 — Target ≤256 chars total; short description ≤80 chars
 
-The description value (not including `description:` or surrounding quotes) must be ≤160 chars. Count carefully.
+The description value (not including `description:` or surrounding quotes) must be ≤256 chars total. The first sentence (short description, up to and including the first `. `) must be ≤80 chars. Count carefully — both limits apply independently.
 
-This is a budget target, not a platform limit. The platform enforces ≤1,024 chars per description. The 160-char target ensures descriptions survive the default `skillListingBudgetFraction` (1% of context window ≈ 8,000 chars total) for users with ~50 skills installed. If the user explicitly wants a higher target, use their stated limit instead — but note that descriptions over ~286 chars may be dropped for users who have installed only the agentics-kit (28 skills) and nothing else.
+These are budget targets, not platform limits. The platform enforces ≤1,024 chars per description. The 256-char total target fits the full three-part description for ~31 skills installed (8,000 ÷ 256 ≈ 31). The 80-char short description survives at ~100 skills. If the user explicitly wants a higher total target, use their stated limit — but keep the short description ≤80 chars regardless, since it must survive aggressive truncation.
 
-### Rule 2 — Two-sentence format
+### Rule 2 — Three-part format
 
-Target descriptions with two components:
-- **Capability sentence**: Third-person verb phrase describing what the skill does or produces. Example: `”Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation.”`
-- **Trigger sentence**: `”Use when the user asks to [activation condition].”` Example: `”Use when the user asks to optimize SKILL.md frontmatter.”`
+Target descriptions with three components in this order:
 
-Either order is acceptable. Preferred pattern (Pattern 1 from `references/best-practices.md`): capability first, then trigger.
+1. **Short description**: One sentence, ≤80 chars, third-person. The single most essential function in plain language — what the skill *is* at a glance. Distilled from the skill name and the first sentence of `## Overview`. Example: `”Optimizes SKILL.md frontmatter fields.”`
+2. **Capability sentence**: Third-person verb phrase with richer detail — specific outputs, flags, or modes the skill handles. Example: `”Rewrites descriptions to three-part format (≤256 chars) and tunes disable-model-invocation.”`
+3. **Trigger sentence**: `”Use when the user asks to [activation condition].”` Example: `”Use when the user asks to optimize SKILL.md frontmatter.”`
 
-Third-person voice throughout. No first-person (“I will”, “I can”).
+Fixed order: short description first, capability second, trigger last. Third-person voice throughout. No first-person (“I will”, “I can”).
 
-If only one component is present, see Rule 2b.
+If any component is missing, see Rule 2b.
 
-### Rule 2b — Generate missing component
+### Rule 2b — Generate missing component(s)
 
-If the description contains only a trigger phrase ("Use when…") with no capability sentence: extract the core action/output from the skill body's `## Overview` or first paragraph. Compress to ≤80 chars, third-person, present tense. Prepend it as Sentence 1 before "Use when…".
+Handle each missing component independently:
 
-If the description contains only a capability statement (no "Use when…" phrase): add a `"Use when the user asks to [condition]."` clause as Sentence 2. Draft the trigger from the skill name and Overview if not explicit.
+**Missing short description** (most common after this format change): extract the first sentence of the `## Overview` section and compress to ≤80 chars, third-person, present tense. Prepend as Sentence 1 before the existing capability and trigger.
 
-Do not add a second capability or a second trigger if either is already present.
+**Missing capability** (description has only short description + trigger, or only trigger): extract the core action/output from `## Overview`. Compress to ≤120 chars, third-person. Insert as Sentence 2 between the short description and the trigger.
 
-When both components together exceed 160 chars: shorten the capability sentence first (Rule 1), then shorten the trigger only if the capability is already minimal.
+**Missing trigger** (no "Use when…" phrase): draft `"Use when the user asks to [condition]."` from the skill name and Overview. Append as the final sentence.
+
+Do not add a second short description, a second capability, or a second trigger if any is already present.
+
+When all three components together exceed 256 chars: shorten the capability sentence first, then the short description (keeping it ≤80 chars), then shorten the trigger only if the capability is already minimal.
 
 ### Rule 3 — Preserve the most discriminating trigger
 
@@ -154,9 +164,9 @@ Do NOT remove:
 
 ---
 
-## Worked example A — trimming an over-long description (Rules 1, 3–5)
+## Worked example A — trimming an over-long description + adding short description (Rules 1, 2, 3–5)
 
-**Before** (486 chars):
+**Before** (486 chars, trigger-only, no short description):
 ```yaml
 Use when the user asks to audit, recommend, fix, or generate the `allowed-tools`
 frontmatter for a SKILL.md, or to review which tools/permissions Claude requested
@@ -165,10 +175,9 @@ have", "fix skill permissions", "audit tool usage"... Does NOT score or audit ge
 SKILL.md quality — use reviewing-skills for that.
 ```
 
-**After** (159 chars, two-sentence):
+**After** (198 chars, three-part):
 ```yaml
-Audits, fixes, or generates the `allowed-tools` frontmatter for a SKILL.md. Use when
-the user asks to check, fix, or review tool permissions for a skill or session.
+Audits allowed-tools frontmatter for SKILL.md files. Fixes, generates, or reviews tool permissions for a skill or Claude Code session. Use when the user asks to check, fix, or review tool permissions for a skill.
 ```
 
 **Body addition inserted before `## Mode 1: Static audit`:**
@@ -179,33 +188,33 @@ Does not score or audit general SKILL.md quality — use reviewing-skills for th
 ```
 
 **What changed and why:**
-- Added capability sentence as Sentence 1 (Rule 2): extracted from body Overview
+- Added short description as Sentence 1 (Rule 2): "Audits allowed-tools frontmatter for SKILL.md files." (52 chars ≤80 ✓)
+- Added capability as Sentence 2 (Rule 2): extracted from body Overview, compressed
 - Dropped the `Triggers include "…"` list: 7 near-synonyms with no selectivity gain (Rule 5)
 - Removed negative-scope clause from description → body (Rule 4)
-- Retained the two most discriminating triggers in Sentence 2
-- Result: 486 → 159 chars, both components present
+- Retained the most discriminating trigger in Sentence 3
+- Result: 486 → 198 chars, all three components present
 
 ---
 
-## Worked example B — adding a missing capability sentence (Rule 2b)
+## Worked example B — adding missing short description (Rule 2b)
 
-**Before** (131 chars, trigger-only — REWRITE despite being ≤160):
-```yaml
-Use when the user asks to optimize SKILL.md frontmatter: trim descriptions to ≤160 chars
-and set disable-model-invocation correctly.
-```
-
-**After** (136 chars, two-sentence):
+**Before** (136 chars, two-sentence — REWRITE because short description is missing):
 ```yaml
 Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation. Use when
 the user asks to optimize SKILL.md frontmatter.
 ```
 
+**After** (188 chars, three-part):
+```yaml
+Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤256 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter.
+```
+
 **What changed and why:**
-- Extracted capability from body Overview: "Optimizes two frontmatter fields… trims `description:` to ≤160 characters… sets `disable-model-invocation`…"
-- Compressed to Sentence 1 (≤80 chars): "Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation."
-- Trigger condensed to Sentence 2: "Use when the user asks to optimize SKILL.md frontmatter."
-- Result: 131 → 136 chars; description now has both components
+- Extracted short description from skill name + Overview: "Optimizes SKILL.md frontmatter fields." (38 chars ≤80 ✓)
+- Existing capability sentence updated to reflect new format targets and kept as Sentence 2
+- Trigger unchanged as Sentence 3: "Use when the user asks to optimize SKILL.md frontmatter."
+- Result: 136 → 188 chars; all three components present (188 ≤256 ✓)
 
 ---
 
@@ -296,7 +305,7 @@ Never use placeholder values like `<value>` — always grep the file for the exa
 
 ## Step 5: Verify results
 
-After all edits, re-measure:
+After all edits, re-measure both total length and short description length:
 
 ```bash
 for f in <edited-files>; do
@@ -306,11 +315,16 @@ for f in <edited-files>; do
   val="${val#\"}"
   val="${val%\'}"
   val="${val#\'}"
-  echo "${#val} $f"
+  # Total length
+  total=${#val}
+  # Short description: first sentence (up to and including the first ". ")
+  short="${val%%. *}"
+  short_len=${#short}
+  echo "total=${total} short=${short_len} $f"
 done
 ```
 
-Confirm every value ≤160. Report any that exceed the limit for a second rewrite pass.
+Confirm every `total` ≤256 and every `short` ≤80. Report any violations for a second rewrite pass. Flag separately: total-only violations (capability too long) vs. short-only violations (first sentence needs trimming).
 
 ---
 
@@ -355,11 +369,13 @@ Then output this advisory to the user, substituting the actual count:
 > **Skill listing budget check**
 > You have N skills installed. Claude Code’s default `skillListingBudgetFraction` allocates 1% of the context window (~8,000 chars on a 200K-token model) for all skill descriptions combined.
 >
-> | Installed skills | Safe avg description length |
-> |---|---|
-> | ≤28 | ~286 chars |
-> | ~50 | ~160 chars |
-> | ~100 | ~80 chars |
+> | Installed skills | Safe avg description length | Format target |
+> |---|---|---|
+> | ≤31 | ~256 chars | Full three-part (short + capability + trigger) |
+> | ~50 | ~160 chars | Two-part (capability + trigger) |
+> | ~100 | ~80 chars | Short description only |
+>
+> The three-part format is designed so the short description (≤80 chars, always Sentence 1) survives even at ~100 skills — truncation never removes the label entirely.
 >
 > Run `/doctor` to see whether any descriptions are currently being truncated or dropped.
 >
@@ -371,7 +387,7 @@ Then output this advisory to the user, substituting the actual count:
 > ```
 > This doubles the budget to ~16,000 chars at a cost of ~2,000 tokens of context per turn.
 
-Skip the advisory if the count is ≤28 and all descriptions are already ≤160 chars — no action is needed in that case.
+Skip the advisory if the count is ≤31 and all descriptions are already ≤256 chars — no action is needed in that case.
 
 **References:**
 - Skill authoring best practices — https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
