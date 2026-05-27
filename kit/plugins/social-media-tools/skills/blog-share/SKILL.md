@@ -70,10 +70,11 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 
 ## Phase 1c — Reuse Check
 
-```
+```bash
 FILE_PREFIX=blog
-Read $PLUGIN_DIR/references/reuse-check.md and follow its procedure.
 ```
+
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ---
 

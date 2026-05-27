@@ -64,10 +64,11 @@ head -30 CHANGELOG.md 2>/dev/null
 
 ## Phase 1c — Reuse Check
 
-```
+```bash
 FILE_PREFIX=<detected-card-type>   # diff, feature, or quote
-Read $PLUGIN_DIR/references/reuse-check.md and follow its procedure.
 ```
+
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ---
 

@@ -49,10 +49,6 @@ Execute after the rendering pipeline completes:
 3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300).
 4. Attach `$SAVE_PATH_PNG` via `SendUserFile` (if screenshot succeeded).
 5. Saved HTML path: `$SAVE_PATH`
-6. Open the saved HTML in the user's default browser:
-   ```bash
-   open "$SAVE_PATH" 2>/dev/null || xdg-open "$SAVE_PATH" 2>/dev/null || true
-   ```
 
 **STOP.** Do not run further git commands, open browsers, or take any action beyond
 delivering the copy and card image.

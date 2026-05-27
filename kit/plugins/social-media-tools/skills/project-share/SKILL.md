@@ -68,10 +68,11 @@ Set `PATH_ROOT` = `--path` value or `$PWD`. Set `DAYS` = `--days` value or `30`.
 
 ## Phase 1c — Reuse Check
 
-```
+```bash
 FILE_PREFIX=project
-Read $PLUGIN_DIR/references/reuse-check.md and follow its procedure.
 ```
+
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ---
 

@@ -3,6 +3,15 @@
 All templates live in `kit/plugins/social-media-tools/templates/`. Each HTML file has a
 comment block at the top listing its variables and an example.
 
+## Contents
+
+- [diff-card.html](#diff-cardhtml)
+- [feature-card.html](#feature-cardhtml)
+- [quote-card.html](#quote-cardhtml)
+- [blog-card.html](#blog-cardhtml)
+- [video-card.html](#video-cardhtml)
+- [snippet-card.html](#snippet-cardhtml)
+
 ---
 
 ## diff-card.html

@@ -78,10 +78,11 @@ Use `AskUserQuestion` to collect:
 
 ## Phase 1c — Reuse Check
 
-```
+```bash
 FILE_PREFIX=snippet
-Read $PLUGIN_DIR/references/reuse-check.md and follow its procedure.
 ```
+
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ---
 
@@ -97,11 +98,13 @@ Use ToolSearch with select:WebFetch first (silent, no user output), then call We
   `https://raw.githubusercontent.com/{OWNER}/{REPO}/{BRANCH}/{FILE_PATH}`
 - If input was `raw.githubusercontent.com/...`: use as-is.
 
+Call `WebFetch` on the raw URL. Store the response body as `RAW_CONTENT`.
+
 **4xx response:**
 > "This repository may be private or the file path is incorrect. This skill only supports public repositories."
 Then **STOP**.
 
-Extract lines: if `LINE_START`/`LINE_END` set, use those (1-indexed); otherwise use lines 1–80.
+Extract lines from `RAW_CONTENT`: if `LINE_START`/`LINE_END` set, use those (1-indexed); otherwise use lines 1–80.
 
 ---
 
