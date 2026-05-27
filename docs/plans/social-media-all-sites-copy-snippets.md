@@ -1,3 +1,10 @@
+---
+status: completed
+type: enhancement
+plugin: social-media-tools (kit/plugins/social-media-tools)
+created: 2026-05-27
+---
+
 # Plan — "All sites" option + per-site embedded copy snippets
 
 ## Context
@@ -169,3 +176,6 @@ old single-site files working and reads the new per-site files correctly.
    both a single site and All sites to confirm the template swap didn't break it.
 6. **Reuse:** run a skill again so Phase 1c finds the new All-sites file, and run
    `media-library`; confirm both extract and label all three per-site snippets.
+7. **Plan hygiene:** confirm this plan file has a descriptive (non-timestamp) name
+   and YAML frontmatter, and that the pre-commit plan-rename check in
+   `.claude/rules/plan-hygiene.md` reports no violations before committing.

@@ -239,13 +239,19 @@
   {{COPY_PANELS}}
   <script>
     function copyPost(id, btn) {
-      var t = document.getElementById(id), orig = btn.textContent;
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
       function done() {
         btn.textContent = 'Copied ✓';
         setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-      if (navigator.clipboard) { navigator.clipboard.writeText(t.value).then(done); }
-      else { t.select(); document.execCommand('copy'); done(); }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
     }
   </script>
 </body>
