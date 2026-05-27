@@ -1,7 +1,7 @@
 ---
 name: github-code-share
 description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card image for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet or file from a GitHub repository."
-allowed-tools: AskUserQuestion, Write, Bash, ToolSearch, WebFetch, Skill, SendUserFile
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, Skill, SendUserFile, Glob
 ---
 
 # github-code-share
@@ -17,11 +17,12 @@ the path is wrong — stop with a clear error.
 | Phase | Action |
 |-------|--------|
 | 1 — Parse URL | Extract owner/repo/branch/path + parse `#L` fragment before any WebFetch |
+| 1c — Reuse check | Scan `docs/media/social/` for existing snippet posts; offer reuse |
 | 2 — Fetch Raw Code | WebFetch raw URL; extract line range; cap at 80 lines |
 | 3 — Security Scrub | Write to temp file; call security-scrub skill with explicit args |
-| 4 — Draft Copy | Write platform-aware copy about what the code does |
-| 5 — Populate Template | HTML-escape code; fill `snippet-card.html` |
-| 6 — Deliver | Copy in fenced block + PNG card |
+| 4 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
+| 5 — Populate Template | HTML-escape code; fill `snippet-card.html`; add `{{POST_COPY_TEXT}}`; save to `docs/media/social/` |
+| 6 — Deliver | Copy in fenced block + PNG card + saved path |
 
 ---
 
@@ -60,6 +61,22 @@ Derive:
 Use `AskUserQuestion` to collect:
 - `PLATFORM` — LinkedIn, Twitter/X, or Bluesky
 - `HOOK_ANGLE` (optional) — e.g. "focus on the error handling pattern"
+
+---
+
+## Phase 1c — Reuse Check
+
+After collecting inputs, check for existing saved snippet posts:
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+existing=$(ls "$MEDIA_DIR"/snippet-*.html 2>/dev/null | sort -r | head -5)
+```
+
+If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
+> "Found existing snippet post(s). Reuse one or generate a new one?"
+
+If user picks **reuse**: extract post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>`, present it, show file path, **STOP.**
 
 ---
 
@@ -128,6 +145,8 @@ Read the code snippet (now confirmed PASS/WARN) and understand what it does befo
 
 Present the draft in a fenced code block labelled with the platform. Wait for approval.
 
+Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n`). Used in Phase 5 for the copy panel.
+
 ---
 
 ## Phase 5 — Populate Template
@@ -173,7 +192,23 @@ For the `<code>` element's `class` attribute, use `HLJS_CLASS` (lowercase):
 the template uses `language-{{LANGUAGE}}` but the skill should pass the lowercase hljs alias,
 not the display name (i.e., pass `"typescript"` not `"TypeScript"`).
 
+### Substitute `{{POST_COPY_TEXT}}`
+
+Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order): `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`. Store as `POST_COPY_TEXT` and include in template substitution.
+
 Write to `~/.claude/tmp/github-code-share-card.html`.
+
+### Persistent save to docs/media/social/
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+mkdir -p "$MEDIA_DIR"
+SLUG=$(echo "$FILENAME" | tr '[:upper:]' '[:lower:]' | \
+       sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//;s/-$//' | cut -c1-40)
+DATE=$(date +%Y-%m-%d)
+SAVE_PATH="$MEDIA_DIR/snippet-${SLUG}-${DATE}.html"
+# Write the same populated HTML to $SAVE_PATH using the Write tool
+```
 
 ### Screenshot pipeline
 
@@ -189,6 +224,7 @@ Write to `~/.claude/tmp/github-code-share-card.html`.
 1. `## [Platform] Copy` heading
 2. Copy in fenced code block with character count `[NNN / max]`
 3. Attach `~/.claude/tmp/github-code-share-card.png` via `SendUserFile`
-4. HTML path: `~/.claude/tmp/github-code-share-card.html`
+4. Saved HTML path: `docs/media/social/snippet-{slug}-{date}.html`
+5. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
 
 **STOP.**

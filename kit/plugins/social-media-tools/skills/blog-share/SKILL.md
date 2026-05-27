@@ -1,7 +1,7 @@
 ---
 name: blog-share
 description: "Creates social media copy and a dark-mode card for a blog post. Formats content for LinkedIn, Twitter, and Bluesky with appropriate tone and length. Use when asked to share or post a blog post on LinkedIn, Twitter, or Bluesky."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
 ---
 
 # blog-share
@@ -14,11 +14,13 @@ for a blog post URL or local markdown file.
 | Phase | Action |
 |-------|--------|
 | 1 — Collect Input | Detect URL vs local file; resolve relative paths; ask platform + tone |
+| 1c — Reuse check | Scan `docs/media/social/` for existing blog posts; offer reuse |
 | 2 — Fetch Metadata | WebFetch OG tags (URL) or Read front matter (local); HTML-escape all values |
-| 3 — Draft Copy | Write platform-aware copy per `references/platforms.md` |
-| 4 — Populate Template | Fill `blog-card.html`; inject conditional elements as full HTML or `""` |
+| 3 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
+| 4 — Populate Template | Fill `blog-card.html`; inject conditional elements + `{{POST_COPY_TEXT}}` |
+| 4b — Save | Write HTML to `docs/media/social/blog-{slug}-{date}.html` |
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot to PNG |
-| 6 — Deliver | Present copy in fenced block + attach PNG |
+| 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
 
 ---
 
@@ -41,6 +43,27 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | `PLATFORM` | LinkedIn, Twitter/X, Bluesky | Required |
 | `TONE` | Professional, Casual, Punchy | Default: Professional (LinkedIn), Punchy (Twitter/Bluesky) |
 | `HOOK_ANGLE` | Free text | Optional — e.g. "focus on the architecture section" |
+
+---
+
+## Phase 1c — Reuse Check
+
+After collecting inputs, check for existing saved blog posts before generating anything new:
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+existing=$(ls "$MEDIA_DIR"/blog-*.html 2>/dev/null | sort -r | head -5)
+```
+
+If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
+> "Found existing blog post(s). Reuse one or generate a new one?"
+
+If user picks **reuse**:
+1. Read the chosen file
+2. Extract the post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>`
+3. Present it in a fenced code block
+4. Tell the user the file path
+5. **STOP.**
 
 ---
 
@@ -106,6 +129,8 @@ Read `references/platforms.md` for the exact format and a filled example for eac
 Present the draft copy in a fenced code block labelled with the platform name.
 Wait for user approval before proceeding.
 
+Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n`). Used in Phase 4 for the copy panel.
+
 ---
 
 ## Phase 4 — Populate Template
@@ -146,12 +171,37 @@ an empty string `""`. Do not attempt CSS tricks:
   ```
 - If no tags: `""`
 
+### Substitute `{{POST_COPY_TEXT}}`
+
+Before substituting, apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order):
+1. `&` → `&amp;`
+2. `<` → `&lt;`
+3. `>` → `&gt;`
+
+Store the result as `POST_COPY_TEXT` and include it in the template substitution.
+
 ### Substitute and write
 
 Replace all `{{VARIABLE}}` placeholders in the template. Write the result to:
 ```bash
 mkdir -p ~/.claude/tmp
 # Write via Write tool to ~/.claude/tmp/blog-share-card.html
+```
+
+---
+
+## Phase 4b — Persistent Save
+
+Save the same populated HTML to `docs/media/social/`:
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+mkdir -p "$MEDIA_DIR"
+SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | \
+       sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//;s/-$//' | cut -c1-40)
+DATE=$(date +%Y-%m-%d)
+SAVE_PATH="$MEDIA_DIR/blog-${SLUG}-${DATE}.html"
+# Write the populated HTML to $SAVE_PATH using the Write tool
 ```
 
 ---
@@ -202,6 +252,7 @@ If Playwright is unavailable:
 2. Copy in fenced code block
 3. Character count: `[NNN / max chars]` — warn if over limit
 4. Attach `~/.claude/tmp/blog-share-card.png` via `SendUserFile` (if screenshot succeeded)
-5. HTML path: `~/.claude/tmp/blog-share-card.html`
+5. Saved HTML path: `docs/media/social/blog-{slug}-{date}.html`
+6. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
 
 **STOP.** Do not run any further commands after delivering.
