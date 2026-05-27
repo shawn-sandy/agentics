@@ -17,7 +17,7 @@ for a blog post URL or local markdown file.
 | 1c — Reuse check | Scan `docs/media/social/` for existing blog posts; offer reuse |
 | 2 — Fetch Metadata | WebFetch OG tags (URL) or Read front matter (local); HTML-escape all values |
 | 3 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
-| 4 — Populate Template | Fill `blog-card.html`; inject conditional elements + `{{POST_COPY_TEXT}}` |
+| 4 — Populate Template | Fill `blog-card.html`; inject conditional elements + `{{COPY_PANELS}}` |
 | 4b — Save | Write HTML to `docs/media/social/blog-{slug}-{date}.html` |
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot to PNG |
 | 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
@@ -40,7 +40,7 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `SOURCE` | URL or file path | Required if not already provided |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky | Required |
+| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required — "All sites" drafts and embeds all three |
 | `TONE` | Professional, Casual, Punchy | Default: Professional (LinkedIn), Punchy (Twitter/Bluesky) |
 | `HOOK_ANGLE` | Free text | Optional — e.g. "focus on the architecture section" |
 
@@ -60,8 +60,8 @@ If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
 
 If user picks **reuse**:
 1. Read the chosen file
-2. Extract the post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>`
-3. Present it in a fenced code block
+2. Extract the post text from every `<textarea class="post-copy-text">…</textarea>` — one for a single-site card, three for an All-sites card
+3. Present each in a fenced code block labeled with its preceding `copy-label`
 4. Tell the user the file path
 5. **STOP.**
 
@@ -129,7 +129,7 @@ Read `references/platforms.md` for the exact format and a filled example for eac
 Present the draft copy in a fenced code block labelled with the platform name.
 Wait for user approval before proceeding.
 
-Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n`). Used in Phase 4 for the copy panel.
+Draft all three platform variants in the chosen tone. **Single site:** store them joined with `\n---\n` as `POST_COPY_TEXT_RAW` (Phase 4 → one copy panel). **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) for one panel per platform.
 
 ---
 
@@ -171,14 +171,19 @@ an empty string `""`. Do not attempt CSS tricks:
   ```
 - If no tags: `""`
 
-### Substitute `{{POST_COPY_TEXT}}`
+### Substitute `{{COPY_PANELS}}`
 
-Before substituting, apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order):
-1. `&` → `&amp;`
-2. `<` → `&lt;`
-3. `>` → `&gt;`
+Escape each platform's copy (textarea-safe, in order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`), then build the copy panel HTML for `{{COPY_PANELS}}`. The template defines the shared `copyPost(id, btn)` function — do not re-add it. Full reference: `../code-share/references/variables.md`.
 
-Store the result as `POST_COPY_TEXT` and include it in the template substitution.
+- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
+  ```html
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+  ```
+- **All sites** — three of the above with ids `post-copy-linkedin`/`post-copy-twitter`/`post-copy-bluesky`, labels `LinkedIn`/`Twitter/X`/`Bluesky`, each holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
 
 ### Substitute and write
 
@@ -248,11 +253,11 @@ If Playwright is unavailable:
 
 ## Phase 6 — Deliver
 
-1. `## [Platform] Copy` heading
-2. Copy in fenced code block
-3. Character count: `[NNN / max chars]` — warn if over limit
+1. `## [Platform] Copy` heading — for **All sites**, use `## Copy — all sites` with three labeled sub-blocks
+2. Copy in fenced code block — one block per platform for All sites
+3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300)
 4. Attach `~/.claude/tmp/blog-share-card.png` via `SendUserFile` (if screenshot succeeded)
 5. Saved HTML path: `docs/media/social/blog-{slug}-{date}.html`
-6. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
+6. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
 
 **STOP.** Do not run any further commands after delivering.

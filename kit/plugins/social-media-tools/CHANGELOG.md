@@ -1,5 +1,14 @@
 # Changelog — social-media-tools
 
+## v0.6.0 — 2026-05-27
+
+Added an "All sites" platform option that embeds an individually copyable post snippet per social site in the generated card.
+
+- All 5 card-generating skills (`code-share`, `blog-share`, `video-share`, `github-code-share`, `project-share`): platform selection now offers **All sites** alongside LinkedIn / Twitter/X / Bluesky. Choosing it drafts all three variants in the chosen tone and embeds one copy panel per platform; single-site selection is unchanged.
+- New `{{COPY_PANELS}}` template variable replaces `{{POST_COPY_TEXT}}` in all 6 HTML templates: holds one `<div class="copy-panel">` (single site) or three per-site panels (All sites), each with a unique textarea id (`post-copy-linkedin` / `-twitter` / `-bluesky`) and its own **Copy** button. The clipboard handler is now a shared `copyPost(id, btn)` function defined once per template; stacked panels are separated with a `.copy-panel + .copy-panel` margin rule.
+- `media-library` and each skill's reuse check now extract copy by `class="post-copy-text"` (one or three textareas), labeling each by its `copy-label` — pre-0.6.0 single-panel files still read correctly.
+- Updated `skills/code-share/references/variables.md` (documents `{{COPY_PANELS}}` with single- and all-sites markup) and `skills/project-share/references/topics.md`.
+
 ## v0.5.0 — 2026-05-27
 
 Added `project-share` skill for topic-based social posts about a whole project or codebase.

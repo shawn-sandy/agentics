@@ -16,7 +16,7 @@ Draft platform-aware social media copy and generate a styled dark-mode card imag
 | 1c — Reuse check | Scan `docs/media/social/` for existing posts of the same type; offer reuse |
 | 2 — Draft | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
 | 3 — Pick template | diff → diff-card, feature → feature-card, insight → quote-card |
-| 4 — Populate | Read template, substitute `{{VARIABLES}}` including `{{POST_COPY_TEXT}}` |
+| 4 — Populate | Read template, substitute `{{VARIABLES}}` including `{{COPY_PANELS}}` (one panel, or three for All sites) |
 | 4b — Save | Write HTML to `docs/media/social/{type}-{slug}-{date}.html` |
 | 5 — Screenshot | Serve HTML locally, Playwright screenshot to PNG |
 | 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
@@ -63,13 +63,13 @@ If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
 
 If user picks **reuse**:
 1. Read the chosen file
-2. Extract the post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>` in the HTML
-3. Present the extracted text in a fenced code block labeled with the platform
+2. Extract the post text from every `<textarea class="post-copy-text">…</textarea>` in the HTML — one for a single-site card, three for an All-sites card
+3. Present each extracted text in a fenced code block labeled with its preceding `copy-label` (platform)
 4. Tell the user: "Saved HTML is at `{path}` — open in a browser to view the card and copy the post."
 5. **STOP.** Do not generate a new card.
 
 Required inputs:
-- **Platform**: LinkedIn, Twitter/X, or Bluesky
+- **Platform**: LinkedIn, Twitter/X, Bluesky, or **All sites** (draft and embed all three)
 - **Content type** (only if not auto-detected above):
   - Diff / rule change / config update → `diff-card`
   - Release / feature announcement / version bump → `feature-card`
@@ -86,9 +86,10 @@ Required inputs:
 | Twitter/X | 280 chars | One punchy sentence or a tight two-liner; no hashtag bloat |
 | Bluesky | 300 chars | Conversational, same brevity as Twitter |
 
-Present the drafted copy to the user in a fenced code block labeled with the platform name before proceeding.
+Draft all three platform variants in the chosen tone (each respecting its own length/style above). Present the drafted copy to the user in a fenced code block labeled with the platform name before proceeding.
 
-Store all platform variants together as `POST_COPY_TEXT_RAW` (join with `\n---\n` between platforms). This is used in Phase 4 to populate the copy panel in the saved HTML.
+- **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW` — Phase 4 puts it in one copy panel (unchanged behavior).
+- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) — Phase 4 builds one copy panel per platform.
 
 ---
 
@@ -126,14 +127,19 @@ Read `TEMPLATE_FILE`. Replace every `{{VARIABLE}}` placeholder with content deri
 
 For variable reference, read: `references/variables.md` (adjacent to this SKILL.md).
 
-### Substitute `{{POST_COPY_TEXT}}`
+### Substitute `{{COPY_PANELS}}`
 
-Before substitution, apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order):
-1. `&` → `&amp;`
-2. `<` → `&lt;`
-3. `>` → `&gt;`
+Build the copy panel HTML and substitute it for `{{COPY_PANELS}}`. Escape each platform's copy (textarea-safe, in order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`) before placing it in a textarea. The template already defines the shared `copyPost(id, btn)` function — do not re-add it. Exact markup: `references/variables.md`.
 
-Store the result as `POST_COPY_TEXT` and substitute it into the template along with the other variables.
+- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
+  ```html
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+  ```
+- **All sites** — three panels with ids `post-copy-linkedin`, `post-copy-twitter`, `post-copy-bluesky`, each labeled and holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
 
 After substitution, write the populated HTML to `~/.claude/tmp/code-share-card.html`:
 
@@ -216,11 +222,11 @@ If Playwright tools are unavailable or the screenshot fails, tell the user:
 
 ## Phase 6 — Deliver
 
-1. **Platform label** as a markdown heading (e.g., `## LinkedIn Copy`)
-2. Copy in a fenced code block
-3. Character count: `[NNN / max chars]` — warn if over limit
+1. **Platform label** as a markdown heading (e.g., `## LinkedIn Copy`). For **All sites**, use `## Copy — all sites` with three labeled sub-blocks (LinkedIn, Twitter/X, Bluesky).
+2. Copy in a fenced code block — one block per platform for All sites
+3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300)
 4. Attach `~/.claude/tmp/code-share-card.png` via `SendUserFile` (if screenshot succeeded)
 5. Saved HTML path: `docs/media/social/{card-type}-{slug}-{date}.html`
-6. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
+6. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
 
 **STOP.** Do not run further git commands, open browsers, or take any action beyond delivering the copy and card image.

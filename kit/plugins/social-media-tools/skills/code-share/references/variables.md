@@ -143,37 +143,52 @@ Apply to `CODE_LINES` in this exact order:
 
 ---
 
-## POST_COPY_TEXT (all card types)
+## COPY_PANELS (all card types)
 
-> Used by all six card-generating skills. Populates the copy panel's `<textarea>` in the saved HTML.
+> Used by all five card-generating skills (`code-share`, `blog-share`, `video-share`, `github-code-share`, `project-share`). Supplies the copy panel markup in the saved HTML. Each template defines one shared `copyPost(id, btn)` function; every copy button calls it with its own textarea `id`.
 
 | Field | Value |
 |-------|-------|
-| Variable | `{{POST_COPY_TEXT}}` |
-| Type | String |
-| Source | The drafted post copy from Phase 2/3, all platform variants joined with `\n---\n` |
-| Escaping | **Textarea-safe** — apply in this order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;` |
+| Variable | `{{COPY_PANELS}}` |
+| Type | HTML — one or more `<div class="copy-panel">` blocks |
+| Source | The drafted post copy from the Draft phase |
+| Escaping | **Textarea-safe**, applied per variant in this order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;` (do **not** escape `"`) |
 
-### Escaping note
+### Single site — one panel (default, unchanged behavior)
 
-Content placed inside `<textarea>` is parsed as HTML character data — the browser decodes HTML entities and displays the raw text to the user. Apply the same `&amp;` → `&lt;` → `&gt;` escaping as for other inline text values. Do **not** escape `"` (only needed in attribute values, not textarea content).
+Textarea content is all platform variants joined with `\n---\n`, then escaped:
 
-### Format example
-
+```html
+<div class="copy-panel">
+  <p class="copy-label">Social media post</p>
+  <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+</div>
 ```
-**LinkedIn** (1,500 chars)
-Here's what changed in auth.ts — we replaced the entire token validation
-loop with a single Map lookup. Faster, cleaner, testable.
 
-🔗 github.com/owner/repo/pull/42
-#DevTips #TypeScript
----
-**Twitter/X** (280 chars)
-Cleaner auth in one refactor → Map lookup replaces nested loop.
-Before: O(n). After: O(1). github.com/owner/repo/pull/42
----
-**Bluesky** (300 chars)
-Just refactored auth.ts in owner/repo — swapped the token loop for a Map.
-One of those changes that makes you wonder why it wasn't always this way.
-github.com/owner/repo/pull/42
+### All sites — three per-site panels
+
+One panel per platform, each holding only that platform's escaped copy under a unique `id`:
+
+```html
+<div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">ESCAPED_LINKEDIN</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">ESCAPED_TWITTER</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">ESCAPED_BLUESKY</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
 ```
+
+### Notes
+
+- Every panel keeps `class="post-copy-text"`, so reuse/extraction (`media-library` and each skill's reuse check) matches **by class** — one textarea for a single site, three for all sites — and labels each by its preceding `copy-label`.
+- Content inside `<textarea>` is parsed as HTML character data: the browser decodes entities and shows raw text. Apply `&amp;` → `&lt;` → `&gt;`; do **not** escape `"`.

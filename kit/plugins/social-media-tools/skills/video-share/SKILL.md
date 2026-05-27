@@ -17,7 +17,7 @@ for a YouTube or Vimeo video URL.
 | 1c — Reuse check | Scan `docs/media/social/` for existing video posts; offer reuse |
 | 2 — Fetch Metadata | oEmbed API for title/channel/thumbnail; fallback on 4xx |
 | 3 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
-| 4 — Populate Template | Fill `video-card.html`; inject `{{THUMBNAIL_ZONE}}` + `{{POST_COPY_TEXT}}` |
+| 4 — Populate Template | Fill `video-card.html`; inject `{{THUMBNAIL_ZONE}}` + `{{COPY_PANELS}}` |
 | 4b — Save | Write HTML to `docs/media/social/video-{slug}-{date}.html` |
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot to PNG |
 | 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
@@ -35,7 +35,7 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `VIDEO_URL` | Any YouTube or Vimeo URL | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky | Target social platform for the post |
+| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Target platform — "All sites" drafts and embeds all three |
 | `HOOK_ANGLE` | Free text | Optional — e.g. "focus on the implementation at 12:00" |
 
 ---
@@ -52,7 +52,7 @@ existing=$(ls "$MEDIA_DIR"/video-*.html 2>/dev/null | sort -r | head -5)
 If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
 > "Found existing video post(s). Reuse one or generate a new one?"
 
-If user picks **reuse**: extract post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>`, present it, show file path, **STOP.**
+If user picks **reuse**: extract post text from every `<textarea class="post-copy-text">…</textarea>` (one for a single-site card, three for an All-sites card), present each labeled by its `copy-label`, show file path, **STOP.**
 
 ---
 
@@ -109,7 +109,7 @@ Read `references/platforms.md` for the exact format and filled examples.
 Present the draft in a fenced code block labelled with the platform name.
 Wait for user approval before proceeding.
 
-Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n`). Used in Phase 4 for the copy panel.
+Draft all three platform variants in the chosen tone. **Single site:** store them joined with `\n---\n` as `POST_COPY_TEXT_RAW` (Phase 4 → one copy panel). **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) for one panel per platform.
 
 ---
 
@@ -146,9 +146,19 @@ use an empty string.
 HTML-escape `VIDEO_TITLE`, `CHANNEL`, `DESCRIPTION_SNIPPET` before substitution:
 `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
 
-### Substitute `{{POST_COPY_TEXT}}`
+### Substitute `{{COPY_PANELS}}`
 
-Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order): `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`. Store as `POST_COPY_TEXT` and include in template substitution.
+Escape each platform's copy (textarea-safe, in order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`), then build the copy panel HTML for `{{COPY_PANELS}}`. The template defines the shared `copyPost(id, btn)` function — do not re-add it. Full reference: `../code-share/references/variables.md`.
+
+- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
+  ```html
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+  ```
+- **All sites** — three of the above with ids `post-copy-linkedin`/`post-copy-twitter`/`post-copy-bluesky`, labels `LinkedIn`/`Twitter/X`/`Bluesky`, each holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
 
 ### Substitute and write
 
@@ -190,10 +200,10 @@ Same pipeline as `code-share`:
 
 ## Phase 6 — Deliver
 
-1. `## [Platform] Copy` heading
-2. Copy in fenced code block with character count `[NNN / max]`
+1. `## [Platform] Copy` heading — for **All sites**, use `## Copy — all sites` with three labeled sub-blocks
+2. Copy in fenced code block with character count `[NNN / max]` — one block per platform for All sites (1,500 / 280 / 300)
 3. Attach `~/.claude/tmp/video-share-card.png` via `SendUserFile`
 4. Saved HTML path: `docs/media/social/video-{slug}-{date}.html`
-5. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
+5. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
 
 **STOP.**

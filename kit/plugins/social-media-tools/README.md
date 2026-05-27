@@ -156,7 +156,7 @@ social-media-tools/
 | Input | Values | Notes |
 |-------|--------|-------|
 | Source | URL or local `.md` path | Relative paths resolved via `realpath` |
-| Platform | LinkedIn, Twitter/X, Bluesky | Required |
+| Platform | LinkedIn, Twitter/X, Bluesky, All sites | Required — "All sites" embeds a copy snippet per site |
 | Tone | Professional, Casual, Punchy | Default varies by platform |
 | Hook angle | Free text | Optional framing direction |
 
@@ -261,9 +261,11 @@ Dispatched by `/code-share:digest-bg`. Runs `scan-for-shares --background` (auto
 
 | Input | Values | Default |
 |-------|--------|---------|
-| Platform | `LinkedIn`, `Twitter/X`, `Bluesky` | — (required) |
+| Platform | `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` | — (required) |
 | Content type | `diff-card`, `feature-card`, `quote-card` | auto-detected from git |
 | Tone | `Professional`, `Casual`, `Punchy` | Professional (LinkedIn), Punchy (Twitter/X, Bluesky) |
+
+When **All sites** is selected, the card embeds a separate, individually copyable snippet for each platform (LinkedIn, Twitter/X, Bluesky) — each with its own **Copy** button — instead of one combined box.
 
 **Workflow (6 phases):**
 

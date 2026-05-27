@@ -21,7 +21,7 @@ the path is wrong — stop with a clear error.
 | 2 — Fetch Raw Code | WebFetch raw URL; extract line range; cap at 80 lines |
 | 3 — Security Scrub | Write to temp file; call security-scrub skill with explicit args |
 | 4 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
-| 5 — Populate Template | HTML-escape code; fill `snippet-card.html`; add `{{POST_COPY_TEXT}}`; save to `docs/media/social/` |
+| 5 — Populate Template | HTML-escape code; fill `snippet-card.html`; add `{{COPY_PANELS}}`; save to `docs/media/social/` |
 | 6 — Deliver | Copy in fenced block + PNG card + saved path |
 
 ---
@@ -59,7 +59,7 @@ Derive:
 - `HLJS_CLASS` = lowercase language alias for highlight.js (e.g., `typescript`, `python`); for C#: `csharp`; for C++: `cpp`; for Shell: `bash`
 
 Use `AskUserQuestion` to collect:
-- `PLATFORM` — LinkedIn, Twitter/X, or Bluesky
+- `PLATFORM` — LinkedIn, Twitter/X, Bluesky, or **All sites** (draft and embed all three)
 - `HOOK_ANGLE` (optional) — e.g. "focus on the error handling pattern"
 
 ---
@@ -76,7 +76,7 @@ existing=$(ls "$MEDIA_DIR"/snippet-*.html 2>/dev/null | sort -r | head -5)
 If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
 > "Found existing snippet post(s). Reuse one or generate a new one?"
 
-If user picks **reuse**: extract post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>`, present it, show file path, **STOP.**
+If user picks **reuse**: extract post text from every `<textarea class="post-copy-text">…</textarea>` (one for a single-site card, three for an All-sites card), present each labeled by its `copy-label`, show file path, **STOP.**
 
 ---
 
@@ -145,7 +145,7 @@ Read the code snippet (now confirmed PASS/WARN) and understand what it does befo
 
 Present the draft in a fenced code block labelled with the platform. Wait for approval.
 
-Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n`). Used in Phase 5 for the copy panel.
+Draft all three platform variants in the chosen tone. **Single site:** store them joined with `\n---\n` as `POST_COPY_TEXT_RAW` (Phase 5 → one copy panel). **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) for one panel per platform.
 
 ---
 
@@ -192,9 +192,19 @@ For the `<code>` element's `class` attribute, use `HLJS_CLASS` (lowercase):
 the template uses `language-{{LANGUAGE}}` but the skill should pass the lowercase hljs alias,
 not the display name (i.e., pass `"typescript"` not `"TypeScript"`).
 
-### Substitute `{{POST_COPY_TEXT}}`
+### Substitute `{{COPY_PANELS}}`
 
-Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order): `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`. Store as `POST_COPY_TEXT` and include in template substitution.
+Escape each platform's copy (textarea-safe, in order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;` — do not escape `"` in textarea content), then build the copy panel HTML for `{{COPY_PANELS}}`. The template defines the shared `copyPost(id, btn)` function — do not re-add it. Full reference: `../code-share/references/variables.md`.
+
+- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
+  ```html
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+  ```
+- **All sites** — three of the above with ids `post-copy-linkedin`/`post-copy-twitter`/`post-copy-bluesky`, labels `LinkedIn`/`Twitter/X`/`Bluesky`, each holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
 
 Write to `~/.claude/tmp/github-code-share-card.html`.
 
@@ -221,10 +231,10 @@ SAVE_PATH="$MEDIA_DIR/snippet-${SLUG}-${DATE}.html"
 
 ## Phase 6 — Deliver
 
-1. `## [Platform] Copy` heading
-2. Copy in fenced code block with character count `[NNN / max]`
+1. `## [Platform] Copy` heading — for **All sites**, use `## Copy — all sites` with three labeled sub-blocks
+2. Copy in fenced code block with character count `[NNN / max]` — one block per platform for All sites (1,500 / 280 / 300)
 3. Attach `~/.claude/tmp/github-code-share-card.png` via `SendUserFile`
 4. Saved HTML path: `docs/media/social/snippet-{slug}-{date}.html`
-5. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
+5. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
 
 **STOP.**
