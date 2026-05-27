@@ -1,6 +1,6 @@
 ---
 name: ship-autonomous
-description: "Chains branch, commit, PR, CI polling, and bounded autofix into one supervised flow. Use when the user asks to autonomously ship or ship and watch CI."
+description: "Runs the full ship pipeline with CI polling and bounded autofix. Chains branch creation, commit, PR, and autofix in one supervised autonomous flow. Use when the user asks to autonomously ship or ship and watch CI."
 allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 

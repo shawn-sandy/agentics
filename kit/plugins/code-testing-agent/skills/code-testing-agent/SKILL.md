@@ -1,6 +1,6 @@
 ---
 name: code-testing-agent
-description: "Suggests purpose-driven tests tied to actual behavior and writes test files. Use when the user asks to suggest tests or find untested behavior."
+description: "Suggests purpose-driven tests tied to actual behavior. Writes test files covering untested paths and behavior gaps in the codebase. Use when the user asks to suggest tests or find untested behavior."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, TodoWrite, Write
 ---
 

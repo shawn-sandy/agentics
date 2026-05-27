@@ -1,6 +1,6 @@
 ---
 name: plugin-validator
-description: "Validates plugin manifest, directory structure, and frontmatter against the official spec. Use when the user asks to validate or audit a plugin."
+description: "Validates a plugin against the official Claude Code spec. Checks manifest fields, directory structure, and frontmatter for compliance. Use when the user asks to validate or audit a plugin."
 allowed-tools: AskUserQuestion, Glob, Read
 ---
 

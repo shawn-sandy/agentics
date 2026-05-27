@@ -1,6 +1,6 @@
 ---
 name: plugin-manager
-description: "Manages plugin entries in marketplace.json — add, remove, bump versions, and update metadata. Use when the user asks to list, add, remove, or bump a plugin."
+description: "Manages plugin entries in marketplace.json. Adds, removes, bumps versions, and updates metadata for marketplace plugins. Use when the user asks to list, add, remove, or bump a plugin."
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 

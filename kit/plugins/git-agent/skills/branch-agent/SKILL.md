@@ -1,6 +1,6 @@
 ---
 name: branch-agent
-description: "Creates a branch from origin/<default> with no upstream tracking, auto-naming from uncommitted changes. Use when the user asks to create or start a new branch."
+description: "Creates a git branch from origin/<default> with no upstream tracking. Auto-names the branch from staged or unstaged changes in the working tree. Use when the user asks to create or start a new branch."
 allowed-tools: Bash(git *), Bash(date *), ToolSearch, AskUserQuestion, ExitPlanMode
 argument-hint: "[branch-name] (optional) — omit to auto-generate from uncommitted changes using <type>/<scope>-<description>"
 disable-model-invocation: true

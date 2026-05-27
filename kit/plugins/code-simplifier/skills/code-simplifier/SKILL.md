@@ -1,6 +1,6 @@
 ---
 name: code-simplifier
-description: "Analyzes code for smells and complexity, then creates a prioritized refactoring plan. Use when the user asks to simplify code, reduce complexity, or refactor."
+description: "Analyzes code for smells and complexity. Creates a prioritized refactoring plan with actionable steps targeting the worst offenders. Use when the user asks to simplify code, reduce complexity, or refactor."
 allowed-tools: AskUserQuestion, Bash(git *), Edit, EnterPlanMode, ExitPlanMode, Glob, Grep, Read, ToolSearch, Write
 ---
 

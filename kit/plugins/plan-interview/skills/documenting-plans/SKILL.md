@@ -1,6 +1,6 @@
 ---
 name: documenting-plans
-description: "Generates a prose reference doc from a completed plan by inspecting the codebase and git history. Use when the user asks to document a completed plan."
+description: "Generates a prose reference doc from a completed plan. Inspects the codebase and git history to produce accurate, evidence-backed documentation. Use when the user asks to document a completed plan."
 allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 disable-model-invocation: true

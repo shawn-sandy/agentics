@@ -1,6 +1,6 @@
 ---
 name: settings-backup
-description: "Backs up Claude Code user settings to a git repo; runs unattended as a routine. Use when the user asks to back up, save, or sync their Claude Code settings."
+description: "Backs up Claude Code user settings to a git repo. Commits and pushes config files unattended; compatible with scheduled routines. Use when the user asks to back up, save, or sync their Claude Code settings."
 allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 argument-hint: "[repo-path]"
 ---
