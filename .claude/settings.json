@@ -5,7 +5,32 @@
             "Bash(git ls-files)",
             "Bash(agent-browser:*)",
             "Bash(git symbolic-ref refs/remotes/origin/HEAD *)",
-            "Bash(claude --version)"
+            "Bash(claude --version)",
+
+            "Bash(git diff*)",
+            "Bash(git log*)",
+            "Bash(git show*)",
+            "Bash(git tag*)",
+            "Bash(git rev-parse*)",
+            "Bash(git -C*)",
+
+            "Bash(find ~/.claude*)",
+            "Bash(ls ~/devbox*)",
+            "Bash(ls */docs/media/social*)",
+            "Bash(ls -t */docs/media/social*)",
+
+            "Bash(mkdir -p ~/.claude/tmp)",
+            "Bash(mkdir -p */docs/media/social)",
+            "Bash(mkdir -p .claude/digests)",
+
+            "Bash(realpath *)",
+            "Bash(dirname *)",
+            "Bash(date +%Y-%m-%d)",
+
+            "Bash(python3 */find_free_port.py)",
+            "Bash(cd ~/.claude/tmp && python3 -m http.server*)",
+
+            "Bash(kill*)"
         ]
     },
     "plansDirectory": "docs/plans",
