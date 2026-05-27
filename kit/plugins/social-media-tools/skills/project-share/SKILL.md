@@ -27,7 +27,7 @@ Generate social media copy and a styled dark-mode card image for a project based
 Parse `$ARGUMENTS`:
 
 - `--topic <value>` — one of: `features`, `bugs`, `changes`, `release` (required)
-- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky` (required; ask if absent)
+- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` (required; ask if absent — "All sites" drafts and embeds all three)
 - `--path <dir>` — project root to analyze (default: `$PWD`)
 - `--days=N` — how far back to look in git history (default: `30`)
 
@@ -149,7 +149,7 @@ Use the extracted content and tone guide from `references/topics.md` to write pl
 
 Present the drafted copy in a fenced code block labeled with the platform name.
 
-Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n` between platforms).
+Draft all three platform variants in the chosen tone. **Single site:** store them joined with `\n---\n` as `POST_COPY_TEXT_RAW` (→ one copy panel). **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) for one panel per platform.
 
 ---
 
@@ -175,7 +175,17 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 
 ### 6b — Populate template
 
-Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` before substitution (`&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`) and store as `POST_COPY_TEXT`.
+Build the `{{COPY_PANELS}}` HTML — escape each platform's copy (textarea-safe: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`). The template defines the shared `copyPost(id, btn)` function; do not re-add it. Full reference: `../code-share/references/variables.md`.
+
+- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
+  ```html
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+  ```
+- **All sites** — three of the above with ids `post-copy-linkedin`/`post-copy-twitter`/`post-copy-bluesky`, labels `LinkedIn`/`Twitter/X`/`Bluesky`, each holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
 
 **feature-card.html variables:**
 
@@ -186,7 +196,7 @@ Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` before substitution (`&` �
 | `{{BADGE}}` | Badge text from Phase 3 |
 | `{{BULLETS}}` | Top 3–5 items as `<li>text</li>` elements |
 | `{{FOOTER_NOTE}}` | Repo URL or `$PATH_ROOT` |
-| `{{POST_COPY_TEXT}}` | Escaped copy |
+| `{{COPY_PANELS}}` | Copy panel HTML (one panel, or three for All sites — see 6b) |
 
 **diff-card.html variables:**
 
@@ -201,7 +211,7 @@ Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` before substitution (`&` �
 | `{{STAT_ADD}}` | Count of items |
 | `{{STAT_DEL}}` | `0` |
 | `{{WORKFLOW_SUMMARY}}` | `Last $DAYS days · $PROJECT_NAME` |
-| `{{POST_COPY_TEXT}}` | Escaped copy |
+| `{{COPY_PANELS}}` | Copy panel HTML (one panel, or three for All sites — see 6b) |
 
 ### 6c — Save
 
@@ -234,11 +244,11 @@ Fallback: if Playwright is unavailable, tell the user:
 
 ## Phase 7 — Deliver
 
-1. **Platform label** as a markdown heading (e.g., `## LinkedIn Copy`)
-2. Copy in a fenced code block
-3. Character count: `[NNN / max chars]` — warn if over limit
+1. **Platform label** as a markdown heading (e.g., `## LinkedIn Copy`). For **All sites**, use `## Copy — all sites` with three labeled sub-blocks.
+2. Copy in a fenced code block — one block per platform for All sites
+3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300)
 4. Attach `~/.claude/tmp/project-share-card.png` via `SendUserFile` (if screenshot succeeded)
 5. Saved path: `docs/media/social/project-{slug}-{date}.html`
-6. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
+6. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
 
 **STOP.** Do not run further git commands, open browsers, or take any action beyond delivering the copy and card.

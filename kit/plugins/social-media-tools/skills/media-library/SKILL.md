@@ -77,10 +77,11 @@ Use `AskUserQuestion` to ask what the user wants to do:
 Ask the user which number they want (or accept a filename). Then:
 
 1. `Read` the chosen HTML file
-2. Extract the text content inside `<textarea class="post-copy-text" id="post-copy">…</textarea>`
-3. Present it in a fenced code block:
+2. Extract the text content of every `<textarea class="post-copy-text">…</textarea>` — one for a single-site card, three for an All-sites card — noting each one's preceding `<p class="copy-label">` label
+3. Present each in its own fenced code block, headed by its platform label:
 
 ````
+**[platform label]**
 ```
 [extracted post copy text]
 ```
@@ -91,6 +92,7 @@ Ask the user which number they want (or accept a filename). Then:
    - `blog` → `blog-share`
    - `video` → `video-share`
    - `snippet` → `github-code-share`
+   - `project` → `project-share`
 
 ### Open in browser
 

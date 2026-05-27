@@ -117,7 +117,7 @@ If version is not found anywhere: use `"latest"` as placeholder.
 | `{{BADGE}}` | `New Features` or `v$PROJECT_VERSION` |
 | `{{BULLETS}}` | Top 3–5 items as `<li>item text</li>` (no wrapping `<ul>`) |
 | `{{FOOTER_NOTE}}` | Repo URL or last 2 path segments of `$PATH_ROOT` |
-| `{{POST_COPY_TEXT}}` | HTML-escaped post copy (all platforms, `\n---\n` separated) |
+| `{{COPY_PANELS}}` | Copy panel HTML — one panel (single site) or three per-site panels (All sites); see `../code-share/references/variables.md` |
 
 ### diff-card.html — variables for bugs / changes topics
 
@@ -132,4 +132,4 @@ If version is not found anywhere: use `"latest"` as placeholder.
 | `{{STAT_ADD}}` | Count of items listed |
 | `{{STAT_DEL}}` | `0` |
 | `{{WORKFLOW_SUMMARY}}` | `Last $DAYS days · $PROJECT_NAME` |
-| `{{POST_COPY_TEXT}}` | HTML-escaped post copy |
+| `{{COPY_PANELS}}` | Copy panel HTML — one panel, or three for All sites |

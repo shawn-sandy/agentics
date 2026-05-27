@@ -22,7 +22,7 @@
 
   Note: all text values must be HTML-escaped by the skill before substitution.
 
-  {{POST_COPY_TEXT}} — Drafted social media post (all platforms, joined with \n---\n); escape & → &amp; < → &lt; > → &gt;
+  {{COPY_PANELS}} — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
 -->
 <html lang="en">
 <head>
@@ -174,6 +174,8 @@
       box-sizing: border-box;
     }
 
+    .copy-panel + .copy-panel { margin-top: 16px; }
+
     .copy-label {
       color: #8b949e;
       font-size: 12px;
@@ -228,23 +230,23 @@
     </div>
 
   </div>
-  <div class="copy-panel">
-    <p class="copy-label">Social media post</p>
-    <textarea readonly class="post-copy-text" id="post-copy">{{POST_COPY_TEXT}}</textarea>
-    <button class="copy-btn" onclick="
-      var t = document.getElementById('post-copy'), btn = this;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(t.value).then(function() {
-          btn.textContent = 'Copied ✓';
-          setTimeout(function() { btn.textContent = 'Copy post'; }, 2000);
-        });
-      } else {
-        t.select();
-        document.execCommand('copy');
+  {{COPY_PANELS}}
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
         btn.textContent = 'Copied ✓';
-        setTimeout(function() { btn.textContent = 'Copy post'; }, 2000);
+        setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-    ">Copy post</button>
-  </div>
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
 </body>
 </html>
