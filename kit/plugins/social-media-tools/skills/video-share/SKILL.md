@@ -1,7 +1,7 @@
 ---
 name: video-share
 description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky with platform-appropriate messaging. Use when asked to share a video or promote a talk on LinkedIn, Twitter, or Bluesky."
-allowed-tools: AskUserQuestion, Write, Bash, ToolSearch, WebFetch, SendUserFile
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
 ---
 
 # video-share
@@ -14,11 +14,13 @@ for a YouTube or Vimeo video URL.
 | Phase | Action |
 |-------|--------|
 | 1 — Collect Input | Auto-detect platform from URL; ask target social platform + angle |
+| 1c — Reuse check | Scan `docs/media/social/` for existing video posts; offer reuse |
 | 2 — Fetch Metadata | oEmbed API for title/channel/thumbnail; fallback on 4xx |
-| 3 — Draft Copy | Write platform-aware copy per `references/platforms.md` |
-| 4 — Populate Template | Fill `video-card.html`; inject `{{THUMBNAIL_ZONE}}` or `""` |
+| 3 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
+| 4 — Populate Template | Fill `video-card.html`; inject `{{THUMBNAIL_ZONE}}` + `{{POST_COPY_TEXT}}` |
+| 4b — Save | Write HTML to `docs/media/social/video-{slug}-{date}.html` |
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot to PNG |
-| 6 — Deliver | Present copy in fenced block + attach PNG |
+| 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
 
 ---
 
@@ -35,6 +37,22 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | `VIDEO_URL` | Any YouTube or Vimeo URL | Required |
 | `PLATFORM` | LinkedIn, Twitter/X, Bluesky | Target social platform for the post |
 | `HOOK_ANGLE` | Free text | Optional — e.g. "focus on the implementation at 12:00" |
+
+---
+
+## Phase 1c — Reuse Check
+
+After collecting inputs, check for existing saved video posts:
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+existing=$(ls "$MEDIA_DIR"/video-*.html 2>/dev/null | sort -r | head -5)
+```
+
+If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
+> "Found existing video post(s). Reuse one or generate a new one?"
+
+If user picks **reuse**: extract post text from `<textarea class="post-copy-text" id="post-copy">…</textarea>`, present it, show file path, **STOP.**
 
 ---
 
@@ -91,6 +109,8 @@ Read `references/platforms.md` for the exact format and filled examples.
 Present the draft in a fenced code block labelled with the platform name.
 Wait for user approval before proceeding.
 
+Store all platform variants as `POST_COPY_TEXT_RAW` (join with `\n---\n`). Used in Phase 4 for the copy panel.
+
 ---
 
 ## Phase 4 — Populate Template
@@ -126,12 +146,30 @@ use an empty string.
 HTML-escape `VIDEO_TITLE`, `CHANNEL`, `DESCRIPTION_SNIPPET` before substitution:
 `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
 
+### Substitute `{{POST_COPY_TEXT}}`
+
+Apply textarea-safe escaping to `POST_COPY_TEXT_RAW` (in this order): `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`. Store as `POST_COPY_TEXT` and include in template substitution.
+
 ### Substitute and write
 
 Replace all `{{VARIABLE}}` placeholders. Write to:
 ```bash
 mkdir -p ~/.claude/tmp
 # Write via Write tool to ~/.claude/tmp/video-share-card.html
+```
+
+---
+
+## Phase 4b — Persistent Save
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+mkdir -p "$MEDIA_DIR"
+SLUG=$(echo "$VIDEO_TITLE" | tr '[:upper:]' '[:lower:]' | \
+       sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//;s/-$//' | cut -c1-40)
+DATE=$(date +%Y-%m-%d)
+SAVE_PATH="$MEDIA_DIR/video-${SLUG}-${DATE}.html"
+# Write the populated HTML to $SAVE_PATH using the Write tool
 ```
 
 ---
@@ -155,6 +193,7 @@ Same pipeline as `code-share`:
 1. `## [Platform] Copy` heading
 2. Copy in fenced code block with character count `[NNN / max]`
 3. Attach `~/.claude/tmp/video-share-card.png` via `SendUserFile`
-4. HTML path: `~/.claude/tmp/video-share-card.html`
+4. Saved HTML path: `docs/media/social/video-{slug}-{date}.html`
+5. Note: "Open the saved HTML in a browser to view the card and use the **Copy post** button."
 
 **STOP.**

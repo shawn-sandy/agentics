@@ -140,3 +140,40 @@ Apply to `CODE_LINES` in this exact order:
 
 - The `{{LANGUAGE}}` variable fills both the display badge text and the `language-{{LANGUAGE}}` CSS class on the `<code>` element. Pass the lowercase hljs alias (`typescript`), not the display name (`TypeScript`).
 - `LANGUAGE_COLOR` is sourced exclusively from `skills/github-code-share/references/language-map.md` — never from fetched content or user input.
+
+---
+
+## POST_COPY_TEXT (all card types)
+
+> Used by all six card-generating skills. Populates the copy panel's `<textarea>` in the saved HTML.
+
+| Field | Value |
+|-------|-------|
+| Variable | `{{POST_COPY_TEXT}}` |
+| Type | String |
+| Source | The drafted post copy from Phase 2/3, all platform variants joined with `\n---\n` |
+| Escaping | **Textarea-safe** — apply in this order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;` |
+
+### Escaping note
+
+Content placed inside `<textarea>` is parsed as HTML character data — the browser decodes HTML entities and displays the raw text to the user. Apply the same `&amp;` → `&lt;` → `&gt;` escaping as for other inline text values. Do **not** escape `"` (only needed in attribute values, not textarea content).
+
+### Format example
+
+```
+**LinkedIn** (1,500 chars)
+Here's what changed in auth.ts — we replaced the entire token validation
+loop with a single Map lookup. Faster, cleaner, testable.
+
+🔗 github.com/owner/repo/pull/42
+#DevTips #TypeScript
+---
+**Twitter/X** (280 chars)
+Cleaner auth in one refactor → Map lookup replaces nested loop.
+Before: O(n). After: O(1). github.com/owner/repo/pull/42
+---
+**Bluesky** (300 chars)
+Just refactored auth.ts in owner/repo — swapped the token loop for a Map.
+One of those changes that makes you wonder why it wasn't always this way.
+github.com/owner/repo/pull/42
+```

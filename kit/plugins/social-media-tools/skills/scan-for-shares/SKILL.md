@@ -90,6 +90,26 @@ Candidates that were BLOCKED are excluded from the digest entirely. WARN candida
 
 ---
 
+## Step 4b — Cross-reference Media Library
+
+Before building digest entries, check `docs/media/social/` for already-saved posts that match each candidate. This prevents surfacing content that has already been shared.
+
+```bash
+MEDIA_DIR="${PWD}/docs/media/social"
+```
+
+For each candidate:
+- **History mode**: slugify the commit subject (`tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g'`) and check if any file in `$MEDIA_DIR` contains those tokens: `ls "$MEDIA_DIR" 2>/dev/null | grep -i "<slug-tokens>"`
+- **Codebase mode**: slugify the filename and do the same check
+
+If a match is found, mark the candidate with `SAVED=true` and the matching file path `SAVED_PATH`.
+
+In background mode (`--background`): auto-skip SAVED candidates (exclude them from the digest entirely; they are already shared).
+
+In interactive mode: include SAVED candidates but tag them with `[SAVED]` in the review gate options and in the digest output.
+
+---
+
 ## Step 5 — Build digest entries
 
 For each surviving candidate, build a structured entry using the card-type decision tree and platform heuristics from `references/interesting-patterns.md`:
@@ -103,6 +123,7 @@ For each surviving candidate, build a structured entry using the card-type decis
 - **Summary:** <one sentence describing what makes this shareable>
 - **Key change / highlight:** <the most interesting line or pattern>
 - **Security:** PASS ✓ (or ⚠ WARN — <reason>)
+- **Already saved:** [SAVED: `docs/media/social/{filename}`] (omit this line if not saved)
 - **code-share prompt:**
   ```
   /code-share:code-share <card-type> for <platform>: <description>

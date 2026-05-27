@@ -12,6 +12,7 @@
     {{STAT_ADD}}          — Integer: lines added
     {{STAT_DEL}}          — Integer: lines removed
     {{WORKFLOW_SUMMARY}}  — One-line footer summary
+  {{POST_COPY_TEXT}}    — Drafted social media post (all platforms, joined with \n---\n); escape & → &amp; < → &lt; > → &gt;
 
   Row format:
     <tr class="add"><td class="ln">+</td><td class="code">  line content</td></tr>
@@ -53,6 +54,7 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 32px;
@@ -182,6 +184,50 @@
       color: var(--muted);
       font-style: italic;
     }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: 760px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
   </style>
 </head>
 <body>
@@ -207,6 +253,24 @@
       </div>
       <span class="summary">{{WORKFLOW_SUMMARY}}</span>
     </div>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">{{POST_COPY_TEXT}}</textarea>
+    <button class="copy-btn" onclick="
+      var t = document.getElementById('post-copy'), btn = this;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(t.value).then(function() {
+          btn.textContent = 'Copied ✓';
+          setTimeout(function() { btn.textContent = 'Copy post'; }, 2000);
+        });
+      } else {
+        t.select();
+        document.execCommand('copy');
+        btn.textContent = 'Copied ✓';
+        setTimeout(function() { btn.textContent = 'Copy post'; }, 2000);
+      }
+    ">Copy post</button>
   </div>
 </body>
 </html>
