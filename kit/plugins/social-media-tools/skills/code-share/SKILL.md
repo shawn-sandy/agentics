@@ -12,22 +12,42 @@ Draft platform-aware social media copy and generate a styled dark-mode card imag
 
 | Phase | Action |
 |-------|--------|
-| 1 — Clarify | Auto-detect from git; ask platform + tone (context found) or all three inputs (no context) |
-| 1c — Reuse check | Scan `docs/media/social/` for existing posts of the same type; offer reuse |
-| 2 — Draft | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
+| 0 — Locate | Locate `templates/` and derive `PLUGIN_DIR` |
+| 1 — Clarify | Auto-detect from git; ask platform + tone |
+| 1c — Reuse check | Scan `docs/media/social/` for existing posts; offer reuse |
+| 2 — Draft | Write platform-aware copy |
 | 3 — Pick template | diff → diff-card, feature → feature-card, insight → quote-card |
-| 4 — Populate | Read template, substitute `{{VARIABLES}}` including `{{COPY_PANELS}}` (one panel, or three for All sites) |
-| 4b — Save | Write HTML to `docs/media/social/{type}-{slug}-{date}.html` |
-| 5 — Screenshot | Serve HTML locally, Playwright screenshot to PNG |
-| 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
+| 4 — Populate | Read template, substitute `{{VARIABLES}}` including `{{COPY_PANELS}}` |
+| 4b — Save | Persistent save to `docs/media/social/` |
+| 5 — Screenshot | Serve HTML locally, Playwright screenshot |
+| 6 — Deliver | Present copy + attach PNG + show saved path |
+
+---
+
+## Phase 0 — Locate Plugin Assets
+
+Run silently:
+
+```bash
+ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
+  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
+find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+```
+
+Use the first non-empty result as `TEMPLATES_DIR`. Derive:
+
+```bash
+PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
+```
+
+If no directory is found: output "Templates not found. Install the plugin or load it with `--plugin-dir`." and **STOP**.
 
 ---
 
 ## Phase 1 — Clarify
 
-### Step 1a — Auto-detect content context
-
-Run these commands silently before asking the user anything:
+Run silently:
 
 ```bash
 git diff HEAD~1 --stat 2>/dev/null | head -20
@@ -35,113 +55,61 @@ git log --oneline -5 2>/dev/null
 head -30 CHANGELOG.md 2>/dev/null
 ```
 
-Use the results to pre-populate inputs:
 - Non-empty diff stat → auto-select `diff-card`
 - Commit with `feat:` prefix or version bump → auto-select `feature-card`
-- If context is found, summarise it in one sentence, then only ask for **platform** and **tone**
-- If no context is found, ask for all three inputs
-
-### Step 1b — Collect remaining inputs
-
-Use `AskUserQuestion` to collect whatever Step 1a did not resolve. Batch all questions in a single call.
+- Context found: summarise in one sentence, ask only **platform** and **tone**
+- No context: ask all three inputs via `AskUserQuestion`
 
 ---
 
 ## Phase 1c — Reuse Check
 
-After collecting inputs (card type is now known), check for existing saved posts before generating anything new.
-
 ```bash
-MEDIA_DIR="${PWD}/docs/media/social"
-# Replace {card-type} with the detected type: diff, feature, or quote
-existing=$(ls "$MEDIA_DIR"/{card-type}-*.html 2>/dev/null | sort -r | head -5)
+FILE_PREFIX=<detected-card-type>   # diff, feature, or quote
 ```
 
-If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
-> "Found existing {card-type} post(s). Reuse one or generate a new one?"
-> Options: "Reuse existing" (list filenames) | "Generate new"
-
-If user picks **reuse**:
-1. Read the chosen file
-2. Extract the post text from every `<textarea class="post-copy-text">…</textarea>` in the HTML — one for a single-site card, three for an All-sites card
-3. Present each extracted text in a fenced code block labeled with its preceding `copy-label` (platform)
-4. Tell the user: "Saved HTML is at `{path}` — open in a browser to view the card and copy the post."
-5. **STOP.** Do not generate a new card.
-
-Required inputs:
-- **Platform**: LinkedIn, Twitter/X, Bluesky, or **All sites** (draft and embed all three)
-- **Content type** (only if not auto-detected above):
-  - Diff / rule change / config update → `diff-card`
-  - Release / feature announcement / version bump → `feature-card`
-  - Insight / opinion / quote / thought leadership → `quote-card`
-- **Tone**: Professional (default for LinkedIn), Casual, Punchy (default for Twitter/X and Bluesky)
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ---
 
 ## Phase 2 — Draft Copy
 
-| Platform | Max Length | Style |
-|----------|-----------|-------|
-| LinkedIn | 1,500 chars | Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags at end |
-| Twitter/X | 280 chars | One punchy sentence or a tight two-liner; no hashtag bloat |
-| Bluesky | 300 chars | Conversational, same brevity as Twitter |
+For character limits and tone defaults, read `$PLUGIN_DIR/references/platforms.md`.
 
-Draft all three platform variants in the chosen tone (each respecting its own length/style above). Present the drafted copy to the user in a fenced code block labeled with the platform name before proceeding.
+- **LinkedIn**: Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags at end
+- **Twitter/X**: One punchy sentence or a tight two-liner; no hashtag bloat
+- **Bluesky**: Conversational, same brevity as Twitter
 
-- **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW` — Phase 4 puts it in one copy panel (unchanged behavior).
-- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) — Phase 4 builds one copy panel per platform.
+Draft all three platform variants in the chosen tone. Present the drafted copy in a fenced code block labeled with the platform name.
+
+- **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW`
+- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
 
 ---
 
-## Phase 3 — Pick Template and Locate It
-
-Select the card template:
+## Phase 3 — Pick Template
 
 - `diff-card.html` — code changes, rule updates, config diffs, PR descriptions
 - `feature-card.html` — releases, new features, version announcements, changelogs
 - `quote-card.html` — insights, opinions, pull quotes, thought leadership
 
-Locate the `templates/` directory — try paths in order, stop at first hit:
-
 ```bash
-# 1. Local dev checkout
-ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
-  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
-
-# 2. Claude Code plugin install dir
-find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
-
-# 3. Plugin cache dir (marketplace install)
-find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+CARD_TYPE=<chosen>          # diff, feature, or quote
+TEMPLATE_FILE=$TEMPLATES_DIR/${CARD_TYPE}-card.html
+TEMP_HTML=code-share-card.html
+FILE_PREFIX=$CARD_TYPE
+SLUG_INPUT=<commit subject, filename, or feature title>
 ```
-
-Use the first non-empty result as `TEMPLATES_DIR`. Set the chosen template path as `TEMPLATE_FILE=$TEMPLATES_DIR/<chosen>-card.html`.
-
-If no directory is found, output: "Templates not found. Install the plugin or load it with `--plugin-dir`." and **STOP**.
 
 ---
 
 ## Phase 4 — Populate Template
 
-Read `TEMPLATE_FILE`. Replace every `{{VARIABLE}}` placeholder with content derived from the user's context and the Phase 2 copy.
+Read `TEMPLATE_FILE`. For variable reference, read `$PLUGIN_DIR/references/variables.md`.
 
-For variable reference, read: `references/variables.md` (adjacent to this SKILL.md).
+For `{{COPY_PANELS}}` markup and escaping rules, read `$PLUGIN_DIR/references/copy-panels.md`.
 
-### Substitute `{{COPY_PANELS}}`
-
-Build the copy panel HTML and substitute it for `{{COPY_PANELS}}`. Escape each platform's copy (textarea-safe, in order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`) before placing it in a textarea. The template already defines the shared `copyPost(id, btn)` function — do not re-add it. Exact markup: `references/variables.md`.
-
-- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
-  ```html
-  <div class="copy-panel">
-    <p class="copy-label">Social media post</p>
-    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
-    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-  </div>
-  ```
-- **All sites** — three panels with ids `post-copy-linkedin`, `post-copy-twitter`, `post-copy-bluesky`, each labeled and holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
-
-After substitution, write the populated HTML to `~/.claude/tmp/code-share-card.html`:
+Write the populated HTML to `~/.claude/tmp/code-share-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp
@@ -151,82 +119,18 @@ mkdir -p ~/.claude/tmp
 
 ## Phase 4b — Persistent Save
 
-After writing to `~/.claude/tmp/`, save the same populated HTML to `docs/media/social/`:
+Variables set in Phase 3: `FILE_PREFIX`, `SLUG_INPUT`, `TEMP_HTML`.
 
-```bash
-MEDIA_DIR="${PWD}/docs/media/social"
-mkdir -p "$MEDIA_DIR"
-
-# Build slug from the primary subject (filename, commit subject, or feature title)
-# Lowercase, replace non-alphanumeric with hyphens, collapse and trim, max 40 chars
-SLUG=$(echo "$PRIMARY_SUBJECT" | tr '[:upper:]' '[:lower:]' | \
-       sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//;s/-$//' | cut -c1-40)
-DATE=$(date +%Y-%m-%d)
-CARD_TYPE="<chosen-type>"  # diff, feature, or quote
-
-SAVE_PATH="$MEDIA_DIR/${CARD_TYPE}-${SLUG}-${DATE}.html"
-# Write the same populated HTML to $SAVE_PATH using the Write tool
-```
-
-The saved HTML file is identical to the `~/.claude/tmp/` version — it includes the copy panel with the full post text.
+Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Persistent Save** section.
 
 ---
 
 ## Phase 5 — Screenshot
 
-### 5a — Get a free port
-
-Derive `PLUGIN_DIR` from `TEMPLATES_DIR` (set in Phase 3), then run the helper:
-
-```bash
-PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
-python3 "$PLUGIN_DIR/scripts/find_free_port.py"
-```
-
-Capture the printed integer as `$PORT`.
-
-### 5b — Start HTTP server and capture PID
-
-Run as a single compound command so `$!` is in scope:
-
-```bash
-cd ~/.claude/tmp && python3 -m http.server $PORT & SERVER_PID=$!; echo "PID:$SERVER_PID"
-```
-
-Parse the `PID:N` line to capture `SERVER_PID`.
-
-### 5c — Playwright screenshot
-
-Load tools via ToolSearch:
-```
-select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for
-```
-
-Then:
-1. Navigate to `http://localhost:$PORT/code-share-card.html`
-2. Wait for `networkidle` or 2000ms
-3. Call `browser_take_screenshot` with `path: ~/.claude/tmp/code-share-card.png` to write directly to disk
-
-### 5d — Kill server
-
-```bash
-kill $SERVER_PID 2>/dev/null || true
-```
-
-### 5e — Fallback
-
-If Playwright tools are unavailable or the screenshot fails, tell the user:
-> "Screenshot could not be generated. The populated HTML is at `~/.claude/tmp/code-share-card.html` — open it in a browser to screenshot manually."
+Read `$PLUGIN_DIR/references/rendering-pipeline.md` and follow the full pipeline.
 
 ---
 
 ## Phase 6 — Deliver
 
-1. **Platform label** as a markdown heading (e.g., `## LinkedIn Copy`). For **All sites**, use `## Copy — all sites` with three labeled sub-blocks (LinkedIn, Twitter/X, Bluesky).
-2. Copy in a fenced code block — one block per platform for All sites
-3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300)
-4. Attach `~/.claude/tmp/code-share-card.png` via `SendUserFile` (if screenshot succeeded)
-5. Saved HTML path: `docs/media/social/{card-type}-{slug}-{date}.html`
-6. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
-
-**STOP.** Do not run further git commands, open browsers, or take any action beyond delivering the copy and card image.
+Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Deliver** section.

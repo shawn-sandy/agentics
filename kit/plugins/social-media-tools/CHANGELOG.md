@@ -1,5 +1,27 @@
 # Changelog — social-media-tools
 
+## v0.7.0 — 2026-05-27
+
+Extracted shared card-pipeline logic into a plugin-root `references/` folder;
+added reuse check to `project-share`.
+
+- New `references/` folder at plugin root with 6 shared files: `rendering-pipeline.md`,
+  `reuse-check.md`, `saving-and-delivery.md`, `copy-panels.md`, `variables.md`,
+  `platforms.md` — each replacing inline duplicates across all 5 card skills
+- All 5 card-generating skills (`code-share`, `blog-share`, `video-share`,
+  `github-code-share`, `project-share`) rewritten to add **Phase 0: Locate plugin assets**
+  and replace duplicated pipeline/save/deliver/reuse/COPY_PANELS/platform-table blocks
+  with one-line pointers to `$PLUGIN_DIR/references/*.md`
+- `project-share` gains a Phase 1c reuse check (was the only card skill lacking one);
+  wired to the shared `references/reuse-check.md` with `FILE_PREFIX=project`
+- `references/copy-panels.md` replaces the `## COPY_PANELS` section that was mislocated
+  in `skills/code-share/references/variables.md`; per-template variable maps relocated to
+  `references/variables.md` (the old `code-share/references/variables.md` now just points
+  to the new locations)
+- `blog-share/references/platforms.md` and `video-share/references/platforms.md` trimmed
+  to skill-specific copy formats and examples; canonical limits now in `references/platforms.md`
+- No cross-skill `../code-share/references/` pointers remain
+
 ## v0.6.0 — 2026-05-27
 
 Added an "All sites" platform option that embeds an individually copyable post snippet per social site in the generated card.

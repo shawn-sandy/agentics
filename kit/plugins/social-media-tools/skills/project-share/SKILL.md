@@ -6,13 +6,17 @@ allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, SendU
 
 # project-share
 
-Generate social media copy and a styled dark-mode card image for a project based on a topic — features, bugs, changes, or release. Extracts project metadata and topic-relevant content from git history, CHANGELOG, README, and manifest files.
+Generate social media copy and a styled dark-mode card image for a project based on a
+topic — features, bugs, changes, or release. Extracts project metadata and topic-relevant
+content from git history, CHANGELOG, README, and manifest files.
 
 ## Quick Reference
 
 | Phase | Action |
 |-------|--------|
+| 0 — Locate | Locate `templates/` and derive `PLUGIN_DIR` |
 | 1 — Inputs | Parse topic, platform, path from `$ARGUMENTS`; ask for missing ones |
+| 1c — Reuse check | Scan `docs/media/social/` for existing project posts; offer reuse |
 | 2 — Metadata | Extract project name, version, description from manifest files |
 | 3 — Content | Extract topic-relevant commits, changelog entries, README sections |
 | 4 — Scrub | Security-scrub extracted content via `security-scrub` skill |
@@ -22,23 +26,53 @@ Generate social media copy and a styled dark-mode card image for a project based
 
 ---
 
+## Phase 0 — Locate Plugin Assets
+
+Run silently:
+
+```bash
+ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
+  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
+find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+```
+
+Use the first non-empty result as `TEMPLATES_DIR`. Derive:
+
+```bash
+PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
+```
+
+If not found: output "Templates not found. Install the plugin or load it with `--plugin-dir`." and **STOP**.
+
+---
+
 ## Phase 1 — Parse Inputs
 
 Parse `$ARGUMENTS`:
 
 - `--topic <value>` — one of: `features`, `bugs`, `changes`, `release` (required)
-- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` (required; ask if absent — "All sites" drafts and embeds all three)
+- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` (required)
 - `--path <dir>` — project root to analyze (default: `$PWD`)
 - `--days=N` — how far back to look in git history (default: `30`)
 
 If `--topic` is missing, use `AskUserQuestion`:
 > "What would you like to share about this project?"
-> Options: `features` (new capabilities added), `bugs` (resolved issues), `changes` (what changed recently), `release` (version announcement)
+> Options: `features`, `bugs`, `changes`, `release`
 
 If `--platform` is missing, ask it in the **same** `AskUserQuestion` call.
 
-Set `PATH_ROOT` = `--path` value, or `$PWD` if omitted.
-Set `DAYS` = `--days` value, or `30` if omitted.
+Set `PATH_ROOT` = `--path` value or `$PWD`. Set `DAYS` = `--days` value or `30`.
+
+---
+
+## Phase 1c — Reuse Check
+
+```bash
+FILE_PREFIX=project
+```
+
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ---
 
@@ -46,159 +80,101 @@ Set `DAYS` = `--days` value, or `30` if omitted.
 
 From `$PATH_ROOT`, extract `PROJECT_NAME`, `PROJECT_VERSION`, and `PROJECT_DESCRIPTION`.
 
-Try these files in order; stop at the first successful match for each field:
-
 ```bash
-# Node.js
 cat "$PATH_ROOT/package.json" 2>/dev/null | grep -E '"name"|"version"|"description"' | head -3
-
-# Python
 cat "$PATH_ROOT/pyproject.toml" 2>/dev/null | grep -E '^name |^version |^description ' | head -3
 cat "$PATH_ROOT/setup.cfg" 2>/dev/null | grep -E '^name|^version' | head -2
-
-# Rust
 cat "$PATH_ROOT/Cargo.toml" 2>/dev/null | grep -E '^name|^version|^description' | head -3
-
-# Go
 head -3 "$PATH_ROOT/go.mod" 2>/dev/null
 ```
 
-If no manifest provides a name, use the last path segment of `$PATH_ROOT` as `PROJECT_NAME`.
-If no manifest provides a version, use `"latest"` as `PROJECT_VERSION`.
-If no description found in manifests, read the first non-heading, non-empty paragraph from `README.md` as `PROJECT_DESCRIPTION`.
+Fallbacks: no name → last segment of `$PATH_ROOT`; no version → `"latest"`; no description → first paragraph of `README.md`.
 
 ---
 
 ## Phase 3 — Extract Topic Content
 
-Read `references/topics.md` (adjacent to this SKILL.md) for the full extraction patterns and card-type assignments.
+Read `references/topics.md` for full extraction patterns and card-type assignments.
 
 ### features
-
 ```bash
-git -C "$PATH_ROOT" log --oneline --after="${DAYS} days ago" \
-    --format="%s" 2>/dev/null | grep -iE "^feat(\(|:)" | head -10
-
+git -C "$PATH_ROOT" log --oneline --after="${DAYS} days ago" --format="%s" 2>/dev/null | grep -iE "^feat(\(|:)" | head -10
 grep -A 20 "^## Features\|^### Features" "$PATH_ROOT/README.md" 2>/dev/null | head -20
 head -80 "$PATH_ROOT/CHANGELOG.md" 2>/dev/null
 ```
-
-Card template: `feature-card.html` — Badge: `New Features`
+Card: `feature-card.html` — Badge: `New Features`
 
 ### bugs
-
 ```bash
-git -C "$PATH_ROOT" log --oneline --after="${DAYS} days ago" \
-    --format="%s" 2>/dev/null | grep -iE "^fix(\(|:)" | head -10
-
+git -C "$PATH_ROOT" log --oneline --after="${DAYS} days ago" --format="%s" 2>/dev/null | grep -iE "^fix(\(|:)" | head -10
 head -80 "$PATH_ROOT/CHANGELOG.md" 2>/dev/null
 ```
-
-Card template: `diff-card.html` — Badge: `Bug Fix`
+Card: `diff-card.html` — Badge: `Bug Fix`
 
 ### changes
-
 ```bash
-git -C "$PATH_ROOT" log --oneline --after="7 days ago" \
-    --format="%s" 2>/dev/null | head -15
-
+git -C "$PATH_ROOT" log --oneline --after="7 days ago" --format="%s" 2>/dev/null | head -15
 git -C "$PATH_ROOT" diff --stat HEAD~5..HEAD 2>/dev/null | head -20
 head -80 "$PATH_ROOT/CHANGELOG.md" 2>/dev/null
 ```
-
-Card template: `diff-card.html` — Badge: `What's Changed`
+Card: `diff-card.html` — Badge: `What's Changed`
 
 ### release
-
 ```bash
 git -C "$PATH_ROOT" tag --sort=-version:refname 2>/dev/null | head -1
 head -60 "$PATH_ROOT/CHANGELOG.md" 2>/dev/null
 ```
+Card: `feature-card.html` — Badge: `v$PROJECT_VERSION` (or latest git tag if different)
 
-Card template: `feature-card.html` — Badge: `v$PROJECT_VERSION` (or latest git tag if different)
-
-If no release data found (no tags, no CHANGELOG, no version field), inform the user and STOP.
+If no release data found, inform the user and STOP.
 
 ---
 
 ## Phase 4 — Security Scrub
 
-Combine the extracted content from Phase 3 into a single string. Invoke the `security-scrub` skill on it.
+Combine extracted content and invoke `security-scrub`:
 
-- `SCRUB RESULT: BLOCKED` → inform the user, show the masked content, and STOP.
-- `SCRUB RESULT: WARN` → continue, but label the output with `⚠ WARN — <reason>`.
+- `SCRUB RESULT: BLOCKED` → show masked content, STOP.
+- `SCRUB RESULT: WARN` → continue with `⚠ WARN — <reason>` label.
 
 ---
 
 ## Phase 5 — Draft Copy
 
-Use the extracted content and tone guide from `references/topics.md` to write platform-aware copy.
-
-| Platform | Max Length | Style |
-|----------|-----------|-------|
-| LinkedIn | 1,500 chars | Story arc (hook → what changed → why it matters → CTA); 2–4 hashtags at end |
-| Twitter/X | 280 chars | One punchy line; lead with the most impactful item |
-| Bluesky | 300 chars | Conversational; same brevity as Twitter/X |
+For character limits and tone defaults, read `$PLUGIN_DIR/references/platforms.md`.
+For per-topic tone guide, read `references/topics.md`.
 
 **Copy structure by topic:**
+- `features`: Hook with the top feature. LinkedIn: story arc. Short: strongest feature + emoji.
+- `bugs`: Lead with pain point fixed. LinkedIn: problem → solution → impact. Short: `#bugfix: [broken] → [fixed]`.
+- `changes`: Lead with most significant change. LinkedIn: what changed + why. Short: top 2 changes.
+- `release`: Lead with version + headline. LinkedIn: full highlights. Short: `🚀 [name] v[N] — [tagline]`.
 
-- `features`: Hook with the top feature. LinkedIn: story arc. Short platforms: strongest feature + emoji.
-- `bugs`: Lead with the pain point fixed. LinkedIn: problem → solution → impact. Short: `#bugfix: [broken] → [fixed]`.
-- `changes`: Lead with the most significant change. LinkedIn: what changed + why. Short: top 2 changes.
-- `release`: Lead with version number + headline. LinkedIn: full highlights. Short: `🚀 [name] v[N] is out — [tagline]`.
+Present drafted copy in a fenced code block labeled with the platform name.
 
-Present the drafted copy in a fenced code block labeled with the platform name.
-
-Draft all three platform variants in the chosen tone. **Single site:** store them joined with `\n---\n` as `POST_COPY_TEXT_RAW` (→ one copy panel). **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) for one panel per platform.
+- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
+- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
 
 ---
 
 ## Phase 6 — Generate Card
 
-### 6a — Locate templates
+### 6a — Variable assignments
 
-```bash
-# 1. Local dev checkout
-ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
-  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
+Set before populating:
 
-# 2. Claude Code plugin install dir
-find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
-
-# 3. Plugin cache dir (marketplace install)
-find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
-```
-
-Use the first non-empty result as `TEMPLATES_DIR`. Set `PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")`.
-
-If not found: output "Templates not found. Install the plugin or load it with `--plugin-dir`." and STOP.
-
-### 6b — Populate template
-
-Build the `{{COPY_PANELS}}` HTML — escape each platform's copy (textarea-safe: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`). The template defines the shared `copyPost(id, btn)` function; do not re-add it. Full reference: `../code-share/references/variables.md`.
-
-- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
-  ```html
-  <div class="copy-panel">
-    <p class="copy-label">Social media post</p>
-    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
-    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-  </div>
-  ```
-- **All sites** — three of the above with ids `post-copy-linkedin`/`post-copy-twitter`/`post-copy-bluesky`, labels `LinkedIn`/`Twitter/X`/`Bluesky`, each holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
-
-**feature-card.html variables:**
+**feature-card.html** (topics: features, release):
 
 | Variable | Value |
 |----------|-------|
-| `{{TITLE}}` | `$PROJECT_NAME — [topic headline]` (e.g. "my-app — New Features") |
+| `{{TITLE}}` | `$PROJECT_NAME — [topic headline]` |
 | `{{SUBTITLE}}` | `$PROJECT_DESCRIPTION` (one sentence) |
 | `{{BADGE}}` | Badge text from Phase 3 |
-| `{{BULLETS}}` | Top 3–5 items as `<li>text</li>` elements |
+| `{{BULLETS}}` | Top 3–5 items as `<li>text</li>` |
 | `{{FOOTER_NOTE}}` | Repo URL or `$PATH_ROOT` |
-| `{{COPY_PANELS}}` | Copy panel HTML (one panel, or three for All sites — see 6b) |
+| `{{COPY_PANELS}}` | See `$PLUGIN_DIR/references/copy-panels.md` |
 
-**diff-card.html variables:**
+**diff-card.html** (topics: bugs, changes):
 
 | Variable | Value |
 |----------|-------|
@@ -211,44 +187,31 @@ Build the `{{COPY_PANELS}}` HTML — escape each platform's copy (textarea-safe:
 | `{{STAT_ADD}}` | Count of items |
 | `{{STAT_DEL}}` | `0` |
 | `{{WORKFLOW_SUMMARY}}` | `Last $DAYS days · $PROJECT_NAME` |
-| `{{COPY_PANELS}}` | Copy panel HTML (one panel, or three for All sites — see 6b) |
+| `{{COPY_PANELS}}` | See `$PLUGIN_DIR/references/copy-panels.md` |
 
-### 6c — Save
+### 6b — Populate and write
+
+For `{{COPY_PANELS}}` markup and escaping, read `$PLUGIN_DIR/references/copy-panels.md`.
+
+Write the populated HTML to `~/.claude/tmp/project-share-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp
-MEDIA_DIR="${PWD}/docs/media/social"
-mkdir -p "$MEDIA_DIR"
-
-SLUG=$(echo "$PROJECT_NAME-$TOPIC" | tr '[:upper:]' '[:lower:]' | \
-       sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//;s/-$//' | cut -c1-40)
-DATE=$(date +%Y-%m-%d)
-SAVE_PATH="$MEDIA_DIR/project-${SLUG}-${DATE}.html"
+TEMP_HTML=project-share-card.html
+FILE_PREFIX=project
+SLUG_INPUT=$PROJECT_NAME-$TOPIC
 ```
 
-Write the populated HTML to `~/.claude/tmp/project-share-card.html` and to `$SAVE_PATH`.
+### 6c — Persistent Save
+
+Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Persistent Save** section.
 
 ### 6d — Screenshot
 
-1. Get free port: `python3 "$PLUGIN_DIR/scripts/find_free_port.py"` → `$PORT`
-2. Start server: `cd ~/.claude/tmp && python3 -m http.server $PORT & SERVER_PID=$!; echo "PID:$SERVER_PID"`
-3. Load Playwright via ToolSearch: `select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for`
-4. Navigate to `http://localhost:$PORT/project-share-card.html`
-5. Wait `networkidle` or 2000ms, then screenshot to `~/.claude/tmp/project-share-card.png`
-6. Kill server: `kill $SERVER_PID 2>/dev/null || true`
-
-Fallback: if Playwright is unavailable, tell the user:
-> "Screenshot could not be generated. The populated HTML is at `~/.claude/tmp/project-share-card.html` — open it in a browser to screenshot manually."
+Read `$PLUGIN_DIR/references/rendering-pipeline.md` and follow the full pipeline.
 
 ---
 
 ## Phase 7 — Deliver
 
-1. **Platform label** as a markdown heading (e.g., `## LinkedIn Copy`). For **All sites**, use `## Copy — all sites` with three labeled sub-blocks.
-2. Copy in a fenced code block — one block per platform for All sites
-3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300)
-4. Attach `~/.claude/tmp/project-share-card.png` via `SendUserFile` (if screenshot succeeded)
-5. Saved path: `docs/media/social/project-{slug}-{date}.html`
-6. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
-
-**STOP.** Do not run further git commands, open browsers, or take any action beyond delivering the copy and card.
+Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Deliver** section.

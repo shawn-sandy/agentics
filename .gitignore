@@ -47,3 +47,10 @@ temp/
 The-Complete-Guide-to-Building-Skill-for-Claude.pdf
 tests/sandbox/.gitkeep
 examples/
+
+# Playwright MCP session files
+.playwright-mcp/
+
+# Social card smoke-test and preview artifacts
+docs/media/social/*-smoke-test-*
+docs/media/social/gap-preview-*
