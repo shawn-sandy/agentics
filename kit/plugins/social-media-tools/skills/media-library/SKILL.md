@@ -96,14 +96,14 @@ Ask the user which number they want (or accept a filename). Then:
 
 ### Open in browser
 
-Tell the user:
-> "Open this file in your browser to view the card and use the **Copy post** button:
-> `{absolute_path_to_file}`"
+Resolve the absolute path and open it in the user's default browser:
 
-Use `Bash` to resolve the absolute path if needed:
 ```bash
-realpath "docs/media/social/{filename}.html" 2>/dev/null || echo "${PWD}/docs/media/social/{filename}.html"
+ABS_PATH=$(realpath "docs/media/social/{filename}.html" 2>/dev/null || echo "${PWD}/docs/media/social/{filename}.html")
+open "$ABS_PATH" 2>/dev/null || xdg-open "$ABS_PATH" 2>/dev/null || true
 ```
+
+Tell the user: "Opened `{abs_path}` in your browser."
 
 ---
 

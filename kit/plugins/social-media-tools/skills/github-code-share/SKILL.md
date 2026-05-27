@@ -235,6 +235,9 @@ SAVE_PATH="$MEDIA_DIR/snippet-${SLUG}-${DATE}.html"
 2. Copy in fenced code block with character count `[NNN / max]` — one block per platform for All sites (1,500 / 280 / 300)
 3. Attach `~/.claude/tmp/github-code-share-card.png` via `SendUserFile`
 4. Saved HTML path: `docs/media/social/snippet-{slug}-{date}.html`
-5. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
+5. Open the saved HTML in the user's default browser:
+   ```bash
+   open "$SAVE_PATH" 2>/dev/null || xdg-open "$SAVE_PATH" 2>/dev/null || true
+   ```
 
 **STOP.**

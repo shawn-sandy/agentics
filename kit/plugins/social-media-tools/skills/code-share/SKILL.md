@@ -227,6 +227,9 @@ If Playwright tools are unavailable or the screenshot fails, tell the user:
 3. Character count `[NNN / max chars]` per block — warn if over limit (1,500 / 280 / 300)
 4. Attach `~/.claude/tmp/code-share-card.png` via `SendUserFile` (if screenshot succeeded)
 5. Saved HTML path: `docs/media/social/{card-type}-{slug}-{date}.html`
-6. Note: "Open the saved HTML in a browser to view the card and use the **Copy** button(s)."
+6. Open the saved HTML in the user's default browser:
+   ```bash
+   open "$SAVE_PATH" 2>/dev/null || xdg-open "$SAVE_PATH" 2>/dev/null || true
+   ```
 
 **STOP.** Do not run further git commands, open browsers, or take any action beyond delivering the copy and card image.
