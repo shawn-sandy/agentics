@@ -4,6 +4,25 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-05-27
+
+### Added
+
+- **Three-part description format** — `optimizing-skill-frontmatter` now produces descriptions with three components: short description (≤80 chars), capability sentence, and trigger phrase. The short description is always Sentence 1 so it survives aggressive budget truncation (~100 skills installed).
+- **Rule 1 updated** — length target changed from ≤160 chars to ≤256 chars total; new sub-constraint of ≤80 chars for the first sentence (short description).
+- **Rule 2 updated** — three-part format replaces two-sentence format. Fixed order: short description → capability → trigger.
+- **Rule 2b extended** — generates missing short description by compressing the first `## Overview` sentence to ≤80 chars and prepending as Sentence 1. All three missing-component cases now handled independently.
+- **Step 2 skip rule updated** — SKIP requires all three components present, total ≤256, and short description ≤80 chars. Any missing component or length violation triggers REWRITE.
+- **Step 5 verification updated** — now measures first sentence length separately in addition to total length; flags both total-only and short-only violations.
+- **Budget advisory table updated** — new ≤31 skills / ~256 chars row; ~100 skills / ~80 chars row explains short-description survival guarantee.
+
+### Changed
+
+- `optimizing-skill-frontmatter` frontmatter `description:` updated to three-part format (188 chars; short description = 38 chars).
+- Overview and "Why 160 chars?" section renamed to "Why three-part format?" with updated budget math.
+- `plugin-patterns.md` Skill Description Format bullet updated to document three-part format and ≤256-char total budget.
+- `marketplace.json` description updated to reference three-part 256-char format.
+
 ## [2.1.0] - 2026-05-26
 
 ### Added
