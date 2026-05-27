@@ -1,6 +1,8 @@
-# Video Share — Platform Formatting Rules & API Reference
+# Video Share — Platform Copy Formats & API Reference
 
-Read this file in Phase 2 (API endpoints) and Phase 3 (copy formats).
+Read in Phase 2 (API endpoints) and Phase 3 (copy format + examples).
+For canonical character limits and universal copy rules, see
+`$PLUGIN_DIR/references/platforms.md`.
 
 ---
 
@@ -17,23 +19,17 @@ Read this file in Phase 2 (API endpoints) and Phase 3 (copy formats).
 
 ---
 
-## Platform Formatting Rules
+## Copy Format — LinkedIn
 
-### LinkedIn
-
-**Max:** 1,500 characters  
-**Tone default:** Professional  
 **Structure:** Why-watch narrative → key insight → explicit CTA → hashtags
 
 ```
-[Hook that names the video and the channel — one sentence. Ideally names the
-specific problem the video solves or the insight it delivers.]
+[Hook that names the video and the channel — one sentence.]
 
-[Two to three sentences explaining who made it, what problem it covers, and why
-it's worth watching right now.]
+[Two to three sentences on who made it, what problem it covers, and why it's worth
+watching right now.]
 
-Key insight: [The most concrete or surprising thing you learned from the description
-or your knowledge of the topic — one to two sentences.]
+Key insight: [The most concrete or surprising thing you learned — one to two sentences.]
 
 Watch here ▶ [URL]
 
@@ -47,8 +43,7 @@ Cassidy Williams just dropped a 20-minute breakdown of how she structures Claude
 projects — and it's the most practical take I've seen.
 
 She walks through her actual CLAUDE.md files, how she layers context for different
-project types, and why she stopped putting documentation in the prompt. If you've
-ever wondered what "context engineering" looks like in practice, this is it.
+project types, and why she stopped putting documentation in the prompt.
 
 Key insight: treating CLAUDE.md as a living document — edited after each session
 based on what Claude got wrong — is a fundamentally different mindset than "write
@@ -61,21 +56,17 @@ Watch here ▶ https://youtu.be/example
 
 ---
 
-### Twitter / X
+## Copy Format — Twitter/X
 
-**Max:** 280 characters  
-**Tone default:** Punchy  
 **Structure:** Hook + "Watch ▶ [URL]"
 
 ```
-[One punchy sentence naming the video or its key insight — make someone want to
-click. Name the creator if well-known.] Watch ▶ [URL]
+[One punchy sentence naming the video or its key insight.] Watch ▶ [URL]
 ```
 
 **Rules:**
 - Lead with the insight or the creator, not "Great video by…"
-- URL counts as 23 characters
-- The ▶ symbol is 1 character and reads well on all platforms
+- The ▶ symbol is 1 character
 - Hashtags optional; if used, 1 max
 
 **Example:**
@@ -87,10 +78,8 @@ doc you edit after each session. This changed how I think about context. Watch �
 
 ---
 
-### Bluesky
+## Copy Format — Bluesky
 
-**Max:** 300 characters  
-**Tone default:** Conversational  
 **Structure:** Quick take + link
 
 ```
@@ -100,7 +89,7 @@ doc you edit after each session. This changed how I think about context. Watch �
 **Rules:**
 - Name the creator — Bluesky culture values attribution
 - More casual than LinkedIn; no hashtags required
-- Don't echo the Twitter copy; find a different angle or observation
+- Don't echo the Twitter copy; find a different angle
 
 **Example:**
 

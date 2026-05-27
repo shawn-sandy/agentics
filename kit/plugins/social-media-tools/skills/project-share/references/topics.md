@@ -117,7 +117,7 @@ If version is not found anywhere: use `"latest"` as placeholder.
 | `{{BADGE}}` | `New Features` or `v$PROJECT_VERSION` |
 | `{{BULLETS}}` | Top 3–5 items as `<li>item text</li>` (no wrapping `<ul>`) |
 | `{{FOOTER_NOTE}}` | Repo URL or last 2 path segments of `$PATH_ROOT` |
-| `{{COPY_PANELS}}` | Copy panel HTML — one panel (single site) or three per-site panels (All sites); see `../code-share/references/variables.md` |
+| `{{COPY_PANELS}}` | Copy panel HTML — one panel (single site) or three per-site panels (All sites); see `$PLUGIN_DIR/references/copy-panels.md` |
 
 ### diff-card.html — variables for bugs / changes topics
 

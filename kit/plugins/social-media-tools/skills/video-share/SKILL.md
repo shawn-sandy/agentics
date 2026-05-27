@@ -13,14 +13,36 @@ for a YouTube or Vimeo video URL.
 
 | Phase | Action |
 |-------|--------|
+| 0 — Locate | Locate `templates/` and derive `PLUGIN_DIR` |
 | 1 — Collect Input | Auto-detect platform from URL; ask target social platform + angle |
 | 1c — Reuse check | Scan `docs/media/social/` for existing video posts; offer reuse |
 | 2 — Fetch Metadata | oEmbed API for title/channel/thumbnail; fallback on 4xx |
-| 3 — Draft Copy | Write platform-aware copy; store as `POST_COPY_TEXT_RAW` |
+| 3 — Draft Copy | Write platform-aware copy |
 | 4 — Populate Template | Fill `video-card.html`; inject `{{THUMBNAIL_ZONE}}` + `{{COPY_PANELS}}` |
-| 4b — Save | Write HTML to `docs/media/social/video-{slug}-{date}.html` |
-| 5 — Screenshot | Serve HTML locally; Playwright screenshot to PNG |
-| 6 — Deliver | Present copy in fenced block + attach PNG + show saved path |
+| 4b — Save | Persistent save to `docs/media/social/` |
+| 5 — Screenshot | Serve HTML locally; Playwright screenshot |
+| 6 — Deliver | Present copy + attach PNG + show saved path |
+
+---
+
+## Phase 0 — Locate Plugin Assets
+
+Run silently:
+
+```bash
+ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
+  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
+find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+```
+
+Use the first non-empty result as `TEMPLATES_DIR`. Derive:
+
+```bash
+PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
+```
+
+If not found: output "Templates not found. Install the plugin or load it with `--plugin-dir`." and **STOP**.
 
 ---
 
@@ -35,24 +57,17 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `VIDEO_URL` | Any YouTube or Vimeo URL | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Target platform — "All sites" drafts and embeds all three |
-| `HOOK_ANGLE` | Free text | Optional — e.g. "focus on the implementation at 12:00" |
+| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required |
+| `HOOK_ANGLE` | Free text | Optional |
 
 ---
 
 ## Phase 1c — Reuse Check
 
-After collecting inputs, check for existing saved video posts:
-
-```bash
-MEDIA_DIR="${PWD}/docs/media/social"
-existing=$(ls "$MEDIA_DIR"/video-*.html 2>/dev/null | sort -r | head -5)
 ```
-
-If `$existing` is non-empty, show the list and use `AskUserQuestion` to ask:
-> "Found existing video post(s). Reuse one or generate a new one?"
-
-If user picks **reuse**: extract post text from every `<textarea class="post-copy-text">…</textarea>` (one for a single-site card, three for an All-sites card), present each labeled by its `copy-label`, show file path, **STOP.**
+FILE_PREFIX=video
+Read $PLUGIN_DIR/references/reuse-check.md and follow its procedure.
+```
 
 ---
 
@@ -60,33 +75,26 @@ If user picks **reuse**: extract post text from every `<textarea class="post-cop
 
 ### Deferred tool bootstrap
 
-`WebFetch` is a deferred tool — its schema is not loaded at session start.
-
 ```
 Use ToolSearch with select:WebFetch first (silent, no user output), then call WebFetch.
 ```
 
-### YouTube
+For API endpoints and 4xx fallback, read `references/platforms.md`.
 
-1. `WebFetch` on `https://www.youtube.com/oembed?url=VIDEO_URL&format=json`
-   - Extract: `title`, `author_name` (channel name), `thumbnail_url`
-2. `WebFetch` on the original `VIDEO_URL`
-   - Extract: `og:description` from the page HTML (oEmbed response does not include description)
+#### YouTube
 
-**4xx response (private / deleted / age-restricted):**
-- Use `AskUserQuestion` to ask for `title` and `channel` manually
-- Set `thumbnail_url = ""` — proceed without thumbnail
+1. `WebFetch` on `https://www.youtube.com/oembed?url=VIDEO_URL&format=json` — extract `title`, `author_name`, `thumbnail_url`
+2. `WebFetch` on the original `VIDEO_URL` — extract `og:description`
 
-### Vimeo
+**4xx:** ask user for `title` and `channel` via `AskUserQuestion`. Set `thumbnail_url = ""`.
 
-1. `WebFetch` on `https://vimeo.com/api/oembed.json?url=VIDEO_URL`
-   - Extract: `title`, `author_name`, `thumbnail_url`, `description`
+#### Vimeo
 
-**4xx response:** same fallback as YouTube — ask user for title and channel.
+1. `WebFetch` on `https://vimeo.com/api/oembed.json?url=VIDEO_URL` — extract `title`, `author_name`, `thumbnail_url`, `description`
 
-### Derived values
+**4xx:** same fallback as YouTube.
 
-Set these from hardcoded values only — never from fetched content or user input:
+#### Derived values (hardcoded — never from fetched content)
 
 | Variable | YouTube | Vimeo |
 |----------|---------|-------|
@@ -98,115 +106,61 @@ Set these from hardcoded values only — never from fetched content or user inpu
 
 ## Phase 3 — Draft Copy
 
-Read `references/platforms.md` for the exact format and filled examples.
+For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
+For copy format and filled examples per platform, read `references/platforms.md`.
 
-| Platform | Max | Tone default |
-|----------|-----|------|
-| LinkedIn | 1,500 chars | Professional |
-| Twitter/X | 280 chars | Punchy |
-| Bluesky | 300 chars | Conversational |
+Present the draft in a fenced code block labelled with the platform name. Wait for approval.
 
-Present the draft in a fenced code block labelled with the platform name.
-Wait for user approval before proceeding.
-
-Draft all three platform variants in the chosen tone. **Single site:** store them joined with `\n---\n` as `POST_COPY_TEXT_RAW` (Phase 4 → one copy panel). **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`) for one panel per platform.
+- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
+- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
 
 ---
 
 ## Phase 4 — Populate Template
 
-### Locate TEMPLATES_DIR
+### Conditional element: `{{THUMBNAIL_ZONE}}`
 
-Same three-path probe as `code-share`:
-
-```bash
-ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
-  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
-find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
-find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
-```
-
-Set `TEMPLATE_FILE=$TEMPLATES_DIR/video-card.html`. If not found, output the
-"Templates not found" message and **STOP**.
-
-### Conditional element substitution (Option A)
-
-**`{{THUMBNAIL_ZONE}}`**
-- If `thumbnail_url` is non-empty: inject the full thumbnail block:
+- If `thumbnail_url` is non-empty:
   ```html
   <div class="video-thumbnail"><img src="THUMBNAIL_URL" alt="Video thumbnail"><div class="play-overlay"><span class="play-icon">&#9654;</span></div></div>
   ```
 - If empty (4xx fallback): `""`
 
-### Prepare DESCRIPTION_SNIPPET
+### Prepare `DESCRIPTION_SNIPPET`
 
-Truncate the description to the first 150 characters. If no description is available,
-use an empty string.
+Truncate description to first 150 characters. If unavailable, use `""`.
 
-HTML-escape `VIDEO_TITLE`, `CHANNEL`, `DESCRIPTION_SNIPPET` before substitution:
-`&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
+HTML-escape `VIDEO_TITLE`, `CHANNEL`, `DESCRIPTION_SNIPPET`: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
 
-### Substitute `{{COPY_PANELS}}`
+### COPY_PANELS
 
-Escape each platform's copy (textarea-safe, in order: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`), then build the copy panel HTML for `{{COPY_PANELS}}`. The template defines the shared `copyPost(id, btn)` function — do not re-add it. Full reference: `../code-share/references/variables.md`.
+Read `$PLUGIN_DIR/references/copy-panels.md` for markup and escaping rules.
 
-- **Single site** — one panel, content = `POST_COPY_TEXT_RAW` escaped:
-  ```html
-  <div class="copy-panel">
-    <p class="copy-label">Social media post</p>
-    <textarea readonly class="post-copy-text" id="post-copy">ESCAPED_COPY</textarea>
-    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-  </div>
-  ```
-- **All sites** — three of the above with ids `post-copy-linkedin`/`post-copy-twitter`/`post-copy-bluesky`, labels `LinkedIn`/`Twitter/X`/`Bluesky`, each holding only that platform's escaped copy, buttons `onclick="copyPost('post-copy-<site>', this)"`.
+### Write and set variables
 
-### Substitute and write
+Replace all `{{VARIABLE}}` placeholders. Write to `~/.claude/tmp/video-share-card.html`:
 
-Replace all `{{VARIABLE}}` placeholders. Write to:
 ```bash
 mkdir -p ~/.claude/tmp
-# Write via Write tool to ~/.claude/tmp/video-share-card.html
+TEMP_HTML=video-share-card.html
+FILE_PREFIX=video
+SLUG_INPUT=$VIDEO_TITLE
 ```
 
 ---
 
 ## Phase 4b — Persistent Save
 
-```bash
-MEDIA_DIR="${PWD}/docs/media/social"
-mkdir -p "$MEDIA_DIR"
-SLUG=$(echo "$VIDEO_TITLE" | tr '[:upper:]' '[:lower:]' | \
-       sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//;s/-$//' | cut -c1-40)
-DATE=$(date +%Y-%m-%d)
-SAVE_PATH="$MEDIA_DIR/video-${SLUG}-${DATE}.html"
-# Write the populated HTML to $SAVE_PATH using the Write tool
-```
+Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Persistent Save** section.
 
 ---
 
 ## Phase 5 — Screenshot
 
-Same pipeline as `code-share`:
-
-1. `python3 $PLUGIN_DIR/scripts/find_free_port.py` → `$PORT`
-2. `cd ~/.claude/tmp && python3 -m http.server $PORT & SERVER_PID=$!; echo "PID:$SERVER_PID"`
-3. ToolSearch for Playwright tools: `select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for`
-4. Navigate → wait → screenshot to `~/.claude/tmp/video-share-card.png`
-5. `kill $SERVER_PID 2>/dev/null || true`
-
-**Fallback:** if Playwright unavailable, tell the user the HTML path for manual screenshot.
+Read `$PLUGIN_DIR/references/rendering-pipeline.md` and follow the full pipeline.
 
 ---
 
 ## Phase 6 — Deliver
 
-1. `## [Platform] Copy` heading — for **All sites**, use `## Copy — all sites` with three labeled sub-blocks
-2. Copy in fenced code block with character count `[NNN / max]` — one block per platform for All sites (1,500 / 280 / 300)
-3. Attach `~/.claude/tmp/video-share-card.png` via `SendUserFile`
-4. Saved HTML path: `docs/media/social/video-{slug}-{date}.html`
-5. Open the saved HTML in the user's default browser:
-   ```bash
-   open "$SAVE_PATH" 2>/dev/null || xdg-open "$SAVE_PATH" 2>/dev/null || true
-   ```
-
-**STOP.**
+Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Deliver** section.

@@ -93,7 +93,7 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 | `video-card` | YouTube or Vimeo video shares | `templates/video-card.html` |
 | `snippet-card` | GitHub code file or snippet shares | `templates/snippet-card.html` |
 
-See [`skills/code-share/references/variables.md`](skills/code-share/references/variables.md) for the full variable reference for each card type.
+See [`references/variables.md`](references/variables.md) for the full variable reference for each card type.
 
 ## Plugin Structure
 
@@ -108,21 +108,32 @@ social-media-tools/
 ├── commands/
 │   ├── digest.md                           ← /code-share:digest
 │   └── digest-bg.md                        ← /code-share:digest-bg
+├── references/                             ← shared pipeline logic (all 5 card skills)
+│   ├── copy-panels.md                      ← {{COPY_PANELS}} markup + escaping rules
+│   ├── platforms.md                        ← canonical char limits + universal copy rules
+│   ├── rendering-pipeline.md               ← find_free_port → HTTP server → Playwright → kill
+│   ├── reuse-check.md                      ← scan docs/media/social/ + offer reuse
+│   ├── saving-and-delivery.md              ← persistent save block + deliver phase
+│   └── variables.md                        ← per-template variable maps (all 6 cards)
 ├── scripts/
 │   └── find_free_port.py                   ← port helper for Playwright
 ├── skills/
 │   ├── blog-share/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       └── platforms.md               ← LinkedIn/Twitter/Bluesky format rules
+│   │       └── platforms.md               ← blog copy format rules + examples
 │   ├── code-share/
 │   │   ├── SKILL.md
 │   │   └── references/
-│   │       └── variables.md               ← template variable reference (all 6 cards)
+│   │       └── variables.md               ← redirects to plugin-root references/
 │   ├── github-code-share/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── language-map.md            ← file extension → language + badge colour
+│   ├── project-share/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── topics.md                  ← per-topic extraction patterns + tone guide
 │   ├── scan-for-shares/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -134,7 +145,7 @@ social-media-tools/
 │   └── video-share/
 │       ├── SKILL.md
 │       └── references/
-│           └── platforms.md               ← oEmbed endpoints + copy format rules
+│           └── platforms.md               ← oEmbed endpoints + video copy format rules
 └── templates/
     ├── blog-card.html
     ├── diff-card.html
