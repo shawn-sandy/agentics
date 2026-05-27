@@ -1,6 +1,6 @@
 ---
 name: building-marketplaces
-description: "Evaluates a repository and scaffolds files needed to create a Claude Code plugin marketplace. Use when the user asks to build or scaffold a marketplace."
+description: "Scaffolds a Claude Code plugin marketplace for a repository. Evaluates the repo structure and generates the required config files and README. Use when the user asks to build or scaffold a marketplace."
 allowed-tools: AskUserQuestion, Bash, Glob, Read, Write
 ---
 

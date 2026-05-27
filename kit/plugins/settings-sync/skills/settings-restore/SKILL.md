@@ -1,6 +1,6 @@
 ---
 name: settings-restore
-description: "Pulls Claude Code settings from a backup git repo and restores them to ~/.claude/ with confirmation. Use when the user asks to restore or import settings."
+description: "Restores Claude Code settings from a backup git repo. Pulls the latest config to ~/.claude/ with a confirmation step before overwriting. Use when the user asks to restore or import settings."
 allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 argument-hint: "[repo-path]"
 ---

@@ -1,6 +1,6 @@
 ---
 name: plan-to-html
-description: "Deprecated alias for markdown-to-html; delegates immediately. Use when the user asks to convert a plan to HTML."
+description: "Deprecated alias for markdown-to-html. Delegates immediately to markdown-to-html with no additional processing. Use when the user asks to convert a plan to HTML."
 allowed-tools: Skill
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: generating-agents
-description: "Scaffolds a complete Claude Code agent with frontmatter and system prompt. Use when the user asks to create, scaffold, or generate an agent."
+description: "Scaffolds a complete Claude Code agent. Generates frontmatter, system prompt, and file structure for a new agent. Use when the user asks to create, scaffold, or generate an agent."
 allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
 ---
 

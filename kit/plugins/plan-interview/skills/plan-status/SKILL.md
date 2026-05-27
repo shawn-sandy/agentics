@@ -1,6 +1,6 @@
 ---
 name: plan-status
-description: "Writes lifecycle status and dates into a plan file's frontmatter after inspecting the codebase. Use when the user asks to check or update a plan's status."
+description: "Writes lifecycle status into a plan file's frontmatter. Inspects the codebase and git history to set accurate dates and completion state. Use when the user asks to check or update a plan's status."
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---

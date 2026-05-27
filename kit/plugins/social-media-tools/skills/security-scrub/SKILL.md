@@ -1,6 +1,6 @@
 ---
 name: security-scrub
-description: "Scans code content or diffs for secrets, credentials, and sensitive data before public sharing. Use when the user asks to check code for secrets, review a diff for leaks, or before sharing any code change."
+description: "Scans code and diffs for secrets and sensitive data. Detects credentials, tokens, and PII to prevent accidental leaks before sharing. Use when the user asks to check code for secrets, review a diff for leaks, or before sharing any code change."
 allowed-tools: Bash, Read, Grep
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: video-share
-description: "Creates social media copy and a card for a YouTube or Vimeo video. Use when asked to share a video or promote a talk on LinkedIn, Twitter, or Bluesky."
+description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky with platform-appropriate messaging. Use when asked to share a video or promote a talk on LinkedIn, Twitter, or Bluesky."
 allowed-tools: AskUserQuestion, Write, Bash, ToolSearch, WebFetch, SendUserFile
 ---
 

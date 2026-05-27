@@ -1,6 +1,6 @@
 ---
 name: github-code-share
-description: "Fetches a GitHub file and generates social media copy with a syntax-highlighted card. Use when asked to share a code snippet or file from a GitHub repository."
+description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card image for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet or file from a GitHub repository."
 allowed-tools: AskUserQuestion, Write, Bash, ToolSearch, WebFetch, Skill, SendUserFile
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: reviewing-agents
-description: "Audits Claude Code agent files for quality across 5 dimensions, with optional fixes. Use when the user asks to review, audit, or score an agent definition."
+description: "Audits Claude Code agent files across 5 quality dimensions. Produces a scored report and optionally generates a corrected version. Use when the user asks to review, audit, or score an agent definition."
 allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 

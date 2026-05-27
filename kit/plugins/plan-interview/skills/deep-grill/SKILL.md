@@ -1,6 +1,6 @@
 ---
 name: deep-grill
-description: "Stress-tests plan decisions node-by-node with focused questions. Use when the user asks to deep grill or stress-test individual decisions in a plan."
+description: "Stress-tests plan decisions node-by-node with focused questions. Walks through each decision point, surfacing assumptions and weak spots with targeted follow-ups. Use when the user asks to deep grill or stress-test individual decisions in a plan."
 allowed-tools: Read, Glob, Grep, AskUserQuestion, TodoWrite
 disable-model-invocation: true
 ---
