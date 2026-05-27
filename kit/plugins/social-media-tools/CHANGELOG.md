@@ -1,5 +1,12 @@
 # Changelog — social-media-tools
 
+## v0.5.0 — 2026-05-27
+
+Added `project-share` skill for topic-based social posts about a whole project or codebase.
+
+- `project-share` skill (new): generates platform-aware social media copy and a dark-mode card for a project based on a topic — `features`, `bugs`, `changes`, or `release`; extracts metadata from `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `CHANGELOG.md`, and `README.md`; uses `feature-card.html` for features/release and `diff-card.html` for bugs/changes; follows the same screenshot pipeline as `code-share`; saves output to `docs/media/social/`
+- `skills/project-share/references/topics.md` (new): tone guide, per-topic git extraction commands, card variable mapping, and project metadata priority table
+
 ## v0.4.0 — 2026-05-27
 
 Added persistent HTML storage, a copy-to-clipboard panel, reuse detection, and a media library skill.

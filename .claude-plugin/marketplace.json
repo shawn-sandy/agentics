@@ -325,7 +325,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "0.4.0",
+      "version": "0.5.0",
       "description": "Discover shareable code, blog posts, videos, and GitHub snippets — scrub for secrets, draft platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky",
       "category": "productivity",
       "tags": [
@@ -344,7 +344,10 @@
         "blog",
         "video",
         "youtube",
-        "github-snippet"
+        "github-snippet",
+        "project-share",
+        "features",
+        "changelog"
       ]
     }
   ]
