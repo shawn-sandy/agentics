@@ -1,0 +1,27 @@
+name: Version Guard
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'kit/plugins/**'
+      - '.claude-plugin/marketplace.json'
+
+jobs:
+  check-version-bump:
+    name: Plugin version bump check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run version guard
+        run: bash scripts/check-version-bump.sh
+        env:
+          VERSION_GUARD_REGISTRY: .claude-plugin/marketplace.json
+          VERSION_GUARD_BASE_BRANCH: main

@@ -28,6 +28,15 @@
                         "command": "test -z \"$(git -C \"${PWD}\" ls-files --others --modified --exclude-standard docs/plans/ 2>/dev/null)\" || echo 'WARNING: Uncommitted plan files in docs/plans/ — commit alongside related changes (see .claude/rules/plan-hygiene.md)'"
                     }
                 ]
+            },
+            {
+                "matcher": "Write|Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "git status --porcelain .claude-plugin/marketplace.json 2>/dev/null | grep -q . && test -f scripts/check-version-bump.sh && VERSION_GUARD_NO_FETCH=1 bash scripts/check-version-bump.sh 2>&1 || true"
+                    }
+                ]
             }
         ]
     }
