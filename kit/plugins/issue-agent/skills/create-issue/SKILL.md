@@ -24,8 +24,8 @@ git remote get-url origin
 ```
 
 - URL contains `github.com` → host is **GitHub**, CLI is `gh`
-- URL contains `gitlab.com` or any non-GitHub host after ruling out GitHub → host is **GitLab**, CLI is `glab`
-- If the remote is absent or unrecognizable, use `AskUserQuestion` to ask: "Which host should I create the issue on? (GitHub / GitLab)"
+- URL contains `gitlab.com` or `gitlab.` (self-hosted pattern) → host is **GitLab**, CLI is `glab`
+- URL is absent, unrecognizable, or any other host (Bitbucket, Azure DevOps, Gitea, etc.) → use `AskUserQuestion` to ask: "Your remote appears to be on an unrecognized host (`<url>`). Which issue tracker should I use? (GitHub / GitLab / Other — I'll stop if Other)"
 
 ### Phase 2 — Pre-flight checks
 
@@ -77,8 +77,8 @@ Read `package.json` for relevant deps. Gather reproduction steps, expected vs ac
 
 ```bash
 # Check for duplicates first
-gh issue list --search "<title keywords>" --limit 10   # GitHub
-glab issue list --search "<title keywords>"             # GitLab
+gh issue list --search "<title keywords>" --limit 10        # GitHub
+glab issue list --search "<title keywords>" --per-page 10   # GitLab
 ```
 
 Read `CLAUDE.md` (if present) for project conventions. Use `Grep` + `Glob` to identify related source files to reference in the issue body.
