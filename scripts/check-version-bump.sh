@@ -40,6 +40,11 @@ REMOTE_BASE="origin/${BASE_BRANCH}"
 
 semver_compare() {
   local v1="$1" v2="$2"
+  if [[ ! "$v1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ ! "$v2" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "WARNING: invalid semver format (expected X.Y.Z): '$v1' vs '$v2'" >&2
+    echo "invalid"
+    return 0
+  fi
   local IFS='.'
   read -ra a <<< "$v1"
   read -ra b <<< "$v2"
@@ -107,23 +112,30 @@ while IFS='|' read -r name local_ver src_path; do
 
   cmp=$(semver_compare "$local_ver" "$base_ver")
 
+  # Skip plugins with unrecognised version formats
+  if [[ "$cmp" == "invalid" ]]; then
+    echo "WARNING: $name — skipping (invalid version format: branch=$local_ver, $BASE_BRANCH=$base_ver)" >&2
+    continue
+  fi
+
   # Version regressed — always an error (branch is stale vs main)
   if [[ "$cmp" == "lt" ]]; then
     echo "ERROR: $name — version regressed (branch: $local_ver, $BASE_BRANCH: $base_ver)" >&2
     echo "       Rebase on $BASE_BRANCH, then bump version above $base_ver in $REGISTRY" >&2
-    ((ERRORS++))
-    ((CHECKED++))
+    ERRORS=$((ERRORS+1))
+    CHECKED=$((CHECKED+1))
     continue
   fi
 
-  # Version unchanged — only a problem if plugin source files changed
+  # Version unchanged — only a problem if plugin source files changed.
+  # Use bash pattern matching to avoid regex metacharacter issues with src_path.
   if [[ "$cmp" == "eq" ]] && [[ -n "$src_path" ]]; then
-    if echo "$CHANGED" | grep -q "^${src_path}/"; then
+    if [[ "$CHANGED" == *"${src_path}/"* ]]; then
       echo "ERROR: $name — version not bumped (still $local_ver on both branch and $BASE_BRANCH)" >&2
       echo "       Files changed under $src_path/ — bump version in $REGISTRY" >&2
       echo "       See .claude/rules/marketplace.md for versioning conventions." >&2
-      ((ERRORS++))
-      ((CHECKED++))
+      ERRORS=$((ERRORS+1))
+      CHECKED=$((CHECKED+1))
     fi
     continue
   fi
@@ -131,7 +143,7 @@ while IFS='|' read -r name local_ver src_path; do
   # Version bumped correctly
   if [[ "$cmp" == "gt" ]]; then
     echo "OK: $name  $base_ver → $local_ver"
-    ((CHECKED++))
+    CHECKED=$((CHECKED+1))
   fi
 
 done < <(jq -r "$PLUGINS_JQ" "$REGISTRY")

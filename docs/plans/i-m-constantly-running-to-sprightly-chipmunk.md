@@ -1,3 +1,12 @@
+---
+title: "Plugin Version Conflict Guard"
+date: 2026-05-28
+status: implemented
+pr: 157
+tags: [versioning, ci, plugins, version-guard]
+summary: "Three-layer automation (Claude Code hook, pre-push hook, GitHub Actions) to prevent version conflicts on concurrent plugin PRs."
+---
+
 # Context
 
 Plugin PRs frequently conflict on the `version` field inside `.claude-plugin/marketplace.json`. Because all 18 plugins share a single file, two PRs created off the same `main` can each bump the same plugin's version to the same number — or a PR can land on a stale version after another PR has already merged a bump. No automated gate currently blocks a bad merge; enforcement is entirely manual.
