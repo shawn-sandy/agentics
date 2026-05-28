@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.7.0",
+  "version": "3.8.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -348,6 +348,28 @@
         "project-share",
         "features",
         "changelog"
+      ]
+    },
+    {
+      "name": "plan-agent",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/plan-agent"
+      },
+      "version": "0.2.0",
+      "description": "Plan authoring on demand — explicit /plan-agent:author skill runs the full §0–§7 workflow from a free-text objective; filename validation hook enforces verb-target kebab-case on every plan write",
+      "category": "productivity",
+      "tags": [
+        "planning",
+        "plan-agent",
+        "author",
+        "on-demand",
+        "conventions",
+        "filename-validation",
+        "workflow",
+        "verb-target",
+        "kebab-case"
       ]
     }
   ]
