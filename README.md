@@ -1,21 +1,61 @@
 # agentics
 
-A marketplace system for Claude Code plugins, enabling discovery, distribution, and installation of plugins that extend Claude's capabilities.
+A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
+
+**Marketplace:** `agentics-kit` v3.8.0 · **17 plugins** · Requires Claude Code 1.0.33+
+
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+  - [Install via Marketplace (Recommended)](#install-via-marketplace-recommended)
+  - [Load Locally for Testing](#load-locally-for-testing)
+  - [Troubleshooting](#troubleshooting)
+- [Usage Guide](#usage-guide)
+  - [Commands vs Skills vs Agents vs Hooks](#commands-vs-skills-vs-agents-vs-hooks)
+  - [Single Plugin](#single-plugin)
+  - [Multiple Plugins](#multiple-plugins)
+- [Plugins](#plugins)
+  - [Code Quality](#code-quality)
+  - [Testing](#testing)
+  - [Planning](#planning)
+  - [Git & Workflow](#git--workflow)
+  - [Accessibility & Performance](#accessibility--performance)
+  - [Plugin Development](#plugin-development)
+  - [Productivity](#productivity)
+- [Plugin Reference Table](#plugin-reference-table)
+- [Contributing](#contributing)
+  - [Reporting Bugs](#reporting-bugs)
+  - [Creating a New Plugin](#creating-a-new-plugin)
+  - [Pull Request Process](#pull-request-process)
+  - [Versioning](#versioning)
+- [Development](#development)
+- [CI/CD](#cicd)
+- [Resources](#resources)
+- [License](#license)
+
+---
 
 ## Quick Start
 
-**Install from GitHub (recommended):**
+**Install from the marketplace (no cloning required):**
 
-```bash
-# Register the agentics-kit marketplace
+```
+# 1. Register the agentics-kit marketplace in Claude Code
 /plugin marketplace add shawn-sandy/agentics
 
-# Install any plugin by name
+# 2. Install the plugins you want
 /plugin install code-review@agentics-kit
 /plugin install git-agent@agentics-kit
+/plugin install memory-tools@agentics-kit
 ```
 
-**Or load a plugin directly for local testing:**
+**Or load any plugin directly for local testing:**
 
 ```bash
 git clone https://github.com/shawn-sandy/agentics.git
@@ -24,344 +64,303 @@ claude --plugin-dir ./kit/plugins/code-review
 # Then ask: "Review this code for issues"
 ```
 
+---
+
 ## Overview
 
-The agentics project provides:
+The agentics project serves two purposes:
 
-- **Example Plugins** — 13 reference implementations demonstrating Claude Code plugin structure
-- **Test Marketplace** — `agentics-kit` marketplace for testing plugin discovery and installation
-- **Plugin Development Guide** — Documentation and patterns for creating your own plugins
+| Purpose | What it contains |
+|---------|-----------------|
+| **Example Plugins** | 17 reference implementations in `kit/plugins/` demonstrating Claude Code plugin structure — commands, skills, agents, and hooks |
+| **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
+
+Every plugin in this repo is a working, production-quality tool you can install and use immediately.
+
+---
 
 ## Prerequisites
 
 ### Required
 
-- **Claude Code CLI** (version 1.0.33 or later — required for plugin support)
-  ```bash
-  # Verify installation
-  claude --version
-  ```
+- **Claude Code CLI** version 1.0.33 or later
 
-### Optional Tools
+```bash
+# Verify version
+claude --version
+```
 
-- **Git** — For cloning the repository
-- **GitHub CLI (`gh`)** — For the git-agent plugin's PR creation
+Install from the [official docs](https://code.claude.com/docs/en/installation) if not present.
+
+### Optional
+
+- **Git** — for cloning the repository locally
+- **GitHub CLI (`gh`)** — used by the `git-agent` plugin for PR creation
+- **`jq`** — JSON processor, useful for debugging plugin manifests
 
 ### Platform Support
 
-- **macOS** 12.0 or later
-- **Linux** (Ubuntu 20.04+ or equivalent)
-- **Windows** (WSL2 recommended for best compatibility)
+| Platform | Support |
+|----------|---------|
+| macOS 12.0+ | Full support |
+| Linux (Ubuntu 20.04+) | Full support |
+| Windows (WSL2) | Recommended over native Windows |
+
+---
 
 ## Project Structure
 
 ```
 agentics/
 ├── .claude-plugin/
-│   └── marketplace.json              # Marketplace manifest (agentics-kit)
+│   └── marketplace.json          # Marketplace manifest — the agentics-kit registry
 ├── .claude/
-│   └── rules/                        # Scoped authoring rules (plugin patterns, marketplace, testing)
+│   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
+│   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                      # Plugin source code (13 plugins)
-│       ├── agent-creator/            # Agent-based plugin scaffolding
-│       ├── agentic-plugin-dev/       # Plugin creation and management
-│       ├── memory-tools/             # CLAUDE.md / project memory audit and optimization
-│       ├── code-review/              # Code review skill
-│       ├── code-simplifier/          # Code smell analysis and refactoring
-│       ├── code-testing-agent/       # Test suggestion and review
-│       ├── git-agent/                # Git workflow automation (commit, PR, ship)
-│       ├── marketplace-builder/      # Marketplace scaffolding
-│       ├── plan-interview/           # Plan stress-test (commands + skills)
-│       ├── react-perf-analyzer/      # React performance analysis
-│       ├── skill-reviewer/           # Skill authoring review and testing
-│       └── wcag-compliance-reviewer/ # WCAG 2.2 accessibility compliance
+│   └── plugins/                  # 17 plugin source directories
+│       ├── agent-creator/
+│       ├── agent-reviewer/
+│       ├── agentic-plugin-dev/
+│       ├── code-review/
+│       ├── code-share/           # (social-media-tools dir)
+│       ├── code-simplifier/
+│       ├── code-testing-agent/
+│       ├── git-agent/
+│       ├── marketplace-builder/
+│       ├── memory-tools/
+│       ├── plan-agent/
+│       ├── plan-interview/
+│       ├── product-plans/
+│       ├── react-perf-analyzer/
+│       ├── settings-sync/
+│       ├── skill-reviewer/
+│       └── wcag-compliance-reviewer/
 ├── tests/
-│   └── fixtures/                     # Test plugin fixtures
-└── README.md                         # This file
+│   └── fixtures/                 # Validation test fixtures
+├── docs/plans/                   # Plan files (committed alongside plugin changes)
+├── examples/                     # Demo scripts
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+└── README.md
 ```
-
-## Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/shawn-sandy/agentics.git
-   cd agentics
-   ```
-
-2. **Load a plugin directly:**
-   ```bash
-   # Test with code-review plugin
-   claude --plugin-dir ./kit/plugins/code-review
-
-   # This starts an interactive Claude Code session.
-   # Once Claude responds, ask naturally:
-   # "Review this code for issues"
-   ```
-
-3. **Verify the plugin loaded:**
-   ```bash
-   # In the Claude interactive session, list available commands:
-   /help
-   ```
-
-**Note:** You can test plugins immediately without installing any dependencies. The `--plugin-dir` flag loads plugins directly from your local filesystem and starts an interactive session.
-
-### Troubleshooting
-
-#### "claude: command not found"
-
-The Claude Code CLI is not installed or not in your PATH.
-
-**Solution:**
-- Install Claude Code from the official source: https://code.claude.com/docs/en/installation
-- Verify installation: `claude --version`
-- Ensure you have version 1.0.33 or later (required for plugin support)
-- On macOS/Linux: Ensure `~/.local/bin` or the installation directory is in your PATH
-- On Windows: Use WSL2 and follow Linux installation steps
-
-#### Plugin not loading
-
-The plugin directory may not exist or the path is incorrect.
-
-**Solution:**
-- Verify the path exists: `ls -la ./kit/plugins/code-review`
-- Use absolute paths if relative paths aren't working:
-  ```bash
-  claude --plugin-dir /full/path/to/agentics/kit/plugins/code-review
-  ```
-- Check that `.claude-plugin/plugin.json` exists in the plugin directory
-
-#### Permission errors
-
-The plugin directory or files may not be readable.
-
-**Solution:**
-- Check file permissions: `ls -la ./kit/plugins/code-review`
-- Make directory readable: `chmod -R +r ./kit/plugins/code-review`
-- Ensure you own the files: `chown -R $USER:$USER ./kit/plugins/`
-
-#### "Input must be provided" error with --plugin-dir
-
-You see an error like: `Error: Input must be provided either through stdin or as a prompt argument when using --print`
-
-**Solution:**
-- This error can occur if Claude Code can't start the interactive session properly
-- Try providing a prompt directly:
-  ```bash
-  claude --plugin-dir ./kit/plugins/code-review "List available commands"
-  ```
-- Or pipe a command:
-  ```bash
-  echo "Review this code for issues" | claude --plugin-dir ./kit/plugins/code-review
-  ```
-- Verify your Claude Code version supports plugins: `claude --version` (need 1.0.33+)
-- Check plugin.json is valid JSON: `cat kit/plugins/code-review/.claude-plugin/plugin.json | jq`
-
-## Usage Guide
-
-### Single Plugin Testing
-
-Test individual plugins by loading them directly:
-
-```bash
-# Test code-review plugin (starts interactive session)
-claude --plugin-dir ./kit/plugins/code-review
-
-# Once in the Claude session, ask naturally:
-# "Review this code for issues"
-
-# Or provide a prompt directly:
-claude --plugin-dir ./kit/plugins/code-review "Review this file for bugs"
-```
-
-### Multiple Plugin Testing
-
-Load multiple plugins simultaneously by specifying multiple `--plugin-dir` flags:
-
-```bash
-# Load multiple plugins at once (starts interactive session)
-claude --plugin-dir ./kit/plugins/code-review --plugin-dir ./kit/plugins/plan-interview
-
-# Once in the Claude session, you can use commands from both plugins:
-# "Review this code for issues"
-# /plan-interview:plan-interview docs/plans/my-plan.md
-
-# Or provide a prompt directly:
-claude --plugin-dir ./kit/plugins/code-review --plugin-dir ./kit/plugins/plan-interview "Review my code"
-```
-
-### Commands vs Skills
-
-**Commands** require explicit invocation using the `/plugin:command` syntax:
-```bash
-# Explicit command invocation
-/plan-interview:plan-interview docs/plans/my-plan.md
-```
-
-**Skills** activate automatically based on your request:
-```bash
-# Load the code-review plugin, then just ask naturally
-"Can you review this code for issues?"
-"Check this file for bugs"
-
-# Load the plan-interview plugin, then describe your intent
-"Stress-test this plan before I start coding"
-```
-
-**Tip:** Use `/help` in Claude to see all available commands from loaded plugins.
-
-### Component Types
-
-Plugins can include four types of components:
-
-| Type | Invocation | File Location | Use When |
-|------|-----------|---------------|----------|
-| **Commands** | Explicit: `/plugin:command` | `commands/name.md` | User should control when to run it |
-| **Skills** | Automatic: matches user intent | `skills/name/SKILL.md` | Claude should detect the need from conversation |
-| **Agents** | Delegated: spawned as subprocesses | `agents/name.md` | Work should run in the background without blocking |
-| **Hooks** | Event-driven: triggered by lifecycle events | Configured in `settings.json` | Actions should happen automatically on specific events |
-
-Most plugins use skills (automatic activation). Commands are for actions that need explicit user control. Agents and hooks are for advanced workflows like background git operations or pre-commit validation.
-
-## Plugins
-
-### code-review `v3.2.1`
-
-Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions.
-
-**Skills** (activate automatically based on your request):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `code-review-agent` | Review code, check for bugs, analyze code quality, look for security issues, or detect breaking changes |
-
-```bash
-claude --plugin-dir ./kit/plugins/code-review
-# "Review this function for bugs"
-# "Check this file for security issues"
-```
-
-[View Plugin Documentation](./kit/plugins/code-review/README.md)
 
 ---
 
-### plan-interview `v1.14.6`
+## Installation
 
-Stress-tests implementation plans with structured multi-round interviews before coding begins.
+### Install via Marketplace (Recommended)
+
+The marketplace approach uses sparse cloning — only the plugin you install is fetched, not the entire repository.
+
+**Step 1: Register the marketplace**
+
+```
+/plugin marketplace add shawn-sandy/agentics
+```
+
+**Step 2: Install individual plugins**
+
+```
+/plugin install code-review@agentics-kit
+/plugin install plan-interview@agentics-kit
+/plugin install memory-tools@agentics-kit
+/plugin install git-agent@agentics-kit
+/plugin install skill-reviewer@agentics-kit
+/plugin install code-testing-agent@agentics-kit
+/plugin install wcag-compliance-reviewer@agentics-kit
+/plugin install agent-reviewer@agentics-kit
+/plugin install code-simplifier@agentics-kit
+/plugin install react-perf-analyzer@agentics-kit
+/plugin install product-plans@agentics-kit
+/plugin install plan-agent@agentics-kit
+/plugin install settings-sync@agentics-kit
+/plugin install code-share@agentics-kit
+/plugin install agent-creator@agentics-kit
+/plugin install marketplace-builder@agentics-kit
+/plugin install agentic-plugin-dev@agentics-kit
+```
+
+**Or install all at once** — paste the full block above into your Claude Code session.
+
+### Load Locally for Testing
+
+Clone the repo and load any plugin directly with `--plugin-dir`:
+
+```bash
+git clone https://github.com/shawn-sandy/agentics.git
+cd agentics
+
+# Load a single plugin (starts an interactive Claude session)
+claude --plugin-dir ./kit/plugins/code-review
+
+# Load multiple plugins simultaneously
+claude --plugin-dir ./kit/plugins/code-review \
+       --plugin-dir ./kit/plugins/plan-interview \
+       --plugin-dir ./kit/plugins/git-agent
+
+# Or run with a prompt directly (non-interactive)
+claude --plugin-dir ./kit/plugins/code-review "Review this file for bugs"
+```
+
+### Troubleshooting
+
+#### `claude: command not found`
+
+Claude Code CLI is not installed or not in your `PATH`.
+
+- Install from: https://code.claude.com/docs/en/installation
+- Verify: `claude --version` — need 1.0.33+
+- macOS/Linux: ensure `~/.local/bin` is in your `PATH`
+- Windows: use WSL2 and follow the Linux steps
+
+#### Plugin not loading
+
+The path may be wrong or the manifest may be missing.
+
+```bash
+# Verify the plugin directory exists and has a manifest
+ls -la ./kit/plugins/code-review/.claude-plugin/plugin.json
+
+# Use an absolute path if relative paths don't work
+claude --plugin-dir /full/path/to/agentics/kit/plugins/code-review
+```
+
+#### Permission errors
+
+```bash
+ls -la ./kit/plugins/code-review
+chmod -R +r ./kit/plugins/code-review
+```
+
+#### "Input must be provided" error with `--plugin-dir`
+
+This occurs when Claude Code can't start the interactive session. Try:
+
+```bash
+# Provide a prompt directly
+claude --plugin-dir ./kit/plugins/code-review "List available commands"
+
+# Or pipe stdin
+echo "Review this code" | claude --plugin-dir ./kit/plugins/code-review
+
+# Verify manifest is valid JSON
+cat kit/plugins/code-review/.claude-plugin/plugin.json | jq
+```
+
+---
+
+## Usage Guide
+
+### Commands vs Skills vs Agents vs Hooks
+
+Plugins can include four types of components:
+
+| Type | Invocation | Example | Use When |
+|------|-----------|---------|----------|
+| **Commands** | Explicit: `/plugin:name` | `/plan-interview:deep-grill plan.md` | User controls exactly when it runs |
+| **Skills** | Automatic: matches your intent | "Review this code for bugs" | Claude detects the need from conversation |
+| **Agents** | Delegated: spawned as subprocesses | Background git commit | Work should run without blocking |
+| **Hooks** | Event-driven: lifecycle triggers | Pre-commit filename validation | Actions must happen automatically |
+
+Most plugins use **skills** (automatic activation). Ask naturally and Claude activates the right skill.
+
+### Single Plugin
+
+```bash
+# Start an interactive session with a plugin loaded
+claude --plugin-dir ./kit/plugins/git-agent
+
+# Inside the session, use naturally:
+# "Commit my changes with a conventional message"
+# "Create a PR for this branch"
+# /git-agent:ship-bg
+```
+
+### Multiple Plugins
+
+```bash
+claude --plugin-dir ./kit/plugins/code-review \
+       --plugin-dir ./kit/plugins/git-agent \
+       --plugin-dir ./kit/plugins/plan-interview
+
+# All skills and commands from all three plugins are available
+```
+
+Use `/help` inside any Claude session to list all active commands.
+
+---
+
+## Plugins
+
+### Code Quality
+
+---
+
+#### `code-review` v3.3.0
+
+Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions. Includes an autonomous `/code-review:fix-branch` command that reviews and applies fixes across the entire branch.
 
 **Commands:**
 
 | Command | Description |
 |---------|-------------|
-| `/plan-interview:plan-interview [plan-file-path]` | Run a structured interview against a plan file |
-| `/plan-interview:deep-grill [plan-file-path]` | Walk through each decision branch and stress-test individual decisions |
-| `/plan-interview:plan-status [plan-file-path]` | Check, update, or determine the implementation status of a plan |
-| `/plan-interview:update-plan-status [plan-file-path]` | Update a plan's status metadata |
-| `/plan-interview:plan-hygiene` | Pre-commit check for randomly-named plan files that need renaming |
-| `/plan-interview:review-rename-plans` | Review and rename plan files with non-descriptive names |
-| `/plan-interview:documenting-plans [plan-file-path]` | Generate prose docs from completed plan files |
+| `/code-review:fix-branch` | Autonomously review the current branch and apply fixes |
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `plan-interview` | Stress-test, validate, interview, or find gaps in a plan |
-| `deep-grill` | Deep grill a plan, examine design-tree branches, or stress-test individual decisions |
-| `plan-status` | Check or determine the implementation status of a plan file |
-| `documenting-plans` | Document a plan, turn a plan into docs, or create a reference doc from a plan |
+| `code-review-agent` | Review code, check for bugs, analyze quality, look for security issues, or detect breaking changes |
 
 ```bash
-claude --plugin-dir ./kit/plugins/plan-interview
-# /plan-interview:plan-interview docs/plans/my-plan.md
-# /plan-interview:deep-grill docs/plans/my-plan.md
-# "Stress-test this plan"
-# "What's the status of this plan?"
+claude --plugin-dir ./kit/plugins/code-review
+# "Review this function for security issues"
+# "Check for breaking changes in my last commit"
+# /code-review:fix-branch
 ```
 
-[View Plugin Documentation](./kit/plugins/plan-interview/README.md)
+[View Documentation](./kit/plugins/code-review/README.md)
 
 ---
 
-### memory-tools `v3.0.0`
+#### `code-simplifier` v1.0.1
 
-Audits and optimizes CLAUDE.md project memory files against Claude Code best practices.
+Analyzes code for structural quality issues, code smells, and optimization opportunities: dead code, high complexity, god classes, duplication, tight coupling, and performance anti-patterns.
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `agentic-memory-doctor` | Optimize, audit, clean up, or diagnose a CLAUDE.md / project memory file — also activates when Claude is ignoring instructions |
-| `path-rules-advisor` | Create path-specific rules, organize rules by file type or directory, or check if the project needs scoped rules in `.claude/rules/` |
+| `code-simplifier` | Simplify code, find smells, reduce complexity, identify refactoring opportunities, or check for dead code |
 
 ```bash
-claude --plugin-dir ./kit/plugins/memory-tools
-# "Audit my CLAUDE.md file"
-# "My Claude is ignoring my instructions — what's wrong?"
-# "Diagnose my project memory"
-# "Create path-specific rules for my src/ directory"
+claude --plugin-dir ./kit/plugins/code-simplifier
+# "Find code smells in this file"
+# "Simplify this function"
+# "What dead code can I remove?"
 ```
 
-[View Plugin Documentation](./kit/plugins/memory-tools/README.md)
+[View Documentation](./kit/plugins/code-simplifier/README.md)
 
 ---
 
-### wcag-compliance-reviewer `v1.2.1`
-
-Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance.
-
-**Skills** (activate automatically based on your request):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `wcag-compliance-reviewer` | Review code for accessibility, WCAG compliance, or a11y issues |
-
-```bash
-claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
-# "Check this component for accessibility issues"
-# "Is this page WCAG 2.2 compliant?"
-```
-
-[View Plugin Documentation](./kit/plugins/wcag-compliance-reviewer/README.md)
+### Testing
 
 ---
 
-### skill-reviewer `v1.6.2`
+#### `code-testing-agent` v3.4.0
 
-Reviews and plans Claude Code skills, runs tests for changed files, and audits skill permissions.
+Analyzes code and suggests specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage targets. Includes TDD fix/loop workflows for bug-driven and feature-driven development.
 
-**Skills** (activate automatically based on your request):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `reviewing-skills` | Audit or review a SKILL.md file for quality and best practices |
-| `planning-skills` | Plan, design, or scaffold a new Claude Code skill |
-| `auditing-allowed-tools` | Audit, recommend, or fix the `allowed-tools` frontmatter for a SKILL.md, or review which tools Claude used during a session |
-| `running-tests` | Run tests for changed files, detect test framework, report results |
-
-```bash
-claude --plugin-dir ./kit/plugins/skill-reviewer
-# "Review this SKILL.md file"
-# "Help me plan a new skill"
-# "What allowed-tools should this skill have?"
-# "Run tests for the files I changed"
-```
-
-[View Plugin Documentation](./kit/plugins/skill-reviewer/README.md)
-
----
-
-### code-testing-agent `v3.2.2`
-
-Analyzes code and suggests specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage.
-
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
 | `code-testing-agent` | Suggest tests for code based on behavior and intent |
 | `reviewing-tests` | Review existing tests for quality, coverage gaps, and alignment |
-| `tdd-fix` | Reproduce a bug with a failing test, then fix it in an autonomous red-green cycle |
-| `running-tests` | Run tests, detect framework, and report results |
+| `tdd-fix` | Reproduce a bug with a failing test, then fix it (red-green cycle) — manual invoke only |
+| `tdd-loop` | Drive a new feature through a full TDD loop — manual invoke only |
 
 ```bash
 claude --plugin-dir ./kit/plugins/code-testing-agent
@@ -370,13 +369,123 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 # "TDD fix this bug — write a failing test then make it green"
 ```
 
-[View Plugin Documentation](./kit/plugins/code-testing-agent/README.md)
+[View Documentation](./kit/plugins/code-testing-agent/README.md)
 
 ---
 
-### git-agent `v3.6.2`
+#### `react-perf-analyzer` v1.3.0
 
-Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship).
+Identifies React component source patterns that commonly correlate with poor INP, CLS, Long Animation Frames, and Long Tasks scores. Produces a heuristic report with recommendations. Manual-invoke only.
+
+**Skills** (activate automatically):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `react-perf-analyzer` | Analyze React components for performance issues or web vitals problems — manual invoke |
+
+```bash
+claude --plugin-dir ./kit/plugins/react-perf-analyzer
+# "Analyze this component for performance issues"
+# "What's causing poor INP on this page?"
+```
+
+[View Documentation](./kit/plugins/react-perf-analyzer/README.md)
+
+---
+
+### Planning
+
+---
+
+#### `plan-interview` v2.2.0
+
+Stress-tests implementation plans with structured multi-round interviews before coding begins. Auto-routes product plans to the panel review skill (Step 1.5 router). Always emits an interview HTML artifact. Use `--quick` flag to bypass routing.
+
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/plan-interview:plan-interview [file]` | Run a structured interview against a plan file |
+| `/plan-interview:deep-grill [file]` | Walk through each decision branch and stress-test individual decisions |
+| `/plan-interview:plan-status [file]` | Check, update, or determine the implementation status of a plan |
+| `/plan-interview:update-plan-status [file]` | Update a plan's status metadata |
+| `/plan-interview:plan-hygiene` | Pre-commit check for randomly-named plan files that need renaming |
+| `/plan-interview:review-rename-plans` | Review and rename plan files with non-descriptive names |
+| `/plan-interview:documenting-plans [file]` | Generate prose documentation from completed plan files |
+
+**Skills** (activate automatically):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `plan-interview` | Stress-test, validate, interview, or find gaps in a plan |
+| `deep-grill` | Deep grill a plan or stress-test individual design decisions |
+| `plan-status` | Check or determine the implementation status of a plan file |
+| `documenting-plans` | Document a plan or turn a plan into reference docs |
+
+```bash
+claude --plugin-dir ./kit/plugins/plan-interview
+# /plan-interview:plan-interview docs/plans/my-plan.md
+# /plan-interview:deep-grill docs/plans/my-plan.md
+# "Stress-test this plan"
+```
+
+[View Documentation](./kit/plugins/plan-interview/README.md)
+
+---
+
+#### `product-plans` v3.4.2
+
+Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional agent team (PM, Lead Developer, UX, Frontend, Accessibility, Security). Produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact. Background mode available via `/product-plans:product-plans-bg`.
+
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/product-plans:product-plans-bg` | Run the full panel review in the background |
+
+**Skills** (activate automatically):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `plan-review-agents` | Review a product plan, PRD, or feature proposal with a cross-functional team |
+
+```bash
+claude --plugin-dir ./kit/plugins/product-plans
+# "Review this PRD with your full panel"
+# "What would the security reviewer say about this plan?"
+# /product-plans:product-plans-bg
+```
+
+[View Documentation](./kit/plugins/product-plans/README.md)
+
+---
+
+#### `plan-agent` v0.2.0
+
+Plan authoring on demand. The explicit `/plan-agent:author <objective>` skill runs the full §0–§7 workflow from a free-text objective. A filename validation hook enforces verb-target kebab-case naming on every plan write.
+
+**Skills** (activate explicitly):
+
+| Skill | Description |
+|-------|-------------|
+| `plan-agent:author` | Author a new plan from a free-text objective — manual invoke only |
+
+```bash
+claude --plugin-dir ./kit/plugins/plan-agent
+# /plan-agent:author "Add dark mode support to the settings page"
+```
+
+[View Documentation](./kit/plugins/plan-agent/README.md)
+
+---
+
+### Git & Workflow
+
+---
+
+#### `git-agent` v3.9.0
+
+Automated git workflow — create branches, commit with conventional messages, and open PRs. Includes background subagents and slash commands for fire-and-forget operations, plus a supervised full pipeline via `ship-autonomous`.
 
 **Commands:**
 
@@ -386,98 +495,89 @@ Automated git workflow — create branches, commit with conventional messages, a
 | `/git-agent:pr-bg` | Fire-and-forget background PR creation |
 | `/git-agent:ship-bg` | Fire-and-forget background commit + push + PR |
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `branch-agent` | Create a new branch, start a branch, or branch off main |
+| `branch-agent` | Create a new branch or branch off main |
 | `commit-agent` | Stage changes and create a conventional commit |
-| `pr-agent` | Create a PR, push and open a pull request, or submit a branch for review |
-| `ship` | Commit, push, and open a pull request in one flow |
+| `pr-agent` | Create a PR, push, or open a branch for review |
+| `ship` | Commit, push, and open a PR in one flow |
 
-**Agents** (background subprocesses):
+**Agents:**
 
 | Agent | Purpose |
 |-------|---------|
-| `agent-commit` | Background git commit without blocking the session |
-| `agent-pr` | Background PR creation without blocking the session |
-| `agent-ship` | Background end-to-end commit + push + PR flow |
+| `agent-commit` | Background git commit — non-blocking |
+| `agent-pr` | Background PR creation — non-blocking |
+| `agent-ship` | Background end-to-end commit + push + PR |
 
 ```bash
 claude --plugin-dir ./kit/plugins/git-agent
 # "Commit my changes"
 # "Create a branch for this feature"
-# "Open a PR for this branch"
 # "Ship it"
-# /git-agent:commit-bg
+# /git-agent:ship-bg
 ```
 
-[View Plugin Documentation](./kit/plugins/git-agent/README.md)
+[View Documentation](./kit/plugins/git-agent/README.md)
 
 ---
 
-### agent-creator `v1.1.1`
+#### `settings-sync` v1.0.0
 
-Scaffolds Claude Code agent-based plugins with guided workflows.
+Back up and restore Claude Code user settings to a dedicated git repo. Routine-compatible for automated weekly or daily backups.
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `generating-agents` | Create, scaffold, or generate a new agent-based plugin |
+| `settings-sync` | Sync, back up, or restore Claude Code settings to/from a git repo |
 
 ```bash
-claude --plugin-dir ./kit/plugins/agent-creator
-# "Create a new agent plugin called my-agent"
+claude --plugin-dir ./kit/plugins/settings-sync
+# "Back up my Claude Code settings"
+# "Restore my settings from my backup repo"
 ```
 
-[View Plugin Documentation](./kit/plugins/agent-creator/README.md)
+[View Documentation](./kit/plugins/settings-sync/README.md)
 
 ---
 
-### react-perf-analyzer `v1.2.0`
+### Accessibility & Performance
 
-Identifies React component source patterns that commonly correlate with poor INP, CLS, Long Animation Frames, and Long Tasks scores.
+---
 
-**Skills** (activate automatically based on your request):
+#### `wcag-compliance-reviewer` v1.2.1
+
+Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance. Covers ARIA, color contrast, keyboard navigation, screen reader compatibility, and more.
+
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `react-perf-analyzer` | Analyze React components for performance issues or web vitals problems |
+| `wcag-compliance-reviewer` | Review code for accessibility, WCAG 2.2 compliance, or a11y issues |
 
 ```bash
-claude --plugin-dir ./kit/plugins/react-perf-analyzer
-# "Analyze this component for performance issues"
+claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
+# "Check this component for accessibility issues"
+# "Is this page WCAG 2.2 AA compliant?"
+# "Audit the ARIA usage in this form"
 ```
 
-[View Plugin Documentation](./kit/plugins/react-perf-analyzer/README.md)
+[View Documentation](./kit/plugins/wcag-compliance-reviewer/README.md)
 
 ---
 
-### marketplace-builder `v1.1.1`
-
-Evaluates a repository and scaffolds Claude Code marketplace infrastructure.
-
-**Skills** (activate automatically based on your request):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `building-marketplaces` | Scaffold, audit, or set up a Claude Code plugin marketplace |
-
-```bash
-claude --plugin-dir ./kit/plugins/marketplace-builder
-# "Help me set up a plugin marketplace for this repo"
-```
-
-[View Plugin Documentation](./kit/plugins/marketplace-builder/README.md)
+### Plugin Development
 
 ---
 
-### agentic-plugin-dev `v1.2.1`
+#### `agentic-plugin-dev` v1.2.1
 
 Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure.
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -489,38 +589,37 @@ Create, manage, and validate Claude Code plugins — scaffold new plugins, manag
 claude --plugin-dir ./kit/plugins/agentic-plugin-dev
 # "Create a new plugin called my-plugin"
 # "Validate the structure of this plugin"
+# "Add my-plugin to the marketplace"
 ```
 
-[View Plugin Documentation](./kit/plugins/agentic-plugin-dev/README.md)
+[View Documentation](./kit/plugins/agentic-plugin-dev/README.md)
 
 ---
 
-### code-simplifier `v1.0.1`
+#### `agent-creator` v1.1.1
 
-Analyze code for structural quality issues, code smells, and optimization opportunities — dead code, complexity, god classes, duplication, coupling, and performance anti-patterns.
+Scaffolds Claude Code agent-based plugins with guided, opinionated workflows.
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `code-simplifier` | Simplify code, find code smells, reduce complexity, identify refactoring opportunities, check for dead code, or optimize structure |
+| `generating-agents` | Create, scaffold, or generate a new agent-based plugin |
 
 ```bash
-claude --plugin-dir ./kit/plugins/code-simplifier
-# "Find code smells in this file"
-# "Simplify this function"
-# "Check for dead code"
+claude --plugin-dir ./kit/plugins/agent-creator
+# "Create a new agent plugin called deployment-agent"
 ```
 
-[View Plugin Documentation](./kit/plugins/code-simplifier/README.md)
+[View Documentation](./kit/plugins/agent-creator/README.md)
 
 ---
 
-### agent-reviewer `v1.0.1`
+#### `agent-reviewer` v1.0.1
 
-Performs a structured, scored audit of Claude Code subagent definition files (`agents/*.md`) against official best practices — covering frontmatter compliance, tool configuration, description quality, system prompt quality, and security & isolation. Produces a graded report (Excellent / Good / Needs Work / Rewrite) with a unified diff of suggested corrections.
+Performs a structured, scored audit of Claude Code subagent definition files (`agents/*.md`) against official best practices. Covers frontmatter compliance, tool configuration, description quality, system prompt quality, and security posture. Produces a graded report (Excellent / Good / Needs Work / Rewrite) with a unified diff of suggested corrections.
 
-**Skills** (activate automatically based on your request):
+**Skills** (activate automatically):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -530,177 +629,320 @@ Performs a structured, scored audit of Claude Code subagent definition files (`a
 claude --plugin-dir ./kit/plugins/agent-reviewer
 # "Review my agent definition at agents/agent-commit.md"
 # "Audit this agent file"
-# "Score my agent definition"
-# "Does this agent follow best practices?"
+# "Score my agent definition against best practices"
 ```
 
-[View Plugin Documentation](./kit/plugins/agent-reviewer/README.md)
+[View Documentation](./kit/plugins/agent-reviewer/README.md)
 
 ---
 
-## Marketplace
+#### `skill-reviewer` v2.2.1
 
-The `agentics-kit` marketplace is defined in `.claude-plugin/marketplace.json`. Each plugin is sourced via `git-subdir`, enabling sparse cloning of individual plugins without fetching the full repository.
+Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit `allowed-tools` permissions, and enforce the three-part 200-character description format.
 
-Register the marketplace and install plugins by name:
+**Skills** (activate automatically):
 
-```bash
-/plugin marketplace add shawn-sandy/agentics
-/plugin install code-review@agentics-kit
-/plugin install plan-interview@agentics-kit
-/plugin install memory-tools@agentics-kit
-/plugin install wcag-compliance-reviewer@agentics-kit
-/plugin install skill-reviewer@agentics-kit
-/plugin install code-testing-agent@agentics-kit
-/plugin install git-agent@agentics-kit
-/plugin install agent-creator@agentics-kit
-/plugin install react-perf-analyzer@agentics-kit
-/plugin install marketplace-builder@agentics-kit
-/plugin install agentic-plugin-dev@agentics-kit
-/plugin install code-simplifier@agentics-kit
-/plugin install agent-reviewer@agentics-kit
-```
-
-## Development
-
-### Plugin Development
-
-Create new plugins in the `kit/plugins/` directory:
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `reviewing-skills` | Audit or review a SKILL.md file for quality and best practices |
+| `planning-skills` | Plan, design, or scaffold a new Claude Code skill |
+| `auditing-allowed-tools` | Audit, recommend, or fix the `allowed-tools` frontmatter |
+| `running-tests` | Run tests for changed files, detect test framework, report results |
 
 ```bash
-# Create plugin structure
-mkdir -p kit/plugins/my-plugin/.claude-plugin
-mkdir -p kit/plugins/my-plugin/skills/my-skill
-
-# Create plugin manifest (no version — version goes in marketplace.json only)
-cat > kit/plugins/my-plugin/.claude-plugin/plugin.json <<EOF
-{
-  "name": "my-plugin",
-  "description": "My test plugin"
-}
-EOF
+claude --plugin-dir ./kit/plugins/skill-reviewer
+# "Review this SKILL.md file"
+# "Help me plan a new skill"
+# "What allowed-tools should this skill have?"
 ```
 
-### Testing Plugins
+[View Documentation](./kit/plugins/skill-reviewer/README.md)
 
-Test plugins locally before adding to the marketplace:
+---
+
+#### `marketplace-builder` v1.1.1
+
+Evaluates a repository and scaffolds Claude Code marketplace infrastructure — audits readiness, generates missing files, and guides marketplace setup.
+
+**Skills** (activate automatically):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `building-marketplaces` | Scaffold, audit, or set up a Claude Code plugin marketplace |
 
 ```bash
-# Test plugin directly (starts interactive session)
-claude --plugin-dir ./kit/plugins/my-plugin
-
-# Once in the Claude session, invoke your command:
-# /my-plugin:my-command
-
-# Or provide a prompt directly:
-claude --plugin-dir ./kit/plugins/my-plugin "Run /my-plugin:my-command"
+claude --plugin-dir ./kit/plugins/marketplace-builder
+# "Help me set up a plugin marketplace for this repo"
+# "Audit my repo for marketplace readiness"
 ```
 
-### Registering Plugins in Marketplace
+[View Documentation](./kit/plugins/marketplace-builder/README.md)
 
-Add your plugin to `.claude-plugin/marketplace.json`:
+---
 
-```json
-{
-  "plugins": [
-    {
-      "name": "my-plugin",
-      "source": {
-        "source": "git-subdir",
-        "url": "shawn-sandy/agentics",
-        "path": "kit/plugins/my-plugin"
-      },
-      "version": "1.0.0",
-      "description": "My test plugin",
-      "category": "development",
-      "tags": ["testing"]
-    }
-  ]
-}
+### Productivity
+
+---
+
+#### `memory-tools` v3.1.0
+
+Audits and optimizes CLAUDE.md project memory files against Claude Code best practices. Enforces the principle: keep only rules that actually change Claude's behavior. Also advises on path-specific scoped rules.
+
+**Skills** (activate automatically):
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `agentic-memory-doctor` | Optimize, audit, clean up, or diagnose a CLAUDE.md file — also activates when Claude is ignoring instructions |
+| `path-rules-advisor` | Create path-specific rules, organize rules by file type/directory, or check if the project needs scoped rules in `.claude/rules/` |
+
+```bash
+claude --plugin-dir ./kit/plugins/memory-tools
+# "Audit my CLAUDE.md file"
+# "Claude keeps ignoring my instructions — what's wrong?"
+# "Create path-specific rules for my src/ directory"
 ```
 
-## Documentation
+[View Documentation](./kit/plugins/memory-tools/README.md)
 
-- [Plugin Directory](./kit/plugins/README.md) — Plugin development guide and examples
-- [Test Fixtures](./tests/fixtures/README.md) — Testing utilities and fixtures
-- [Roadmap](./ROADMAP.md) — Planned features and API development
-- [Changelog](./CHANGELOG.md) — Project-level change history
-- [Security Policy](./SECURITY.md) — Vulnerability reporting
-- [Contributing](./CONTRIBUTING.md) — How to contribute
-- [Code of Conduct](./CODE_OF_CONDUCT.md) — Community standards
+---
 
-## Roadmap
+#### `code-share` v0.8.0
 
-### Current Features
+Discover shareable code from git history or by codebase path, scrub it for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky. Use `/code-share:digest` for interactive and `/code-share:digest-bg` for background digest scanning.
 
-- 13 example plugin implementations covering commands, skills, and agents
-- `agentics-kit` marketplace v3.2.0 with `git-subdir` sources for sparse cloning
-- Plugin structure documentation and patterns
-- Community infrastructure: contributing guide, code of conduct, security policy, issue templates
+**Commands:**
 
-| Plugin | Version | Components |
-|--------|---------|------------|
-| code-review | v3.2.1 | 1 skill, 1 agent |
-| plan-interview | v1.14.6 | 7 commands, 4 skills |
-| memory-tools | v3.0.0 | 2 skills |
-| wcag-compliance-reviewer | v1.2.1 | 1 skill |
-| skill-reviewer | v1.6.2 | 4 skills |
-| code-testing-agent | v3.2.2 | 4 skills |
-| git-agent | v3.6.2 | 3 commands, 4 skills, 3 agents |
-| agent-creator | v1.1.1 | 1 skill |
-| react-perf-analyzer | v1.2.0 | 1 command, 1 skill |
-| marketplace-builder | v1.1.1 | 1 skill |
-| agentic-plugin-dev | v1.2.1 | 3 skills |
-| code-simplifier | v1.0.1 | 1 skill |
-| agent-reviewer | v1.0.1 | 1 skill |
+| Command | Description |
+|---------|-------------|
+| `/code-share:digest` | Interactive digest — discover and share the best recent work |
+| `/code-share:digest-bg` | Background digest scan |
 
-### Planned Features
+**Skills** (activate automatically):
 
-See [ROADMAP.md](./ROADMAP.md) for details on upcoming features including:
-- Marketplace API implementation
-- CLI for plugin installation
-- Remote marketplace support
-- Plugin search and filtering
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `code-share` | Share code, create social cards, or draft copy for a feature or snippet |
 
-## CI/CD Integration
+```bash
+claude --plugin-dir ./kit/plugins/social-media-tools
+# "Create a social card for this feature"
+# "Draft a LinkedIn post about my latest commit"
+# /code-share:digest
+```
 
-This repository uses two GitHub Actions workflows powered by [Claude Code Action](https://github.com/anthropics/claude-code-action):
+[View Documentation](./kit/plugins/social-media-tools/README.md)
 
-- **Claude Code** (`claude.yml`) — Responds to `@claude` mentions in issue comments, PR review comments, and issues. Use it to ask Claude for help directly in GitHub.
-- **Claude Code Review** (`claude-code-review.yml`) — Automatically reviews all pull requests when opened, synchronized, or reopened. Provides code review feedback as PR comments.
+---
+
+## Plugin Reference Table
+
+| Plugin | Version | Category | Components |
+|--------|---------|----------|------------|
+| [code-review](./kit/plugins/code-review/README.md) | 3.3.0 | development | 1 command, 1 skill, 1 agent |
+| [code-simplifier](./kit/plugins/code-simplifier/README.md) | 1.0.1 | development | 1 skill |
+| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.0 | testing | 4 skills |
+| [react-perf-analyzer](./kit/plugins/react-perf-analyzer/README.md) | 1.3.0 | testing | 1 skill |
+| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.0 | development | 7 commands, 4 skills |
+| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.2 | productivity | 1 command, 1 skill |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.2.0 | productivity | 1 skill, 1 hook |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.9.0 | development | 3 commands, 4 skills, 3 agents |
+| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.0 | productivity | 1 skill |
+| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.1 | security | 1 skill |
+| [agentic-plugin-dev](./kit/plugins/agentic-plugin-dev/README.md) | 1.2.1 | development | 3 skills |
+| [agent-creator](./kit/plugins/agent-creator/README.md) | 1.1.1 | development | 1 skill |
+| [agent-reviewer](./kit/plugins/agent-reviewer/README.md) | 1.0.1 | development | 1 skill |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.1 | development | 4 skills |
+| [marketplace-builder](./kit/plugins/marketplace-builder/README.md) | 1.1.1 | development | 1 skill |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.0 | development | 2 skills |
+| [code-share](./kit/plugins/social-media-tools/README.md) | 0.8.0 | productivity | 2 commands, 1 skill |
+
+---
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on:
-- Reporting bugs
-- Proposing new plugins
-- Plugin development workflow
-- PR process and conventions
+### Reporting Bugs
+
+Open a [GitHub Issue](https://github.com/shawn-sandy/agentics/issues/new) with:
+
+- Plugin name and version
+- Claude Code CLI version (`claude --version`)
+- Steps to reproduce
+- Expected vs actual behavior
+- Error messages or screenshots
+
+### Creating a New Plugin
+
+**Step 1: Scaffold the directory structure**
+
+```
+kit/plugins/my-plugin/
+├── .claude-plugin/
+│   └── plugin.json          # Required: name, description (NO version field)
+├── commands/                 # Slash commands — optional
+│   └── my-command.md
+├── skills/                   # Auto-activated skills — optional
+│   └── my-skill/
+│       └── SKILL.md
+├── agents/                   # Background subagent definitions — optional
+│   └── my-agent.md
+└── README.md
+```
+
+**Step 2: Create the plugin manifest**
+
+```json
+{
+  "name": "my-plugin",
+  "description": "What this plugin does"
+}
+```
+
+> **Version rule:** `version` belongs **only** in `.claude-plugin/marketplace.json`. Adding it to `plugin.json` silently overrides the marketplace version and causes conflicts.
+
+**Step 3: Test locally**
+
+```bash
+claude --plugin-dir ./kit/plugins/my-plugin
+
+# Inside the session, test your commands/skills:
+# /my-plugin:my-command
+# "Invoke my-plugin on this file"
+```
+
+**Step 4: Register in the marketplace**
+
+Add an entry to `.claude-plugin/marketplace.json`:
+
+```json
+{
+  "name": "my-plugin",
+  "source": {
+    "source": "git-subdir",
+    "url": "https://github.com/shawn-sandy/agentics.git",
+    "path": "kit/plugins/my-plugin"
+  },
+  "version": "1.0.0",
+  "description": "What this plugin does",
+  "category": "development",
+  "tags": ["specific", "relevant", "tags"]
+}
+```
+
+**Available categories:** `development` · `testing` · `productivity` · `security` · `documentation` · `learning`
+
+### Pull Request Process
+
+1. Create a feature branch from `main`
+2. Build and test your plugin locally with `--plugin-dir`
+3. Bump the plugin's `version` in `marketplace.json` (must be higher than `main`)
+4. Include the relevant plan file from `docs/plans/` in your commit
+5. Submit a PR with a clear description
+
+**PR Checklist:**
+
+- [ ] `plugin.json` has `name` and `description` — **no `version` field**
+- [ ] Version bumped in `marketplace.json` and higher than version on `main`
+- [ ] Plugin tested locally with `claude --plugin-dir`
+- [ ] `README.md` included in plugin directory
+- [ ] Homepage URL points to the plugin directory: `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/my-plugin`
+- [ ] `CHANGELOG.md` updated (for existing plugins)
+- [ ] Plan file committed alongside changes
+
+### Versioning
+
+| Bump | When |
+|------|------|
+| **PATCH** `x.y.Z` | Bug fix, typo, metadata correction |
+| **MINOR** `x.Y.z` | New command, skill, agent, or hook added |
+| **MAJOR** `X.y.z` | Removing/renaming a command/skill/agent, changing argument format |
+
+**Commit message conventions:**
+
+```
+fix(kit/plugins/my-plugin): bump version to 1.0.1     # patch
+feat(kit/plugins/my-plugin): bump version to 1.1.0    # minor
+feat(kit/plugins/my-plugin)!: bump version to 2.0.0   # major
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide.
+
+---
+
+## Development
+
+### Authoring Rules
+
+Detailed patterns live in `.claude/rules/`:
+
+| File | Scope | Content |
+|------|-------|---------|
+| `plugin-patterns.md` | `kit/plugins/**` | Command/skill patterns, progressive disclosure, pitfalls |
+| `marketplace.md` | global | Categories, tagging, versioning, registration |
+| `testing.md` | `tests/**` | Test fixture guidelines |
+| `plan-hygiene.md` | `**/plans/**` | Pre-commit plan file rename checks |
+| `skill-authoring.md` | global | Skill description format, `allowed-tools`, trigger phrases |
+
+### Project Hooks (Auto-Active)
+
+Three hooks run automatically after every file Write/Edit:
+
+1. **JSON validation** — validates `marketplace.json` syntax
+2. **Uncommitted plan warning** — alerts if plan files are unstaged alongside plugin changes
+3. **Version guard** — checks that the plugin version was bumped when `marketplace.json` was modified
+
+### Running Tests
+
+```bash
+# Run the demo test suite
+bash tests/demo/run.sh
+
+# Check fixture validity
+ls tests/fixtures/valid-plugin/
+```
+
+---
+
+## CI/CD
+
+Two GitHub Actions workflows run on every PR and push:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `claude.yml` | `@claude` mention in issues/PRs | Respond to questions and implement requested changes |
+| `claude-code-review.yml` | PR opened / synchronized / reopened | Automated code review as PR comments |
+| `update-readme.yml` | Every Sunday at 00:00 UTC | Keep the README in sync with `marketplace.json` |
+
+To trigger Claude in any issue or PR comment, mention `@claude`:
+
+```
+@claude Can you review the skill descriptions in this plugin?
+```
+
+---
 
 ## Resources
 
-- [Claude Code Documentation](https://code.claude.com/docs/en)
-- [Create Plugins Guide](https://code.claude.com/docs/en/plugins)
-- [Plugins Reference](https://code.claude.com/docs/en/plugins-reference)
-- [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
-- [Discover Plugins](https://code.claude.com/docs/en/discover-plugins)
-- [Plugin Development Best Practices](./kit/plugins/README.md)
+| Resource | Link |
+|----------|------|
+| Claude Code Docs | https://code.claude.com/docs/en |
+| Plugin Creation Guide | https://code.claude.com/docs/en/plugins |
+| Plugin Reference | https://code.claude.com/docs/en/plugins-reference |
+| Plugin Marketplaces | https://code.claude.com/docs/en/plugin-marketplaces |
+| Discover Plugins | https://code.claude.com/docs/en/discover-plugins |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) |
+| Roadmap | [ROADMAP.md](./ROADMAP.md) |
+| Security Policy | [SECURITY.md](./SECURITY.md) |
+| Code of Conduct | [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) |
+
+---
 
 ## License
 
-MIT License
+MIT License — Copyright (c) 2026 Shawn Sandy
 
-Copyright (c) 2026 Shawn Sandy
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -709,4 +951,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
