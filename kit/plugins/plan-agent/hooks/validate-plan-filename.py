@@ -38,7 +38,7 @@ STOP_WORDS_2ND = {"the", "a", "an", "this", "that", "my", "some", "please", "to"
 
 _KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 _HEX_AGENT_RE = re.compile(r"-agent-[0-9a-f]{6,}$")
-_HEX_SUFFIX_RE = re.compile(r"-[0-9a-f]{8,}$")
+_HEX_SUFFIX_RE = re.compile(r"-[0-9a-f]{6,}$")
 _DATE_SUFFIX_RE = re.compile(r"-\d{4}-\d{2}-\d{2}$")
 
 
@@ -95,18 +95,24 @@ def _get_plans_dir():
         if val:
             if os.path.isabs(val):
                 return val.rstrip("/")
-            # Relative path: strip leading ./ and trailing /
-            return val.lstrip("./").strip("/") or _FALLBACK_PLANS_DIR
+            # Relative path: strip leading ./ prefix (lstrip would strip chars, not the literal prefix)
+            if val.startswith("./"):
+                val = val[2:]
+            return val.rstrip("/") or _FALLBACK_PLANS_DIR
 
     return _FALLBACK_PLANS_DIR
 
 
 def _is_plan_path(path, plans_dir):
     """Return True if path is a .md file inside plans_dir."""
-    normalized = path.replace(os.sep, "/")
-    if os.path.isabs(plans_dir):
-        return normalized.startswith(plans_dir + "/")
-    return f"/{plans_dir}/" in normalized
+    # Resolve both to absolute paths so the comparison is an exact prefix check,
+    # not a substring scan that can match unrelated directories.
+    abs_plans = plans_dir if os.path.isabs(plans_dir) else os.path.abspath(plans_dir)
+    abs_path = os.path.abspath(path)
+    # Normalize separators for cross-platform consistency.
+    abs_plans = abs_plans.replace(os.sep, "/").rstrip("/")
+    abs_path = abs_path.replace(os.sep, "/")
+    return abs_path.startswith(abs_plans + "/")
 
 
 def _is_completed(path):

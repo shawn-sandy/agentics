@@ -79,4 +79,4 @@ Direct, imperative, developer-friendly — real names (file paths, function name
 
 ## Skeleton
 
-Copy `reference/SKELETON.md` (in this skill's directory) as a starter for every new plan.
+Copy `reference/SKELETON.md` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/author/reference/SKELETON.md` if the path is uncertain, to avoid accidentally loading the global `~/.claude/rules/reference/SKELETON.md` which has different content.
