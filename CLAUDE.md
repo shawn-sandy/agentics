@@ -45,7 +45,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-17 plugins in the marketplace (`agentics-kit` v3.8.0):
+18 plugins in the marketplace (`agentics-kit` v3.9.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|

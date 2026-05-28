@@ -1,5 +1,9 @@
 # Changelog — social-media-tools
 
+## v0.8.1 — 2026-05-28
+
+Fixed generic `element` label in `references/rendering-pipeline.md` rendering pipeline reference.
+
 ## v0.8.0 — 2026-05-28
 
 Added `selection-share` skill for turning selected/pasted code into objective-driven posts.

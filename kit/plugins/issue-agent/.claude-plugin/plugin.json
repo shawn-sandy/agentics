@@ -1,0 +1,9 @@
+{
+  "name": "issue-agent",
+  "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection and a confirmation gate before writing.",
+  "author": { "name": "Agentics Project" },
+  "license": "MIT",
+  "keywords": ["issue", "ticket", "bug", "feature", "github", "gitlab", "gh", "glab", "issue-tracker"],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/issue-agent",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
