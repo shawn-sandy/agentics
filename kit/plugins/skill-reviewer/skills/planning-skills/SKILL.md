@@ -1,6 +1,6 @@
 ---
 name: planning-skills
-description: "Scaffolds a new skill with SKILL.md and supporting files. Walks through a structured workflow covering frontmatter, body, references, and optional scripts. Use when the user asks to plan, design, or scaffold a new skill."
+description: "Scaffolds a new skill with SKILL.md and supporting files. Walks a structured workflow covering frontmatter, body, references, and scripts. Use when the user asks to plan or scaffold a new skill."
 allowed-tools: AskUserQuestion, Read, TodoWrite, Write
 ---
 

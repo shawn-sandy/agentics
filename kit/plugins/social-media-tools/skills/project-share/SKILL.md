@@ -1,6 +1,6 @@
 ---
 name: project-share
-description: "Generates social posts and dark-mode cards for a project by topic. Creates platform-aware posts and cards for features, bugs, changes, or releases. Use when announcing project updates for LinkedIn, Twitter/X, or Bluesky."
+description: "Generates social posts and dark-mode cards for a project by topic. Creates platform-aware posts for features, bugs, changes, or releases. Use when announcing project updates on social media."
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, SendUserFile, Skill
 disable-model-invocation: true
 ---

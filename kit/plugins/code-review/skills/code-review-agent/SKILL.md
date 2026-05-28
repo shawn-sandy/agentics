@@ -1,6 +1,6 @@
 ---
 name: code-review-agent
-description: "Reviews code for bugs, security issues, and breaking changes. Produces prioritized findings covering quality, vulnerabilities, and regressions. Use when the user asks to review code or check a PR diff."
+description: "Reviews code for bugs, security issues, and breaking changes. Produces prioritized findings on quality, vulnerabilities, and regressions. Use when asked to review code or check a PR diff."
 allowed-tools: AskUserQuestion, Bash, Read
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: tdd-loop
-description: "Implements features via TDD with up to 20 red-green-refactor rounds. Writes failing tests first, then iterates until all pass and the feature is complete. Use when the user asks to TDD a new feature or write tests first."
+description: "Implements features via TDD with up to 20 red-green-refactor rounds. Writes failing tests first, then iterates until all pass. Use when the user asks to TDD a new feature or write tests first."
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, TodoWrite, Skill
 disable-model-invocation: true
 ---

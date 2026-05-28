@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Ships changes by staging, committing, pushing, and opening a PR. Supports both GitHub and GitLab in a single guided flow. Use when the user asks to ship changes, commit and create a PR, or land their work."
+description: "Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
