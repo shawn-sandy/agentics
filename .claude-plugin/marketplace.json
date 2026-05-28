@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
@@ -138,7 +138,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.9.0",
+      "version": "3.9.1",
       "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
@@ -325,7 +325,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "0.8.0",
+      "version": "0.8.1",
       "description": "Discover shareable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky",
       "category": "productivity",
       "tags": [
@@ -371,6 +371,28 @@
         "workflow",
         "verb-target",
         "kebab-case"
+      ]
+    },
+    {
+      "name": "issue-agent",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/issue-agent"
+      },
+      "version": "0.1.0",
+      "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection and a confirmation gate before writing",
+      "category": "development",
+      "tags": [
+        "issue",
+        "ticket",
+        "bug",
+        "feature",
+        "github",
+        "gitlab",
+        "gh",
+        "glab",
+        "issue-tracker"
       ]
     }
   ]

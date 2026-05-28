@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>issue-agent plugin</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --bullet-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bullets {
+      padding: 20px 32px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: rgba(56, 139, 253, 0.05);
+      border-left: 3px solid var(--bullet-accent);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .bullets li::before {
+      content: '→';
+      color: var(--bullet-accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .footer-note { font-size: 11px; color: var(--muted); }
+    .footer-badge { font-size: 11px; color: var(--accent); font-weight: 500; }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: 680px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label { color: #8b949e; font-size: 12px; margin: 0 0 8px; }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="badge">New Plugin</div>
+      <h1>issue-agent plugin</h1>
+      <p class="subtitle">Create GitHub &amp; GitLab issues from any context — now in the agentics marketplace</p>
+    </div>
+
+    <ul class="bullets">
+      <li>Seeds issues from 4 sources: bug, feature, session, or text selection</li>
+      <li>Auto-detects git host — GitHub gets <code style="font-size:12px;background:#0d1117;padding:1px 5px;border-radius:3px;">gh</code>, GitLab gets <code style="font-size:12px;background:#0d1117;padding:1px 5px;border-radius:3px;">glab</code></li>
+      <li>Bug source auto-collects Node/npm versions, recent git log, and related files</li>
+      <li>Always shows a confirmation gate before creating on the remote</li>
+    </ul>
+
+    <div class="card-footer">
+      <span class="footer-note">github.com/shawn-sandy/agentics</span>
+      <span class="footer-badge">New Plugin</span>
+    </div>
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just shipped a new Claude Code plugin: issue-agent.
+
+The problem: you find a bug mid-session, note a feature idea in conversation, or highlight a gnarly piece of code — and then... it becomes a mental note. issue-agent fixes that.
+
+You can seed an issue from four sources:
+→ a bug you just hit (auto-collects Node/npm versions, git log, related files)
+→ a feature idea that surfaced in the conversation
+→ a text selection or pasted snippet
+→ anything discussed in the current session
+
+It auto-detects your git host from the remote URL — GitHub gets gh, GitLab gets glab. It drafts a structured issue (bug report, feature request, or general), runs a duplicate check, and always shows a confirmation gate before touching the remote. One command to go from "I should track this" to a real issue.
+
+/issue-agent:create-issue
+
+#ClaudeCode #DeveloperTools #GitHub #GitLab</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">New Claude Code plugin: issue-agent creates GitHub/GitLab issues from your session — from a bug, a selection, a feature idea, or the current conversation. Auto-detects your git host. Always confirms before creating. /issue-agent:create-issue</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">New plugin: issue-agent creates GitHub/GitLab issues right from your Claude Code session — from a bug you just hit, something mid-chat, or a code selection. Picks gh or glab from the git remote. Always confirms before creating. /issue-agent:create-issue</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

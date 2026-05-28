@@ -1,5 +1,19 @@
 # Changelog — git-agent
 
+## v3.9.1 — branch-agent: auto-stash on checkout conflict
+
+- `branch-agent` now detects tracked files that would conflict with
+  `git checkout -b` before attempting the checkout (new Step 4.5). The
+  conflict set is computed as the intersection of locally-modified tracked
+  files and files that differ between `HEAD` and `origin/<default>`.
+- When conflicts are detected, the skill automatically stashes, creates the
+  branch, and pops the stash — recovering your uncommitted changes on the new
+  branch. Untracked files are never stashed.
+- On `git stash pop` failure (rare merge conflict), the skill stops with a
+  clear recovery guide (`git stash list` / resolve / `git stash drop`); the
+  stash is never auto-dropped.
+- No behaviour change for clean or untracked-only working trees.
+
 ## v3.9.0 — ship-autonomous watches PRs via event subscription
 
 - `ship-autonomous` now subscribes to the PR's activity events
