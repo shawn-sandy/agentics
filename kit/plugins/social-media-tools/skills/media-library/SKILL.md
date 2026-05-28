@@ -1,6 +1,6 @@
 ---
 name: media-library
-description: "Browses and reuses saved social media HTML posts from docs/media/social/. Lists saved cards by date and type; reuse post copy without regenerating. Use when asking to show saved posts, browse the media library, or find a prior post."
+description: "Browses and reuses saved social media HTML posts from docs/media/social/. Lists saved cards by type and date for copy reuse. Use when the user asks to browse the media library or find a prior post."
 allowed-tools: Bash, Read, AskUserQuestion
 ---
 

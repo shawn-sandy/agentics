@@ -1,6 +1,6 @@
 ---
 name: reviewing-skills
-description: "Scores SKILL.md files across 5 quality dimensions. Audits against Anthropic's authoring best practices and optionally generates a corrected version. Use when the user asks to review, audit, or score a skill."
+description: "Scores SKILL.md files across 5 quality dimensions. Audits against Anthropic's authoring best practices and optionally generates a fix. Use when the user asks to review, audit, or score a skill."
 allowed-tools: AskUserQuestion, Bash, Read, Write
 ---
 

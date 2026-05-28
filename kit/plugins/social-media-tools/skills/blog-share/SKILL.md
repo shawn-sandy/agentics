@@ -1,6 +1,6 @@
 ---
 name: blog-share
-description: "Creates social media copy and a dark-mode card for a blog post. Formats content for LinkedIn, Twitter, and Bluesky with appropriate tone and length. Use when asked to share or post a blog post on LinkedIn, Twitter, or Bluesky."
+description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, and Bluesky with platform tone. Use when asked to share a blog post on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
 ---
 

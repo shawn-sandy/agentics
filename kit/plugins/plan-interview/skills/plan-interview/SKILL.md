@@ -1,6 +1,6 @@
 ---
 name: plan-interview
-description: "Stress-tests implementation plans through structured interviews. Surfaces gaps, risks, and assumptions via targeted questions across the full plan. Use when the user asks to stress-test or validate a technical plan."
+description: "Stress-tests implementation plans through structured interviews. Surfaces gaps, risks, and assumptions via targeted questions. Use when the user asks to stress-test or validate a technical plan."
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill, ToolSearch, ExitPlanMode
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: plan-review-agents
-description: "Runs a six-role Agent Team to review product plans in place. Covers PM, Dev, UX, Frontend, A11y, and Security perspectives on PRDs and feature proposals. Use when the user asks to review or optimize a product plan."
+description: "Runs a six-role Agent Team to review product plans in place. Covers PM, Dev, UX, Frontend, A11y, and Security on PRDs and proposals. Use when the user asks to review or improve a product plan."
 allowed-tools: Read, Glob, Bash, AskUserQuestion, TodoWrite, Edit, Write, ToolSearch, ExitPlanMode
 ---
 

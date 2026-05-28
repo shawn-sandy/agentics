@@ -1,6 +1,6 @@
 ---
 name: markdown-to-html
-description: "Converts a markdown file into a self-contained HTML page. Produces a richly styled, browser-viewable output with syntax highlighting and responsive layout. Use when the user asks to convert a markdown file or plan to HTML."
+description: "Converts a markdown file into a self-contained HTML page. Produces styled output with syntax highlighting and responsive layout. Use when the user asks to convert a markdown file or plan to HTML."
 allowed-tools: Agent, AskUserQuestion, Bash(open *), Bash(realpath *), Glob, Grep, Read, TodoWrite, Write
 ---
 
