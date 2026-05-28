@@ -2,17 +2,32 @@
 
 ## v0.9.0 — 2026-05-28
 
-Added a contextual **Follow CTA** so generated posts invite readers to follow for more
-on the post's topic — turning reach into followers across every share skill.
+Added `social-share` router skill, `agent-social-share` background agent, `social-share-bg`
+command, a shared non-interactive mode contract, and contextual follow CTAs across all share skills.
 
+- `social-share` skill (new): auto-activating router that classifies a natural-language request
+  into the right card workflow (github-code-share, video-share, blog-share, selection-share,
+  project-share, or code-share) using first-match-wins rules; captures live session context
+  (git state, IDE selection, pasted code) then dispatches in the background with smart defaults
+  (`--platform=all`); returns a one-line ack immediately
+- `agent-social-share` agent (new): background runner that receives a pre-classified target
+  skill + flags, invokes the skill in non-interactive mode, and reports a `SOCIAL-SHARE: DONE`
+  completion line; mirrors `agent-digest` pattern
+- `/code-share:social-share-bg` command (new): explicit entry point; delegates straight to the
+  `social-share` skill which handles all classification and dispatch logic
+- `references/non-interactive-mode.md` (new): shared reference defining the `--background` flag
+  contract — skip rules for AskUserQuestion/copy-approval/WARN/long-file/4xx, smart defaults,
+  and the machine-parseable `SOCIAL-SHARE: DONE` completion format
+- All 6 card skills (`code-share`, `blog-share`, `github-code-share`, `selection-share`,
+  `video-share`, `project-share`) updated with a `## Non-interactive mode` pointer and
+  `(Interactive mode only)` guards on their AskUserQuestion and copy-approval lines; interactive
+  behavior unchanged when invoked without `--background`
 - New `## Follow CTA` rule in `references/platforms.md` (read by all share skills during
   their Draft Copy phase): close each post with a **topic-matched** follow line keyed to
-  the post's keywords/hashtags (language, technique, feature area, subject), **varied
-  every time** (a pattern bank to adapt, never a stock "follow me"), **generic with no
-  `@handle`**, and dropped on Twitter/X and Bluesky when the character budget is tight
-  (content wins)
-- `blog-share` and `video-share` copy-format references updated: follow CTA woven into the
-  LinkedIn template plus the LinkedIn/Twitter/Bluesky examples, with budget rules noted
+  the post's keywords/hashtags, **varied every time** (a pattern bank to adapt, never a stock
+  "follow me"), **generic with no `@handle`**, and dropped on Twitter/X and Bluesky when the
+  character budget is tight (content wins)
+- `blog-share` and `video-share` copy-format references updated with follow CTA examples
 - `code-share`, `selection-share`, `github-code-share`, and `project-share` Draft Copy
   guidance clarified so the existing closing "CTA" is explicitly the topic-matched follow CTA
 

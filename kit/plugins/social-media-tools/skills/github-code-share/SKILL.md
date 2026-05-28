@@ -25,6 +25,11 @@ the path is wrong — stop with a clear error.
 | 5 — Populate Template | HTML-escape code; fill `snippet-card.html`; save to `docs/media/social/` |
 | 6 — Deliver | Copy in fenced block + PNG card + saved path |
 
+## Non-interactive mode
+
+When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
+and follow all skip rules. Do not pause for user input at any point.
+
 ---
 
 ## Phase 0 — Locate Plugin Assets
@@ -70,6 +75,7 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 - `LANGUAGE` and `LANGUAGE_COLOR` from file extension — look up in `$PLUGIN_DIR/references/language-map.md`
 - `HLJS_CLASS` = lowercase language alias (e.g., `typescript`, `python`; C# → `csharp`; C++ → `cpp`; Shell → `bash`)
 
+*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Use `AskUserQuestion` to collect:
 - `PLATFORM` — LinkedIn, Twitter/X, Bluesky, or **All sites**
 - `HOOK_ANGLE` (optional)
@@ -124,7 +130,7 @@ Skill(skill: "code-share:security-scrub", args: "Scan the file at ~/.claude/tmp/
 
 Parse the returned `SCRUB RESULT` block:
 - `BLOCKED` → report masked findings, **STOP.**
-- `WARN` → surface the warning, ask user to confirm before continuing.
+- `WARN` → *(Interactive mode)* surface the warning, ask user to confirm before continuing; *(background mode)* auto-proceed per `non-interactive-mode.md`.
 - `PASS` → continue silently.
 
 ---
@@ -139,7 +145,7 @@ For character limits and the **Follow CTA** rule, read `$PLUGIN_DIR/references/p
 
 Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/repo subject) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
 
-Read the code snippet before drafting. Present in a fenced code block labelled with the platform. Wait for approval.
+Read the code snippet before drafting. *(Interactive mode only — present in a fenced code block labelled with the platform and wait for approval; in `--background` mode proceed directly to Phase 5.)*
 
 - **Single site:** store as `POST_COPY_TEXT_RAW`
 - **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
