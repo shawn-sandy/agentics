@@ -1,7 +1,9 @@
-# GitHub Code Share — Language Map
+# Language Map
 
-Use this table in Phase 1 to derive `LANGUAGE` (display name) and `LANGUAGE_COLOR`
-(hex badge colour) from the file extension extracted from `FILE_PATH`.
+Shared by the snippet-card skills (`github-code-share`, `selection-share`). Use this table
+to derive `LANGUAGE` (display name) and `LANGUAGE_COLOR` (hex badge colour) from a file
+extension — taken from the GitHub `FILE_PATH`, a selected file's path, or a pasted fenced
+block's language tag.
 
 Match on the longest suffix first (e.g. `.tsx` before `.ts`).
 

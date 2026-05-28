@@ -14,6 +14,7 @@ Two complementary workflows: a **discovery pipeline** (scan git history or a cod
 | `blog-share` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
 | `video-share` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
 | `github-code-share` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
+| `selection-share` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
 | `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
 | `/code-share:digest` | Command | Interactive discovery scan with multi-select candidate review |
@@ -108,8 +109,9 @@ social-media-tools/
 ├── commands/
 │   ├── digest.md                           ← /code-share:digest
 │   └── digest-bg.md                        ← /code-share:digest-bg
-├── references/                             ← shared pipeline logic (all 5 card skills)
+├── references/                             ← shared pipeline logic (all card skills)
 │   ├── copy-panels.md                      ← {{COPY_PANELS}} markup + escaping rules
+│   ├── language-map.md                     ← file extension → language + badge colour
 │   ├── platforms.md                        ← canonical char limits + universal copy rules
 │   ├── rendering-pipeline.md               ← find_free_port → HTTP server → Playwright → kill
 │   ├── reuse-check.md                      ← scan docs/media/social/ + offer reuse
@@ -127,9 +129,9 @@ social-media-tools/
 │   │   └── references/
 │   │       └── variables.md               ← redirects to plugin-root references/
 │   ├── github-code-share/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── language-map.md            ← file extension → language + badge colour
+│   │   └── SKILL.md
+│   ├── selection-share/
+│   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
 │   ├── project-share/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -202,6 +204,19 @@ social-media-tools/
 - `https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}` (raw URL, skip conversion)
 
 **Workflow:** parse URL fragment (`#L10-L25`) from string before any network call → fetch raw content → extract line range (or first 80 lines) → write to temp file → `security-scrub` → draft copy → HTML-escape code → populate `snippet-card.html` → Playwright screenshot → deliver copy + PNG.
+
+---
+
+### Skill: `selection-share`
+
+**File:** `skills/selection-share/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share, post, or tweet selected, highlighted, open, or pasted code. Distinct from `code-share` (which scans git history): this skill shares the specific code the user points at and never falls back to git.
+
+**Content sources (first match wins):** lines highlighted in the IDE → a selected/open file (read from disk, `FILENAME`/`LANGUAGE` from the path) → a pasted fenced code block. Non-code files (binary, lockfiles, minified bundles) are declined; a file over the ~80-line snippet cap prompts the user to choose a region.
+
+**Objective-driven:** the post copy is shaped by a user **objective** — inferred from the prompt, asked only if absent — alongside platform and tone.
+
+**Workflow:** capture selection + objective → `security-scrub` → draft objective-driven copy → auto-pick template (diff-like → `diff-card.html`, otherwise `snippet-card.html`) → HTML-escape + populate (language/colour from `references/language-map.md`) → Playwright screenshot → deliver copy + PNG. Reuses the shared `references/` pipeline.
 
 ---
 

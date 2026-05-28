@@ -159,5 +159,5 @@ Apply to `CODE_LINES` in this exact order:
 - The `{{LANGUAGE}}` variable fills both the display badge text and the `language-{{LANGUAGE}}`
   CSS class on the `<code>` element. Pass the lowercase hljs alias (`typescript`), not the
   display name (`TypeScript`).
-- `LANGUAGE_COLOR` is sourced exclusively from `skills/github-code-share/references/language-map.md`
-  — never from fetched content or user input.
+- `LANGUAGE_COLOR` is sourced exclusively from `references/language-map.md` (plugin-root
+  shared reference) — never from fetched content or user input.

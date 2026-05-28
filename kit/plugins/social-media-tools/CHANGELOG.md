@@ -1,5 +1,24 @@
 # Changelog — social-media-tools
 
+## v0.8.0 — 2026-05-28
+
+Added `selection-share` skill for turning selected/pasted code into objective-driven posts.
+
+- `selection-share` skill (new): detects code the user highlighted in their IDE, has selected
+  or open as a file, or pasted as a fenced block (provided via context); reads it, scrubs it
+  for secrets via `security-scrub`, and drafts platform-aware copy shaped by a user
+  **objective** (inferred from the prompt, asked only if absent) — distinct from `code-share`,
+  which scans git history
+- Auto-picks the card template from the content: diff-like text (`+`/`-` lines, `@@` hunk
+  headers, or a ```` ```diff ```` fence) → `diff-card.html`; otherwise → `snippet-card.html`
+- Selected-file handling: derives `FILENAME`/`LANGUAGE` from the real path/extension, declines
+  non-code files (binary, lockfiles, minified bundles), and prompts for a region when a file
+  exceeds the ~80-line snippet cap
+- `references/language-map.md` (relocated): moved from
+  `skills/github-code-share/references/language-map.md` to the plugin-root `references/` folder
+  so both `github-code-share` and `selection-share` share it without a cross-skill pointer;
+  `github-code-share` repointed to `$PLUGIN_DIR/references/language-map.md`
+
 ## v0.7.0 — 2026-05-27
 
 Extracted shared card-pipeline logic into a plugin-root `references/` folder;
