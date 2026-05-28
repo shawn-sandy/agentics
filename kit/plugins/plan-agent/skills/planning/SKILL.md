@@ -1,6 +1,6 @@
 ---
 name: planning
-description: "Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and plan-mode frontmatter. Use when running `/plan-agent:planning <objective>` to create a plan."
+description: "Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and HTML metadata. Use when running `/plan-agent:planning <objective>` to create a plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, TodoWrite, ToolSearch, Skill, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
 argument-hint: "<objective> [--quick] [--type feature|fix|refactor|docs|chore] [--dir <path>] [--interview]"
@@ -50,11 +50,11 @@ Echo the resolved objective and effective flags before proceeding to §0.
 0. **Assess** — Before drafting anything, determine whether the request warrants a plan: does it span multiple files, or involve unclear requirements? If not — single file, simple fix, typo, missing dep, direct skill/git operation — use `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` immediately and apply the change directly. Never produce a plan document for requests that don't clear this threshold.
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. *(Skip entirely when `--quick` or when the objective is detailed.)*
 2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.**
-3. **Frontmatter** — Embed plan metadata as a `<meta>` and `<script type="application/json" id="plan-meta">` block inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory.
+3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory.
 4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from §2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
 5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — approval is requested separately via `ExitPlanMode`. *(Skip entirely when `--quick`.)*
 6. **Commit** — **Always** commit plan files to version control alongside the related changes.
-7. **Status** — **Always** update `status` (and `data-modified`) in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit the `<body data-status="…">` attribute and the status badge text. Use `plan-interview:plan-status` (optional cross-plugin helper — requires `plan-interview` plugin) to automate this.
+7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
 
 After §7, if `--interview` was set: call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")` to stress-test the plan. If the plugin is absent, note "plan-interview plugin not found — skipping" and continue.
 
@@ -85,6 +85,7 @@ The file must:
 - Use a progress indicator showing how many acceptance-criteria items are checked
 - Be readable without JavaScript (checkboxes work natively); minimal JS is allowed only to enhance interactivity (e.g. progress bar update on checkbox change)
 - Include `<meta name="plan-status">`, `<meta name="plan-type">`, `<meta name="plan-created">`, and `<meta name="plan-repo">` tags for machine readability
+- **HTML-escape all user-supplied content** before inserting it into the file — replace `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#39;`. This applies especially to file paths, function names, CLI flags, and any prompt text placed inside `<pre>` blocks
 
 ## Writing Style
 
