@@ -351,22 +351,23 @@
       ]
     },
     {
-      "name": "plan-mode",
+      "name": "plan-agent",
       "source": {
         "source": "git-subdir",
         "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/plan-mode"
+        "path": "kit/plugins/plan-agent"
       },
-      "version": "0.1.0",
-      "description": "Plan Mode authoring conventions — auto-activating skill and filename validation hook for implementation plans",
+      "version": "0.2.0",
+      "description": "Plan authoring on demand — explicit /plan-agent:author skill runs the full §0–§7 workflow from a free-text objective; filename validation hook enforces verb-target kebab-case on every plan write",
       "category": "productivity",
       "tags": [
         "planning",
-        "plan-mode",
+        "plan-agent",
+        "author",
+        "on-demand",
         "conventions",
         "filename-validation",
         "workflow",
-        "authoring",
         "verb-target",
         "kebab-case"
       ]
