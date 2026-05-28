@@ -358,7 +358,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.3.0",
+      "version": "0.4.0",
       "description": "Plan creation on demand — explicit /plan-agent:planning skill runs the full §0–§7 workflow from a free-text objective; filename validation hook enforces verb-target kebab-case on every plan write",
       "category": "productivity",
       "tags": [
