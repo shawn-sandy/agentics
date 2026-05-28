@@ -1,3 +1,9 @@
+---
+status: completed
+type: feature
+created: 2026-05-28
+---
+
 # Plan: New `selection-share` skill — share selected/pasted code with objective-driven posts
 
 ## Context
