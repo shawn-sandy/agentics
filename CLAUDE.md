@@ -45,7 +45,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-17 plugins in the marketplace (`agentics-kit` v3.8.0):
+18 plugins in the marketplace (`agentics-kit` v3.9.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -66,6 +66,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
 | `code-share` | Skills + Commands + Agents | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky; `/code-share:digest` and `/code-share:digest-bg` for interactive and background digest scanning |
 | `plan-agent` | Skills + Hooks | Explicit `/plan-agent:author <objective>` skill (manual-invoke, `disable-model-invocation`) runs §0–§7 plan workflow; automatic `verb-target` filename hook on `Write`/`Edit`; optional pairing with `plan-interview:plan-status` |
+| `issue-agent` | Skills | Create GitHub and GitLab issues from any context — selection, session, bug, or feature; host auto-detected from git remote; manual-invoke only (`disable-model-invocation`); always confirms before creating |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
