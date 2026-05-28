@@ -2,7 +2,6 @@
 status: completed
 type: refactor
 created: 2026-05-27
-modified: 2026-05-27
 repo-name: agentics
 ---
 

@@ -1,9 +1,11 @@
 ---
-status: todo
+status: superseded
 type: feature
 created: 2026-05-27
 repo-name: agentics
 ---
+
+> **Superseded** by [`convert-plan-mode-to-plan-agent-skill.md`](convert-plan-mode-to-plan-agent-skill.md) — the original plan-mode approach was refactored into the `plan-agent` plugin with an explicit-invoke `author` skill.
 
 # Plan: Create plan-mode plugin
 
