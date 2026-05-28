@@ -131,11 +131,13 @@ Parse the returned `SCRUB RESULT` block:
 
 ## Phase 4 — Draft Copy
 
-For character limits, read `$PLUGIN_DIR/references/platforms.md`.
+For character limits and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
 
 - **LinkedIn**: Context ("Here's [LANGUAGE] code from [OWNER/REPO] that...") + what it does + key design decision or insight + CTA with link + 2–4 hashtags
 - **Twitter/X**: "[LANGUAGE] snippet worth seeing → [what it does in one phrase] — [GitHub URL]"
 - **Bluesky**: Similar brevity to Twitter; name the repo
+
+Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/repo subject) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
 
 Read the code snippet before drafting. Present in a fenced code block labelled with the platform. Wait for approval.
 
