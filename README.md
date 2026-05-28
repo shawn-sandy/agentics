@@ -2,7 +2,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v3.8.0 · **17 plugins** · Requires Claude Code 1.0.33+
+**Marketplace:** `agentics-kit` v3.9.0 · **18 plugins** · Requires Claude Code 1.0.33+
 
 ---
 
@@ -72,7 +72,7 @@ The agentics project serves two purposes:
 
 | Purpose | What it contains |
 |---------|-----------------|
-| **Example Plugins** | 17 reference implementations in `kit/plugins/` demonstrating Claude Code plugin structure — commands, skills, agents, and hooks |
+| **Example Plugins** | 18 reference implementations in `kit/plugins/` demonstrating Claude Code plugin structure — commands, skills, agents, and hooks |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
 Every plugin in this repo is a working, production-quality tool you can install and use immediately.
@@ -127,6 +127,7 @@ agentics/
 │       ├── code-simplifier/
 │       ├── code-testing-agent/
 │       ├── git-agent/
+│       ├── issue-agent/
 │       ├── marketplace-builder/
 │       ├── memory-tools/
 │       ├── plan-agent/
@@ -179,6 +180,7 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install agent-creator@agentics-kit
 /plugin install marketplace-builder@agentics-kit
 /plugin install agentic-plugin-dev@agentics-kit
+/plugin install issue-agent@agentics-kit
 ```
 
 **Or install all at once** — paste the full block above into your Claude Code session.
@@ -460,19 +462,22 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v0.2.0
+#### `plan-agent` v0.5.0
 
-Plan authoring on demand. The explicit `/plan-agent:author <objective>` skill runs the full §0–§7 workflow from a free-text objective. A filename validation hook enforces verb-target kebab-case naming on every plan write.
+Plan creation on demand — invoke `/plan-agent:planning <objective>` to run the full §0–§7 workflow and produce a self-contained interactive HTML plan. Supports multiple plan templates (`default`, `minimal`, `adr`, `spike`), granular flags (`--quick`, `--type`, `--template`, `--priority`, `--interview`), and an automatic `validate-plan-filename` hook that enforces verb-target kebab-case naming on every write.
 
-**Skills** (activate explicitly):
+**Skills** (manual-invoke only):
 
 | Skill | Description |
 |-------|-------------|
-| `plan-agent:author` | Author a new plan from a free-text objective — manual invoke only |
+| `planning` | Author a new HTML plan from a free-text objective — invoke as `/plan-agent:planning <objective>` |
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
-# /plan-agent:author "Add dark mode support to the settings page"
+# /plan-agent:planning "Add dark mode support to the settings page"
+# /plan-agent:planning --quick --type fix "Patch the login redirect"
+# /plan-agent:planning --template adr "Decide on database ORM strategy"
+# /plan-agent:planning --template spike --priority high "Investigate websocket feasibility"
 ```
 
 [View Documentation](./kit/plugins/plan-agent/README.md)
@@ -483,7 +488,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 ---
 
-#### `git-agent` v3.9.0
+#### `git-agent` v3.9.1
 
 Automated git workflow — create branches, commit with conventional messages, and open PRs. Includes background subagents and slash commands for fire-and-forget operations, plus a supervised full pipeline via `ship-autonomous`.
 
@@ -541,6 +546,28 @@ claude --plugin-dir ./kit/plugins/settings-sync
 ```
 
 [View Documentation](./kit/plugins/settings-sync/README.md)
+
+---
+
+#### `issue-agent` v0.1.0
+
+Create GitHub and GitLab issues from any context — a text selection, the current session, a bug description, or a feature request. Auto-detects the git host (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing to the remote. Manual-invoke only.
+
+**Skills** (manual-invoke only):
+
+| Skill | Invocation | Description |
+|-------|-----------|-------------|
+| `create-issue` | `/issue-agent:create-issue [bug\|feature\|selection\|session] [title]` | Draft and create a structured issue with a confirmation gate |
+
+```bash
+claude --plugin-dir ./kit/plugins/issue-agent
+# /issue-agent:create-issue bug "Login form crashes on empty password"
+# /issue-agent:create-issue feature "Add dark mode toggle to settings panel"
+# /issue-agent:create-issue session
+# /issue-agent:create-issue selection <paste text here>
+```
+
+[View Documentation](./kit/plugins/issue-agent/README.md)
 
 ---
 
@@ -706,14 +733,15 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ---
 
-#### `code-share` v0.8.0
+#### `code-share` v0.9.0
 
-Discover shareable code from git history or by codebase path, scrub it for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky. Use `/code-share:digest` for interactive and `/code-share:digest-bg` for background digest scanning.
+Discover shareable code, blog posts, videos, and GitHub snippets — scrub for secrets, draft platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky. The `social-share` router skill classifies any share request and dispatches the right workflow in the background automatically.
 
 **Commands:**
 
 | Command | Description |
 |---------|-------------|
+| `/code-share:social-share-bg` | Fire-and-forget background share — router dispatches the right card workflow |
 | `/code-share:digest` | Interactive digest — discover and share the best recent work |
 | `/code-share:digest-bg` | Background digest scan |
 
@@ -721,12 +749,18 @@ Discover shareable code from git history or by codebase path, scrub it for secre
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `code-share` | Share code, create social cards, or draft copy for a feature or snippet |
+| `social-share` | Route any share request — classifies intent and dispatches the right card skill in the background |
+| `code-share` | Share a code change or git diff — draft copy and generate a dark-mode social card |
+| `blog-share` | Share a blog post or article — fetch metadata and generate a card |
+| `video-share` | Share a YouTube or Vimeo video — fetch metadata and generate a card |
+| `selection-share` | Share selected, highlighted, or pasted code — scrub and generate a card |
+| `security-scrub` | Check code for secrets or credentials before sharing |
 
 ```bash
 claude --plugin-dir ./kit/plugins/social-media-tools
-# "Create a social card for this feature"
-# "Draft a LinkedIn post about my latest commit"
+# "Share what I just built"
+# "Post today's changes to LinkedIn"
+# /code-share:social-share-bg share my latest commit
 # /code-share:digest
 ```
 
@@ -744,9 +778,10 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [react-perf-analyzer](./kit/plugins/react-perf-analyzer/README.md) | 1.3.0 | testing | 1 skill |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.0 | development | 7 commands, 4 skills |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.2 | productivity | 1 command, 1 skill |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.2.0 | productivity | 1 skill, 1 hook |
-| [git-agent](./kit/plugins/git-agent/README.md) | 3.9.0 | development | 3 commands, 4 skills, 3 agents |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.5.0 | productivity | 1 skill, 1 hook |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.9.1 | development | 3 commands, 4 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.0 | productivity | 1 skill |
+| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.1.0 | development | 1 skill |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.1 | security | 1 skill |
 | [agentic-plugin-dev](./kit/plugins/agentic-plugin-dev/README.md) | 1.2.1 | development | 3 skills |
 | [agent-creator](./kit/plugins/agent-creator/README.md) | 1.1.1 | development | 1 skill |
@@ -754,7 +789,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.1 | development | 4 skills |
 | [marketplace-builder](./kit/plugins/marketplace-builder/README.md) | 1.1.1 | development | 1 skill |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.0 | development | 2 skills |
-| [code-share](./kit/plugins/social-media-tools/README.md) | 0.8.0 | productivity | 2 commands, 1 skill |
+| [code-share](./kit/plugins/social-media-tools/README.md) | 0.9.0 | productivity | 3 commands, 6 skills, 2 agents |
 
 ---
 
