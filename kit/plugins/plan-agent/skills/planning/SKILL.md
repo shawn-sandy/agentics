@@ -1,12 +1,12 @@
 ---
-name: author
-description: "Authors implementation plans from a free-text objective. Enforces verb-target filenames, structure, and plan-mode frontmatter. Use when running `/plan-agent:author <objective>` to create a plan."
+name: planning
+description: "Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and plan-mode frontmatter. Use when running `/plan-agent:planning <objective>` to create a plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, TodoWrite, ToolSearch, Skill, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
 argument-hint: "<objective> [--quick] [--type feature|fix|refactor|docs|chore] [--dir <path>] [--interview]"
 ---
 
-# Plan Agent — Author
+# Plan Agent — Planning
 
 > **Deferred tools:** `EnterPlanMode` and `ExitPlanMode` are deferred — their schemas are not loaded at session start.
 > Before calling either, use `ToolSearch` with `select:EnterPlanMode` or `select:ExitPlanMode` to load the schema first.
@@ -79,4 +79,4 @@ Direct, imperative, developer-friendly — real names (file paths, function name
 
 ## Skeleton
 
-Copy `reference/SKELETON.md` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/author/reference/SKELETON.md` if the path is uncertain, to avoid accidentally loading the global `~/.claude/rules/reference/SKELETON.md` which has different content.
+Copy `reference/SKELETON.md` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/planning/reference/SKELETON.md` if the path is uncertain, to avoid accidentally loading the global `~/.claude/rules/reference/SKELETON.md` which has different content.
