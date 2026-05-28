@@ -28,6 +28,11 @@ does **not** scan git history — that is `code-share`'s job.
 | 6 — Screenshot | Serve HTML locally, Playwright screenshot |
 | 7 — Deliver | Present copy + attach PNG + show saved path |
 
+## Non-interactive mode
+
+When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
+and follow all skip rules. Do not pause for user input at any point.
+
 ---
 
 ## Phase 0 — Locate Plugin Assets
@@ -71,9 +76,10 @@ and a line range when known.
 - **Non-code file** (binary, image, lockfile such as `package-lock.json`/`*.lock`, minified
   bundle, or anything that isn't human-readable source): do **not** render it. Tell the user
   what was selected and ask them to pick a code file or paste a snippet instead. **STOP.**
-- **Long file** — `snippet-card` caps at ~80 lines (Phase 5). If the source exceeds 80 lines,
-  use `AskUserQuestion` to ask which region to feature (a line range, function, or section),
-  then use only that range. Do **not** silently truncate or render the whole file.
+- **Long file** — `snippet-card` caps at ~80 lines (Phase 5). *(Interactive mode)* If the
+  source exceeds 80 lines, use `AskUserQuestion` to ask which region to feature (a line range,
+  function, or section), then use only that range. Do **not** silently truncate or render the
+  whole file. *(Background mode)* use the first 80 lines without asking.
 
 ### No code found
 
@@ -86,7 +92,8 @@ Determine `OBJECTIVE` — what the user wants the post to accomplish or emphasiz
 
 - **Infer** it from the user's prompt when stated (e.g. "share this and stress the perf win"
   → `OBJECTIVE = "highlight the performance win"`).
-- **Ask** only if absent: include a short free-text **objective** input ("What should this
+- *(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
+  **Ask** only if absent: include a short free-text **objective** input ("What should this
   post accomplish or emphasize?") in the same `AskUserQuestion` that collects `PLATFORM`
   (LinkedIn, Twitter/X, Bluesky, or **All sites**) and `TONE`.
 
@@ -119,7 +126,7 @@ Skill(skill: "code-share:security-scrub", args: "Scan the file at ~/.claude/tmp/
 
 Parse the returned `SCRUB RESULT` block:
 - `BLOCKED` → report masked findings, **STOP.**
-- `WARN` → surface the warning, ask the user to confirm before continuing.
+- `WARN` → *(Interactive mode)* surface the warning, ask the user to confirm before continuing; *(background mode)* auto-proceed per `non-interactive-mode.md`.
 - `PASS` → continue silently.
 
 ---
@@ -137,8 +144,7 @@ Draft copy that **serves `OBJECTIVE`** within each platform's limit and the chos
 
 Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/objective keywords) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
 
-Present the drafted copy in a fenced code block labelled with the platform name. Wait for
-approval.
+*(Interactive mode only — present the drafted copy in a fenced code block labelled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 4.)*
 
 - **Single site:** store as `POST_COPY_TEXT_RAW`
 - **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)

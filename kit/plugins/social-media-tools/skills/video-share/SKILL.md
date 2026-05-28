@@ -23,6 +23,11 @@ for a YouTube or Vimeo video URL.
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
 
+## Non-interactive mode
+
+When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
+and follow all skip rules. Do not pause for user input at any point.
+
 ---
 
 ## Phase 0 — Locate Plugin Assets
@@ -52,6 +57,7 @@ Auto-detect the video platform from the URL:
 - `youtube.com` or `youtu.be` → **YouTube**
 - `vimeo.com` → **Vimeo**
 
+*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one call:
 
 | Input | Options | Notes |
@@ -87,7 +93,7 @@ For API endpoints and 4xx fallback, read `references/platforms.md`.
 1. `WebFetch` on `https://www.youtube.com/oembed?url=VIDEO_URL&format=json` — extract `title`, `author_name`, `thumbnail_url`
 2. `WebFetch` on the original `VIDEO_URL` — extract `og:description`
 
-**4xx:** ask user for `title` and `channel` via `AskUserQuestion`. Set `thumbnail_url = ""`.
+**4xx:** *(Interactive mode)* ask user for `title` and `channel` via `AskUserQuestion`; *(background mode)* set `VIDEO_TITLE=""`, `CHANNEL=""` per `non-interactive-mode.md`. Set `thumbnail_url = ""`.
 
 #### Vimeo
 
@@ -110,7 +116,7 @@ For API endpoints and 4xx fallback, read `references/platforms.md`.
 For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
 For copy format and filled examples per platform, read `references/platforms.md`.
 
-Present the draft in a fenced code block labelled with the platform name. Wait for approval.
+*(Interactive mode only — present the draft in a fenced code block labelled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 4.)*
 
 - **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
 - **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)

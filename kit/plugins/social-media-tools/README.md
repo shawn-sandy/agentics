@@ -10,15 +10,19 @@ Two complementary workflows: a **discovery pipeline** (scan git history or a cod
 
 | Component | Type | Description |
 |-----------|------|-------------|
+| `social-share` | Skill | **Router** — classifies a natural-language request and dispatches the right card skill in the background with zero questions |
 | `code-share` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
 | `blog-share` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
 | `video-share` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
 | `github-code-share` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
 | `selection-share` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
+| `project-share` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
 | `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
+| `/code-share:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
 | `/code-share:digest` | Command | Interactive discovery scan with multi-select candidate review |
 | `/code-share:digest-bg` | Command | Fire-and-forget background digest scan |
+| `agent-social-share` | Agent | Background agent; runs the chosen card skill non-interactively and reports `SOCIAL-SHARE: DONE` |
 | `agent-digest` | Agent | Background agent; proactively reports output path when done |
 
 ## Installation
@@ -53,7 +57,31 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/code-share:code-share` prompt.
 
-### Generate a social media post
+### Share anything — router dispatches in the background
+
+The `social-share` router skill classifies your request and runs the right workflow
+unattended. Just describe what you want to share:
+
+```
+"share what I just built"
+"post today's changes"
+"share this: https://youtu.be/abc123"
+"we just launched v2.0, post about it"
+"share my progress this week"
+```
+
+Or use the explicit command:
+
+```bash
+/code-share:social-share-bg share my latest commit
+/code-share:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
+/code-share:social-share-bg we just shipped v2 on Twitter
+```
+
+A one-line ack is returned immediately. The background agent notifies you when the card is
+saved under `docs/media/social/`.
+
+### Generate a social media post (interactive)
 
 Skills activate automatically — just describe what you want to share.
 
