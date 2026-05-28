@@ -1,5 +1,33 @@
 # Changelog — git-agent
 
+## v3.9.0 — ship-autonomous watches PRs via event subscription
+
+- `ship-autonomous` now subscribes to the PR's activity events
+  (`mcp__github__subscribe_pr_activity`) after opening the PR, replacing the
+  synchronous `gh pr checks --watch` polling loop as the primary path. After
+  subscribing it posts an initial status update and ends the turn; CI failures
+  and review comments arrive as `<github-webhook-activity>` events that wake the
+  session.
+- Event handling (Step 6) now covers **review comments** in addition to CI
+  failures: clear, in-scope review changes are applied, committed, pushed, and
+  replied to; ambiguous or architecturally significant comments are escalated.
+- Failures outside the safe allowlist (`lint`/`typecheck`/`peer-deps`) and
+  ambiguous review comments now **ask the user via `AskUserQuestion`** rather
+  than printing an escalation block and stopping. Autofix is capped at 3
+  attempts **per check**.
+- Posts **regular status updates** and refreshes a live TodoWrite checklist on
+  every event so the thread reflects current state.
+- Keeps the subscription active after CI goes green to handle later review
+  comments; unsubscribes (`mcp__github__unsubscribe_pr_activity`) only when the
+  PR merges/closes or the user asks to stop.
+- **Fallback:** in environments without the GitHub MCP server (e.g. local
+  Claude Code), the skill detects that `subscribe_pr_activity` is unavailable
+  and falls back to the previous synchronous `gh pr checks --watch` polling
+  with the same ≤3-attempt autofix, stopping once CI is green.
+- Added `mcp__github__subscribe_pr_activity` and
+  `mcp__github__unsubscribe_pr_activity` to `allowed-tools`; updated the skill
+  description and README to describe the watch/autofix lifecycle.
+
 ## v3.8.0 — ship-autonomous moved into plugin
 
 - New skill: `ship-autonomous` — supervised full pipeline (branch if on
