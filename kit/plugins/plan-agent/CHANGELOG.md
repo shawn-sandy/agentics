@@ -15,7 +15,7 @@
 
 - **§2 Create**: plan filename extension changed from `.md` to `.html`.
 - **§3 Frontmatter**: metadata now stored in HTML `<meta>` tags instead of YAML frontmatter.
-- **§7 Status**: status updates now edit `<body data-status="…">` and the badge element instead of YAML.
+- **§7 Status**: status updates now edit `<html data-status="…">` and the badge element instead of YAML.
 - `validate-plan-filename.py` hook updated to accept both `.html` (primary) and `.md` (legacy) plan files; `_is_completed` now reads `<meta name="plan-status" content="completed">` for HTML files.
 
 ### Fixed (in this release)
