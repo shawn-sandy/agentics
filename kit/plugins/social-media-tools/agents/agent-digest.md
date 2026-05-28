@@ -26,7 +26,7 @@ Read `$ARGUMENTS` passed from the dispatch prompt. Pass them through to `share-s
 ### Step 2 — Invoke skill
 
 Call `Skill` with:
-- `skill: "code-share:share-scan"`
+- `skill: "social-media-tools:share-scan"`
 - `args: "$ARGUMENTS --background"`
 
 ### Step 3 — Report completion

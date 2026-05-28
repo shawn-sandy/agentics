@@ -87,10 +87,10 @@ Default → feature-card
 Each digest entry should include a ready-to-paste prompt:
 
 ```
-/code-share:share-code <card-type> for <platform>: <one-sentence description of what to share>
+/social-media-tools:share-code <card-type> for <platform>: <one-sentence description of what to share>
 ```
 
 Example:
 ```
-/code-share:share-code feature-card for LinkedIn: the new share-scan skill that finds shareable commits from git history
+/social-media-tools:share-code feature-card for LinkedIn: the new share-scan skill that finds shareable commits from git history
 ```

@@ -126,7 +126,7 @@ For each surviving candidate, build a structured entry using the card-type decis
 - **Already saved:** [SAVED: `docs/media/social/{filename}`] (omit this line if not saved)
 - **share-code prompt:**
   ```
-  /code-share:share-code <card-type> for <platform>: <description>
+  /social-media-tools:share-code <card-type> for <platform>: <description>
   ```
 ```
 

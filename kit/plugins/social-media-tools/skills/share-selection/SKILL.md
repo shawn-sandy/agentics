@@ -121,7 +121,7 @@ Content: CODE_RAW (plain text, no HTML escaping yet)
 Then invoke:
 
 ```
-Skill(skill: "code-share:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
+Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
 ```
 
 Parse the returned `SCRUB RESULT` block:

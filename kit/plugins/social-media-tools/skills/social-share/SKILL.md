@@ -121,7 +121,7 @@ Invoke the `Agent` tool with:
   ```
   Run the social share workflow.
   Target skill: <TARGET_SKILL>
-  Invoke: Skill(skill: "code-share:<TARGET_SKILL>", args: "<DISPATCH_FLAGS>")
+  Invoke: Skill(skill: "social-media-tools:<TARGET_SKILL>", args: "<DISPATCH_FLAGS>")
   Report the output path when done.
   ```
 

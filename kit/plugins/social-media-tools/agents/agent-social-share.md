@@ -31,7 +31,7 @@ Read the dispatch prompt to extract:
 ### Step 2 — Invoke skill
 
 Call `Skill` with:
-- `skill: "code-share:<TARGET_SKILL>"`
+- `skill: "social-media-tools:<TARGET_SKILL>"`
 - `args: "<DISPATCH_FLAGS>"`
 
 The skill runs non-interactively because `--background` is present in `DISPATCH_FLAGS`.

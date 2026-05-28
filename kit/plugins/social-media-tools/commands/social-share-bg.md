@@ -12,10 +12,10 @@ immediately.
 ## Usage
 
 ```
-/code-share:social-share-bg share my latest commit
-/code-share:social-share-bg https://youtu.be/abc123
-/code-share:social-share-bg we just launched v2.0 on LinkedIn
-/code-share:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
+/social-media-tools:social-share-bg share my latest commit
+/social-media-tools:social-share-bg https://youtu.be/abc123
+/social-media-tools:social-share-bg we just launched v2.0 on LinkedIn
+/social-media-tools:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
 ```
 
 ## Workflow
@@ -29,7 +29,7 @@ when plan mode is already off.
 ### Step 1 — Invoke the router skill
 
 Call `Skill` with:
-- `skill: "code-share:social-share"`
+- `skill: "social-media-tools:social-share"`
 - `args: "$ARGUMENTS"`
 
 The `social-share` skill classifies the request, resolves smart defaults, and dispatches
