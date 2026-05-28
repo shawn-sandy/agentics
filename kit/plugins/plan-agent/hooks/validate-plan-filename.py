@@ -135,8 +135,11 @@ def _get_plans_dir():
     return _FALLBACK_PLANS_DIR
 
 
+_PLAN_EXTENSIONS = (".html", ".md")
+
+
 def _is_plan_path(path, plans_dir):
-    """Return True if path is a .md file inside plans_dir."""
+    """Return True if path is a plan file (.html or .md) inside plans_dir."""
     # Resolve both to absolute paths so the comparison is an exact prefix check,
     # not a substring scan that can match unrelated directories.
     abs_plans = plans_dir if os.path.isabs(plans_dir) else os.path.abspath(plans_dir)
@@ -148,12 +151,16 @@ def _is_plan_path(path, plans_dir):
 
 
 def _is_completed(path):
-    """Return True if the file has `status: completed` in its YAML frontmatter."""
+    """Return True if the plan file marks status as completed (HTML meta or YAML frontmatter)."""
     try:
         with open(path, encoding="utf-8") as fh:
-            lines = fh.read().splitlines()
+            content = fh.read()
     except OSError:
         return False
+    if path.endswith(".html"):
+        return bool(re.search(r'<meta\s+name=["\']plan-status["\']\s+content=["\']completed["\']', content, re.IGNORECASE))
+    # YAML frontmatter for legacy .md plans
+    lines = content.splitlines()
     if not lines or lines[0].strip() != "---":
         return False
     for line in lines[1:]:
@@ -171,7 +178,7 @@ def main():
         sys.exit(0)
 
     path = (data.get("tool_input") or {}).get("file_path", "")
-    if not path or not path.endswith(".md"):
+    if not path or not any(path.endswith(ext) for ext in _PLAN_EXTENSIONS):
         sys.exit(0)
 
     plans_dir = _get_plans_dir()
@@ -186,7 +193,8 @@ def main():
     effective_stop = STOP_WORDS_2ND | set(w.lower() for w in cfg.get("additionalStopWords", []))
     effective_ph = GENERIC_NAMES | set(n.lower() for n in cfg.get("additionalPlaceholders", []))
 
-    stem = os.path.basename(path)[: -len(".md")]
+    ext = next(ext for ext in _PLAN_EXTENSIONS if path.endswith(ext))
+    stem = os.path.basename(path)[: -len(ext)]
     ok, reason = classify_filename(stem, verbs=effective_verbs, stop_words=effective_stop, placeholders=effective_ph)
     if ok:
         sys.exit(0)
@@ -196,8 +204,8 @@ def main():
         f"(verb-target kebab-case).\n"
         f"Reason: {reason}.\n"
         f"Rename to an imperative verb-target name before committing, "
-        f"e.g. 'add-dark-mode-toggle', 'fix-login-redirect'.\n"
-        f"Derive the name from the plan's # H1 title and Objective section.\n"
+        f"e.g. 'add-dark-mode-toggle.html', 'fix-login-redirect.html'.\n"
+        f"Derive the name from the plan title and Objective section.\n"
     )
     sys.stderr.write(msg)
     sys.exit(2)
