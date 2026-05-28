@@ -21,16 +21,16 @@ Open a [GitHub Issue](https://github.com/shawn-sandy/agentics/issues/new) with:
 ## Plugin Development Workflow
 
 1. **Create your plugin** following the structure in [plugins/README.md](./plugins/README.md)
-2. **Test locally** with `claude --plugin-dir ./plugins/your-plugin`
-3. **Register** in `.claude-plugin/marketplace.json` (version must match `plugin.json`)
+2. **Test locally** with `claude --plugin-dir ./kit/plugins/your-plugin`
+3. **Register** in `.claude-plugin/marketplace.json` with a bumped version — do **not** add `version` to `plugin.json`
 4. **Document** with a README.md in your plugin directory
 
 ### Plugin Structure
 
 ```
-plugins/my-plugin/
+kit/plugins/my-plugin/
 ├── .claude-plugin/
-│   └── plugin.json          # Required: name, version, description
+│   └── plugin.json          # Required: name, description (no version field)
 ├── commands/                 # Slash commands (optional)
 │   └── my-command.md
 ├── skills/                   # Auto-activated skills (optional)
@@ -39,22 +39,24 @@ plugins/my-plugin/
 └── README.md                 # Plugin documentation
 ```
 
+> **Version rule:** `version` lives **only** in `.claude-plugin/marketplace.json`. Adding it to `plugin.json` silently overrides the marketplace version and causes conflicts.
+
 ## Pull Request Process
 
 1. Create a feature branch from `main`
 2. Make your changes
-3. Ensure version sync between `plugin.json` and `marketplace.json`
+3. Bump the plugin's `version` in `.claude-plugin/marketplace.json` (must be higher than `main`)
 4. Test your plugin locally with `--plugin-dir`
 5. Include the plan file in commits for plugin changes
 6. Submit a PR with a clear description
 
 ### PR Checklist
 
-- [ ] Plugin manifest (`plugin.json`) has required fields: name, version, description
-- [ ] Version in `marketplace.json` matches `plugin.json`
+- [ ] Plugin manifest (`plugin.json`) has required fields: `name`, `description` — **no `version` field**
+- [ ] Plugin version bumped in `marketplace.json` and is higher than the version on `main`
 - [ ] Plugin tested locally with `claude --plugin-dir`
 - [ ] README.md included in plugin directory
-- [ ] Homepage URL points to plugin's directory (e.g., `https://github.com/shawn-sandy/agentics/tree/main/plugins/my-plugin`)
+- [ ] Homepage URL points to plugin's directory (e.g., `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/my-plugin`)
 - [ ] CHANGELOG.md updated (for existing plugins)
 
 ## Commit Messages

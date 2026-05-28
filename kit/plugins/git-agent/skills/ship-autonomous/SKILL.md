@@ -1,7 +1,7 @@
 ---
 name: ship-autonomous
-description: "Ships, then watches and autofixes the PR. Branches, commits, opens a PR, then subscribes to PR events to fix CI failures and review comments with regular status updates. Use when the user asks to autonomously ship, watch a PR, or autofix CI failures."
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode, mcp__github__subscribe_pr_activity, mcp__github__unsubscribe_pr_activity
+description: "Runs the full ship pipeline with CI polling and bounded autofix. Chains commit, PR, CI poll, and autofix in one supervised flow. Use when the user asks to autonomously ship or watch CI."
+allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 Autonomously branch, commit, and open a PR, then subscribe to the PR's activity

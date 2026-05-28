@@ -1,6 +1,6 @@
 ---
 name: github-code-share
-description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card image for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet or file from a GitHub repository."
+description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet from a GitHub repository."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, Skill, SendUserFile, Glob
 ---
 
@@ -67,7 +67,7 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 - `OWNER`, `REPO`, `BRANCH`, `FILE_PATH`
 - `FILENAME` = basename of `FILE_PATH`
 - `REPO_SLUG` = `OWNER/REPO`
-- `LANGUAGE` and `LANGUAGE_COLOR` from file extension — look up in `references/language-map.md`
+- `LANGUAGE` and `LANGUAGE_COLOR` from file extension — look up in `$PLUGIN_DIR/references/language-map.md`
 - `HLJS_CLASS` = lowercase language alias (e.g., `typescript`, `python`; C# → `csharp`; C++ → `cpp`; Shell → `bash`)
 
 Use `AskUserQuestion` to collect:
@@ -164,7 +164,7 @@ For variable reference, read `$PLUGIN_DIR/references/variables.md`.
 |-------------------|-------|
 | `{{FILENAME}}` | `FILENAME` (HTML-escaped) |
 | `{{LANGUAGE}}` | `HLJS_CLASS` (lowercase alias, e.g. `typescript`) |
-| `{{LANGUAGE_COLOR}}` | `LANGUAGE_COLOR` hex (from `references/language-map.md` only) |
+| `{{LANGUAGE_COLOR}}` | `LANGUAGE_COLOR` hex (from `$PLUGIN_DIR/references/language-map.md` only) |
 | `{{CODE_LINES}}` | `CODE_LINES_ESCAPED` |
 | `{{LINE_RANGE}}` | e.g., `"L10–L25"` or `"lines 1–80"` |
 | `{{REPO_SLUG}}` | `"OWNER/REPO"` (HTML-escaped) |

@@ -1,23 +1,23 @@
 ---
 name: optimizing-skill-frontmatter
-description: "Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤256 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter."
+description: "Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤200 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter."
 allowed-tools: AskUserQuestion, Read, Edit, Bash, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
 ## Overview
 
-Optimizes two frontmatter fields in SKILL.md files in a single pass: rewrites `description:` to the **three-part format** (≤256 chars total, short description ≤80 chars) and sets `disable-model-invocation` to the correct value based on whether the skill is a write-heavy workflow or a read-only advisory tool.
+Optimizes two frontmatter fields in SKILL.md files in a single pass: rewrites `description:` to the **three-part format** (≤200 chars total, short description ≤80 chars) and sets `disable-model-invocation` to the correct value based on whether the skill is a write-heavy workflow or a read-only advisory tool.
 
 The description rewrite targets the **three-part format**: a short description (≤80 chars) capturing the essential function, followed by a capability sentence with richer detail, followed by the "Use when…" trigger phrase — aligning with Anthropic's authoring checklist requirement that descriptions include both *what the skill does* and *when to use it* (Pattern 1 in `references/best-practices.md`).
 
 **Why three-part format?** Claude Code loads all skill descriptions into the context window each turn. The default `skillListingBudgetFraction` allocates 1% of the model’s context window — roughly 8,000 characters on a 200K-token model. The three-part format is designed around this budget:
 
 - **Short description ≤80 chars**: survives at ~100 skills installed (8,000 ÷ 100 = 80 chars/skill). Always the first sentence so truncation still leaves a meaningful label.
-- **Total ≤256 chars**: fits the full three-part description for ~31 skills (8,000 ÷ 256 ≈ 31). Users with the agentics-kit alone (~16 skills) have headroom to spare.
+- **Total ≤200 chars**: fits the full three-part description for ~40 skills (8,000 ÷ 200 = 40). Users with the agentics-kit alone (~16 skills) have headroom to spare.
 - **Legacy ≤160 target**: still safe for ~50 skills installed; remains the recommendation in the budget advisory table.
 
-The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry; 256 is a practical target for surviving the default budget, not a platform constraint.
+The platform hard limit is 1,024 chars per description and 1,536 chars per skill listing entry; 200 is a practical target for surviving the default budget, not a platform constraint.
 
 **Why `disable-model-invocation`?** This flag controls how a skill activates. `true` forces explicit invocation only (via `/plugin:skill-name`); omitting it lets the model auto-fire the skill when user intent matches. Workflow skills that write files, commit code, or run pipelines should require explicit invocation — auto-firing a deploy on a loose intent match causes unintended side effects. Advisory/read-only skills benefit from auto-activation. Negative-scope clauses (“Does NOT cover X”) are relocated to a `## When not to use` body section rather than dropped.
 
@@ -85,7 +85,7 @@ Use only the **first match** — YAML frontmatter always appears before the body
 
 Then count the value’s character length (excluding the `description:` prefix).
 
-**Skip rule:** a file qualifies for SKIP only if it meets **all three** conditions: (1) total description ≤256 chars, (2) short description (first sentence) ≤80 chars, and (3) all three components present — a short description, a capability sentence, and a “Use when…” trigger phrase. A file is a REWRITE candidate if any condition fails: total >256, first sentence >80, missing short description, missing capability, or missing trigger. Do not exit silently. Instead:
+**Skip rule:** a file qualifies for SKIP only if it meets **all three** conditions: (1) total description ≤200 chars, (2) short description (first sentence) ≤80 chars, and (3) all three components present — a short description, a capability sentence, and a “Use when…” trigger phrase. A file is a REWRITE candidate if any condition fails: total >200, first sentence >80, missing short description, missing capability, or missing trigger. Do not exit silently. Instead:
 
 1. Print a row showing: `{path} | {current chars} | {current description text}`
 2. Call `AskUserQuestion` with three options:
@@ -101,18 +101,18 @@ Report a table of all files, current char count, and SKIP/REWRITE status before 
 
 Apply all five rules in order. Do not proceed to edits until rewrites are drafted.
 
-### Rule 1 — Target ≤256 chars total; short description ≤80 chars
+### Rule 1 — Target ≤200 chars total; short description ≤80 chars
 
-The description value (not including `description:` or surrounding quotes) must be ≤256 chars total. The first sentence (short description, up to and including the first `. `) must be ≤80 chars. Count carefully — both limits apply independently.
+The description value (not including `description:` or surrounding quotes) must be ≤200 chars total. The first sentence (short description, up to and including the first `. `) must be ≤80 chars. Count carefully — both limits apply independently.
 
-These are budget targets, not platform limits. The platform enforces ≤1,024 chars per description. The 256-char total target fits the full three-part description for ~31 skills installed (8,000 ÷ 256 ≈ 31). The 80-char short description survives at ~100 skills. If the user explicitly wants a higher total target, use their stated limit — but keep the short description ≤80 chars regardless, since it must survive aggressive truncation.
+These are budget targets, not platform limits. The platform enforces ≤1,024 chars per description. The 200-char total target fits the full three-part description for ~40 skills installed (8,000 ÷ 200 = 40). The 80-char short description survives at ~100 skills. If the user explicitly wants a higher total target, use their stated limit — but keep the short description ≤80 chars regardless, since it must survive aggressive truncation.
 
 ### Rule 2 — Three-part format
 
 Target descriptions with three components in this order:
 
 1. **Short description**: One sentence, ≤80 chars, third-person. The single most essential function in plain language — what the skill *is* at a glance. Distilled from the skill name and the first sentence of `## Overview`. Example: `”Optimizes SKILL.md frontmatter fields.”`
-2. **Capability sentence**: Third-person verb phrase with richer detail — specific outputs, flags, or modes the skill handles. Example: `”Rewrites descriptions to three-part format (≤256 chars) and tunes disable-model-invocation.”`
+2. **Capability sentence**: Third-person verb phrase with richer detail — specific outputs, flags, or modes the skill handles. Example: `”Rewrites descriptions to three-part format (≤200 chars) and tunes disable-model-invocation.”`
 3. **Trigger sentence**: `”Use when the user asks to [activation condition].”` Example: `”Use when the user asks to optimize SKILL.md frontmatter.”`
 
 Fixed order: short description first, capability second, trigger last. Third-person voice throughout. No first-person (“I will”, “I can”).
@@ -131,7 +131,7 @@ Handle each missing component independently:
 
 Do not add a second short description, a second capability, or a second trigger if any is already present.
 
-When all three components together exceed 256 chars: shorten the capability sentence first, then the short description (keeping it ≤80 chars), then shorten the trigger only if the capability is already minimal.
+When all three components together exceed 200 chars: shorten the capability sentence first, then the short description (keeping it ≤80 chars), then shorten the trigger only if the capability is already minimal.
 
 ### Rule 3 — Preserve the most discriminating trigger
 
@@ -207,14 +207,14 @@ the user asks to optimize SKILL.md frontmatter.
 
 **After** (188 chars, three-part):
 ```yaml
-Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤256 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter.
+Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤200 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter.
 ```
 
 **What changed and why:**
 - Extracted short description from skill name + Overview: "Optimizes SKILL.md frontmatter fields." (38 chars ≤80 ✓)
 - Existing capability sentence updated to reflect new format targets and kept as Sentence 2
 - Trigger unchanged as Sentence 3: "Use when the user asks to optimize SKILL.md frontmatter."
-- Result: 136 → 188 chars; all three components present (188 ≤256 ✓)
+- Result: 136 → 188 chars; all three components present (188 ≤200 ✓)
 
 ---
 
@@ -324,7 +324,7 @@ for f in <edited-files>; do
 done
 ```
 
-Confirm every `total` ≤256 and every `short` ≤80. Report any violations for a second rewrite pass. Flag separately: total-only violations (capability too long) vs. short-only violations (first sentence needs trimming).
+Confirm every `total` ≤200 and every `short` ≤80. Report any violations for a second rewrite pass. Flag separately: total-only violations (capability too long) vs. short-only violations (first sentence needs trimming).
 
 ---
 
@@ -346,11 +346,11 @@ done
 
 Print a table with columns `path | chars | status` where status is:
 - `DONE` — already processed this session
-- `REWRITE` — >160 chars
-- `SKIP` — ≤160 chars and compliant phrasing
+- `REWRITE` — >200 chars
+- `SKIP` — ≤200 chars and compliant phrasing
 
 Then call `AskUserQuestion` with three options:
-- **Optimize all over 160** — process every REWRITE file automatically using Steps 3–5
+- **Optimize all over 200** — process every REWRITE file automatically using Steps 3–5
 - **Pick specific files** — prompt for a selection, then loop back to Step 2 with the chosen subset
 - **Stop here** — end the skill run and proceed to the Budget advisory
 
@@ -371,7 +371,7 @@ Then output this advisory to the user, substituting the actual count:
 >
 > | Installed skills | Safe avg description length | Format target |
 > |---|---|---|
-> | ≤31 | ~256 chars | Full three-part (short + capability + trigger) |
+> | ≤40 | ~200 chars | Full three-part (short + capability + trigger) |
 > | ~50 | ~160 chars | Two-part (capability + trigger) |
 > | ~100 | ~80 chars | Short description only |
 >
@@ -387,7 +387,7 @@ Then output this advisory to the user, substituting the actual count:
 > ```
 > This doubles the budget to ~16,000 chars at a cost of ~2,000 tokens of context per turn.
 
-Skip the advisory if the count is ≤31 and all descriptions are already ≤256 chars — no action is needed in that case.
+Skip the advisory if the count is ≤40 and all descriptions are already ≤200 chars — no action is needed in that case.
 
 **References:**
 - Skill authoring best practices — https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices

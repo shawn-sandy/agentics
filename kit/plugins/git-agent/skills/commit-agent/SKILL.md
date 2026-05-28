@@ -1,6 +1,6 @@
 ---
 name: commit-agent
-description: "Stages all changes and creates a conventional commit message. Analyzes the diff to write a descriptive, scope-correct commit. Use when the user asks to commit changes, stage and commit, or save work to git."
+description: "Stages all changes and creates a conventional commit message. Analyzes the diff and writes a descriptive, scope-correct commit. Use when the user asks to commit or save work to git."
 allowed-tools: Bash(git *), ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---

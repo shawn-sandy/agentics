@@ -4,6 +4,15 @@ All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] - 2026-05-28
+
+### Changed
+
+- **Default total-length target lowered 256 → 200** — `optimizing-skill-frontmatter` now targets ≤200 chars (down from ≤256). Budget math updated: 8,000 ÷ 200 = 40 skills (was ÷ 256 ≈ 31). Advisory table top row updated to `≤40 | ~200 chars`.
+- **Step 2 / Step 6 threshold unified on 200** — resolves prior inconsistency where Step 2 (skip rule) used ≤256 and Step 6 (status logic) used ≤160. Both now agree on ≤200.
+- `plugin-patterns.md` "Total budget" bullet updated from ≤256 to ≤200.
+- `marketplace.json` description updated to reference 200-char format.
+
 ## [2.2.0] - 2026-05-27
 
 ### Added

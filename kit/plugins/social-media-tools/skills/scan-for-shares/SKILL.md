@@ -1,6 +1,6 @@
 ---
 name: scan-for-shares
-description: "Scans git history or a codebase path for shareable code. Drafts social media prompts for code-share or digest generation from recent commits. Use when the user asks to find commits worth sharing, create a code digest, or generate a post."
+description: "Scans git history or a codebase path for shareable code. Drafts social media prompts for code-share or digest generation. Use when the user asks to find commits worth sharing or create a digest."
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Write, Skill
 ---
 

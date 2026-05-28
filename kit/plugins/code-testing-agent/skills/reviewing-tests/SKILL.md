@@ -1,6 +1,6 @@
 ---
 name: reviewing-tests
-description: "Audits tests for quality, coverage, and code alignment. Identifies gaps, redundant tests, and misaligned assertions across the test suite. Use when the user asks to review tests, audit test quality, or improve a test suite."
+description: "Audits tests for quality, coverage, and code alignment. Identifies gaps, redundant tests, and misaligned assertions. Use when the user asks to review, audit, or improve a test suite."
 allowed-tools: AskUserQuestion, Bash, Edit, Glob, Read, TodoWrite, Write
 ---
 

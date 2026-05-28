@@ -1,6 +1,6 @@
 ---
 name: author
-description: "Authors implementation plans from a free-text objective, enforcing verb-target filenames and required structure. Invoke as `/plan-agent:author <objective>`."
+description: "Authors implementation plans from a free-text objective. Enforces verb-target filenames, structure, and plan-mode frontmatter. Use when running `/plan-agent:author <objective>` to create a plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, TodoWrite, ToolSearch, Skill, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
 argument-hint: "<objective> [--quick] [--type feature|fix|refactor|docs|chore] [--dir <path>] [--interview]"

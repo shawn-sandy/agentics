@@ -89,7 +89,7 @@ Each plugin must have a `README.md` with:
 
 - **README First** — Write the plugin README before implementing complex features
 - **Command Descriptions** — Keep frontmatter descriptions to one sentence
-- **Skill Description Format** — Three-part format: `[Short description (≤80 chars).] [Capability statement.] Use when the user asks to [trigger].` Short description is always Sentence 1 and survives even at ~100 skills installed (8,000 ÷ 100 = 80 chars/skill). Source both sentences from the skill body's `## Overview` section. Total budget: ≤256 chars.
+- **Skill Description Format** — Three-part format: `[Short description (≤80 chars).] [Capability statement.] Use when the user asks to [trigger].` Short description is always Sentence 1 and survives even at ~100 skills installed (8,000 ÷ 100 = 80 chars/skill). Source both sentences from the skill body's `## Overview` section. Total budget: ≤200 chars.
 - **Examples Matter** — Include concrete usage examples in every component
 - **Progressive Disclosure** — Start simple, add detail progressively in skills
 
