@@ -126,7 +126,7 @@ Parse the returned `SCRUB RESULT` block:
 
 ## Phase 3 — Draft Copy
 
-For character limits and tone defaults, read `$PLUGIN_DIR/references/platforms.md`.
+For character limits, tone defaults, and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
 
 Draft copy that **serves `OBJECTIVE`** within each platform's limit and the chosen tone:
 
@@ -134,6 +134,8 @@ Draft copy that **serves `OBJECTIVE`** within each platform's limit and the chos
   objective calls for → CTA; 2–4 hashtags at end
 - **Twitter/X**: One punchy line framing the snippet around the objective; no hashtag bloat
 - **Bluesky**: Conversational, same brevity as Twitter
+
+Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/objective keywords) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
 
 Present the drafted copy in a fenced code block labelled with the platform name. Wait for
 approval.

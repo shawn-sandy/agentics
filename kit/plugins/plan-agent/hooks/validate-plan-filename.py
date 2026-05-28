@@ -9,6 +9,12 @@ plans whose frontmatter carries `status: completed`.
 On a violation: writes a rename message to stderr and exits 2 so Claude
 receives it as actionable feedback (PostToolUse exit-2 contract).
 On a pass: exits 0 silently.
+
+Project-level customisation (planAgent key in .claude/settings.json or
+~/.claude/settings.json, first-match-wins):
+  planAgent.additionalVerbs        list[str]  — merged with IMPERATIVE_VERBS
+  planAgent.additionalStopWords    list[str]  — merged with STOP_WORDS_2ND
+  planAgent.additionalPlaceholders list[str]  — merged with GENERIC_NAMES
 """
 
 import json
@@ -42,27 +48,37 @@ _HEX_SUFFIX_RE = re.compile(r"-[0-9a-f]{6,}$")
 _DATE_SUFFIX_RE = re.compile(r"-\d{4}-\d{2}-\d{2}$")
 
 
-def classify_filename(stem):
+def classify_filename(stem, verbs=None, stop_words=None, placeholders=None):
     """
     Return (ok: bool, reason: str).
     ok=True  → filename is valid verb-target kebab-case.
     ok=False → reason describes the first failing check.
+
+    verbs, stop_words, placeholders default to the module-level constants,
+    allowing callers to inject extended sets without mutating global state.
     """
+    if verbs is None:
+        verbs = IMPERATIVE_VERBS
+    if stop_words is None:
+        stop_words = STOP_WORDS_2ND
+    if placeholders is None:
+        placeholders = GENERIC_NAMES
+
     if not _KEBAB_RE.fullmatch(stem):
         return False, "not strict kebab-case (only lowercase letters, digits, hyphens allowed)"
     if _HEX_AGENT_RE.search(stem) or _HEX_SUFFIX_RE.search(stem):
         return False, "contains a harness-generated hex suffix — strip it"
     if _DATE_SUFFIX_RE.search(stem):
         return False, "trailing date belongs in frontmatter `created:`, not the filename"
-    if stem in GENERIC_NAMES:
+    if stem in placeholders:
         return False, f"'{stem}' is a generic placeholder name"
     tokens = stem.split("-")
-    if tokens[0] not in IMPERATIVE_VERBS:
+    if tokens[0] not in verbs:
         return False, (
             f"first word '{tokens[0]}' is not an imperative verb "
             f"— start with e.g. add-, fix-, refactor-"
         )
-    if len(tokens) >= 2 and tokens[1] in STOP_WORDS_2ND:
+    if len(tokens) >= 2 and tokens[1] in stop_words:
         return False, (
             f"second word '{tokens[1]}' is a stop-word "
             f"— looks like a prompt-echo (e.g. 'update-the-...' → 'update-plan-mode')"
@@ -77,6 +93,22 @@ def _load_settings(path):
             return json.load(fh)
     except (OSError, json.JSONDecodeError, ValueError):
         return {}
+
+
+def _get_plan_agent_settings():
+    """
+    Return the planAgent config dict from .claude/settings.json (project first,
+    then global ~/.claude/settings.json). First-match-wins — does not merge both
+    files. Returns {} if neither file exists or neither has a planAgent key.
+    """
+    project_settings_path = os.path.join(os.getcwd(), ".claude", "settings.json")
+    global_settings_path = os.path.join(os.path.expanduser("~"), ".claude", "settings.json")
+    for settings_path in (project_settings_path, global_settings_path):
+        settings = _load_settings(settings_path)
+        cfg = settings.get("planAgent")
+        if isinstance(cfg, dict):
+            return cfg
+    return {}
 
 
 def _get_plans_dir():
@@ -156,9 +188,14 @@ def main():
     if _is_completed(path):
         sys.exit(0)
 
+    cfg = _get_plan_agent_settings()
+    effective_verbs = IMPERATIVE_VERBS | set(v.lower() for v in cfg.get("additionalVerbs", []))
+    effective_stop = STOP_WORDS_2ND | set(w.lower() for w in cfg.get("additionalStopWords", []))
+    effective_ph = GENERIC_NAMES | set(n.lower() for n in cfg.get("additionalPlaceholders", []))
+
     ext = next(ext for ext in _PLAN_EXTENSIONS if path.endswith(ext))
     stem = os.path.basename(path)[: -len(ext)]
-    ok, reason = classify_filename(stem)
+    ok, reason = classify_filename(stem, verbs=effective_verbs, stop_words=effective_stop, placeholders=effective_ph)
     if ok:
         sys.exit(0)
 

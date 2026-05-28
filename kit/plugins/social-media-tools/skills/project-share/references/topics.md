@@ -24,6 +24,11 @@ Reference data for the `project-share` skill. Each section defines the card temp
 | `changes` | "Here's what changed in [project]" + bulleted list | Top 2 changes in 280 chars | "Here's what changed 👇" |
 | `release` | Version + full feature highlights + CTA | `🚀 [name] v[N] is out!` | Same brevity as Twitter/X |
 
+The closing CTA above is a topic-matched **follow** CTA tied to the project/topic (e.g.
+"follow for more `<project>` updates") — varied each post, never a generic "follow me";
+on Twitter/Bluesky include it only when it fits the limit. See the Follow CTA rule in
+`$PLUGIN_DIR/references/platforms.md`.
+
 ---
 
 ## Extraction Commands
