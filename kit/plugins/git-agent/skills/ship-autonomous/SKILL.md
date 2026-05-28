@@ -4,9 +4,12 @@ description: "Runs the full ship pipeline with CI polling and bounded autofix. C
 allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
-Autonomously branch, commit, open a PR, poll CI, and fix allow-listed failures
-— up to 3 iterations. Follow these steps in strict order. **STOP immediately
-after Step 7.**
+Autonomously branch, commit, and open a PR, then subscribe to the PR's activity
+events and autofix failures as they arrive — keeping the user posted throughout.
+
+Run Steps 0–5 in strict order. **Step 5 subscribes to PR events and ends the
+turn.** Steps 6–7 are the standing policy the session follows each time a PR
+event wakes it; they are not a synchronous loop you run inside one turn.
 
 ---
 
@@ -123,156 +126,145 @@ Capture the PR URL from pr-agent's final output — look for the line containing
 
 ---
 
-## Step 5: Poll CI
+## Step 5: Subscribe to PR Activity (preferred) or Poll CI (fallback)
 
-Run:
+Parse the PR URL captured in Step 4 into `owner`, `repo`, and `pullNumber`
+(`https://github.com/<owner>/<repo>/pull/<number>`).
+
+### Preferred: subscribe to PR events
+
+`mcp__github__subscribe_pr_activity` is a deferred tool available only in
+remote execution environments (Claude Code on the web, GitHub Actions). Load it
+with `ToolSearch` using `select:mcp__github__subscribe_pr_activity,mcp__github__unsubscribe_pr_activity`.
+
+If the tools load, do the following and then **end the turn**:
+
+1. Call `mcp__github__subscribe_pr_activity` with `owner`, `repo`, `pullNumber`.
+2. Seed a TodoWrite status checklist: `CI green`, `review comments resolved`.
+3. Post one status update to the user, e.g.: "Watching PR #<n> — I'll autofix
+   CI failures and respond to review comments as they land, and keep you
+   posted."
+4. **End your turn. Do not poll, sleep, or run `gh pr checks --watch`.** PR
+   events arrive as `<github-webhook-activity>` messages that wake the session;
+   handle each per Steps 6–7. After a fix is pushed, the new CI run emits fresh
+   events — never manually re-poll in subscription mode.
+
+### Fallback: poll CI
+
+If `ToolSearch` returns no match for the subscribe tool (a local environment
+without the GitHub MCP server), poll synchronously instead:
 
 ```
 gh pr checks <pr-url> --watch --fail-fast=false
-```
-
-This blocks until every check reaches a terminal state (success, failure,
-skipped, cancelled).
-
-After it exits, retrieve the structured results:
-
-```
 gh pr checks <pr-url> --json name,state,conclusion,workflowName
 ```
 
-Parse with `jq`. If **all conclusions are `SUCCESS` or `SKIPPED`**, jump
-directly to Step 7 (request review).
-
-If any conclusion is `FAILURE`, proceed to Step 6.
-
-If any conclusion is `CANCELLED` or `TIMED_OUT`, escalate:
-
-> CI check `<name>` was cancelled/timed out. Manual intervention may be
-> needed. PR: <url>
-
-and **STOP**.
+Parse with `jq`. If all conclusions are `SUCCESS`/`SKIPPED`, go to Step 7. If
+any is `FAILURE`, handle it via Step 6 then re-poll (max 3 fix attempts per
+check). If any is `CANCELLED`/`TIMED_OUT`, escalate via AskUserQuestion.
 
 ---
 
-## Step 6: Autofix Loop (max 3 iterations)
+## Step 6: Handle Each PR Event
 
-Track the iteration counter with TodoWrite. Label the task
-`autofix-iteration-N` and mark it `in_progress` at the start of each cycle.
+Each time a `<github-webhook-activity>` event arrives (or, in fallback mode,
+after a poll returns), investigate and act. **Refresh the TodoWrite checklist
+on every event** so the thread shows live state, and post a concise status
+update on each meaningful change (fix pushed, escalation, all-green). Do not
+narrate routine investigation, and skip duplicate or no-op events silently.
 
-### 6a: Classify the failure
+Cap autofix at **3 attempts per failing check** (track each check's count in
+TodoWrite). On the 4th recurrence of the same check, stop fixing it and
+escalate via AskUserQuestion.
 
-For each failing check, fetch the log:
+### 6a: Triage
+
+- **A check run / CI job failed** → classify and fix (6b).
+- **A review, review comment, or change request** → address (6c).
+- **All checks green** (`SUCCESS`/`SKIPPED`) → go to Step 7.
+- **Informational comment, duplicate, or no action needed** → skip silently.
+
+### 6b: CI failures — classify, then autofix the allow-listed classes
+
+Fetch the failing log:
 
 ```
 gh run list --json databaseId,conclusion,workflowName --jq '.[] | select(.conclusion=="failure") | .databaseId' | head -1
-```
-
-Then:
-
-```
 gh run view <run-id> --log-failed
 ```
 
-Classify based on log content:
+Classify on log content:
 
 | Class | Signature in log | Allowed action |
 |---|---|---|
 | `lint` | `eslint`, `lint error`, rule violation names | Run the project's lint-fix command |
 | `typecheck` | `TS`, `TypeScript`, `error TS`, `tsc` | Apply minimal TS fixes |
 | `peer-deps` | `peer dep`, `ERESOLVE`, `incompatible peer` | Reinstall lockfile |
-| anything else | any other content | **Escalate — do not attempt fix** |
+| anything else | any other content | **Ask the user — do not guess** |
 
-### 6b: Apply fix (allow-listed classes only)
-
-**`lint`:** Detect the project's lint-fix command:
+**`lint`:** Detect the lint-fix command:
 
 ```
 jq -r '.scripts | to_entries[] | select(.key | test("lint")) | "\(.key): \(.value)"' package.json 2>/dev/null
 ```
 
-Run the script that includes `--fix` (or add `--fix` if the lint script uses
-`eslint` directly). If no lint script exists, escalate.
+Run the script that includes `--fix` (or add `--fix` if the lint script calls
+`eslint` directly). If no lint script exists, ask the user.
 
-**`typecheck`:** Read the reported TypeScript errors from the log. Apply
-minimal fixes: add missing imports, use correct existing types. Never introduce
-`any`, `as unknown`, `// @ts-ignore`, or `// @ts-expect-error`. Never loosen
-an existing type. If the error requires type loosening, escalate.
+**`typecheck`:** Read the reported errors from the log and apply minimal fixes
+(add missing imports, use correct existing types). Never introduce `any`,
+`as unknown`, `// @ts-ignore`, or `// @ts-expect-error`, and never loosen an
+existing type. If the fix requires type loosening, ask the user.
 
-**`peer-deps`:** Detect the package manager:
+**`peer-deps`:** Detect the package manager and reinstall:
 
 ```
 test -f pnpm-lock.yaml && echo pnpm || test -f yarn.lock && echo yarn || echo npm
 ```
 
-Run `pnpm install` / `yarn install` / `npm install`. Then verify the diff is
-lockfile-only:
+Run `pnpm install` / `yarn install` / `npm install`, then confirm the diff is
+lockfile-only (`git diff --name-only`). If anything else changed, ask the user.
 
-```
-git diff --name-only
-```
+**Outside the allowlist (or attempt cap reached):** use **AskUserQuestion**.
+Summarize the failing check and the first ~20 lines of its log, and offer
+options such as "attempt a fix", "skip this check", or "stop watching the PR".
+Do not guess a fix for an unrecognized failure.
 
-If any non-lockfile files changed, escalate (something unexpected mutated).
+### 6c: Review comments
 
-**Escalation format for disallowed classes:**
+If the requested change is clear, safe, and in scope: apply it with `Edit`,
+commit via **`git-agent:commit-agent`**, `git push`, then reply to the comment
+via `gh` noting the commit that addresses it.
 
-```
-Cannot auto-fix: check '<name>' (class: unknown) failed with:
-<first 20 lines of log>
+If the comment is ambiguous, architecturally significant, or open to multiple
+interpretations: use **AskUserQuestion** with enough context that the user can
+answer without scrolling back. Do not guess.
 
-PR: <url>
-Iteration: N/3
-```
+### 6d: Commit and let the next event drive
 
-Then **STOP**.
-
-### 6c: Commit the fix and re-poll
-
-After applying a fix:
-
-1. Invoke **`git-agent:commit-agent`** for the fix commit. Message will be
-   auto-generated (it should produce something like
-   `fix(scope): address lint failures`).
-2. Run `git push`.
-3. Return to Step 5 to re-poll checks.
-
-### 6d: Hard cap
-
-If the iteration counter reaches 3 and checks are still failing:
-
-```
-gh pr comment <pr-url> --body "Autonomous autofix reached 3-iteration cap. Remaining failures require manual intervention. See CI logs for details."
-```
-
-Output:
-
-```
-Autofix cap reached (3/3). PR comment added. Manual action required.
-PR: <url>
-```
-
-and **STOP**.
+After any fix: commit via **`git-agent:commit-agent`**, then `git push`. In
+subscription mode the push triggers a new CI run whose events wake the session
+again — stop here and wait. In fallback mode, return to the Step 5 poll.
 
 ---
 
-## Step 7: Request Review
+## Step 7: Green / Done
 
 When all checks are green (all conclusions `SUCCESS` or `SKIPPED`):
 
-Mark the PR ready if it was opened as draft:
+1. Mark the PR ready if it was opened as draft: `gh pr ready <pr-url>`.
+2. Comment: `gh pr comment <pr-url> --body "CI is green — ready for review."`
+3. Update the TodoWrite checklist and post a final status update to the user
+   with the PR URL.
 
-```
-gh pr ready <pr-url>
-```
+In **fallback (polling) mode**, you are done — **STOP**.
 
-Add a review-ready comment:
-
-```
-gh pr comment <pr-url> --body "CI is green — ready for review."
-```
-
-Output the PR URL and **STOP**.
+In **subscription mode**, keep the subscription active so later review comments
+are still handled per Step 6. Call `mcp__github__unsubscribe_pr_activity` (with
+`owner`, `repo`, `pullNumber`) and stop pushing changes only when the PR merges
+or closes, or when the user asks you to stop watching.
 
 ---
 
-**STOP here. Do not analyze code, run tests, review the diff, suggest
-follow-up tasks, or take any further action.**
+**Beyond this policy, do not analyze unrelated code, run extra tests, or suggest
+follow-up tasks. Act only on the PR events you receive.**

@@ -10,7 +10,7 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
-- **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens PR, polls CI, auto-fixes lint/typecheck/peer-deps failures (≤3 iterations), and requests review when green. Use when you want to ship and walk away.
+- **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist. Falls back to CI polling when run locally without the GitHub MCP server. Use when you want to ship and walk away.
 
 ### Subagents (background, fire-and-forget)
 
@@ -125,9 +125,9 @@ Use `commit-agent` or `pr-agent` if you only need one step.
 
 Say any of:
 - "ship it autonomously"
-- "ship and watch CI"
+- "ship and watch the PR"
 - "ship and fix what breaks"
-- "auto-fix CI failures"
+- "ship and autofix CI failures"
 
 The skill will:
 1. Exit plan mode (Step 0) — no-op when already off
@@ -135,17 +135,16 @@ The skill will:
 3. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
 4. Commit via `commit-agent` (stages, conventional message, commits)
 5. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
-6. Poll CI with `gh pr checks --watch` until all checks reach a terminal state
-7. Autofix loop (≤3 iterations) for allow-listed failure classes:
-   - `lint` — runs the project's lint-fix script
-   - `typecheck` — applies minimal TS fixes (no `any`, no type loosening)
-   - `peer-deps` — reinstalls lockfile only
-   - Anything else → escalates with the first 20 log lines and **STOPs**
-8. When all checks are green: marks PR ready, posts "CI is green — ready for review.", outputs PR URL
+6. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
+7. On each event: refresh a live TodoWrite status checklist and post a concise update, then
+   - **CI failure** → classify and autofix allow-listed classes (`lint`, `typecheck`, `peer-deps`), ≤3 attempts per check; commit + push the fix (which triggers the next CI run)
+   - **Review comment** → apply clear, in-scope changes (commit, push, reply); ask first if ambiguous or architectural
+   - **Anything outside the safe allowlist, or ambiguous** → ask via `AskUserQuestion` instead of guessing
+8. When all checks are green: marks the PR ready, posts "CI is green — ready for review.", and sends a final status update with the PR URL. Keeps watching for later review comments until the PR merges/closes or you say stop (then unsubscribes)
 
-**STOPS after step 8. Does not analyze code, suggest follow-ups, or take further action.**
+**Environment:** event subscription requires a remote execution environment (Claude Code on the web or GitHub Actions). Run locally without the GitHub MCP server, the skill falls back to synchronous CI polling (`gh pr checks --watch`) with the same ≤3-attempt autofix, and stops once CI is green.
 
-Use `ship` if you don't need CI polling or autofix — it's simpler and stops after PR creation.
+Use `ship` if you don't want CI watching or autofix — it's simpler and stops after PR creation.
 
 ## Background subagents
 
