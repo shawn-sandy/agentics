@@ -39,7 +39,7 @@ select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwrigh
 Then:
 1. Navigate to `http://localhost:$PORT/$TEMP_HTML`
 2. Wait for `networkidle` or 2000ms
-3. Call `browser_take_screenshot` with `path: $SAVE_PATH_PNG` to write directly to disk
+3. Call `browser_take_screenshot` with `path: $SAVE_PATH_PNG` and `selector: ".card"` to capture only the card element and write directly to disk
 
 ## Step 4 — Kill server
 
