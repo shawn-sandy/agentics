@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-05-28
+
+### Changed (BREAKING)
+
+- **Skill renamed** `author` → `planning`. Explicit invocation is now `/plan-agent:planning <objective>`.
+
+---
+
 ## 0.2.0 — 2026-05-27
 
 ### Changed (BREAKING)

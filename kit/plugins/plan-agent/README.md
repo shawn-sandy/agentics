@@ -1,10 +1,10 @@
 # plan-agent Plugin
 
-Explicit plan authoring as a Claude Code plugin — invoke `/plan-agent:author <objective>` to run the full §0–§7 planning workflow on demand, plus an automatic filename validation hook.
+Explicit plan creation as a Claude Code plugin — invoke `/plan-agent:planning <objective>` to run the full §0–§7 planning workflow on demand, plus an automatic filename validation hook.
 
 ## Overview
 
-This plugin packages the Plan Mode workflow (§0 Assess through §7 Status), required plan structure, and writing style into a **manual-invoke** skill (`author`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
+This plugin packages the Plan Mode workflow (§0 Assess through §7 Status), required plan structure, and writing style into a **manual-invoke** skill (`planning`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
 
 It also ships a `PostToolUse` hook that enforces `verb-target` kebab-case filenames on plan files the moment they are written.
 
@@ -14,7 +14,7 @@ Installers get on-demand planning with argument support and the filename guardra
 
 | Component | Type | Activation |
 |-----------|------|-----------|
-| `author` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:author <objective>` |
+| `planning` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:planning <objective>` |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
 
 **Optional pairing:** install `plan-interview` to get `/plan-interview:plan-status` for automating the `status` frontmatter updates referenced in §7, and to enable the `--interview` flag.
@@ -38,12 +38,12 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 ### Skill (explicit invocation)
 
-Invoke `/plan-agent:author` with a free-text objective:
+Invoke `/plan-agent:planning` with a free-text objective:
 
 ```
-/plan-agent:author create a todo app for ravens
-/plan-agent:author fix the login redirect bug in auth middleware
-/plan-agent:author refactor the user settings module into smaller services
+/plan-agent:planning create a todo app for ravens
+/plan-agent:planning fix the login redirect bug in auth middleware
+/plan-agent:planning refactor the user settings module into smaller services
 ```
 
 **Flags:**
@@ -58,9 +58,9 @@ Invoke `/plan-agent:author` with a free-text objective:
 **Examples with flags:**
 
 ```
-/plan-agent:author --quick --type fix patch the login redirect
-/plan-agent:author --dir tmp/plans add dark mode toggle
-/plan-agent:author --interview create a new payment integration
+/plan-agent:planning --quick --type fix patch the login redirect
+/plan-agent:planning --dir tmp/plans add dark mode toggle
+/plan-agent:planning --interview create a new payment integration
 ```
 
 **Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). A detailed, specific objective (≥ 8 words with concrete names) is treated as `--quick` automatically.
@@ -115,7 +115,7 @@ plan-agent/
   .claude-plugin/
     plugin.json             — Plugin manifest
   skills/
-    author/
+    planning/
       SKILL.md              — Plan Mode workflow, arguments, structure, writing style
       reference/
         SKELETON.md         — Starter template for new plans
@@ -128,9 +128,9 @@ plan-agent/
 
 ## Components
 
-### `author` Skill
+### `planning` Skill
 
-Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:author <objective>`.
+Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:planning <objective>`.
 
 - **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--type`/`--dir`/`--interview` flags with smart defaults
 - **Enter plan mode** — bootstraps `EnterPlanMode` via `ToolSearch` and calls it before drafting
@@ -155,7 +155,7 @@ The `classify_filename()` function checks:
 
 ### Optional: `plan-interview` pairing
 
-The `author` skill §7 references `plan-interview:plan-status` as an optional cross-plugin helper for automating status updates, and `--interview` runs the full stress-test interview. Install both plugins to get the full authoring + lifecycle management experience:
+The `planning` skill §7 references `plan-interview:plan-status` as an optional cross-plugin helper for automating status updates, and `--interview` runs the full stress-test interview. Install both plugins to get the full planning + lifecycle management experience:
 
 ```
 /plugin install plan-agent@agentics-kit

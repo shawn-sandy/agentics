@@ -1,6 +1,6 @@
 {
   "name": "plan-agent",
-  "description": "Plan authoring on demand — explicit /plan-agent:author skill runs the full §0–§7 workflow from a free-text objective; filename validation hook enforces verb-target kebab-case on every plan write",
+  "description": "Plan creation on demand — explicit /plan-agent:planning skill runs the full §0–§7 workflow from a free-text objective; filename validation hook enforces verb-target kebab-case on every plan write",
   "author": {
     "name": "Agentics Project"
   },
@@ -8,7 +8,7 @@
   "keywords": [
     "planning",
     "plan-agent",
-    "author",
+    "planning",
     "on-demand",
     "conventions",
     "filename-validation",
