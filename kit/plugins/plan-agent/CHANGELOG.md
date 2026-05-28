@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.0 — 2026-05-28
+
+### Added
+
+- **HTML output** (default): the `planning` skill now writes every plan as a self-contained `.html` file — no markdown, no external dependencies.
+  - Rich layout: status badge, objective highlight card, numbered step cards with expandable *Verify* disclosures, interactive acceptance-criteria checkboxes with live progress bar, collapsible Next Steps and Unresolved Questions sections.
+  - **Wish List subsection**: blue-sky / visionary ideas in `next-steps` are automatically labelled `🔭 Wish List` and rendered with a distinct dashed-border, muted-colour treatment so they read as non-committal aspirations.
+  - Plan metadata stored in `<meta>` tags (`plan-status`, `plan-type`, `plan-created`, `plan-repo`) for machine readability.
+  - Minimal inline JavaScript (progress bar on checkbox change); fully functional without JS.
+- `reference/SKELETON.html`: new bundled HTML plan template replacing `SKELETON.md` — all required sections pre-wired with placeholders in `{curly braces}`.
+
+### Changed
+
+- **§2 Create**: plan filename extension changed from `.md` to `.html`.
+- **§3 Frontmatter**: metadata now stored in HTML `<meta>` tags instead of YAML frontmatter.
+- **§7 Status**: status updates now edit `<body data-status="…">` and the badge element instead of YAML.
+- `validate-plan-filename.py` hook updated to accept both `.html` (primary) and `.md` (legacy) plan files; `_is_completed` now reads `<meta name="plan-status" content="completed">` for HTML files.
+
+---
+
 ## 0.3.0 — 2026-05-28
 
 ### Changed (BREAKING)
