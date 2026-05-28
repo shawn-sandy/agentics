@@ -1,12 +1,12 @@
 ---
-name: scan-for-shares
-description: "Scans git history or a codebase path for shareable code. Drafts social media prompts for code-share or digest generation. Use when the user asks to find commits worth sharing or create a digest."
+name: share-scan
+description: "Scans git history or a codebase path for shareable code. Drafts social media prompts for share-code or digest generation. Use when the user asks to find commits worth sharing or create a digest."
 allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Write, Skill
 ---
 
-# scan-for-shares
+# share-scan
 
-Discover shareable code, scrub for secrets, and draft `code-share` prompts. Writes a digest file the user reviews before posting.
+Discover shareable code, scrub for secrets, and draft `share-code` prompts. Writes a digest file the user reviews before posting.
 
 ## Two modes
 
@@ -124,9 +124,9 @@ For each surviving candidate, build a structured entry using the card-type decis
 - **Key change / highlight:** <the most interesting line or pattern>
 - **Security:** PASS ✓ (or ⚠ WARN — <reason>)
 - **Already saved:** [SAVED: `docs/media/social/{filename}`] (omit this line if not saved)
-- **code-share prompt:**
+- **share-code prompt:**
   ```
-  /code-share:code-share <card-type> for <platform>: <description>
+  /social-media-tools:share-code <card-type> for <platform>: <description>
   ```
 ```
 
@@ -170,4 +170,4 @@ Entries: <count>
 
 Report the output path and entry count to the user.
 
-**STOP. Do not invoke `code-share` automatically.** The user reviews the digest and picks which prompts to run.
+**STOP. Do not invoke `share-code` automatically.** The user reviews the digest and picks which prompts to run.

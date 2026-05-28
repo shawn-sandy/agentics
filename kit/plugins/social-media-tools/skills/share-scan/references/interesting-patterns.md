@@ -1,6 +1,6 @@
 # Interesting Patterns Reference
 
-Scoring tables for `scan-for-shares`. Re-read on every run so users can tune weights without editing the skill.
+Scoring tables for `share-scan`. Re-read on every run so users can tune weights without editing the skill.
 
 ---
 
@@ -82,15 +82,15 @@ Default → feature-card
 
 ---
 
-## Code-Share Prompt Template
+## Share-Code Prompt Template
 
 Each digest entry should include a ready-to-paste prompt:
 
 ```
-/code-share:code-share <card-type> for <platform>: <one-sentence description of what to share>
+/social-media-tools:share-code <card-type> for <platform>: <one-sentence description of what to share>
 ```
 
 Example:
 ```
-/code-share:code-share feature-card for LinkedIn: the new scan-for-shares skill that finds shareable commits from git history
+/social-media-tools:share-code feature-card for LinkedIn: the new share-scan skill that finds shareable commits from git history
 ```

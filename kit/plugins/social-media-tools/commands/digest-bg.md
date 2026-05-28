@@ -11,9 +11,9 @@ Dispatch the digest scan to a background agent and return immediately.
 ## Usage
 
 ```
-/code-share:digest-bg                          # scan last 7 days of git history in background
-/code-share:digest-bg --days=14               # scan last 14 days
-/code-share:digest-bg --codebase src/         # scan a codebase path
+/social-media-tools:digest-bg                          # scan last 7 days of git history in background
+/social-media-tools:digest-bg --days=14               # scan last 14 days
+/social-media-tools:digest-bg --codebase src/         # scan a codebase path
 ```
 
 ## Workflow
@@ -32,7 +32,7 @@ Invoke the `Agent` tool with:
 
   ```
   Run the digest scan with these arguments: $ARGUMENTS
-  Invoke Skill(skill: "code-share:scan-for-shares", args: "$ARGUMENTS --background")
+  Invoke Skill(skill: "social-media-tools:share-scan", args: "$ARGUMENTS --background")
   and write the digest to .claude/digests/. Report the output path when done.
   ```
 

@@ -1,5 +1,36 @@
 # Changelog — social-media-tools
 
+## v1.0.1 — 2026-05-28
+
+Plugin renamed from `code-share` to `social-media-tools` to match the directory name.
+All commands now use the `/social-media-tools:*` prefix (e.g. `/social-media-tools:digest`).
+Install with: `/plugin install social-media-tools@agentics-kit`
+
+---
+
+## v1.0.0 — 2026-05-28
+
+**BREAKING:** All share-type skills renamed to `share-*` prefix for consistent naming.
+Plugin name (`code-share`) and all commands unchanged.
+
+| Old skill name | New skill name |
+|---|---|
+| `code-share` | `share-code` |
+| `blog-share` | `share-blog` |
+| `video-share` | `share-video` |
+| `github-code-share` | `share-github` |
+| `selection-share` | `share-selection` |
+| `project-share` | `share-project` |
+| `scan-for-shares` | `share-scan` |
+
+- All internal dispatch calls (`social-share` router, `agent-social-share`, `agent-digest`, `digest.md`, `digest-bg.md`) updated to reference new skill names
+- Temp card filenames updated to match (`share-blog-card.html`, etc.)
+- Shared references (`variables.md`, `language-map.md`, `non-interactive-mode.md`, `platforms.md`) updated
+- `media-library` SKILL.md skill name references updated
+- `share-scan` references (`interesting-patterns.md`, `topics.md`) updated
+
+---
+
 ## v0.9.0 — 2026-05-28
 
 Added `social-share` router skill, `agent-social-share` background agent, `social-share-bg`
@@ -13,7 +44,7 @@ command, a shared non-interactive mode contract, and contextual follow CTAs acro
 - `agent-social-share` agent (new): background runner that receives a pre-classified target
   skill + flags, invokes the skill in non-interactive mode, and reports a `SOCIAL-SHARE: DONE`
   completion line; mirrors `agent-digest` pattern
-- `/code-share:social-share-bg` command (new): explicit entry point; delegates straight to the
+- `/social-media-tools:social-share-bg` command (new): explicit entry point; delegates straight to the
   `social-share` skill which handles all classification and dispatch logic
 - `references/non-interactive-mode.md` (new): shared reference defining the `--background` flag
   contract — skip rules for AskUserQuestion/copy-approval/WARN/long-file/4xx, smart defaults,
@@ -120,8 +151,8 @@ Added discovery and security-scrub layer upstream of the `code-share` skill.
 
 - `scan-for-shares` skill: discovers shareable commits or codebase patterns in two modes — history mode (`git log` on current branch) and codebase mode (`--codebase <path>`); scores candidates, runs security scrub, presents multi-select review gate, writes `.claude/digests/code-digest-YYYY-MM-DD.md`
 - `security-scrub` skill: standalone secret/credential scanner; detects HIGH/MEDIUM/LOW patterns across 20+ categories; masks values before reporting; emits structured `SCRUB RESULT` block for callers
-- `/code-share:digest` command: interactive front-end for `scan-for-shares`
-- `/code-share:digest-bg` command: fire-and-forget background variant via `agent-digest`
+- `/social-media-tools:digest` command: interactive front-end for `scan-for-shares`
+- `/social-media-tools:digest-bg` command: fire-and-forget background variant via `agent-digest`
 - `agent-digest` background agent: runs digest scan without user interaction; proactively reports output path on completion
 - Scheduling note: GitHub Actions / cron / Claude routines can run `digest-bg` on a schedule; human review always required before posting
 

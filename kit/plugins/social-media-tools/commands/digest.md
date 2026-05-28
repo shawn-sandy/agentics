@@ -11,11 +11,11 @@ Discover what's worth sharing from your code.
 ## Usage
 
 ```
-/code-share:digest                          # scan last 7 days of git history
-/code-share:digest --days=14               # scan last 14 days
-/code-share:digest --base=develop          # diff against a different base branch
-/code-share:digest --codebase src/auth/    # scan a codebase path instead of git history
-/code-share:digest --codebase .            # scan entire working directory
+/social-media-tools:digest                          # scan last 7 days of git history
+/social-media-tools:digest --days=14               # scan last 14 days
+/social-media-tools:digest --base=develop          # diff against a different base branch
+/social-media-tools:digest --codebase src/auth/    # scan a codebase path instead of git history
+/social-media-tools:digest --codebase .            # scan entire working directory
 ```
 
 ## Workflow
@@ -24,12 +24,12 @@ Discover what's worth sharing from your code.
 
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
-### Step 1 — Run scan-for-shares
+### Step 1 — Run share-scan
 
-Invoke the `scan-for-shares` skill with `$ARGUMENTS`:
+Invoke the `share-scan` skill with `$ARGUMENTS`:
 
 ```
-Skill(skill: "code-share:scan-for-shares", args: "$ARGUMENTS")
+Skill(skill: "social-media-tools:share-scan", args: "$ARGUMENTS")
 ```
 
 The skill handles all candidate collection, scoring, security scrubbing, and the interactive review gate. Wait for it to complete and write the digest.
@@ -44,4 +44,4 @@ Options:
 - "Yes — I'll copy a `code-share prompt` from the digest and run it"  
 - "No — I'm done for now"
 
-Do not invoke `code-share` automatically regardless of the user's answer. The user must run the `/code-share:code-share` command themselves.
+Do not invoke `share-code` automatically regardless of the user's answer. The user must run the `/social-media-tools:share-code` command themselves.

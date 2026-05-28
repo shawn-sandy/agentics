@@ -1,10 +1,10 @@
 ---
-name: selection-share
+name: share-selection
 description: "Drafts a social post and a dark-mode card from code you selected or pasted. Detects the selection, scrubs for secrets, and tailors copy to your objective. Use when asked to share, post, or tweet selected, highlighted, or pasted code."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob, Skill
 ---
 
-# selection-share
+# share-selection
 
 Turn code the user **selected, highlighted, opened, or pasted** into platform-aware social
 media copy and a styled dark-mode card image for LinkedIn, Twitter/X, or Bluesky — with the
@@ -121,7 +121,7 @@ Content: CODE_RAW (plain text, no HTML escaping yet)
 Then invoke:
 
 ```
-Skill(skill: "code-share:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
+Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
 ```
 
 Parse the returned `SCRUB RESULT` block:
@@ -162,7 +162,7 @@ Inspect `CODE_RAW`:
 ```bash
 CARD_TYPE=<diff or snippet>
 TEMPLATE_FILE=$TEMPLATES_DIR/${CARD_TYPE}-card.html
-TEMP_HTML=selection-share-card.html
+TEMP_HTML=share-selection-card.html
 SLUG_INPUT=<FILENAME or a short title for the snippet>
 ```
 
@@ -203,7 +203,7 @@ Convert `CODE_RAW` into hunk rows and fill the diff-card variables per the **dif
 section of `$PLUGIN_DIR/references/variables.md` (row format, `{{STAT_ADD}}`/`{{STAT_DEL}}`,
 `{{COPY_PANELS}}`). `{{FILENAME}}` is the selected file name or a short title.
 
-Write the populated HTML to `~/.claude/tmp/selection-share-card.html`:
+Write the populated HTML to `~/.claude/tmp/share-selection-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp

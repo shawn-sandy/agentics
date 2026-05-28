@@ -19,9 +19,9 @@ Two complementary workflows: a **discovery pipeline** (scan git history or a cod
 | `project-share` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
 | `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
-| `/code-share:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
-| `/code-share:digest` | Command | Interactive discovery scan with multi-select candidate review |
-| `/code-share:digest-bg` | Command | Fire-and-forget background digest scan |
+| `/social-media-tools:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
+| `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
+| `/social-media-tools:digest-bg` | Command | Fire-and-forget background digest scan |
 | `agent-social-share` | Agent | Background agent; runs the chosen card skill non-interactively and reports `SOCIAL-SHARE: DONE` |
 | `agent-digest` | Agent | Background agent; proactively reports output path when done |
 
@@ -42,20 +42,20 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 ```bash
 # Scan the last 7 days of git history (interactive review gate)
-/code-share:digest
+/social-media-tools:digest
 
 # Scan further back or against a specific base branch
-/code-share:digest --days=14
-/code-share:digest --base=develop
+/social-media-tools:digest --days=14
+/social-media-tools:digest --base=develop
 
 # Scan a codebase path instead of git history
-/code-share:digest --codebase src/auth/
+/social-media-tools:digest --codebase src/auth/
 
 # Run in the background while you keep working
-/code-share:digest-bg --days=7
+/social-media-tools:digest-bg --days=7
 ```
 
-The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/code-share:code-share` prompt.
+The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/social-media-tools:code-share` prompt.
 
 ### Share anything — router dispatches in the background
 
@@ -73,9 +73,9 @@ unattended. Just describe what you want to share:
 Or use the explicit command:
 
 ```bash
-/code-share:social-share-bg share my latest commit
-/code-share:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
-/code-share:social-share-bg we just shipped v2 on Twitter
+/social-media-tools:social-share-bg share my latest commit
+/social-media-tools:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
+/social-media-tools:social-share-bg we just shipped v2 on Twitter
 ```
 
 A one-line ack is returned immediately. The background agent notifies you when the card is
@@ -102,7 +102,7 @@ Skills activate automatically — just describe what you want to share.
 > "Post about this file: https://github.com/owner/repo/blob/main/src/parser.py"
 
 **Use a prompt from the digest:**
-> `/code-share:code-share feature-card for LinkedIn: the new security-scrub skill`
+> `/social-media-tools:code-share feature-card for LinkedIn: the new security-scrub skill`
 
 ### Scrub code for secrets before sharing
 
@@ -135,8 +135,8 @@ social-media-tools/
 ├── agents/
 │   └── agent-digest.md                    ← background digest agent
 ├── commands/
-│   ├── digest.md                           ← /code-share:digest
-│   └── digest-bg.md                        ← /code-share:digest-bg
+│   ├── digest.md                           ← /social-media-tools:digest
+│   └── digest-bg.md                        ← /social-media-tools:digest-bg
 ├── references/                             ← shared pipeline logic (all card skills)
 │   ├── copy-panels.md                      ← {{COPY_PANELS}} markup + escaping rules
 │   ├── language-map.md                     ← file extension → language + badge colour
@@ -277,24 +277,24 @@ Pattern table and file-path block list are in `skills/security-scrub/references/
 
 ---
 
-### Command: `/code-share:digest`
+### Command: `/social-media-tools:digest`
 
 **File:** `commands/digest.md`  
 Interactive front-end for `scan-for-shares`. Runs the scan, presents candidates for review, and writes the approved entries to `.claude/digests/`.
 
 ```
-/code-share:digest [--days=7] [--base=main] [--max=20] | --codebase <path>
+/social-media-tools:digest [--days=7] [--base=main] [--max=20] | --codebase <path>
 ```
 
 ---
 
-### Command: `/code-share:digest-bg`
+### Command: `/social-media-tools:digest-bg`
 
 **File:** `commands/digest-bg.md`  
 Background variant. Dispatches `agent-digest` and returns immediately; the agent reports the output path on completion.
 
 ```
-/code-share:digest-bg [--days=7] [--base=main] [--max=20] | --codebase <path>
+/social-media-tools:digest-bg [--days=7] [--base=main] [--max=20] | --codebase <path>
 ```
 
 ---
@@ -302,7 +302,7 @@ Background variant. Dispatches `agent-digest` and returns immediately; the agent
 ### Agent: `agent-digest`
 
 **File:** `agents/agent-digest.md`  
-Dispatched by `/code-share:digest-bg`. Runs `scan-for-shares --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke `code-share`.
+Dispatched by `/social-media-tools:digest-bg`. Runs `scan-for-shares --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke `code-share`.
 
 ---
 
@@ -334,7 +334,7 @@ When **All sites** is selected, the card embeds a separate, individually copyabl
 
 ## Scheduling
 
-Claude Code has no native timer, but `/code-share:digest-bg` works well with external schedulers:
+Claude Code has no native timer, but `/social-media-tools:digest-bg` works well with external schedulers:
 
 ```yaml
 # GitHub Actions — weekly digest on Monday at 9am
@@ -344,7 +344,7 @@ on:
 jobs:
   digest:
     steps:
-      - run: claude --plugin-dir kit/plugins/social-media-tools -p "/code-share:digest-bg --days=7"
+      - run: claude --plugin-dir kit/plugins/social-media-tools -p "/social-media-tools:digest-bg --days=7"
 ```
 
 Human review is always required before posting — no path in this plugin auto-posts.

@@ -25,13 +25,13 @@ Follow these steps in strict order.
 ### Step 1 — Parse arguments
 
 Read the dispatch prompt to extract:
-- `TARGET_SKILL` — the skill to invoke (e.g. `code-share`, `blog-share`, `project-share`).
+- `TARGET_SKILL` — the skill to invoke (e.g. `share-code`, `share-blog`, `share-project`).
 - `DISPATCH_FLAGS` — the full flag string to pass (already includes `--background`).
 
 ### Step 2 — Invoke skill
 
 Call `Skill` with:
-- `skill: "code-share:<TARGET_SKILL>"`
+- `skill: "social-media-tools:<TARGET_SKILL>"`
 - `args: "<DISPATCH_FLAGS>"`
 
 The skill runs non-interactively because `--background` is present in `DISPATCH_FLAGS`.

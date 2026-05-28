@@ -10,7 +10,7 @@ Browse, search, and reuse saved social media posts from `docs/media/social/`.
 
 ## Overview
 
-Every time a card-generating skill runs (code-share, blog-share, video-share, github-code-share), it saves the populated HTML — including the post copy — to `docs/media/social/`. This skill lets developers:
+Every time a card-generating skill runs (share-code, share-blog, share-video, share-github), it saves the populated HTML — including the post copy — to `docs/media/social/`. This skill lets developers:
 1. See what posts have already been created
 2. Retrieve the copy text for reposting
 3. Know which tool to use to regenerate or update a card
@@ -22,7 +22,7 @@ Every time a card-generating skill runs (code-share, blog-share, video-share, gi
 ```bash
 MEDIA_DIR="${PWD}/docs/media/social"
 if [ ! -d "$MEDIA_DIR" ]; then
-  echo "No saved posts yet. Run a sharing skill first (code-share, blog-share, video-share, or github-code-share)."
+  echo "No saved posts yet. Run a sharing skill first (share-code, share-blog, share-video, or share-github)."
   # STOP
 fi
 
@@ -88,11 +88,11 @@ Ask the user which number they want (or accept a filename). Then:
 ````
 
 4. Tell the user which skill was used to generate it (inferred from card type in filename):
-   - `diff`, `feature`, `quote` → `code-share`
-   - `blog` → `blog-share`
-   - `video` → `video-share`
-   - `snippet` → `github-code-share`
-   - `project` → `project-share`
+   - `diff`, `feature`, `quote` → `share-code`
+   - `blog` → `share-blog`
+   - `video` → `share-video`
+   - `snippet` → `share-github`
+   - `project` → `share-project`
 
 ### Open in browser
 

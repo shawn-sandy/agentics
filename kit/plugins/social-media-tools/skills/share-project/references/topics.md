@@ -1,6 +1,6 @@
 # Topic Extraction Patterns
 
-Reference data for the `project-share` skill. Each section defines the card template, badge label, platform tone, and git/file extraction commands for a topic.
+Reference data for the `share-project` skill. Each section defines the card template, badge label, platform tone, and git/file extraction commands for a topic.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Canonical character limits and universal copy rules for all card-generating skills.
 Per-skill copy format templates and examples live in each skill's own
-`references/platforms.md` (blog-share, video-share).
+`references/platforms.md` (share-blog, share-video).
 
 ---
 
