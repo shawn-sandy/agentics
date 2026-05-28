@@ -1,7 +1,8 @@
 # Blog Share — Platform Copy Formats
 
 Read in Phase 3 to draft platform-aware copy. For canonical character limits and
-universal copy rules, see `$PLUGIN_DIR/references/platforms.md`.
+universal copy rules — including the **Follow CTA** rule that closes each post — see
+`$PLUGIN_DIR/references/platforms.md`.
 Follow the format for the selected platform exactly — character limits are hard
 constraints, not suggestions.
 
@@ -9,7 +10,7 @@ constraints, not suggestions.
 
 ## LinkedIn
 
-**Structure:** Hook → 3 numbered takeaways → commentary → CTA → hashtags
+**Structure:** Hook → 3 numbered takeaways → commentary → read CTA → follow CTA → hashtags
 
 ```
 [One-sentence hook that names the article and its core claim.]
@@ -24,6 +25,9 @@ constraints, not suggestions.
 or how you plan to apply it.]
 
 Worth a read if [specific audience / condition]: [URL]
+
+[Topic-matched follow CTA — one varied line on the article's subject; see the
+Follow CTA rule in $PLUGIN_DIR/references/platforms.md]
 
 #[Hashtag1] #[Hashtag2] #[Hashtag3]
 ```
@@ -48,6 +52,8 @@ the read.
 
 Essential for anyone working on AI pipelines or workflow orchestration: https://example.com/article
 
+I dig into agent-architecture reads like this often — follow along if that's your space.
+
 #AIEngineering #MultiAgentSystems #SoftwareArchitecture
 ```
 
@@ -65,12 +71,14 @@ Essential for anyone working on AI pipelines or workflow orchestration: https://
 - No "Great article by…" opener — lead with the insight
 - 1–2 hashtags max; they eat character budget fast
 - If the article has a memorable quote, lead with it (no surrounding quotation marks)
+- Add a short, topic-matched follow tag only if it fits the 280-char budget after the
+  URL (the URL counts as 23 chars); drop it if the message would overflow
 
 **Example:**
 
 ```
 Idempotency at agent boundaries isn't optional — it's the only way retry logic
-doesn't silently corrupt state. Solid deep-dive: https://example.com/article #AIEngineering #Agents
+doesn't silently corrupt state. Solid deep-dive: https://example.com/article — follow for more on agent reliability. #AIEngineering
 ```
 
 ---
@@ -89,6 +97,7 @@ Worth your time if you [relevant condition]. [URL]
 - Name the author — Bluesky culture values attribution
 - End with a qualification: "if you work with…", "if you've ever hit…"
 - No hashtags required
+- Close with a brief, varied follow line on the topic when it fits the 300-char budget
 
 **Example:**
 
@@ -96,4 +105,5 @@ Worth your time if you [relevant condition]. [URL]
 Just read "Designing Reliable Agent Pipelines" by Sarah Chen — the section on
 backpressure instead of retry loops clicked immediately. Worth your time if
 you've ever debugged a stuck orchestrator. https://example.com/article
+I post more on agent reliability — follow along if it's your thing.
 ```

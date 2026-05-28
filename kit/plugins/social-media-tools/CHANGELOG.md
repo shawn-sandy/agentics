@@ -1,5 +1,21 @@
 # Changelog — social-media-tools
 
+## v0.9.0 — 2026-05-28
+
+Added a contextual **Follow CTA** so generated posts invite readers to follow for more
+on the post's topic — turning reach into followers across every share skill.
+
+- New `## Follow CTA` rule in `references/platforms.md` (read by all share skills during
+  their Draft Copy phase): close each post with a **topic-matched** follow line keyed to
+  the post's keywords/hashtags (language, technique, feature area, subject), **varied
+  every time** (a pattern bank to adapt, never a stock "follow me"), **generic with no
+  `@handle`**, and dropped on Twitter/X and Bluesky when the character budget is tight
+  (content wins)
+- `blog-share` and `video-share` copy-format references updated: follow CTA woven into the
+  LinkedIn template plus the LinkedIn/Twitter/Bluesky examples, with budget rules noted
+- `code-share`, `selection-share`, `github-code-share`, and `project-share` Draft Copy
+  guidance clarified so the existing closing "CTA" is explicitly the topic-matched follow CTA
+
 ## v0.8.1 — 2026-05-28
 
 Fixed generic `element` label in `references/rendering-pipeline.md` rendering pipeline reference.
