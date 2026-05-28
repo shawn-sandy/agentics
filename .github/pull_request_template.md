@@ -9,8 +9,8 @@ Brief description of the changes.
 
 ## Checklist
 
-- [ ] Plugin loads via `claude --plugin-dir ./plugins/<name>`
-- [ ] `plugin.json` has `name`, `version`, `description`
-- [ ] Version in `marketplace.json` matches `plugin.json`
+- [ ] Plugin loads via `claude --plugin-dir ./kit/plugins/<name>`
+- [ ] `plugin.json` has `name` and `description` — **no `version` field**
+- [ ] Version bumped in `marketplace.json` and is higher than the value on `main`
 - [ ] Plugin README documents all commands and skills
 - [ ] CHANGELOG updated
