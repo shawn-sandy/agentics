@@ -50,20 +50,36 @@ Invoke `/plan-agent:planning` with a free-text objective:
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | Skip §1 Clarify and §5 Align |
+| `--quick` | Shorthand for `--no-clarify --no-align`; skip both §1 Clarify and §5 Align |
+| `--no-clarify` | Skip §1 Clarify only |
+| `--no-align` | Skip §5 Align only |
 | `--type <kind>` | Preset frontmatter `type:` (`feature`, `fix`, `refactor`, `docs`, `chore`) |
+| `--template <name>` | Plan skeleton variant (see table below); default is `default` |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
+| `--priority <level>` | Write `priority:` to frontmatter (`low`, `medium`, `high`, `critical`) |
 | `--interview` | After writing the plan, run `plan-interview:plan-interview` before `ExitPlanMode` (requires `plan-interview` plugin) |
+
+**Available templates:**
+
+| Template | Format | Best for |
+|---|---|---|
+| `default` | Full §0–§7 plan with all optional sections | Multi-step features, refactors |
+| `minimal` | Context + Steps + Acceptance Criteria + Verification | Simple fixes, well-understood changes |
+| `adr` | Architecture Decision Record (Context / Decision / Consequences) | Architecture decisions |
+| `spike` | Goal / Time-box / Approach / Findings / Recommendation | Investigations, time-boxed research |
 
 **Examples with flags:**
 
 ```
 /plan-agent:planning --quick --type fix patch the login redirect
+/plan-agent:planning --no-clarify add dark mode toggle
+/plan-agent:planning --template adr decide on database ORM strategy
+/plan-agent:planning --template spike --priority high investigate websocket feasibility
 /plan-agent:planning --dir tmp/plans add dark mode toggle
 /plan-agent:planning --interview create a new payment integration
 ```
 
-**Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). A detailed, specific objective (≥ 8 words with concrete names) is treated as `--quick` automatically.
+**Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`) are opt-in only and are never inferred automatically.
 
 The skill enforces the full §0–§7 workflow:
 
@@ -108,6 +124,32 @@ To use a custom directory, add to your project's `.claude/settings.json`:
 }
 ```
 
+### Plugin configuration (`planAgent.*`)
+
+The hook and skill both read a `planAgent` object from `.claude/settings.json` (project first, then global `~/.claude/settings.json`, first-match-wins):
+
+```json
+{
+  "planAgent": {
+    "additionalVerbs": ["onboard", "publish", "ingest"],
+    "additionalStopWords": ["new", "better"],
+    "additionalPlaceholders": ["scratch", "wip", "idea"],
+    "extraFrontmatter": {
+      "team": "engineering",
+      "milestone": "Q3-2026",
+      "priority": "medium"
+    }
+  }
+}
+```
+
+| Key | Type | Effect |
+|---|---|---|
+| `additionalVerbs` | `string[]` | Merged with the built-in imperative verb set; custom verbs are accepted as valid first tokens |
+| `additionalStopWords` | `string[]` | Merged with the built-in stop-word set; custom tokens are rejected as second tokens |
+| `additionalPlaceholders` | `string[]` | Merged with generic placeholder names (`plan`, `draft`, etc.); listed names are rejected as full filenames |
+| `extraFrontmatter` | `object` | Key-value pairs appended to every new plan's YAML frontmatter after `repo-name:`. `--priority` overrides any `priority` key here. |
+
 ## Plugin Structure
 
 ```
@@ -118,7 +160,10 @@ plan-agent/
     planning/
       SKILL.md              — Plan Mode workflow, arguments, structure, writing style
       reference/
-        SKELETON.md         — Starter template for new plans
+        SKELETON.md         — Default starter template (full plan)
+        SKELETON-minimal.md — Minimal template (Context + Steps + Criteria)
+        SKELETON-adr.md     — Architecture Decision Record template
+        SKELETON-spike.md   — Time-boxed investigation template
   hooks/
     validate-plan-filename.py  — PostToolUse filename enforcement script
   hooks.json                — Hook registration (Write|Edit matcher)
@@ -132,12 +177,12 @@ plan-agent/
 
 Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:planning <objective>`.
 
-- **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--type`/`--dir`/`--interview` flags with smart defaults
+- **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--no-clarify`/`--no-align`/`--type`/`--template`/`--dir`/`--priority`/`--interview` flags with smart defaults
 - **Enter plan mode** — bootstraps `EnterPlanMode` via `ToolSearch` and calls it before drafting
 - **Workflow §0–§7** — Assess, Clarify, Create, Frontmatter, Rename, Align, Commit, Status
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps, unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly
-- **Skeleton reference** — points to `reference/SKELETON.md` one level deep
+- **Skeleton reference** — selects `reference/SKELETON-<template>.md` based on `--template` flag (four variants)
 
 Both `EnterPlanMode` and `ExitPlanMode` are deferred tools. The skill loads them via `ToolSearch` (`select:EnterPlanMode`, `select:ExitPlanMode`) before calling each.
 

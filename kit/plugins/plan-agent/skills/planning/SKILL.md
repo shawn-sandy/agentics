@@ -3,7 +3,7 @@ name: planning
 description: "Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and plan-mode frontmatter. Use when running `/plan-agent:planning <objective>` to create a plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, TodoWrite, ToolSearch, Skill, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
-argument-hint: "<objective> [--quick] [--type feature|fix|refactor|docs|chore] [--dir <path>] [--interview]"
+argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default|minimal|adr|spike] [--dir <path>] [--priority low|medium|high|critical] [--interview]"
 ---
 
 # Plan Agent — Planning
@@ -16,9 +16,13 @@ argument-hint: "<objective> [--quick] [--type feature|fix|refactor|docs|chore] [
 Read `$ARGUMENTS` on entry:
 
 - **Objective (required):** all text that is not a flag. If empty after parsing, ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
-- `--quick` — skip §1 Clarify and §5 Align.
+- `--quick` — shorthand for `--no-clarify --no-align`; skips both §1 Clarify and §5 Align.
+- `--no-clarify` — skip §1 Clarify only. Use when the objective is well-specified but you still want §5 Align.
+- `--no-align` — skip §5 Align only. Use when steps are pre-agreed but requirements need verification first.
 - `--type <kind>` — preset `type:` in frontmatter (`feature`, `fix`, `refactor`, `docs`, `chore`).
+- `--template <name>` — plan skeleton variant: `default` (default), `minimal`, `adr`, `spike`. Controls which skeleton is loaded in §2 (see **Skeleton** section).
 - `--dir <path>` — override §2 directory resolution; write the plan to this path.
+- `--priority <level>` — write `priority: <level>` to frontmatter (`low`, `medium`, `high`, `critical`). Overrides `planAgent.extraFrontmatter.priority` from settings if both are present.
 - `--interview` — after writing the plan and before `ExitPlanMode`, call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")`. If that plugin is absent, note "plan-interview plugin not found — skipping" and continue.
 
 **Smart defaults when a flag is absent:**
@@ -29,7 +33,7 @@ Read `$ARGUMENTS` on entry:
   - `refactor`, `rename`, `extract`, `move`, `restructure`, `convert` → `refactor`
   - `document`, `docs` → `docs`
   - anything else → `chore`
-- `--quick` absent → treat as `--quick` if the objective is detailed and specific (≥ 8 words with concrete file paths or names); keep Clarify/Align for vague objectives.
+- `--quick`, `--no-clarify`, `--no-align` are opt-in only and are never inferred automatically.
 
 Echo the resolved objective and effective flags before proceeding to §0.
 
@@ -48,11 +52,11 @@ Echo the resolved objective and effective flags before proceeding to §0.
 ## Workflow
 
 0. **Assess** — Before drafting anything, determine whether the request warrants a plan: does it span multiple files, or involve unclear requirements? If not — single file, simple fix, typo, missing dep, direct skill/git operation — use `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` immediately and apply the change directly. Never produce a plan document for requests that don't clear this threshold.
-1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. *(Skip entirely when `--quick` or when the objective is detailed.)*
-2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename. Examples: `add-dark-mode-toggle`, `fix-login-redirect`, `refactor-auth-module`.
-3. **Frontmatter** — **Always** add YAML frontmatter at the top of every new plan file: `status: todo`, `type: <kind>` (use `--type` value if provided, otherwise the inferred type from the objective verb), `created: YYYY-MM-DD`, `repo-name: <repo>`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory.
+1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. *(Skip entirely when `--quick` or `--no-clarify`.)*
+2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename. Examples: `add-dark-mode-toggle`, `fix-login-redirect`, `refactor-auth-module`. Load the skeleton using the template rule in the **Skeleton** section below.
+3. **Frontmatter** — **Always** add YAML frontmatter at the top of every new plan file: `status: todo`, `type: <kind>` (use `--type` value if provided, otherwise the inferred type from the objective verb), `created: YYYY-MM-DD`, `repo-name: <repo>`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. After writing the standard fields, read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global `~/.claude/settings.json`); if found, append each key-value pair after `repo-name:`. If `--priority` was set, write `priority: <level>` (overwriting any `priority` key from `extraFrontmatter`). Omit `priority:` entirely if neither source provides it.
 4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from §2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
-5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — approval is requested separately via `ExitPlanMode`. *(Skip entirely when `--quick`.)*
+5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — approval is requested separately via `ExitPlanMode`. *(Skip entirely when `--quick` or `--no-align`.)*
 6. **Commit** — **Always** commit plan files to version control alongside the related changes.
 7. **Status** — **Always** update `status` (and `modified: YYYY-MM-DD`) in the frontmatter as the plan progresses: `todo` → `in-progress` → `completed`. Use `plan-interview:plan-status` (optional cross-plugin helper — requires `plan-interview` plugin) to automate this.
 
@@ -79,4 +83,13 @@ Direct, imperative, developer-friendly — real names (file paths, function name
 
 ## Skeleton
 
-Copy `reference/SKELETON.md` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/planning/reference/SKELETON.md` if the path is uncertain, to avoid accidentally loading the global `~/.claude/rules/reference/SKELETON.md` which has different content.
+Copy the appropriate skeleton from this plugin's `skills/planning/reference/` directory based on `--template`:
+
+| `--template` | File |
+|---|---|
+| `default` (or absent) | `SKELETON.md` |
+| `minimal` | `SKELETON-minimal.md` |
+| `adr` | `SKELETON-adr.md` |
+| `spike` | `SKELETON-spike.md` |
+
+Locate the target file using `Glob` with pattern `**/plan-agent/skills/planning/reference/SKELETON<suffix>.md` where `<suffix>` is empty for `default` and `-<name>` for others (e.g. `-adr`). This avoids accidentally loading the global `~/.claude/rules/reference/SKELETON.md` which has different content.
