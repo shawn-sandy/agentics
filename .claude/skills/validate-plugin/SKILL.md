@@ -1,6 +1,6 @@
 ---
 name: validate-plugin
-description: Validate a plugin directory's structure before committing. Checks required files, version conventions, homepage URL format, and marketplace.json registration. Invoke as /validate-plugin <plugin-name>.
+description: Validates a plugin directory's structure before committing. Checks required files, version conventions, homepage URL format, and marketplace.json registration. Use when running /validate-plugin <plugin-name> or checking a plugin before commit.
 allowed-tools: Glob, Grep, Read
 ---
 
