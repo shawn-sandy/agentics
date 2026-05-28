@@ -1,5 +1,28 @@
 # Changelog — social-media-tools
 
+## v1.0.0 — 2026-05-28
+
+**BREAKING:** All share-type skills renamed to `share-*` prefix for consistent naming.
+Plugin name (`code-share`) and all commands unchanged.
+
+| Old skill name | New skill name |
+|---|---|
+| `code-share` | `share-code` |
+| `blog-share` | `share-blog` |
+| `video-share` | `share-video` |
+| `github-code-share` | `share-github` |
+| `selection-share` | `share-selection` |
+| `project-share` | `share-project` |
+| `scan-for-shares` | `share-scan` |
+
+- All internal dispatch calls (`social-share` router, `agent-social-share`, `agent-digest`, `digest.md`, `digest-bg.md`) updated to reference new skill names
+- Temp card filenames updated to match (`share-blog-card.html`, etc.)
+- Shared references (`variables.md`, `language-map.md`, `non-interactive-mode.md`, `platforms.md`) updated
+- `media-library` SKILL.md skill name references updated
+- `share-scan` references (`interesting-patterns.md`, `topics.md`) updated
+
+---
+
 ## v0.9.0 — 2026-05-28
 
 Added `social-share` router skill, `agent-social-share` background agent, `social-share-bg`

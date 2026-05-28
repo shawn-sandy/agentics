@@ -32,7 +32,7 @@ Invoke the `Agent` tool with:
 
   ```
   Run the digest scan with these arguments: $ARGUMENTS
-  Invoke Skill(skill: "code-share:scan-for-shares", args: "$ARGUMENTS --background")
+  Invoke Skill(skill: "code-share:share-scan", args: "$ARGUMENTS --background")
   and write the digest to .claude/digests/. Report the output path when done.
   ```
 

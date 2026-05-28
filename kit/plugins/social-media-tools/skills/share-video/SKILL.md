@@ -1,10 +1,10 @@
 ---
-name: video-share
+name: share-video
 description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky. Use when asked to share or promote a video on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
 ---
 
-# video-share
+# share-video
 
 Draft platform-aware social media copy and generate a styled dark-mode card image
 for a YouTube or Vimeo video URL.
@@ -145,11 +145,11 @@ Read `$PLUGIN_DIR/references/copy-panels.md` for markup and escaping rules.
 
 ### Write and set variables
 
-Replace all `{{VARIABLE}}` placeholders. Write to `~/.claude/tmp/video-share-card.html`:
+Replace all `{{VARIABLE}}` placeholders. Write to `~/.claude/tmp/share-video-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp
-TEMP_HTML=video-share-card.html
+TEMP_HTML=share-video-card.html
 FILE_PREFIX=video
 SLUG_INPUT=$VIDEO_TITLE
 ```

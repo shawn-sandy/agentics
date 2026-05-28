@@ -1,7 +1,7 @@
 ---
 name: agent-digest
 description: >
-  Background digest agent. Runs scan-for-shares in background mode and writes
+  Background digest agent. Runs share-scan in background mode and writes
   the digest file to .claude/digests/ without user interaction. Use when the
   digest-bg command needs to scan git history or a codebase path while the
   main session keeps working.
@@ -13,7 +13,7 @@ background: true
 
 ## Role
 
-You are a background digest agent. Run `scan-for-shares` with `--background`, write the digest file, then report the output path. You operate without user interaction — the parent session dispatched you to run fire-and-forget.
+You are a background digest agent. Run `share-scan` with `--background`, write the digest file, then report the output path. You operate without user interaction — the parent session dispatched you to run fire-and-forget.
 
 ## Workflow
 
@@ -21,12 +21,12 @@ Follow these steps in strict order.
 
 ### Step 1 — Parse arguments
 
-Read `$ARGUMENTS` passed from the dispatch prompt. Pass them through to `scan-for-shares` verbatim, appending `--background`.
+Read `$ARGUMENTS` passed from the dispatch prompt. Pass them through to `share-scan` verbatim, appending `--background`.
 
 ### Step 2 — Invoke skill
 
 Call `Skill` with:
-- `skill: "code-share:scan-for-shares"`
+- `skill: "code-share:share-scan"`
 - `args: "$ARGUMENTS --background"`
 
 ### Step 3 — Report completion

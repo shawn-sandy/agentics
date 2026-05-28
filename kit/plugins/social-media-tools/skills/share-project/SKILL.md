@@ -1,11 +1,11 @@
 ---
-name: project-share
+name: share-project
 description: "Generates social posts and dark-mode cards for a project by topic. Creates platform-aware posts for features, bugs, changes, or releases. Use when announcing project updates on social media."
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, SendUserFile, Skill
 disable-model-invocation: true
 ---
 
-# project-share
+# share-project
 
 Generate social media copy and a styled dark-mode card image for a project based on a
 topic — features, bugs, changes, or release. Extracts project metadata and topic-relevant
@@ -201,11 +201,11 @@ Set before populating:
 
 For `{{COPY_PANELS}}` markup and escaping, read `$PLUGIN_DIR/references/copy-panels.md`.
 
-Write the populated HTML to `~/.claude/tmp/project-share-card.html`:
+Write the populated HTML to `~/.claude/tmp/share-project-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp
-TEMP_HTML=project-share-card.html
+TEMP_HTML=share-project-card.html
 FILE_PREFIX=project
 SLUG_INPUT=$PROJECT_NAME-$TOPIC
 ```

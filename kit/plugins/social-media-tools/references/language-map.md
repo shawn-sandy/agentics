@@ -1,6 +1,6 @@
 # Language Map
 
-Shared by the snippet-card skills (`github-code-share`, `selection-share`). Use this table
+Shared by the snippet-card skills (`share-github`, `share-selection`). Use this table
 to derive `LANGUAGE` (display name) and `LANGUAGE_COLOR` (hex badge colour) from a file
 extension — taken from the GitHub `FILE_PATH`, a selected file's path, or a pasted fenced
 block's language tag.

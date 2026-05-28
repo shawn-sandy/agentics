@@ -1,10 +1,10 @@
 ---
-name: blog-share
+name: share-blog
 description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, and Bluesky with platform tone. Use when asked to share a blog post on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
 ---
 
-# blog-share
+# share-blog
 
 Draft platform-aware social media copy and generate a styled dark-mode card image
 for a blog post URL or local markdown file.
@@ -165,11 +165,11 @@ Read `$PLUGIN_DIR/references/copy-panels.md` for markup and escaping rules.
 
 ### Write and set variables
 
-Replace all `{{VARIABLE}}` placeholders. Write to `~/.claude/tmp/blog-share-card.html`:
+Replace all `{{VARIABLE}}` placeholders. Write to `~/.claude/tmp/share-blog-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp
-TEMP_HTML=blog-share-card.html
+TEMP_HTML=share-blog-card.html
 FILE_PREFIX=blog
 SLUG_INPUT=$TITLE
 ```

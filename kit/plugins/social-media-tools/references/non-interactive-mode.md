@@ -15,9 +15,9 @@ All flags use `--flag=value` equals-form to survive URL and path tokenization.
 | `--background` | (presence) | Master switch; activates this mode |
 | `--platform=<v>` | `linkedin` \| `twitter` \| `bluesky` \| `all` | Default: `all` |
 | `--tone=<v>` | `professional` \| `casual` \| `punchy` \| `conversational` | Optional; omit for `all` |
-| `--source=<v>` | URL or absolute path | Required for `blog-share`, `github-code-share`, `video-share` |
-| `--objective=<text>` | Free text | Used by `selection-share`; inferred if absent |
-| `--code-file=<path>` | Absolute path under `~/.claude/tmp/` | Required for `selection-share` |
+| `--source=<v>` | URL or absolute path | Required for `share-blog`, `share-github`, `share-video` |
+| `--objective=<text>` | Free text | Used by `share-selection`; inferred if absent |
+| `--code-file=<path>` | Absolute path under `~/.claude/tmp/` | Required for `share-selection` |
 
 ---
 
@@ -27,7 +27,7 @@ Apply every rule when `--background` is present.
 
 1. **AskUserQuestion calls** — Do not call `AskUserQuestion` for any input. Resolve values
    from flags or smart defaults below. If a **required** value is absent after parsing (e.g.
-   `blog-share` dispatched with no `--source`), emit:
+   `share-blog` dispatched with no `--source`), emit:
    ```
    SOCIAL-SHARE: ERROR skill=<name> reason=missing required flag --<flag>
    ```
@@ -40,11 +40,11 @@ Apply every rule when `--background` is present.
    `⚠ WARN — <reason>` note to the `SOCIAL-SHARE: DONE` output line. `BLOCKED` still
    hard-STOPs.
 
-4. **Long-file disambiguation** (`selection-share`) — Do not ask which region. Use the first
+4. **Long-file disambiguation** (`share-selection`) — Do not ask which region. Use the first
    80 lines of the file at `--code-file`, or the explicitly passed line range if one was
    embedded in the dispatch prompt.
 
-5. **Video 4xx fallback** (`video-share`) — Do not ask for title or channel. Set
+5. **Video 4xx fallback** (`share-video`) — Do not ask for title or channel. Set
    `VIDEO_TITLE=""`, `CHANNEL=""`, `thumbnail_url=""` and continue.
 
 6. **Reuse check** — Skip the interactive reuse offer. Always generate a fresh card.

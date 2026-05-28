@@ -48,14 +48,14 @@ Evaluate rules **top-to-bottom; first match wins.** Do not ask the user anything
 
 | # | Condition on `$ARGUMENTS` or session context | Target | Extra flags |
 |---|----------------------------------------------|--------|-------------|
-| 1 | URL matching `github\.com/.*/blob/` or `raw\.githubusercontent\.com/` | `github-code-share` | `--source=<url>` |
-| 2 | URL matching `youtube\.com`, `youtu\.be`, or `vimeo\.com` | `video-share` | `--source=<url>` |
-| 3 | Any other `https?://` URL **or** a path ending `.md`/`.mdx`/`.markdown` | `blog-share` | `--source=<url-or-path>` |
-| 4 | Fenced code block (` ``` `) present in the message, or IDE context includes a highlighted selection or open code file | `selection-share` | `--code-file=` + `--objective=` (see Phase 2) |
-| 5 | Matches: `launch`, `release`, `shipped`, `announcing`, `went live`, or `v\d` | `project-share` | `--topic=release` |
-| 6 | Matches: `progress`, `update`, `working on`, `lately`, `this week`, `building` | `project-share` | `--topic=features` |
-| 7 | **Fallback A** — git diff has changes: `git rev-parse --git-dir 2>/dev/null && git diff HEAD~1 --stat 2>/dev/null \| grep -c .` returns a positive integer | `code-share` | *(none)* |
-| 8 | **Fallback B** — nothing else matched | `project-share` | `--topic=changes` |
+| 1 | URL matching `github\.com/.*/blob/` or `raw\.githubusercontent\.com/` | `share-github` | `--source=<url>` |
+| 2 | URL matching `youtube\.com`, `youtu\.be`, or `vimeo\.com` | `share-video` | `--source=<url>` |
+| 3 | Any other `https?://` URL **or** a path ending `.md`/`.mdx`/`.markdown` | `share-blog` | `--source=<url-or-path>` |
+| 4 | Fenced code block (` ``` `) present in the message, or IDE context includes a highlighted selection or open code file | `share-selection` | `--code-file=` + `--objective=` (see Phase 2) |
+| 5 | Matches: `launch`, `release`, `shipped`, `announcing`, `went live`, or `v\d` | `share-project` | `--topic=release` |
+| 6 | Matches: `progress`, `update`, `working on`, `lately`, `this week`, `building` | `share-project` | `--topic=features` |
+| 7 | **Fallback A** — git diff has changes: `git rev-parse --git-dir 2>/dev/null && git diff HEAD~1 --stat 2>/dev/null \| grep -c .` returns a positive integer | `share-code` | *(none)* |
+| 8 | **Fallback B** — nothing else matched | `share-project` | `--topic=changes` |
 
 If no git repository exists **and** no source URL/code was provided: output
 `social-share: nothing to share — no git repository and no source provided.` and **STOP**.
@@ -64,7 +64,7 @@ Set `TARGET_SKILL` and `EXTRA_FLAGS` from the matching row before continuing.
 
 ---
 
-## Phase 2 — Capture Code (selection-share only)
+## Phase 2 — Capture Code (share-selection only)
 
 If rule 4 matched:
 
@@ -98,7 +98,7 @@ Build `DISPATCH_FLAGS`:
 --platform=<PLATFORM> --background <EXTRA_FLAGS>
 ```
 
-For `project-share`, also include `--topic=<value>` from Phase 1:
+For `share-project`, also include `--topic=<value>` from Phase 1:
 
 ```
 --topic=<value> --platform=<PLATFORM> --background

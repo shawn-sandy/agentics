@@ -24,12 +24,12 @@ Discover what's worth sharing from your code.
 
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
-### Step 1 — Run scan-for-shares
+### Step 1 — Run share-scan
 
-Invoke the `scan-for-shares` skill with `$ARGUMENTS`:
+Invoke the `share-scan` skill with `$ARGUMENTS`:
 
 ```
-Skill(skill: "code-share:scan-for-shares", args: "$ARGUMENTS")
+Skill(skill: "code-share:share-scan", args: "$ARGUMENTS")
 ```
 
 The skill handles all candidate collection, scoring, security scrubbing, and the interactive review gate. Wait for it to complete and write the digest.
@@ -44,4 +44,4 @@ Options:
 - "Yes — I'll copy a `code-share prompt` from the digest and run it"  
 - "No — I'm done for now"
 
-Do not invoke `code-share` automatically regardless of the user's answer. The user must run the `/code-share:code-share` command themselves.
+Do not invoke `share-code` automatically regardless of the user's answer. The user must run the `/code-share:share-code` command themselves.

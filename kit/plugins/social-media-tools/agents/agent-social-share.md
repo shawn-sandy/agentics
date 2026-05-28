@@ -25,7 +25,7 @@ Follow these steps in strict order.
 ### Step 1 — Parse arguments
 
 Read the dispatch prompt to extract:
-- `TARGET_SKILL` — the skill to invoke (e.g. `code-share`, `blog-share`, `project-share`).
+- `TARGET_SKILL` — the skill to invoke (e.g. `share-code`, `share-blog`, `share-project`).
 - `DISPATCH_FLAGS` — the full flag string to pass (already includes `--background`).
 
 ### Step 2 — Invoke skill

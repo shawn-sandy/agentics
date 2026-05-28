@@ -1,10 +1,10 @@
 ---
-name: github-code-share
+name: share-github
 description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet from a GitHub repository."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, Skill, SendUserFile, Glob
 ---
 
-# github-code-share
+# share-github
 
 Fetch a specific file or snippet from a public GitHub repository, security-scrub it,
 draft platform-aware copy, and generate a syntax-highlighted dark-mode card image.
@@ -182,11 +182,11 @@ For variable reference, read `$PLUGIN_DIR/references/variables.md`.
 
 Read `$PLUGIN_DIR/references/copy-panels.md` for markup and escaping rules.
 
-Write the populated HTML to `~/.claude/tmp/github-code-share-card.html`:
+Write the populated HTML to `~/.claude/tmp/share-github-card.html`:
 
 ```bash
 mkdir -p ~/.claude/tmp
-TEMP_HTML=github-code-share-card.html
+TEMP_HTML=share-github-card.html
 FILE_PREFIX=snippet
 SLUG_INPUT=$FILENAME
 ```

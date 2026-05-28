@@ -79,7 +79,7 @@ Inline highlights inside `<td class="code">`:
 
 ## blog-card.html
 
-> Used by `blog-share` skill. All text values must be HTML-escaped before substitution.
+> Used by `share-blog` skill. All text values must be HTML-escaped before substitution.
 
 ### Static variables
 
@@ -105,7 +105,7 @@ The skill injects a full HTML element **or an empty string `""`** — do not use
 
 ## video-card.html
 
-> Used by `video-share` skill. `PLATFORM_COLOR` must come from the hardcoded map in the
+> Used by `share-video` skill. `PLATFORM_COLOR` must come from the hardcoded map in the
 > skill — never from fetched content.
 
 ### Static variables
@@ -130,7 +130,7 @@ The skill injects a full HTML element **or an empty string `""`** — do not use
 
 ## snippet-card.html
 
-> Used by `github-code-share` skill. `{{CODE_LINES}}` **must** be HTML-escaped before
+> Used by `share-github` skill. `{{CODE_LINES}}` **must** be HTML-escaped before
 > substitution — unescaped code breaks card rendering.
 
 ### HTML-escape order (mandatory)
