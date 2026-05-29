@@ -1,4 +1,4 @@
-# code-share
+# social-media-tools
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
@@ -31,7 +31,7 @@ Two complementary workflows: a **discovery pipeline** (scan git history or a cod
 ```bash
 # From the agentics marketplace
 /plugin marketplace add shawn-sandy/agentics
-/plugin install code-share@agentics-kit
+/plugin install social-media-tools@agentics-kit
 
 # Local dev
 claude --plugin-dir ./kit/plugins/social-media-tools
@@ -290,7 +290,7 @@ Pattern table and file-path block list are in `skills/security-scrub/references/
 ### Command: `/social-media-tools:digest`
 
 **File:** `commands/digest.md`  
-Interactive front-end for `scan-for-shares`. Runs the scan, presents candidates for review, and writes the approved entries to `.claude/digests/`.
+Interactive front-end for `share-scan`. Runs the scan, presents candidates for review, and writes the approved entries to `.claude/digests/`.
 
 ```
 /social-media-tools:digest [--days=7] [--base=main] [--max=20] | --codebase <path>

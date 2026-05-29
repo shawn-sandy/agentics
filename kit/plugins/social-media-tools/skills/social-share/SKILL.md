@@ -58,7 +58,7 @@ Evaluate rules **top-to-bottom; first match wins.** Do not ask the user anything
 | 8 | **Fallback A** — git diff has changes: `git rev-parse --git-dir 2>/dev/null && git diff HEAD~1 --stat 2>/dev/null \| grep -c .` returns a positive integer | `share-code` | *(none)* |
 | 9 | **Fallback B** — nothing else matched | `share-project` | `--topic=changes` |
 
-If no git repository exists **and** no source URL/code was provided: output
+If **no rule 1–7 matched** and no git repository exists and no source URL/code was provided: output
 `social-share: nothing to share — no git repository and no source provided.` and **STOP**.
 
 Set `TARGET_SKILL` and `EXTRA_FLAGS` from the matching row before continuing.
