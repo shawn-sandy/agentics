@@ -1,5 +1,17 @@
 # Changelog — social-media-tools
 
+## v1.1.1 — 2026-05-29
+
+README documentation sync — no behavior changes.
+
+- Added missing **Components** sections for components already listed in the Features table
+  and structure tree but undocumented in detail: `social-share` (router), `share-project`,
+  `media-library`, `/social-media-tools:social-share-bg`, and `agent-social-share`
+- Reworked the overview to reflect the current three-workflow scope (discovery pipeline,
+  card generation pipeline, background router) and to note that no path auto-posts
+- Updated the overview to mention selected/pasted code and project updates, matching the
+  marketplace description
+
 ## v1.1.0 — 2026-05-28
 
 Full background coverage: every skill except `security-scrub` (a sub-step utility) can now

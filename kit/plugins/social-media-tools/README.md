@@ -2,9 +2,15 @@
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
-Discover shareable code, blog posts, videos, and GitHub snippets — scrub for secrets, draft platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky.
+Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky.
 
-Two complementary workflows: a **discovery pipeline** (scan git history or a codebase path → scrub → review → digest) and a **card generation pipeline** (draft copy → render dark-mode card image).
+Three complementary workflows:
+
+- **Discovery pipeline** — scan git history or a codebase path → scrub → review → write a digest.
+- **Card generation pipeline** — draft copy → render a dark-mode card image from one of six templates.
+- **Background router** — describe what you want to share in plain language; the `social-share` router classifies it and dispatches the right skill unattended.
+
+No path in this plugin auto-posts — human review is always required before anything reaches a social network.
 
 ## Features
 
@@ -197,6 +203,15 @@ social-media-tools/
 
 ## Components
 
+### Skill: `social-share` (router)
+
+**File:** `skills/social-share/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share what they're working on, or to post code, a blog, a video, or a project update without naming a specific skill.
+
+The entry point for everything. It classifies a natural-language request (first-match-wins rules), resolves a default platform, captures any inline code to a temp file, and dispatches `agent-social-share` to run the matching skill in the background. Returns a one-line ack immediately; the agent reports the saved card path (card skills) or catalog path (`media-library`) on completion. Use `/social-media-tools:social-share-bg` for the explicit command form.
+
+---
+
 ### Skill: `share-blog`
 
 **File:** `skills/share-blog/SKILL.md`  
@@ -258,6 +273,31 @@ social-media-tools/
 
 ---
 
+### Skill: `share-project`
+
+**File:** `skills/share-project/SKILL.md`  
+**Activation:** manual-invoke only (`disable-model-invocation: true`) — reached via the `social-share` router or an explicit dispatch, not by passive intent matching.
+
+Generates a card for a project **topic** — features, bugs, changes, or release — by pulling topic-relevant content from git history, `CHANGELOG.md`, `README.md`, and manifest files.
+
+**Inputs:** `--topic` (features / bugs / changes / release), `--platform`, and an optional project `--path`; missing values are prompted for in interactive mode (the router always supplies topic and platform).
+
+**Workflow:** locate templates → parse inputs → reuse-check `docs/media/social/` → extract project metadata → gather topic-relevant content → `security-scrub` → draft platform-aware copy → populate template, save, screenshot → deliver copy + PNG + saved path. Per-topic extraction patterns and tone live in `skills/share-project/references/topics.md`.
+
+---
+
+### Skill: `media-library`
+
+**File:** `skills/media-library/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to browse the media library or find a prior post.
+
+Every card-generating skill saves its populated HTML (including the post copy) to `docs/media/social/`. This skill lists saved cards by type and date so you can retrieve copy for reposting and see which skill regenerates each card.
+
+- **Interactive mode** — lists posts and lets you pick one to view/reuse via `AskUserQuestion`.
+- **Background mode** (`--background`) — skips prompts and snapshots the catalog to `.claude/digests/media-library-YYYY-MM-DD.md`, emitting the file-output completion line. Card-skill flags (`--platform`, `--tone`) are silently ignored.
+
+---
+
 ### Skill: `share-scan`
 
 **File:** `skills/share-scan/SKILL.md`  
@@ -287,6 +327,17 @@ Pattern table and file-path block list are in `skills/security-scrub/references/
 
 ---
 
+### Command: `/social-media-tools:social-share-bg`
+
+**File:** `commands/social-share-bg.md`  
+Explicit, fire-and-forget entry point for the `social-share` router. Classifies the request, picks the right skill, and runs it in the background, returning immediately.
+
+```
+/social-media-tools:social-share-bg <what to share — plain language, URL, or code>
+```
+
+---
+
 ### Command: `/social-media-tools:digest`
 
 **File:** `commands/digest.md`  
@@ -313,6 +364,13 @@ Background variant. Dispatches `agent-digest` and returns immediately; the agent
 
 **File:** `agents/agent-digest.md`  
 Dispatched by `/social-media-tools:digest-bg`. Runs `share-scan --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke any card skill.
+
+---
+
+### Agent: `agent-social-share`
+
+**File:** `agents/agent-social-share.md`  
+Dispatched by the `social-share` skill and the `/social-media-tools:social-share-bg` command. Receives a pre-classified target skill plus flags, invokes that skill in non-interactive (`--background`) mode, and relays a single completion line — a card path for card-generating skills, or a catalog file path for file-producing skills like `media-library`. Runs as a background subagent (`model: sonnet`) with no user interaction.
 
 ---
 
