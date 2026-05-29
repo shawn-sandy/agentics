@@ -29,7 +29,7 @@ happen silently with no user-visible output. This is a no-op when plan mode is a
 
 ```bash
 MEDIA_DIR="${PWD}/docs/media/social"
-MEDIA_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null)
+MEDIA_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null | grep -v '/index\.html$')
 ```
 
 If `docs/media/social/` does not exist or contains no `.html` files, tell the user:
@@ -49,7 +49,7 @@ For each HTML file path (e.g., `docs/media/social/diff-add-copy-button-2026-05-2
 
 | Field | Example |
 |-------|---------|
-| Type | `diff`, `feature`, `quote`, `blog`, `snippet`, `video` |
+| Type | `diff`, `feature`, `quote`, `blog`, `snippet`, `video`, `project`, `session` |
 | Topic | `add-copy-button` (slug, replace hyphens with spaces) |
 | Date | `2026-05-27` |
 
@@ -97,6 +97,7 @@ Ask the user which number they want (or accept a filename). Then:
    - `video` → `share-video`
    - `snippet` → `share-github`
    - `project` → `share-project`
+   - `session` → `share-session`
 
 ### Open in browser
 
@@ -131,7 +132,7 @@ Generate a visual HTML gallery page from the saved cards:
    (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one `<a>` block:
 
    ```html
-   <a class="gallery-card" href="{BASENAME}.html">
+   <a class="gallery-card" href="{BASENAME}">
      <div class="thumb-container">
        <img src="{BASENAME_PNG}" alt="{TOPIC}" onerror="showFallback(this)">
        <span class="thumb-fallback" style="display:none">{TYPE}</span>
