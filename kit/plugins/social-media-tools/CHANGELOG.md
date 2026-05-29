@@ -1,5 +1,21 @@
 # Changelog — social-media-tools
 
+## v2.0.0 — 2026-05-29
+
+BREAKING CHANGE: Remove background dispatch layer.
+
+- Deleted commands: `social-share-bg`, `digest-bg`, `session-bg`
+- Deleted agents: `agent-social-share`, `agent-digest`
+- Deleted reference: `non-interactive-mode.md`
+- `social-share` router now invokes target skills directly via `Skill(...)` instead of
+  dispatching a background agent; `allowed-tools` simplified to `Bash, Read, Write, Skill`
+- Removed `--background` flag and non-interactive skip rules from all share skills
+- `share-scan`: removed `--background` flag, automatic PASS inclusion, and background review gate bypass
+- `media-library`: removed background catalog-snapshot path and `SOCIAL-SHARE: DONE` completion line
+- `share-session`: removed `BG_MODE` variable, background content-reconstruction path, and `SOCIAL-SHARE: DONE` completion line
+- Reduced permission surface on the router: no more `Agent`, `ToolSearch`, `ExitPlanMode`, or `WebFetch` in the dispatch layer
+- Individual share skills still use Playwright for interactive screenshots via `rendering-pipeline.md`
+
 ## v1.3.1 — 2026-05-29
 
 Fix background card generation. The `agent-social-share` background subagent invoked

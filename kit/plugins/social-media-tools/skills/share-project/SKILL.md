@@ -25,14 +25,6 @@ content from git history, CHANGELOG, README, and manifest files.
 | 6 — Card | Populate template, save to disk, screenshot via Playwright |
 | 7 — Deliver | Present copy + card image + saved path |
 
-## Non-interactive mode
-
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. The router always supplies `--topic` and `--platform`; do not ask
-for them. Do not pause for user input at any point.
-
----
-
 ## Phase 0 — Locate Plugin Assets
 
 Run silently:
@@ -63,7 +55,6 @@ Parse `$ARGUMENTS`:
 - `--path <dir>` — project root to analyze (default: `$PWD`)
 - `--days=N` — how far back to look in git history (default: `30`)
 
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 If `--topic` is missing, use `AskUserQuestion`:
 > "What would you like to share about this project?"
 > Options: `features`, `bugs`, `changes`, `release`

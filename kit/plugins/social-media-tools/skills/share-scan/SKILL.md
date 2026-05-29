@@ -25,7 +25,6 @@ Parse `$ARGUMENTS`:
 - `--base=BRANCH` — base branch for diff (auto-detect `main` or `master` if omitted, history mode only)
 - `--max=N` — max candidates before scoring (default: 20)
 - `--codebase <path>` — activates codebase mode; value is the path to scan
-- `--background` — skip interactive review gate (auto-include PASS, auto-exclude BLOCKED/WARN)
 
 **Guard (history mode only):** run `git rev-parse --git-dir 2>/dev/null` — if it fails, output:
 ```
@@ -104,9 +103,7 @@ For each candidate:
 
 If a match is found, mark the candidate with `SAVED=true` and the matching file path `SAVED_PATH`.
 
-In background mode (`--background`): auto-skip SAVED candidates (exclude them from the digest entirely; they are already shared).
-
-In interactive mode: include SAVED candidates but tag them with `[SAVED]` in the review gate options and in the digest output.
+Include SAVED candidates but tag them with `[SAVED]` in the review gate options and in the digest output.
 
 ---
 
@@ -134,17 +131,11 @@ For each surviving candidate, build a structured entry using the card-type decis
 
 ## Step 6 — Human review gate
 
-### Interactive mode (default — `--background` absent)
-
 Present all PASS and WARN candidates in a **single** `AskUserQuestion` call with `multiSelect: true`. Options list each candidate by number and subject. Include a note on any WARN entry.
 
 Ask: "Which entries should go into the digest?" — options are the candidates, plus "None — discard all".
 
 Use only the user-selected entries in the final digest.
-
-### Background mode (`--background` present)
-
-Auto-include all PASS entries. Auto-exclude all BLOCKED and WARN entries. Skip the `AskUserQuestion` call entirely.
 
 ---
 
