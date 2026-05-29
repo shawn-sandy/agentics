@@ -1,6 +1,6 @@
 ---
 name: share-video
-description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky. Use when asked to share or promote a video on social media."
+description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, Bluesky, and Substack. Use when asked to share or promote a video on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
@@ -63,7 +63,7 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `VIDEO_URL` | Any YouTube or Vimeo URL | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required |
+| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, Substack, All sites | Required |
 | `HOOK_ANGLE` | Free text | Optional |
 
 ---
@@ -119,7 +119,7 @@ For copy format and filled examples per platform, read `references/platforms.md`
 Present the draft in a fenced code block labelled with the platform name and wait for approval.
 
 - **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
 
 ---
 

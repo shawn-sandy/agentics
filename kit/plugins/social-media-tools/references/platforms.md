@@ -13,6 +13,7 @@ Per-skill copy format templates and examples live in each skill's own
 | LinkedIn | 1,500 | Professional |
 | Twitter/X | 280 | Punchy |
 | Bluesky | 300 | Conversational |
+| Substack | 500 | Thoughtful |
 
 ---
 
@@ -25,8 +26,11 @@ Per-skill copy format templates and examples live in each skill's own
 - **Attribution on Bluesky**: name the creator or author — Bluesky culture values attribution;
   do not echo the Twitter copy verbatim.
 - **Hashtags**: LinkedIn supports 2–4 hashtags at end; Twitter/X 1–2 max (they eat budget
-  fast); Bluesky hashtags are optional.
-- **All-sites drafting**: when platform is "All sites", draft all three variants and respect
+  fast); Bluesky hashtags are optional; Substack Notes do not use hashtags.
+- **Substack Notes tone**: write in a newsletter voice — more personal and reflective than
+  LinkedIn, more substantive than Twitter. Add a sentence of context or opinion that wouldn't
+  fit in 280 chars. Do not echo the LinkedIn or Twitter copy verbatim.
+- **All-sites drafting**: when platform is "All sites", draft all four variants and respect
   each platform's length and tone independently — find a different angle per platform.
 
 ---
@@ -55,3 +59,5 @@ per-skill story arcs (hook → insight → CTA).
   - **Twitter/X** (280) & **Bluesky** (300): add a brief follow clause **only if it
     fits** after the core message and URL (a URL is 23 chars on Twitter/X). If it
     would crowd the message, **drop it — content wins**.
+  - **Substack** (500): one closing line inviting the reader to subscribe or follow
+    for more on the topic — natural newsletter voice, not a hard sell.

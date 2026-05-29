@@ -1,6 +1,6 @@
 ---
 name: share-project
-description: "Generates social posts and dark-mode cards for a project by topic. Creates platform-aware posts for features, bugs, changes, or releases. Use when announcing project updates on social media."
+description: "Generates social posts and dark-mode cards for a project by topic. Creates platform-aware posts for features, bugs, changes, or releases for LinkedIn, Twitter/X, Bluesky, or Substack. Use when announcing project updates on social media."
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, Skill
 disable-model-invocation: true
 ---
@@ -59,7 +59,7 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 Parse `$ARGUMENTS`:
 
 - `--topic <value>` — one of: `features`, `bugs`, `changes`, `release` (required)
-- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` (required)
+- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky`, `Substack`, `All sites` (required)
 - `--path <dir>` — project root to analyze (default: `$PWD`)
 - `--days=N` — how far back to look in git history (default: `30`)
 
@@ -160,7 +160,7 @@ For per-topic tone guide, read `references/topics.md`.
 Present drafted copy in a fenced code block labeled with the platform name.
 
 - **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
 
 ---
 

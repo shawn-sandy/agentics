@@ -1,6 +1,6 @@
 ---
 name: share-blog
-description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, and Bluesky with platform tone. Use when asked to share a blog post on social media."
+description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, Bluesky, and Substack with platform tone. Use when asked to share a blog post on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
@@ -68,7 +68,7 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `SOURCE` | URL or file path | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required |
+| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, Substack, All sites | Required |
 | `TONE` | Professional, Casual, Punchy | Default: Professional (LinkedIn), Punchy (Twitter/Bluesky) |
 | `HOOK_ANGLE` | Free text | Optional |
 
@@ -139,7 +139,7 @@ For copy format and filled examples per platform, read `references/platforms.md`
 Present drafted copy in a fenced code block labelled with the platform name and wait for approval.
 
 - **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
 
 ---
 

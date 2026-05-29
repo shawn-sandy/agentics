@@ -2,7 +2,7 @@
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
-Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky.
+Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack.
 
 Two complementary workflows:
 
@@ -199,7 +199,7 @@ The entry point for everything. It classifies a natural-language request (first-
 | Input | Values | Notes |
 |-------|--------|-------|
 | Source | URL or local `.md` path | Relative paths resolved via `realpath` |
-| Platform | LinkedIn, Twitter/X, Bluesky, All sites | Required — "All sites" embeds a copy snippet per site |
+| Platform | LinkedIn, Twitter/X, Bluesky, Substack, All sites | Required — "All sites" embeds a copy snippet per site |
 | Tone | Professional, Casual, Punchy | Default varies by platform |
 | Hook angle | Free text | Optional framing direction |
 
@@ -323,16 +323,16 @@ Interactive front-end for `share-scan`. Runs the scan, presents candidates for r
 
 | Input | Values | Default |
 |-------|--------|---------|
-| Platform | `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` | — (required) |
+| Platform | `LinkedIn`, `Twitter/X`, `Bluesky`, `Substack`, `All sites` | — (required) |
 | Content type | `diff-card`, `feature-card`, `quote-card` | auto-detected from git |
 | Tone | `Professional`, `Casual`, `Punchy` | Professional (LinkedIn), Punchy (Twitter/X, Bluesky) |
 
-When **All sites** is selected, the card embeds a separate, individually copyable snippet for each platform (LinkedIn, Twitter/X, Bluesky) — each with its own **Copy** button — instead of one combined box.
+When **All sites** is selected, the card embeds a separate, individually copyable snippet for each platform (LinkedIn, Twitter/X, Bluesky, Substack) — each with its own **Copy** button — instead of one combined box.
 
 **Workflow (6 phases):**
 
 1. **Clarify** — runs `git diff`, `git log`, and `CHANGELOG.md` to auto-detect content type; only asks for what it can't infer
-2. **Draft copy** — writes platform-aware copy within character limits (LinkedIn 1,500 / Twitter 280 / Bluesky 300)
+2. **Draft copy** — writes platform-aware copy within character limits (LinkedIn 1,500 / Twitter 280 / Bluesky 300 / Substack 500)
 3. **Pick template** — selects `diff-card`, `feature-card`, or `quote-card` and locates the `templates/` directory
 4. **Populate** — substitutes `{{VARIABLES}}` in the HTML template and writes to `~/.claude/tmp/code-share-card.html`
 5. **Screenshot** — starts a local HTTP server, takes a Playwright screenshot to `~/.claude/tmp/code-share-card.png`, then kills the server

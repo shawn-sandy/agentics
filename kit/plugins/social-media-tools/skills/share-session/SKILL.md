@@ -7,9 +7,9 @@ allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, Sen
 # share-session
 
 Summarize **what the current Claude Code session accomplished** — a short narrative plus the
-key things built, fixed, or changed — into a dark-mode recap card for LinkedIn, Twitter/X, or
-Bluesky. Token usage, duration, and commit/file counts ride along as a compact stats strip.
-**Tokens only — no dollar amounts.**
+key things built, fixed, or changed — into a dark-mode recap card for LinkedIn, Twitter/X,
+Bluesky, or Substack. Token usage, duration, and commit/file counts ride along as a compact
+stats strip. **Tokens only — no dollar amounts.**
 
 The content summary is the hero of the card; the usage metrics are supporting detail.
 
@@ -205,6 +205,7 @@ detail, not the headline.
   hit) → follow CTA; 2–4 hashtags
 - **Twitter/X**: One punchy line on what was built; a single stat only if it fits and adds color
 - **Bluesky**: Conversational, same accomplishment-first brevity
+- **Substack**: Newsletter voice — reflect on what you built and what you learned; stats as supporting detail; no hashtags
 
 The token/duration/cache figures are a single trailing stat line, never the focus.
 

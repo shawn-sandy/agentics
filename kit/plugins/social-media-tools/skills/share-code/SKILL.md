@@ -1,12 +1,12 @@
 ---
 name: share-code
-description: "Generates social media copy and a dark-mode card image. Formats code changes into platform-ready posts for LinkedIn, Twitter/X, or Bluesky. Use when asked to post or share a code change."
+description: "Generates social media copy and a dark-mode card image. Formats code changes into platform-ready posts for LinkedIn, Twitter/X, Bluesky, or Substack. Use when asked to post or share a code change."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob
 ---
 
 # share-code
 
-Draft platform-aware social media copy and generate a styled dark-mode card image for LinkedIn, Twitter/X, or Bluesky.
+Draft platform-aware social media copy and generate a styled dark-mode card image for LinkedIn, Twitter/X, Bluesky, or Substack.
 
 ## Quick Reference
 
@@ -85,13 +85,14 @@ For character limits, tone defaults, and the **Follow CTA** rule, read `$PLUGIN_
 - **LinkedIn**: Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags at end
 - **Twitter/X**: One punchy sentence or a tight two-liner; no hashtag bloat
 - **Bluesky**: Conversational, same brevity as Twitter
+- **Substack**: Newsletter voice — more reflective, adds a sentence of context or opinion; no hashtags
 
 The closing CTA is a topic-matched **follow** CTA (e.g. "follow for more `<language>`/`<topic>` like this") — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit. See the Follow CTA rule.
 
 Draft all three platform variants in the chosen tone. Present the drafted copy in a fenced code block labeled with the platform name and wait for approval.
 
 - **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
 
 ---
 

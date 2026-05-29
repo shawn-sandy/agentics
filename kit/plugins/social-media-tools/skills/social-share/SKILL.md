@@ -90,8 +90,8 @@ Write the raw code content to `~/.claude/tmp/social-share-selection.txt`.
 ## Phase 3 — Resolve Defaults
 
 Set `PLATFORM=all` unless the user specified a platform in `$ARGUMENTS`:
-- Detect phrases like "post to twitter", "share on LinkedIn", "for Bluesky" → map to the
-  corresponding `--platform=<value>`.
+- Detect phrases like "post to twitter", "share on LinkedIn", "for Bluesky", "on Substack",
+  "Substack note" → map to the corresponding `--platform=<value>`.
 
 Build `DISPATCH_FLAGS`:
 
