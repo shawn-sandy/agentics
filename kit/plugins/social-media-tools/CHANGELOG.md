@@ -1,5 +1,19 @@
 # Changelog — social-media-tools
 
+## v2.2.0 — 2026-05-29
+
+Add visual gallery viewer for saved social cards.
+
+- `templates/gallery.html` (new): dark-mode responsive grid template matching the
+  existing card design language; displays PNG thumbnails with color-coded type badges,
+  humanized topics, and dates; works on `file://` protocol with no JS dependencies;
+  `<img onerror>` fallback shows card type text when PNG is missing
+- `media-library` skill: added **View gallery** option to the interactive menu —
+  scans `docs/media/social/` for saved cards, populates the gallery template, writes
+  `docs/media/social/index.html`, and opens it in the default browser; gallery is
+  generated on demand, not on every card save
+- Updated skill description to include gallery viewing as a trigger
+
 ## v2.1.1 — README: sync usage documentation with current skill behavior
 
 - Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.

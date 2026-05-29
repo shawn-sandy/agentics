@@ -1,6 +1,6 @@
 ---
 name: media-library
-description: "Browses and reuses saved social media HTML posts from docs/media/social/. Lists saved cards by type and date for copy reuse. Use when the user asks to browse the media library or find a prior post."
+description: "Browses saved social media cards and generates a visual gallery page. Lists cards by type and date for copy reuse. Use when the user asks to browse the media library, view shares, or open the gallery."
 allowed-tools: Bash, Read, Write, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
@@ -29,7 +29,7 @@ happen silently with no user-visible output. This is a no-op when plan mode is a
 
 ```bash
 MEDIA_DIR="${PWD}/docs/media/social"
-MEDIA_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null)
+MEDIA_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null | grep -v '/index\.html$')
 ```
 
 If `docs/media/social/` does not exist or contains no `.html` files, tell the user:
@@ -49,7 +49,7 @@ For each HTML file path (e.g., `docs/media/social/diff-add-copy-button-2026-05-2
 
 | Field | Example |
 |-------|---------|
-| Type | `diff`, `feature`, `quote`, `blog`, `snippet`, `video` |
+| Type | `diff`, `feature`, `quote`, `blog`, `snippet`, `video`, `project`, `session` |
 | Topic | `add-copy-button` (slug, replace hyphens with spaces) |
 | Date | `2026-05-27` |
 
@@ -73,6 +73,7 @@ Use `AskUserQuestion` to ask what the user wants to do:
 > Options:
 > - **View a post** — Show the post copy text from a saved file
 > - **Open in browser** — Show the file path to open manually
+> - **View gallery** — Generate a visual gallery page and open it
 > - **Done** — No action needed
 
 ### View a post
@@ -96,6 +97,7 @@ Ask the user which number they want (or accept a filename). Then:
    - `video` → `share-video`
    - `snippet` → `share-github`
    - `project` → `share-project`
+   - `session` → `share-session`
 
 ### Open in browser
 
@@ -107,6 +109,70 @@ open "$ABS_PATH" 2>/dev/null || xdg-open "$ABS_PATH" 2>/dev/null || true
 ```
 
 Tell the user: "Opened `{abs_path}` in your browser."
+
+### View gallery
+
+Generate a visual HTML gallery page from the saved cards:
+
+1. **Locate plugin assets** — find `templates/` directory to derive `$PLUGIN_DIR`:
+   ```bash
+   find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+   find "$PWD" -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+   ```
+   Use the first non-empty result as `TEMPLATES_DIR`. Derive:
+   ```bash
+   PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
+   ```
+   If no directory is found: output "Templates not found. Install the plugin or load it with `--plugin-dir`." and **STOP**.
+
+2. **List card files** — collect all `.html` files in `docs/media/social/` excluding `index.html`:
+   ```bash
+   MEDIA_DIR="${PWD}/docs/media/social"
+   CARD_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null | grep -v '/index\.html$')
+   ```
+
+3. **Read the gallery template** from `$PLUGIN_DIR/templates/gallery.html`.
+
+4. **Build `{{GALLERY_ENTRIES}}`** — for each card file (most recent first), parse the filename
+   (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one `<a>` block:
+
+   ```html
+   <a class="gallery-card" href="{BASENAME}">
+     <div class="thumb-container">
+       <img src="{BASENAME_PNG}" alt="{TOPIC}" onerror="showFallback(this)">
+       <span class="thumb-fallback" style="display:none">{TYPE}</span>
+     </div>
+     <div class="card-info">
+       <div class="card-info-top">
+         <span class="type-badge type-{TYPE}">{TYPE}</span>
+         <span class="card-date">{DATE}</span>
+       </div>
+       <span class="card-topic">{TOPIC}</span>
+     </div>
+   </a>
+   ```
+
+   Where:
+   - `{BASENAME}` = filename without path (e.g., `diff-add-copy-button-2026-05-27.html`)
+   - `{BASENAME_PNG}` = same with `.png` extension
+   - `{TYPE}` = first segment of filename (e.g., `diff`, `feature`, `blog`)
+   - `{TOPIC}` = middle segments with hyphens replaced by spaces, title-cased (e.g., "Add Copy Button")
+   - `{DATE}` = last segment before `.html` (e.g., `2026-05-27`)
+
+5. **Substitute variables** in the template:
+   - `{{GALLERY_ENTRIES}}` → the concatenated `<a>` blocks
+   - `{{CARD_COUNT}}` → total number of cards
+   - `{{GENERATED_AT}}` → current date and time (e.g., `2026-05-27 14:30`)
+
+6. **Write** the populated HTML to `docs/media/social/index.html`.
+
+7. **Open** in the user's default browser:
+   ```bash
+   GALLERY_PATH=$(realpath "docs/media/social/index.html" 2>/dev/null || echo "${PWD}/docs/media/social/index.html")
+   open "$GALLERY_PATH" 2>/dev/null || xdg-open "$GALLERY_PATH" 2>/dev/null || true
+   ```
+
+8. Tell the user: "Gallery generated at `docs/media/social/index.html` with {count} cards."
 
 ---
 
