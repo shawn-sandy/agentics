@@ -1,3 +1,9 @@
+---
+status: completed
+type: feature
+created: 2026-05-29
+---
+
 # Plan: Add Copy Button to Next Steps and Unresolved Questions
 
 ## Context
