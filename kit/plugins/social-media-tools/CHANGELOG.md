@@ -1,5 +1,9 @@
 # Changelog — social-media-tools
 
+## v2.1.1 — README: sync usage documentation with current skill behavior
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 ## v2.1.0 — 2026-05-29
 
 Add Substack Notes as a fourth share platform; consolidate platform list into

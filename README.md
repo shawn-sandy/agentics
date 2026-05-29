@@ -95,7 +95,8 @@ Install from the [official docs](https://code.claude.com/docs/en/installation) i
 ### Optional
 
 - **Git** — for cloning the repository locally
-- **GitHub CLI (`gh`)** — used by the `git-agent` plugin for PR creation
+- **GitHub CLI (`gh`)** — used by the `git-agent` plugin for GitHub PR creation
+- **GitLab CLI (`glab`)** — used by `agent-ship` for GitLab MR creation
 - **`jq`** — JSON processor, useful for debugging plugin manifests
 
 ### Platform Support
@@ -367,7 +368,7 @@ claude --plugin-dir ./kit/plugins/code-simplifier
 
 Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage.
 
-**Skills** (activate automatically):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -398,7 +399,7 @@ Identifies React component source patterns that commonly correlate with poor Eve
 |---------|-------------|
 | `/react-perf-analyzer:test [url]` | Run Lighthouse against a URL (Storybook story, local dev server, or any live page) and report actual INP, CLS, TBT, FCP, and LCP scores with prioritized fix recommendations |
 
-**Skills** (activate automatically):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -438,7 +439,7 @@ Stress-test implementation plans with structured multi-round interviews before c
 | `/plan-interview:plan-maintenance [--archive] [--index] [--variants] [--all] [--background]` | Archive completed plans as HTML, generate a README index, and review variant/duplicate files |
 | `/plan-interview:plan-to-html [plan-file-path]` | Deprecated — use /plan-interview:markdown-to-html instead |
 
-**Skills** (activate automatically):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -541,7 +542,7 @@ Automated git workflow — create branches, commit with conventional messages, a
 | `/git-agent:pr-bg` | Fire off the agent-pr subagent in the background to push the current branch and open a GitHub PR, then return control immediately |
 | `/git-agent:ship-bg` | Fire off the agent-ship subagent in the background to commit, push, and open a PR/MR end-to-end, then return control immediately |
 
-**Skills** (activate automatically):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -579,7 +580,7 @@ Back up and restore Claude Code user settings to a dedicated git repo. Routine-c
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `settings-backup` | Back up, save, export, or sync Claude Code settings to a git repo — also activates for routine-scheduled setting backups |
+| `settings-backup` | Back up, save, or sync Claude Code settings to a git repo — also activates for routine-scheduled setting backups |
 | `settings-restore` | Restore, import, or recover Claude Code settings from a backup git repo |
 
 ```bash
@@ -694,7 +695,7 @@ Review and plan Claude Code skills, and run tests for changed files — audit SK
 |---------|-------------|
 | `/skill-reviewer:check-description` | Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 160-char budget |
 
-**Skills** (activate automatically):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
@@ -770,7 +771,7 @@ Draft platform-aware social media copy and generate dark-mode cards for code cha
 |---------|-------------|
 | `/social-media-tools:digest` | Scan recent git history or a codebase path for shareable code, scrub for secrets, and draft code-share prompts |
 
-**Skills** (activate automatically):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|

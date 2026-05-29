@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.4.3 — README: sync usage documentation with current skill behavior
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 ## 3.4.2 — 2026-05-20
 
 **Fixed: WebFetch/WebSearch permission prompts blocking review panel execution.**

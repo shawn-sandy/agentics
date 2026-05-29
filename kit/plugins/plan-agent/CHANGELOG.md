@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.1 — README: correct --template flag docs; fix planAgent.extraFrontmatter key
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 ## 0.7.0 — 2026-05-29
 
 ### Added

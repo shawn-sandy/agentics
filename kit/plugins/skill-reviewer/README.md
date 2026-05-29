@@ -139,8 +139,8 @@ Check my SKILL.md against the current platform docs
 The plugin ships a `PostToolUse` hook in `hooks.json` that fires automatically when Claude writes or edits any `SKILL.md` file in the current project. It warns if the `description:` frontmatter value exceeds the budget:
 
 ```text
-OK: SKILL.md description is 142 chars (<=160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md
-WARNING: SKILL.md description is 214 chars (>160) in kit/plugins/my-plugin/skills/my-skill/SKILL.md — run /skill-reviewer:optimizing-skill-frontmatter to trim
+OK: SKILL.md description is 142 chars (within budget for current installed-skill count) in kit/plugins/my-plugin/skills/my-skill/SKILL.md
+WARNING: SKILL.md description is 214 chars (over budget for current installed-skill count) in kit/plugins/my-plugin/skills/my-skill/SKILL.md — run /skill-reviewer:optimizing-skill-frontmatter to optimize
 ```
 
 **Description length budgets:** Claude Code's default `skillListingBudgetFraction` (1% of the context window) allocates roughly 8,000 chars total across all installed skills. The `optimizing-skill-frontmatter` skill targets the three-part format (≤200 chars total, short description ≤80 chars):
