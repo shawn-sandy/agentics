@@ -1,5 +1,62 @@
 # Changelog — social-media-tools
 
+## v2.1.0 — 2026-05-29
+
+Add Substack Notes as a fourth share platform; consolidate platform list into
+shared reference to reduce duplication.
+
+- Added Substack (500 chars, thoughtful/newsletter tone) to the canonical platform
+  table in `references/platforms.md`
+- Consolidated platform options, copy variant storage convention, draft procedure,
+  and default per-platform copy formats into `references/platforms.md` — skills now
+  reference the shared file instead of duplicating the platform list inline
+- Added Substack copy format sections to `share-blog/references/platforms.md` and
+  `share-video/references/platforms.md` with examples
+- Updated all share skill descriptions for activation matching
+- Updated `references/copy-panels.md` to render four per-site panels in "All sites"
+  mode, with a cross-reference note for adding new platforms
+- Added `substack` tag to marketplace entry
+
+## v2.0.0 — 2026-05-29
+
+BREAKING CHANGE: Remove background dispatch layer.
+
+- Deleted commands: `social-share-bg`, `digest-bg`, `session-bg`
+- Deleted agents: `agent-social-share`, `agent-digest`
+- Deleted reference: `non-interactive-mode.md`
+- `social-share` router now invokes target skills directly via `Skill(...)` instead of
+  dispatching a background agent; `allowed-tools` simplified to `Bash, Read, Write, Skill`
+- Removed `--background` flag and non-interactive skip rules from all share skills
+- `share-scan`: removed `--background` flag, automatic PASS inclusion, and background review gate bypass
+- `media-library`: removed background catalog-snapshot path and `SOCIAL-SHARE: DONE` completion line
+- `share-session`: removed `BG_MODE` variable, background content-reconstruction path, and `SOCIAL-SHARE: DONE` completion line
+- Reduced permission surface on the router: no more `Agent`, `ToolSearch`, `ExitPlanMode`, or `WebFetch` in the dispatch layer
+- Individual share skills still use Playwright for interactive screenshots via `rendering-pipeline.md`
+
+## v1.3.1 — 2026-05-29
+
+Fix background card generation. The `agent-social-share` background subagent invoked
+the `share-*` skills via `Skill`, but subagent tool grants are not transitive across
+`Skill` invocations — so the inner skills' card-rendering and fetch calls were blocked,
+and no PNG (or blog/GitHub/video fetch) succeeded in background mode.
+
+- `agent-social-share` agent: widened `tools:` to add `WebFetch` (needed by
+  `share-blog`, `share-github`, `share-video`) and the three Playwright screenshot
+  tools used by every card skill's rendering pipeline
+  (`mcp__plugin_playwright_playwright__browser_navigate`, `…__browser_take_screenshot`,
+  `…__browser_wait_for`). `AskUserQuestion` is intentionally still excluded — background
+  runs skip it. Mirrors the precedent set by `agent-product-plans`.
+- No skill logic changed; the `--background` non-interactive paths were already correct.
+- `agent-social-share`: added a Step 1b Playwright preflight. For card-generating skills
+  (every target except `media-library`), the agent now probes for the screenshot tool via
+  `ToolSearch` before invoking the skill; if Playwright is unavailable it proceeds (HTML +
+  copy are still produced) but reports the `DONE` line with an empty `png=` and an explicit
+  `⚠ WARN` pointing to the HTML — so a missing screenshot is never silent.
+- `agent-digest` / `share-scan` (digest path) was unaffected and is unchanged.
+- README `Requirements`: added a note that the Playwright MCP is an external,
+  non-bundled dependency (not declared in `plugin.json`), pointing to the
+  rendering-pipeline manual fallback; formally declaring it is a planned enhancement.
+
 ## v1.3.0 — 2026-05-29
 
 `share-session` now leads with a summary of **what the session accomplished** — a narrative

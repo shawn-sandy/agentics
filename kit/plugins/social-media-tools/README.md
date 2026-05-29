@@ -2,13 +2,12 @@
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
-Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky.
+Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack.
 
-Three complementary workflows:
+Two complementary workflows:
 
 - **Discovery pipeline** — scan git history or a codebase path → scrub → review → write a digest.
 - **Card generation pipeline** — draft copy → render a dark-mode card image from one of six templates.
-- **Background router** — describe what you want to share in plain language; the `social-share` router classifies it and dispatches the right skill unattended.
 
 No path in this plugin auto-posts — human review is always required before anything reaches a social network.
 
@@ -16,7 +15,7 @@ No path in this plugin auto-posts — human review is always required before any
 
 | Component | Type | Description |
 |-----------|------|-------------|
-| `social-share` | Skill | **Router** — classifies a natural-language request and dispatches the right skill in the background with zero questions |
+| `social-share` | Skill | **Router** — classifies a natural-language request and runs the right skill |
 | `share-session` | Skill | Generate a dark-mode session recap card from the live session JSONL — tokens, duration, commits, and platform copy |
 | `share-code` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
 | `share-blog` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
@@ -25,14 +24,9 @@ No path in this plugin auto-posts — human review is always required before any
 | `share-selection` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
 | `share-project` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
 | `share-scan` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
-| `media-library` | Skill | Browse saved posts interactively, or snapshot the catalog to `.claude/digests/` in the background |
+| `media-library` | Skill | Browse saved posts interactively and retrieve copy for reposting |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
-| `/social-media-tools:session-bg` | Command | Fire-and-forget session recap — dispatches `share-session` in the background |
-| `/social-media-tools:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
-| `/social-media-tools:digest-bg` | Command | Fire-and-forget background digest scan |
-| `agent-social-share` | Agent | Background agent; runs the chosen skill non-interactively and reports `SOCIAL-SHARE: DONE` |
-| `agent-digest` | Agent | Background agent; runs `share-scan --background` and proactively reports the digest path |
 
 ## Installation
 
@@ -59,17 +53,14 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 # Scan a codebase path instead of git history
 /social-media-tools:digest --codebase src/auth/
-
-# Run in the background while you keep working
-/social-media-tools:digest-bg --days=7
 ```
 
-The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/social-media-tools:social-share-bg` prompt.
+The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste share prompt.
 
-### Share anything — router dispatches in the background
+### Share anything — router picks the right skill
 
-The `social-share` router skill classifies your request and runs the right workflow
-unattended. Just describe what you want to share:
+The `social-share` router skill classifies your request and runs the right workflow.
+Just describe what you want to share:
 
 ```
 "share what I just built"
@@ -79,20 +70,7 @@ unattended. Just describe what you want to share:
 "share my progress this week"
 ```
 
-Or use the explicit command:
-
-```bash
-/social-media-tools:social-share-bg share my latest commit
-/social-media-tools:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
-/social-media-tools:social-share-bg we just shipped v2 on Twitter
-/social-media-tools:social-share-bg browse my saved posts   # snapshots catalog to .claude/digests/
-```
-
-A one-line ack is returned immediately. The background agent notifies you when the card is
-saved under `docs/media/social/` (card skills) or the catalog snapshot is written to
-`.claude/digests/media-library-YYYY-MM-DD.md` (`media-library`).
-
-### Generate a social media post (interactive)
+### Generate a social media post
 
 Skills activate automatically — just describe what you want to share.
 
@@ -113,7 +91,7 @@ Skills activate automatically — just describe what you want to share.
 > "Post about this file: https://github.com/owner/repo/blob/main/src/parser.py"
 
 **Use a prompt from the digest:**
-> `/social-media-tools:social-share-bg feature-card for LinkedIn: the new security-scrub skill`
+> "share feature-card for LinkedIn: the new security-scrub skill"
 
 ### Scrub code for secrets before sharing
 
@@ -143,18 +121,11 @@ social-media-tools/
 │   └── plugin.json
 ├── CHANGELOG.md
 ├── README.md
-├── agents/
-│   ├── agent-digest.md                    ← background digest agent
-│   └── agent-social-share.md              ← background social share agent (all card skills + media-library)
 ├── commands/
-│   ├── digest.md                          ← /social-media-tools:digest
-│   ├── digest-bg.md                       ← /social-media-tools:digest-bg
-│   ├── session-bg.md                      ← /social-media-tools:session-bg
-│   └── social-share-bg.md                 ← /social-media-tools:social-share-bg
+│   └── digest.md                          ← /social-media-tools:digest
 ├── references/                            ← shared pipeline logic (all card skills)
 │   ├── copy-panels.md                     ← {{COPY_PANELS}} markup + escaping rules
 │   ├── language-map.md                    ← file extension → language + badge colour
-│   ├── non-interactive-mode.md            ← --background contract (skip rules + completion lines)
 │   ├── platforms.md                       ← canonical char limits + universal copy rules
 │   ├── rendering-pipeline.md              ← find_free_port → HTTP server → Playwright → kill
 │   ├── reuse-check.md                     ← scan docs/media/social/ + offer reuse
@@ -196,7 +167,7 @@ social-media-tools/
 │   │   └── references/
 │   │       └── platforms.md               ← oEmbed endpoints + video copy format rules
 │   └── social-share/
-│       └── SKILL.md                       ← router: classifies + dispatches agent-social-share
+│       └── SKILL.md                       ← router: classifies + invokes target skill
 └── templates/
     ├── blog-card.html
     ├── diff-card.html
@@ -214,7 +185,7 @@ social-media-tools/
 **File:** `skills/social-share/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to share what they're working on, or to post code, a blog, a video, or a project update without naming a specific skill.
 
-The entry point for everything. It classifies a natural-language request (first-match-wins rules), resolves a default platform, captures any inline code to a temp file, and dispatches `agent-social-share` to run the matching skill in the background. Returns a one-line ack immediately; the agent reports the saved card path (card skills) or catalog path (`media-library`) on completion. Use `/social-media-tools:social-share-bg` for the explicit command form.
+The entry point for everything. It classifies a natural-language request (first-match-wins rules), resolves a default platform, captures any inline code to a temp file, and invokes the matching skill directly. Waits for the skill to complete and reports the saved card path.
 
 ---
 
@@ -228,7 +199,7 @@ The entry point for everything. It classifies a natural-language request (first-
 | Input | Values | Notes |
 |-------|--------|-------|
 | Source | URL or local `.md` path | Relative paths resolved via `realpath` |
-| Platform | LinkedIn, Twitter/X, Bluesky, All sites | Required — "All sites" embeds a copy snippet per site |
+| Platform | LinkedIn, Twitter/X, Bluesky, Substack, All sites | Required — "All sites" embeds a copy snippet per site |
 | Tone | Professional, Casual, Punchy | Default varies by platform |
 | Hook angle | Free text | Optional framing direction |
 
@@ -299,8 +270,7 @@ Generates a card for a project **topic** — features, bugs, changes, or release
 
 Every card-generating skill saves its populated HTML (including the post copy) to `docs/media/social/`. This skill lists saved cards by type and date so you can retrieve copy for reposting and see which skill regenerates each card.
 
-- **Interactive mode** — lists posts and lets you pick one to view/reuse via `AskUserQuestion`.
-- **Background mode** (`--background`) — skips prompts and snapshots the catalog to `.claude/digests/media-library-YYYY-MM-DD.md`, emitting the file-output completion line. Card-skill flags (`--platform`, `--tone`) are silently ignored.
+Lists posts and lets you pick one to view/reuse via `AskUserQuestion`.
 
 ---
 
@@ -333,17 +303,6 @@ Pattern table and file-path block list are in `skills/security-scrub/references/
 
 ---
 
-### Command: `/social-media-tools:social-share-bg`
-
-**File:** `commands/social-share-bg.md`  
-Explicit, fire-and-forget entry point for the `social-share` router. Classifies the request, picks the right skill, and runs it in the background, returning immediately.
-
-```
-/social-media-tools:social-share-bg <what to share — plain language, URL, or code>
-```
-
----
-
 ### Command: `/social-media-tools:digest`
 
 **File:** `commands/digest.md`  
@@ -352,31 +311,6 @@ Interactive front-end for `share-scan`. Runs the scan, presents candidates for r
 ```
 /social-media-tools:digest [--days=7] [--base=main] [--max=20] | --codebase <path>
 ```
-
----
-
-### Command: `/social-media-tools:digest-bg`
-
-**File:** `commands/digest-bg.md`  
-Background variant. Dispatches `agent-digest` and returns immediately; the agent reports the output path on completion.
-
-```
-/social-media-tools:digest-bg [--days=7] [--base=main] [--max=20] | --codebase <path>
-```
-
----
-
-### Agent: `agent-digest`
-
-**File:** `agents/agent-digest.md`  
-Dispatched by `/social-media-tools:digest-bg`. Runs `share-scan --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke any card skill.
-
----
-
-### Agent: `agent-social-share`
-
-**File:** `agents/agent-social-share.md`  
-Dispatched by the `social-share` skill and the `/social-media-tools:social-share-bg` command. Receives a pre-classified target skill plus flags, invokes that skill in non-interactive (`--background`) mode, and relays a single completion line — a card path for card-generating skills, or a catalog file path for file-producing skills like `media-library`. Runs as a background subagent (`model: sonnet`) with no user interaction.
 
 ---
 
@@ -389,16 +323,16 @@ Dispatched by the `social-share` skill and the `/social-media-tools:social-share
 
 | Input | Values | Default |
 |-------|--------|---------|
-| Platform | `LinkedIn`, `Twitter/X`, `Bluesky`, `All sites` | — (required) |
+| Platform | `LinkedIn`, `Twitter/X`, `Bluesky`, `Substack`, `All sites` | — (required) |
 | Content type | `diff-card`, `feature-card`, `quote-card` | auto-detected from git |
 | Tone | `Professional`, `Casual`, `Punchy` | Professional (LinkedIn), Punchy (Twitter/X, Bluesky) |
 
-When **All sites** is selected, the card embeds a separate, individually copyable snippet for each platform (LinkedIn, Twitter/X, Bluesky) — each with its own **Copy** button — instead of one combined box.
+When **All sites** is selected, the card embeds a separate, individually copyable snippet for each platform (LinkedIn, Twitter/X, Bluesky, Substack) — each with its own **Copy** button — instead of one combined box.
 
 **Workflow (6 phases):**
 
 1. **Clarify** — runs `git diff`, `git log`, and `CHANGELOG.md` to auto-detect content type; only asks for what it can't infer
-2. **Draft copy** — writes platform-aware copy within character limits (LinkedIn 1,500 / Twitter 280 / Bluesky 300)
+2. **Draft copy** — writes platform-aware copy within character limits (LinkedIn 1,500 / Twitter 280 / Bluesky 300 / Substack 500)
 3. **Pick template** — selects `diff-card`, `feature-card`, or `quote-card` and locates the `templates/` directory
 4. **Populate** — substitutes `{{VARIABLES}}` in the HTML template and writes to `~/.claude/tmp/code-share-card.html`
 5. **Screenshot** — starts a local HTTP server, takes a Playwright screenshot to `~/.claude/tmp/code-share-card.png`, then kills the server
@@ -406,25 +340,17 @@ When **All sites** is selected, the card embeds a separate, individually copyabl
 
 **Fallback:** if Playwright MCP is unavailable, the skill skips the screenshot and provides the HTML path for a manual browser screenshot.
 
-## Scheduling
-
-Claude Code has no native timer, but `/social-media-tools:digest-bg` works well with external schedulers:
-
-```yaml
-# GitHub Actions — weekly digest on Monday at 9am
-on:
-  schedule:
-    - cron: '0 9 * * 1'
-jobs:
-  digest:
-    steps:
-      - run: claude --plugin-dir kit/plugins/social-media-tools -p "/social-media-tools:digest-bg --days=7"
-```
-
-Human review is always required before posting — no path in this plugin auto-posts.
-
 ## Requirements
 
 - **Playwright MCP** — required for the screenshot pipeline. If unavailable, the skill falls back to providing the HTML path for a manual screenshot.
 - **Python 3** — used by `find_free_port.py` and `http.server` for the local card server.
 - **Git** — used in Phase 1 to auto-detect recent changes and commits.
+
+> **Note — Playwright MCP is an external dependency, not bundled.** This plugin's
+> `plugin.json` does not declare the Playwright MCP server, so card rendering relies
+> on Playwright being provisioned separately (e.g. installed as its own plugin or
+> configured in your `mcpServers`). The rendering pipeline already documents a manual
+> fallback (`references/rendering-pipeline.md`): when Playwright is unavailable, the
+> populated HTML is left in `~/.claude/tmp/` to screenshot by hand. Provisioning or
+> formally declaring Playwright as a plugin dependency is a separate, planned
+> enhancement.

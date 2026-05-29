@@ -325,14 +325,15 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "1.3.0",
-      "description": "Discover shareable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, and Bluesky",
+      "version": "2.1.0",
+      "description": "Discover shareable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack",
       "category": "productivity",
       "tags": [
         "social-media",
         "linkedin",
         "twitter",
         "bluesky",
+        "substack",
         "content-creation",
         "card",
         "screenshot",
@@ -363,7 +364,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.6.0",
+      "version": "0.7.0",
       "description": "Plan creation on demand — explicit /plan-agent:planning skill produces self-contained interactive HTML plans; runs the full §0–§7 workflow; blue-sky items land in a Wish List section; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [

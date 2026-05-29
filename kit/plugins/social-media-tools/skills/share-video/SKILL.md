@@ -1,7 +1,7 @@
 ---
 name: share-video
-description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky. Use when asked to share or promote a video on social media."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
+description: "Creates platform-aware social copy and a card for YouTube or Vimeo videos. Use when asked to share or promote a video on social media."
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
 # share-video
@@ -23,10 +23,11 @@ for a YouTube or Vimeo video URL.
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -57,13 +58,12 @@ Auto-detect the video platform from the URL:
 - `youtube.com` or `youtu.be` → **YouTube**
 - `vimeo.com` → **Vimeo**
 
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one call:
 
 | Input | Options | Notes |
 |-------|---------|-------|
 | `VIDEO_URL` | Any YouTube or Vimeo URL | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required |
+| `PLATFORM` | See **Platform Options** in `$PLUGIN_DIR/references/platforms.md` | Required |
 | `HOOK_ANGLE` | Free text | Optional |
 
 ---
@@ -93,7 +93,7 @@ For API endpoints and 4xx fallback, read `references/platforms.md`.
 1. `WebFetch` on `https://www.youtube.com/oembed?url=VIDEO_URL&format=json` — extract `title`, `author_name`, `thumbnail_url`
 2. `WebFetch` on the original `VIDEO_URL` — extract `og:description`
 
-**4xx:** *(Interactive mode)* ask user for `title` and `channel` via `AskUserQuestion`; *(background mode)* set `VIDEO_TITLE=""`, `CHANNEL=""` per `non-interactive-mode.md`. Set `thumbnail_url = ""`.
+**4xx:** ask user for `title` and `channel` via `AskUserQuestion`. Set `thumbnail_url = ""`.
 
 #### Vimeo
 
@@ -113,13 +113,10 @@ For API endpoints and 4xx fallback, read `references/platforms.md`.
 
 ## Phase 3 — Draft Copy
 
-For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
-For copy format and filled examples per platform, read `references/platforms.md`.
-
-*(Interactive mode only — present the draft in a fenced code block labelled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 4.)*
-
-- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, universal copy rules,
+and **Draft Copy — Standard Procedure**.
+For copy format and filled examples per platform, read the skill-local `references/platforms.md`
+(adjacent to this SKILL.md).
 
 ---
 

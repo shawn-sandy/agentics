@@ -1,7 +1,7 @@
 ---
 name: share-github
-description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet from a GitHub repository."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, Skill, SendUserFile, Glob
+description: "Fetches a GitHub file and generates a syntax-highlighted social card with copy. Use when asked to share a code snippet from a GitHub repository."
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, Skill, SendUserFile, Glob
 ---
 
 # share-github
@@ -25,10 +25,11 @@ the path is wrong — stop with a clear error.
 | 5 — Populate Template | HTML-escape code; fill `snippet-card.html`; save to `docs/media/social/` |
 | 6 — Deliver | Copy in fenced block + PNG card + saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -75,9 +76,8 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 - `LANGUAGE` and `LANGUAGE_COLOR` from file extension — look up in `$PLUGIN_DIR/references/language-map.md`
 - `HLJS_CLASS` = lowercase language alias (e.g., `typescript`, `python`; C# → `csharp`; C++ → `cpp`; Shell → `bash`)
 
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Use `AskUserQuestion` to collect:
-- `PLATFORM` — LinkedIn, Twitter/X, Bluesky, or **All sites**
+- `PLATFORM` — see **Platform Options** in `$PLUGIN_DIR/references/platforms.md`
 - `HOOK_ANGLE` (optional)
 
 ---
@@ -130,25 +130,24 @@ Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.cla
 
 Parse the returned `SCRUB RESULT` block:
 - `BLOCKED` → report masked findings, **STOP.**
-- `WARN` → *(Interactive mode)* surface the warning, ask user to confirm before continuing; *(background mode)* auto-proceed per `non-interactive-mode.md`.
+- `WARN` → surface the warning, ask user to confirm before continuing.
 - `PASS` → continue silently.
 
 ---
 
 ## Phase 4 — Draft Copy
 
-For character limits and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, the **Follow CTA** rule,
+**Default Per-Platform Copy Formats**, and **Draft Copy — Standard Procedure**.
 
-- **LinkedIn**: Context ("Here's [LANGUAGE] code from [OWNER/REPO] that...") + what it does + key design decision or insight + CTA with link + 2–4 hashtags
+Content-specific guidance for this skill:
+
+- **LinkedIn**: Context ("Here's [LANGUAGE] code from [OWNER/REPO] that...") + what it does + key design decision or insight + CTA with link
 - **Twitter/X**: "[LANGUAGE] snippet worth seeing → [what it does in one phrase] — [GitHub URL]"
 - **Bluesky**: Similar brevity to Twitter; name the repo
+- **Substack**: Why you found this code interesting + what it demonstrates + link
 
-Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/repo subject) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
-
-Read the code snippet before drafting. *(Interactive mode only — present in a fenced code block labelled with the platform and wait for approval; in `--background` mode proceed directly to Phase 5.)*
-
-- **Single site:** store as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+Read the code snippet before drafting.
 
 ---
 

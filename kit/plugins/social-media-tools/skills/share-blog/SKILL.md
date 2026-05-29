@@ -1,7 +1,7 @@
 ---
 name: share-blog
-description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, and Bluesky with platform tone. Use when asked to share a blog post on social media."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
+description: "Creates platform-aware social copy and a dark-mode card for a blog post. Use when asked to share a blog post or article on social media."
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
 # share-blog
@@ -23,10 +23,11 @@ for a blog post URL or local markdown file.
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -62,13 +63,12 @@ If the user provides a **relative path**, resolve it:
 realpath "$USER_PATH" 2>/dev/null || echo "$PWD/$USER_PATH"
 ```
 
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one call:
 
 | Input | Options | Notes |
 |-------|---------|-------|
 | `SOURCE` | URL or file path | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required |
+| `PLATFORM` | See **Platform Options** in `$PLUGIN_DIR/references/platforms.md` | Required |
 | `TONE` | Professional, Casual, Punchy | Default: Professional (LinkedIn), Punchy (Twitter/Bluesky) |
 | `HOOK_ANGLE` | Free text | Optional |
 
@@ -133,13 +133,10 @@ Before any template substitution, apply to every text value:
 
 ## Phase 3 — Draft Copy
 
-For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
-For copy format and filled examples per platform, read `references/platforms.md`.
-
-*(Interactive mode only — present drafted copy in a fenced code block labelled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 4.)*
-
-- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, universal copy rules,
+and **Draft Copy — Standard Procedure**.
+For copy format and filled examples per platform, read the skill-local `references/platforms.md`
+(adjacent to this SKILL.md).
 
 ---
 

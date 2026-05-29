@@ -1,15 +1,15 @@
 ---
 name: share-session
 description: "Session recap card summarizing what you accomplished — a narrative plus highlights, with token usage as a secondary stat. Use when asked to share my session, session recap, what I worked on, what I did today, or session summary."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob, Skill
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 
 # share-session
 
 Summarize **what the current Claude Code session accomplished** — a short narrative plus the
-key things built, fixed, or changed — into a dark-mode recap card for LinkedIn, Twitter/X, or
-Bluesky. Token usage, duration, and commit/file counts ride along as a compact stats strip.
-**Tokens only — no dollar amounts.**
+key things built, fixed, or changed — into a dark-mode recap card for any supported platform
+(see `$PLUGIN_DIR/references/platforms.md`). Token usage, duration, and commit/file counts
+ride along as a compact stats strip. **Tokens only — no dollar amounts.**
 
 The content summary is the hero of the card; the usage metrics are supporting detail.
 
@@ -30,16 +30,11 @@ signals and uses git history for activity context. No code selection required.
 | 5 — Screenshot | Serve HTML locally, Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
-
-Skill-specific flags (used here; not in the shared non-interactive reference):
-
-| Flag | Values | Notes |
-|------|--------|-------|
-| `--session=<id\|path>` | Session ID or absolute `.jsonl` path | Passed directly to `session_usage.py` |
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -73,7 +68,6 @@ Check for optional flags and capture:
 - `SESSION_FLAG` — the `--session=<value>` flag string if present (pass verbatim to `session_usage.py`)
 - `PLATFORM` — from `--platform=<v>`; keep empty if absent
 - `TONE` — from `--tone=<v>`; keep empty if absent
-- `BG_MODE` — `true` if `--background` is present
 
 ### 1b — Run `session_usage.py`
 
@@ -149,22 +143,7 @@ This is the most important step. Produce two values:
 - `ACCOMPLISHMENTS` — 3–5 short bullet strings (each ≤ 90 chars) naming concrete things built,
   fixed, or changed.
 
-**Interactive mode (default):** You are running inside the live session — author `NARRATIVE`
-and `ACCOMPLISHMENTS` **directly from your own conversation memory**. You already know what
-happened; do not rely on the JSONL for content. Use `FILES_TOUCHED`/`TOOL_USE_COUNTS` only as
-corroborating detail. Prefer concrete outcomes over process narration.
-
-**Background mode (`--background`):** You do NOT share the live session's context. Reconstruct
-the summary from the `session_usage.py` content signals:
-- `USER_PROMPTS[]` — what the developer asked for
-- `ASSISTANT_SNIPPETS[]` — what Claude reported doing
-- `FILES_TOUCHED[]` and `TOOL_USE_COUNTS` — concrete activity (e.g. "14 edits across 6 files")
-- git commit subjects from Phase 1c
-
-Synthesize a faithful `NARRATIVE` + `ACCOMPLISHMENTS` from those signals. **Never invent work
-that isn't evidenced by the data.** If the content signals are too sparse, fall back to
-`FIRST_USER_PROMPT` as the narrative and list `FILES_TOUCHED` / commits as accomplishments; if
-everything is empty, use `"Claude Code session"` and a single best-effort bullet.
+Author `NARRATIVE` and `ACCOMPLISHMENTS` **directly from your own conversation memory**. You already know what happened; do not rely on the JSONL for content. Use `FILES_TOUCHED`/`TOOL_USE_COUNTS` only as corroborating detail. Prefer concrete outcomes over process narration.
 
 Define `SUMMARY_RAW` for the security scrub (Phase 2) as `NARRATIVE` followed by each
 accomplishment bullet on its own line.
@@ -204,37 +183,34 @@ Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.cla
 
 Parse the returned `SCRUB RESULT` block:
 - `BLOCKED` → report masked findings, **STOP.**
-- `WARN` → *(Interactive mode)* surface the warning, ask the user to confirm before continuing; *(background mode)* auto-proceed per `non-interactive-mode.md`.
+- `WARN` → surface the warning, ask the user to confirm before continuing.
 - `PASS` → continue silently.
 
 ---
 
 ## Phase 3 — Draft Copy
 
-For character limits, tone defaults, and the **Follow CTA** rule, read
-`$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
+Procedure**.
 
 **Never include dollar amounts or cost figures — tokens only.**
 
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Ask for `PLATFORM` and `TONE` in a single `AskUserQuestion` if not already in `$ARGUMENTS`.
 
 Lead with **what was accomplished** (`NARRATIVE` + `ACCOMPLISHMENTS`); metrics are supporting
 detail, not the headline.
 
+Content-specific guidance for this skill:
+
 - **LinkedIn**: Hook on the outcome ("Just shipped X in a Claude Code session…") → 2–3
   accomplishments → *then* one supporting stat line (N commits · N files · ~X tokens · Y% cache
-  hit) → follow CTA; 2–4 hashtags
+  hit) → follow CTA
 - **Twitter/X**: One punchy line on what was built; a single stat only if it fits and adds color
 - **Bluesky**: Conversational, same accomplishment-first brevity
+- **Substack**: Reflect on what you built and what you learned; stats as supporting detail
 
 The token/duration/cache figures are a single trailing stat line, never the focus.
-
-Close with a topic-matched **follow** CTA tied to the session topic — never generic; on
-Twitter/Bluesky include only if it fits the character budget.
-
-*(Interactive mode only — present drafted copy per platform in a fenced block and wait for
-approval; proceed directly to Phase 4 in `--background` mode.)*
 
 ---
 
@@ -296,15 +272,3 @@ Read `$PLUGIN_DIR/references/rendering-pipeline.md` and follow the full pipeline
 ## Phase 6 — Deliver
 
 Read `$PLUGIN_DIR/references/saving-and-delivery.md` — **Deliver** section.
-
-After delivering, emit the machine-parseable completion line:
-
-```
-SOCIAL-SHARE: DONE skill=share-session platform=<resolved-platform> png=<$SAVE_PATH_PNG> html=<$SAVE_PATH>
-```
-
-On any hard STOP (missing session, BLOCKED scrub), emit instead:
-
-```
-SOCIAL-SHARE: ERROR skill=share-session reason=<one-line description>
-```

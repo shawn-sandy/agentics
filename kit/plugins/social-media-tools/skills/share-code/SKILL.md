@@ -1,12 +1,13 @@
 ---
 name: share-code
-description: "Generates social media copy and a dark-mode card image. Formats code changes into platform-ready posts for LinkedIn, Twitter/X, or Bluesky. Use when asked to post or share a code change."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob
+description: "Generates platform-aware social copy and a dark-mode card image for code changes. Use when asked to post or share a code change."
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob
 ---
 
 # share-code
 
-Draft platform-aware social media copy and generate a styled dark-mode card image for LinkedIn, Twitter/X, or Bluesky.
+Draft platform-aware social media copy and generate a styled dark-mode card image for any
+supported platform (see `$PLUGIN_DIR/references/platforms.md`).
 
 ## Quick Reference
 
@@ -22,10 +23,11 @@ Draft platform-aware social media copy and generate a styled dark-mode card imag
 | 5 — Screenshot | Serve HTML locally, Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -62,7 +64,6 @@ head -30 CHANGELOG.md 2>/dev/null
 
 - Non-empty diff stat → auto-select `diff-card`
 - Commit with `feat:` prefix or version bump → auto-select `feature-card`
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 - Context found: summarise in one sentence, ask only **platform** and **tone**
 - No context: ask all three inputs via `AskUserQuestion`
 
@@ -80,18 +81,9 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ## Phase 2 — Draft Copy
 
-For character limits, tone defaults, and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
-
-- **LinkedIn**: Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags at end
-- **Twitter/X**: One punchy sentence or a tight two-liner; no hashtag bloat
-- **Bluesky**: Conversational, same brevity as Twitter
-
-The closing CTA is a topic-matched **follow** CTA (e.g. "follow for more `<language>`/`<topic>` like this") — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit. See the Follow CTA rule.
-
-Draft all three platform variants in the chosen tone. *(Interactive mode only — present the drafted copy in a fenced code block labeled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 3.)*
-
-- **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
+Procedure** (present → approve → store variants).
 
 ---
 
