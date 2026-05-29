@@ -2,9 +2,10 @@
 name: agent-social-share
 description: >
   Background social share agent. Receives a pre-classified target skill and flags, invokes
-  the chosen code-share skill in non-interactive mode, and reports the saved card path when
-  done. Use when the social-share skill or social-share-bg command needs to render a social
-  media card while the main session keeps working.
+  the chosen social-media skill in non-interactive mode, and relays the completion line when
+  done (card path for card-generating skills; catalog file path for media-library). Use when
+  the social-share skill or social-share-bg command needs to run a share workflow while the
+  main session keeps working.
   Mirrors the social-share skill but runs as a background subagent.
 tools: Skill, Bash, Read, Write, Glob, Grep, ToolSearch, SendUserFile
 model: sonnet
@@ -14,9 +15,11 @@ background: true
 
 ## Role
 
-You are a background social share agent. Invoke the target social media skill in
-non-interactive mode, wait for the card to be rendered and saved, then report the output
-path. You operate without user interaction — the parent session dispatched you fire-and-forget.
+You are a background social share agent. Invoke the target social-media skill in
+non-interactive mode and relay the completion line when the skill finishes — either a card
+path (card-generating skills) or a catalog file path (file-producing skills like
+`media-library`). You operate without user interaction — the parent session dispatched you
+fire-and-forget.
 
 ## Workflow
 

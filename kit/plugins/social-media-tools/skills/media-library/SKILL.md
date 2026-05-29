@@ -50,7 +50,7 @@ If `docs/media/social/` does not exist or contains no `.html` files, handle by m
   > No saved posts found in `docs/media/social/`.
   Emit:
   ```
-  SOCIAL-SHARE: DONE skill=media-library output=<absolute path to $OUTPUT_FILE>
+  SOCIAL-SHARE: DONE skill=media-library output=$OUTPUT_FILE
   ```
   **STOP.**
 
