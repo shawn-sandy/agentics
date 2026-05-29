@@ -1,5 +1,27 @@
 # Changelog — social-media-tools
 
+## v1.2.0 — 2026-05-29
+
+New `share-session` skill — generate a dark-mode session recap card from the live
+Claude Code session JSONL and post to LinkedIn, Twitter/X, or Bluesky.
+
+- `share-session` skill: reads `$CLAUDE_CODE_SESSION_ID` + cwd to locate the session JSONL;
+  runs `session_usage.py` for token counts (input, output, cache-read, cache-hit-rate),
+  duration, model, and first user prompt; derives git commit + file-change counts for the
+  session window; drafts tokens-only platform-aware copy (never dollar amounts); populates
+  `session-card.html` dark-mode template; saves PNG to `docs/media/social/`
+- `session_usage.py` script: defensive JSONL parser — streams line-by-line, tolerates
+  truncated active sessions, coerces all token fields to `int` to guard against malformed
+  values, resolves session path via `$CLAUDE_CODE_SESSION_ID` + cwd or falls back to newest
+  `*.jsonl` in the project sessions directory
+- `session-card.html` template: dark-mode 8-tile metrics card (total/input/output/cache
+  tokens, cache hit rate, duration, files changed, commits) with copy panels
+- `/social-media-tools:session-bg` command: fire-and-forget background command; dispatches
+  `agent-social-share` with `TARGET_SKILL=share-session`; accepts `--platform`, `--tone`,
+  and `--session=<id|path>` flags
+- `social-share` router updated: new row 8 routes session/recap/tokens-today intent to
+  `share-session` before the git-diff fallbacks
+
 ## v1.1.1 — 2026-05-29
 
 README documentation sync — no behavior changes.

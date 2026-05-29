@@ -17,6 +17,7 @@ No path in this plugin auto-posts — human review is always required before any
 | Component | Type | Description |
 |-----------|------|-------------|
 | `social-share` | Skill | **Router** — classifies a natural-language request and dispatches the right skill in the background with zero questions |
+| `share-session` | Skill | Generate a dark-mode session recap card from the live session JSONL — tokens, duration, commits, and platform copy |
 | `share-code` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
 | `share-blog` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
 | `share-video` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
@@ -26,6 +27,7 @@ No path in this plugin auto-posts — human review is always required before any
 | `share-scan` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `media-library` | Skill | Browse saved posts interactively, or snapshot the catalog to `.claude/digests/` in the background |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
+| `/social-media-tools:session-bg` | Command | Fire-and-forget session recap — dispatches `share-session` in the background |
 | `/social-media-tools:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 | `/social-media-tools:digest-bg` | Command | Fire-and-forget background digest scan |
@@ -147,6 +149,7 @@ social-media-tools/
 ├── commands/
 │   ├── digest.md                          ← /social-media-tools:digest
 │   ├── digest-bg.md                       ← /social-media-tools:digest-bg
+│   ├── session-bg.md                      ← /social-media-tools:session-bg
 │   └── social-share-bg.md                 ← /social-media-tools:social-share-bg
 ├── references/                            ← shared pipeline logic (all card skills)
 │   ├── copy-panels.md                     ← {{COPY_PANELS}} markup + escaping rules
@@ -186,6 +189,8 @@ social-media-tools/
 │   │       └── interesting-patterns.md    ← scoring table (user-tunable)
 │   ├── share-selection/
 │   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
+│   ├── share-session/
+│   │   └── SKILL.md                       ← session recap card (tokens, duration, commits)
 │   ├── share-video/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -197,6 +202,7 @@ social-media-tools/
     ├── diff-card.html
     ├── feature-card.html
     ├── quote-card.html
+    ├── session-card.html
     ├── snippet-card.html
     └── video-card.html
 ```
