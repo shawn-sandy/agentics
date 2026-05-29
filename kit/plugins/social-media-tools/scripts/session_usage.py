@@ -234,7 +234,9 @@ def parse_session(jsonl_path: Path) -> dict:
         "assistant_snippets": assistant_snippets,
         "tool_use_counts": tool_use_counts,
         "files_touched": files_touched,
-        "files_touched_count": len(files_touched),
+        # True unique count from the full set — `files_touched` is capped at
+        # MAX_FILES for output size, so its length would under-report long sessions.
+        "files_touched_count": len(_files_seen),
         "skipped_lines": skipped,
     }
 
