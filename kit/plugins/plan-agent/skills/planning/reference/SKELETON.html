@@ -56,13 +56,20 @@
     word-break: break-word;
   }
 
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
   /* ── Skip link ─────────────────────────────────────────────────── */
   .skip-link {
     position: absolute;
-    left: -9999px;
-    top: auto;
-    width: 1px;
-    height: 1px;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
     overflow: hidden;
   }
   .skip-link:focus {
@@ -81,7 +88,7 @@
 
   /* ── Header ────────────────────────────────────────────────────── */
   .plan-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #312e81 100%);
+    background: #0f172a;
     border: none;
     padding: 0;
   }
@@ -116,7 +123,7 @@
   .status-badge {
     display: inline-flex;
     align-items: center;
-    gap: .35rem;
+    gap: .4rem;
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .05em;
@@ -127,7 +134,16 @@
     flex-shrink: 0;
     color: #fff;
   }
-  .status-badge::before { content: "●"; font-size: .65em; }
+  /* CSS circle dot — cleaner than ● glyph */
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
   [data-status="todo"]        .status-badge { background: #6b7280; }
   [data-status="in-progress"] .status-badge { background: #d97706; }
   [data-status="completed"]   .status-badge { background: #16a34a; }
@@ -146,9 +162,12 @@
     font-size: .8rem;
     color: #94a3b8;
   }
-  .meta-created::before { content: "📅 "; }
-  .meta-repo::before    { content: "📦 "; }
-  .meta-type::before    { content: "🏷 "; }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .7; }
 
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
@@ -186,12 +205,15 @@
     font-size: .875rem;
     color: var(--muted);
     text-decoration: none;
-    gap: .4rem;
+    gap: .5rem;
     transition: color .15s;
   }
   .plan-nav li a:hover { color: var(--accent); }
   .plan-nav li a.active { color: var(--accent); font-weight: 600; }
   .plan-nav li a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .6; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: 1; }
 
   /* Scroll rail */
   .scroll-rail {
@@ -295,9 +317,9 @@
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    gap: .4rem;
+    gap: .45rem;
   }
-  .section-icon { font-size: 1rem; }
+  .section-card h2 .icon { opacity: .7; }
   .section-card p { margin-bottom: .75rem; }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
@@ -324,7 +346,6 @@
     gap: .85rem;
     position: relative;
   }
-  /* Vertical connector line */
   .steps-list::before {
     content: "";
     position: absolute;
@@ -350,14 +371,11 @@
   @media (prefers-reduced-motion: reduce) {
     .step-card, .step-card:hover { transition: none; transform: none; }
   }
-  /* Timeline circle node */
   .step-card::before {
     content: "";
     position: absolute;
-    left: -1.6rem;
-    top: 1.15rem;
-    width: .875rem;
-    height: .875rem;
+    left: -1.6rem; top: 1.15rem;
+    width: .875rem; height: .875rem;
     border-radius: 50%;
     background: var(--border);
     border: 2.5px solid var(--bg);
@@ -369,8 +387,7 @@
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 2rem;
-    height: 2rem;
+    width: 2rem; height: 2rem;
     background: linear-gradient(135deg, #4f46e5, #0ea5e9);
     color: #fff;
     border-radius: 50%;
@@ -381,7 +398,6 @@
     font-weight: 700;
     box-shadow: 0 2px 6px rgba(79,70,229,.3);
     margin-top: .1rem;
-    flex-shrink: 0;
   }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
@@ -392,7 +408,6 @@
     gap: .45rem;
     flex-wrap: wrap;
   }
-  /* Step status chip */
   .step-chip {
     display: inline-block;
     font-size: .63rem;
@@ -441,17 +456,13 @@
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: .65rem;
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .65rem;
   }
   .criteria-list li { display: flex; align-items: flex-start; gap: .75rem; }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.1rem; height: 1.1rem;
     margin-top: .25rem;
     accent-color: var(--green);
     cursor: pointer;
@@ -544,6 +555,10 @@
 
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
     text-align: center;
     font-size: .75rem;
     color: var(--muted);
@@ -554,6 +569,7 @@
       linear-gradient(var(--bg), var(--bg)) padding-box,
       linear-gradient(90deg, #38bdf8, #818cf8, #c084fc) border-box;
   }
+  .plan-footer .icon { opacity: .4; }
 
   /* ── Focus styles ───────────────────────────────────────────────── */
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -572,11 +588,53 @@
     }
     .step-chip { display: none !important; }
     a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
-    .status-badge { border: 1px solid currentColor; }
+    .status-badge { border: 1px solid rgba(255,255,255,.5); }
   }
 </style>
 </head>
 <body>
+
+<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+</svg>
+
 <a href="#main" class="skip-link">Skip to content</a>
 
 <!-- ── Header ─────────────────────────────────────────────────── -->
@@ -587,9 +645,18 @@
       <span class="status-badge">{status}</span>
     </div>
     <div class="plan-meta">
-      <span class="meta-created">{created}</span>
-      <span class="meta-repo">{repo-name}</span>
-      <span class="meta-type">{type}</span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
+        {created}
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
+        {repo-name}
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
+        {type}
+      </span>
     </div>
   </div>
 </header>
@@ -600,13 +667,13 @@
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <ul>
-      <li><a href="#objective">🎯 Objective</a></li>
-      <li><a href="#progress">📊 Progress</a></li>
-      <li><a href="#context">📋 Context</a></li>
-      <li><a href="#steps">🚀 Steps</a></li>
-      <li><a href="#criteria">✅ Criteria</a></li>
-      <li><a href="#verification">🔍 Verification</a></li>
-      <li><a href="#next-steps">🔜 Next Steps</a></li>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
     </ul>
   </nav>
 
@@ -634,13 +701,19 @@
 
     <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
-      <h2 id="h-context"><span class="section-icon">📋</span> Context</h2>
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
       <p>{context}</p>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
-      <h2 id="h-steps"><span class="section-icon">🚀</span> Steps</h2>
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
       <div class="steps-list">
 
         <div class="step-card">
@@ -667,7 +740,10 @@
 
     <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
-      <h2 id="h-criteria"><span class="section-icon">✅</span> Acceptance Criteria</h2>
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Acceptance Criteria
+      </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
@@ -685,13 +761,19 @@
 
     <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
-      <h2 id="h-verification"><span class="section-icon">🔍</span> Verification</h2>
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Verification
+      </h2>
       <p>{end-to-end-verification}</p>
     </section>
 
     <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
-      <h2 id="h-next-steps"><span class="section-icon">🔜</span> Next Steps</h2>
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next Steps
+      </h2>
       <div class="next-steps-list">
 
         <!-- Actionable next step -->
@@ -704,7 +786,10 @@
         </details>
 
         <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-        <div class="wish-list-header">🔭 Wish List</div>
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
 
         <details class="next-step-item wish-item">
           <summary>
@@ -722,7 +807,10 @@
 
     <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
     <details class="optional-section">
-      <summary>❓ Unresolved Questions</summary>
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
       <div class="optional-body">
         <ul class="unresolved-list">
           <li>
@@ -738,6 +826,7 @@
     </details>
 
     <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
       Generated by plan-agent · {created} · {repo-name}
     </footer>
 
