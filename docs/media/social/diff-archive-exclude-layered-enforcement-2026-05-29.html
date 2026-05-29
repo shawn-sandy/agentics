@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>~/.claude/settings.json</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --add-bg: rgba(46, 160, 67, 0.15);
+      --del-bg: rgba(248, 81, 73, 0.15);
+      --add-fg: #3fb950;
+      --del-fg: #f85149;
+      --ctx-fg: #8b949e;
+      --hunk-bg: #1c2d3f;
+      --hunk-fg: #79c0ff;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 760px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .filename {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0.9;
+    }
+
+    .badge {
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .diff-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    td.hunk-header {
+      background: var(--hunk-bg);
+      color: var(--hunk-fg);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    tr.add { background: var(--add-bg); }
+    tr.del { background: var(--del-bg); }
+    tr.ctx { background: transparent; }
+
+    td.ln {
+      width: 20px;
+      padding: 0 8px 0 16px;
+      color: var(--muted);
+      user-select: none;
+      font-size: 11px;
+    }
+
+    tr.add td.ln { color: var(--add-fg); }
+    tr.del td.ln { color: var(--del-fg); }
+
+    td.code {
+      padding: 1px 12px 1px 0;
+      color: var(--text);
+      white-space: pre;
+    }
+
+    tr.add td.code { color: var(--add-fg); }
+    tr.del td.code { color: var(--del-fg); }
+    tr.ctx td.code { color: var(--ctx-fg); }
+
+    .hl-add {
+      background: rgba(46, 160, 67, 0.35);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .hl-del {
+      background: rgba(248, 81, 73, 0.35);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .stat-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .stat-pills { display: flex; gap: 8px; }
+
+    .pill-add {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(46, 160, 67, 0.15);
+      color: var(--add-fg);
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .pill-del {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--del-fg);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .summary {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: 760px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <span class="filename">~/.claude/settings.json</span>
+      <span class="badge">config</span>
+    </div>
+
+    <table class="diff-table">
+      <tbody>
+        <tr><td colspan="2" class="hunk-header">@@ permissions.deny @@</td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code">    "deny": [</td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code">      "Read(*.env)",</td></tr>
+        <tr class="add"><td class="ln">+</td><td class="code">      <span class="hl-add">"Read(*/plans/archive/*)"</span>,</td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code">      "Bash(rm:*)",</td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code">      "Bash(curl:*)"</td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code">    ],</td></tr>
+        <tr><td colspan="2" class="hunk-header">@@ ~/.claude/CLAUDE.md — new section @@</td></tr>
+        <tr class="add"><td class="ln">+</td><td class="code">## Search Exclusions</td></tr>
+        <tr class="add"><td class="ln">+</td><td class="code"> </td></tr>
+        <tr class="add"><td class="ln">+</td><td class="code">- Never include `*/plans/archive` (any depth) in file</td></tr>
+        <tr class="add"><td class="ln">+</td><td class="code">  searches, glob patterns, or exploratory reads.</td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code"> </td></tr>
+        <tr class="ctx"><td class="ln"> </td><td class="code">## Working Style</td></tr>
+      </tbody>
+    </table>
+
+    <div class="stat-bar">
+      <div class="stat-pills">
+        <span class="pill-add">+6</span>
+        <span class="pill-del">-0</span>
+      </div>
+      <span class="summary">layered search exclusions: instruction + permission deny</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">Excluding a directory from Claude searches isn't just a CLAUDE.md instruction — it's a two-layer problem.
+
+CLAUDE.md tells Claude not to look there. But if the model ignores the instruction, or a subagent doesn't inherit it, files still get read.
+
+The fix: pair the instruction with a `permissions.deny` rule in `settings.json`.
+
+"deny": ["Read(*/plans/archive/*)"]
+
+This blocks the `Read` tool at the permission layer — no instruction-following required. The `*/plans/archive/*` wildcard matches any depth, across any project.
+
+The two layers are complementary:
+— CLAUDE.md: prevents the call from being attempted
+— `permissions.deny`: enforces it if the call happens anyway
+
+For a completed-plans archive, or any "don't touch" path, this is the pattern that actually holds.
+
+Follow for more Claude Code configuration patterns like this.
+
+#ClaudeCode #AIEngineering #DeveloperTools #LLMOps</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">Two layers beat one for Claude search exclusions.
+
+CLAUDE.md tells it not to look. `permissions.deny` blocks the Read tool if it tries anyway.
+
+"Read(*/plans/archive/*)" — enforced at the tool layer, no model cooperation needed.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">CLAUDE.md instructions and `permissions.deny` rules aren't redundant — they cover different failure modes. Instructions prevent the call; deny rules block it if it happens. Layering both on `*/plans/archive/*` means the exclusion holds even across subagents.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
