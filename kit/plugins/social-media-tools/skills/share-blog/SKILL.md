@@ -1,6 +1,6 @@
 ---
 name: share-blog
-description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, Bluesky, and Substack with platform tone. Use when asked to share a blog post on social media."
+description: "Creates platform-aware social copy and a dark-mode card for a blog post. Use when asked to share a blog post or article on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
@@ -135,7 +135,8 @@ Before any template substitution, apply to every text value:
 
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, universal copy rules,
 and **Draft Copy — Standard Procedure**.
-For copy format and filled examples per platform, read `references/platforms.md`.
+For copy format and filled examples per platform, read the skill-local `references/platforms.md`
+(adjacent to this SKILL.md).
 
 ---
 

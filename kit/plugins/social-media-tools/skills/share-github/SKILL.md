@@ -1,6 +1,6 @@
 ---
 name: share-github
-description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card for LinkedIn, Twitter/X, Bluesky, or Substack. Use when asked to share a code snippet from a GitHub repository."
+description: "Fetches a GitHub file and generates a syntax-highlighted social card with copy. Use when asked to share a code snippet from a GitHub repository."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, Skill, SendUserFile, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: share-video
-description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, Bluesky, and Substack. Use when asked to share or promote a video on social media."
+description: "Creates platform-aware social copy and a card for YouTube or Vimeo videos. Use when asked to share or promote a video on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
@@ -115,7 +115,8 @@ For API endpoints and 4xx fallback, read `references/platforms.md`.
 
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, universal copy rules,
 and **Draft Copy — Standard Procedure**.
-For copy format and filled examples per platform, read `references/platforms.md`.
+For copy format and filled examples per platform, read the skill-local `references/platforms.md`
+(adjacent to this SKILL.md).
 
 ---
 

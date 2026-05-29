@@ -1,6 +1,6 @@
 ---
 name: share-code
-description: "Generates social media copy and a dark-mode card image. Formats code changes into platform-ready posts for LinkedIn, Twitter/X, Bluesky, or Substack. Use when asked to post or share a code change."
+description: "Generates platform-aware social copy and a dark-mode card image for code changes. Use when asked to post or share a code change."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob
 ---
 
