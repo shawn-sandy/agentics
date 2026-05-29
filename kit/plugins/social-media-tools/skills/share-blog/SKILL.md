@@ -1,7 +1,7 @@
 ---
 name: share-blog
 description: "Creates social media copy and a dark-mode card for a blog post. Formats copy for LinkedIn, Twitter, and Bluesky with platform tone. Use when asked to share a blog post on social media."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
 # share-blog
@@ -23,10 +23,11 @@ for a blog post URL or local markdown file.
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -62,7 +63,6 @@ If the user provides a **relative path**, resolve it:
 realpath "$USER_PATH" 2>/dev/null || echo "$PWD/$USER_PATH"
 ```
 
-*(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one call:
 
 | Input | Options | Notes |
@@ -136,7 +136,7 @@ Before any template substitution, apply to every text value:
 For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
 For copy format and filled examples per platform, read `references/platforms.md`.
 
-*(Interactive mode only — present drafted copy in a fenced code block labelled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 4.)*
+Present drafted copy in a fenced code block labelled with the platform name and wait for approval.
 
 - **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
 - **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)

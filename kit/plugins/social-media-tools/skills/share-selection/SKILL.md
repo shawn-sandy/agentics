@@ -1,7 +1,7 @@
 ---
 name: share-selection
 description: "Drafts a social post and a dark-mode card from code you selected or pasted. Detects the selection, scrubs for secrets, and tailors copy to your objective. Use when asked to share, post, or tweet selected, highlighted, or pasted code."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob, Skill
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 
 # share-selection
@@ -28,10 +28,11 @@ does **not** scan git history — that is `code-share`'s job.
 | 6 — Screenshot | Serve HTML locally, Playwright screenshot |
 | 7 — Deliver | Present copy + attach PNG + show saved path |
 
-## Non-interactive mode
+## Exit plan mode
 
-When `$ARGUMENTS` contains `--background`: read `$PLUGIN_DIR/references/non-interactive-mode.md`
-and follow all skip rules. Do not pause for user input at any point.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 
@@ -92,8 +93,7 @@ Determine `OBJECTIVE` — what the user wants the post to accomplish or emphasiz
 
 - **Infer** it from the user's prompt when stated (e.g. "share this and stress the perf win"
   → `OBJECTIVE = "highlight the performance win"`).
-- *(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
-  **Ask** only if absent: include a short free-text **objective** input ("What should this
+- **Ask** only if absent: include a short free-text **objective** input ("What should this
   post accomplish or emphasize?") in the same `AskUserQuestion` that collects `PLATFORM`
   (LinkedIn, Twitter/X, Bluesky, or **All sites**) and `TONE`.
 
@@ -126,7 +126,7 @@ Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.cla
 
 Parse the returned `SCRUB RESULT` block:
 - `BLOCKED` → report masked findings, **STOP.**
-- `WARN` → *(Interactive mode)* surface the warning, ask the user to confirm before continuing; *(background mode)* auto-proceed per `non-interactive-mode.md`.
+- `WARN` → surface the warning, ask the user to confirm before continuing.
 - `PASS` → continue silently.
 
 ---
@@ -144,7 +144,7 @@ Draft copy that **serves `OBJECTIVE`** within each platform's limit and the chos
 
 Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/objective keywords) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
 
-*(Interactive mode only — present the drafted copy in a fenced code block labelled with the platform name and wait for approval; in `--background` mode proceed directly to Phase 4.)*
+Present the drafted copy in a fenced code block labelled with the platform name and wait for approval.
 
 - **Single site:** store as `POST_COPY_TEXT_RAW`
 - **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)

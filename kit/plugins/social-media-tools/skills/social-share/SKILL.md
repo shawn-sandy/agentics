@@ -1,13 +1,12 @@
 ---
 name: social-share
-description: "Social media share router — classifies content type and runs the right skill in the background. Use when asked to share what you're working on or post code, a blog, video, or project update."
-allowed-tools: Bash, Read, Write, Agent, ToolSearch, ExitPlanMode
+description: "Social media share router — classifies content type and runs the right skill. Use when asked to share what you're working on or post code, a blog, video, or project update."
+allowed-tools: Bash, Read, Write, Skill, ToolSearch, ExitPlanMode
 ---
 
 # social-share
 
-Route a natural-language share request to the right social media workflow and run it in the
-background so you can keep working.
+Route a natural-language share request to the right social media workflow.
 
 ## Quick Reference
 
@@ -17,7 +16,7 @@ background so you can keep working.
 | 1 — Classify | Identify content type using first-match-wins rules |
 | 2 — Capture | For code selections: write code to a temp file before dispatching |
 | 3 — Defaults | Resolve `--platform` and any extra flags |
-| 4 — Dispatch | Exit plan mode silently; invoke `agent-social-share` in the background; ack |
+| 4 — Dispatch | Exit plan mode silently; invoke target skill directly via `Skill(...)` |
 
 ---
 
@@ -97,40 +96,27 @@ Set `PLATFORM=all` unless the user specified a platform in `$ARGUMENTS`:
 Build `DISPATCH_FLAGS`:
 
 ```
---platform=<PLATFORM> --background <EXTRA_FLAGS>
+--platform=<PLATFORM> <EXTRA_FLAGS>
 ```
 
 For `share-project`, also include `--topic=<value>` from Phase 1:
 
 ```
---topic=<value> --platform=<PLATFORM> --background
+--topic=<value> --platform=<PLATFORM>
 ```
 
 ---
 
 ## Phase 4 — Dispatch
 
-`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode` first, then call
-`ExitPlanMode`. Both steps happen silently with no user-visible output. This is a no-op when
-plan mode is already off.
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
-Invoke the `Agent` tool with:
-- `subagent_type: "agent-social-share"`
-- `run_in_background: true`
-- `description: "Background social share"`
-- `prompt`: a self-contained instruction embedding `TARGET_SKILL` and `DISPATCH_FLAGS`. Example:
-
-  ```
-  Run the social share workflow.
-  Target skill: <TARGET_SKILL>
-  Invoke: Skill(skill: "social-media-tools:<TARGET_SKILL>", args: "<DISPATCH_FLAGS>")
-  Report the output path when done.
-  ```
-
-Output a single-line ack:
+Invoke the target skill directly:
 
 ```
-Background share started (<TARGET_SKILL>). You will be notified when the card is ready.
+Skill(skill: "social-media-tools:<TARGET_SKILL>", args: "<DISPATCH_FLAGS>")
 ```
 
-Do not poll, sleep, or check progress. The agent will proactively report when done.
+Wait for the skill to complete and report its output to the user.
