@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-05-28">
+<meta name="plan-repo" content="agentics">
+<title>Plan: Close background-mode gaps for social-media-tools skills</title>
+<style>
+  :root {
+    --bg:#f8f9fb; --surface:#ffffff; --border:#e2e6ea; --text:#1a1d23; --muted:#6b7280;
+    --accent:#3b82f6; --accent-bg:#eff6ff; --green:#16a34a; --green-bg:#f0fdf4;
+    --amber:#d97706; --amber-bg:#fffbeb; --grey:#6b7280; --grey-bg:#f3f4f6;
+    --wish-bg:#faf5ff; --wish-border:#c084fc; --radius:10px; --shadow:0 1px 4px rgba(0,0,0,.07);
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:15px; line-height:1.65; color:var(--text); background:var(--bg); padding:2rem 1rem 4rem; }
+  a { color:var(--accent); }
+  code, pre { font-family:"SF Mono","Fira Code",Consolas,monospace; font-size:.875em; }
+  pre { background:var(--grey-bg); border:1px solid var(--border); border-radius:6px; padding:.75rem 1rem; overflow-x:auto; white-space:pre-wrap; word-break:break-word; }
+  .plan-wrap { max-width:780px; margin:0 auto; }
+  .plan-header { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.75rem 2rem 1.5rem; margin-bottom:1.5rem; box-shadow:var(--shadow); }
+  .plan-header-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .plan-title { font-size:1.6rem; font-weight:700; letter-spacing:-.015em; line-height:1.25; flex:1; }
+  .status-badge { display:inline-flex; align-items:center; gap:.35rem; font-size:.75rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; padding:.3rem .75rem; border-radius:999px; white-space:nowrap; flex-shrink:0; }
+  [data-status="todo"] .status-badge { background:var(--grey-bg); color:var(--grey); }
+  [data-status="in-progress"] .status-badge { background:var(--amber-bg); color:var(--amber); }
+  [data-status="completed"] .status-badge { background:var(--green-bg); color:var(--green); }
+  .status-badge::before { content:"●"; font-size:.6em; }
+  .plan-meta { display:flex; gap:1.25rem; flex-wrap:wrap; margin-top:1rem; font-size:.8rem; color:var(--muted); }
+  .plan-meta span::before { margin-right:.3rem; }
+  .meta-created::before { content:"📅"; }
+  .meta-repo::before { content:"📦"; }
+  .meta-type::before { content:"🏷"; }
+  .objective-card { background:var(--accent-bg); border:1.5px solid var(--accent); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:1.5rem; font-size:1.05rem; font-weight:500; color:#1e3a5f; }
+  .objective-card .section-label { font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:.5rem; }
+  .progress-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.5rem; margin-bottom:1.5rem; box-shadow:var(--shadow); }
+  .progress-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.6rem; font-size:.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .progress-bar-bg { height:8px; background:var(--grey-bg); border-radius:999px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:var(--green); border-radius:999px; transition:width .3s ease; width:0%; }
+  .section-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-bottom:1.25rem; box-shadow:var(--shadow); }
+  .section-card h2 { font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:1rem; }
+  .section-card p { margin-bottom:.75rem; }
+  .section-card p:last-child { margin-bottom:0; }
+  .section-card ul, .section-card ol { padding-left:1.4rem; display:flex; flex-direction:column; gap:.4rem; }
+  .steps-list { display:flex; flex-direction:column; gap:.85rem; margin-bottom:1.25rem; }
+  .step-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem 1.5rem; box-shadow:var(--shadow); position:relative; }
+  .step-card-header { display:flex; align-items:flex-start; gap:.9rem; }
+  .step-number { flex-shrink:0; width:2rem; height:2rem; background:var(--accent-bg); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; margin-top:.1rem; }
+  .step-body { flex:1; }
+  .step-action { font-weight:600; margin-bottom:.35rem; }
+  .step-why { font-size:.875rem; color:var(--muted); margin-bottom:.5rem; }
+  .step-why::before { content:"Why: "; font-weight:600; color:var(--text); }
+  .step-verify-toggle { margin-top:.6rem; border:0; border-top:1px dashed var(--border); padding-top:.5rem; }
+  .step-verify-toggle summary { font-size:.8rem; font-weight:600; color:var(--accent); cursor:pointer; list-style:none; display:flex; align-items:center; gap:.35rem; user-select:none; }
+  .step-verify-toggle summary::before { content:"▶"; font-size:.6em; transition:transform .2s; }
+  .step-verify-toggle[open] summary::before { transform:rotate(90deg); }
+  .step-verify-toggle .verify-body { font-size:.875rem; color:var(--text); margin-top:.5rem; padding-left:.5rem; border-left:3px solid var(--accent); }
+  .criteria-list { list-style:none; padding:0; display:flex; flex-direction:column; gap:.6rem; }
+  .criteria-list li { display:flex; align-items:flex-start; gap:.7rem; }
+  .criteria-list input[type="checkbox"] { flex-shrink:0; width:1.1rem; height:1.1rem; margin-top:.2rem; accent-color:var(--green); cursor:pointer; }
+  .criteria-list label { cursor:pointer; }
+  .criteria-list input:checked + label { text-decoration:line-through; color:var(--muted); }
+  .next-steps-section { margin-bottom:1.25rem; }
+  .next-steps-list { padding:0; display:flex; flex-direction:column; gap:1rem; }
+  .next-step-item { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .next-step-item summary { font-weight:600; padding:.75rem 1rem; cursor:pointer; list-style:none; display:flex; align-items:center; gap:.5rem; background:var(--surface); user-select:none; }
+  .next-step-item summary::before { content:"▶"; font-size:.6em; color:var(--muted); transition:transform .2s; }
+  .next-step-item[open] summary::before { transform:rotate(90deg); }
+  .next-step-prompt { padding:.75rem 1rem 1rem; background:var(--grey-bg); }
+  .next-step-prompt p { font-size:.8rem; color:var(--muted); margin-bottom:.5rem; }
+  .next-step-prompt pre { margin:0; }
+  .wish-list-header { display:flex; align-items:center; gap:.5rem; font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#7c3aed; margin:1.25rem 0 .75rem; }
+  .wish-list-header::after { content:""; flex:1; height:1px; background:var(--wish-border); opacity:.4; }
+  .wish-item { border:1.5px dashed var(--wish-border) !important; background:var(--wish-bg); }
+  .wish-item summary { background:var(--wish-bg); color:#6d28d9; }
+  .wish-badge { font-size:.65rem; background:#ede9fe; color:#6d28d9; padding:.15rem .5rem; border-radius:999px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-left:auto; }
+  .plan-footer { text-align:center; font-size:.75rem; color:var(--muted); margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="plan-wrap">
+
+  <header class="plan-header">
+    <div class="plan-header-top">
+      <h1 class="plan-title">Plan: Close background-mode gaps for social-media-tools skills</h1>
+      <span class="status-badge">todo</span>
+    </div>
+    <div class="plan-meta">
+      <span class="meta-created">2026-05-28</span>
+      <span class="meta-repo">agentics</span>
+      <span class="meta-type">feature</span>
+    </div>
+  </header>
+
+  <div class="objective-card">
+    <div class="section-label">Objective</div>
+    <p>Make every <code>social-media-tools</code> skill runnable in the background so the main session's context stays free. The router and two background agents already cover seven of nine skills; this closes the remaining gaps — give <code>media-library</code> a non-interactive mode, make the router reach it, and reconcile the completion-line contract — then version and document the full capability.</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span>Acceptance criteria</span>
+      <span id="progress-label">0 / 7 done</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2>Context</h2>
+    <p>The user wants the plugin's skills to run in the background, in a separate agent context, so developers can keep working without the share workflow consuming their main session window.</p>
+    <p>Exploration showed this is <strong>mostly already built</strong>. Two background chains exist: the <code>social-share</code> router skill classifies a request and dispatches the <code>agent-social-share</code> subagent (<code>background: true</code>), covering <code>share-code</code>, <code>share-blog</code>, <code>share-github</code>, <code>share-video</code>, <code>share-selection</code>, and <code>share-project</code>; and <code>/digest-bg</code> dispatches <code>agent-digest</code> for <code>share-scan</code>. All seven honor the <code>--background</code> non-interactive contract in <code>references/non-interactive-mode.md</code> (v0.9.0).</p>
+    <p>Three real gaps remain: (1) <code>media-library</code> is purely interactive — it has no <code>--background</code> mode and the router has no rule to reach it; (2) the digest chain emits its own <code>Digest complete: …</code> line rather than the contract's <code>SOCIAL-SHARE: DONE</code> line, and the contract documents only card-rendering output (<code>png=/html=</code>), not file-producing skills; (3) <code>security-scrub</code> is already non-interactive and stays a sub-step utility — out of scope by decision.</p>
+  </div>
+
+  <div class="section-card">
+    <h2>Steps</h2>
+    <div class="steps-list">
+
+      <div class="step-card">
+        <div class="step-card-header">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <div class="step-action">Add a generic file-output completion line to <code>references/non-interactive-mode.md</code>.</div>
+            <div class="step-why">The current contract only defines a card line (<code>png=/html=</code>). A catalog dump and the digest produce a single file, so the contract needs a generic form before <code>media-library</code> can conform. Reconciling this first lets Step 2 reference it.</div>
+            <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Re-read the file: it documents <code>SOCIAL-SHARE: DONE skill=&lt;name&gt; output=&lt;path&gt;</code> for file-producing skills alongside the existing card form, and a short note that <code>share-scan</code>/digest uses its own <code>--days/--base/--max/--codebase</code> flags and <code>Digest complete:</code> line.</div></details>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card-header">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <div class="step-action">Add <code>--background</code> non-interactive mode to <code>skills/media-library/SKILL.md</code>.</div>
+            <div class="step-why">This is the one core skill with no background path. In background mode it must not call <code>AskUserQuestion</code>; instead it writes the saved-posts table to <code>.claude/digests/media-library-YYYY-MM-DD.md</code> and emits the generic completion line from Step 1.</div>
+            <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">The SKILL.md has a <code>## Non-interactive mode</code> pointer block; Step 3's <code>AskUserQuestion</code> is marked <em>(Interactive mode only)</em>; a background branch writes the catalog file and emits <code>SOCIAL-SHARE: DONE skill=media-library output=&lt;path&gt;</code>; <code>allowed-tools</code> gains <code>Write</code>. Interactive mode (no <code>--background</code>) still asks via <code>AskUserQuestion</code>.</div></details>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card-header">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <div class="step-action">Add a classification rule to <code>skills/social-share/SKILL.md</code> Phase 1 routing browse/library intent to <code>media-library</code>.</div>
+            <div class="step-why">The router is the single background entry point; it must reach <code>media-library</code> so a developer can snapshot the catalog in the background. The rule must sit <em>above</em> the git fallbacks (rules 7–8) so "browse my saved posts" never falls through to <code>share-code</code>.</div>
+            <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Phase 1 has a new rule matching terms like <code>browse</code>, <code>library</code>, <code>saved posts</code>, <code>prior post</code> → target <code>media-library</code>, placed before rule 7. Dispatching <code>/social-share-bg browse my saved posts</code> classifies to <code>media-library</code> and builds <code>DISPATCH_FLAGS</code> containing <code>--background</code>.</div></details>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card-header">
+          <div class="step-number">4</div>
+          <div class="step-body">
+            <div class="step-action">Update <code>agents/agent-social-share.md</code> to list <code>media-library</code> as a valid target and relay the <code>output=</code> form.</div>
+            <div class="step-why">The agent forwards the <code>Skill</code> call and relays the status line verbatim, so it already works mechanically — but its Step 1 example list and Step 3 should explicitly acknowledge the generic <code>output=</code> completion line so the doc stays accurate. Doc-level change, no behavioral rewrite.</div>
+            <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Step 1's <code>TARGET_SKILL</code> examples include <code>media-library</code>; Step 3 notes that a <code>SOCIAL-SHARE: DONE … output=&lt;path&gt;</code> line is relayed as-is just like the card form.</div></details>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card-header">
+          <div class="step-number">5</div>
+          <div class="step-body">
+            <div class="step-action">Bump the plugin version in <code>.claude-plugin/marketplace.json</code> from <code>1.0.1</code> to <code>1.1.0</code> and add a <code>CHANGELOG.md</code> entry.</div>
+            <div class="step-why">A new non-interactive mode on <code>media-library</code> plus a new router rule is additive new capability — a MINOR bump per the repo's versioning table. Version lives only in <code>marketplace.json</code> for relative-path plugins.</div>
+            <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">The <code>social-media-tools</code> entry in <code>marketplace.json</code> reads <code>"version": "1.1.0"</code> and the auto-validate hook reports no JSON errors; <code>CHANGELOG.md</code> has a <code>## v1.1.0 — 2026-05-28</code> entry describing the media-library background mode, router rule, and contract reconciliation.</div></details>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-card-header">
+          <div class="step-number">6</div>
+          <div class="step-body">
+            <div class="step-action">Update <code>README.md</code> to document full background coverage.</div>
+            <div class="step-why">Discoverability was a real gap — developers may not know the background capability exists. The README should state that all share skills run in the background via <code>/social-share-bg</code> and <code>/digest-bg</code>, and document the new <code>media-library --background</code> catalog-snapshot behavior.</div>
+            <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">README lists the background entry points and the skills each covers, including <code>media-library</code>, and shows the <code>.claude/digests/media-library-YYYY-MM-DD.md</code> output path.</div></details>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h2>Acceptance Criteria</h2>
+    <ul class="criteria-list" id="criteria-list">
+      <li><input type="checkbox" id="ac1"><label for="ac1">Every social-media-tools skill except <code>security-scrub</code> (intentionally a sub-step utility) can be run in the background.</label></li>
+      <li><input type="checkbox" id="ac2"><label for="ac2"><code>media-library</code> with <code>--background</code> writes a catalog to <code>.claude/digests/media-library-YYYY-MM-DD.md</code> and never calls <code>AskUserQuestion</code>.</label></li>
+      <li><input type="checkbox" id="ac3"><label for="ac3"><code>media-library</code> without <code>--background</code> still works interactively exactly as before.</label></li>
+      <li><input type="checkbox" id="ac4"><label for="ac4">The <code>social-share</code> router routes a "browse my saved posts" request to <code>media-library</code> in the background.</label></li>
+      <li><input type="checkbox" id="ac5"><label for="ac5"><code>references/non-interactive-mode.md</code> defines a generic <code>output=</code> completion line and documents the digest's own flags/line.</label></li>
+      <li><input type="checkbox" id="ac6"><label for="ac6">Plugin version is <code>1.1.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry; JSON validates.</label></li>
+      <li><input type="checkbox" id="ac7"><label for="ac7"><code>README.md</code> documents the full background capability and entry points.</label></li>
+    </ul>
+  </div>
+
+  <div class="section-card">
+    <h2>Verification</h2>
+    <p><strong>End-to-end background dispatch:</strong> from a session in this repo, run <code>/social-media-tools:social-share-bg browse my saved posts</code>. Confirm the router acks with a single line, the <code>agent-social-share</code> subagent runs in the background, and it reports back a <code>SOCIAL-SHARE: DONE skill=media-library output=…</code> line. Confirm <code>.claude/digests/media-library-YYYY-MM-DD.md</code> exists and contains the saved-posts table (or the "no saved posts" notice if the media dir is empty).</p>
+    <p><strong>Interactive regression:</strong> invoke <code>media-library</code> without <code>--background</code> and confirm it still lists posts and asks via <code>AskUserQuestion</code>.</p>
+    <p><strong>Plugin integrity:</strong> run <code>/validate-plugin social-media-tools</code> (or the <code>validate-plugin</code> skill) — structure, version, and homepage checks pass; the <code>marketplace.json</code> auto-validate hook reports no JSON errors after the version bump.</p>
+    <p><strong>Existing chains unaffected:</strong> spot-check that <code>/social-share-bg share my latest commit</code> still routes to <code>share-code</code> and <code>/digest-bg</code> still routes to <code>share-scan</code> — the new router rule sits above the git fallbacks and must not shadow them.</p>
+  </div>
+
+  <div class="section-card next-steps-section">
+    <h2>Next Steps</h2>
+    <div class="next-steps-list">
+
+      <details class="next-step-item">
+        <summary>Add a dedicated <code>/media-library-bg</code> command</summary>
+        <div class="next-step-prompt">
+          <p>Paste this prompt into Claude to execute this follow-up:</p>
+          <pre>In kit/plugins/social-media-tools, add a commands/media-library-bg.md command (mirroring digest-bg.md) that dispatches a background agent to run the media-library skill with --background and write the catalog snapshot to .claude/digests/. Reuse agent-social-share if it can carry a non-share target, or add a thin agent-media-library if a dedicated agent reads cleaner. Bump the version a PATCH/MINOR as appropriate and update CHANGELOG.md and README.md.</pre>
+        </div>
+      </details>
+
+      <details class="next-step-item">
+        <summary>Fully unify the digest chain onto the SOCIAL-SHARE contract</summary>
+        <div class="next-step-prompt">
+          <p>Paste this prompt into Claude to execute this follow-up:</p>
+          <pre>Refactor share-scan and agent-digest in kit/plugins/social-media-tools so the digest chain emits the generic SOCIAL-SHARE: DONE skill=share-scan output=&lt;path&gt; completion line instead of the bespoke "Digest complete: …" message, while keeping its --days/--base/--max/--codebase flags. Update references/non-interactive-mode.md, the agent, and tests/fixtures if any reference the old line. This is a contract-unification cleanup — verify digest-bg still works end to end.</pre>
+        </div>
+      </details>
+
+      <div class="wish-list-header">🔭 Wish List</div>
+
+      <details class="next-step-item wish-item">
+        <summary>Scheduled background digest + auto-catalog<span class="wish-badge">Wish List</span></summary>
+        <div class="next-step-prompt">
+          <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+          <pre>Design a routine/cron setup that runs /social-media-tools:digest-bg weekly and refreshes the media-library catalog snapshot, writing both to .claude/digests/, so a developer always has an up-to-date "what's shareable" digest and post inventory without ever spending main-session context. Human review still required before posting. Propose the schedule config and where it should live.</pre>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <footer class="plan-footer">
+    Generated by plan-agent · 2026-05-28 · agentics
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var total = document.querySelectorAll('#criteria-list input[type="checkbox"]').length;
+    var bar = document.getElementById('progress-bar');
+    var label = document.getElementById('progress-label');
+    function update() {
+      var done = document.querySelectorAll('#criteria-list input:checked').length;
+      var pct = total ? Math.round(done / total * 100) : 0;
+      if (bar) bar.style.width = pct + '%';
+      if (label) label.textContent = done + ' / ' + total + ' done';
+    }
+    document.querySelectorAll('#criteria-list input[type="checkbox"]').forEach(function (cb) {
+      cb.addEventListener('change', update);
+    });
+    update();
+  })();
+</script>
+</body>
+</html>

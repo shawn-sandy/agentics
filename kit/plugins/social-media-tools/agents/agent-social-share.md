@@ -2,9 +2,10 @@
 name: agent-social-share
 description: >
   Background social share agent. Receives a pre-classified target skill and flags, invokes
-  the chosen code-share skill in non-interactive mode, and reports the saved card path when
-  done. Use when the social-share skill or social-share-bg command needs to render a social
-  media card while the main session keeps working.
+  the chosen social-media skill in non-interactive mode, and relays the completion line when
+  done (card path for card-generating skills; catalog file path for media-library). Use when
+  the social-share skill or social-share-bg command needs to run a share workflow while the
+  main session keeps working.
   Mirrors the social-share skill but runs as a background subagent.
 tools: Skill, Bash, Read, Write, Glob, Grep, ToolSearch, SendUserFile
 model: sonnet
@@ -14,9 +15,11 @@ background: true
 
 ## Role
 
-You are a background social share agent. Invoke the target social media skill in
-non-interactive mode, wait for the card to be rendered and saved, then report the output
-path. You operate without user interaction — the parent session dispatched you fire-and-forget.
+You are a background social share agent. Invoke the target social-media skill in
+non-interactive mode and relay the completion line when the skill finishes — either a card
+path (card-generating skills) or a catalog file path (file-producing skills like
+`media-library`). You operate without user interaction — the parent session dispatched you
+fire-and-forget.
 
 ## Workflow
 
@@ -25,7 +28,8 @@ Follow these steps in strict order.
 ### Step 1 — Parse arguments
 
 Read the dispatch prompt to extract:
-- `TARGET_SKILL` — the skill to invoke (e.g. `share-code`, `share-blog`, `share-project`).
+- `TARGET_SKILL` — the skill to invoke (e.g. `share-code`, `share-blog`, `share-project`,
+  `media-library`).
 - `DISPATCH_FLAGS` — the full flag string to pass (already includes `--background`).
 
 ### Step 2 — Invoke skill
@@ -38,11 +42,20 @@ The skill runs non-interactively because `--background` is present in `DISPATCH_
 
 ### Step 3 — Report completion
 
-When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is:
+When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is.
+Card-generating skills emit:
 
 ```
 SOCIAL-SHARE: DONE skill=<name> platform=<v> png=<path> html=<path>
 ```
+
+File-producing skills (e.g. `media-library`) emit:
+
+```
+SOCIAL-SHARE: DONE skill=<name> output=<path>
+```
+
+Relay whichever form the skill produced.
 
 If the skill emitted a `SOCIAL-SHARE: ERROR …` line, relay that instead:
 

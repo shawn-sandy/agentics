@@ -1,0 +1,366 @@
+<!doctype html>
+<!--
+  snippet-card.html — Dark-mode syntax-highlighted code snippet card for social posts.
+  Distinct from diff-card.html (which shows before/after diffs).
+
+  Static variables (all code content must be HTML-escaped by the skill before substitution):
+    SKILL.md       — File name, e.g. "auth.ts" (HTML-escaped)
+    markdown       — Display name, e.g. "TypeScript" (also used as hljs class)
+    #083fa1 — Hex color for language badge, e.g. "#3178c6" (hardcoded from language-map.md)
+    ---
+name: settings-backup
+description: &quot;Backs up Claude Code user settings to a git repo. Commits and pushes config files unattended; routine-compatible. Use when the user asks to back up or sync their Claude Code settings.&quot;
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
+argument-hint: &quot;[repo-path]&quot;
+---
+
+
+# Settings Backup
+
+Back up Claude Code user settings to a dedicated git repository. Copies
+user-authored configuration files, commits, and pushes. Designed to run
+unattended as a Claude routine when the repo path is configured.
+
+## When not to use
+
+- To restore settings from a backup — use `settings-restore` instead.
+- To compare local vs backed-up settings without changing anything.
+
+## Reference
+     — Code content, MUST be HTML-escaped (&amp; &lt; &gt; &quot;)
+                         Skill escapes in order: & first, then < > "
+    L1–L19     — e.g. "L10–L25" or "lines 1–80"
+    shawn-sandy/agentics      — e.g. "owner/repo"
+         — Original GitHub URL (fragment stripped)
+
+  Syntax highlighting:
+    Uses highlight.js via CDN (github-dark theme). Playwright screenshots are taken
+    in a local browser that fetches the CDN over the network — this works for the
+    normal screenshot pipeline. If the CDN is unreachable, the code block still renders
+    correctly in dark-mode (the inline CSS provides bg/text styling); only token
+    colouring is absent.
+
+    To make the card fully offline: download highlight.js github-dark CSS and common
+    languages bundle and replace the CDN <link> and <script> tags with inline <style>
+    and <script> blocks.
+
+  <div class="copy-panel">
+  <p class="copy-label">Social media post</p>
+  <textarea readonly class="post-copy-text" id="post-copy">Most developers version-control their code. Few version-control their AI assistant configuration.
+
+The settings-backup skill in the settings-sync plugin changes that. One command commits your Claude Code setup — settings.json, CLAUDE.md rules, custom skills, keybindings — to a dedicated git repo and pushes.
+
+What makes it practical:
+→ Routine-compatible: schedule it unattended, zero prompts
+→ Conflict-aware: detects multi-machine push conflicts and tells you exactly how to resolve
+→ First-backup secret scan: checks settings.json for leaked keys before anything hits git history
+→ Selective sync: opt-in flag for settings.local.json to keep machine-specific config separate
+
+The backup covers everything you've customized — the rules that shape Claude's behavior, the commands you've built, the skills you've installed. Lose nothing on a machine wipe or device swap.
+
+If you're treating your AI config as throw-away state, you're accumulating invisible technical debt.
+
+More automation patterns coming — follow for the next one.
+
+#ClaudeCode #DeveloperTools #AIAutomation #DevEx</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+</div> — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SKILL.md</title>
+
+    <!-- highlight.js: github-dark theme + common languages bundle -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+      integrity="sha256-nyCNAiECsdDHrr/s2OQsp5l9XeY2ZJ0rMepjCT2AkBk="
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"
+      integrity="sha256-g3pvpbDHNrUrveKythkPMF2j/J7UFoHbUyFQcFe1yEY="
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof hljs !== "undefined") {
+          hljs.highlightAll();
+        }
+      });
+    </script>
+
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #388bfd;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+      }
+
+      .card {
+        width: 720px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      }
+
+      /* ── Header ── */
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .filename {
+        font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+        font-size: 13px;
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .lang-badge {
+        display: inline-block;
+        background-color: #083fa1;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.3px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      }
+
+      /* ── Code block ── */
+      .code-block {
+        background: var(--bg);
+        padding: 20px 24px;
+        overflow-x: auto;
+        max-height: 400px;
+      }
+
+      /* Override hljs background so our --bg colour shows through */
+      .code-block pre,
+      .code-block .hljs {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0;
+      }
+
+      .code-block pre code {
+        font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+        font-size: 13px;
+        line-height: 1.65;
+        /* Fallback colours when hljs is offline */
+        color: var(--text);
+        white-space: pre;
+        tab-size: 2;
+      }
+
+      /* ── Footer ── */
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .repo-slug {
+        font-size: 11px;
+        color: var(--muted);
+        font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      }
+
+      .footer-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .line-range {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .github-link {
+        font-size: 11px;
+        color: var(--accent);
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* ── Copy panel ── */
+      .copy-panel {
+        width: 720px;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+
+      .copy-panel + .copy-panel {
+        margin-top: 0;
+      }
+
+      .copy-label {
+        color: #8b949e;
+        font-size: 12px;
+        margin: 0 0 8px;
+      }
+
+      .post-copy-text {
+        width: 100%;
+        min-height: 80px;
+        background: #0d1117;
+        color: #e6edf3;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        resize: vertical;
+        box-sizing: border-box;
+        display: block;
+      }
+
+      .copy-btn {
+        margin-top: 8px;
+        padding: 6px 16px;
+        background: #238636;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .copy-btn:hover {
+        background: #2ea043;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-header">
+        <span class="filename">SKILL.md</span>
+        <span class="lang-badge">markdown</span>
+      </div>
+
+      <div class="code-block">
+        <pre><code class="language-markdown">---
+name: settings-backup
+description: &quot;Backs up Claude Code user settings to a git repo. Commits and pushes config files unattended; routine-compatible. Use when the user asks to back up or sync their Claude Code settings.&quot;
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
+argument-hint: &quot;[repo-path]&quot;
+---
+
+# Settings Backup
+
+Back up Claude Code user settings to a dedicated git repository. Copies
+user-authored configuration files, commits, and pushes. Designed to run
+unattended as a Claude routine when the repo path is configured.
+
+## When not to use
+
+- To restore settings from a backup — use `settings-restore` instead.
+- To compare local vs backed-up settings without changing anything.
+
+## Reference
+</code></pre>
+      </div>
+
+      <div class="card-footer">
+        <span class="repo-slug">shawn-sandy/agentics</span>
+        <div class="footer-right">
+          <span class="line-range">L1–L19</span>
+          <span class="github-link"></span>
+        </div>
+      </div>
+    </div>
+    <div class="copy-panel">
+      <p class="copy-label">Social media post</p>
+      <textarea readonly class="post-copy-text" id="post-copy">
+Most developers version-control their code. Few version-control their AI assistant configuration.
+
+The settings-backup skill in the settings-sync plugin changes that. One command commits your Claude Code setup — settings.json, CLAUDE.md rules, custom skills, keybindings — to a dedicated git repo and pushes.
+
+What makes it practical:
+→ Routine-compatible: schedule it unattended, zero prompts
+→ Conflict-aware: detects multi-machine push conflicts and tells you exactly how to resolve
+→ First-backup secret scan: checks settings.json for leaked keys before anything hits git history
+→ Selective sync: opt-in flag for settings.local.json to keep machine-specific config separate
+
+The backup covers everything you've customized — the rules that shape Claude's behavior, the commands you've built, the skills you've installed. Lose nothing on a machine wipe or device swap.
+
+If you're treating your AI config as throw-away state, you're accumulating invisible technical debt.
+
+More automation patterns coming — follow for the next one.
+
+#ClaudeCode #DeveloperTools #AIAutomation #DevEx</textarea
+      >
+      <button class="copy-btn" onclick="copyPost('post-copy', this)">
+        Copy post
+      </button>
+    </div>
+    <script>
+      function copyPost(id, btn) {
+        var t = document.getElementById(id);
+        if (!t) return;
+        var orig = btn.textContent;
+        function done() {
+          btn.textContent = "Copied ✓";
+          setTimeout(function () {
+            btn.textContent = orig;
+          }, 2000);
+        }
+        function fallback() {
+          t.select();
+          document.execCommand("copy");
+          done();
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+        } else {
+          fallback();
+        }
+      }
+    </script>
+  </body>
+</html>

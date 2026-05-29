@@ -1,4 +1,4 @@
-# code-share
+# social-media-tools
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
@@ -10,27 +10,28 @@ Two complementary workflows: a **discovery pipeline** (scan git history or a cod
 
 | Component | Type | Description |
 |-----------|------|-------------|
-| `social-share` | Skill | **Router** — classifies a natural-language request and dispatches the right card skill in the background with zero questions |
-| `code-share` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
-| `blog-share` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
-| `video-share` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
-| `github-code-share` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
-| `selection-share` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
-| `project-share` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
-| `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
-| `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
+| `social-share` | Skill | **Router** — classifies a natural-language request and dispatches the right skill in the background with zero questions |
+| `share-code` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
+| `share-blog` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
+| `share-video` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
+| `share-github` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
+| `share-selection` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
+| `share-project` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
+| `share-scan` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
+| `media-library` | Skill | Browse saved posts interactively, or snapshot the catalog to `.claude/digests/` in the background |
+| `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
 | `/social-media-tools:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 | `/social-media-tools:digest-bg` | Command | Fire-and-forget background digest scan |
-| `agent-social-share` | Agent | Background agent; runs the chosen card skill non-interactively and reports `SOCIAL-SHARE: DONE` |
-| `agent-digest` | Agent | Background agent; proactively reports output path when done |
+| `agent-social-share` | Agent | Background agent; runs the chosen skill non-interactively and reports `SOCIAL-SHARE: DONE` |
+| `agent-digest` | Agent | Background agent; runs `share-scan --background` and proactively reports the digest path |
 
 ## Installation
 
 ```bash
 # From the agentics marketplace
 /plugin marketplace add shawn-sandy/agentics
-/plugin install code-share@agentics-kit
+/plugin install social-media-tools@agentics-kit
 
 # Local dev
 claude --plugin-dir ./kit/plugins/social-media-tools
@@ -55,7 +56,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 /social-media-tools:digest-bg --days=7
 ```
 
-The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/social-media-tools:code-share` prompt.
+The digest is written to `.claude/digests/code-digest-YYYY-MM-DD.md`. Each entry includes a ready-to-paste `/social-media-tools:social-share-bg` prompt.
 
 ### Share anything — router dispatches in the background
 
@@ -76,10 +77,12 @@ Or use the explicit command:
 /social-media-tools:social-share-bg share my latest commit
 /social-media-tools:social-share-bg https://github.com/owner/repo/blob/main/src/auth.ts#L10-L40
 /social-media-tools:social-share-bg we just shipped v2 on Twitter
+/social-media-tools:social-share-bg browse my saved posts   # snapshots catalog to .claude/digests/
 ```
 
 A one-line ack is returned immediately. The background agent notifies you when the card is
-saved under `docs/media/social/`.
+saved under `docs/media/social/` (card skills) or the catalog snapshot is written to
+`.claude/digests/media-library-YYYY-MM-DD.md` (`media-library`).
 
 ### Generate a social media post (interactive)
 
@@ -102,7 +105,7 @@ Skills activate automatically — just describe what you want to share.
 > "Post about this file: https://github.com/owner/repo/blob/main/src/parser.py"
 
 **Use a prompt from the digest:**
-> `/social-media-tools:code-share feature-card for LinkedIn: the new security-scrub skill`
+> `/social-media-tools:social-share-bg feature-card for LinkedIn: the new security-scrub skill`
 
 ### Scrub code for secrets before sharing
 
@@ -133,49 +136,56 @@ social-media-tools/
 ├── CHANGELOG.md
 ├── README.md
 ├── agents/
-│   └── agent-digest.md                    ← background digest agent
+│   ├── agent-digest.md                    ← background digest agent
+│   └── agent-social-share.md              ← background social share agent (all card skills + media-library)
 ├── commands/
-│   ├── digest.md                           ← /social-media-tools:digest
-│   └── digest-bg.md                        ← /social-media-tools:digest-bg
-├── references/                             ← shared pipeline logic (all card skills)
-│   ├── copy-panels.md                      ← {{COPY_PANELS}} markup + escaping rules
-│   ├── language-map.md                     ← file extension → language + badge colour
-│   ├── platforms.md                        ← canonical char limits + universal copy rules
-│   ├── rendering-pipeline.md               ← find_free_port → HTTP server → Playwright → kill
-│   ├── reuse-check.md                      ← scan docs/media/social/ + offer reuse
-│   ├── saving-and-delivery.md              ← persistent save block + deliver phase
-│   └── variables.md                        ← per-template variable maps (all 6 cards)
+│   ├── digest.md                          ← /social-media-tools:digest
+│   ├── digest-bg.md                       ← /social-media-tools:digest-bg
+│   └── social-share-bg.md                 ← /social-media-tools:social-share-bg
+├── references/                            ← shared pipeline logic (all card skills)
+│   ├── copy-panels.md                     ← {{COPY_PANELS}} markup + escaping rules
+│   ├── language-map.md                    ← file extension → language + badge colour
+│   ├── non-interactive-mode.md            ← --background contract (skip rules + completion lines)
+│   ├── platforms.md                       ← canonical char limits + universal copy rules
+│   ├── rendering-pipeline.md              ← find_free_port → HTTP server → Playwright → kill
+│   ├── reuse-check.md                     ← scan docs/media/social/ + offer reuse
+│   ├── saving-and-delivery.md             ← persistent save block + deliver phase
+│   └── variables.md                       ← per-template variable maps (all 6 cards)
 ├── scripts/
-│   └── find_free_port.py                   ← port helper for Playwright
+│   └── find_free_port.py                  ← port helper for Playwright
 ├── skills/
-│   ├── blog-share/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── platforms.md               ← blog copy format rules + examples
-│   ├── code-share/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── variables.md               ← redirects to plugin-root references/
-│   ├── github-code-share/
-│   │   └── SKILL.md
-│   ├── selection-share/
-│   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
-│   ├── project-share/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── topics.md                  ← per-topic extraction patterns + tone guide
-│   ├── scan-for-shares/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── interesting-patterns.md    ← scoring table (user-tunable)
+│   ├── media-library/
+│   │   └── SKILL.md                       ← browse interactively or snapshot catalog to .claude/digests/
 │   ├── security-scrub/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── scrub-rules.md             ← pattern table and block list
-│   └── video-share/
-│       ├── SKILL.md
-│       └── references/
-│           └── platforms.md               ← oEmbed endpoints + video copy format rules
+│   ├── share-blog/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── platforms.md               ← blog copy format rules + examples
+│   ├── share-code/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── variables.md               ← redirects to plugin-root references/
+│   ├── share-github/
+│   │   └── SKILL.md
+│   ├── share-project/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── topics.md                  ← per-topic extraction patterns + tone guide
+│   ├── share-scan/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── interesting-patterns.md    ← scoring table (user-tunable)
+│   ├── share-selection/
+│   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
+│   ├── share-video/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── platforms.md               ← oEmbed endpoints + video copy format rules
+│   └── social-share/
+│       └── SKILL.md                       ← router: classifies + dispatches agent-social-share
 └── templates/
     ├── blog-card.html
     ├── diff-card.html
@@ -187,9 +197,9 @@ social-media-tools/
 
 ## Components
 
-### Skill: `blog-share`
+### Skill: `share-blog`
 
-**File:** `skills/blog-share/SKILL.md`  
+**File:** `skills/share-blog/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to share or post a blog post or article.
 
 **Inputs:**
@@ -207,9 +217,9 @@ social-media-tools/
 
 ---
 
-### Skill: `video-share`
+### Skill: `share-video`
 
-**File:** `skills/video-share/SKILL.md`  
+**File:** `skills/share-video/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to share a video, post about a talk, or promote video content.
 
 **Supported platforms:** YouTube (`youtube.com`, `youtu.be`) and Vimeo (`vimeo.com`).
@@ -220,9 +230,9 @@ social-media-tools/
 
 ---
 
-### Skill: `github-code-share`
+### Skill: `share-github`
 
-**File:** `skills/github-code-share/SKILL.md`  
+**File:** `skills/share-github/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to share a code file or snippet from a GitHub repository.
 
 **Public repositories only.** Private repos return a 4xx from the raw URL — the skill stops with a clear error message.
@@ -235,10 +245,10 @@ social-media-tools/
 
 ---
 
-### Skill: `selection-share`
+### Skill: `share-selection`
 
-**File:** `skills/selection-share/SKILL.md`  
-**Activation:** automatic — triggers when the user asks to share, post, or tweet selected, highlighted, open, or pasted code. Distinct from `code-share` (which scans git history): this skill shares the specific code the user points at and never falls back to git.
+**File:** `skills/share-selection/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share, post, or tweet selected, highlighted, open, or pasted code. Distinct from `share-code` (which scans git history): this skill shares the specific code the user points at and never falls back to git.
 
 **Content sources (first match wins):** lines highlighted in the IDE → a selected/open file (read from disk, `FILENAME`/`LANGUAGE` from the path) → a pasted fenced code block. Non-code files (binary, lockfiles, minified bundles) are declined; a file over the ~80-line snippet cap prompts the user to choose a region.
 
@@ -248,9 +258,9 @@ social-media-tools/
 
 ---
 
-### Skill: `scan-for-shares`
+### Skill: `share-scan`
 
-**File:** `skills/scan-for-shares/SKILL.md`  
+**File:** `skills/share-scan/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to find commits worth sharing, create a code digest, or generate a post from the codebase.
 
 **Two modes:**
@@ -260,7 +270,7 @@ social-media-tools/
 | *(default)* | History | `git log` on current branch |
 | `--codebase <path>` | Codebase | `Read`/`Glob` on given path |
 
-Scoring weights (commit type, codebase patterns, card-type decision tree, platform heuristics) are stored in `skills/scan-for-shares/references/interesting-patterns.md` and re-read on every run — edit that file to tune what surfaces in your digests.
+Scoring weights (commit type, codebase patterns, card-type decision tree, platform heuristics) are stored in `skills/share-scan/references/interesting-patterns.md` and re-read on every run — edit that file to tune what surfaces in your digests.
 
 Security scrub is mandatory on every candidate. The review gate presents all candidates in a single multi-select prompt. Output goes to `.claude/digests/code-digest-YYYY-MM-DD.md`.
 
@@ -280,7 +290,7 @@ Pattern table and file-path block list are in `skills/security-scrub/references/
 ### Command: `/social-media-tools:digest`
 
 **File:** `commands/digest.md`  
-Interactive front-end for `scan-for-shares`. Runs the scan, presents candidates for review, and writes the approved entries to `.claude/digests/`.
+Interactive front-end for `share-scan`. Runs the scan, presents candidates for review, and writes the approved entries to `.claude/digests/`.
 
 ```
 /social-media-tools:digest [--days=7] [--base=main] [--max=20] | --codebase <path>
@@ -302,13 +312,13 @@ Background variant. Dispatches `agent-digest` and returns immediately; the agent
 ### Agent: `agent-digest`
 
 **File:** `agents/agent-digest.md`  
-Dispatched by `/social-media-tools:digest-bg`. Runs `scan-for-shares --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke `code-share`.
+Dispatched by `/social-media-tools:digest-bg`. Runs `share-scan --background` (auto-includes PASS candidates, skips interactive review), writes the digest, and sends one proactive completion message. Does not post or invoke any card skill.
 
 ---
 
-### Skill: `code-share`
+### Skill: `share-code`
 
-**File:** `skills/code-share/SKILL.md`
+**File:** `skills/share-code/SKILL.md`
 **Activation:** automatic — triggers when the user asks to write a post, tweet, or share a code change.
 
 **Inputs (collected automatically or via prompt):**

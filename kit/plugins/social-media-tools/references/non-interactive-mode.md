@@ -62,6 +62,8 @@ Apply every rule when `--background` is present.
 
 ## Completion Line
 
+### Card-generating skills
+
 After the Deliver phase, emit exactly:
 
 ```
@@ -69,6 +71,28 @@ SOCIAL-SHARE: DONE skill=<skill-name> platform=<resolved-platform> png=<$SAVE_PA
 ```
 
 If `$SAVE_PATH_PNG` is empty (Playwright unavailable), report `png=` as an empty string.
+
+### File-producing skills
+
+Skills that write a single output file instead of a card (e.g. `media-library` catalog
+dump) use a generic form:
+
+```
+SOCIAL-SHARE: DONE skill=<skill-name> output=<absolute-path-to-output-file>
+```
+
+### Digest chain
+
+`share-scan` (invoked by `agent-digest` / `/digest-bg`) predates this contract and uses
+its own flags (`--days`, `--base`, `--max`, `--codebase`) and completion message:
+
+```
+Digest complete: .claude/digests/<filename> (<N> entries)
+```
+
+This is intentional — do not reformat it to the card line.
+
+### Error line (all skills)
 
 On STOP due to missing flag or BLOCKED scrub, emit instead:
 

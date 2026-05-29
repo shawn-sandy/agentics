@@ -54,10 +54,11 @@ Evaluate rules **top-to-bottom; first match wins.** Do not ask the user anything
 | 4 | Fenced code block (` ``` `) present in the message, or IDE context includes a highlighted selection or open code file | `share-selection` | `--code-file=` + `--objective=` (see Phase 2) |
 | 5 | Matches: `launch`, `release`, `shipped`, `announcing`, `went live`, or `v\d` | `share-project` | `--topic=release` |
 | 6 | Matches: `progress`, `update`, `working on`, `lately`, `this week`, `building` | `share-project` | `--topic=features` |
-| 7 | **Fallback A** — git diff has changes: `git rev-parse --git-dir 2>/dev/null && git diff HEAD~1 --stat 2>/dev/null \| grep -c .` returns a positive integer | `share-code` | *(none)* |
-| 8 | **Fallback B** — nothing else matched | `share-project` | `--topic=changes` |
+| 7 | Matches: `browse`, `library`, `saved posts`, `prior post`, `media library`, `my posts` | `media-library` | *(none)* |
+| 8 | **Fallback A** — git diff has changes: `git rev-parse --git-dir 2>/dev/null && git diff HEAD~1 --stat 2>/dev/null \| grep -c .` returns a positive integer | `share-code` | *(none)* |
+| 9 | **Fallback B** — nothing else matched | `share-project` | `--topic=changes` |
 
-If no git repository exists **and** no source URL/code was provided: output
+If **no rule 1–7 matched** and no git repository exists and no source URL/code was provided: output
 `social-share: nothing to share — no git repository and no source provided.` and **STOP**.
 
 Set `TARGET_SKILL` and `EXTRA_FLAGS` from the matching row before continuing.

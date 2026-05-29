@@ -1,12 +1,22 @@
 ---
 name: media-library
 description: "Browses and reuses saved social media HTML posts from docs/media/social/. Lists saved cards by type and date for copy reuse. Use when the user asks to browse the media library or find a prior post."
-allowed-tools: Bash, Read, AskUserQuestion
+allowed-tools: Bash, Read, Write, AskUserQuestion
 ---
 
 # media-library
 
 Browse, search, and reuse saved social media posts from `docs/media/social/`.
+
+## Non-interactive mode
+
+When `$ARGUMENTS` contains `--background`, read
+`$PLUGIN_DIR/references/non-interactive-mode.md` and follow all skip rules.
+Do not call `AskUserQuestion`. Instead, write the saved-posts catalog to
+`.claude/digests/media-library-YYYY-MM-DD.md` and emit the file-output completion line.
+
+This skill writes a file, not a card. Card-skill flags (`--platform`, `--tone`) are
+not applicable and are silently ignored when present.
 
 ## Overview
 
@@ -21,22 +31,59 @@ Every time a card-generating skill runs (share-code, share-blog, share-video, sh
 
 ```bash
 MEDIA_DIR="${PWD}/docs/media/social"
-if [ ! -d "$MEDIA_DIR" ]; then
-  echo "No saved posts yet. Run a sharing skill first (share-code, share-blog, share-video, or share-github)."
-  # STOP
-fi
-
-# List most-recent-first
-ls -t "$MEDIA_DIR"/*.html 2>/dev/null
+MEDIA_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null)
 ```
 
-If the directory is empty, tell the user:
-> "No saved posts found in `docs/media/social/`. Run a sharing skill to generate your first post."
-**STOP.**
+If `docs/media/social/` does not exist or contains no `.html` files, handle by mode:
+
+- **Interactive mode** (no `--background`) — tell the user:
+  > "No saved posts found in `docs/media/social/`. Run a sharing skill to generate your first post."
+  **STOP.**
+
+- **Background mode** (`--background` present) — resolve the output path:
+  ```bash
+  DIGESTS_DIR="${PWD}/.claude/digests"
+  mkdir -p "$DIGESTS_DIR"
+  OUTPUT_FILE="$DIGESTS_DIR/media-library-$(date +%F).md"
+  ```
+  Write a notice to `$OUTPUT_FILE`:
+  > No saved posts found in `docs/media/social/`.
+  Emit:
+  ```
+  SOCIAL-SHARE: DONE skill=media-library output=$OUTPUT_FILE
+  ```
+  **STOP.**
 
 ---
 
 ## Step 2 — Parse and display
+
+### Background mode (`--background` present)
+
+Parse filenames and build the catalog table using the same format and slug-to-plain-text
+rules as Interactive mode below (most-recent-first, max 20 rows, hyphens → spaces in Topic).
+
+Resolve the absolute path:
+
+```bash
+DIGESTS_DIR="${PWD}/.claude/digests"
+mkdir -p "$DIGESTS_DIR"
+OUTPUT_FILE="$DIGESTS_DIR/media-library-$(date +%F).md"
+```
+
+Write the markdown table to `$OUTPUT_FILE`.
+
+Emit the completion line:
+
+```
+SOCIAL-SHARE: DONE skill=media-library output=<absolute path to $OUTPUT_FILE>
+```
+
+**STOP.**
+
+---
+
+### Interactive mode (no `--background`)
 
 For each HTML file path (e.g., `docs/media/social/diff-add-copy-button-2026-05-27.html`), parse the filename:
 
@@ -61,7 +108,7 @@ Display as a markdown table (most recent first, max 20 rows):
 
 ---
 
-## Step 3 — Interactive action
+## Step 3 — Interactive action *(Interactive mode only)*
 
 Use `AskUserQuestion` to ask what the user wants to do:
 
