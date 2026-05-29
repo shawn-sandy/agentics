@@ -67,41 +67,6 @@ A skill-only plugin for automated git commit and PR creation.
 
 **Use case:** Streamlined git workflows, automated PR creation
 
-### agent-creator
-A skill-only plugin for scaffolding Claude Code agent-based plugins with guided workflows.
-
-**Components:**
-- Skill: `generating-agents` - Scaffold agent-based plugin components with guided prompts
-
-**Use case:** Plugin authoring, agent scaffolding
-
-### agentic-plugin-dev
-A multi-skill plugin for creating, managing, and validating Claude Code plugins.
-
-**Components:**
-- Skill: `plugin-creator` - Scaffold new plugins end-to-end with guided workflow
-- Skill: `plugin-manager` - Manage marketplace entries and plugin metadata
-- Skill: `plugin-validator` - Audit plugin structure and validate manifests
-
-**Use case:** Full plugin development lifecycle management
-
-### marketplace-builder
-A skill-only plugin for evaluating a repository and scaffolding Claude Code marketplace infrastructure.
-
-**Components:**
-- Skill: `building-marketplaces` - Evaluate repo readiness and scaffold marketplace structure
-
-**Use case:** Setting up new Claude Code plugin marketplaces
-
-### react-perf-analyzer
-A plugin for identifying React performance issues correlated with Core Web Vitals (INP, CLS, LCP, TBT).
-
-**Components:**
-- Skill: `react-perf-analyzer` - Analyze React source for patterns that hurt Web Vitals scores
-- Command: `/react-perf-analyzer:test [url]` - Run Lighthouse against a URL and report scores
-
-**Use case:** React performance auditing, Core Web Vitals optimization
-
 ## Testing Plugins Locally
 
 ### Prerequisites Check
