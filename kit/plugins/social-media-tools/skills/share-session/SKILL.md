@@ -7,9 +7,9 @@ allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, Sen
 # share-session
 
 Summarize **what the current Claude Code session accomplished** — a short narrative plus the
-key things built, fixed, or changed — into a dark-mode recap card for LinkedIn, Twitter/X, or
-Bluesky. Token usage, duration, and commit/file counts ride along as a compact stats strip.
-**Tokens only — no dollar amounts.**
+key things built, fixed, or changed — into a dark-mode recap card for any supported platform
+(see `$PLUGIN_DIR/references/platforms.md`). Token usage, duration, and commit/file counts
+ride along as a compact stats strip. **Tokens only — no dollar amounts.**
 
 The content summary is the hero of the card; the usage metrics are supporting detail.
 
@@ -190,8 +190,9 @@ Parse the returned `SCRUB RESULT` block:
 
 ## Phase 3 — Draft Copy
 
-For character limits, tone defaults, and the **Follow CTA** rule, read
-`$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
+Procedure**.
 
 **Never include dollar amounts or cost figures — tokens only.**
 
@@ -200,18 +201,16 @@ Ask for `PLATFORM` and `TONE` in a single `AskUserQuestion` if not already in `$
 Lead with **what was accomplished** (`NARRATIVE` + `ACCOMPLISHMENTS`); metrics are supporting
 detail, not the headline.
 
+Content-specific guidance for this skill:
+
 - **LinkedIn**: Hook on the outcome ("Just shipped X in a Claude Code session…") → 2–3
   accomplishments → *then* one supporting stat line (N commits · N files · ~X tokens · Y% cache
-  hit) → follow CTA; 2–4 hashtags
+  hit) → follow CTA
 - **Twitter/X**: One punchy line on what was built; a single stat only if it fits and adds color
 - **Bluesky**: Conversational, same accomplishment-first brevity
+- **Substack**: Reflect on what you built and what you learned; stats as supporting detail
 
 The token/duration/cache figures are a single trailing stat line, never the focus.
-
-Close with a topic-matched **follow** CTA tied to the session topic — never generic; on
-Twitter/Bluesky include only if it fits the character budget.
-
-Present drafted copy per platform in a fenced block and wait for approval.
 
 ---
 

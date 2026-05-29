@@ -1,5 +1,22 @@
 # Changelog — social-media-tools
 
+## v2.1.0 — 2026-05-29
+
+Add Substack Notes as a fourth share platform; consolidate platform list into
+shared reference to reduce duplication.
+
+- Added Substack (500 chars, thoughtful/newsletter tone) to the canonical platform
+  table in `references/platforms.md`
+- Consolidated platform options, copy variant storage convention, draft procedure,
+  and default per-platform copy formats into `references/platforms.md` — skills now
+  reference the shared file instead of duplicating the platform list inline
+- Added Substack copy format sections to `share-blog/references/platforms.md` and
+  `share-video/references/platforms.md` with examples
+- Updated all share skill descriptions for activation matching
+- Updated `references/copy-panels.md` to render four per-site panels in "All sites"
+  mode, with a cross-reference note for adding new platforms
+- Added `substack` tag to marketplace entry
+
 ## v2.0.0 — 2026-05-29
 
 BREAKING CHANGE: Remove background dispatch layer.

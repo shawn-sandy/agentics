@@ -107,3 +107,48 @@ backpressure instead of retry loops clicked immediately. Worth your time if
 you've ever debugged a stuck orchestrator. https://example.com/article
 I post more on agent reliability — follow along if it's your thing.
 ```
+
+---
+
+## Substack
+
+**Structure:** Personal reaction + 1–2 key takeaways + why it matters + link
+
+```
+[One sentence framing why you picked up this article — what question you had or
+what problem you were chewing on.]
+
+[TITLE] by [AUTHOR] gets into [topic] — and [one or two concrete things you
+learned or reconsidered].
+
+[A sentence of personal opinion or implication: how this changes how you think
+about the problem, or what you'll do differently.]
+
+[URL]
+
+[Topic-matched subscribe/follow CTA — one varied line in newsletter voice; see
+the Follow CTA rule in $PLUGIN_DIR/references/platforms.md]
+```
+
+**Rules:**
+- Newsletter voice: more personal and reflective than LinkedIn, more substantive than Twitter
+- No hashtags — Substack Notes don't use them
+- Name the author — attribution matters
+- Add genuine opinion or context, not just summary
+- Keep under 500 chars for optimal engagement in Notes
+
+**Example:**
+
+```
+I've been thinking about how retry logic quietly corrupts state in agent
+pipelines — turns out I'm not the only one.
+
+"Designing Reliable Agent Pipelines" by Sarah Chen nails the
+idempotency-at-every-boundary argument and makes a strong case for backpressure
+over retry loops.
+
+The shift from "just retry" to "pause the upstream queue" is a mindset change I
+wish I'd made earlier. https://example.com/article
+
+I write about agent architecture patterns — subscribe if that's useful.
+```

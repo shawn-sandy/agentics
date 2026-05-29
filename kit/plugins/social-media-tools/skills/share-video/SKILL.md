@@ -1,6 +1,6 @@
 ---
 name: share-video
-description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky. Use when asked to share or promote a video on social media."
+description: "Creates platform-aware social copy and a card for YouTube or Vimeo videos. Use when asked to share or promote a video on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
@@ -63,7 +63,7 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `VIDEO_URL` | Any YouTube or Vimeo URL | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, All sites | Required |
+| `PLATFORM` | See **Platform Options** in `$PLUGIN_DIR/references/platforms.md` | Required |
 | `HOOK_ANGLE` | Free text | Optional |
 
 ---
@@ -113,13 +113,10 @@ For API endpoints and 4xx fallback, read `references/platforms.md`.
 
 ## Phase 3 — Draft Copy
 
-For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
-For copy format and filled examples per platform, read `references/platforms.md`.
-
-Present the draft in a fenced code block labelled with the platform name and wait for approval.
-
-- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, universal copy rules,
+and **Draft Copy — Standard Procedure**.
+For copy format and filled examples per platform, read the skill-local `references/platforms.md`
+(adjacent to this SKILL.md).
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: share-github
-description: "Fetches a GitHub file and generates social media copy. Creates a syntax-highlighted card for LinkedIn, Twitter/X, or Bluesky. Use when asked to share a code snippet from a GitHub repository."
+description: "Fetches a GitHub file and generates a syntax-highlighted social card with copy. Use when asked to share a code snippet from a GitHub repository."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, Skill, SendUserFile, Glob
 ---
 
@@ -77,7 +77,7 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 - `HLJS_CLASS` = lowercase language alias (e.g., `typescript`, `python`; C# → `csharp`; C++ → `cpp`; Shell → `bash`)
 
 Use `AskUserQuestion` to collect:
-- `PLATFORM` — LinkedIn, Twitter/X, Bluesky, or **All sites**
+- `PLATFORM` — see **Platform Options** in `$PLUGIN_DIR/references/platforms.md`
 - `HOOK_ANGLE` (optional)
 
 ---
@@ -137,18 +137,17 @@ Parse the returned `SCRUB RESULT` block:
 
 ## Phase 4 — Draft Copy
 
-For character limits and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, the **Follow CTA** rule,
+**Default Per-Platform Copy Formats**, and **Draft Copy — Standard Procedure**.
 
-- **LinkedIn**: Context ("Here's [LANGUAGE] code from [OWNER/REPO] that...") + what it does + key design decision or insight + CTA with link + 2–4 hashtags
+Content-specific guidance for this skill:
+
+- **LinkedIn**: Context ("Here's [LANGUAGE] code from [OWNER/REPO] that...") + what it does + key design decision or insight + CTA with link
 - **Twitter/X**: "[LANGUAGE] snippet worth seeing → [what it does in one phrase] — [GitHub URL]"
 - **Bluesky**: Similar brevity to Twitter; name the repo
+- **Substack**: Why you found this code interesting + what it demonstrates + link
 
-Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/repo subject) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
-
-Read the code snippet before drafting. Present in a fenced code block labelled with the platform and wait for approval.
-
-- **Single site:** store as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`)
+Read the code snippet before drafting.
 
 ---
 

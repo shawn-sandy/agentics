@@ -107,3 +107,42 @@ CLAUDE.md after each session based on what Claude got wrong is genuinely useful.
 https://youtu.be/example
 Following more Claude project tips here — follow along if that's useful.
 ```
+
+---
+
+## Copy Format — Substack
+
+**Structure:** Personal context + what you got from it + link
+
+```
+[One sentence on why you watched — what you were looking for or what caught your eye.]
+
+[CHANNEL]'s [TITLE] covers [topic] — [one or two concrete takeaways or observations,
+written as personal reaction rather than summary.]
+
+[A sentence on what stuck with you or what you'll apply.] [URL]
+
+[Topic-matched subscribe CTA — newsletter voice; see the Follow CTA rule in
+$PLUGIN_DIR/references/platforms.md]
+```
+
+**Rules:**
+- Newsletter voice: more reflective than LinkedIn, more substantive than Twitter
+- Name the creator — attribution matters
+- No hashtags (Substack Notes don't use them)
+- Add genuine opinion, not just description
+- Keep under 500 chars
+
+**Example:**
+
+```
+I've been rethinking how I structure context for Claude — so Cassidy Williams'
+breakdown of her actual CLAUDE.md workflow was well-timed.
+
+The key shift: treating CLAUDE.md as a living document you edit after each
+session based on what Claude got wrong, not a set-it-and-forget-it config file.
+
+That reframe alone changed how I approach project setup. https://youtu.be/example
+
+I write about Claude workflows and dev productivity — subscribe for more.
+```
