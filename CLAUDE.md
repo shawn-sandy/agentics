@@ -26,7 +26,10 @@ kit/plugins/          → Plugin source code (what users install)
 tests/fixtures/       → Test data for validation logic
 .claude/rules/        → Detailed authoring patterns (scoped rules)
 docs/plans/           → Plan files (commit with plugin changes)
+docs/plans/archive/   → Archived completed plans — IGNORE in all searches and exploration
 ```
+
+> **Search exclusion:** Never include `docs/plans/archive/` in file searches, glob patterns, or exploratory reads. Treat it as off-limits unless the user explicitly targets it by path.
 
 Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` uses relative `source` paths.
 
