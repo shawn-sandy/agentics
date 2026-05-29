@@ -68,7 +68,7 @@ Use `AskUserQuestion` to collect whatever is missing. Batch all questions in one
 | Input | Options | Notes |
 |-------|---------|-------|
 | `SOURCE` | URL or file path | Required |
-| `PLATFORM` | LinkedIn, Twitter/X, Bluesky, Substack, All sites | Required |
+| `PLATFORM` | See **Platform Options** in `$PLUGIN_DIR/references/platforms.md` | Required |
 | `TONE` | Professional, Casual, Punchy | Default: Professional (LinkedIn), Punchy (Twitter/Bluesky) |
 | `HOOK_ANGLE` | Free text | Optional |
 
@@ -133,13 +133,9 @@ Before any template substitution, apply to every text value:
 
 ## Phase 3 — Draft Copy
 
-For character limits and universal copy rules, read `$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, universal copy rules,
+and **Draft Copy — Standard Procedure**.
 For copy format and filled examples per platform, read `references/platforms.md`.
-
-Present drafted copy in a fenced code block labelled with the platform name and wait for approval.
-
-- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
 
 ---
 

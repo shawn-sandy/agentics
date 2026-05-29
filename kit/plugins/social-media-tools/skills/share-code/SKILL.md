@@ -6,7 +6,8 @@ allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, Sen
 
 # share-code
 
-Draft platform-aware social media copy and generate a styled dark-mode card image for LinkedIn, Twitter/X, Bluesky, or Substack.
+Draft platform-aware social media copy and generate a styled dark-mode card image for any
+supported platform (see `$PLUGIN_DIR/references/platforms.md`).
 
 ## Quick Reference
 
@@ -80,19 +81,9 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ## Phase 2 — Draft Copy
 
-For character limits, tone defaults, and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
-
-- **LinkedIn**: Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags at end
-- **Twitter/X**: One punchy sentence or a tight two-liner; no hashtag bloat
-- **Bluesky**: Conversational, same brevity as Twitter
-- **Substack**: Newsletter voice — more reflective, adds a sentence of context or opinion; no hashtags
-
-The closing CTA is a topic-matched **follow** CTA (e.g. "follow for more `<language>`/`<topic>` like this") — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit. See the Follow CTA rule.
-
-Draft all three platform variants in the chosen tone. Present the drafted copy in a fenced code block labeled with the platform name and wait for approval.
-
-- **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
+Procedure** (present → approve → store variants).
 
 ---
 

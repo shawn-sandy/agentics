@@ -1,12 +1,14 @@
 # Platform Reference
 
-Canonical character limits and universal copy rules for all card-generating skills.
-Per-skill copy format templates and examples live in each skill's own
-`references/platforms.md` (share-blog, share-video).
+Canonical character limits, platform options, and universal copy rules for all
+card-generating skills. Per-skill copy format templates and examples live in each
+skill's own `references/platforms.md` (share-blog, share-video).
+
+When adding a new platform, update this file only — all skills read it at runtime.
 
 ---
 
-## Character Limits
+## Supported Platforms
 
 | Platform | Max chars | Tone default |
 |----------|-----------|--------------|
@@ -14,6 +16,15 @@ Per-skill copy format templates and examples live in each skill's own
 | Twitter/X | 280 | Punchy |
 | Bluesky | 300 | Conversational |
 | Substack | 500 | Thoughtful |
+
+### Platform Options for `AskUserQuestion`
+
+When asking the user to choose a platform, offer these options:
+
+> LinkedIn, Twitter/X, Bluesky, Substack, All sites
+
+"All sites" drafts one variant per platform and renders a separate copy panel
+for each (see `$PLUGIN_DIR/references/copy-panels.md`).
 
 ---
 
@@ -61,3 +72,39 @@ per-skill story arcs (hook → insight → CTA).
     would crowd the message, **drop it — content wins**.
   - **Substack** (500): one closing line inviting the reader to subscribe or follow
     for more on the topic — natural newsletter voice, not a hard sell.
+
+---
+
+## Copy Variant Storage
+
+How to store drafted copy for downstream template population:
+
+- **Single site:** store all variants joined with `\n---\n` as `POST_COPY_TEXT_RAW`
+- **All sites:** keep each variant in a separate variable:
+  `LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`
+
+---
+
+## Draft Copy — Standard Procedure
+
+Every card-generating skill follows this procedure after drafting:
+
+1. Present the drafted copy in a fenced code block labelled with the platform name
+2. Wait for user approval before proceeding to template population
+3. Store variants per the **Copy Variant Storage** convention above
+
+---
+
+## Default Per-Platform Copy Formats
+
+Universal copy structure guidance. Skills with content-specific needs add to these
+defaults in their own Draft Copy phase.
+
+- **LinkedIn**: Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags
+  at end
+- **Twitter/X**: One punchy sentence or tight two-liner; 1–2 hashtags max; lead with
+  the insight, not "Great post by…"
+- **Bluesky**: Conversational, similar brevity to Twitter; name the creator; no
+  hashtags required
+- **Substack**: Newsletter voice — more reflective than LinkedIn, more substantive
+  than Twitter; add a sentence of context or opinion; no hashtags

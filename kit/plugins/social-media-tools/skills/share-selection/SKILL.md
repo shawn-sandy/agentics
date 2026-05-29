@@ -7,8 +7,8 @@ allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, Sen
 # share-selection
 
 Turn code the user **selected, highlighted, opened, or pasted** into platform-aware social
-media copy and a styled dark-mode card image for LinkedIn, Twitter/X, Bluesky, or Substack —
-with the copy shaped by the user's stated objective.
+media copy and a styled dark-mode card image for any supported platform (see
+`$PLUGIN_DIR/references/platforms.md`) — with the copy shaped by the user's stated objective.
 
 This skill is **selection-driven**: it shares a specific piece of code the user points at. It
 does **not** scan git history — that is `code-share`'s job.
@@ -95,7 +95,7 @@ Determine `OBJECTIVE` — what the user wants the post to accomplish or emphasiz
   → `OBJECTIVE = "highlight the performance win"`).
 - **Ask** only if absent: include a short free-text **objective** input ("What should this
   post accomplish or emphasize?") in the same `AskUserQuestion` that collects `PLATFORM`
-  (LinkedIn, Twitter/X, Bluesky, Substack, or **All sites**) and `TONE`.
+  (see **Platform Options** in `$PLUGIN_DIR/references/platforms.md`) and `TONE`.
 
 ---
 
@@ -133,22 +133,17 @@ Parse the returned `SCRUB RESULT` block:
 
 ## Phase 3 — Draft Copy
 
-For character limits, tone defaults, and the **Follow CTA** rule, read `$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
+Procedure**.
 
 Draft copy that **serves `OBJECTIVE`** within each platform's limit and the chosen tone:
 
 - **LinkedIn**: Context ("Here's a [LANGUAGE] snippet that…") → what it does → the insight the
-  objective calls for → CTA; 2–4 hashtags at end
-- **Twitter/X**: One punchy line framing the snippet around the objective; no hashtag bloat
-- **Bluesky**: Conversational, same brevity as Twitter
-- **Substack**: Newsletter voice — why this code is interesting + the insight the objective calls for; no hashtags
-
-Close with a topic-matched **follow** CTA (tied to the `LANGUAGE`/objective keywords) — varied each time, never a generic "follow me"; on Twitter/Bluesky include it only if it fits the limit.
-
-Present the drafted copy in a fenced code block labelled with the platform name and wait for approval.
-
-- **Single site:** store as `POST_COPY_TEXT_RAW`
-- **All sites:** keep each variant separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
+  objective calls for → CTA
+- **Twitter/X**: One punchy line framing the snippet around the objective
+- **Bluesky**: Conversational; name the creator
+- **Substack**: Why this code is interesting + the insight the objective calls for
 
 ---
 

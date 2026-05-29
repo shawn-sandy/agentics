@@ -59,7 +59,7 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 Parse `$ARGUMENTS`:
 
 - `--topic <value>` — one of: `features`, `bugs`, `changes`, `release` (required)
-- `--platform <value>` — one of: `LinkedIn`, `Twitter/X`, `Bluesky`, `Substack`, `All sites` (required)
+- `--platform <value>` — see **Platform Options** in `$PLUGIN_DIR/references/platforms.md` (required)
 - `--path <dir>` — project root to analyze (default: `$PWD`)
 - `--days=N` — how far back to look in git history (default: `30`)
 
@@ -148,7 +148,8 @@ Combine extracted content and invoke `security-scrub`:
 
 ## Phase 5 — Draft Copy
 
-For character limits and tone defaults, read `$PLUGIN_DIR/references/platforms.md`.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults,
+**Default Per-Platform Copy Formats**, and **Draft Copy — Standard Procedure**.
 For per-topic tone guide, read `references/topics.md`.
 
 **Copy structure by topic:**
@@ -156,11 +157,6 @@ For per-topic tone guide, read `references/topics.md`.
 - `bugs`: Lead with pain point fixed. LinkedIn: problem → solution → impact. Short: `#bugfix: [broken] → [fixed]`.
 - `changes`: Lead with most significant change. LinkedIn: what changed + why. Short: top 2 changes.
 - `release`: Lead with version + headline. LinkedIn: full highlights. Short: `🚀 [name] v[N] — [tagline]`.
-
-Present drafted copy in a fenced code block labeled with the platform name.
-
-- **Single site:** store joined with `\n---\n` as `POST_COPY_TEXT_RAW`
-- **All sites:** keep separate (`LINKEDIN_COPY`, `TWITTER_COPY`, `BLUESKY_COPY`, `SUBSTACK_COPY`)
 
 ---
 

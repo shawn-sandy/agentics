@@ -124,7 +124,7 @@ For each surviving candidate, build a structured entry using the card-type decis
 
 - **Source:** `<commit hash>` or `<file path>`
 - **Card type:** <feature-card | diff-card | quote-card>
-- **Platform:** <LinkedIn | Twitter/X | Bluesky | Substack>
+- **Platform:** <one of the platforms from `$PLUGIN_DIR/references/platforms.md`>
 - **Summary:** <one sentence describing what makes this shareable>
 - **Key change / highlight:** <the most interesting line or pattern>
 - **Security:** PASS ✓ (or ⚠ WARN — <reason>)

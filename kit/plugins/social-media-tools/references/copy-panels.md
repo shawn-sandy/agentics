@@ -1,8 +1,12 @@
 # Copy Panels Reference
 
-Used by all five card-generating skills. Supplies the `{{COPY_PANELS}}` markup in the
+Used by all card-generating skills. Supplies the `{{COPY_PANELS}}` markup in the
 saved HTML. Each template defines one shared `copyPost(id, btn)` function; every copy
 button calls it with its own textarea `id`.
+
+Platform names and panel IDs below must match the **Platform Options** in
+`platforms.md`. When adding a platform, add a new `<div class="copy-panel">` block
+following the same pattern.
 
 | Field | Value |
 |-------|-------|
