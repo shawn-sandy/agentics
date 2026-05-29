@@ -42,9 +42,10 @@ and inspect the result.
 
 - **A matching tool is returned** → Playwright is available. Continue to Step 2 as normal.
 - **No matching tool is returned** → Playwright is unavailable. Do **not** abort — the skill
-  still drafts the copy and writes the populated HTML. Invoke the skill (Step 2), then in
-  Step 3 report the `DONE` line with an **empty `png=`** and an explicit warning so the
-  missing screenshot is never silent:
+  still drafts the copy and writes the populated HTML, and will emit its own `DONE` line with
+  an **empty `png=`**. Continue to Step 2. When you relay that line in Step 3, append a
+  `⚠ WARN` note so the missing screenshot is never silent — do not fabricate a separate
+  `DONE` line or invent a path. The relayed line should read:
 
   ```
   SOCIAL-SHARE: DONE skill=<name> platform=<v> png= html=<path> ⚠ WARN — screenshot skipped: Playwright MCP unavailable; open html=<path> in a browser to capture manually
@@ -63,8 +64,10 @@ The skill runs non-interactively because `--background` is present in `DISPATCH_
 
 ### Step 3 — Report completion
 
-When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is.
-Card-generating skills emit:
+When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is — with
+one exception: if the Step 1b preflight found Playwright unavailable, append the
+`⚠ WARN — screenshot skipped …` note to the line you relay (the skill's line will already
+carry an empty `png=`). Card-generating skills emit:
 
 ```
 SOCIAL-SHARE: DONE skill=<name> platform=<v> png=<path> html=<path>
