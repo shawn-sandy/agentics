@@ -2,28 +2,37 @@
 
 Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent. This plugin does not generate arbitrary unit tests for coverage metrics — it identifies what tests would be genuinely valuable and explains why each one matters.
 
-## Purpose
+## Installation
 
-Developers often face two problems with testing: either they write tests after the fact that verify implementation details rather than behavior, or they rely on coverage tools to tell them what to test — which leads to many tests that catch nothing useful and few tests that catch real bugs. This plugin takes a different approach: it reads the code, looks for the developer's plan or intent, identifies critical behaviors and fragile areas, and suggests the specific tests that would catch the most damaging failures. At the same time, it ensures suggested tests would meet the project's coverage target — or maximize coverage when no target is defined — so you get both meaningful and thorough test suites.
+### Via Marketplace (recommended)
 
-## How It Differs from code-review
+```bash
+/plugin install code-testing-agent@agentics-kit
+```
 
-The `code-review` plugin reviews code for quality, bugs, security, and best practices — it tells you what is wrong with your code. The `code-testing-agent` plugin tells you how to prove your code works correctly — it designs a test strategy based on what the code does and what the developer intended.
+### Local Development
 
-## Components
-
-| Component | Type | Activation |
-|-----------|------|-----------|
-| `code-testing-agent` | Skill | Auto-triggers when user asks to "suggest tests", "what tests should I write", "test this code", "review testability", or "find untested behavior" |
-| `reviewing-tests` | Skill | Auto-triggers when user asks to "review my tests", "audit test quality", "improve my tests", "are my tests good", or "what's wrong with my tests" |
-
-All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/code-testing-agent
+```
 
 ## Usage
 
-### Suggest tests (skill)
+### Skills
 
-Describe what you want — the skill parses file paths and function names directly from your message:
+All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
+
+| Skill | Activation | Trigger phrases |
+|-------|-----------|----------------|
+| `code-testing-agent` | Auto | "suggest tests", "what tests should I write", "test this code", "find untested behavior" |
+| `reviewing-tests` | Auto | "review my tests", "audit test quality", "improve my tests", "are my tests good" |
+| `running-tests` | Auto | "run tests", "check if tests pass", "verify changes" |
+| `tdd-fix` | Manual invoke only | `/code-testing-agent:tdd-fix` |
+| `tdd-loop` | Manual invoke only | `/code-testing-agent:tdd-loop` |
+
+#### code-testing-agent — suggest new tests
+
+Auto-activated. Describe what you want — the skill parses file paths and function names directly from your message:
 
 ```
 Suggest tests for `src/services/auth.ts`
@@ -34,32 +43,30 @@ What would you test in this code?
 Review this module for testability
 ```
 
-### With a specific function scope
-
-Mention a function or method name to limit analysis to that function only:
+With a specific function scope:
 
 ```
 Test the `parseJWT` method in src/utils/token.ts
 Suggest tests for the `render` function in src/components/Button.tsx
 ```
 
-### With a plan
-
-If you have an implementation plan, mention it:
+With a plan:
 
 ```
 Suggest tests for src/services/auth.ts based on docs/plans/auth-refactor.md
 I just implemented the plan in ~/.claude/plans/checkout-flow.md — what tests do I need?
 ```
 
-### For recent changes
+For recent changes:
 
 ```
 Suggest tests for my recent changes
 What should I test in my current branch?
 ```
 
-### Review existing tests (reviewing-tests skill)
+#### reviewing-tests — review existing tests
+
+Auto-activated. Reviews test files for quality, coverage, and alignment with source behavior:
 
 ```
 Review my tests for src/services/auth.test.ts
@@ -68,6 +75,47 @@ Audit my test suite
 What's wrong with my tests?
 How can I improve these tests?
 ```
+
+#### running-tests — run tests and report results
+
+Auto-activated. Detects the test framework, runs tests scoped to the target, and reports pass/fail:
+
+```
+Run tests for src/services/auth.ts
+Check if tests pass
+Run my tests and show me what's failing
+Verify my changes didn't break anything
+```
+
+#### tdd-fix — fix a bug via TDD
+
+Manual invoke only — use `/code-testing-agent:tdd-fix` explicitly.
+
+Writes a failing test that captures the bug, then iterates (up to 10 red-green cycles) until the bug is resolved:
+
+```
+/code-testing-agent:tdd-fix the login redirect bug in src/services/auth.ts
+/code-testing-agent:tdd-fix null pointer when user has no email
+```
+
+#### tdd-loop — implement a feature via TDD
+
+Manual invoke only — use `/code-testing-agent:tdd-loop` explicitly.
+
+Writes failing tests first, then iterates (up to 20 red-green-refactor rounds) until all tests pass:
+
+```
+/code-testing-agent:tdd-loop add rate limiting to the API client
+/code-testing-agent:tdd-loop implement the password reset flow in src/auth/
+```
+
+## Purpose
+
+Developers often face two problems with testing: either they write tests after the fact that verify implementation details rather than behavior, or they rely on coverage tools to tell them what to test — which leads to many tests that catch nothing useful and few tests that catch real bugs. This plugin takes a different approach: it reads the code, looks for the developer's plan or intent, identifies critical behaviors and fragile areas, and suggests the specific tests that would catch the most damaging failures. At the same time, it ensures suggested tests would meet the project's coverage target — or maximize coverage when no target is defined — so you get both meaningful and thorough test suites.
+
+## How It Differs from code-review
+
+The `code-review` plugin reviews code for quality, bugs, security, and best practices — it tells you what is wrong with your code. The `code-testing-agent` plugin tells you how to prove your code works correctly — it designs a test strategy based on what the code does and what the developer intended.
 
 ## What the Skills Do
 
@@ -113,23 +161,28 @@ Reviews are organized by test file:
 - **Coverage Gaps** — Behaviors from the source code analysis with no corresponding test, ranked by priority.
 - **What's Working Well** — Things the tests do right.
 
-## Installation
+### running-tests (run tests and report results)
 
-### Install via Marketplace (Recommended)
+1. Detects the test framework from project config (`package.json`, `pytest.ini`, `Cargo.toml`, etc.)
+2. Scopes the test run to the target file or directory specified in your message
+3. Runs the tests and captures output
+4. Reports pass/fail results, highlights failing assertions, and surfaces error messages
 
-```bash
-# Register the marketplace
-/plugin marketplace add https://github.com/shawn-sandy/agentics
+### tdd-fix (bug fix via TDD)
 
-# Install the plugin
-/plugin install code-testing-agent@agentics-kit
-```
+1. Reads the bug description and locates the relevant source file
+2. Writes a minimal failing test that reproduces the bug (red)
+3. Applies the smallest fix that makes the test pass (green)
+4. Repeats up to 10 iterations if the fix introduces new failures
+5. Stops and reports when all tests pass or the iteration limit is reached
 
-### Load Locally (Development)
+### tdd-loop (feature implementation via TDD)
 
-```bash
-claude --plugin-dir /path/to/agentics/kit/plugins/code-testing-agent
-```
+1. Reads the feature description and scopes the implementation target
+2. Writes a set of failing tests that define the expected behavior (red)
+3. Implements the feature incrementally to pass each test (green)
+4. Refactors after each passing cycle without breaking tests (refactor)
+5. Repeats up to 20 red-green-refactor rounds until all tests pass
 
 ## Plugin Structure
 
@@ -142,10 +195,16 @@ plugins/code-testing-agent/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── test-analysis-guide.md
-│   └── reviewing-tests/
-│       ├── SKILL.md
-│       └── references/
-│           └── test-quality-checklist.md
+│   ├── reviewing-tests/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── test-quality-checklist.md
+│   ├── running-tests/
+│   │   └── SKILL.md
+│   ├── tdd-fix/
+│   │   └── SKILL.md
+│   └── tdd-loop/
+│       └── SKILL.md
 ├── README.md
 └── CHANGELOG.md
 ```

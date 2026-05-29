@@ -10,7 +10,7 @@ For actual runtime measurements, the `/react-perf-analyzer:test` command runs Li
 
 | Mode | How | When to use |
 |------|-----|-------------|
-| **Static analysis** (skill) | Auto-activates from intent | Before running the app — find likely problems early |
+| **Static analysis** (skill) | Manual invoke — `/react-perf-analyzer:react-perf-analyzer` | Before running the app — find likely problems early |
 | **Runtime testing** (command) | `/react-perf-analyzer:test [url]` | Against a running app — get actual scored measurements |
 
 All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
@@ -28,47 +28,63 @@ All skills declare `allowed-tools` explicitly in their frontmatter for consisten
 
 ## Installation
 
+### Via Marketplace (recommended)
 ```bash
-# Load for local testing
-claude --plugin-dir ~/path/to/plugins/react-perf-analyzer
-
-# Install from the agentics-kit marketplace
-/plugin marketplace add ~/path/to/agentics
 /plugin install react-perf-analyzer@agentics-kit
+```
+
+### Local Development
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/react-perf-analyzer
 ```
 
 ---
 
 ## Usage
 
-### Static Analysis — Skill (Auto-Activated)
+### Commands
 
-The skill activates automatically when you describe a performance problem or ask for an analysis. No command needed.
+| Command | Description |
+|---------|-------------|
+| `/react-perf-analyzer:test [url]` | Run Lighthouse against a URL (Storybook story, local dev server, or any live page) and report actual INP, CLS, TBT, FCP, and LCP scores with prioritized fix recommendations |
 
-**Trigger phrases:**
+`url` — HTTP or HTTPS URL to test; optional, command will prompt if not provided.
+
+### Skills
+
+| Skill | Activation | Description |
+|-------|------------|-------------|
+| `react-perf-analyzer` | Manual invoke only | Identifies React patterns correlated with poor INP, CLS, and Long Tasks. Produces a prioritized report mapping patterns to Core Web Vitals. |
+
+**Manual invoke only** — use `/react-perf-analyzer:react-perf-analyzer` explicitly. This skill has `disable-model-invocation: true` and will not auto-activate from natural language.
+
+---
+
+### Static Analysis — `/react-perf-analyzer:react-perf-analyzer`
+
+Invoke the skill explicitly to analyze React component source patterns. Provide a file path or component name as context.
+
+**Example invocations:**
 
 ```
-"Analyze the performance of my ProductList component"
-"Check for INP issues in src/components/Modal.tsx"
-"Find what's causing layout shifts in my app"
-"Why is my component slow? Give me a performance report"
-"Are there any long tasks in this React component?"
-"Review my useEffect for performance problems"
+/react-perf-analyzer:react-perf-analyzer src/components/DataTable.tsx
+/react-perf-analyzer:react-perf-analyzer src/components/Modal.tsx
+/react-perf-analyzer:react-perf-analyzer src/components/SearchBar.tsx
 ```
 
 **Providing a target file:**
 
-You can name a specific file path, component name, or let the skill detect from your git-changed files:
+You can name a specific file path or component name:
 
 ```
 # Explicit file path
-"Analyze src/components/DataTable.tsx for performance issues"
+/react-perf-analyzer:react-perf-analyzer src/components/DataTable.tsx
 
-# Component name only
-"Check the SearchBar component for INP problems"
+# Component name (skill locates it in the project)
+/react-perf-analyzer:react-perf-analyzer SearchBar
 
-# From git changes (skill detects automatically)
-"Analyze the performance of my recent changes"
+# From git changes
+/react-perf-analyzer:react-perf-analyzer (skill detects from recent git-changed files)
 ```
 
 **What the skill produces:**
@@ -207,7 +223,7 @@ For best results, use both modes together:
 
 ```
 # Step 1: Static analysis while writing code (no server needed)
-"Analyze the performance of src/components/DataTable.tsx"
+/react-perf-analyzer:react-perf-analyzer src/components/DataTable.tsx
 
 # Step 2: Start your app or Storybook
 npm run storybook   # or: npm run dev

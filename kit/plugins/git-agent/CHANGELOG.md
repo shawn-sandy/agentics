@@ -1,5 +1,9 @@
 # Changelog — git-agent
 
+## v3.9.2 — README: sync usage documentation; split provider-specific CLI requirements
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 ## v3.9.1 — branch-agent: auto-stash on checkout conflict
 
 - `branch-agent` now detects tracked files that would conflict with

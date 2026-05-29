@@ -8,6 +8,41 @@ The WCAG Compliance Reviewer performs systematic accessibility audits of web cod
 
 This skill is applicable for code reviews, component development, and accessibility testing in both vanilla HTML/CSS and React/TypeScript projects.
 
+## Installation
+
+### Via Marketplace (recommended)
+
+```bash
+/plugin install wcag-compliance-reviewer@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/wcag-compliance-reviewer
+```
+
+## Usage
+
+This plugin provides one skill. There are no commands or agents.
+
+### Skills
+
+#### `wcag-compliance-reviewer`
+
+**Auto-activated** — activates automatically when user intent matches the description. No explicit invocation required.
+
+Reviews HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA violations. Provides targeted fixes for each accessibility issue found.
+
+**Trigger:** Use when you ask to review code for accessibility, check WCAG 2.2 Level AA compliance, identify accessibility issues in components, or audit pages/applications for a11y standards.
+
+**Example prompts that activate this skill:**
+
+- "Review this component for accessibility issues"
+- "Check my form for WCAG compliance"
+- "Audit this page for a11y standards"
+- "Are there any accessibility violations in this code?"
+
 ## Features
 
 - **Systematic WCAG Review** - Organized by four WCAG principles (Perceivable, Operable, Understandable, Robust)
@@ -16,39 +51,6 @@ This skill is applicable for code reviews, component development, and accessibil
 - **Automated Testing Guidance** - Tool recommendations based on code complexity
 - **Static Analysis Script** - Python script for initial scanning
 - **Comprehensive Reference Documentation** - WCAG guidelines, common violations, testing guides
-
-## Installation
-
-### Install via Marketplace (Recommended)
-
-Register the agentics-kit marketplace and install the plugin in one step:
-
-```bash
-# Register the marketplace
-/plugin marketplace add https://github.com/shawn-sandy/agentics
-
-# Install the plugin
-/plugin install wcag-compliance-reviewer@agentics-kit
-```
-
-### Load Locally (Development)
-
-To load the plugin directly from a local clone:
-
-```bash
-claude --plugin-dir /path/to/agentics/kit/plugins/wcag-compliance-reviewer
-```
-
-## When to Use This Skill
-
-Invoke this skill when you need to:
-
-- Review code for accessibility compliance
-- Check WCAG 2.2 Level AA compliance
-- Identify accessibility issues in components
-- Audit pages or applications for a11y standards
-- Get specific fixes for accessibility violations
-- Learn accessibility best practices
 
 ## Review Process
 

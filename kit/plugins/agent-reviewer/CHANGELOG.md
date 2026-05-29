@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.2 — README: sync usage documentation with current skill behavior
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 All notable changes to the `agent-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).

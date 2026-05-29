@@ -2,19 +2,29 @@
 
 Scaffold Claude Code agent-based plugins with a guided workflow. Instead of manually writing agent frontmatter, choosing tools, and structuring system prompts, describe what you want and the skill walks you through every step — from requirements gathering to marketplace registration.
 
-## Purpose
+## Installation
 
-Authoring a Claude Code agent involves several interconnected decisions: naming conventions, tool allow-lists, permission modes, model selection, and a well-structured system prompt. Getting any of these wrong causes silent failures or unexpected behavior. This plugin encodes the official agent schema into a step-by-step workflow that produces valid, ready-to-use agent files — either as a new plugin or added to an existing one.
+### Via Marketplace (recommended)
 
-## Components
+```bash
+/plugin install agent-creator@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/agent-creator
+```
+
+## Usage
+
+### Components
 
 | Component | Type | Activation |
 |-----------|------|-----------|
-| `generating-agents` | Skill | Auto-triggers when user asks to "create an agent", "generate an agent plugin", "scaffold an agent", "add an agent to my plugin", "build a new agent", or "make a sub-agent" |
+| `generating-agents` | Skill | Auto-activated — triggers when user asks to "create an agent", "generate an agent plugin", "scaffold an agent", "add an agent to my plugin", "build a new agent", or "make a sub-agent" |
 
 All skills declare `allowed-tools` explicitly in their frontmatter for consistent, session-independent tool access.
-
-## Usage
 
 The skill activates automatically when your message matches the trigger phrases. Just describe what you need:
 
@@ -27,6 +37,10 @@ Generate an agent that audits accessibility compliance
 ```
 
 The skill then guides you through an interactive 6-step workflow using structured questions — you don't need to know the agent schema upfront.
+
+## Purpose
+
+Authoring a Claude Code agent involves several interconnected decisions: naming conventions, tool allow-lists, permission modes, model selection, and a well-structured system prompt. Getting any of these wrong causes silent failures or unexpected behavior. This plugin encodes the official agent schema into a step-by-step workflow that produces valid, ready-to-use agent files — either as a new plugin or added to an existing one.
 
 ## What the Skill Does
 
@@ -81,24 +95,6 @@ Fixes issues automatically and re-validates.
 ### Step 6: Marketplace Registration
 
 If a `marketplace.json` exists in the project root, offers to register the new plugin with version synchronization between `plugin.json` and the marketplace entry.
-
-## Installation
-
-### Install via Marketplace (Recommended)
-
-```bash
-# Register the marketplace
-/plugin marketplace add https://github.com/shawn-sandy/agentics
-
-# Install the plugin
-/plugin install agent-creator@agentics-kit
-```
-
-### Load Locally (Development)
-
-```bash
-claude --plugin-dir /path/to/agentics/kit/plugins/agent-creator
-```
 
 ## Plugin Structure
 

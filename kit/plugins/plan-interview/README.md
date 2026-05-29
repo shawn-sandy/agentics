@@ -18,29 +18,59 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 
 `plan-interview` is a single-agent, interactive Q&A interview optimised for technical implementation plans. `product-plans` runs six specialist agents in parallel and is optimised for product-level documents with stakeholder concerns.
 
-## Components
+## Installation
 
-| Component | Type | Invocation |
-|-----------|------|-----------|
-| `plan-interview` | Command | `/plan-interview:plan-interview [plan-file-path]` |
-| `plan-status` | Command | `/plan-interview:plan-status [plan-file-path]` |
-| `update-plan-status` | Command | `/plan-interview:update-plan-status [directory-path] [--force]` |
-| `review-rename-plans` | Command | `/plan-interview:review-rename-plans [plan-file-or-directory]` |
-| `plan-hygiene` | Command | `/plan-interview:plan-hygiene [directory-path]` |
-| `deep-grill` | Command | `/plan-interview:deep-grill [plan-file-path]` |
-| `plan-maintenance` | Command | `/plan-interview:plan-maintenance [--archive] [--index] [--variants] [--all] [--background]` |
-| `plan-interview` | Skill | Auto-activates on stress-test/validate/interview requests |
-| `plan-status` | Skill | Auto-activates on plan status check/update requests |
-| `deep-grill` | Skill | Auto-activates on deep grill/walk decision branches requests |
-| `documenting-plans` | Command | `/plan-interview:documenting-plans [plan-file-path]` |
-| `documenting-plans` | Skill | Auto-activates on requests to document, generate docs from, or write reference docs for a plan |
-| `markdown-to-html` | Command | `/plan-interview:markdown-to-html [file-path]` |
-| `markdown-to-html` | Skill | Auto-activates on requests to convert a plan or markdown doc to HTML or make it viewable in a browser |
-| `plan-to-html` | Skill | Deprecated alias — delegates to `markdown-to-html` with `--mode=plan` |
-| `plan-documenter` | Agent | Invoked via Agent tool: `plan-interview:plan-documenter` |
-| `ExitPlanMode` | Hook | Auto-fires after exiting plan mode |
+### Via Marketplace (recommended)
+
+```bash
+/plugin install plan-interview@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-interview
+```
 
 ## Usage
+
+### Commands
+
+| Command | Invocation | Description |
+|---------|-----------|-------------|
+| `plan-interview` | `/plan-interview:plan-interview [plan-file-path] [--quick]` | Stress-test a plan with a structured interview across technical, UX, edge case, and out-of-scope domains |
+| `plan-status` | `/plan-interview:plan-status [plan-file-path]` | Check and update the lifecycle status of a plan file (todo, in-progress, completed) with type classification |
+| `update-plan-status` | `/plan-interview:update-plan-status [directory-path] [--force]` | Process multiple plan files in a directory — analyze codebase evidence and add/update YAML frontmatter in bulk with summary-first approval |
+| `review-rename-plans` | `/plan-interview:review-rename-plans [plan-file-or-directory]` | Review plan filenames and offer to rename files whose names don't match their intent |
+| `plan-hygiene` | `/plan-interview:plan-hygiene [directory-path]` | Scan plan directories for randomly-named files and rename them to descriptive kebab-case names based on content headings |
+| `deep-grill` | `/plan-interview:deep-grill [plan-file-path]` | Walk each decision branch in an implementation plan with focused questions and codebase exploration |
+| `plan-maintenance` | `/plan-interview:plan-maintenance [--archive] [--index] [--variants] [--all] [--background]` | Archive completed plans as HTML, generate a README index, and review variant/duplicate files |
+| `documenting-plans` | `/plan-interview:documenting-plans [plan-file-path]` | Generate developer-friendly documentation at docs/<slug>.md from a completed plan file |
+| `markdown-to-html` | `/plan-interview:markdown-to-html [file-path] [--theme=default\|developer\|document\|minimal] [--mode=auto\|plan\|doc] [--background] [--no-open] [--async] [--list-themes]` | Convert a markdown file or plan to a rich, self-contained HTML document viewable in any browser |
+| `plan-to-html` | `/plan-interview:plan-to-html [plan-file-path] [flags]` | Deprecated — use `/plan-interview:markdown-to-html` instead. Delegates to markdown-to-html with --mode=plan. |
+
+### Skills
+
+| Skill | Activation | Trigger phrases |
+|-------|-----------|----------------|
+| `plan-interview` | Auto-activated | "Stress-test this plan", "Interview my implementation plan", "Find gaps and risks in this plan", "Validate my approach before I start coding" |
+| `plan-status` | Auto-activated | "Check the status of this plan", "Has this plan been implemented?", "Update the plan status", "What's the lifecycle status of this plan?" |
+| `deep-grill` | **Manual invoke only** — use `/plan-interview:deep-grill` explicitly | Not auto-activated (`disable-model-invocation: true`) |
+| `documenting-plans` | **Manual invoke only** — use `/plan-interview:documenting-plans` explicitly | Not auto-activated (`disable-model-invocation: true`) |
+| `markdown-to-html` | Auto-activated | "Convert this plan to HTML", "Make an HTML version of this plan", "Export this markdown as a webpage" |
+| `plan-to-html` | Auto-activated (deprecated alias) | Deprecated — routes to `markdown-to-html` with `--mode=plan` |
+
+### Agents
+
+| Agent | Invocation | Description |
+|-------|-----------|-------------|
+| `plan-documenter` | Agent tool: `subagent_type: "plan-interview:plan-documenter"` | Batch documentation agent — scans the plans directory for completed plans (status: completed, 30+ days old) without corresponding docs in docs/, then invokes the documenting-plans skill for each one |
+
+### Hook
+
+| Hook | Trigger | Behavior |
+|------|---------|---------|
+| `ExitPlanMode` | Auto-fires after exiting plan mode | Prompts to run the plan-interview skill — interview does not start unless you confirm |
 
 ### Command (explicit invocation)
 
@@ -175,7 +205,7 @@ Convert a completed plan file into a developer-friendly prose reference document
 /plan-interview:documenting-plans ~/.claude/plans/my-feature.md               # absolute path
 ```
 
-The skill automatically verifies the plan is `status: completed` before generating docs — if not, it runs `plan-status` first. The generated document includes:
+The skill automatically verifies the plan is `status: completed` before generating docs — if not, it runs `plan-status` first. The plan must also be at least 30 days old to be eligible for documentation. The generated document includes:
 
 - **What shipped** — capabilities list from Objective + Steps, rewritten in past tense
 - **Files changed** — table of every cited file with Created/Modified/Relocated/Missing status
@@ -185,18 +215,11 @@ The skill automatically verifies the plan is `status: completed` before generati
 
 Content inside `<!-- generated:start -->` / `<!-- generated:end -->` markers is regenerated on each run. Content outside the markers is preserved (suitable for hand-written notes or additions).
 
-To describe your intent and auto-activate the skill:
-
-```
-Document this plan
-Generate reference docs for this plan
-Turn this completed plan into documentation
-Write developer docs from this plan
-```
+This skill is manual-invoke only (`disable-model-invocation: true`) — use `/plan-interview:documenting-plans` explicitly to run it.
 
 ### Batch Document All Plans (Agent)
 
-The `plan-documenter` agent scans the plans directory for completed plans that
+The `plan-documenter` agent scans the plans directory for completed plans (status: completed, 30+ days old) that
 don't yet have corresponding docs in `docs/`, then runs the `documenting-plans`
 skill for each one automatically.
 
@@ -211,7 +234,7 @@ Invoke via the Agent tool from another agent or automated workflow:
 
 The agent resolves the plan directory from `.claude/settings.json`
 (`plansDirectory` key), falling back to `docs/plans/`. It pre-filters to only
-`status: completed` plans without an existing `docs/<slug>.md` file, then
+`status: completed` plans (30+ days old) without an existing `docs/<slug>.md` file, then
 processes each sequentially in alphabetical order. A summary table is produced
 at the end.
 
@@ -236,14 +259,7 @@ than expecting the plugin agent to run unattended.
 
 #### Running independently
 
-Describe your intent in conversation to auto-activate:
-
-```
-Batch document all completed plans
-Generate docs for all completed plans that are missing documentation
-```
-
-Or invoke explicitly via the Agent tool:
+Invoke explicitly via the Agent tool:
 
 ```json
 {
@@ -285,10 +301,10 @@ it in another repo:
 }
 ```
 
-3. Run the agent on demand — describe your intent or invoke explicitly:
+3. Run the agent on demand — invoke explicitly:
 
 ```
-Batch document all completed plans
+/plan-interview:documenting-plans
 ```
 
 #### Scheduling for multiple repos
@@ -359,9 +375,11 @@ The deep grill is a standalone session — it does not modify the plan file. It
 reads the plan, builds a decision tree, and walks each branch one at a time.
 Results are presented as a summary at the end.
 
+This skill is manual-invoke only (`disable-model-invocation: true`) — use `/plan-interview:deep-grill` explicitly to run it.
+
 ### Skill (automatic activation)
 
-Describe your intent and the skill activates:
+Describe your intent and the `plan-interview` skill activates:
 
 ```
 Stress-test this plan
@@ -369,15 +387,6 @@ Stress-test my agentic plan
 Interview my implementation plan
 Find gaps and risks in this plan
 Validate my approach before I start coding
-```
-
-To run a standalone deep grill, describe your intent:
-
-```
-Deep grill this plan
-Deep grill my agentic plan
-Walk through each decision in my plan
-Examine every branch in my implementation plan
 ```
 
 To check the status of a plan, describe your intent and the `plan-status` skill
@@ -389,6 +398,13 @@ Check the status of my agentic plan
 Has this plan been implemented?
 Update the plan status
 What's the lifecycle status of this plan?
+```
+
+To run the deep grill or generate plan documentation, use the explicit commands — these skills have `disable-model-invocation: true` and will not auto-activate:
+
+```
+/plan-interview:deep-grill docs/plans/my-feature.md
+/plan-interview:documenting-plans docs/plans/my-feature.md
 ```
 
 In skill-review mode, target a `SKILL.md` file instead:
@@ -417,7 +433,7 @@ The number of rounds scales with plan complexity:
 
 Any plan with UI signals (React, Tailwind, `.tsx`, form/modal/dialog terminology) always includes Round 2.
 
-After the interview (or independently), run the **Deep Grill** skill to walk every decision branch with focused questions, suggested answers, and codebase exploration via `Glob`/`Grep`/`Read`. Say _"deep grill this plan"_ or invoke `/plan-interview:deep-grill [path]` directly.
+After the interview (or independently), run the **Deep Grill** skill to walk every decision branch with focused questions, suggested answers, and codebase exploration via `Glob`/`Grep`/`Read`. Invoke `/plan-interview:deep-grill [path]` directly.
 
 ### After the interview
 
@@ -449,18 +465,4 @@ paths:
 Before creating any git commit, check if there are plan files with random non-descriptive names (e.g., `precious-knitting-tulip.md`) in the planning directories.
 
 If random-named plan files exist, run `/plan-hygiene` first and complete the rename workflow before proceeding with the commit.
-```
-
-## Installation
-
-**Requires:** Claude Code 1.0.33 or later.
-
-```
-/plugin install plan-interview@agentics-kit
-```
-
-Or load directly for local testing:
-
-```bash
-claude --plugin-dir ./kit/plugins/plan-interview
 ```

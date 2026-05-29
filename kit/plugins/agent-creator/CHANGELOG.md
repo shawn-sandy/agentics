@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2 — README: sync usage documentation with current skill behavior
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 ## [1.1.1] - 2026-05-07
 
 ### Changed

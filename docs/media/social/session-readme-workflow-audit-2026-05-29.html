@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<!--
+  session-card.html — Dark-mode session recap card for social posts.
+
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
+    session recap · 2026-05-29          — Session title (e.g. "session recap · 2026-05-28")
+    sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
+    Ran a 22-subagent workflow across all 18 Claude Code plugins — reading every command, skill, agent, and hook from disk — then rewrote README.md to match ground truth.      — 1–2 sentence summary of what the session accomplished
+    <li>22-subagent workflow reviewed all 18 plugins directly from source files, not docs</li>
+<li>README updated: plugin count 17→18, marketplace version corrected</li>
+<li>Added missing issue-agent v0.1.0 section with install command and usage examples</li>
+<li>Caught 3 stale versions: social-media-tools v0.8.0→v2.1.0, plan-agent v0.2.0→v0.7.0, git-agent v3.9.0→v3.9.1</li>
+<li>pipeline() overlap kept wall-clock at 15 min despite 22 agents — 87.1% cache hit</li>— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    34,316   — Total tokens formatted with commas (e.g. "42,180")
+    87.1% — Cache hit rate (e.g. "44.2%")
+    15 min       — Session duration (e.g. "47 min")
+    1  — Files changed count (e.g. "12")
+    0        — Commits in session (e.g. "3")
+    <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">just ran a 22-subagent Claude Code workflow to audit my own plugin marketplace README — and it caught things I'd let drift.
+
+the workflow read every command, skill, agent, and hook from disk across 18 plugins. no docs, no memory — just the actual files. then it rewrote the README to match.
+
+what it caught:
+• social-media-tools: v0.8.0 → v2.1.0 in the real code (missed a whole major version in the docs)
+• plan-agent: v0.2.0 → v0.7.0
+• git-agent: v3.9.0 → v3.9.1
+• issue-agent v0.1.0 — existed in the codebase, never documented at all
+
+87.1% cache hit meant the whole thing ran in ~15 min on ~34k tokens.
+
+one thing worth noting: pipeline() vs parallel() for the extraction phase. each plugin's scan overlapped with the next instead of waiting for all 18 to finish first — that's the default and it pays off at scale.
+
+if you're building Claude Code plugins and want to keep your docs honest, this pattern works.
+
+follow for more claude code agent patterns and workflows.
+
+#ClaudeCode #AIAgents #DevTools</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">ran a 22-agent workflow to audit my claude code plugin docs
+
+caught social-media-tools sitting at v0.8.0 in the README. actual version: v2.1.0
+
+15 min · 87% cache hit · pipeline &gt; parallel for overlapping work
+
+#ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">audited 18 claude code plugins with a 22-agent workflow today
+
+the README had social-media-tools at v0.8.0. real version was v2.1.0. issue-agent existed in the codebase but wasn't documented at all
+
+pipeline() for extraction so each plugin scan overlapped — 15 min, 87% cache hit
+
+docs should match the code</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">I keep a marketplace of 18 Claude Code plugins. The README had drifted — versions stale, one plugin not documented at all.
+
+Today I ran a 22-subagent workflow that read every plugin file directly and rewrote the README from ground truth. Caught three version drifts and a missing section for issue-agent v0.1.0.
+
+The pipeline() vs parallel() distinction mattered: each plugin's scan overlapped with the next rather than waiting for all 18 to finish first.
+
+87% cache hit, 15 min, ~34k tokens. Not bad for a full doc audit.
+
+More Claude Code workflow patterns coming — follow to catch them.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
+    1. & → &amp;  ← first, prevents double-escaping
+    2. < → &lt;
+    3. > → &gt;
+    4. " → &quot;
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>session recap · 2026-05-29</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --green: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 720px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    /* ── Hero content: narrative + accomplishments ── */
+    .content {
+      padding: 22px 28px 8px;
+    }
+
+    .narrative {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .accomplishments {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .accomplishments li {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .accomplishments li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ── Demoted metrics strip ── */
+    .metrics-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .metric {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric b {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric b.accent { color: var(--accent); }
+    .metric b.green  { color: var(--green); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-tag {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-accent {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: 720px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="header-text">
+        <h1>session recap · 2026-05-29</h1>
+      </div>
+      <div class="model-badge">sonnet-4-6</div>
+    </div>
+
+    <div class="content">
+      <p class="narrative">Ran a 22-subagent workflow across all 18 Claude Code plugins — reading every command, skill, agent, and hook from disk — then rewrote README.md to match ground truth.</p>
+      <ul class="accomplishments"><li>22-subagent workflow reviewed all 18 plugins directly from source files, not docs</li>
+<li>README updated: plugin count 17→18, marketplace version corrected</li>
+<li>Added missing issue-agent v0.1.0 section with install command and usage examples</li>
+<li>Caught 3 stale versions: social-media-tools v0.8.0→v2.1.0, plan-agent v0.2.0→v0.7.0, git-agent v3.9.0→v3.9.1</li>
+<li>pipeline() overlap kept wall-clock at 15 min despite 22 agents — 87.1% cache hit</li></ul>
+    </div>
+
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">34,316</b> tokens</span>
+      <span class="metric"><b>15 min</b></span>
+      <span class="metric"><b class="green">87.1%</b> cache hit</span>
+      <span class="metric"><b>1</b> files</span>
+      <span class="metric"><b>0</b> commits</span>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-tag">Claude Code · session recap</span>
+      <span class="footer-accent">github.com/shawn-sandy/agentics</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">just ran a 22-subagent Claude Code workflow to audit my own plugin marketplace README — and it caught things I'd let drift.
+
+the workflow read every command, skill, agent, and hook from disk across 18 plugins. no docs, no memory — just the actual files. then it rewrote the README to match.
+
+what it caught:
+• social-media-tools: v0.8.0 → v2.1.0 in the real code (missed a whole major version in the docs)
+• plan-agent: v0.2.0 → v0.7.0
+• git-agent: v3.9.0 → v3.9.1
+• issue-agent v0.1.0 — existed in the codebase, never documented at all
+
+87.1% cache hit meant the whole thing ran in ~15 min on ~34k tokens.
+
+one thing worth noting: pipeline() vs parallel() for the extraction phase. each plugin's scan overlapped with the next instead of waiting for all 18 to finish first — that's the default and it pays off at scale.
+
+if you're building Claude Code plugins and want to keep your docs honest, this pattern works.
+
+follow for more claude code agent patterns and workflows.
+
+#ClaudeCode #AIAgents #DevTools</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">ran a 22-agent workflow to audit my claude code plugin docs
+
+caught social-media-tools sitting at v0.8.0 in the README. actual version: v2.1.0
+
+15 min · 87% cache hit · pipeline &gt; parallel for overlapping work
+
+#ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">audited 18 claude code plugins with a 22-agent workflow today
+
+the README had social-media-tools at v0.8.0. real version was v2.1.0. issue-agent existed in the codebase but wasn't documented at all
+
+pipeline() for extraction so each plugin scan overlapped — 15 min, 87% cache hit
+
+docs should match the code</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">I keep a marketplace of 18 Claude Code plugins. The README had drifted — versions stale, one plugin not documented at all.
+
+Today I ran a 22-subagent workflow that read every plugin file directly and rewrote the README from ground truth. Caught three version drifts and a missing section for issue-agent v0.1.0.
+
+The pipeline() vs parallel() distinction mattered: each plugin's scan overlapped with the next rather than waiting for all 18 to finish first.
+
+87% cache hit, 15 min, ~34k tokens. Not bad for a full doc audit.
+
+More Claude Code workflow patterns coming — follow to catch them.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

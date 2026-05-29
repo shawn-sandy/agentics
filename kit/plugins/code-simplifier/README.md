@@ -4,6 +4,62 @@ Analyze code for structural quality issues, code smells, and optimization
 opportunities. Produces a prioritized refactoring plan with specific improvement
 steps and before/after code examples, then applies approved changes.
 
+## Installation
+
+### Via Marketplace (recommended)
+
+```bash
+/plugin install code-simplifier@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/code-simplifier
+```
+
+## Usage
+
+### Skills
+
+| Skill | Activation | Trigger |
+|-------|------------|---------|
+| `code-simplifier` | Auto-activated | Triggers when the user asks to simplify code, find code smells, reduce complexity, identify refactoring opportunities, check for dead code, clean up messy code, or optimize structure |
+
+The skill activates automatically when you say things like:
+
+- "Find code smells in this file"
+- "This code is messy, clean it up"
+- "Simplify the utils folder"
+- "Check for dead code"
+- "Reduce the complexity of this module"
+- "Identify refactoring opportunities"
+
+### Providing specific code
+
+```
+Analyze src/services/auth.ts for code smells
+```
+
+```
+Find refactoring opportunities in the components/ directory
+```
+
+### Agents
+
+| Agent | Invocation |
+|-------|------------|
+| `agent-code-simplifier` | Internal background agent — invoked via `Agent(subagent_type: "code-simplifier:agent-code-simplifier", ...)`. Not intended for direct user requests. |
+
+### Analysis output format
+
+1. **Summary** -- code purpose and structural quality
+2. **Smell Severity Rating** -- Clean / Minor Issues / Needs Refactoring / Major
+3. **Critical Smells** -- must-fix structural issues with code examples
+4. **Moderate Smells** -- should-fix improvements
+5. **Refactoring Plan** -- link to plan file with prioritized steps
+6. **Positive Observations** -- good structural patterns
+
 ## Purpose
 
 Code review catches bugs and security issues, but structural quality problems
@@ -86,50 +142,6 @@ Agent(
 The agent uses project-scoped memory to learn recurring patterns, project
 conventions, acceptable complexity thresholds, and categories to skip. Memory
 is consulted at the start of each analysis and updated with new discoveries.
-
-## Usage
-
-### Automatic activation (skill)
-
-The skill activates automatically when you say things like:
-
-- "Find code smells in this file"
-- "This code is messy, clean it up"
-- "Simplify the utils folder"
-- "Check for dead code"
-- "Reduce the complexity of this module"
-- "Identify refactoring opportunities"
-
-### Providing specific code
-
-```
-Analyze src/services/auth.ts for code smells
-```
-
-```
-Find refactoring opportunities in the components/ directory
-```
-
-### Analysis output format
-
-1. **Summary** -- code purpose and structural quality
-2. **Smell Severity Rating** -- Clean / Minor Issues / Needs Refactoring / Major
-3. **Critical Smells** -- must-fix structural issues with code examples
-4. **Moderate Smells** -- should-fix improvements
-5. **Refactoring Plan** -- link to plan file with prioritized steps
-6. **Positive Observations** -- good structural patterns
-
-## Installation
-
-```text
-/plugin install code-simplifier@agentics-kit
-```
-
-Or load directly for local testing:
-
-```bash
-claude --plugin-dir ./kit/plugins/code-simplifier
-```
 
 ## Plugin Structure
 
