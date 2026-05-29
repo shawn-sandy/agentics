@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--
+  gallery.html — Gallery viewer for saved social media cards.
+
+  Static variables (substituted by the media-library skill):
+    {{GALLERY_ENTRIES}}  — Repeated <a> blocks, one per saved card
+    {{CARD_COUNT}}       — Total number of cards displayed
+    {{GENERATED_AT}}     — ISO timestamp of gallery generation
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Media Gallery</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 32px;
+    }
+
+    .gallery-header {
+      max-width: 1200px;
+      margin: 0 auto 32px;
+    }
+
+    .gallery-header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .gallery-header p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .gallery-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .gallery-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(56, 139, 253, 0.15);
+    }
+
+    .thumb-container {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      background: var(--bg);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .thumb-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumb-fallback {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--border);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .card-info {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .card-info-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .type-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .type-diff     { background: #f8514933; color: #f85149; }
+    .type-feature  { background: #3fb95033; color: #3fb950; }
+    .type-quote    { background: #d2a8ff33; color: #d2a8ff; }
+    .type-blog     { background: #388bfd33; color: #388bfd; }
+    .type-snippet  { background: #79c0ff33; color: #79c0ff; }
+    .type-video    { background: #ff7b7233; color: #ff7b72; }
+    .type-project  { background: #ffa65733; color: #ffa657; }
+    .type-session  { background: #7ee78733; color: #7ee787; }
+
+    .card-date {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    .card-topic {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .gallery-footer {
+      max-width: 1200px;
+      margin: 32px auto 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .gallery-footer span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      max-width: 1200px;
+      margin: 80px auto;
+      text-align: center;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery-header">
+    <h1>Social Media Gallery</h1>
+    <p>{{CARD_COUNT}} saved cards</p>
+  </div>
+
+  <div class="gallery-grid">
+    {{GALLERY_ENTRIES}}
+  </div>
+
+  <div class="gallery-footer">
+    <span>{{CARD_COUNT}} cards</span>
+    <span>Generated {{GENERATED_AT}}</span>
+  </div>
+
+  <script>
+    function showFallback(img) {
+      var container = img.parentElement;
+      img.style.display = 'none';
+      var fb = container.querySelector('.thumb-fallback');
+      if (fb) fb.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
