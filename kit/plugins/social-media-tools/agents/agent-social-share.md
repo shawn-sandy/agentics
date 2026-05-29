@@ -7,7 +7,7 @@ description: >
   the social-share skill or social-share-bg command needs to run a share workflow while the
   main session keeps working.
   Mirrors the social-share skill but runs as a background subagent.
-tools: Skill, Bash, Read, Write, Glob, Grep, ToolSearch, SendUserFile
+tools: Skill, Bash, Read, Write, Glob, Grep, ToolSearch, SendUserFile, WebFetch, mcp__plugin_playwright_playwright__browser_navigate, mcp__plugin_playwright_playwright__browser_take_screenshot, mcp__plugin_playwright_playwright__browser_wait_for
 model: sonnet
 maxTurns: 25
 background: true
@@ -32,6 +32,28 @@ Read the dispatch prompt to extract:
   `media-library`).
 - `DISPATCH_FLAGS` — the full flag string to pass (already includes `--background`).
 
+### Step 1b — Playwright preflight (card-generating skills only)
+
+Every `TARGET_SKILL` except `media-library` renders its PNG with the Playwright MCP.
+Before invoking one, confirm the screenshot tools are reachable in this background context:
+
+Use `ToolSearch` with `select:mcp__plugin_playwright_playwright__browser_take_screenshot`
+and inspect the result.
+
+- **A matching tool is returned** → Playwright is available. Continue to Step 2 as normal.
+- **No matching tool is returned** → Playwright is unavailable. Do **not** abort — the skill
+  still drafts the copy and writes the populated HTML, and will emit its own `DONE` line with
+  an **empty `png=`**. Continue to Step 2. When you relay that line in Step 3, append a
+  `⚠ WARN` note so the missing screenshot is never silent — do not fabricate a separate
+  `DONE` line or invent a path. The relayed line should read:
+
+  ```
+  SOCIAL-SHARE: DONE skill=<name> platform=<v> png= html=<path> ⚠ WARN — screenshot skipped: Playwright MCP unavailable; open html=<path> in a browser to capture manually
+  ```
+
+Skip this check entirely when `TARGET_SKILL` is `media-library` (it writes a catalog file,
+not a card).
+
 ### Step 2 — Invoke skill
 
 Call `Skill` with:
@@ -42,8 +64,10 @@ The skill runs non-interactively because `--background` is present in `DISPATCH_
 
 ### Step 3 — Report completion
 
-When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is.
-Card-generating skills emit:
+When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is — with
+one exception: if the Step 1b preflight found Playwright unavailable, append the
+`⚠ WARN — screenshot skipped …` note to the line you relay (the skill's line will already
+carry an empty `png=`). Card-generating skills emit:
 
 ```
 SOCIAL-SHARE: DONE skill=<name> platform=<v> png=<path> html=<path>
