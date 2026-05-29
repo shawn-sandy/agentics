@@ -1,27 +1,30 @@
 ---
 name: share-session
-description: "Session recap card with token usage and activity for social posts. Use when asked to share my session, session recap, usage today, or tokens this session."
+description: "Session recap card summarizing what you accomplished — a narrative plus highlights, with token usage as a secondary stat. Use when asked to share my session, session recap, what I worked on, what I did today, or session summary."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob, Skill
 ---
 
 # share-session
 
-Summarize the current Claude Code session — token usage (input, output, cache), duration,
-model, files changed, commits, and a one-line narrative — into a dark-mode session recap
-card for LinkedIn, Twitter/X, or Bluesky. **Tokens only — no dollar amounts.**
+Summarize **what the current Claude Code session accomplished** — a short narrative plus the
+key things built, fixed, or changed — into a dark-mode recap card for LinkedIn, Twitter/X, or
+Bluesky. Token usage, duration, and commit/file counts ride along as a compact stats strip.
+**Tokens only — no dollar amounts.**
 
-This skill is **session-driven**: it reads the live session JSONL for token counts and uses
-git history for activity context. No code selection required.
+The content summary is the hero of the card; the usage metrics are supporting detail.
+
+This skill is **session-driven**: it reads the live session JSONL for token counts and content
+signals and uses git history for activity context. No code selection required.
 
 ## Quick Reference
 
 | Phase | Action |
 |-------|--------|
 | 0 — Locate | Locate `templates/` and derive `PLUGIN_DIR` |
-| 1 — Gather | Run `session_usage.py`, derive git stats and `SUMMARY` |
+| 1 — Gather | Run `session_usage.py`, derive git stats, **build `NARRATIVE` + `ACCOMPLISHMENTS`** |
 | 1c — Reuse check | Scan `docs/media/social/` for existing posts; offer reuse |
-| 2 — Scrub | `security-scrub` the `SUMMARY` text (BLOCKED = hard stop) |
-| 3 — Draft | Write tokens-only platform-aware copy |
+| 2 — Scrub | `security-scrub` the **full content summary** (BLOCKED = hard stop) |
+| 3 — Draft | Write content-first, tokens-only platform-aware copy |
 | 4 — Populate | Read `session-card.html`, substitute `{{VARIABLES}}` |
 | 4b — Save | Persistent save to `docs/media/social/` |
 | 5 — Screenshot | Serve HTML locally, Playwright screenshot |
@@ -87,6 +90,9 @@ Capture the JSON output as `USAGE_JSON`. If the script exits non-zero or the JSO
 Extract from `USAGE_JSON`:
 - `SESSION_ID`, `TOTAL_TOKENS`, `INPUT_TOKENS`, `OUTPUT_TOKENS`, `CACHE_READ`, `CACHE_HIT_RATE`
 - `DURATION_MINUTES`, `FIRST_TIMESTAMP_ISO`, `MODELS[]`, `FIRST_USER_PROMPT`
+- Content signals (for Phase 1e): `USER_PROMPTS[]`, `ASSISTANT_SNIPPETS[]`, `TOOL_USE_COUNTS`,
+  `FILES_TOUCHED[]`, `FILES_TOUCHED_COUNT`. Interactive mode may ignore these and summarize
+  from its own context (see Phase 1e).
 
 ### 1c — Derive Git Stats
 
@@ -134,8 +140,34 @@ print('duration', f\"{int(d['duration_minutes'])} min\" if d['duration_minutes']
 " <<< "$USAGE_JSON"
 ```
 
-`SUMMARY_RAW` = `FIRST_USER_PROMPT` from `USAGE_JSON`, truncated to 160 chars. If empty, use
-`"Claude Code session"`.
+### 1e — Build the content summary (the hero of the card)
+
+This is the most important step. Produce two values:
+
+- `NARRATIVE` — 1–2 sentences (≤ 240 chars) describing what the session was about and what got
+  done. Be specific (feature names, files, fixes), not generic ("did some work").
+- `ACCOMPLISHMENTS` — 3–5 short bullet strings (each ≤ 90 chars) naming concrete things built,
+  fixed, or changed.
+
+**Interactive mode (default):** You are running inside the live session — author `NARRATIVE`
+and `ACCOMPLISHMENTS` **directly from your own conversation memory**. You already know what
+happened; do not rely on the JSONL for content. Use `FILES_TOUCHED`/`TOOL_USE_COUNTS` only as
+corroborating detail. Prefer concrete outcomes over process narration.
+
+**Background mode (`--background`):** You do NOT share the live session's context. Reconstruct
+the summary from the `session_usage.py` content signals:
+- `USER_PROMPTS[]` — what the developer asked for
+- `ASSISTANT_SNIPPETS[]` — what Claude reported doing
+- `FILES_TOUCHED[]` and `TOOL_USE_COUNTS` — concrete activity (e.g. "14 edits across 6 files")
+- git commit subjects from Phase 1c
+
+Synthesize a faithful `NARRATIVE` + `ACCOMPLISHMENTS` from those signals. **Never invent work
+that isn't evidenced by the data.** If the content signals are too sparse, fall back to
+`FIRST_USER_PROMPT` as the narrative and list `FILES_TOUCHED` / commits as accomplishments; if
+everything is empty, use `"Claude Code session"` and a single best-effort bullet.
+
+Define `SUMMARY_RAW` for the security scrub (Phase 2) as `NARRATIVE` followed by each
+accomplishment bullet on its own line.
 
 ---
 
@@ -151,8 +183,13 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 ## Phase 2 — Security Scrub
 
-The `SUMMARY_RAW` text (derived from the first user prompt) may contain sensitive context.
-Write it to a temp file:
+The content summary now draws on many messages (especially in background mode, where it is
+synthesized from `USER_PROMPTS`/`ASSISTANT_SNIPPETS`/`FILES_TOUCHED`) — so it is far more likely
+to surface secrets, paths, or env names than the old first-prompt echo. Scrub the **entire**
+narrative + accomplishments, not a single line.
+
+Write `SUMMARY_RAW` (the `NARRATIVE` plus every `ACCOMPLISHMENT` bullet, one per line) to a temp
+file:
 
 ```
 Write to: ~/.claude/tmp/scrub-input.txt
@@ -182,13 +219,16 @@ For character limits, tone defaults, and the **Follow CTA** rule, read
 *(Interactive mode only — see Non-interactive mode above when `--background` is set.)*
 Ask for `PLATFORM` and `TONE` in a single `AskUserQuestion` if not already in `$ARGUMENTS`.
 
-Draft copy that leads with session activity and token highlights:
+Lead with **what was accomplished** (`NARRATIVE` + `ACCOMPLISHMENTS`); metrics are supporting
+detail, not the headline.
 
-- **LinkedIn**: Hook ("Just wrapped a session where…") → total token count → cache hit rate
-  insight → activity summary (N commits, N files) → what was built (from `SUMMARY_RAW`) →
-  follow CTA; 2–4 hashtags
-- **Twitter/X**: One punchy line with total tokens and what was built; no hashtag bloat
-- **Bluesky**: Conversational, same brevity as Twitter
+- **LinkedIn**: Hook on the outcome ("Just shipped X in a Claude Code session…") → 2–3
+  accomplishments → *then* one supporting stat line (N commits · N files · ~X tokens · Y% cache
+  hit) → follow CTA; 2–4 hashtags
+- **Twitter/X**: One punchy line on what was built; a single stat only if it fits and adds color
+- **Bluesky**: Conversational, same accomplishment-first brevity
+
+The token/duration/cache figures are a single trailing stat line, never the focus.
 
 Close with a topic-matched **follow** CTA tied to the session topic — never generic; on
 Twitter/Bluesky include only if it fits the character budget.
@@ -222,15 +262,13 @@ Apply to every substituted string in this exact order:
 |-------------------|-------|
 | `{{TITLE}}` | `TITLE` (HTML-escaped; e.g. `session recap · 2026-05-28`) |
 | `{{MODEL}}` | `MODEL` (HTML-escaped; e.g. `sonnet-4-6`) |
+| `{{NARRATIVE}}` | `NARRATIVE` (HTML-escaped; 1–2 sentences, ≤240 chars) |
+| `{{ACCOMPLISHMENTS}}` | One `<li>…</li>` per accomplishment — HTML-escape each bullet's **text**, then wrap in `<li>` (the `<li>` tags stay literal). No wrapping `<ul>`. Mirrors `feature-card.html`'s `{{BULLETS}}`. |
 | `{{TOTAL_TOKENS}}` | Total tokens formatted with commas (HTML-escaped) |
-| `{{INPUT_TOKENS}}` | Input tokens formatted with commas (HTML-escaped) |
-| `{{OUTPUT_TOKENS}}` | Output tokens formatted with commas (HTML-escaped) |
-| `{{CACHE_READ}}` | Cache-read tokens formatted with commas (HTML-escaped) |
 | `{{CACHE_HIT_RATE}}` | Cache hit rate (e.g. `44.2%`) (HTML-escaped) |
 | `{{DURATION}}` | Duration in minutes (e.g. `47 min`; `0 min` if unknown) (HTML-escaped) |
 | `{{FILES_CHANGED}}` | Files changed integer (HTML-escaped) |
 | `{{COMMITS}}` | Commits count integer (HTML-escaped) |
-| `{{SUMMARY}}` | `SUMMARY_RAW` truncated to 160 chars (HTML-escaped) |
 | `{{COPY_PANELS}}` | Copy panel HTML — see `references/copy-panels.md` |
 
 Write the populated HTML to `~/.claude/tmp/session-share-card.html`:

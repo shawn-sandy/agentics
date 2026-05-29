@@ -11,6 +11,7 @@ comment block at the top listing its variables and an example.
 - [blog-card.html](#blog-cardhtml)
 - [video-card.html](#video-cardhtml)
 - [snippet-card.html](#snippet-cardhtml)
+- [session-card.html](#session-cardhtml)
 
 ---
 
@@ -161,3 +162,42 @@ Apply to `CODE_LINES` in this exact order:
   display name (`TypeScript`).
 - `LANGUAGE_COLOR` is sourced exclusively from `references/language-map.md` (plugin-root
   shared reference) — never from fetched content or user input.
+
+---
+
+## session-card.html
+
+> Used by `share-session`. Content-first layout: a narrative + accomplishment bullets are the
+> hero; token/activity metrics are a compact secondary strip. All text values must be
+> HTML-escaped before substitution.
+
+| Variable | Description |
+|----------|-------------|
+| `{{TITLE}}` | `session recap · YYYY-MM-DD` (HTML-escaped) |
+| `{{MODEL}}` | Model badge, e.g. `sonnet-4-6` (HTML-escaped) |
+| `{{NARRATIVE}}` | 1–2 sentence summary of what the session accomplished (HTML-escaped; ≤240 chars) |
+| `{{ACCOMPLISHMENTS}}` | `<li>` items (3–5), one per accomplishment, no wrapping `<ul>`; each item's text HTML-escaped |
+| `{{TOTAL_TOKENS}}` | Total tokens with commas (e.g. `42,180`) |
+| `{{DURATION}}` | Session duration (e.g. `47 min`) |
+| `{{CACHE_HIT_RATE}}` | Cache hit rate (e.g. `44.2%`) |
+| `{{FILES_CHANGED}}` | Files-changed count (git, session window) |
+| `{{COMMITS}}` | Commits in the session window |
+| `{{COPY_PANELS}}` | Copy panel HTML — see `references/copy-panels.md` |
+
+### Accomplishment item format
+
+Build `{{ACCOMPLISHMENTS}}` the same way as `feature-card.html`'s `{{BULLETS}}`: HTML-escape
+each bullet's text, wrap each in `<li>…</li>`, and concatenate (no surrounding `<ul>`).
+
+```html
+<li>Added a content summary to the share-session card</li>
+<li>Enriched session_usage.py with file + tool signals</li>
+```
+
+### HTML-escape order (mandatory)
+
+Apply to every text value in this exact order:
+1. `&` → `&amp;` ← first, to prevent double-escaping
+2. `<` → `&lt;`
+3. `>` → `&gt;`
+4. `"` → `&quot;`

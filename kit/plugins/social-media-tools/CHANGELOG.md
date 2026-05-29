@@ -1,5 +1,32 @@
 # Changelog — social-media-tools
 
+## v1.3.0 — 2026-05-29
+
+`share-session` now leads with a summary of **what the session accomplished** — a narrative
+plus key highlights — instead of foregrounding token usage. Tokens, duration, and commit/file
+counts move to a compact secondary stats strip.
+
+- `share-session` skill: new Phase 1e builds a `NARRATIVE` (1–2 sentences) and 3–5
+  `ACCOMPLISHMENTS` bullets. Interactive runs summarize from the live conversation context;
+  `--background` runs reconstruct the summary from enriched `session_usage.py` signals (user
+  prompts, assistant snippets, files touched, tool-use counts, git commit subjects). Security
+  scrub now covers the full narrative + accomplishments text, not just the first prompt. Draft
+  copy leads with outcomes; token/duration/cache figures become a single trailing stat line
+  (still tokens-only, never dollars). Description + triggers updated ("what I worked on",
+  "what I did today", "session summary")
+- `session_usage.py`: emits five new bounded fields — `user_prompts[]`, `assistant_snippets[]`,
+  `tool_use_counts{}`, `files_touched[]`, and `files_touched_count` — extracted in the existing
+  single streaming pass; caps keep stdout small for multi-MB sessions. `first_user_prompt`
+  retained for backward compatibility
+- `session-card.html`: restructured to a content-first layout — narrative paragraph + arrow
+  bullet list as the hero, with a compact `tokens · duration · cache hit · files · commits`
+  strip beneath. Replaces the 8-tile metrics grid. New `{{NARRATIVE}}` and `{{ACCOMPLISHMENTS}}`
+  variables; `{{SUMMARY}}`, `{{INPUT_TOKENS}}`, `{{OUTPUT_TOKENS}}`, `{{CACHE_READ}}` removed.
+  Copy panels + clipboard script unchanged
+- `references/variables.md`: documented the `session-card.html` variables (previously missing)
+- `social-share` router (rule 8): added `session summary`, `what I worked on`, and `what I did
+  today` so the new `share-session` trigger phrases dispatch correctly through the router
+
 ## v1.2.0 — 2026-05-29
 
 New `share-session` skill — generate a dark-mode session recap card from the live
