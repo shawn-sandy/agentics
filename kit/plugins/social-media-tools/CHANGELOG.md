@@ -14,6 +14,11 @@ and no PNG (or blog/GitHub/video fetch) succeeded in background mode.
   `…__browser_wait_for`). `AskUserQuestion` is intentionally still excluded — background
   runs skip it. Mirrors the precedent set by `agent-product-plans`.
 - No skill logic changed; the `--background` non-interactive paths were already correct.
+- `agent-social-share`: added a Step 1b Playwright preflight. For card-generating skills
+  (every target except `media-library`), the agent now probes for the screenshot tool via
+  `ToolSearch` before invoking the skill; if Playwright is unavailable it proceeds (HTML +
+  copy are still produced) but reports the `DONE` line with an empty `png=` and an explicit
+  `⚠ WARN` pointing to the HTML — so a missing screenshot is never silent.
 - `agent-digest` / `share-scan` (digest path) was unaffected and is unchanged.
 - README `Requirements`: added a note that the Playwright MCP is an external,
   non-bundled dependency (not declared in `plugin.json`), pointing to the

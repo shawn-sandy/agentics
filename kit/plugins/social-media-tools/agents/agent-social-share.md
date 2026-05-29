@@ -32,6 +32,27 @@ Read the dispatch prompt to extract:
   `media-library`).
 - `DISPATCH_FLAGS` — the full flag string to pass (already includes `--background`).
 
+### Step 1b — Playwright preflight (card-generating skills only)
+
+Every `TARGET_SKILL` except `media-library` renders its PNG with the Playwright MCP.
+Before invoking one, confirm the screenshot tools are reachable in this background context:
+
+Use `ToolSearch` with `select:mcp__plugin_playwright_playwright__browser_take_screenshot`
+and inspect the result.
+
+- **A matching tool is returned** → Playwright is available. Continue to Step 2 as normal.
+- **No matching tool is returned** → Playwright is unavailable. Do **not** abort — the skill
+  still drafts the copy and writes the populated HTML. Invoke the skill (Step 2), then in
+  Step 3 report the `DONE` line with an **empty `png=`** and an explicit warning so the
+  missing screenshot is never silent:
+
+  ```
+  SOCIAL-SHARE: DONE skill=<name> platform=<v> png= html=<path> ⚠ WARN — screenshot skipped: Playwright MCP unavailable; open html=<path> in a browser to capture manually
+  ```
+
+Skip this check entirely when `TARGET_SKILL` is `media-library` (it writes a catalog file,
+not a card).
+
 ### Step 2 — Invoke skill
 
 Call `Skill` with:
