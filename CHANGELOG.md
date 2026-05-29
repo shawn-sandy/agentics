@@ -14,10 +14,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 - **agent-reviewer v1.0.2** — overlaps with `skill-reviewer`, which covers plugin component auditing more broadly
 - **marketplace-builder v1.1.2** — redundant with `agentic-plugin-dev`'s plugin-manager skill
 - **react-perf-analyzer v1.3.1** — too specialized; only useful in React projects; general perf issues are covered by `code-review`
+- **agentic-plugin-dev v1.2.2** — removed from marketplace; directory retained for reference; plugin scaffolding covered by existing skills
+- **code-simplifier v1.0.2** — removed from marketplace; directory retained for reference; structural analysis covered by `code-review`
 
 ### Changed
 
-- **Marketplace** (`agentics-kit`) bumped to v4.0.0 (MAJOR — four plugins removed)
+- **Marketplace** (`agentics-kit`) bumped to v4.0.0 (MAJOR — six plugins removed)
 
 ---
 

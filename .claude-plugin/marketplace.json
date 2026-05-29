@@ -310,13 +310,13 @@
       "name": "agentic-plugin-dev",
       "version": "1.2.2",
       "removedDate": "2026-05-29",
-      "reason": "Plugin directory removed; functionality consolidated — plugin scaffolding covered by existing skills"
+      "reason": "Removed from marketplace; directory retained for reference — plugin scaffolding covered by existing skills"
     },
     {
       "name": "code-simplifier",
       "version": "1.0.2",
       "removedDate": "2026-05-29",
-      "reason": "Plugin directory removed; structural analysis covered by code-review"
+      "reason": "Removed from marketplace; directory retained for reference — structural analysis covered by code-review"
     }
   ]
 }
