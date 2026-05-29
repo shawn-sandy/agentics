@@ -139,13 +139,15 @@ def parse_session(jsonl_path: Path) -> dict:
             if evt_type == "user":
                 user_msgs += 1
                 text = _extract_user_text(msg.get("content", ""))
-                if text:
+                # Skip Claude Code's synthetic user turns — tool_result echoes
+                # (already "" from _extract_user_text) plus <system-reminder>,
+                # <command-message>, <local-command-stdout> and similar injected
+                # blocks — so prompts reflect the developer's actual requests and
+                # don't waste the small cap on internal noise.
+                if text and not text.startswith("<"):
                     if not first_user_prompt:
                         # Cap at 200 chars; the skill truncates further for the card
                         first_user_prompt = text[:200]
-                    # Collect human prompts for background-mode summarization.
-                    # `_extract_user_text` returns "" for tool_result-only turns,
-                    # so this skips those automatically.
                     if len(user_prompts) < MAX_PROMPTS:
                         user_prompts.append(text[:SNIP_LEN])
 
