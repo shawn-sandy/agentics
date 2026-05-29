@@ -1,3 +1,10 @@
+---
+status: completed
+type: refactor
+created: 2026-05-29
+repo-name: agentics
+---
+
 # Plan: Remove Background Feature from social-media-tools
 
 ## Context
