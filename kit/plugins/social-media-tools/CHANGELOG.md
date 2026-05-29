@@ -1,5 +1,21 @@
 # Changelog — social-media-tools
 
+## v1.3.1 — 2026-05-29
+
+Fix background card generation. The `agent-social-share` background subagent invoked
+the `share-*` skills via `Skill`, but subagent tool grants are not transitive across
+`Skill` invocations — so the inner skills' card-rendering and fetch calls were blocked,
+and no PNG (or blog/GitHub/video fetch) succeeded in background mode.
+
+- `agent-social-share` agent: widened `tools:` to add `WebFetch` (needed by
+  `share-blog`, `share-github`, `share-video`) and the three Playwright screenshot
+  tools used by every card skill's rendering pipeline
+  (`mcp__plugin_playwright_playwright__browser_navigate`, `…__browser_take_screenshot`,
+  `…__browser_wait_for`). `AskUserQuestion` is intentionally still excluded — background
+  runs skip it. Mirrors the precedent set by `agent-product-plans`.
+- No skill logic changed; the `--background` non-interactive paths were already correct.
+- `agent-digest` / `share-scan` (digest path) was unaffected and is unchanged.
+
 ## v1.3.0 — 2026-05-29
 
 `share-session` now leads with a summary of **what the session accomplished** — a narrative

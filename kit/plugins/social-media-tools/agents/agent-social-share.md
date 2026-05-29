@@ -7,7 +7,7 @@ description: >
   the social-share skill or social-share-bg command needs to run a share workflow while the
   main session keeps working.
   Mirrors the social-share skill but runs as a background subagent.
-tools: Skill, Bash, Read, Write, Glob, Grep, ToolSearch, SendUserFile
+tools: Skill, Bash, Read, Write, Glob, Grep, ToolSearch, SendUserFile, WebFetch, mcp__plugin_playwright_playwright__browser_navigate, mcp__plugin_playwright_playwright__browser_take_screenshot, mcp__plugin_playwright_playwright__browser_wait_for
 model: sonnet
 maxTurns: 25
 background: true
