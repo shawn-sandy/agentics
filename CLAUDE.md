@@ -48,7 +48,7 @@ claude --plugin-dir ./kit/plugins/<name>
 
 ## Reference Implementations
 
-18 plugins in the marketplace (`agentics-kit` v3.9.0):
+12 plugins in the marketplace (`agentics-kit` v4.0.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -58,13 +58,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `skill-reviewer` | Skills | Audit and optimize skill files — enforces two-sentence description format (capability + trigger phrase, ≤160 chars) |
 | `code-testing-agent` | Skills + Agents | Test suggestion, review, tdd-fix (bug), tdd-loop (feature); tdd-fix and tdd-loop are manual-invoke only (`disable-model-invocation`) |
 | `git-agent` | Skills + Agents + Commands | Branch creation, commit, PR, and ship workflows; background commands: `commit-bg`, `pr-bg`, `ship-bg`; `ship-autonomous` for supervised full pipeline |
-| `agent-creator` | Agents | Plugin scaffolding agent |
-| `agentic-plugin-dev` | Skills + Commands | Plugin development toolkit |
-| `code-simplifier` | Skills | Structural quality and simplification analysis |
-| `marketplace-builder` | Skills | Marketplace scaffolding |
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
-| `react-perf-analyzer` | Skills | React performance analysis; manual-invoke only (`disable-model-invocation`) |
-| `agent-reviewer` | Skills | Subagent definition file auditing |
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
 | `social-media-tools` | Skills + Commands | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `/social-media-tools:digest` for interactive digest scanning |

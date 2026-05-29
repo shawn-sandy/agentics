@@ -119,7 +119,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 18 plugin source directories
+│   └── plugins/                  # 12 plugins in marketplace (6 archived directories retained)
 │       ├── agent-creator/
 │       ├── agent-reviewer/
 │       ├── agentic-plugin-dev/
@@ -171,16 +171,10 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install skill-reviewer@agentics-kit
 /plugin install code-testing-agent@agentics-kit
 /plugin install wcag-compliance-reviewer@agentics-kit
-/plugin install agent-reviewer@agentics-kit
-/plugin install code-simplifier@agentics-kit
-/plugin install react-perf-analyzer@agentics-kit
 /plugin install product-plans@agentics-kit
 /plugin install plan-agent@agentics-kit
 /plugin install settings-sync@agentics-kit
 /plugin install social-media-tools@agentics-kit
-/plugin install agent-creator@agentics-kit
-/plugin install marketplace-builder@agentics-kit
-/plugin install agentic-plugin-dev@agentics-kit
 /plugin install issue-agent@agentics-kit
 ```
 
@@ -333,33 +327,6 @@ claude --plugin-dir ./kit/plugins/code-review
 
 ---
 
-#### `code-simplifier` v1.0.1
-
-Analyze code for structural quality issues, code smells, and optimization opportunities.
-
-**Skills** (activate automatically):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `code-simplifier` | Simplify code, find smells, reduce complexity, identify refactoring opportunities, check for dead code, clean up messy code, or optimize code structure |
-
-**Agents:**
-
-| Agent | Purpose |
-|-------|---------|
-| `agent-code-simplifier` | Internal background code simplification agent for delegation from other agents or automated workflows |
-
-```bash
-claude --plugin-dir ./kit/plugins/code-simplifier
-# "Find code smells in this file"
-# "Simplify this function"
-# "What dead code can I remove?"
-```
-
-[View Documentation](./kit/plugins/code-simplifier/README.md)
-
----
-
 ### Testing
 
 ---
@@ -386,33 +353,6 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 ```
 
 [View Documentation](./kit/plugins/code-testing-agent/README.md)
-
----
-
-#### `react-perf-analyzer` v1.3.0
-
-Identifies React component source patterns that commonly correlate with poor Event Timing (INP), Layout Instability (CLS), Long Animation Frames, and Long Tasks scores — produces a heuristic report with recommendations.
-
-**Commands:**
-
-| Command | Description |
-|---------|-------------|
-| `/react-perf-analyzer:test [url]` | Run Lighthouse against a URL (Storybook story, local dev server, or any live page) and report actual INP, CLS, TBT, FCP, and LCP scores with prioritized fix recommendations |
-
-**Skills:**
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `react-perf-analyzer` | Analyze React performance, identify patterns correlated with poor INP, CLS, and Long Tasks, or produce a prioritized Core Web Vitals report — manual invoke only |
-
-```bash
-claude --plugin-dir ./kit/plugins/react-perf-analyzer
-# "Analyze this component for performance issues"
-# "What's causing poor INP on this page?"
-# /react-perf-analyzer:test http://localhost:3000/
-```
-
-[View Documentation](./kit/plugins/react-perf-analyzer/README.md)
 
 ---
 
@@ -618,73 +558,6 @@ claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 
 ---
 
-### Plugin Development
-
----
-
-#### `agentic-plugin-dev` v1.2.1
-
-Create, manage, and validate Claude Code plugins — scaffold new plugins, manage marketplace entries, and audit plugin structure.
-
-**Skills** (activate automatically):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `plugin-creator` | Create or scaffold a new Claude Code plugin |
-| `plugin-manager` | List, add, remove, or bump a plugin in marketplace.json |
-| `plugin-validator` | Validate or audit a plugin's structure and manifest |
-
-```bash
-claude --plugin-dir ./kit/plugins/agentic-plugin-dev
-# "Create a new plugin called my-plugin"
-# "Validate the structure of this plugin"
-# "Add my-plugin to the marketplace"
-```
-
-[View Documentation](./kit/plugins/agentic-plugin-dev/README.md)
-
----
-
-#### `agent-creator` v1.1.1
-
-Scaffold Claude Code agent-based plugins with guided workflows.
-
-**Skills** (activate automatically):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `generating-agents` | Create, scaffold, or generate a new agent-based plugin |
-
-```bash
-claude --plugin-dir ./kit/plugins/agent-creator
-# "Create a new agent plugin called deployment-agent"
-```
-
-[View Documentation](./kit/plugins/agent-creator/README.md)
-
----
-
-#### `agent-reviewer` v1.0.1
-
-Review and audit Claude Code subagent definition files against official best practices.
-
-**Skills** (activate automatically):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `reviewing-agents` | Review, audit, or score an agent definition |
-
-```bash
-claude --plugin-dir ./kit/plugins/agent-reviewer
-# "Review my agent definition at agents/agent-commit.md"
-# "Audit this agent file"
-# "Score my agent definition against best practices"
-```
-
-[View Documentation](./kit/plugins/agent-reviewer/README.md)
-
----
-
 #### `skill-reviewer` v2.2.1
 
 Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage.
@@ -712,26 +585,6 @@ claude --plugin-dir ./kit/plugins/skill-reviewer
 ```
 
 [View Documentation](./kit/plugins/skill-reviewer/README.md)
-
----
-
-#### `marketplace-builder` v1.1.1
-
-Evaluate a repository and scaffold Claude Code skill marketplace infrastructure.
-
-**Skills** (activate automatically):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `building-marketplaces` | Build or scaffold a marketplace, set up a skill marketplace, scaffold marketplace files, or evaluate marketplace readiness |
-
-```bash
-claude --plugin-dir ./kit/plugins/marketplace-builder
-# "Help me set up a plugin marketplace for this repo"
-# "Audit my repo for marketplace readiness"
-```
-
-[View Documentation](./kit/plugins/marketplace-builder/README.md)
 
 ---
 
@@ -823,24 +676,18 @@ claude --plugin-dir ./kit/plugins/issue-agent
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [code-review](./kit/plugins/code-review/README.md) | 3.3.0 | development | 1 command, 1 skill, 1 agent |
-| [code-simplifier](./kit/plugins/code-simplifier/README.md) | 1.0.1 | development | 1 skill, 1 agent |
-| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.0 | testing | 5 skills |
-| [react-perf-analyzer](./kit/plugins/react-perf-analyzer/README.md) | 1.3.0 | testing | 1 command, 1 skill |
-| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.0 | development | 10 commands, 6 skills, 1 agent, 1 hook |
-| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.2 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.7.0 | productivity | 1 skill, 1 hook |
-| [git-agent](./kit/plugins/git-agent/README.md) | 3.9.1 | development | 3 commands, 5 skills, 3 agents |
-| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.0 | productivity | 2 skills |
-| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.1 | security | 1 skill |
-| [agentic-plugin-dev](./kit/plugins/agentic-plugin-dev/README.md) | 1.2.1 | development | 3 skills |
-| [agent-creator](./kit/plugins/agent-creator/README.md) | 1.1.1 | development | 1 skill |
-| [agent-reviewer](./kit/plugins/agent-reviewer/README.md) | 1.0.1 | development | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.1 | development | 1 command, 4 skills, 1 hook |
-| [marketplace-builder](./kit/plugins/marketplace-builder/README.md) | 1.1.1 | development | 1 skill |
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.0 | development | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.1.0 | productivity | 1 command, 11 skills |
-| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.1.0 | development | 1 skill |
+| [code-review](./kit/plugins/code-review/README.md) | 3.3.1 | development | 1 command, 1 skill, 1 agent |
+| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
+| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.1 | development | 10 commands, 6 skills, 1 agent, 1 hook |
+| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.3 | productivity | 1 command, 1 skill, 7 agents |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.7.1 | productivity | 1 skill, 1 hook |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.9.2 | development | 3 commands, 5 skills, 3 agents |
+| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
+| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.2 | development | 1 command, 4 skills, 1 hook |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.1 | development | 2 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.2.0 | productivity | 1 command, 11 skills |
+| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.1.1 | development | 1 skill |
 
 ---
 
