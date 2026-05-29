@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.6.0 — 2026-05-29
+
+### Added
+
+- **Sticky sidebar navigation**: two-column layout (200px sidebar + content) with "On this page" section links; collapses to single-column on narrow viewports.
+- **Scroll rail**: animated 3px progress indicator on the left edge of the sidebar tracks page scroll position in real time.
+- **Scroll spy**: `IntersectionObserver`-powered active link highlighting (left-border indicator) in the sidebar as sections enter the viewport.
+- **CSS step timeline**: vertical connector line with circle nodes on each step card; nodes turn green when all criteria are checked (via CSS `.step-card.completed`).
+- **Step chips**: `<span class="step-chip">todo</span>` decorates each step action with a pill badge; turns green when the step card is marked complete.
+- **localStorage persistence**: acceptance-criteria checkbox state saved to `localStorage` keyed by page title — survives page refresh.
+- **Print styles**: sidebar, scroll rail, and step chips hidden in print; single-column layout.
+- **Inline SVG icons**: Heroicons `<symbol>`/`<use>` pattern replaces emoji; zero external dependencies.
+- **Pulsing in-progress dot**: status badge dot pulses when `data-status="in-progress"`; respects `prefers-reduced-motion`.
+- **Accessibility baseline**: skip link, `aria-labelledby` on every section, `role="progressbar"` attributes, `aria-live="polite"` region for criteria announcements, `min-height: 44px` touch targets on nav links.
+- **Tone guidance in SKILL.md**: writing-style addendum encouraging rallying-statement objectives and imperative-verb step actions.
+
+### Changed
+
+- `SKELETON.html`: professional document aesthetic — white page, white header with a single 3px blue accent stripe, "Implementation Plan" doc-type label above the plan title.
+- Sections rendered as flat ruled document sections separated by `border-top` lines (no card shadows or rounded corners).
+- `<div class="section-card">` elements converted to `<section>` with `id` and `aria-labelledby` for improved semantics.
+- Step number badges simplified to a plain grey circle (no gradient).
+- Criteria items styled as individual bordered rows.
+- Progress bar thinned to 6px with a solid blue fill.
+- `--radius: 4px` throughout for a sharper document feel.
+
+---
+
 ## 0.5.0 — 2026-05-28
 
 ### Added

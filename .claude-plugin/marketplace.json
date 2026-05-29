@@ -363,7 +363,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.5.0",
+      "version": "0.6.0",
       "description": "Plan creation on demand — explicit /plan-agent:planning skill produces self-contained interactive HTML plans; runs the full §0–§7 workflow; blue-sky items land in a Wish List section; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [
