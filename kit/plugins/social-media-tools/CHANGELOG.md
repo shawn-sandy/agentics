@@ -1,5 +1,32 @@
 # Changelog — social-media-tools
 
+## v1.1.0 — 2026-05-28
+
+Full background coverage: every skill except `security-scrub` (a sub-step utility) can now
+run in the background, freeing the main session context while social cards or catalog
+snapshots are generated.
+
+- `media-library` skill: added `--background` non-interactive mode — when dispatched with
+  `--background`, writes the saved-posts catalog table to
+  `.claude/digests/media-library-YYYY-MM-DD.md` and emits a
+  `SOCIAL-SHARE: DONE skill=media-library output=<path>` completion line instead of calling
+  `AskUserQuestion`; interactive behavior (step 3 prompt) unchanged when invoked without
+  `--background`; `Write` added to `allowed-tools`
+- `social-share` router (rule 7, new): routes "browse", "library", "saved posts", "prior
+  post", "media library", "my posts" intents to `media-library` in the background; rule sits
+  above the git fallbacks so browsing requests never fall through to `share-code`
+- `agent-social-share`: updated to document `media-library` as a valid `TARGET_SKILL` and
+  relay the generic `output=<path>` completion form alongside the existing card form
+- `references/non-interactive-mode.md`: reconciled the completion-line contract — added a
+  generic file-output form (`output=<path>`) for file-producing skills, documented the
+  digest chain's own flags and `Digest complete:` line as an intentional pre-contract variant
+- README updated: documents full background coverage, all entry points, and the new
+  `media-library --background` catalog-snapshot behavior; corrected stale pre-v1.0.0 skill
+  names (`code-share` → `share-code`, `scan-for-shares` → `share-scan`, etc.) in the
+  README Components and Features sections
+
+---
+
 ## v1.0.1 — 2026-05-28
 
 Plugin renamed from `code-share` to `social-media-tools` to match the directory name.

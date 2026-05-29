@@ -25,7 +25,8 @@ Follow these steps in strict order.
 ### Step 1 — Parse arguments
 
 Read the dispatch prompt to extract:
-- `TARGET_SKILL` — the skill to invoke (e.g. `share-code`, `share-blog`, `share-project`).
+- `TARGET_SKILL` — the skill to invoke (e.g. `share-code`, `share-blog`, `share-project`,
+  `media-library`).
 - `DISPATCH_FLAGS` — the full flag string to pass (already includes `--background`).
 
 ### Step 2 — Invoke skill
@@ -38,11 +39,20 @@ The skill runs non-interactively because `--background` is present in `DISPATCH_
 
 ### Step 3 — Report completion
 
-When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is:
+When the skill completes and reports a `SOCIAL-SHARE: DONE …` line, relay it as-is.
+Card-generating skills emit:
 
 ```
 SOCIAL-SHARE: DONE skill=<name> platform=<v> png=<path> html=<path>
 ```
+
+File-producing skills (e.g. `media-library`) emit:
+
+```
+SOCIAL-SHARE: DONE skill=<name> output=<path>
+```
+
+Relay whichever form the skill produced.
 
 If the skill emitted a `SOCIAL-SHARE: ERROR …` line, relay that instead:
 
