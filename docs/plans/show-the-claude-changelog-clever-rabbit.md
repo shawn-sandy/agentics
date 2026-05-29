@@ -1,9 +1,12 @@
 ---
-status: completed
+status: todo
 type: feature
 created: 2026-05-29
 repo-name: agentics
 ---
+
+> **Rename before commit:** this file was auto-named from an unrelated earlier request.
+> Per the plan filename rule, rename it to `port-share-session-onto-main.md` on commit.
 
 # Plan: Port the session-recap feature onto current `main` as `share-session`
 
@@ -90,9 +93,11 @@ variables,platforms,copy-panels,reuse-check,saving-and-delivery,rendering-pipeli
    - *Verify:* `grep -A2 social-media-tools .claude-plugin/marketplace.json` shows `1.2.0`;
      CHANGELOG has a v1.2.0 heading; README lists `share-session`/`session-bg`.
 
-5. **Carry the plan file.** Set this file's `status: in-progress` and stage it with the change.
-   - *Why:* Repo convention — plan files commit alongside plugin changes.
-   - *Verify:* `git status` shows `docs/plans/port-share-session-onto-main.md` staged; the
+5. **Carry the plan file.** Rename this file to `port-share-session-onto-main.md`, set
+   `status: in-progress`, and stage it with the change.
+   - *Why:* Repo convention — plan files commit alongside plugin changes; the filename rule
+     requires a meaningful `verb-target` name.
+   - *Verify:* `ls docs/plans/port-share-session-onto-main.md` exists; the
      `validate-plan-filename` hook does not flag it.
 
 6. **Close #173 and open a fresh PR.** `gh pr close 173 --comment "Superseded by clean
@@ -127,7 +132,7 @@ End-to-end:
 
 ## Next Steps *(optional)*
 
-- Delete the stale branches:
+- Delete the stale branch:
   ```text
   After the share-session PR merges to main, delete the obsolete feat/share-bg-fix and
   feat/kit/add-social-share-router-2026-05-28 branches both locally and on origin, since their
