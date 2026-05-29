@@ -3,7 +3,13 @@
 session_usage.py — parse a Claude Code session JSONL and report token usage.
 
 Emits JSON on stdout with token counts, model(s), duration, message/tool-call
-counts, and the first user prompt (for the share-session card SUMMARY field).
+counts, the first user prompt, and content signals for summarization.
+
+The content signals — `user_prompts`, `assistant_snippets`, `tool_use_counts`,
+and `files_touched` — exist so background-mode callers (which do not share the
+live session's conversation context) can reconstruct a faithful summary of what
+the session accomplished. Interactive callers summarize from their own context
+and use these mainly as corroborating detail.
 
 Usage:
     python3 session_usage.py [<path.jsonl>]
@@ -69,6 +75,17 @@ def _extract_user_text(content: object) -> str:
     return ""
 
 
+# Caps keep stdout bounded on long (multi-MB) sessions. Early prompts carry the
+# session's intent; a dozen assistant snippets cover the running narration; 40
+# distinct files is more than enough to characterise the work.
+MAX_PROMPTS = 8
+MAX_SNIPPETS = 12
+MAX_FILES = 40
+SNIP_LEN = 280
+# Tools whose input names a file we count as "touched" (i.e. changed/created).
+FILE_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
+
+
 def parse_session(jsonl_path: Path) -> dict:
     input_tokens = 0
     output_tokens = 0
@@ -82,6 +99,13 @@ def parse_session(jsonl_path: Path) -> dict:
     last_ts: float | None = None
     first_user_prompt = ""
     skipped = 0
+
+    # Content signals for summarization (see module docstring).
+    user_prompts: list[str] = []
+    assistant_snippets: list[str] = []
+    tool_use_counts: dict[str, int] = {}
+    files_touched: list[str] = []
+    _files_seen: set[str] = set()
 
     with jsonl_path.open("r", encoding="utf-8", errors="replace") as fh:
         for raw in fh:
@@ -114,11 +138,16 @@ def parse_session(jsonl_path: Path) -> dict:
 
             if evt_type == "user":
                 user_msgs += 1
-                if not first_user_prompt:
-                    text = _extract_user_text(msg.get("content", ""))
-                    if text:
+                text = _extract_user_text(msg.get("content", ""))
+                if text:
+                    if not first_user_prompt:
                         # Cap at 200 chars; the skill truncates further for the card
                         first_user_prompt = text[:200]
+                    # Collect human prompts for background-mode summarization.
+                    # `_extract_user_text` returns "" for tool_result-only turns,
+                    # so this skips those automatically.
+                    if len(user_prompts) < MAX_PROMPTS:
+                        user_prompts.append(text[:SNIP_LEN])
 
             elif evt_type == "assistant":
                 assistant_msgs += 1
@@ -138,8 +167,36 @@ def parse_session(jsonl_path: Path) -> dict:
                 content = msg.get("content")
                 if isinstance(content, list):
                     for block in content:
-                        if isinstance(block, dict) and block.get("type") == "tool_use":
+                        if not isinstance(block, dict):
+                            continue
+                        btype = block.get("type")
+                        if btype == "tool_use":
                             tool_calls += 1
+                            name = block.get("name")
+                            if isinstance(name, str) and name:
+                                tool_use_counts[name] = tool_use_counts.get(name, 0) + 1
+                                if name in FILE_TOOLS:
+                                    inp = block.get("input")
+                                    if isinstance(inp, dict):
+                                        fp = (
+                                            inp.get("file_path")
+                                            or inp.get("path")
+                                            or inp.get("notebook_path")
+                                        )
+                                        if (
+                                            isinstance(fp, str)
+                                            and fp
+                                            and fp not in _files_seen
+                                        ):
+                                            _files_seen.add(fp)
+                                            if len(files_touched) < MAX_FILES:
+                                                files_touched.append(fp)
+                        elif btype == "text" and len(assistant_snippets) < MAX_SNIPPETS:
+                            t = block.get("text", "")
+                            if isinstance(t, str):
+                                t = t.strip()
+                                if t:
+                                    assistant_snippets.append(t[:SNIP_LEN])
 
     total_tokens = input_tokens + output_tokens
     cache_total = cache_read + cache_write
@@ -171,6 +228,11 @@ def parse_session(jsonl_path: Path) -> dict:
         "assistant_msgs": assistant_msgs,
         "tool_calls": tool_calls,
         "first_user_prompt": first_user_prompt,
+        "user_prompts": user_prompts,
+        "assistant_snippets": assistant_snippets,
+        "tool_use_counts": tool_use_counts,
+        "files_touched": files_touched,
+        "files_touched_count": len(files_touched),
         "skipped_lines": skipped,
     }
 
