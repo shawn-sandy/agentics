@@ -883,25 +883,37 @@
 /* ── Copy prompt button (global — required by inline onclick) ── */
 function copyPrompt(btn) {
   var pre = btn.previousElementSibling;
-  if (!pre || pre.tagName !== 'PRE') return;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
   var text = pre.textContent;
-  var orig = btn.textContent;
-  function done() {
+
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
     btn.textContent = 'Copied ✓';
     btn.classList.add('copied');
-    setTimeout(function () { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy prompt';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
   }
+
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
     ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) {}
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
+    if (ok) flash();
   }
+
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(fallback);
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
   } else {
     fallback();
   }
