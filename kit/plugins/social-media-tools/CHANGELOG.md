@@ -24,6 +24,8 @@ counts move to a compact secondary stats strip.
   variables; `{{SUMMARY}}`, `{{INPUT_TOKENS}}`, `{{OUTPUT_TOKENS}}`, `{{CACHE_READ}}` removed.
   Copy panels + clipboard script unchanged
 - `references/variables.md`: documented the `session-card.html` variables (previously missing)
+- `social-share` router (rule 8): added `session summary`, `what I worked on`, and `what I did
+  today` so the new `share-session` trigger phrases dispatch correctly through the router
 
 ## v1.2.0 — 2026-05-29
 

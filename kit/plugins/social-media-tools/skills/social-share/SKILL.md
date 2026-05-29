@@ -55,7 +55,7 @@ Evaluate rules **top-to-bottom; first match wins.** Do not ask the user anything
 | 5 | Matches: `launch`, `release`, `shipped`, `announcing`, `went live`, or `v\d` | `share-project` | `--topic=release` |
 | 6 | Matches: `progress`, `update`, `working on`, `lately`, `this week`, `building` | `share-project` | `--topic=features` |
 | 7 | Matches: `browse`, `library`, `saved posts`, `prior post`, `media library`, `my posts` | `media-library` | *(none)* |
-| 8 | Matches: `my session`, `session recap`, `session stats`, `tokens today`, `usage today`, `this session`, or standalone `session` | `share-session` | *(none)* |
+| 8 | Matches: `my session`, `session recap`, `session summary`, `session stats`, `tokens today`, `usage today`, `this session`, `what I worked on`, `what I did today`, or standalone `session` | `share-session` | *(none)* |
 | 9 | **Fallback A** — git diff has changes: `git rev-parse --git-dir 2>/dev/null && git diff HEAD~1 --stat 2>/dev/null \| grep -c .` returns a positive integer | `share-code` | *(none)* |
 | 10 | **Fallback B** — nothing else matched | `share-project` | `--topic=changes` |
 
