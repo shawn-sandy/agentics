@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.6.0 — 2026-05-29
+
+### Added
+
+- **Sticky sidebar navigation**: two-column layout (200px sidebar + content) with section links; collapses to single-column on narrow viewports.
+- **Scroll rail**: animated 3px progress indicator on the left edge of the sidebar tracks page scroll position in real time.
+- **Scroll spy**: `IntersectionObserver`-powered active link highlighting in the sidebar as sections enter the viewport.
+- **CSS step timeline**: vertical connector line with circle nodes on each step card; nodes turn green when all criteria are checked (via CSS `.step-card.completed`).
+- **Step chips**: `<span class="step-chip">todo</span>` decorates each step action with a pill badge; turns green when the step card is marked complete.
+- **localStorage persistence**: acceptance-criteria checkbox state saved to `localStorage` keyed by page title — survives page refresh.
+- **Print styles**: sidebar, scroll rail, and step chips hidden in print; single-column layout; colour-safe header.
+- **Gradient header**: full-bleed dark-to-indigo gradient with a 4px rainbow accent bar (`#38bdf8 → #818cf8 → #c084fc`) replacing the plain white header.
+- **Section accent colours**: each section card has a coloured left border (context=blue, steps=indigo, criteria=green, verification=orange, next-steps=purple).
+- **Coloured section icons**: `<span class="section-icon">` prefix with emoji in every section heading.
+- **Hover lift**: section and step cards animate `translateY(-2px)` with enhanced shadow on hover; respects `prefers-reduced-motion`.
+- **Pulsing in-progress dot**: status badge dot pulses when `data-status="in-progress"`; respects `prefers-reduced-motion`.
+- **Stronger objective card**: 5px solid blue left border, gradient fill, 1.1rem bold text.
+- **Taller progress bar**: 12px height with gradient fill (`#10b981 → #06b6d4`); shimmer animation when at 0%.
+- **Accessibility baseline**: skip link, `aria-labelledby` on every section, `role="progressbar"` attributes, `aria-live="polite"` region for criteria announcements, `min-height: 44px` touch targets on nav links.
+- **Tone guidance in SKILL.md**: writing-style addendum encouraging rallying-statement objectives and imperative-verb step actions.
+
+### Changed
+
+- `SKELETON.html`: complete structural and visual redesign; all existing placeholders (`{curly braces}`) preserved for backwards-compatible substitution.
+- `<div class="section-card">` elements converted to `<section>` with `id` and `aria-labelledby` for improved semantics.
+- Section `<h2>` labels upgraded from `.7rem` muted grey to `.82rem` dark text with emoji icon prefix.
+- Step number badges now use an indigo-to-cyan gradient with white numerals and box-shadow.
+- Background colour lightened from `#f8f9fb` to `#f0f4f8` for better contrast with white cards.
+
+---
+
 ## 0.5.0 — 2026-05-28
 
 ### Added

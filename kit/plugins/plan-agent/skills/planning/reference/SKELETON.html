@@ -11,38 +11,39 @@
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
-    --bg:        #f8f9fb;
-    --surface:   #ffffff;
-    --border:    #e2e6ea;
-    --text:      #1a1d23;
-    --muted:     #6b7280;
-    --accent:    #3b82f6;
-    --accent-bg: #eff6ff;
-    --green:     #16a34a;
-    --green-bg:  #f0fdf4;
-    --amber:     #d97706;
-    --amber-bg:  #fffbeb;
-    --grey:      #6b7280;
-    --grey-bg:   #f3f4f6;
-    --wish-bg:   #faf5ff;
+    --bg:         #f0f4f8;
+    --surface:    #ffffff;
+    --border:     #e2e6ea;
+    --text:       #1a1d23;
+    --muted:      #6b7280;
+    --accent:     #3b82f6;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --grey:       #6b7280;
+    --grey-bg:    #f3f4f6;
+    --wish-bg:    #faf5ff;
     --wish-border:#c084fc;
-    --radius:    10px;
-    --shadow:    0 1px 4px rgba(0,0,0,.07);
+    --radius:     10px;
+    --shadow:     0 1px 4px rgba(0,0,0,.07);
+    --shadow-lg:  0 6px 20px rgba(0,0,0,.12);
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: 15px;
     line-height: 1.65;
     color: var(--text);
     background: var(--bg);
-    padding: 2rem 1rem 4rem;
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .875em;
   }
   pre {
@@ -55,17 +56,45 @@
     word-break: break-word;
   }
 
-  /* ── Layout wrapper ────────────────────────────────────────────── */
-  .plan-wrap { max-width: 780px; margin: 0 auto; }
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
 
   /* ── Header ────────────────────────────────────────────────────── */
   .plan-header {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.75rem 2rem 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #312e81 100%);
+    border: none;
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 4px;
+    background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-header-top {
     display: flex;
@@ -75,10 +104,11 @@
     flex-wrap: wrap;
   }
   .plan-title {
-    font-size: 1.6rem;
+    font-size: 1.7rem;
     font-weight: 700;
-    letter-spacing: -.015em;
-    line-height: 1.25;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    color: #f0f9ff;
     flex: 1;
   }
 
@@ -88,50 +118,120 @@
     align-items: center;
     gap: .35rem;
     font-size: .75rem;
-    font-weight: 600;
-    letter-spacing: .04em;
+    font-weight: 700;
+    letter-spacing: .05em;
     text-transform: uppercase;
-    padding: .3rem .75rem;
+    padding: .3rem .85rem;
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
+    color: #fff;
   }
-  [data-status="todo"]        .status-badge { background: var(--grey-bg);  color: var(--grey);  }
-  [data-status="in-progress"] .status-badge { background: var(--amber-bg); color: var(--amber); }
-  [data-status="completed"]   .status-badge { background: var(--green-bg); color: var(--green); }
-  .status-badge::before { content: "●"; font-size: .6em; }
+  .status-badge::before { content: "●"; font-size: .65em; }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
 
   /* Meta row */
   .plan-meta {
     display: flex;
     gap: 1.25rem;
     flex-wrap: wrap;
-    margin-top: 1rem;
+    margin-top: .85rem;
     font-size: .8rem;
-    color: var(--muted);
+    color: #94a3b8;
   }
-  .plan-meta span::before { margin-right: .3rem; }
-  .meta-created::before { content: "📅"; }
-  .meta-repo::before    { content: "📦"; }
-  .meta-type::before    { content: "🏷"; }
+  .meta-created::before { content: "📅 "; }
+  .meta-repo::before    { content: "📦 "; }
+  .meta-type::before    { content: "🏷 "; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 4rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1rem .75rem 3rem; }
+  }
+
+  /* ── Sidebar nav ────────────────────────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 0;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  @media (max-width: 720px) { .plan-nav { position: static; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .35rem 1rem .35rem 1.25rem;
+    font-size: .875rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .4rem;
+    transition: color .15s;
+  }
+  .plan-nav li a:hover { color: var(--accent); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; }
+  .plan-nav li a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* Scroll rail */
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
 
   /* ── Objective card ────────────────────────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1.5px solid var(--accent);
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 2px solid #3b82f6;
+    border-left-width: 5px;
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: #1e3a5f;
+    box-shadow: var(--shadow);
   }
   .objective-card .section-label {
     font-size: .7rem;
     font-weight: 700;
-    letter-spacing: .08em;
+    letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: #2563eb;
     margin-bottom: .5rem;
   }
 
@@ -148,44 +248,56 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: .6rem;
+    margin-bottom: .65rem;
     font-size: .8rem;
     font-weight: 600;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: .04em;
+    letter-spacing: .05em;
   }
-  .progress-bar-bg {
-    height: 8px;
-    background: var(--grey-bg);
-    border-radius: 999px;
-    overflow: hidden;
-  }
+  .progress-bar-bg { height: 12px; background: var(--grey-bg); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
   .progress-bar-fill {
     height: 100%;
-    background: var(--green);
     border-radius: 999px;
-    transition: width .3s ease;
+    background: linear-gradient(90deg, #10b981, #06b6d4, #10b981);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
   }
 
   /* ── Generic section card ──────────────────────────────────────── */
   .section-card {
     background: var(--surface);
     border: 1px solid var(--border);
+    border-left: 4px solid transparent;
     border-radius: var(--radius);
     padding: 1.5rem;
     margin-bottom: 1.25rem;
     box-shadow: var(--shadow);
+    transition: box-shadow .2s ease, transform .2s ease;
+  }
+  .section-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  @media (prefers-reduced-motion: reduce) {
+    .section-card, .section-card:hover { transition: none; transform: none; }
   }
   .section-card h2 {
-    font-size: .7rem;
+    font-size: .82rem;
     font-weight: 700;
-    letter-spacing: .08em;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--text);
     margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
   }
+  .section-icon { font-size: 1rem; }
   .section-card p { margin-bottom: .75rem; }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
@@ -195,42 +307,108 @@
     gap: .4rem;
   }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Section accent colours */
+  .card-context      { border-left-color: #60a5fa; }
+  .card-steps        { border-left-color: #818cf8; }
+  .card-criteria     { border-left-color: #34d399; }
+  .card-verification {
+    border-left-color: #fb923c;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%);
+  }
+  .card-next-steps   { border-left-color: #a78bfa; }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
   .steps-list {
     display: flex;
     flex-direction: column;
     gap: .85rem;
-    margin-bottom: 1.25rem;
+    position: relative;
   }
+  /* Vertical connector line */
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 2px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
   .step-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    padding: 1.1rem 1.25rem;
     box-shadow: var(--shadow);
     position: relative;
+    margin-left: 2.25rem;
+    transition: box-shadow .2s ease, transform .2s ease;
   }
-  .step-card-header {
-    display: flex;
-    align-items: flex-start;
-    gap: .9rem;
+  .step-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+  @media (prefers-reduced-motion: reduce) {
+    .step-card, .step-card:hover { transition: none; transform: none; }
   }
+  /* Timeline circle node */
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem;
+    top: 1.15rem;
+    width: .875rem;
+    height: .875rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2.5px solid var(--bg);
+    transition: background .2s ease;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
     width: 2rem;
     height: 2rem;
-    background: var(--accent-bg);
-    color: var(--accent);
+    background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+    color: #fff;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: .8rem;
     font-weight: 700;
+    box-shadow: 0 2px 6px rgba(79,70,229,.3);
     margin-top: .1rem;
+    flex-shrink: 0;
   }
-  .step-body { flex: 1; }
-  .step-action { font-weight: 600; margin-bottom: .35rem; }
+  .step-body { flex: 1; min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .35rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+  }
+  /* Step status chip */
+  .step-chip {
+    display: inline-block;
+    font-size: .63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--muted);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip { background: var(--green-bg); color: var(--green); }
+  .step-chip-text { flex: 1; }
   .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .5rem; }
   .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
   .step-verify-toggle {
@@ -259,6 +437,7 @@
     padding-left: .5rem;
     border-left: 3px solid var(--accent);
   }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -266,18 +445,14 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: .6rem;
+    gap: .65rem;
   }
-  .criteria-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: .7rem;
-  }
+  .criteria-list li { display: flex; align-items: flex-start; gap: .75rem; }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1.1rem;
     height: 1.1rem;
-    margin-top: .2rem;
+    margin-top: .25rem;
     accent-color: var(--green);
     cursor: pointer;
   }
@@ -285,13 +460,7 @@
   .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
 
   /* ── Next steps ────────────────────────────────────────────────── */
-  .next-steps-section { margin-bottom: 1.25rem; }
-  .next-steps-list {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .next-step-item { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
   .next-step-item summary {
     font-weight: 600;
@@ -303,12 +472,14 @@
     gap: .5rem;
     background: var(--surface);
     user-select: none;
+    min-height: 44px;
   }
   .next-step-item summary::before { content: "▶"; font-size: .6em; color: var(--muted); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
   .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); }
   .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
   /* Wish list variant */
   .wish-list-header {
@@ -329,10 +500,7 @@
     background: var(--wish-border);
     opacity: .4;
   }
-  .wish-item {
-    border: 1.5px dashed var(--wish-border) !important;
-    background: var(--wish-bg);
-  }
+  .wish-item { border: 1.5px dashed var(--wish-border) !important; background: var(--wish-bg); }
   .wish-item summary { background: var(--wish-bg); color: #6d28d9; }
   .wish-badge {
     font-size: .65rem;
@@ -364,42 +532,56 @@
     align-items: center;
     gap: .6rem;
     user-select: none;
+    min-height: 44px;
   }
   .optional-section > summary::before { content: "▶"; font-size: .6em; color: var(--muted); transition: transform .2s; }
   .optional-section[open] > summary::before { transform: rotate(90deg); }
   .optional-body { padding: 0 1.5rem 1.5rem; }
-  .unresolved-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .unresolved-item summary {
-    font-weight: 600;
-    padding: .5rem 0;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-  }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .5rem 0; cursor: pointer; list-style: none; user-select: none; }
   .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
 
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     text-align: center;
     font-size: .75rem;
     color: var(--muted);
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 2px solid transparent;
+    background:
+      linear-gradient(var(--bg), var(--bg)) padding-box,
+      linear-gradient(90deg, #38bdf8, #818cf8, #c084fc) border-box;
+  }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .layout { display: block !important; }
+    body { background: #fff; }
+    .plan-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .step-card, .section-card {
+      box-shadow: none !important;
+      border: 1px solid #ccc !important;
+      break-inside: avoid;
+      transform: none !important;
+    }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+    .status-badge { border: 1px solid currentColor; }
   }
 </style>
 </head>
 <body>
-<div class="plan-wrap">
+<a href="#main" class="skip-link">Skip to content</a>
 
-  <!-- ── Header ───────────────────────────────────────────────── -->
-  <header class="plan-header">
+<!-- ── Header ─────────────────────────────────────────────────── -->
+<header class="plan-header">
+  <div class="plan-header-inner">
     <div class="plan-header-top">
       <h1 class="plan-title">Plan: {title}</h1>
       <span class="status-badge">{status}</span>
@@ -409,150 +591,250 @@
       <span class="meta-repo">{repo-name}</span>
       <span class="meta-type">{type}</span>
     </div>
-  </header>
-
-  <!-- ── Objective ─────────────────────────────────────────────── -->
-  <div class="objective-card">
-    <div class="section-label">Objective</div>
-    <p>{objective}</p>
   </div>
+</header>
 
-  <!-- ── Progress bar ──────────────────────────────────────────── -->
-  <div class="progress-wrap">
-    <div class="progress-header">
-      <span>Acceptance criteria</span>
-      <span id="progress-label">0 / {criteria-count} done</span>
+<div class="layout">
+
+  <!-- ── Sidebar nav ──────────────────────────────────────────── -->
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <ul>
+      <li><a href="#objective">🎯 Objective</a></li>
+      <li><a href="#progress">📊 Progress</a></li>
+      <li><a href="#context">📋 Context</a></li>
+      <li><a href="#steps">🚀 Steps</a></li>
+      <li><a href="#criteria">✅ Criteria</a></li>
+      <li><a href="#verification">🔍 Verification</a></li>
+      <li><a href="#next-steps">🔜 Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── Objective ────────────────────────────────────────────── -->
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>{objective}</p>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+
+    <!-- ── Progress bar ─────────────────────────────────────────── -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">0 / {criteria-count} done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- ── Context ───────────────────────────────────────────────── -->
-  <div class="section-card">
-    <h2>Context</h2>
-    <p>{context}</p>
-  </div>
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context"><span class="section-icon">📋</span> Context</h2>
+      <p>{context}</p>
+    </section>
 
-  <!-- ── Steps ─────────────────────────────────────────────────── -->
-  <div class="section-card">
-    <h2>Steps</h2>
-    <div class="steps-list">
+    <!-- ── Steps ────────────────────────────────────────────────── -->
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps"><span class="section-icon">🚀</span> Steps</h2>
+      <div class="steps-list">
 
-      <div class="step-card">
-        <div class="step-card-header">
-          <div class="step-number">1</div>
-          <div class="step-body">
-            <div class="step-action">{step-1-action}</div>
-            <div class="step-why">{step-1-why}</div>
-            <details class="step-verify-toggle">
-              <summary>Verify</summary>
-              <div class="verify-body">{step-1-verify}</div>
-            </details>
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">{step-1-action}</span>
+              </div>
+              <div class="step-why">{step-1-why}</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">{step-1-verify}</div>
+              </details>
+            </div>
           </div>
         </div>
+
+        <!-- Duplicate the block above for each additional step -->
+
       </div>
+    </section>
 
-      <!-- Duplicate the block above for each additional step -->
-
-    </div>
-  </div>
-
-  <!-- ── Acceptance Criteria ───────────────────────────────────── -->
-  <div class="section-card">
-    <h2>Acceptance Criteria</h2>
-    <ul class="criteria-list" id="criteria-list">
-      <li>
-        <input type="checkbox" id="ac1">
-        <label for="ac1">{criterion-1}</label>
-      </li>
-      <li>
-        <input type="checkbox" id="ac2">
-        <label for="ac2">{criterion-2}</label>
-      </li>
-      <!-- Add more <li> items as needed -->
-    </ul>
-  </div>
-
-  <!-- ── Verification ───────────────────────────────────────────── -->
-  <div class="section-card">
-    <h2>Verification</h2>
-    <p>{end-to-end-verification}</p>
-  </div>
-
-  <!-- ── Next Steps (optional — remove section if empty) ──────── -->
-  <div class="section-card next-steps-section">
-    <h2>Next Steps</h2>
-    <div class="next-steps-list">
-
-      <!-- Actionable next step -->
-      <details class="next-step-item">
-        <summary>{next-step-1-label}</summary>
-        <div class="next-step-prompt">
-          <p>Paste this prompt into Claude to execute this follow-up:</p>
-          <pre>{next-step-1-prompt}</pre>
-        </div>
-      </details>
-
-      <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-      <div class="wish-list-header">🔭 Wish List</div>
-
-      <details class="next-step-item wish-item">
-        <summary>
-          {wish-1-label}
-          <span class="wish-badge">Wish List</span>
-        </summary>
-        <div class="next-step-prompt">
-          <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-          <pre>{wish-1-prompt}</pre>
-        </div>
-      </details>
-
-    </div>
-  </div>
-
-  <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
-  <details class="optional-section">
-    <summary>❓ Unresolved Questions</summary>
-    <div class="optional-body">
-      <ul class="unresolved-list">
+    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria"><span class="section-icon">✅</span> Acceptance Criteria</h2>
+      <ul class="criteria-list" id="criteria-list">
         <li>
-          <details class="unresolved-item">
-            <summary>{question-1-label}</summary>
-            <div class="unresolved-prompt">
-              <pre>{question-1-prompt}</pre>
-            </div>
-          </details>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">{criterion-1}</label>
         </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2">{criterion-2}</label>
+        </li>
+        <!-- Add more <li> items as needed -->
       </ul>
-    </div>
-  </details>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
 
-  <footer class="plan-footer">
-    Generated by plan-agent · {created} · {repo-name}
-  </footer>
+    <!-- ── Verification ──────────────────────────────────────────── -->
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification"><span class="section-icon">🔍</span> Verification</h2>
+      <p>{end-to-end-verification}</p>
+    </section>
 
-</div><!-- /.plan-wrap -->
+    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps"><span class="section-icon">🔜</span> Next Steps</h2>
+      <div class="next-steps-list">
+
+        <!-- Actionable next step -->
+        <details class="next-step-item">
+          <summary>{next-step-1-label}</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>{next-step-1-prompt}</pre>
+          </div>
+        </details>
+
+        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
+        <div class="wish-list-header">🔭 Wish List</div>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            {wish-1-label}
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>{wish-1-prompt}</pre>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
+    <details class="optional-section">
+      <summary>❓ Unresolved Questions</summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item">
+              <summary>{question-1-label}</summary>
+              <div class="unresolved-prompt">
+                <pre>{question-1-prompt}</pre>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <footer class="plan-footer">
+      Generated by plan-agent · {created} · {repo-name}
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
 
 <script>
-  (function () {
-    var total = document.querySelectorAll('#criteria-list input[type="checkbox"]').length;
-    var bar   = document.getElementById('progress-bar');
-    var label = document.getElementById('progress-label');
+(function () {
+  'use strict';
 
-    function update() {
-      var done = document.querySelectorAll('#criteria-list input:checked').length;
-      var pct  = total ? Math.round(done / total * 100) : 0;
-      if (bar)   bar.style.width = pct + '%';
-      if (label) label.textContent = done + ' / ' + total + ' done';
+  /* ── Progress bar + localStorage ────────────────────────────── */
+  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
     }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
 
-    document.querySelectorAll('#criteria-list input[type="checkbox"]').forEach(function (cb) {
-      cb.addEventListener('change', update);
+  function saveState() {
+    var state = {};
+    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function restoreState() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!raw) return;
+    var state;
+    try { state = JSON.parse(raw); } catch (e) { return; }
+    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
+    updateProgress();
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      updateProgress();
+      saveState();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
     });
+  });
 
-    update();
-  })();
+  restoreState();
+  updateProgress();
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
 </script>
 </body>
 </html>
