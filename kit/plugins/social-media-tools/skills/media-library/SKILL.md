@@ -116,10 +116,8 @@ Generate a visual HTML gallery page from the saved cards:
 
 1. **Locate plugin assets** — find `templates/` directory to derive `$PLUGIN_DIR`:
    ```bash
-   ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
-     echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
    find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
-   find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
+   find "$PWD" -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
    ```
    Use the first non-empty result as `TEMPLATES_DIR`. Derive:
    ```bash
