@@ -1,3 +1,10 @@
+---
+title: Content-first share-session recap card
+status: completed
+type: standard
+created: 2026-05-29
+---
+
 # Content-first `share-session` recap card
 
 ## Context
