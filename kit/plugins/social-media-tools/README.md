@@ -16,10 +16,12 @@ Two complementary workflows: a **discovery pipeline** (scan git history or a cod
 | `video-share` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
 | `github-code-share` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
 | `selection-share` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
+| `session-share` | Skill | Session recap card — token usage, duration, files changed, commits, and one-line narrative |
 | `project-share` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
 | `scan-for-shares` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data |
 | `/code-share:social-share-bg` | Command | Fire-and-forget background share — explicit entry point for the router |
+| `/code-share:session-bg` | Command | Fire-and-forget background session recap — dispatches `session-share` non-interactively |
 | `/code-share:digest` | Command | Interactive discovery scan with multi-select candidate review |
 | `/code-share:digest-bg` | Command | Fire-and-forget background digest scan |
 | `agent-social-share` | Agent | Background agent; runs the chosen card skill non-interactively and reports `SOCIAL-SHARE: DONE` |
@@ -104,6 +106,33 @@ Skills activate automatically — just describe what you want to share.
 **Use a prompt from the digest:**
 > `/code-share:code-share feature-card for LinkedIn: the new security-scrub skill`
 
+### Share a session recap (background, zero-interruption)
+
+```bash
+# Share current session stats in the background — returns immediately
+/code-share:session-bg
+
+# Target a specific platform
+/code-share:session-bg --platform=linkedin
+/code-share:session-bg --platform=all --tone=professional
+
+# Share a specific past session by ID or path
+/code-share:session-bg --session=abc123-session-id
+/code-share:session-bg --session=~/.claude/projects/-Users-me-myrepo/abc123.jsonl
+```
+
+The `session-share` skill activates automatically when you describe what you want to recap:
+
+> "Share my session stats"
+> "Post my token usage from today"
+> "Create a session recap card"
+
+The card shows total/input/output/cache tokens, cache hit rate, duration, files changed,
+and commits — **tokens only, no dollar amounts**. The mandatory security scrub runs on
+the session narrative before any content is generated.
+
+---
+
 ### Scrub code for secrets before sharing
 
 The `security-scrub` skill activates automatically when you ask to check code for leaks:
@@ -121,6 +150,7 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 | `blog-card` | Blog post or article shares | `templates/blog-card.html` |
 | `video-card` | YouTube or Vimeo video shares | `templates/video-card.html` |
 | `snippet-card` | GitHub code file or snippet shares | `templates/snippet-card.html` |
+| `session-card` | Claude Code session recaps with token metrics | `templates/session-card.html` |
 
 See [`references/variables.md`](references/variables.md) for the full variable reference for each card type.
 
@@ -136,7 +166,8 @@ social-media-tools/
 │   └── agent-digest.md                    ← background digest agent
 ├── commands/
 │   ├── digest.md                           ← /code-share:digest
-│   └── digest-bg.md                        ← /code-share:digest-bg
+│   ├── digest-bg.md                        ← /code-share:digest-bg
+│   └── session-bg.md                       ← /code-share:session-bg
 ├── references/                             ← shared pipeline logic (all card skills)
 │   ├── copy-panels.md                      ← {{COPY_PANELS}} markup + escaping rules
 │   ├── language-map.md                     ← file extension → language + badge colour
@@ -146,7 +177,8 @@ social-media-tools/
 │   ├── saving-and-delivery.md              ← persistent save block + deliver phase
 │   └── variables.md                        ← per-template variable maps (all 6 cards)
 ├── scripts/
-│   └── find_free_port.py                   ← port helper for Playwright
+│   ├── find_free_port.py                   ← port helper for Playwright
+│   └── session_usage.py                    ← JSONL parser for session token stats
 ├── skills/
 │   ├── blog-share/
 │   │   ├── SKILL.md
@@ -160,6 +192,8 @@ social-media-tools/
 │   │   └── SKILL.md
 │   ├── selection-share/
 │   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
+│   ├── session-share/
+│   │   └── SKILL.md                       ← session recap card with token usage stats
 │   ├── project-share/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -181,11 +215,33 @@ social-media-tools/
     ├── diff-card.html
     ├── feature-card.html
     ├── quote-card.html
+    ├── session-card.html
     ├── snippet-card.html
     └── video-card.html
 ```
 
 ## Components
+
+### Skill: `session-share`
+
+**File:** `skills/session-share/SKILL.md`
+**Activation:** automatic — triggers when the user asks to share a session, post session stats, or recap token usage.
+
+**Inputs:**
+
+| Input | Values | Notes |
+|-------|--------|-------|
+| Platform | LinkedIn, Twitter/X, Bluesky, All sites | Default: All sites in background mode |
+| Tone | Professional, Casual, Punchy | Default varies by platform |
+| `--session=<id\|path>` | Session ID or absolute `.jsonl` path | Optional; defaults to current session via `$CLAUDE_CODE_SESSION_ID` |
+
+**Workflow:** run `session_usage.py` for token counts + first user prompt → `git log --after=<first_timestamp>` for files/commits → security-scrub on summary text → draft tokens-only platform copy → populate `session-card.html` → Playwright screenshot → deliver copy + PNG.
+
+**Token display:** all counts formatted with commas, no dollar amounts — tokens only by design.
+
+**Background via `/code-share:session-bg`:** exits plan mode, dispatches `agent-social-share` with `TARGET_SKILL=session-share --background`, returns a one-line ack immediately.
+
+---
 
 ### Skill: `blog-share`
 

@@ -1,5 +1,36 @@
 # Changelog — social-media-tools
 
+## v0.10.0 — 2026-05-28
+
+Added `session-share` skill, `session-bg` command, `session-card.html` template, and
+`session_usage.py` parser for zero-interruption coding session recap posts.
+
+- `session-share` skill (new): reads the live session JSONL via `session_usage.py` to
+  extract token counts (input, output, cache write/read, cache hit rate), duration, and
+  model; runs `git log --after=<first_timestamp>` to collect files changed and commits
+  within the session window; derives a one-line `SUMMARY` from the first user prompt;
+  runs mandatory `security-scrub` on the summary text before drafting; produces
+  tokens-only platform-aware copy (LinkedIn/Twitter/Bluesky) — **no dollar amounts**;
+  populates `session-card.html` and follows the shared rendering + save pipeline
+- `session-bg` command (new): `/code-share:session-bg` — exits plan mode, dispatches
+  `agent-social-share` directly with `TARGET_SKILL=session-share --background`, returns
+  a one-line ack immediately; all flags from `$ARGUMENTS` passed through verbatim
+- `templates/session-card.html` (new): dark-mode metric-dashboard card — 8-tile grid
+  (total tokens, input, output, cache read, cache hit rate, duration, files changed,
+  commits) + title/model header + one-line summary; reuses shared palette tokens and
+  `.card{width:720px}` width
+- `scripts/session_usage.py` (new): stdlib-only Python parser; resolves session JSONL
+  from `$CLAUDE_CODE_SESSION_ID` + cwd encoding (`/`→`-`), falls back to newest-mtime
+  `*.jsonl`; accepts an explicit path arg; streams lines defensively (tolerates truncated
+  active sessions); emits JSON with `total_tokens`, `input_tokens`, `output_tokens`,
+  `cache_write`, `cache_read`, `cache_hit_rate`, `duration_minutes`,
+  `first_timestamp_iso`, `models[]`, `user_msgs`, `assistant_msgs`, `tool_calls`,
+  `first_user_prompt`, `session_id`
+- `references/variables.md` updated: `session-card.html` variable table added including
+  token format spec (commas, no `$`) and HTML-escape requirements
+- `skills/media-library/SKILL.md` updated: `session` added to the filename-type mapping
+  and the `{type}-{slug}-{YYYY-MM-DD}` type enum
+
 ## v0.9.0 — 2026-05-28
 
 Added `social-share` router skill, `agent-social-share` background agent, `social-share-bg`

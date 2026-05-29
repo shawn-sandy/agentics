@@ -11,6 +11,7 @@ comment block at the top listing its variables and an example.
 - [blog-card.html](#blog-cardhtml)
 - [video-card.html](#video-cardhtml)
 - [snippet-card.html](#snippet-cardhtml)
+- [session-card.html](#session-cardhtml)
 
 ---
 
@@ -161,3 +162,39 @@ Apply to `CODE_LINES` in this exact order:
   display name (`TypeScript`).
 - `LANGUAGE_COLOR` is sourced exclusively from `references/language-map.md` (plugin-root
   shared reference) — never from fetched content or user input.
+
+---
+
+## session-card.html
+
+> Used by `session-share` skill. All token counts must be formatted with commas before
+> substitution. **Never substitute dollar amounts or cost values** — tokens only.
+
+### Variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{TITLE}}` | Session title (HTML-escaped; e.g. `session recap · 2026-05-28`) |
+| `{{MODEL}}` | Model name for the badge (HTML-escaped; e.g. `sonnet-4-6`) |
+| `{{TOTAL_TOKENS}}` | Total tokens (input + output), formatted with commas (HTML-escaped) |
+| `{{INPUT_TOKENS}}` | Input tokens formatted with commas (HTML-escaped) |
+| `{{OUTPUT_TOKENS}}` | Output tokens formatted with commas (HTML-escaped) |
+| `{{CACHE_READ}}` | Cache-read tokens formatted with commas (HTML-escaped) |
+| `{{CACHE_HIT_RATE}}` | Cache hit rate percentage (HTML-escaped; e.g. `44.2%`) |
+| `{{DURATION}}` | Session duration in minutes (HTML-escaped; e.g. `47 min`; `0 min` if unknown) |
+| `{{FILES_CHANGED}}` | Count of distinct files changed in the session git window (HTML-escaped) |
+| `{{COMMITS}}` | Count of commits in the session git window (HTML-escaped) |
+| `{{SUMMARY}}` | One-line session narrative derived from the first user prompt, truncated to 160 chars (HTML-escaped) |
+| `{{COPY_PANELS}}` | Copy panel HTML — see `references/copy-panels.md` |
+
+### Token display format
+
+Format all token integers with Python `f"{value:,}"` before HTML-escaping (e.g. `42180` → `42,180`).
+
+### HTML-escape order (mandatory)
+
+Apply to every variable above in this exact order:
+1. `&` → `&amp;` ← first, to prevent double-escaping
+2. `<` → `&lt;`
+3. `>` → `&gt;`
+4. `"` → `&quot;`

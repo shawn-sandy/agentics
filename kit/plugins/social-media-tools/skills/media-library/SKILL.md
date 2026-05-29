@@ -46,7 +46,7 @@ For each HTML file path (e.g., `docs/media/social/diff-add-copy-button-2026-05-2
 
 | Field | Example |
 |-------|---------|
-| Type | `diff`, `feature`, `quote`, `blog`, `snippet`, `video` |
+| Type | `diff`, `feature`, `quote`, `blog`, `snippet`, `video`, `session` |
 | Topic | `add-copy-button` (slug, replace hyphens with spaces) |
 | Date | `2026-05-27` |
 
@@ -93,6 +93,7 @@ Ask the user which number they want (or accept a filename). Then:
    - `video` → `video-share`
    - `snippet` → `github-code-share`
    - `project` → `project-share`
+   - `session` → `session-share`
 
 ### Open in browser
 
