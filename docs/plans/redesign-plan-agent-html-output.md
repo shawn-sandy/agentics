@@ -1,5 +1,5 @@
 ---
-status: todo
+status: completed
 type: feature
 created: 2026-05-29
 repo-name: agentics
