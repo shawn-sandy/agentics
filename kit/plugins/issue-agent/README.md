@@ -2,33 +2,25 @@
 
 Create GitHub or GitLab issues from any context — selection, session, bug, or feature description — without leaving the Claude Code session.
 
-## Overview
-
-`issue-agent` provides a single manual-invoke skill, `create-issue`, that:
-
-- Detects the git host automatically (GitHub → `gh`, GitLab → `glab`)
-- Ingests context from four sources: a text selection, the current session, a bug description, or a feature request
-- Gathers repo context (related files, duplicate check, environment info for bugs)
-- Drafts a structured issue body using per-type templates
-- Always shows a confirmation gate before writing to the remote — no issue is created without your approval
-
-## Features
-
-| Component | Invocation | What it does |
-|-----------|-----------|--------------|
-| `create-issue` skill | `/issue-agent:create-issue [bug\|feature\|selection\|session] [title]` | Drafts and creates an issue with confirmation gate |
-
 ## Installation
 
+### Via Marketplace (recommended)
 ```bash
-# Load for local testing
-claude --plugin-dir ~/devbox/agentics/kit/plugins/issue-agent
-
-# Install from the agentics-kit marketplace
 /plugin install issue-agent@agentics-kit
 ```
 
+### Local Development
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/issue-agent
+```
+
 ## Usage
+
+### Skills
+
+#### `create-issue` — Manual invoke only — use `/issue-agent:create-issue` explicitly
+
+Drafts and opens a GitHub or GitLab issue from any context source. Detects the git host from the remote URL and always shows a confirmation gate before creating the issue.
 
 ```bash
 # File a bug from a description
@@ -56,6 +48,22 @@ gh auth login
 # Authenticate with GitLab
 glab auth login
 ```
+
+## Overview
+
+`issue-agent` provides a single manual-invoke skill, `create-issue`, that:
+
+- Detects the git host automatically (GitHub → `gh`, GitLab → `glab`)
+- Ingests context from four sources: a text selection, the current session, a bug description, or a feature request
+- Gathers repo context (related files, duplicate check, environment info for bugs)
+- Drafts a structured issue body using per-type templates
+- Always shows a confirmation gate before writing to the remote — no issue is created without your approval
+
+## Features
+
+| Component | Invocation | What it does |
+|-----------|-----------|--------------| 
+| `create-issue` skill | `/issue-agent:create-issue [bug\|feature\|selection\|session] [title]` | Drafts and creates an issue with confirmation gate |
 
 ## Plugin Structure
 

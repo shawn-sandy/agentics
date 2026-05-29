@@ -7,7 +7,7 @@ Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted co
 Two complementary workflows:
 
 - **Discovery pipeline** — scan git history or a codebase path → scrub → review → write a digest.
-- **Card generation pipeline** — draft copy → render a dark-mode card image from one of six templates.
+- **Card generation pipeline** — draft copy → render a dark-mode card image from one of seven templates.
 
 No path in this plugin auto-posts — human review is always required before anything reaches a social network.
 
@@ -16,7 +16,7 @@ No path in this plugin auto-posts — human review is always required before any
 | Component | Type | Description |
 |-----------|------|-------------|
 | `social-share` | Skill | **Router** — classifies a natural-language request and runs the right skill |
-| `share-session` | Skill | Generate a dark-mode session recap card from the live session JSONL — tokens, duration, commits, and platform copy |
+| `share-session` | Skill | Generate a narrative session recap card summarizing accomplishments, highlights, and platform copy |
 | `share-code` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
 | `share-blog` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
 | `share-video` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
@@ -30,16 +30,41 @@ No path in this plugin auto-posts — human review is always required before any
 
 ## Installation
 
-```bash
-# From the agentics marketplace
-/plugin marketplace add shawn-sandy/agentics
-/plugin install social-media-tools@agentics-kit
+### Via Marketplace (recommended)
 
-# Local dev
-claude --plugin-dir ./kit/plugins/social-media-tools
+```bash
+/plugin install social-media-tools@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/social-media-tools
 ```
 
 ## Usage
+
+### Commands
+
+| Invocation | Description |
+|-----------|-------------|
+| `/social-media-tools:digest [--days=7] [--base=main] [--max=20] \| --codebase <path>` | Interactive discovery scan — runs share-scan, presents candidates for review, and writes approved entries to `.claude/digests/` |
+
+### Skills
+
+| Skill | Activation | Trigger |
+|-------|-----------|---------|
+| `social-share` | Automatic | Share what you're working on, post code, a blog, video, or project update |
+| `share-session` | Automatic | Share my session, session recap, what I worked on, what I did today, session summary |
+| `share-code` | Automatic | Post or share a code change, write a LinkedIn post about today's changes |
+| `share-blog` | Automatic | Share a blog post or article on social media |
+| `share-video` | Automatic | Share or promote a video on social media |
+| `share-github` | Automatic | Share a code snippet from a GitHub repository |
+| `share-selection` | Automatic | Share, post, or tweet selected, highlighted, or pasted code |
+| `share-project` | Manual invoke only — use `/social-media-tools:share-project` explicitly | Reached via `social-share` router with `--topic` flag or explicit dispatch; not activated by passive intent matching |
+| `share-scan` | Automatic | Find commits worth sharing, create a digest, scan codebase for shareable code |
+| `media-library` | Automatic | Browse the media library, find a prior post, view saved posts |
+| `security-scrub` | Automatic | Check for secrets, review a diff for leaks, scrub this file for sensitive data |
 
 ### Discover what's worth sharing
 
@@ -110,6 +135,7 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 | `blog-card` | Blog post or article shares | `templates/blog-card.html` |
 | `video-card` | YouTube or Vimeo video shares | `templates/video-card.html` |
 | `snippet-card` | GitHub code file or snippet shares | `templates/snippet-card.html` |
+| `session-card` | Session recap — accomplishments, highlights, token usage | `templates/session-card.html` |
 
 See [`references/variables.md`](references/variables.md) for the full variable reference for each card type.
 
@@ -130,7 +156,7 @@ social-media-tools/
 │   ├── rendering-pipeline.md              ← find_free_port → HTTP server → Playwright → kill
 │   ├── reuse-check.md                     ← scan docs/media/social/ + offer reuse
 │   ├── saving-and-delivery.md             ← persistent save block + deliver phase
-│   └── variables.md                       ← per-template variable maps (all 6 cards)
+│   └── variables.md                       ← per-template variable maps (all 7 cards)
 ├── scripts/
 │   └── find_free_port.py                  ← port helper for Playwright
 ├── skills/
@@ -161,7 +187,7 @@ social-media-tools/
 │   ├── share-selection/
 │   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
 │   ├── share-session/
-│   │   └── SKILL.md                       ← session recap card (tokens, duration, commits)
+│   │   └── SKILL.md                       ← narrative session recap card (accomplishments, highlights, tokens)
 │   ├── share-video/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -186,6 +212,17 @@ social-media-tools/
 **Activation:** automatic — triggers when the user asks to share what they're working on, or to post code, a blog, a video, or a project update without naming a specific skill.
 
 The entry point for everything. It classifies a natural-language request (first-match-wins rules), resolves a default platform, captures any inline code to a temp file, and invokes the matching skill directly. Waits for the skill to complete and reports the saved card path.
+
+---
+
+### Skill: `share-session`
+
+**File:** `skills/share-session/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to share their session, create a session recap, summarize what they worked on, or share a session summary.
+
+Generates a narrative-first session recap card — the primary content is a short summary of what was accomplished and the session highlights. Token usage, duration, and commit count appear as secondary stats in the card footer.
+
+**Workflow:** read session context → draft narrative summary + highlights → populate `session-card.html` → Playwright screenshot → deliver copy + PNG.
 
 ---
 
@@ -316,7 +353,7 @@ Interactive front-end for `share-scan`. Runs the scan, presents candidates for r
 
 ### Skill: `share-code`
 
-**File:** `skills/share-code/SKILL.md`
+**File:** `skills/share-code/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to write a post, tweet, or share a code change.
 
 **Inputs (collected automatically or via prompt):**

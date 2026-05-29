@@ -25,27 +25,38 @@ Installers get on-demand planning with argument support and the filename guardra
 
 **Requires:** Claude Code 1.0.33 or later.
 
-```
-/plugin marketplace add shawn-sandy/agentics
+### Via Marketplace (recommended)
+
+```bash
 /plugin install plan-agent@agentics-kit
 ```
 
-Or load directly for local testing:
+### Local Development
 
 ```bash
-claude --plugin-dir ./kit/plugins/plan-agent
+claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent
 ```
 
 ## Usage
 
-### Skill (explicit invocation)
+### Skills
 
-Invoke `/plan-agent:planning` with a free-text objective:
+#### `planning` — Manual invoke only
+
+Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and HTML metadata.
+
+Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `disable-model-invocation: true` and will not auto-activate on ambient intent.
 
 ```
 /plan-agent:planning create a todo app for ravens
 /plan-agent:planning fix the login redirect bug in auth middleware
 /plan-agent:planning refactor the user settings module into smaller services
+```
+
+**Full invocation syntax:**
+
+```
+/plan-agent:planning <objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default|minimal|adr|spike] [--dir <path>] [--priority low|medium|high|critical] [--interview]
 ```
 
 **Flags:**
@@ -56,9 +67,9 @@ Invoke `/plan-agent:planning` with a free-text objective:
 | `--no-clarify` | Skip §1 Clarify only |
 | `--no-align` | Skip §5 Align only |
 | `--type <kind>` | Set plan `type` in HTML metadata (`feature`, `fix`, `refactor`, `docs`, `chore`) |
-| `--template <name>` | Reserved for future HTML skeleton variants; use `default` (or omit) |
+| `--template <name>` | Select HTML skeleton variant: `default`, `minimal`, `adr`, or `spike` (see table below) |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
-| `--priority <level>` | Write `priority:` to frontmatter (`low`, `medium`, `high`, `critical`) |
+| `--priority <level>` | Write `priority` to plan HTML metadata (`low`, `medium`, `high`, `critical`) |
 | `--interview` | After writing the plan, run `plan-interview:plan-interview` before `ExitPlanMode` (requires `plan-interview` plugin) |
 
 **Available templates:**
@@ -102,7 +113,7 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 - **Objective card** — prominent highlighted block at the top
 - **Step cards** — numbered, each with an expandable *Verify* disclosure
 - **Interactive checkboxes** — acceptance criteria the user can tick in the browser, with a live progress bar
-- **🔭 Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment
+- **Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment
 - **Collapsible sections** — Next Steps and Unresolved Questions use `<details>` for progressive disclosure
 
 Open the `.html` file directly in any browser. No server required.
@@ -149,7 +160,7 @@ The hook and skill both read a `planAgent` object from `.claude/settings.json` (
     "additionalVerbs": ["onboard", "publish", "ingest"],
     "additionalStopWords": ["new", "better"],
     "additionalPlaceholders": ["scratch", "wip", "idea"],
-    "extraFrontmatter": {
+    "extraMetadata": {
       "team": "engineering",
       "milestone": "Q3-2026",
       "priority": "medium"
@@ -163,7 +174,7 @@ The hook and skill both read a `planAgent` object from `.claude/settings.json` (
 | `additionalVerbs` | `string[]` | Merged with the built-in imperative verb set; custom verbs are accepted as valid first tokens |
 | `additionalStopWords` | `string[]` | Merged with the built-in stop-word set; custom tokens are rejected as second tokens |
 | `additionalPlaceholders` | `string[]` | Merged with generic placeholder names (`plan`, `draft`, etc.); listed names are rejected as full filenames |
-| `extraFrontmatter` | `object` | Key-value pairs appended to every new plan's YAML frontmatter after `repo-name:`. `--priority` overrides any `priority` key here. |
+| `extraMetadata` | `object` | Key-value pairs written as additional `<meta>` tags in every new plan's HTML `<head>`. `--priority` overrides any `priority` key here. |
 
 ## Plugin Structure
 
@@ -175,7 +186,10 @@ plan-agent/
     planning/
       SKILL.md              — Plan Mode workflow, arguments, structure, writing style
       reference/
-        SKELETON.html       — Starter HTML template for new plans
+        SKELETON.html       — Default full-plan HTML template
+        SKELETON-minimal.md — Minimal template (context + steps + criteria + verification)
+        SKELETON-adr.md     — Architecture Decision Record template
+        SKELETON-spike.md   — Spike / time-boxed investigation template
   hooks/
     validate-plan-filename.py  — PostToolUse filename enforcement script
   hooks.json                — Hook registration (Write|Edit matcher)
@@ -194,7 +208,7 @@ Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent
 - **Workflow §0–§7** — Assess, Clarify, Create, Metadata, Rename, Align, Commit, Status
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
-- **Skeleton reference** — points to `reference/SKELETON.html` one level deep
+- **Skeleton reference** — points to `reference/SKELETON.html` (default) or the matching `SKELETON-<template>.md` for `minimal`, `adr`, and `spike` templates
 
 Both `EnterPlanMode` and `ExitPlanMode` are deferred tools. The skill loads them via `ToolSearch` (`select:EnterPlanMode`, `select:ExitPlanMode`) before calling each.
 
