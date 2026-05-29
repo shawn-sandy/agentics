@@ -428,3 +428,12 @@ Human review is always required before posting — no path in this plugin auto-p
 - **Playwright MCP** — required for the screenshot pipeline. If unavailable, the skill falls back to providing the HTML path for a manual screenshot.
 - **Python 3** — used by `find_free_port.py` and `http.server` for the local card server.
 - **Git** — used in Phase 1 to auto-detect recent changes and commits.
+
+> **Note — Playwright MCP is an external dependency, not bundled.** This plugin's
+> `plugin.json` does not declare the Playwright MCP server, so card rendering relies
+> on Playwright being provisioned separately (e.g. installed as its own plugin or
+> configured in your `mcpServers`). The rendering pipeline already documents a manual
+> fallback (`references/rendering-pipeline.md`): when Playwright is unavailable, the
+> populated HTML is left in `~/.claude/tmp/` to screenshot by hand. Provisioning or
+> formally declaring Playwright as a plugin dependency is a separate, planned
+> enhancement.

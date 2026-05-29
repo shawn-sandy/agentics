@@ -15,6 +15,9 @@ and no PNG (or blog/GitHub/video fetch) succeeded in background mode.
   runs skip it. Mirrors the precedent set by `agent-product-plans`.
 - No skill logic changed; the `--background` non-interactive paths were already correct.
 - `agent-digest` / `share-scan` (digest path) was unaffected and is unchanged.
+- README `Requirements`: added a note that the Playwright MCP is an external,
+  non-bundled dependency (not declared in `plugin.json`), pointing to the
+  rendering-pipeline manual fallback; formally declaring it is a planned enhancement.
 
 ## v1.3.0 — 2026-05-29
 
