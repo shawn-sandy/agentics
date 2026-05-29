@@ -24,18 +24,27 @@ Auto-generated files (sessions, caches, plugins, telemetry) are excluded.
 
 ## Installation
 
-```bash
-# From marketplace
-/plugin marketplace add shawn-sandy/agentics
-/plugin install settings-sync@agentics-kit
+### Via Marketplace (recommended)
 
-# Local testing
-claude --plugin-dir ./kit/plugins/settings-sync
+```bash
+/plugin install settings-sync@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/settings-sync
 ```
 
 ## Usage
 
-### Backup
+This plugin is skills-only — there are no slash commands. Both skills are
+auto-activated when your message matches their trigger description. You can
+also pass a repo path inline as an argument.
+
+### settings-backup (Skill — auto-activated)
+
+Triggers when you ask to back up, save, or sync your Claude Code settings.
 
 ```
 back up my claude settings to ~/dotfiles/claude-settings
@@ -47,11 +56,27 @@ Or with a previously configured repo:
 back up my claude settings
 ```
 
-### Restore
+You can pass the repo path inline:
+
+```
+back up my claude settings [repo-path]
+```
+
+### settings-restore (Skill — auto-activated)
+
+Triggers when you ask to restore or import your Claude Code settings.
 
 ```
 restore my claude settings from ~/dotfiles/claude-settings
 ```
+
+You can pass the repo path inline:
+
+```
+restore my claude settings [repo-path]
+```
+
+Always interactive — requires user confirmation before overwriting local files.
 
 ### Routine (automated backup)
 
@@ -99,7 +124,7 @@ settings-sync/
 
 ### settings-backup (Skill)
 
-Activates when the user asks to back up, save, export, or sync their settings.
+Activates when the user asks to back up, save, or sync their settings.
 
 Steps: resolve repo path, validate/init git repo, scan for secrets (first run),
 copy files, write metadata, commit, push.

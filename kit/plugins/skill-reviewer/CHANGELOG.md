@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.2 — README: update hook output example to budget-aware phrasing; sync usage docs
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 All notable changes to the `skill-reviewer` plugin are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Versions follow [Semantic Versioning](https://semver.org/).

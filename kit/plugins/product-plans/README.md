@@ -67,11 +67,13 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
 
 ## Installation
 
+### Via Marketplace (recommended)
+
 ```bash
 /plugin install product-plans@agentics-kit
 ```
 
-Or load locally for testing:
+### Local Development
 
 ```bash
 claude --plugin-dir ~/devbox/agentics/kit/plugins/product-plans
@@ -91,7 +93,21 @@ Add to `~/.claude/settings.json` before using this skill:
 
 ## Usage
 
-The skill activates automatically when you ask to improve, optimize, or review a plan:
+### Skills
+
+#### `plan-review-agents` — Auto-activated
+
+Runs a six-role Agent Team to review product plans in place. Activates
+automatically when you ask to improve, optimize, or review a product plan,
+PRD, or feature proposal.
+
+Trigger phrases include: "review or improve a product plan", "cross-functional
+panel review", "multi-role critique", "PM/Dev/UX/Frontend/Accessibility/Security
+team review of a product plan, PRD, or feature proposal".
+
+For technical implementation plans, use `plan-interview:plan-interview` instead.
+
+Example prompts:
 
 ```
 Improve this product plan.
@@ -108,22 +124,41 @@ Or point it at a specific file:
 Run the review panel on docs/plans/my-feature.md
 ```
 
-### Background mode
+### Commands
 
-Fire the panel unattended and keep working:
+#### `/product-plans:product-plans-bg <path>`
+
+Run the product-plans review panel in the background. Pass the plan path as
+argument. Returns immediately with a one-line ack; Claude notifies you when
+the panel finishes and the plan has been updated in place.
 
 ```
 /product-plans:product-plans-bg docs/plans/my-feature.md
 ```
 
-Returns immediately with a one-line ack. Claude notifies you when the panel
-finishes and the plan has been updated in place at the path you provided.
+If no path is provided, outputs a usage error and stops without dispatching.
 
-You can also call the skill directly with the flag:
+You can also trigger background mode via the skill directly:
 
 ```
 Review this plan in the background: docs/plans/my-feature.md --background
 ```
+
+### Agents
+
+| Agent | Invocation |
+|-------|------------|
+| `agent-product-plans` | Dispatched by `/product-plans:product-plans-bg`; not for direct invocation |
+| `product-reviewer-pm` | Teammate-only — spawned by `plan-review-agents` skill as part of Agent Team |
+| `product-reviewer-lead-developer` | Teammate-only — spawned by `plan-review-agents` skill as part of Agent Team |
+| `product-reviewer-ux-designer` | Teammate-only — spawned by `plan-review-agents` skill as part of Agent Team |
+| `product-reviewer-frontend-engineer` | Teammate-only — spawned by `plan-review-agents` skill as part of Agent Team |
+| `product-reviewer-accessibility-expert` | Teammate-only — spawned by `plan-review-agents` skill as part of Agent Team |
+| `product-reviewer-security-expert` | Teammate-only — spawned by `plan-review-agents` skill as part of Agent Team |
+
+The six `product-reviewer-*` agents are designed exclusively for use as Agent
+Team teammates spawned by the `plan-review-agents` skill. They are not
+intended for standalone invocation.
 
 ## Output
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.2 — README: sync usage documentation with current skill behavior
+
+- Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.
+
 All notable changes to this plugin will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

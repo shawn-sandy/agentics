@@ -4,13 +4,13 @@ Automated git commit and PR creation for Claude Code. Encodes a strict plan→co
 
 ## Features
 
-### Skills (synchronous)
+### Skills (foreground)
 
-- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified (e.g. `"add login page"` → `add-login-page`, max 30 chars). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after.
-- **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after.
-- **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after.
-- **ship** — Stages, commits, pushes, and creates a PR in one flow. Use commit-agent or pr-agent for individual steps.
-- **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist. Falls back to CI polling when run locally without the GitHub MCP server. Use when you want to ship and walk away.
+- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified (e.g. `"add login page"` → `add-login-page`, max 30 chars). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after. Auto-activates on intent match.
+- **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
+- **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
+- **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
+- **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
 
 ### Subagents (background, fire-and-forget)
 
@@ -24,22 +24,53 @@ There is no `agent-branch` — branch creation is synchronous by design (you nee
 
 ## Installation
 
-```bash
-# Load locally for testing
-claude --plugin-dir ./kit/plugins/git-agent
+### Via Marketplace (recommended)
 
-# Or install via marketplace
-/plugin marketplace add /path/to/agentics
+```bash
 /plugin install git-agent@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/git-agent
 ```
 
 ## Usage
 
-All skills activate automatically when intent matches.
+### Commands
+
+| Command | Description |
+|---|---|
+| `/git-agent:commit-bg [hint]` | Dispatch `agent-commit` in the background — stage and commit while you keep working. Optional hint sets commit message context. |
+| `/git-agent:pr-bg [hint]` | Dispatch `agent-pr` in the background — push and open a GitHub PR while you keep working. Optional hint sets PR title/body context. |
+| `/git-agent:ship-bg [hint]` | Dispatch `agent-ship` in the background — full commit + push + PR pipeline end-to-end. Optional hint sets commit/PR context. |
+
+### Skills
+
+| Skill | Activation | Trigger |
+|---|---|---|
+| `branch-agent` | Auto-activated | "create a new branch", "start a branch", "branch off main", "make a fresh branch" |
+| `commit-agent` | Manual invoke only — use `/git-agent:commit-agent` explicitly | "commit my changes", "stage and commit", "commit all changes" |
+| `pr-agent` | Manual invoke only — use `/git-agent:pr-agent` explicitly | "create a PR", "open a pull request", "make a PR", "push and create PR" |
+| `ship` | Manual invoke only — use `/git-agent:ship` explicitly | "ship it", "commit and create a PR", "ship my changes", "send it", "land my work" |
+| `ship-autonomous` | Auto-activated | "ship it autonomously", "ship and watch the PR", "ship and fix what breaks", "ship and autofix CI failures" |
+
+### Agents
+
+Agents are background subagents dispatched via the corresponding slash commands or directly by an orchestrator.
+
+| Agent | Invocation | Description |
+|---|---|---|
+| `agent-commit` | `/git-agent:commit-bg` or `Agent` tool with `subagent_type: agent-commit` | Stages all working-tree changes and creates a conventional commit. Reports the commit hash on completion. |
+| `agent-pr` | `/git-agent:pr-bg` or `Agent` tool with `subagent_type: agent-pr` | Pushes the current branch if needed and opens a GitHub PR with an auto-generated summary. Reports the PR URL on completion. |
+| `agent-ship` | `/git-agent:ship-bg` or `Agent` tool with `subagent_type: agent-ship` | Stages, commits, pushes, and opens a PR/MR end-to-end (GitHub via `gh`, GitLab via `glab`). Reports the PR/MR URL on completion. |
+
+---
 
 ### branch-agent
 
-Say any of:
+Auto-activates when you say any of:
 - "create a new branch called feat/login-fix"
 - "start a branch for dark mode"
 - "branch off main for this feature"
@@ -68,11 +99,7 @@ Use `commit-agent` to commit work on the new branch. Use `pr-agent` when ready t
 
 ### commit-agent
 
-Say any of:
-- "commit my changes"
-- "stage and commit"
-- "commit all changes"
-- "commit everything"
+**Manual invoke only** — does not respond to natural-language intent matching. Invoke explicitly with `/git-agent:commit-agent` or dispatch via `/git-agent:commit-bg` for background operation.
 
 The skill will:
 1. Check for a clean tree or detached HEAD (stops if either)
@@ -85,11 +112,7 @@ The skill will:
 
 ### pr-agent
 
-Say any of:
-- "create a PR"
-- "open a pull request"
-- "make a PR"
-- "push and create PR"
+**Manual invoke only** — does not respond to natural-language intent matching. Invoke explicitly with `/git-agent:pr-agent` or dispatch via `/git-agent:pr-bg` for background operation.
 
 The skill will:
 1. Guard: check for detached HEAD, default branch, `gh` auth
@@ -102,12 +125,7 @@ The skill will:
 
 ### ship
 
-Say any of:
-- "ship it"
-- "commit and create a PR"
-- "ship my changes"
-- "send it"
-- "land my work"
+**Manual invoke only** — does not respond to natural-language intent matching. Invoke explicitly with `/git-agent:ship` or dispatch via `/git-agent:ship-bg` for background operation.
 
 The skill will:
 1. Guard: check for clean tree, detached HEAD, default branch, `gh` auth
@@ -123,7 +141,7 @@ Use `commit-agent` or `pr-agent` if you only need one step.
 
 ### ship-autonomous
 
-Say any of:
+Auto-activates when you say any of:
 - "ship it autonomously"
 - "ship and watch the PR"
 - "ship and fix what breaks"
@@ -162,28 +180,19 @@ The skills above run synchronously in the foreground — your session waits for 
 
 #### agent-commit
 
-Trigger phrases:
-- "commit in the background"
-- "commit and keep going"
-- "fire off a commit while I work"
+Dispatched via `/git-agent:commit-bg [hint]` or directly by an orchestrator.
 
 Mirrors `commit-agent`: guards → `git add -A` → conventional commit message → `git commit`. Reports the commit hash on completion.
 
 #### agent-pr
 
-Trigger phrases:
-- "open a PR in the background"
-- "create an MR summary while I work"
-- "fire off a PR"
+Dispatched via `/git-agent:pr-bg [hint]` or directly by an orchestrator.
 
 Mirrors `pr-agent`: guards → detect base → check for existing PR → push if needed → `gh pr create`. Reports the PR URL on completion.
 
 #### agent-ship
 
-Trigger phrases:
-- "ship it in the background"
-- "ship and keep working"
-- "land my work without blocking me"
+Dispatched via `/git-agent:ship-bg [hint]` or directly by an orchestrator.
 
 Mirrors `ship`: guards → stage → commit → push → check for existing PR/MR → create PR/MR (GitHub via `gh`, GitLab via `glab`). Reports the PR/MR URL on completion.
 
@@ -209,7 +218,8 @@ Example:
 
 ## Requirements
 
-- `pr-agent` requires the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`)
+- `pr-agent`, `ship`, `ship-autonomous`, `agent-pr`, and `agent-ship` all require the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`)
+- GitLab support (`agent-ship`) additionally requires `glab` installed and authenticated
 
 ## Plugin Structure
 

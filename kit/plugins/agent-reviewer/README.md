@@ -15,22 +15,29 @@ Review and audit Claude Code subagent definition files (`agents/*.md`) against o
 
 ## Installation
 
-### From marketplace
+### Via Marketplace (recommended)
 
-```
-/plugin marketplace add shawn-sandy/agentics
+```bash
 /plugin install agent-reviewer@agentics-kit
 ```
 
-### Local testing
+### Local Development
 
 ```bash
-claude --plugin-dir ./kit/plugins/agent-reviewer
+claude --plugin-dir ~/devbox/agentics/kit/plugins/agent-reviewer
 ```
 
 ## Usage
 
-The `reviewing-agents` skill activates automatically when you ask to review an agent:
+This plugin is skills-only — there are no slash commands. The skill activates automatically when your request matches its trigger description.
+
+### Skills
+
+#### reviewing-agents (auto-activated)
+
+Audits Claude Code agent files across 5 quality dimensions. Produces a scored report and optionally generates a fix.
+
+Activates automatically when you ask to review, audit, or score an agent definition file. Example trigger phrases:
 
 ```
 Review my agent definition at agents/agent-code-reviewer.md
@@ -88,6 +95,8 @@ agent-reviewer/
 #### reviewing-agents
 
 Structured audit of subagent definition files. Produces a scored report across 5 quality dimensions and optionally generates a corrected version.
+
+**Activation:** Auto-activated — no slash command needed. The skill activates when user intent matches trigger phrases.
 
 **Trigger phrases:** "review my agent", "audit this agent", "check agent quality", "score my agent definition"
 

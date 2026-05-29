@@ -2,6 +2,60 @@
 
 Structured, multi-dimensional code review across quality, bugs, security, best practices, complexity, and breaking changes & regressions. Provides specific, actionable feedback with line numbers and suggested fixes.
 
+## Installation
+
+### Via Marketplace (recommended)
+
+```bash
+/plugin install code-review@agentics-kit
+```
+
+### Local Development
+
+```bash
+claude --plugin-dir ~/devbox/agentics/kit/plugins/code-review
+```
+
+## Usage
+
+### Commands
+
+| Command | Invocation | Description |
+|---------|-----------|-------------|
+| `fix-branch` | `/code-review:fix-branch [base-branch]` | Review all branch changes vs the default branch, then autonomously fix blocking, major, and minor issues until the branch is clean. Leaves fixes uncommitted. |
+
+### Skills
+
+| Skill | Activation | Trigger phrases |
+|-------|-----------|-----------------|
+| `code-review-agent` | Auto-activated — triggers when user intent matches the description | review code, check for bugs, look over a PR, find security issues, detect breaking changes, check a PR diff |
+
+### Agents
+
+| Agent | Invocation | Description |
+|-------|-----------|-------------|
+| `agent-code-reviewer` | Delegated — invoked by other agents via `Agent(subagent_type: "code-review:agent-code-reviewer", ...)` | Internal background agent for delegation from other agents or automated workflows. Not for direct user requests — those are handled by the `code-review-agent` skill. |
+
+### Automatic activation (skill)
+
+Describe what you want reviewed:
+
+```
+Review this function for bugs
+Check this file for security issues
+Analyze the code quality in src/api/users.ts
+Look for problems in my authentication module
+```
+
+### Providing specific code
+
+Paste code directly in your message or reference a file:
+
+```
+Review this code: [paste code]
+Check src/components/LoginForm.tsx for security issues
+```
+
 ## Purpose
 
 Code review is most effective when it's structured and consistent. This plugin applies a repeatable checklist across six dimensions so nothing slips through. It automatically resolves which files to review from git status, branch diffs, or explicit paths, and produces a structured report with severity-ranked findings.
@@ -86,28 +140,6 @@ The agent runs in the background (`background: true`) and returns a structured r
 
 The agent maintains project-scoped memory across sessions. It learns recurring patterns, project conventions, and known false positives so that repeated reviews become more accurate over time. Memory is stored in `.claude/agent-memory/agent-code-reviewer/`.
 
-## Usage
-
-### Automatic activation (skill)
-
-Describe what you want reviewed:
-
-```
-Review this function for bugs
-Check this file for security issues
-Analyze the code quality in src/api/users.ts
-Look for problems in my authentication module
-```
-
-### Providing specific code
-
-Paste code directly in your message or reference a file:
-
-```
-Review this code: [paste code]
-Check src/components/LoginForm.tsx for security issues
-```
-
 ### Example: skill review (user-initiated)
 
 **User prompt:**
@@ -174,15 +206,3 @@ Reviews are structured as:
 4. **Critical Issues** — bugs, security vulnerabilities, data loss risks (must fix)
 5. **Improvements** — non-critical quality and maintainability suggestions
 6. **Positive Observations** — what the code does well
-
-## Installation
-
-```text
-/plugin install code-review@agentics-kit
-```
-
-Or load directly for local testing:
-
-```bash
-claude --plugin-dir ./kit/plugins/code-review
-```

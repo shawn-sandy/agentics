@@ -18,22 +18,29 @@ The marketplace-builder plugin helps developers turn any repository into a funct
 
 ## Installation
 
-**From the agentics marketplace:**
+### Via Marketplace (recommended)
 
-```
-/plugin marketplace add shawn-sandy/agentics
+```bash
 /plugin install marketplace-builder@agentics-kit
 ```
 
-**Local development:**
+### Local Development
 
 ```bash
-claude --plugin-dir ./kit/plugins/marketplace-builder
+claude --plugin-dir ~/devbox/agentics/kit/plugins/marketplace-builder
 ```
 
 ## Usage
 
-The skill activates automatically when you ask to:
+This plugin contains one skill — there are no commands. The skill auto-activates when your intent matches its description.
+
+### Skills
+
+#### building-marketplaces
+
+Auto-activated — triggers when you ask to build, scaffold, or evaluate a marketplace.
+
+Trigger phrases:
 
 - "Build a marketplace"
 - "Set up a skill marketplace"
