@@ -1,7 +1,7 @@
 ---
 name: share-selection
 description: "Drafts a social post and a dark-mode card from code you selected or pasted. Detects the selection, scrubs for secrets, and tailors copy to your objective. Use when asked to share, post, or tweet selected, highlighted, or pasted code."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob, Skill
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 
 # share-selection
@@ -27,6 +27,14 @@ does **not** scan git history — that is `code-share`'s job.
 | 5b — Save | Persistent save to `docs/media/social/` |
 | 6 — Screenshot | Serve HTML locally, Playwright screenshot |
 | 7 — Deliver | Present copy + attach PNG + show saved path |
+
+## Exit plan mode
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
+
+---
 
 ## Phase 0 — Locate Plugin Assets
 

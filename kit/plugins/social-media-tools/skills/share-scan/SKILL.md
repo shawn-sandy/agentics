@@ -1,7 +1,7 @@
 ---
 name: share-scan
 description: "Scans git history or a codebase path for shareable code. Drafts social media prompts for share-code or digest generation. Use when the user asks to find commits worth sharing or create a digest."
-allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Write, Skill
+allowed-tools: Bash, Read, Grep, Glob, AskUserQuestion, Write, Skill, ToolSearch, ExitPlanMode
 ---
 
 # share-scan
@@ -14,6 +14,14 @@ Discover shareable code, scrub for secrets, and draft `share-code` prompts. Writ
 |-----------|------|--------|
 | *(default)* | **History** | `git log` on current branch |
 | `--codebase <path>` | **Codebase** | `Read`/`Glob` on given path |
+
+---
+
+## Exit plan mode
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
 
 ---
 

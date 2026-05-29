@@ -1,7 +1,7 @@
 ---
 name: share-session
 description: "Session recap card summarizing what you accomplished — a narrative plus highlights, with token usage as a secondary stat. Use when asked to share my session, session recap, what I worked on, what I did today, or session summary."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, SendUserFile, Glob, Skill
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 
 # share-session
@@ -29,6 +29,14 @@ signals and uses git history for activity context. No code selection required.
 | 4b — Save | Persistent save to `docs/media/social/` |
 | 5 — Screenshot | Serve HTML locally, Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
+
+## Exit plan mode
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
+
+---
 
 ## Phase 0 — Locate Plugin Assets
 

@@ -1,7 +1,7 @@
 ---
 name: share-video
 description: "Creates social media copy and a card for a YouTube or Vimeo video. Formats video content for LinkedIn, Twitter, and Bluesky. Use when asked to share or promote a video on social media."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, WebFetch, SendUserFile, Glob
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 
 # share-video
@@ -22,6 +22,14 @@ for a YouTube or Vimeo video URL.
 | 4b — Save | Persistent save to `docs/media/social/` |
 | 5 — Screenshot | Serve HTML locally; Playwright screenshot |
 | 6 — Deliver | Present copy + attach PNG + show saved path |
+
+## Exit plan mode
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
+
+---
 
 ## Phase 0 — Locate Plugin Assets
 

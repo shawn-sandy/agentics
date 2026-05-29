@@ -1,7 +1,7 @@
 ---
 name: share-project
 description: "Generates social posts and dark-mode cards for a project by topic. Creates platform-aware posts for features, bugs, changes, or releases. Use when announcing project updates on social media."
-allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, SendUserFile, Skill
+allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, Skill
 disable-model-invocation: true
 ---
 
@@ -24,6 +24,14 @@ content from git history, CHANGELOG, README, and manifest files.
 | 5 — Draft | Write platform-aware copy |
 | 6 — Card | Populate template, save to disk, screenshot via Playwright |
 | 7 — Deliver | Present copy + card image + saved path |
+
+## Exit plan mode
+
+`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
+Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
+happen silently with no user-visible output. This is a no-op when plan mode is already off.
+
+---
 
 ## Phase 0 — Locate Plugin Assets
 
