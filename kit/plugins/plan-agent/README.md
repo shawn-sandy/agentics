@@ -67,27 +67,16 @@ Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `di
 | `--no-clarify` | Skip §1 Clarify only |
 | `--no-align` | Skip §5 Align only |
 | `--type <kind>` | Set plan `type` in HTML metadata (`feature`, `fix`, `refactor`, `docs`, `chore`) |
-| `--template <name>` | Select HTML skeleton variant: `default`, `minimal`, `adr`, or `spike` (see table below) |
+| `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
 | `--priority <level>` | Write `priority` to plan HTML metadata (`low`, `medium`, `high`, `critical`) |
 | `--interview` | After writing the plan, run `plan-interview:plan-interview` before `ExitPlanMode` (requires `plan-interview` plugin) |
-
-**Available templates:**
-
-| Template | Format | Best for |
-|---|---|---|
-| `default` | Full §0–§7 plan with all optional sections | Multi-step features, refactors |
-| `minimal` | Context + Steps + Acceptance Criteria + Verification | Simple fixes, well-understood changes |
-| `adr` | Architecture Decision Record (Context / Decision / Consequences) | Architecture decisions |
-| `spike` | Goal / Time-box / Approach / Findings / Recommendation | Investigations, time-boxed research |
 
 **Examples with flags:**
 
 ```
 /plan-agent:planning --quick --type fix patch the login redirect
 /plan-agent:planning --no-clarify add dark mode toggle
-/plan-agent:planning --template adr decide on database ORM strategy
-/plan-agent:planning --template spike --priority high investigate websocket feasibility
 /plan-agent:planning --dir tmp/plans add dark mode toggle
 /plan-agent:planning --interview create a new payment integration
 ```
@@ -160,7 +149,7 @@ The hook and skill both read a `planAgent` object from `.claude/settings.json` (
     "additionalVerbs": ["onboard", "publish", "ingest"],
     "additionalStopWords": ["new", "better"],
     "additionalPlaceholders": ["scratch", "wip", "idea"],
-    "extraMetadata": {
+    "extraFrontmatter": {
       "team": "engineering",
       "milestone": "Q3-2026",
       "priority": "medium"
@@ -174,7 +163,7 @@ The hook and skill both read a `planAgent` object from `.claude/settings.json` (
 | `additionalVerbs` | `string[]` | Merged with the built-in imperative verb set; custom verbs are accepted as valid first tokens |
 | `additionalStopWords` | `string[]` | Merged with the built-in stop-word set; custom tokens are rejected as second tokens |
 | `additionalPlaceholders` | `string[]` | Merged with generic placeholder names (`plan`, `draft`, etc.); listed names are rejected as full filenames |
-| `extraMetadata` | `object` | Key-value pairs written as additional `<meta>` tags in every new plan's HTML `<head>`. `--priority` overrides any `priority` key here. |
+| `extraFrontmatter` | `object` | Key-value pairs written as additional `<meta>` tags in every new plan's HTML `<head>`. `--priority` overrides any `priority` key here. |
 
 ## Plugin Structure
 
