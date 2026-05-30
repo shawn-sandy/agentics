@@ -10,6 +10,16 @@
     },
     "plansDirectory": "docs/plans",
     "hooks": {
+        "SessionStart": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "test -f scripts/setup-merge-driver.sh && bash scripts/setup-merge-driver.sh >/dev/null 2>&1 || true"
+                    }
+                ]
+            }
+        ],
         "PostToolUse": [
             {
                 "matcher": "Write|Edit",

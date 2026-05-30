@@ -46,6 +46,12 @@ Tags must be specific, searchable, and related to plugin functionality. Avoid ge
 | **MINOR** | New command, skill, agent, or hook added |
 | **MAJOR** | Removing/renaming a command/skill/agent, changing argument format or activation behavior |
 
+### Concurrent-bump resolution
+
+When two branches bump different plugins and then merge, `marketplace.json` conflicts are auto-resolved by `scripts/merge-marketplace.mjs` (a git merge driver registered via `scripts/setup-merge-driver.sh`). The driver keeps `max(ours, theirs)` per-plugin semver and unions `plugins[]`/`removed[]` — no manual conflict resolution needed in the common case.
+
+The existing version guard (`scripts/check-version-bump.sh`) still runs as a safety net: if two branches bump the **same** plugin to the **same** version, the guard fails and prompts a further bump.
+
 ### How to bump
 
 1. Update `"version"` in `.claude-plugin/marketplace.json` under the plugin entry

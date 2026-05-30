@@ -18,6 +18,16 @@ Open a [GitHub Issue](https://github.com/shawn-sandy/agentics/issues/new) with:
 2. Include: purpose, target audience, planned commands/skills
 3. Wait for feedback before starting implementation
 
+## First-time Setup
+
+Run this once after cloning to register the `marketplace.json` merge driver:
+
+```bash
+bash scripts/setup-merge-driver.sh
+```
+
+This lets git automatically resolve version conflicts in `.claude-plugin/marketplace.json` by keeping the higher semver per plugin during merges and rebases. Claude Code sessions self-register the driver automatically via a `SessionStart` hook — manual setup is only needed for non-Claude contributors.
+
 ## Plugin Development Workflow
 
 1. **Create your plugin** following the structure in [plugins/README.md](./plugins/README.md)
