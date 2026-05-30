@@ -19,7 +19,7 @@ Installers get on-demand planning with argument support and the filename guardra
 | `planning` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:planning <objective>` |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
 
-**Optional pairing:** install `plan-interview` to enable the `--interview` flag for post-plan stress-testing. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
+**Built-in interview:** the planning workflow includes a structured interview step (§5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
 ## Installation
 
@@ -56,21 +56,21 @@ Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `di
 **Full invocation syntax:**
 
 ```
-/plan-agent:planning <objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default|minimal|adr|spike] [--dir <path>] [--priority low|medium|high|critical] [--interview]
+/plan-agent:planning <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default|minimal|adr|spike] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
 
 | Flag | Effect |
 |------|--------|
-| `--quick` | Shorthand for `--no-clarify --no-align`; skip both §1 Clarify and §5 Align |
+| `--quick` | Shorthand for `--no-clarify --no-align --no-interview`; skip §1, §5, and §5b |
 | `--no-clarify` | Skip §1 Clarify only |
 | `--no-align` | Skip §5 Align only |
+| `--no-interview` | Skip §5b Interview (built-in structured interview) |
 | `--type <kind>` | Set plan `type` in HTML metadata (`feature`, `fix`, `refactor`, `docs`, `chore`) |
 | `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
 | `--priority <level>` | Write `priority` to plan HTML metadata (`low`, `medium`, `high`, `critical`) |
-| `--interview` | After writing the plan, run `plan-interview:plan-interview` before `ExitPlanMode` (requires `plan-interview` plugin) |
 
 **Examples with flags:**
 
@@ -78,10 +78,10 @@ Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `di
 /plan-agent:planning --quick --type fix patch the login redirect
 /plan-agent:planning --no-clarify add dark mode toggle
 /plan-agent:planning --dir tmp/plans add dark mode toggle
-/plan-agent:planning --interview create a new payment integration
+/plan-agent:planning --no-interview fix a config typo
 ```
 
-**Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`) are opt-in only and are never inferred automatically.
+**Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) are opt-in only and are never inferred automatically.
 
 The skill enforces the full §0–§7 workflow:
 
@@ -91,6 +91,7 @@ The skill enforces the full §0–§7 workflow:
 4. **Metadata** — writes HTML `<meta>` tags: `plan-status`, `plan-type`, `plan-created`, `plan-repo`
 5. **Rename** — ensures the filename is meaningful before committing
 6. **Align** — confirms each step matches the objective (skipped with `--quick`)
+6b. **Interview** — structured interview to stress-test the plan (skipped with `--quick` or `--no-interview`)
 7. **Commit** — commits the plan alongside related changes
 8. **Status** — tracks `todo` → `in-progress` → `completed` via `<html data-status>` and `<meta name="plan-status">`
 
@@ -192,7 +193,7 @@ plan-agent/
 
 Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:planning <objective>`.
 
-- **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--no-clarify`/`--no-align`/`--type`/`--template`/`--dir`/`--priority`/`--interview` flags with smart defaults
+- **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority` flags with smart defaults
 - **Enter plan mode** — bootstraps `EnterPlanMode` via `ToolSearch` and calls it before drafting
 - **Workflow §0–§7** — Assess, Clarify, Create, Metadata, Rename, Align, Commit, Status
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
@@ -217,9 +218,8 @@ Completion is detected via `<meta name="plan-status" content="completed">` for H
 
 ### Optional: `plan-interview` pairing
 
-The `--interview` flag runs the full stress-test interview after writing the plan. Install both plugins for the full planning experience:
+The built-in §5b Interview runs a lightweight stress-test during plan creation. For deeper standalone reviews (multi-round interviews with product-plan routing, plan-name validation, and HTML artifact generation), install the `plan-interview` plugin:
 
 ```
-/plugin install plan-agent@agentics-kit
 /plugin install plan-interview@agentics-kit
 ```

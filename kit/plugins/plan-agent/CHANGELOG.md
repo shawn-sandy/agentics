@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.10.0 — 2026-05-30 — Add built-in structured interview step
+
+### Added
+
+- **§5b Interview** — new standard workflow step between Align and Commit. Analyzes plan content to classify complexity (short/medium/complex), detects UI signals, then runs 1–3 interview rounds via `AskUserQuestion` with dynamically generated questions. Round 1 (Technical & Trade-offs) always runs; Round 2a (UI/UX) and 2b (Accessibility) run for medium+ plans or when UI signals are detected; Round 3 (Edge Cases) runs for complex plans only. Post-interview summary offers to update the plan HTML before committing.
+- **`--no-interview` flag** — skips §5b Interview for pre-validated or time-critical plans.
+
+### Changed
+
+- **`--quick` expanded** — now shorthand for `--no-clarify --no-align --no-interview` (previously only `--no-clarify --no-align`).
+
+### Removed
+
+- **`--interview` flag** — the external delegation to `plan-interview:plan-interview` after §8 is replaced by the built-in §5b step. The `plan-interview` plugin remains available as a standalone deep-interview tool.
+
+---
+
 ## v0.9.0 — 2026-05-30 — Add mandatory §8 Open step with browser verification
 
 ### Added
