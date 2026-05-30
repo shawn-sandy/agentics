@@ -1,6 +1,6 @@
 ---
 name: planning
-description: "Creates a structured, self-contained HTML implementation plan from a stated objective — enforcing verb-target filenames, required sections, and HTML metadata. Use when the user wants to turn an objective into a detailed plan via /plan-agent:planning. Does not review or modify existing plans — for that use plan-interview:plan-interview."
+description: "Creates self-contained HTML plans from objectives, enforcing verb-target filenames. Use via /plan-agent:planning to turn any objective into a structured plan."
 allowed-tools: Read, Write, Edit, Glob, Bash, AskUserQuestion, Skill, ToolSearch, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 disable-model-invocation: true
 argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical] [--interview]"
