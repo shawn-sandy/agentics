@@ -1,0 +1,25 @@
+{
+  "name": "agentics-kit",
+  "version": "4.0.2",
+  "plugins": [
+    {
+      "name": "memory-tools",
+      "version": "3.1.0",
+      "description": "Theirs updated memory-tools description"
+    },
+    {
+      "name": "code-review",
+      "version": "3.3.1",
+      "description": "Baseline code-review description"
+    },
+    {
+      "name": "plan-interview",
+      "version": "2.3.0"
+    },
+    {
+      "name": "issue-agent",
+      "version": "0.1.0"
+    }
+  ],
+  "removed": []
+}

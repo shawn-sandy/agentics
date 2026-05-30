@@ -10,6 +10,16 @@
     },
     "plansDirectory": "docs/plans",
     "hooks": {
+        "SessionStart": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/setup-merge-driver.sh\" && bash \"$TOPLEVEL/scripts/setup-merge-driver.sh\" >/dev/null 2>&1 || true"
+                    }
+                ]
+            }
+        ],
         "PostToolUse": [
             {
                 "matcher": "Write|Edit",
