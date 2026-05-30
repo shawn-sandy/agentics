@@ -16,7 +16,7 @@
 - Step 7 now writes `type` for completed plans; `todo` and `in-progress` plans never get a `type` field.
 - `plan-interview` plugin bumped to `1.11.0`.
 
-> See [CHANGELOG §1.11.0](../kit/plugins/plan-interview/CHANGELOG.md#1110---2026-03-29) for the authoritative feature list.
+> See [CHANGELOG v1.11.0](../kit/plugins/plan-interview/CHANGELOG.md#1110---2026-03-29) for the authoritative feature list.
 
 ## Files changed
 
@@ -68,4 +68,4 @@ modified: 2026-03-29
 ## References
 
 - Plan: [add-type-field-to-plan-status-skill.md](plans/add-type-field-to-plan-status-skill.md)
-- Changelog: [CHANGELOG §1.11.0](../kit/plugins/plan-interview/CHANGELOG.md#1110---2026-03-29)
+- Changelog: [CHANGELOG v1.11.0](../kit/plugins/plan-interview/CHANGELOG.md#1110---2026-03-29)

@@ -4,9 +4,9 @@
 
 ### Added
 
-- **§0 Explore** — new codebase research step before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`. Fixes the orphaned `§0` reference that pointed nowhere.
-- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during §0 Explore and plan drafting.
-- **§8 browser fallback** — `ToolSearch` now checks whether the browser MCP server is connected before attempting browser verification. When unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
+- **Step 0 Explore** — new codebase research step before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`. Fixes the orphaned Step 0 reference that pointed nowhere.
+- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during Step 0 Explore and plan drafting.
+- **Step 8 browser fallback** — `ToolSearch` now checks whether the browser MCP server is connected before attempting browser verification. When unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
 
 ### Changed
 
@@ -18,9 +18,17 @@
 
 ### Added
 
-- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — brings the planning skill's exploration capabilities in line with the built-in Plan agent. `WebSearch` and `WebFetch` enable research during §1 Clarify (verifying APIs, checking library versions, confirming best practices). `SendUserFile` delivers the finished plan file directly to the user in §8 Open.
-- **§1 Clarify updated** — now documents when and how to use `WebSearch`/`WebFetch` for plan research, including the `ToolSearch` bootstrap for deferred tools.
-- **§8 Open step 6** — sends the plan file to the user via `SendUserFile` before reporting the URL.
+- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — brings the planning skill's exploration capabilities in line with the built-in Plan agent. `WebSearch` and `WebFetch` enable research during Step 1 Clarify (verifying APIs, checking library versions, confirming best practices). `SendUserFile` delivers the finished plan file directly to the user in Step 8 Open.
+- **Step 1 Clarify updated** — now documents when and how to use `WebSearch`/`WebFetch` for plan research, including the `ToolSearch` bootstrap for deferred tools.
+- **Step 8 Open step 6** — sends the plan file to the user via `SendUserFile` before reporting the URL.
+
+---
+
+## v0.12.1 — 2026-05-30 — Fix section sign rendering
+
+### Fixed
+
+- Replaced `§` (section sign) characters with plain text ("Step N", "Steps N–M") across SKILL.md, README.md, and CHANGELOG.md to fix rendering issues in terminals and markdown viewers.
 
 ---
 
@@ -28,8 +36,8 @@
 
 ### Added
 
-- **§5b Interview** — new standard workflow step between Align and Commit. Analyzes plan content to classify complexity (short/medium/complex), detects UI signals, then runs 1–3 interview rounds via `AskUserQuestion` with dynamically generated questions. Round 1 (Technical & Trade-offs) always runs; Round 2a (UI/UX) and 2b (Accessibility) run for medium+ plans or when UI signals are detected; Round 3 (Edge Cases) runs for complex plans only. Post-interview summary offers to update the plan HTML before committing.
-- **`--no-interview` flag** — skips §5b Interview for pre-validated or time-critical plans.
+- **Step 5b Interview** — new standard workflow step between Align and Commit. Analyzes plan content to classify complexity (short/medium/complex), detects UI signals, then runs 1–3 interview rounds via `AskUserQuestion` with dynamically generated questions. Round 1 (Technical & Trade-offs) always runs; Round 2a (UI/UX) and 2b (Accessibility) run for medium+ plans or when UI signals are detected; Round 3 (Edge Cases) runs for complex plans only. Post-interview summary offers to update the plan HTML before committing.
+- **`--no-interview` flag** — skips Step 5b Interview for pre-validated or time-critical plans.
 
 ### Changed
 
@@ -37,15 +45,15 @@
 
 ### Removed
 
-- **`--interview` flag** — the external delegation to `plan-interview:plan-interview` after §8 is replaced by the built-in §5b step. The `plan-interview` plugin remains available as a standalone deep-interview tool.
+- **`--interview` flag** — the external delegation to `plan-interview:plan-interview` after Step 8 is replaced by the built-in Step 5b step. The `plan-interview` plugin remains available as a standalone deep-interview tool.
 
 ---
 
-## v0.9.0 — 2026-05-30 — Add mandatory §8 Open step with browser verification
+## v0.9.0 — 2026-05-30 — Add mandatory Step 8 Open step with browser verification
 
 ### Added
 
-- **§8 Open** — new mandatory final workflow step that opens the committed plan in a browser to confirm it renders correctly. Steps: find a free port via `python3 -c "import socket…"`, start `python3 -m http.server <port>` in the background from the plan's parent directory, load browser tools via `ToolSearch`, navigate to `http://localhost:<port>/<plan-filename>`, take and send a screenshot, report the URL to the user, and leave the server running. Cannot be skipped.
+- **Step 8 Open** — new mandatory final workflow step that opens the committed plan in a browser to confirm it renders correctly. Steps: find a free port via `python3 -c "import socket…"`, start `python3 -m http.server <port>` in the background from the plan's parent directory, load browser tools via `ToolSearch`, navigate to `http://localhost:<port>/<plan-filename>`, take and send a screenshot, report the URL to the user, and leave the server running. Cannot be skipped.
 - **`allowed-tools` expanded** — added `ToolSearch`, `mcp__claude-in-chrome__tabs_context_mcp`, `mcp__claude-in-chrome__tabs_create_mcp`, `mcp__claude-in-chrome__navigate`, and `mcp__claude-in-chrome__computer` so browser automation tools are pre-approved and never prompt mid-run.
 
 ---
@@ -121,20 +129,20 @@
 
 ### Changed
 
-- **§2 Create**: plan filename extension changed from `.md` to `.html`.
-- **§3 Frontmatter**: metadata now stored in HTML `<meta>` tags instead of YAML frontmatter.
-- **§7 Status**: status updates now edit `<html data-status="…">` and the badge element instead of YAML.
+- **Step 2 Create**: plan filename extension changed from `.md` to `.html`.
+- **Step 3 Frontmatter**: metadata now stored in HTML `<meta>` tags instead of YAML frontmatter.
+- **Step 7 Status**: status updates now edit `<html data-status="…">` and the badge element instead of YAML.
 - `validate-plan-filename.py` hook updated to accept both `.html` (primary) and `.md` (legacy) plan files; `_is_completed` now reads `<meta name="plan-status" content="completed">` for HTML files.
 
 ### Fixed (in this release)
 
-- Status `<html data-status="…">` attribute is on the `<html>` element (not `<body>`); SKILL.md §7 and CHANGELOG wording corrected to match the skeleton.
-- SKILL.md §7 now instructs updating **both** `<html data-status>` and `<meta name="plan-status">` so CSS badge colour and the hook's completion check stay in sync.
-- SKILL.md §3 no longer mentions a redundant `<script type="application/json" id="plan-meta">` block; `<meta>` tags are the sole metadata channel.
+- Status `<html data-status="…">` attribute is on the `<html>` element (not `<body>`); SKILL.md Step 7 and CHANGELOG wording corrected to match the skeleton.
+- SKILL.md Step 7 now instructs updating **both** `<html data-status>` and `<meta name="plan-status">` so CSS badge colour and the hook's completion check stay in sync.
+- SKILL.md Step 3 no longer mentions a redundant `<script type="application/json" id="plan-meta">` block; `<meta>` tags are the sole metadata channel.
 - SKELETON.html `<ul class="next-steps-list">` changed to `<div>` — `<details>` and `<div>` are not valid `<ul>` children per HTML spec.
 - SKILL.md HTML Output Requirements now mandates HTML-escaping all user-supplied placeholder values (`&`, `<`, `>`, `"`, `'`).
 - SKILL.md frontmatter description updated from "plan-mode frontmatter" to "HTML metadata".
-- SKILL.md §7 cross-plugin note clarifies that `plan-interview:plan-status` operates on `.md`/YAML only and should not be used for HTML plans until updated.
+- SKILL.md Step 7 cross-plugin note clarifies that `plan-interview:plan-status` operates on `.md`/YAML only and should not be used for HTML plans until updated.
 - README.md updated to reflect HTML output, `SKELETON.html`, `.html` hook firing, and HTML metadata (replacing YAML frontmatter references).
 
 ---
@@ -144,9 +152,9 @@
 ### Added
 
 - **Hook extensibility** — `validate-plan-filename.py` now reads `planAgent.additionalVerbs`, `planAgent.additionalStopWords`, and `planAgent.additionalPlaceholders` from `.claude/settings.json` (project first, then global). Domain-specific verbs and custom extensions can be merged with the hardcoded sets without editing the Python source.
-- **Plan templates** (`--template default|minimal|adr|spike`) — three new skeleton variants: `SKELETON-minimal.md` (Context + Steps + Criteria only), `SKELETON-adr.md` (Architecture Decision Record), `SKELETON-spike.md` (time-boxed investigation). Template selected at §2 Create.
-- **`--no-clarify` flag** — skips §1 Clarify independently of §5 Align.
-- **`--no-align` flag** — skips §5 Align independently of §1 Clarify.
+- **Plan templates** (`--template default|minimal|adr|spike`) — three new skeleton variants: `SKELETON-minimal.md` (Context + Steps + Criteria only), `SKELETON-adr.md` (Architecture Decision Record), `SKELETON-spike.md` (time-boxed investigation). Template selected at Step 2 Create.
+- **`--no-clarify` flag** — skips Step 1 Clarify independently of Step 5 Align.
+- **`--no-align` flag** — skips Step 5 Align independently of Step 1 Clarify.
 - **`--priority` flag** (`low|medium|high|critical`) — writes `priority:` to plan frontmatter without requiring settings config.
 - **`planAgent.extraFrontmatter` config** — project or global `.claude/settings.json` can inject arbitrary key-value pairs (e.g. `team`, `milestone`) into every plan's YAML frontmatter after the standard fields.
 
@@ -176,13 +184,13 @@
 ### Unchanged
 
 - `validate-plan-filename` hook — logic, exit codes, and `hooks.json` registration are identical. Only the stderr citation was updated to reference `plan-agent` `/plan-agent:author`.
-- Full §0–§7 workflow body, Required Structure, Writing Style, and Skeleton sections.
+- Full Steps 0–7 workflow body, Required Structure, Writing Style, and Skeleton sections.
 
 ## 0.1.0 — 2026-05-27
 
 ### Added
 
-- `authoring-plans` skill: auto-activating Plan Mode conventions covering the full §0–§7 workflow, required plan structure, and writing style
+- `authoring-plans` skill: auto-activating Plan Mode conventions covering the full Steps 0–7 workflow, required plan structure, and writing style
 - `reference/SKELETON.md`: bundled plan skeleton with all required sections and per-step *Why*/*Verify* structure
 - `validate-plan-filename.py` hook: `PostToolUse` enforcement of `verb-target` kebab-case plan filenames — rejects non-conforming names at write time (exit 2), skips `status: completed` plans
 - `hooks.json`: registers the filename hook on `Write|Edit` events with a 5-second timeout

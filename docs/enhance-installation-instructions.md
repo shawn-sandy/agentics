@@ -16,7 +16,7 @@
 - `CHANGELOG.md` updated with a `v2.2.1` entry.
 - `marketplace.json` tags updated and version bumped to `2.2.1`.
 
-> See [CHANGELOG §2.2.1](../kit/plugins/code-testing-agent/CHANGELOG.md) for the authoritative change log entry.
+> See [CHANGELOG v2.2.1](../kit/plugins/code-testing-agent/CHANGELOG.md) for the authoritative change log entry.
 
 ## Files changed
 
@@ -50,4 +50,4 @@ Note: The `code-test-suggestion` plugin was subsequently renamed to `code-testin
 ## References
 
 - Plan: [enhance-installation-instructions.md](plans/enhance-installation-instructions.md)
-- Changelog: [kit/plugins/code-testing-agent/CHANGELOG.md §2.2.1](../kit/plugins/code-testing-agent/CHANGELOG.md)
+- Changelog: [kit/plugins/code-testing-agent/CHANGELOG.md v2.2.1](../kit/plugins/code-testing-agent/CHANGELOG.md)

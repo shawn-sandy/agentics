@@ -15,7 +15,7 @@
 - Step 0 todo label updated: "Step 2: Read and analyze the plan" → "Step 2: Read, validate plan name, and analyze the plan".
 - `plan-interview` plugin bumped from `1.1.0` → `1.2.0`.
 
-> See [CHANGELOG §1.2.0](../kit/plugins/plan-interview/CHANGELOG.md#120---2026-02-26) for the authoritative feature list.
+> See [CHANGELOG v1.2.0](../kit/plugins/plan-interview/CHANGELOG.md#120---2026-02-26) for the authoritative feature list.
 
 ## Files changed
 
@@ -68,4 +68,4 @@ The Plan Name Review table will appear at the start of Step 2. No additional fla
 ## References
 
 - Plan: [add-plan-name-validation-to-interview.md](plans/add-plan-name-validation-to-interview.md)
-- Changelog: [CHANGELOG §1.2.0](../kit/plugins/plan-interview/CHANGELOG.md#120---2026-02-26)
+- Changelog: [CHANGELOG v1.2.0](../kit/plugins/plan-interview/CHANGELOG.md#120---2026-02-26)

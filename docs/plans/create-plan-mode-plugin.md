@@ -14,7 +14,7 @@ repo-name: agentics
 The user maintains a global Plan Mode rule at `~/.claude/rules/plan-mode.md`
 (backed up at `shawn-sandy/claude-settings-backup/rules/plan-mode.md`). It is a
 behavioral *rule* — always loaded into context — that defines the full planning
-workflow (§0 Assess → §7 Status), the required plan structure, a writing style,
+workflow (Step 0 Assess → Step 7 Status), the required plan structure, a writing style,
 and a `verb-target` filename convention enforced by a `PostToolUse` hook
 (`~/.claude/hooks/validate-plan-filename.py`). It also references a `SKELETON.md`
 template and `/plan-status` for status automation.
@@ -29,10 +29,10 @@ way `.claude/rules/*.md` does. So the rule splits into two halves:
 
 | Source artifact | Plugin vessel | Fidelity |
 |---|---|---|
-| Workflow §0–§7 + Required Structure + Writing Style | **skill** `authoring-plans` (auto-activates on planning intent) | Partial — activates on intent, not "always during plan mode" |
+| Workflow Steps 0–7 + Required Structure + Writing Style | **skill** `authoring-plans` (auto-activates on planning intent) | Partial — activates on intent, not "always during plan mode" |
 | `reference/SKELETON.md` | bundled skill reference file | Full |
-| `validate-plan-filename.py` (§4 enforcement) | **plugin hook** (`hooks/` script + `Write\|Edit` matcher) | Full |
-| `/plan-status` (§7) | already exists as `plan-interview:plan-status` | Reuse via optional cross-plugin reference |
+| `validate-plan-filename.py` (Step 4 enforcement) | **plugin hook** (`hooks/` script + `Write\|Edit` matcher) | Full |
+| `/plan-status` (Step 7) | already exists as `plan-interview:plan-status` | Reuse via optional cross-plugin reference |
 
 Per the user's decisions: a **new dedicated `plan-mode` plugin**, the rule as an
 **auto-activating skill**, and **the filename hook ported in**.
@@ -64,12 +64,12 @@ conventions as an auto-activating `authoring-plans` skill (with bundled
    (≤80-char short desc + capability + "Use when the user drafts, structures, or
    writes an implementation plan"); `allowed-tools: Read, Write, Edit, Glob,
    Grep, Bash, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode`. Body =
-   the full content of `plan-mode.md`: **When to plan**, **Workflow §0–§7**,
+   the full content of `plan-mode.md`: **When to plan**, **Workflow Steps 0–7**,
    **Required Structure**, **Writing Style**, **Skeleton** (point to
    `reference/SKELETON.md`, one level deep). Adapt three references for the
-   plugin context: (a) §4 cites the bundled hook
+   plugin context: (a) Step 4 cites the bundled hook
    `${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py` instead of the
-   `~/.claude/` path; (b) §7 references `plan-interview:plan-status` as an
+   `~/.claude/` path; (b) Step 7 references `plan-interview:plan-status` as an
    *optional* cross-plugin helper (no hard dependency); (c) add the deferred-tool
    bootstrap note required by `skill-authoring.md` — "`ExitPlanMode` is deferred;
    `ToolSearch` with `select:ExitPlanMode` before calling it."
@@ -78,14 +78,14 @@ conventions as an auto-activating `authoring-plans` skill (with bundled
      always-on rule. The deferred-tool note prevents a mid-skill permission
      prompt (`skill-authoring.md`).
    - *Verify:* `head -8 SKILL.md` shows valid frontmatter with `name`,
-     `description`, `allowed-tools`; body contains all of Workflow §0–§7, Required
+     `description`, `allowed-tools`; body contains all of Workflow Steps 0–7, Required
      Structure, Writing Style; body is < 500 lines.
 
 3. **Add `skills/authoring-plans/reference/SKELETON.md`.** Copy the plan skeleton
    verbatim from `~/.claude/rules/reference/SKELETON.md` (Context, Objective,
    Steps with per-step *Why*/*Verify*, Acceptance Criteria, Verification, Next
    Steps, Unresolved Questions).
-   - *Why:* §2/§Skeleton of the rule tells authors to copy this as the starter for
+   - *Why:* Step 2/Skeleton of the rule tells authors to copy this as the starter for
      every plan; bundling it keeps the reference one level deep from `SKILL.md`
      (skill-authoring rule).
    - *Verify:* The file exists, begins with `# Plan: <title>`, and contains the
@@ -97,8 +97,8 @@ conventions as an auto-activating `authoring-plans` skill (with bundled
    `.claude/settings.json` (cwd-relative) for `plansDirectory` first, then fall
    back to `~/.claude/settings.json`, then the existing `docs/plans` default — so
    the hook honors the installer's *current* project config, not their global
-   one; (b) update the stderr citation from "plan-mode.md §4" to "plan-mode
-   plugin authoring-plans (§4)" so the message is self-consistent for installers.
+   one; (b) update the stderr citation from "plan-mode.md Step 4" to "plan-mode
+   plugin authoring-plans (Step 4)" so the message is self-consistent for installers.
    Keep the exit-2 `PostToolUse` contract, the `status: completed` skip, the
    `verb-target` `classify_filename()` logic, and the verb/stop-word lists intact.
    - *Why:* The validation logic is the whole value; only the settings-path
@@ -152,7 +152,7 @@ conventions as an auto-activating `authoring-plans` skill (with bundled
       `skills/authoring-plans/reference/SKELETON.md`,
       `hooks/validate-plan-filename.py`, `hooks.json`, `README.md`, `CHANGELOG.md`.
 - [x] The `authoring-plans` skill carries the complete Plan Mode workflow
-      (§0–§7), Required Structure, and Writing Style, and references its bundled
+      (Steps 0–7), Required Structure, and Writing Style, and references its bundled
       `SKELETON.md`.
 - [x] The hook rejects non-`verb-target` plan filenames (exit 2) and passes valid
       ones (exit 0), skipping `status: completed` plans, with `plansDirectory`

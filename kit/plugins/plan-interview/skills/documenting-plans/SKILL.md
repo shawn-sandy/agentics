@@ -267,7 +267,7 @@ rationale, fold it into the bullet as a brief parenthetical.>
 
 <If a CHANGELOG entry exists for this feature, add a citation footer:>
 
-> See [CHANGELOG §<version>](<relative-path-to-CHANGELOG.md>#<anchor>) for the
+> See [CHANGELOG v<version>](<relative-path-to-CHANGELOG.md>#<anchor>) for the
 > authoritative feature list.
 
 ## Files changed

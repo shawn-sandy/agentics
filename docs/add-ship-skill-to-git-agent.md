@@ -13,7 +13,7 @@
 - Push happens before the existing-PR check — ensures new commits always reach the remote whether a PR exists or not.
 - `git-agent` plugin bumped from `1.0.0` → `1.1.0`.
 
-> See [CHANGELOG §v1.1.0](../kit/plugins/git-agent/CHANGELOG.md#v110----add-ship-skill) for the authoritative feature list.
+> See [CHANGELOG v1.1.0](../kit/plugins/git-agent/CHANGELOG.md#v110----add-ship-skill) for the authoritative feature list.
 
 ## Files changed
 
@@ -65,4 +65,4 @@ The skill outputs a PR URL on success:
 ## References
 
 - Plan: [add-ship-skill-to-git-agent.md](plans/add-ship-skill-to-git-agent.md)
-- Changelog: [CHANGELOG §v1.1.0](../kit/plugins/git-agent/CHANGELOG.md)
+- Changelog: [CHANGELOG v1.1.0](../kit/plugins/git-agent/CHANGELOG.md)

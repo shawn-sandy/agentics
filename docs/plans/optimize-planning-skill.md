@@ -7,7 +7,7 @@ repo-name: agentics
 
 # Plan: Optimize the plan-agent `planning` SKILL.md
 
-> **Filename note:** the harness created this file as `abundant-jingling-pebble.md` (a random slug). Per the plan-agent §4 Rename rule it must be renamed to a `verb-target` name — `optimize-planning-skill.md` — before commit. The plan-agent skill normally emits HTML; this markdown form is a plan-mode constraint (only this `.md` file is editable during planning). Convert to HTML on commit if HTML parity is desired.
+> **Filename note:** the harness created this file as `abundant-jingling-pebble.md` (a random slug). Per the plan-agent Step 4 Rename rule it must be renamed to a `verb-target` name — `optimize-planning-skill.md` — before commit. The plan-agent skill normally emits HTML; this markdown form is a plan-mode constraint (only this `.md` file is editable during planning). Convert to HTML on commit if HTML parity is desired.
 
 ## Context
 
@@ -15,12 +15,12 @@ repo-name: agentics
 
 A scored audit of `kit/plugins/plan-agent/skills/planning/SKILL.md` (run this session via `skill-reviewer:reviewing-skills`) graded it **7/10 — Good**, with four warnings and four suggestions. Direct verification against the plugin README and `reference/` skeleton files refined those findings:
 
-- **Real and high-value:** the `--template` flag advertises `minimal|adr|spike` variants in `argument-hint` and §2, but only `default` is implemented. The three `SKELETON-*.md` variant files are **markdown with YAML frontmatter**, which directly violates the skill's own hard rule "**Always write HTML — never write markdown for plan output.**" The README (line 70) is already correct ("Reserved — only `default` is currently supported"); the SKILL.md contradicts both the README and itself.
+- **Real and high-value:** the `--template` flag advertises `minimal|adr|spike` variants in `argument-hint` and Step 2, but only `default` is implemented. The three `SKELETON-*.md` variant files are **markdown with YAML frontmatter**, which directly violates the skill's own hard rule "**Always write HTML — never write markdown for plan output.**" The README (line 70) is already correct ("Reserved — only `default` is currently supported"); the SKILL.md contradicts both the README and itself.
 - **Real:** an H1 (`# Plan Agent — Planning`) inside the body where best practices reserve H1 for the frontmatter `name`; a dead `TodoWrite` entry in `allowed-tools` that the workflow never uses (every listed tool risks a permission prompt); no stated freedom level for a process-critical sequential skill.
 - **Refined down:** the audit's `$ARGUMENTS` warning is overstated — README line 195 documents `$ARGUMENTS` use and this session's own invocation proves substitution works for command-invoked skills. Since `planning` is `disable-model-invocation` (only ever invoked as `/plan-agent:planning`), `$ARGUMENTS` is correct here. At most this needs a one-line clarifying note.
-- **Polish:** the description trigger describes invocation syntax rather than user intent and lacks a scope-exclusion line; the "Enter plan mode" section sits outside the §0–§7 numbering and a reader can miss it.
+- **Polish:** the description trigger describes invocation syntax rather than user intent and lacks a scope-exclusion line; the "Enter plan mode" section sits outside the Steps 0–7 numbering and a reader can miss it.
 
-Goal: apply the verified fixes so the skill is internally consistent, free of dead/contradictory instructions, and scores higher on structure and discoverability — without changing the §0–§7 workflow behavior.
+Goal: apply the verified fixes so the skill is internally consistent, free of dead/contradictory instructions, and scores higher on structure and discoverability — without changing the Steps 0–7 workflow behavior.
 
 ## Objective
 
@@ -35,7 +35,7 @@ Tighten `planning/SKILL.md` so its template story matches the README and the HTM
 
 ## Steps
 
-1. **Resolve the `--template` inconsistency to match the README.** In `SKILL.md`: trim the `argument-hint` `--template` token to `default` only; in §2's flag list and the `## Skeleton` section, document `minimal|adr|spike` as "planned — not yet implemented"; state that `SKELETON.html` is the only supported skeleton. Then delete the three `SKELETON-*.md` variant files.
+1. **Resolve the `--template` inconsistency to match the README.** In `SKILL.md`: trim the `argument-hint` `--template` token to `default` only; in Step 2's flag list and the `## Skeleton` section, document `minimal|adr|spike` as "planned — not yet implemented"; state that `SKELETON.html` is the only supported skeleton. Then delete the three `SKELETON-*.md` variant files.
    - *Why:* The markdown variants violate the skill's "always write HTML" mandate and the flag advertises capability that does not exist; aligning to the already-correct README removes the contradiction at the source.
    - *Verify:* `grep -n "minimal|adr|spike" SKILL.md` shows only "planned"/reserved framing (no functional claim); `ls reference/` lists only `SKELETON.html`; README line 70 and SKILL.md now agree.
 
@@ -49,13 +49,13 @@ Tighten `planning/SKILL.md` so its template story matches the README and the HTM
 
 4. **State the freedom level.** Add "Follow these steps exactly." at the top of the `## Workflow` section.
    - *Why:* For a process-critical sequential skill that enforces naming, HTML structure, and status sync, an explicit rigidity signal prevents Claude from skipping guardrails (default is "flexible").
-   - *Verify:* The `## Workflow` section opens with the rigidity statement before step §0.
+   - *Verify:* The `## Workflow` section opens with the rigidity statement before step Step 0.
 
 5. **Rewrite the frontmatter `description` for intent + scope.** Keep a capability statement, replace the invocation-syntax trigger with user-intent phrasing, and add a scope-exclusion sentence. Draft: `"Creates a structured, self-contained HTML implementation plan from a stated objective — enforcing verb-target filenames, required sections, and HTML metadata. Use when the user wants to turn an objective into a detailed plan via /plan-agent:planning. Does not review or modify existing plans — for that use plan-interview:plan-interview."`
    - *Why:* The description is what a reader scans in the command list; intent + scope communicates purpose and reduces collision risk. Safe to change because `disable-model-invocation` means no auto-activation behavior depends on the old wording.
    - *Verify:* `description` ≤1024 chars, third person, contains a "Use when…" clause, a capability statement, and a scope-exclusion sentence; re-running `skill-reviewer:reviewing-skills` scores Discoverability 2/2.
 
-6. **Remove the plan-mode handshake (ROOT CAUSE).** Delete the entire `## Enter plan mode` section and the top "Deferred tools" callout. In §0 Assess, remove the `ToolSearch`→`ExitPlanMode` bootstrap and reword it to "if the request is trivial, apply the change directly without authoring a plan document." Delete the closing "Then use `ToolSearch` with `select:ExitPlanMode` and call `ExitPlanMode`…" line; replace it with: write the HTML plan file directly, then present its path and offer to open it. The `--interview` `Skill` call stays but no longer sits between two `ExitPlanMode` references. Net effect: the skill executes its write directly — honoring its own "When to plan → do not enter plan mode for write operations" rule — and keeps full control of HTML output and the `verb-target` filename.
+6. **Remove the plan-mode handshake (ROOT CAUSE).** Delete the entire `## Enter plan mode` section and the top "Deferred tools" callout. In Step 0 Assess, remove the `ToolSearch`→`ExitPlanMode` bootstrap and reword it to "if the request is trivial, apply the change directly without authoring a plan document." Delete the closing "Then use `ToolSearch` with `select:ExitPlanMode` and call `ExitPlanMode`…" line; replace it with: write the HTML plan file directly, then present its path and offer to open it. The `--interview` `Skill` call stays but no longer sits between two `ExitPlanMode` references. Net effect: the skill executes its write directly — honoring its own "When to plan → do not enter plan mode for write operations" rule — and keeps full control of HTML output and the `verb-target` filename.
    - *Why:* Calling `EnterPlanMode` cedes the skill's two core guarantees (HTML output, verb-target naming) to the harness, which forces markdown to a random-slug path. Removing the handshake is the only fix that restores the skill's output contract; folding the section in (the earlier idea) would preserve the bug.
    - *Verify:* `grep -n "EnterPlanMode\|ExitPlanMode" SKILL.md` returns nothing; a fresh `/plan-agent:planning <objective>` run writes a `.html` file with a `verb-target` name and never enters plan mode.
 
@@ -68,7 +68,7 @@ Tighten `planning/SKILL.md` so its template story matches the README and the HTM
    - *Verify:* `marketplace.json` validates (auto-hook on save); CHANGELOG top entry matches the new version; new version string is `X.Y.0`.
 
 9. **Re-audit and rename the plan file.** Re-run `skill-reviewer:reviewing-skills` on the edited SKILL.md to confirm ≥9/10; rename this plan from `abundant-jingling-pebble.md` to `optimize-planning-skill.md` before commit.
-   - *Why:* Closes the loop on the audit and satisfies the plan-agent §4 Rename rule (random slug → verb-target).
+   - *Why:* Closes the loop on the audit and satisfies the plan-agent Step 4 Rename rule (random slug → verb-target).
    - *Verify:* Audit grade is "Excellent" (9–10); plan file is named `optimize-planning-skill.md`; the `validate-plan-filename` hook passes on the new name.
 
 ## Acceptance Criteria
@@ -83,7 +83,7 @@ Tighten `planning/SKILL.md` so its template story matches the README and the HTM
 - [ ] The frontmatter `description` contains a capability statement, a user-intent "Use when…" trigger, and a scope-exclusion sentence; it stays ≤1024 chars and third-person.
 - [ ] `marketplace.json` `plan-agent` version is bumped (MINOR) and a matching `CHANGELOG.md` entry exists.
 - [ ] Re-running `skill-reviewer:reviewing-skills` scores ≥9/10 with no error- or warning-level findings.
-- [ ] The §0–§7 workflow behavior is unchanged (no step added, removed, or reordered in a way that alters output).
+- [ ] The Steps 0–7 workflow behavior is unchanged (no step added, removed, or reordered in a way that alters output).
 
 ## Verification
 
@@ -99,7 +99,7 @@ Tighten `planning/SKILL.md` so its template story matches the README and the HTM
 - Build real HTML template variants (delivers the `--template` feature instead of deprecating it):
 
   ```text
-  In kit/plugins/plan-agent/skills/planning/reference/, create HTML skeleton variants SKELETON-minimal.html, SKELETON-adr.html, and SKELETON-spike.html modeled on the existing SKELETON.html (single self-contained file, inline CSS/JS, status badge, meta tags). Then update planning/SKILL.md §2 and the ## Skeleton section to load the matching SKELETON-<template>.html when --template is minimal|adr|spike, restore those values to argument-hint as functional, and bump the plan-agent version (MINOR) with a CHANGELOG entry. Verify each variant renders standalone in a browser and the validate-plan-filename hook still passes.
+  In kit/plugins/plan-agent/skills/planning/reference/, create HTML skeleton variants SKELETON-minimal.html, SKELETON-adr.html, and SKELETON-spike.html modeled on the existing SKELETON.html (single self-contained file, inline CSS/JS, status badge, meta tags). Then update planning/SKILL.md Step 2 and the ## Skeleton section to load the matching SKELETON-<template>.html when --template is minimal|adr|spike, restore those values to argument-hint as functional, and bump the plan-agent version (MINOR) with a CHANGELOG entry. Verify each variant renders standalone in a browser and the validate-plan-filename hook still passes.
   ```
 
 - Sweep sibling skills for the same dead-tool / heading issues:

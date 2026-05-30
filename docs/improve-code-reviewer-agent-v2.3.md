@@ -19,7 +19,7 @@
 - Memory instructions section added to agent prompt body — consult on review start, update after discovering new patterns.
 - `code-review` plugin bumped from `2.2.0` to `2.3.0`.
 
-> See [CHANGELOG §2.3.0](../kit/plugins/code-review/CHANGELOG.md) for the authoritative change log entry.
+> See [CHANGELOG v2.3.0](../kit/plugins/code-review/CHANGELOG.md) for the authoritative change log entry.
 
 ## Files changed
 
@@ -52,4 +52,4 @@ The `permissionMode: plan` field constrains the agent to read-only exploration a
 ## References
 
 - Plan: [improve-code-reviewer-agent-v2.3.md](plans/improve-code-reviewer-agent-v2.3.md)
-- Changelog: [kit/plugins/code-review/CHANGELOG.md §2.3.0](../kit/plugins/code-review/CHANGELOG.md)
+- Changelog: [kit/plugins/code-review/CHANGELOG.md v2.3.0](../kit/plugins/code-review/CHANGELOG.md)
