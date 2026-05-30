@@ -4,11 +4,13 @@
   "plugins": [
     {
       "name": "memory-tools",
-      "version": "3.1.1"
+      "version": "3.1.1",
+      "description": "Baseline memory-tools description"
     },
     {
       "name": "code-review",
-      "version": "3.3.0"
+      "version": "3.3.0",
+      "description": "Ours updated code-review description"
     },
     {
       "name": "plan-interview",
