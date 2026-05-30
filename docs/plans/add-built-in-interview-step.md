@@ -1,3 +1,10 @@
+---
+title: Add built-in structured interview step
+status: completed
+created: 2026-05-30
+type: feature
+---
+
 # Plan: Add Built-in Structured Interview Step to plan-agent
 
 ## Context

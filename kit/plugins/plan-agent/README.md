@@ -56,7 +56,7 @@ Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `di
 **Full invocation syntax:**
 
 ```
-/plan-agent:planning <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default|minimal|adr|spike] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:planning <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
@@ -83,17 +83,17 @@ Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `di
 
 **Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) are opt-in only and are never inferred automatically.
 
-The skill enforces the full §0–§7 workflow:
+The skill enforces the full §1–§8 workflow:
 
-1. **Assess** — determines whether a plan is warranted
-2. **Clarify** — resolves ambiguous requirements (skipped with `--quick`)
-3. **Create** — places the plan in the right directory with a `verb-target.html` filename
-4. **Metadata** — writes HTML `<meta>` tags: `plan-status`, `plan-type`, `plan-created`, `plan-repo`
-5. **Rename** — ensures the filename is meaningful before committing
-6. **Align** — confirms each step matches the objective (skipped with `--quick`)
-6b. **Interview** — structured interview to stress-test the plan (skipped with `--quick` or `--no-interview`)
-7. **Commit** — commits the plan alongside related changes
-8. **Status** — tracks `todo` → `in-progress` → `completed` via `<html data-status>` and `<meta name="plan-status">`
+1. **Clarify** — resolves ambiguous requirements (skipped with `--quick`)
+2. **Create** — places the plan in the right directory with a `verb-target.html` filename
+3. **Frontmatter** — writes HTML `<meta>` tags: `plan-status`, `plan-type`, `plan-created`, `plan-repo`
+4. **Rename** — ensures the filename is meaningful before committing
+5. **Align** — confirms each step matches the objective (skipped with `--quick`)
+5b. **Interview** — structured interview to stress-test the plan (skipped with `--quick` or `--no-interview`)
+6. **Commit** — commits the plan alongside related changes
+7. **Status** — tracks `todo` → `in-progress` → `completed` via `<html data-status>` and `<meta name="plan-status">`
+8. **Open** — opens the plan in a browser to confirm it renders correctly
 
 ### HTML plan output
 
@@ -194,13 +194,10 @@ plan-agent/
 Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:planning <objective>`.
 
 - **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority` flags with smart defaults
-- **Enter plan mode** — bootstraps `EnterPlanMode` via `ToolSearch` and calls it before drafting
-- **Workflow §0–§7** — Assess, Clarify, Create, Metadata, Rename, Align, Commit, Status
+- **Workflow §1–§8** — Clarify, Create, Frontmatter, Rename, Align, Interview (§5b), Commit, Status, Open
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
-- **Skeleton reference** — points to `reference/SKELETON.html` (default) or the matching `SKELETON-<template>.md` for `minimal`, `adr`, and `spike` templates
-
-Both `EnterPlanMode` and `ExitPlanMode` are deferred tools. The skill loads them via `ToolSearch` (`select:EnterPlanMode`, `select:ExitPlanMode`) before calling each.
+- **Skeleton reference** — points to `reference/SKELETON.html` (only supported template; `minimal`, `adr`, and `spike` are planned)
 
 ### `validate-plan-filename` Hook
 
