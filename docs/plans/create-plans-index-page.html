@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-05-30">
 <meta name="plan-repo" content="agentics">
@@ -681,7 +681,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Create Plans Index Page</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -745,6 +745,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
+      <p><strong>Superseded 2026-05-30</strong> — the <code>plans-library</code> skill added in plan-agent v0.11.0 implements this as a reusable plugin skill. Use <code>plans-library</code> instead. See plan <a href="add-plans-library-to-plan-agent.html">add-plans-library-to-plan-agent.html</a>.</p>
       <p>The plan-agent plugin generates <code>.html</code> plan files in <code>docs/plans/</code>. With over 100 plan files now in that directory, there is no way to browse or navigate them without knowing exact filenames. An index page that reads each plan's <code>&lt;meta&gt;</code> tags (plan-status, plan-type, plan-created, plan-repo) and renders them as filterable, sortable cards would make the plan archive discoverable without requiring a server or build toolchain.</p>
       <p>The page will be pre-rendered at build time by a bash script that greps meta tags from each <code>.html</code> file and inlines the data, keeping it openable directly from the filesystem at a <code>file://</code> URL.</p>
     </section>

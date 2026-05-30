@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.0 — 2026-05-30 — Add plans-library skill
+
+### Added
+
+- **`plans-library` skill** — scans every HTML plan in the plans directory, parses `<meta>` tags (`plan-status`, `plan-type`, `plan-created`) and `<title>`, populates a gallery template, writes `docs/plans/index.html`, and opens it in the browser. Filterable by status (todo / in-progress / completed) and type (feature / fix / refactor / docs / chore) with a title search box. Excludes `index.html` and `archive/` subdirectory from the scan.
+- **`templates/plans-gallery.html`** — self-contained gallery template (no external CSS/JS/CDN) with light theme matching plan document design tokens; grid and list views; copy-free client-side filtering.
+
+---
+
 ## v0.10.0 — 2026-05-30 — Add built-in structured interview step
 
 ### Added
