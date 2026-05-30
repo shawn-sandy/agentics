@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<!--
+  diff-card.html — Dark-mode GitHub-style diff card for social posts.
+
+  Variables to substitute:
+    .claude-plugin/marketplace.json + CHANGELOG.md          — File path or rule name (e.g. plan-mode.md)
+    fix             — Top-right label (e.g. v3.4.1, feat, fix)
+    @@ marketplace.json — removal reasons @@     — First hunk header (e.g. @@ Workflow §3 @@)
+        <tr class="ctx"><td class="ln"> </td><td class="code">  "name": "agentic-plugin-dev",</td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">  "reason": "<span class="hl-del">Plugin directory removed</span>; functionality consolidated..."</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">  "reason": "<span class="hl-add">Removed from marketplace; directory retained for reference</span>..."</td></tr>
+    <tr class="ctx"><td class="ln"> </td><td class="code">  "name": "code-simplifier",</td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">  "reason": "<span class="hl-del">Plugin directory removed</span>; structural analysis covered by code-review"</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">  "reason": "<span class="hl-add">Removed from marketplace; directory retained for reference</span>..."</td></tr>       — HTML <tr> rows for first hunk (see row format below)
+    @@ CHANGELOG.md — removal list + count @@     — Second hunk header (omit <tr> block above if unused)
+        <tr class="add"><td class="ln">+</td><td class="code">- **agentic-plugin-dev v1.2.2** — removed from marketplace; directory retained for reference...</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">- **code-simplifier v1.0.2** — removed from marketplace; directory retained for reference...</td></tr>
+    <tr class="ctx"><td class="ln"> </td><td class="code"> </td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">- **Marketplace** (`agentics-kit`) bumped to v4.0.0 (MAJOR — <span class="hl-del">four</span> plugins removed)</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">- **Marketplace** (`agentics-kit`) bumped to v4.0.0 (MAJOR — <span class="hl-add">six</span> plugins removed)</td></tr>       — HTML <tr> rows for second hunk
+    5          — Integer: lines added
+    3          — Integer: lines removed
+    fix(pr#187): complete v4.0.0 removal list and fix retention reasons  — One-line footer summary
+    <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">PR review caught something worth documenting: in the v4.0.0 agentics marketplace cleanup, two plugins were logged as "directory removed" — but we actually kept both directories for reference.
+
+Plus the removal count was off: said 4, should've been 6.
+
+Two-line fix. But here's the thing: accurate removal reasons in a changelog are what prevent the "wait, why did we remove this again?" conversation six months from now. The code is gone from the marketplace, but the context is preserved.
+
+Small commits like this are where documentation does its quietest, most useful work.
+
+Follow along if you're building or maintaining Claude Code plugins — more on the agentics marketplace authoring process coming.
+
+#ClaudeCode #Plugins #Documentation #OpenSource</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">PR review caught it: two plugins listed as "directory removed" — but we actually kept them for reference. Fixed the count too (4 → 6). Small diff, but right removal reasons in the changelog are what make future you say "oh, that's why" instead of "no idea." #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">PR #187 caught two fixes in the v4.0.0 agentics changelog: count was 4, should be 6 — and agentic-plugin-dev + code-simplifier were listed as "directory removed" when directories are kept for reference. Small fix, but getting removal reasons right makes changelogs useful months later.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">There's a category of commit that feels invisible but does real work: fixing the reason a decision was made.
+
+This week's v4.0.0 marketplace cleanup initially logged two plugins as "directory removed" — but we actually kept them for reference. The removal count was also off by two (said 4, should've been 6).
+
+Two lines changed. But the changelog is what you'll read when you revisit these decisions in six months. Getting the reasons right the first time is cheaper than reconstructing them later — and it's the kind of care that makes a project's history actually trustworthy.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div>       — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
+
+  Row format:
+    <tr class="add"><td class="ln">+</td><td class="code">  line content</td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">  line content</td></tr>
+    <tr class="ctx"><td class="ln"> </td><td class="code">  context line</td></tr>
+
+  Inline highlights within td.code:
+    <span class="hl-add">added word</span>
+    <span class="hl-del">removed word</span>
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>.claude-plugin/marketplace.json + CHANGELOG.md</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --add-bg: rgba(46, 160, 67, 0.15);
+      --del-bg: rgba(248, 81, 73, 0.15);
+      --add-fg: #3fb950;
+      --del-fg: #f85149;
+      --ctx-fg: #8b949e;
+      --hunk-bg: #1c2d3f;
+      --hunk-fg: #79c0ff;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 760px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .filename {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0.9;
+    }
+
+    .badge {
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .diff-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    td.hunk-header {
+      background: var(--hunk-bg);
+      color: var(--hunk-fg);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    tr.add { background: var(--add-bg); }
+    tr.del { background: var(--del-bg); }
+    tr.ctx { background: transparent; }
+
+    td.ln {
+      width: 20px;
+      padding: 0 8px 0 16px;
+      color: var(--muted);
+      user-select: none;
+      font-size: 11px;
+    }
+
+    tr.add td.ln { color: var(--add-fg); }
+    tr.del td.ln { color: var(--del-fg); }
+
+    td.code {
+      padding: 1px 12px 1px 0;
+      color: var(--text);
+      white-space: pre;
+    }
+
+    tr.add td.code { color: var(--add-fg); }
+    tr.del td.code { color: var(--del-fg); }
+    tr.ctx td.code { color: var(--ctx-fg); }
+
+    .hl-add {
+      background: rgba(46, 160, 67, 0.35);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .hl-del {
+      background: rgba(248, 81, 73, 0.35);
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+
+    .stat-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .stat-pills { display: flex; gap: 8px; }
+
+    .pill-add {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(46, 160, 67, 0.15);
+      color: var(--add-fg);
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .pill-del {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--del-fg);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .summary {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: 760px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <span class="filename">.claude-plugin/marketplace.json + CHANGELOG.md</span>
+      <span class="badge">fix</span>
+    </div>
+
+    <table class="diff-table">
+      <tbody>
+        <tr><td colspan="2" class="hunk-header">@@ marketplace.json — removal reasons @@</td></tr>
+            <tr class="ctx"><td class="ln"> </td><td class="code">  "name": "agentic-plugin-dev",</td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">  "reason": "<span class="hl-del">Plugin directory removed</span>; functionality consolidated..."</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">  "reason": "<span class="hl-add">Removed from marketplace; directory retained for reference</span>..."</td></tr>
+    <tr class="ctx"><td class="ln"> </td><td class="code">  "name": "code-simplifier",</td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">  "reason": "<span class="hl-del">Plugin directory removed</span>; structural analysis covered by code-review"</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">  "reason": "<span class="hl-add">Removed from marketplace; directory retained for reference</span>..."</td></tr>
+        <tr><td colspan="2" class="hunk-header">@@ CHANGELOG.md — removal list + count @@</td></tr>
+            <tr class="add"><td class="ln">+</td><td class="code">- **agentic-plugin-dev v1.2.2** — removed from marketplace; directory retained for reference...</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">- **code-simplifier v1.0.2** — removed from marketplace; directory retained for reference...</td></tr>
+    <tr class="ctx"><td class="ln"> </td><td class="code"> </td></tr>
+    <tr class="del"><td class="ln">-</td><td class="code">- **Marketplace** (`agentics-kit`) bumped to v4.0.0 (MAJOR — <span class="hl-del">four</span> plugins removed)</td></tr>
+    <tr class="add"><td class="ln">+</td><td class="code">- **Marketplace** (`agentics-kit`) bumped to v4.0.0 (MAJOR — <span class="hl-add">six</span> plugins removed)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="stat-bar">
+      <div class="stat-pills">
+        <span class="pill-add">+5</span>
+        <span class="pill-del">-3</span>
+      </div>
+      <span class="summary">fix(pr#187): complete v4.0.0 removal list and fix retention reasons</span>
+    </div>
+  </div>
+    <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">PR review caught something worth documenting: in the v4.0.0 agentics marketplace cleanup, two plugins were logged as "directory removed" — but we actually kept both directories for reference.
+
+Plus the removal count was off: said 4, should've been 6.
+
+Two-line fix. But here's the thing: accurate removal reasons in a changelog are what prevent the "wait, why did we remove this again?" conversation six months from now. The code is gone from the marketplace, but the context is preserved.
+
+Small commits like this are where documentation does its quietest, most useful work.
+
+Follow along if you're building or maintaining Claude Code plugins — more on the agentics marketplace authoring process coming.
+
+#ClaudeCode #Plugins #Documentation #OpenSource</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">PR review caught it: two plugins listed as "directory removed" — but we actually kept them for reference. Fixed the count too (4 → 6). Small diff, but right removal reasons in the changelog are what make future you say "oh, that's why" instead of "no idea." #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">PR #187 caught two fixes in the v4.0.0 agentics changelog: count was 4, should be 6 — and agentic-plugin-dev + code-simplifier were listed as "directory removed" when directories are kept for reference. Small fix, but getting removal reasons right makes changelogs useful months later.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">There's a category of commit that feels invisible but does real work: fixing the reason a decision was made.
+
+This week's v4.0.0 marketplace cleanup initially logged two plugins as "directory removed" — but we actually kept them for reference. The removal count was also off by two (said 4, should've been 6).
+
+Two lines changed. But the changelog is what you'll read when you revisit these decisions in six months. Getting the reasons right the first time is cheaper than reconstructing them later — and it's the kind of care that makes a project's history actually trustworthy.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

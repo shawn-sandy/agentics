@@ -2,39 +2,46 @@
 <!--
   session-card.html — Dark-mode session recap card for social posts.
 
-  Variables to substitute (all values must be HTML-escaped before insertion):
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
     session recap · 2026-05-29          — Session title (e.g. "session recap · 2026-05-28")
     sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
-    9,536   — Total tokens formatted with commas (e.g. "42,180")
-    38   — Input tokens formatted with commas (e.g. "38,250")
-    9,498  — Output tokens formatted with commas (e.g. "3,930")
-    1,321,472     — Cache-read tokens formatted with commas (e.g. "18,400")
-    93.7% — Cache hit rate (e.g. "44.2%")
-    4 min       — Session duration (e.g. "47 min")
+    Dog-fooding the social-media-tools plugin — built the media library gallery for 14 saved cards, then generated a full all-platform diff card for the v4.0.0 marketplace cleanup fix.      — 1–2 sentence summary of what the session accomplished
+    <li>Built filterable media library gallery (14 saved cards) and opened in browser</li>
+<li>Improved gallery builder to use live file listing instead of hardcoded list</li>
+<li>Generated all-platform diff card for fix(pr#187): v4.0.0 removal list corrections</li>
+<li>Drafted LinkedIn, Twitter/X, Bluesky &amp; Substack copy variants for the diff card</li>
+<li>Captured Playwright screenshot of the card via local HTTP server</li>— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    51,867   — Total tokens formatted with commas (e.g. "42,180")
+    94.6% — Cache hit rate (e.g. "44.2%")
+    57 min       — Session duration (e.g. "47 min")
     0  — Files changed count (e.g. "12")
     0        — Commits in session (e.g. "3")
-    Pulled settings.json from GitHub backup; applied only the modified file using the settings-restore skill, skipping 174 unchanged files.        — One-line summary (HTML-escaped; truncated to 160 chars)
-    <div class="copy-panel">
-  <p class="copy-label">LinkedIn</p>
-  <textarea readonly class="post-copy-text" id="post-copy">Ran a zero-friction Claude Code settings sync today — pulled a fresh settings.json from a GitHub backup and applied only the delta using the settings-restore skill.
+      <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just wrapped a Claude Code session dog-fooding the social-media-tools plugin — and it felt satisfying.
 
-What happened under the hood:
-- Resolved repo path from ~/.claude/settings-sync.json config — no arguments needed
-- git pull --ff-only fetched 11 new lines in settings.json from the backup repo
-- Diff preview classified 174 files as unchanged (rules/, commands/, skills/) and 1 as modified
-- "Restore new and modified only" wrote exactly one file, leaving everything else untouched
+Two things got done:
 
-The --delete guardrail is what makes the full-restore path safe: it surfaces local-only deletions in the preview before anything is overwritten, so you can verify scope before committing.
+→ Opened the media library gallery (14 saved social cards) and tightened the builder to scan files live instead of pulling from a hardcoded list
 
-1 file restored · 0 commits · 9,536 tokens · 93.7% cache hit · ~4 min
+→ Generated a full all-platform diff card for the v4.0.0 marketplace cleanup fix (PR #187) — drafted LinkedIn, Twitter/X, Bluesky, and Substack copy variants, then screenshotted via Playwright
 
-Star shawn-sandy/agentics for more Claude Code plugin workflows.
+The 94.6% cache hit rate on a 57-minute session keeps surprising me. 51k tokens, mostly cached reads.
 
-#ClaudeCode #SettingsSync #DeveloperTools #PluginDev</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-</div>    — Copy panel HTML — see references/copy-panels.md
+3 skills invoked · 57 min · 51,867 tokens · 94.6% cache hit
 
-  HTML-escape order (mandatory, apply to every variable above):
+If you're building Claude Code plugins or just curious about the social sharing workflow, follow along — more coming.
+
+#ClaudeCode #Plugins #AITools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
     1. & → &amp;  ← first, prevents double-escaping
     2. < → &lt;
     3. > → &gt;
@@ -97,14 +104,6 @@ Star shawn-sandy/agentics for more Claude Code plugin workflows.
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
-      margin-bottom: 7px;
-    }
-
-    .header-text .summary {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-      max-width: 500px;
     }
 
     .model-badge {
@@ -122,39 +121,64 @@ Star shawn-sandy/agentics for more Claude Code plugin workflows.
       margin-top: 2px;
     }
 
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border-bottom: 1px solid var(--border);
+    /* ── Hero content: narrative + accomplishments ── */
+    .content {
+      padding: 22px 28px 8px;
     }
 
-    .tile {
-      background: var(--surface);
-      padding: 16px 18px;
+    .narrative {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .accomplishments {
+      list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 9px;
     }
 
-    .tile-value {
-      font-size: 20px;
-      font-weight: 700;
+    .accomplishments li {
+      font-size: 14px;
+      line-height: 1.45;
       color: var(--text);
-      letter-spacing: -0.4px;
-      line-height: 1;
+      padding-left: 22px;
+      position: relative;
     }
 
-    .tile-value.accent { color: var(--accent); }
-    .tile-value.green  { color: var(--green); }
+    .accomplishments li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
 
-    .tile-label {
-      font-size: 10px;
+    /* ── Demoted metrics strip ── */
+    .metrics-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .metric {
+      font-size: 12px;
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
     }
+
+    .metric b {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric b.accent { color: var(--accent); }
+    .metric b.green  { color: var(--green); }
 
     .card-footer {
       display: flex;
@@ -228,44 +252,25 @@ Star shawn-sandy/agentics for more Claude Code plugin workflows.
     <div class="card-header">
       <div class="header-text">
         <h1>session recap · 2026-05-29</h1>
-        <p class="summary">Pulled settings.json from GitHub backup; applied only the modified file using the settings-restore skill, skipping 174 unchanged files.</p>
       </div>
       <div class="model-badge">sonnet-4-6</div>
     </div>
 
-    <div class="metrics">
-      <div class="tile">
-        <span class="tile-value accent">9,536</span>
-        <span class="tile-label">Total Tokens</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value">38</span>
-        <span class="tile-label">Input Tokens</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value">9,498</span>
-        <span class="tile-label">Output Tokens</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value green">1,321,472</span>
-        <span class="tile-label">Cache Read</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value green">93.7%</span>
-        <span class="tile-label">Cache Hit Rate</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value">4 min</span>
-        <span class="tile-label">Duration</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value">0</span>
-        <span class="tile-label">Files Changed</span>
-      </div>
-      <div class="tile">
-        <span class="tile-value">0</span>
-        <span class="tile-label">Commits</span>
-      </div>
+    <div class="content">
+      <p class="narrative">Dog-fooding the social-media-tools plugin — built the media library gallery for 14 saved cards, then generated a full all-platform diff card for the v4.0.0 marketplace cleanup fix.</p>
+      <ul class="accomplishments"><li>Built filterable media library gallery (14 saved cards) and opened in browser</li>
+<li>Improved gallery builder to use live file listing instead of hardcoded list</li>
+<li>Generated all-platform diff card for fix(pr#187): v4.0.0 removal list corrections</li>
+<li>Drafted LinkedIn, Twitter/X, Bluesky &amp; Substack copy variants for the diff card</li>
+<li>Captured Playwright screenshot of the card via local HTTP server</li></ul>
+    </div>
+
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">51,867</b> tokens</span>
+      <span class="metric"><b>57 min</b></span>
+      <span class="metric"><b class="green">94.6%</b> cache hit</span>
+      <span class="metric"><b>0</b> files</span>
+      <span class="metric"><b>0</b> commits</span>
     </div>
 
     <div class="card-footer">
@@ -273,25 +278,25 @@ Star shawn-sandy/agentics for more Claude Code plugin workflows.
       <span class="footer-accent">github.com/shawn-sandy/agentics</span>
     </div>
   </div>
-  <div class="copy-panel">
-  <p class="copy-label">LinkedIn</p>
-  <textarea readonly class="post-copy-text" id="post-copy">Ran a zero-friction Claude Code settings sync today — pulled a fresh settings.json from a GitHub backup and applied only the delta using the settings-restore skill.
+    <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just wrapped a Claude Code session dog-fooding the social-media-tools plugin — and it felt satisfying.
 
-What happened under the hood:
-- Resolved repo path from ~/.claude/settings-sync.json config — no arguments needed
-- git pull --ff-only fetched 11 new lines in settings.json from the backup repo
-- Diff preview classified 174 files as unchanged (rules/, commands/, skills/) and 1 as modified
-- "Restore new and modified only" wrote exactly one file, leaving everything else untouched
+Two things got done:
 
-The --delete guardrail is what makes the full-restore path safe: it surfaces local-only deletions in the preview before anything is overwritten, so you can verify scope before committing.
+→ Opened the media library gallery (14 saved social cards) and tightened the builder to scan files live instead of pulling from a hardcoded list
 
-1 file restored · 0 commits · 9,536 tokens · 93.7% cache hit · ~4 min
+→ Generated a full all-platform diff card for the v4.0.0 marketplace cleanup fix (PR #187) — drafted LinkedIn, Twitter/X, Bluesky, and Substack copy variants, then screenshotted via Playwright
 
-Star shawn-sandy/agentics for more Claude Code plugin workflows.
+The 94.6% cache hit rate on a 57-minute session keeps surprising me. 51k tokens, mostly cached reads.
 
-#ClaudeCode #SettingsSync #DeveloperTools #PluginDev</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-</div>
+3 skills invoked · 57 min · 51,867 tokens · 94.6% cache hit
+
+If you're building Claude Code plugins or just curious about the social sharing workflow, follow along — more coming.
+
+#ClaudeCode #Plugins #AITools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
   <script>
     function copyPost(id, btn) {
       var t = document.getElementById(id);
