@@ -104,7 +104,7 @@ The implementation was straightforward: enhanced the gallery template with data-
     }
 
     .card {
-      width: 720px;
+      width: min(720px, 100%);
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -225,7 +225,7 @@ The implementation was straightforward: enhanced the gallery template with data-
 
     /* ── Copy panel ── */
     .copy-panel {
-      width: 720px;
+      width: min(720px, 100%);
       background: #161b22;
       border: 1px solid #30363d;
       border-radius: 8px;
@@ -352,7 +352,9 @@ The implementation was straightforward: enhanced the gallery template with data-
         btn.textContent = 'Copied ✓';
         setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t.value).then(done).catch(fallback);
       } else {

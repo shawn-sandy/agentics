@@ -3,9 +3,9 @@
   gallery.html — Media library for saved social media cards.
 
   Static variables (substituted by the media-library skill):
-    {{GALLERY_ENTRIES}}  — Repeated <a> blocks, one per saved card
-    {{CARD_COUNT}}       — Total number of cards displayed
-    {{GENERATED_AT}}     — ISO timestamp of gallery generation
+    GALLERY_ENTRIES  — Repeated <a> blocks, one per saved card
+    CARD_COUNT       — Total number of cards displayed
+    GENERATED_AT     — ISO timestamp of gallery generation
 -->
 <html lang="en">
 <head>
@@ -338,21 +338,21 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" class="search-box" placeholder="Search by topic or type..." id="searchBox">
+    <input type="text" class="search-box" placeholder="Search by topic or type..." id="searchBox" aria-label="Search cards by topic or type">
     <div class="filter-chips" id="filterChips">
-      <button class="filter-chip active" data-type="all">All</button>
-      <button class="filter-chip" data-type="diff">Diff</button>
-      <button class="filter-chip" data-type="feature">Feature</button>
-      <button class="filter-chip" data-type="quote">Quote</button>
-      <button class="filter-chip" data-type="blog">Blog</button>
-      <button class="filter-chip" data-type="snippet">Snippet</button>
-      <button class="filter-chip" data-type="video">Video</button>
-      <button class="filter-chip" data-type="project">Project</button>
-      <button class="filter-chip" data-type="session">Session</button>
+      <button class="filter-chip active" data-type="all" aria-pressed="true">All</button>
+      <button class="filter-chip" data-type="diff" aria-pressed="false">Diff</button>
+      <button class="filter-chip" data-type="feature" aria-pressed="false">Feature</button>
+      <button class="filter-chip" data-type="quote" aria-pressed="false">Quote</button>
+      <button class="filter-chip" data-type="blog" aria-pressed="false">Blog</button>
+      <button class="filter-chip" data-type="snippet" aria-pressed="false">Snippet</button>
+      <button class="filter-chip" data-type="video" aria-pressed="false">Video</button>
+      <button class="filter-chip" data-type="project" aria-pressed="false">Project</button>
+      <button class="filter-chip" data-type="session" aria-pressed="false">Session</button>
     </div>
     <div class="view-toggle">
-      <button class="view-btn active" id="gridBtn" title="Grid view">&#9638;</button>
-      <button class="view-btn" id="listBtn" title="List view">&#9776;</button>
+      <button class="view-btn active" id="gridBtn" title="Grid view" aria-label="Grid view" aria-pressed="true">&#9638;</button>
+      <button class="view-btn" id="listBtn" title="List view" aria-label="List view" aria-pressed="false">&#9776;</button>
     </div>
   </div>
 
@@ -411,8 +411,12 @@
 
     for (var i = 0; i < chips.length; i++) {
       chips[i].addEventListener('click', function() {
-        for (var j = 0; j < chips.length; j++) chips[j].classList.remove('active');
+        for (var j = 0; j < chips.length; j++) {
+          chips[j].classList.remove('active');
+          chips[j].setAttribute('aria-pressed', 'false');
+        }
         this.classList.add('active');
+        this.setAttribute('aria-pressed', 'true');
         activeType = this.getAttribute('data-type');
         applyFilters();
       });
@@ -429,13 +433,17 @@
     gridBtn.addEventListener('click', function() {
       grid.classList.remove('list-view');
       gridBtn.classList.add('active');
+      gridBtn.setAttribute('aria-pressed', 'true');
       listBtn.classList.remove('active');
+      listBtn.setAttribute('aria-pressed', 'false');
     });
 
     listBtn.addEventListener('click', function() {
       grid.classList.add('list-view');
       listBtn.classList.add('active');
+      listBtn.setAttribute('aria-pressed', 'true');
       gridBtn.classList.remove('active');
+      gridBtn.setAttribute('aria-pressed', 'false');
     });
   </script>
 </body>
