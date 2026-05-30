@@ -62,7 +62,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
 | `social-media-tools` | Skills + Commands | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `/social-media-tools:digest` for interactive digest scanning |
-| `plan-agent` | Skills + Hooks | Explicit `/plan-agent:author <objective>` skill (manual-invoke, `disable-model-invocation`) runs §0–§7 plan workflow; automatic `verb-target` filename hook on `Write`/`Edit`; optional pairing with `plan-interview:plan-status` |
+| `plan-agent` | Skills + Hooks | Explicit `/plan-agent:planning <objective>` skill (manual-invoke, `disable-model-invocation`) runs §1–§8 plan workflow with built-in structured interview (§5b); automatic `verb-target` filename hook on `Write`/`Edit` |
 | `issue-agent` | Skills | Create GitHub and GitLab issues from any context — selection, session, bug, or feature; host auto-detected from git remote; manual-invoke only (`disable-model-invocation`); always confirms before creating |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
