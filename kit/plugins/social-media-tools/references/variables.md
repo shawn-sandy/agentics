@@ -21,7 +21,7 @@ comment block at the top listing its variables and an example.
 |----------|-------------|
 | `{{FILENAME}}` | File path or rule name being changed (e.g., `plan-mode.md`) |
 | `{{BADGE}}` | Short label shown top-right (e.g., `v3.4.1`, `feat`, `fix`) |
-| `{{HUNK_1_HEADER}}` | First hunk header text (e.g., `@@ Workflow §3 @@`) |
+| `{{HUNK_1_HEADER}}` | First hunk header text (e.g., `@@ Workflow Step 3 @@`) |
 | `{{HUNK_1_ROWS}}` | HTML `<tr>` rows for the first hunk — see row format below |
 | `{{HUNK_2_HEADER}}` | Second hunk header — omit entire second hunk `<tr>` block if unused |
 | `{{HUNK_2_ROWS}}` | HTML `<tr>` rows for the second hunk |

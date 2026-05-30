@@ -13,14 +13,14 @@ argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--no-intervie
 Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this skill is command-invoked only — `disable-model-invocation: true`):
 
 - **Objective (required):** all text that is not a flag. If empty after parsing, ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
-- `--quick` — shorthand for `--no-clarify --no-align --no-interview`; skips §1 Clarify, §5 Align, and §5b Interview.
-- `--no-clarify` — skip §1 Clarify only. Use when the objective is well-specified but you still want §5 Align.
-- `--no-align` — skip §5 Align only. Use when steps are pre-agreed but requirements need verification first.
+- `--quick` — shorthand for `--no-clarify --no-align --no-interview`; skips Step 1 Clarify, Step 5 Align, and Step 5b Interview.
+- `--no-clarify` — skip Step 1 Clarify only. Use when the objective is well-specified but you still want Step 5 Align.
+- `--no-align` — skip Step 5 Align only. Use when steps are pre-agreed but requirements need verification first.
 - `--type <kind>` — preset `type:` in frontmatter (`feature`, `fix`, `refactor`, `docs`, `chore`).
-- `--template <name>` — plan skeleton variant: `default` (only supported value; `minimal`, `adr`, and `spike` are planned but not yet implemented). Controls which skeleton is loaded in §2.
-- `--dir <path>` — override §2 directory resolution; write the plan to this path.
+- `--template <name>` — plan skeleton variant: `default` (only supported value; `minimal`, `adr`, and `spike` are planned but not yet implemented). Controls which skeleton is loaded in Step 2.
+- `--dir <path>` — override Step 2 directory resolution; write the plan to this path.
 - `--priority <level>` — write `priority: <level>` to frontmatter (`low`, `medium`, `high`, `critical`). Overrides `planAgent.extraFrontmatter.priority` from settings if both are present.
-- `--no-interview` — skip §5b Interview. Use when the plan is pre-validated or time-critical.
+- `--no-interview` — skip Step 5b Interview. Use when the plan is pre-validated or time-critical.
 
 **Smart defaults when a flag is absent:**
 
@@ -32,7 +32,7 @@ Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this
   - anything else → `chore`
 - `--quick`, `--no-clarify`, `--no-align`, `--no-interview` are opt-in only and are never inferred automatically.
 
-Echo the resolved objective and effective flags before proceeding to §0.
+Echo the resolved objective and effective flags before proceeding to Step 0.
 
 ## Workflow
 
@@ -41,7 +41,7 @@ Follow these steps exactly.
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. *(Skip entirely when `--quick` or `--no-clarify`.)*
 2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.**
 3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. If `--priority` was set, also add `<meta name="plan-priority" content="<level>">`. Read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global) and render any extra key-value pairs as additional `<meta name="plan-<key>" content="<value>">` tags; `--priority` overrides any `priority` key from settings.
-4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from §2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
+4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from Step 2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
 5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — confirm overall approval directly with the user after presenting the plan. *(Skip entirely when `--quick` or `--no-align`.)*
 5b. **Interview** — Stress-test the drafted plan through a structured interview before committing. *(Skip entirely when `--quick` or `--no-interview`.)*
 
@@ -64,7 +64,7 @@ Follow these steps exactly.
     **Round 3 — Edge Cases & Best Practices** (complex only):
     Up to 4 questions covering: critical failure modes or race conditions, concurrent user scenarios or data conflicts, regression risks (existing tests, API contracts, backward compatibility), and remaining open questions from the plan.
 
-    **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings before committing?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions. If declined, proceed to §6 without changes.
+    **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings before committing?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions. If declined, proceed to Step 6 without changes.
 
 6. **Commit** — **Always** commit plan files to version control alongside the related changes.
 7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.

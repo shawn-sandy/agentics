@@ -15,7 +15,7 @@
 - DB schema checks marked conditional — apply only when reviewing migration files or schema definitions.
 - `code-review` plugin bumped from `2.0.0` → `2.1.0`.
 
-> See [CHANGELOG §2.1.0](../kit/plugins/code-review/CHANGELOG.md#210---2026-03-05) for the authoritative feature list.
+> See [CHANGELOG v2.1.0](../kit/plugins/code-review/CHANGELOG.md#210---2026-03-05) for the authoritative feature list.
 
 ## Files changed
 
@@ -66,4 +66,4 @@ The `description` frontmatter was updated to add "breaking changes" and "regress
 ## References
 
 - Plan: [add-breaking-change-regression-detection.md](plans/add-breaking-change-regression-detection.md)
-- Changelog: [CHANGELOG §2.1.0](../kit/plugins/code-review/CHANGELOG.md#210---2026-03-05)
+- Changelog: [CHANGELOG v2.1.0](../kit/plugins/code-review/CHANGELOG.md#210---2026-03-05)

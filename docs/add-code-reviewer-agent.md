@@ -13,7 +13,7 @@
 - System prompt includes Role, Behavior, Workflow, Output Format, and Scope sections, reusing the review checklist structure from the existing skill.
 - `code-review` plugin bumped from `2.1.1` → `2.2.0`.
 
-> See [CHANGELOG §2.2.0](../kit/plugins/code-review/CHANGELOG.md#220---2026-03-08) for the authoritative feature list.
+> See [CHANGELOG v2.2.0](../kit/plugins/code-review/CHANGELOG.md#220---2026-03-08) for the authoritative feature list.
 
 ## Files changed
 
@@ -56,4 +56,4 @@ Agent({ subagent_type: "code-reviewer", prompt: "Review the files in src/api/" }
 ## References
 
 - Plan: [add-code-reviewer-agent.md](plans/add-code-reviewer-agent.md)
-- Changelog: [CHANGELOG §2.2.0](../kit/plugins/code-review/CHANGELOG.md#220---2026-03-08)
+- Changelog: [CHANGELOG v2.2.0](../kit/plugins/code-review/CHANGELOG.md#220---2026-03-08)

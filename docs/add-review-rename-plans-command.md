@@ -14,7 +14,7 @@
 - Renames use `git mv` to preserve file history.
 - `plan-interview` plugin bumped from `1.2.0` → `1.3.0`.
 
-> See [CHANGELOG §1.3.0](../kit/plugins/plan-interview/CHANGELOG.md#130---2026-02-26) for the authoritative feature list.
+> See [CHANGELOG v1.3.0](../kit/plugins/plan-interview/CHANGELOG.md#130---2026-02-26) for the authoritative feature list.
 
 ## Files changed
 
@@ -65,4 +65,4 @@ Rename: [Rename all] [Pick individually] [Skip]
 ## References
 
 - Plan: [add-review-rename-plans-command.md](plans/add-review-rename-plans-command.md)
-- Changelog: [CHANGELOG §1.3.0](../kit/plugins/plan-interview/CHANGELOG.md#130---2026-02-26)
+- Changelog: [CHANGELOG v1.3.0](../kit/plugins/plan-interview/CHANGELOG.md#130---2026-02-26)

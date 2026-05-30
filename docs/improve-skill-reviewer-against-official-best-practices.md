@@ -14,7 +14,7 @@
 - `README.md` updated to reflect new anti-patterns and revised line-count threshold.
 - `skill-reviewer` plugin bumped from `1.1.0` to `1.2.0`.
 
-> See [CHANGELOG §1.2.0](../kit/plugins/skill-reviewer/CHANGELOG.md) for the authoritative change log entry.
+> See [CHANGELOG v1.2.0](../kit/plugins/skill-reviewer/CHANGELOG.md) for the authoritative change log entry.
 
 ## Files changed
 
@@ -49,4 +49,4 @@ The evaluation-driven development section in `best-practices.md` introduces the 
 ## References
 
 - Plan: [improve-skill-reviewer-against-official-best-practices.md](plans/improve-skill-reviewer-against-official-best-practices.md)
-- Changelog: [kit/plugins/skill-reviewer/CHANGELOG.md §1.2.0](../kit/plugins/skill-reviewer/CHANGELOG.md)
+- Changelog: [kit/plugins/skill-reviewer/CHANGELOG.md v1.2.0](../kit/plugins/skill-reviewer/CHANGELOG.md)

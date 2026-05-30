@@ -15,7 +15,7 @@
 - Monorepo tie-breaking: nearest ancestor config file wins when multiple framework configs are present.
 - `skill-reviewer` plugin bumped from `1.3.0` → `1.4.0`.
 
-> See [CHANGELOG §1.4.0](../kit/plugins/skill-reviewer/CHANGELOG.md#140---2026-03-03) for the authoritative feature list.
+> See [CHANGELOG v1.4.0](../kit/plugins/skill-reviewer/CHANGELOG.md#140---2026-03-03) for the authoritative feature list.
 
 ## Files changed
 
@@ -72,4 +72,4 @@ Missing tests: src/utils.ts → create src/utils.test.ts
 ## References
 
 - Plan: [add-running-tests-skill-to-skill-reviewer.md](plans/add-running-tests-skill-to-skill-reviewer.md)
-- Changelog: [CHANGELOG §1.4.0](../kit/plugins/skill-reviewer/CHANGELOG.md#140---2026-03-03)
+- Changelog: [CHANGELOG v1.4.0](../kit/plugins/skill-reviewer/CHANGELOG.md#140---2026-03-03)
