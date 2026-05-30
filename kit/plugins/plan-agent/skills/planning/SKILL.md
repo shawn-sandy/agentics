@@ -1,29 +1,26 @@
 ---
 name: planning
-description: "Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and HTML metadata. Use when running `/plan-agent:planning <objective>` to create a plan."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, TodoWrite, ToolSearch, Skill, EnterPlanMode, ExitPlanMode
+description: "Creates a structured, self-contained HTML implementation plan from a stated objective — enforcing verb-target filenames, required sections, and HTML metadata. Use when the user wants to turn an objective into a detailed plan via /plan-agent:planning. Does not review or modify existing plans — for that use plan-interview:plan-interview."
+allowed-tools: Read, Write, Edit, Glob, Bash, AskUserQuestion, Skill
 disable-model-invocation: true
-argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default|minimal|adr|spike] [--dir <path>] [--priority low|medium|high|critical] [--interview]"
+argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical] [--interview]"
 ---
 
-# Plan Agent — Planning
-
-> **Deferred tools:** `EnterPlanMode` and `ExitPlanMode` are deferred — their schemas are not loaded at session start.
-> Before calling either, use `ToolSearch` with `select:EnterPlanMode` or `select:ExitPlanMode` to load the schema first.
+## Plan Agent — Planning
 
 ## Invocation & Arguments
 
-Read `$ARGUMENTS` on entry:
+Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this skill is command-invoked only — `disable-model-invocation: true`):
 
 - **Objective (required):** all text that is not a flag. If empty after parsing, ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
 - `--quick` — shorthand for `--no-clarify --no-align`; skips both §1 Clarify and §5 Align.
 - `--no-clarify` — skip §1 Clarify only. Use when the objective is well-specified but you still want §5 Align.
 - `--no-align` — skip §5 Align only. Use when steps are pre-agreed but requirements need verification first.
 - `--type <kind>` — preset `type:` in frontmatter (`feature`, `fix`, `refactor`, `docs`, `chore`).
-- `--template <name>` — plan skeleton variant: `default` (default), `minimal`, `adr`, `spike`. Controls which skeleton is loaded in §2 (see **Skeleton** section).
+- `--template <name>` — plan skeleton variant: `default` (only supported value; `minimal`, `adr`, and `spike` are planned but not yet implemented). Controls which skeleton is loaded in §2.
 - `--dir <path>` — override §2 directory resolution; write the plan to this path.
 - `--priority <level>` — write `priority: <level>` to frontmatter (`low`, `medium`, `high`, `critical`). Overrides `planAgent.extraFrontmatter.priority` from settings if both are present.
-- `--interview` — after writing the plan and before `ExitPlanMode`, call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")`. If that plugin is absent, note "plan-interview plugin not found — skipping" and continue.
+- `--interview` — after writing the plan, call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")`. If that plugin is absent, note "plan-interview plugin not found — skipping" and continue.
 
 **Smart defaults when a flag is absent:**
 
@@ -37,13 +34,6 @@ Read `$ARGUMENTS` on entry:
 
 Echo the resolved objective and effective flags before proceeding to §0.
 
-## Enter plan mode
-
-`EnterPlanMode` is a deferred tool — load it before calling it.
-
-1. Use `ToolSearch` with `select:EnterPlanMode` to load the schema.
-2. Call `EnterPlanMode`. If already in plan mode, skip this step silently.
-
 ## When to plan
 
 - When a skill/slash-command requires write operations (git, filesystem, migrations), **do not** enter plan mode. Execute directly.
@@ -51,18 +41,18 @@ Echo the resolved objective and effective flags before proceeding to §0.
 
 ## Workflow
 
-0. **Assess** — Before drafting anything, determine whether the request warrants a plan: does it span multiple files, or involve unclear requirements? If not — single file, simple fix, typo, missing dep, direct skill/git operation — use `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` immediately and apply the change directly. Never produce a plan document for requests that don't clear this threshold.
+Follow these steps exactly.
+
+0. **Assess** — Before drafting anything, determine whether the request warrants a plan: does it span multiple files, or involve unclear requirements? If not — single file, simple fix, typo, missing dep, direct skill/git operation — apply the change directly. Never produce a plan document for requests that don't clear this threshold.
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. *(Skip entirely when `--quick` or `--no-clarify`.)*
 2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.**
 3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. If `--priority` was set, also add `<meta name="plan-priority" content="<level>">`. Read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global) and render any extra key-value pairs as additional `<meta name="plan-<key>" content="<value>">` tags; `--priority` overrides any `priority` key from settings.
 4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from §2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
-5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — approval is requested separately via `ExitPlanMode`. *(Skip entirely when `--quick` or `--no-align`.)*
+5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — confirm overall approval directly with the user after presenting the plan. *(Skip entirely when `--quick` or `--no-align`.)*
 6. **Commit** — **Always** commit plan files to version control alongside the related changes.
 7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
 
-After §7, if `--interview` was set: call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")` to stress-test the plan. If the plugin is absent, note "plan-interview plugin not found — skipping" and continue.
-
-Then use `ToolSearch` with `select:ExitPlanMode` and call `ExitPlanMode` to present the plan for approval.
+After §7, present the plan file path to the user and offer to open it. If `--interview` was set: call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")` to stress-test the plan. If the plugin is absent, note "plan-interview plugin not found — skipping" and continue.
 
 ## Required Structure
 
@@ -100,6 +90,6 @@ Direct, imperative, developer-friendly — real names (file paths, function name
 
 ## Skeleton
 
-Copy `reference/SKELETON.html` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/planning/reference/SKELETON.html` if the path is uncertain. Fill every placeholder (wrapped in `{curly braces}`) before writing the file. The skeleton includes copy buttons after every prompt `<pre>`; do not remove them when filling placeholders. The `--template` flag is reserved for future HTML skeleton variants; use `default` (or omit it) for now.
+Copy `reference/SKELETON.html` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/planning/reference/SKELETON.html` if the path is uncertain. Fill every placeholder (wrapped in `{curly braces}`) before writing the file. The skeleton includes copy buttons after every prompt `<pre>`; do not remove them when filling placeholders. `minimal`, `adr`, and `spike` template variants are planned but not yet implemented — use `SKELETON.html` for all plans until those variants ship.
 
 Each step card in the skeleton includes a `<span class="step-chip">todo</span>` before the action text. Always write `todo` as the initial chip value — the chip visually updates to `done` via CSS when the `.step-card.completed` class is applied. Do not change the chip text from `todo` in the initial HTML output.
