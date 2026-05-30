@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Git merge driver for .claude-plugin/marketplace.json
 // Invoked by git as: node merge-marketplace.mjs %O %A %B
-//   %O = base (common ancestor path)
+//   %O = base (common ancestor path — accepted but not read)
 //   %A = ours (current branch path — driver MUST write result here)
 //   %B = theirs (incoming branch path)
 // Exit 0 on success; exit 1 (file untouched) on any parse or semver error.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const [,, basePath, oursPath, theirsPath] = process.argv;
+const [,, , oursPath, theirsPath] = process.argv;
 
 function semverMax(a, b) {
   if (!/^\d+\.\d+\.\d+$/.test(a) || !/^\d+\.\d+\.\d+$/.test(b)) {
@@ -24,7 +24,6 @@ function semverMax(a, b) {
 }
 
 try {
-  const base = JSON.parse(readFileSync(basePath, 'utf8'));
   const ours = JSON.parse(readFileSync(oursPath, 'utf8'));
   const theirs = JSON.parse(readFileSync(theirsPath, 'utf8'));
 
@@ -35,19 +34,21 @@ try {
     merged.version = semverMax(ours.version ?? '0.0.0', theirs.version ?? '0.0.0');
   }
 
+  // Names that ours deliberately removed — don't let theirs resurrect them
+  const oursRemovedNames = new Set((ours.removed ?? []).map(r => r.name));
+
   // Merge plugins[] — ours order first, then append entries new in theirs
   const theirPlugins = new Map((theirs.plugins ?? []).map(p => [p.name, p]));
-  const seenNames = new Set();
 
   merged.plugins = (ours.plugins ?? []).map(op => {
-    seenNames.add(op.name);
     const tp = theirPlugins.get(op.name);
+    theirPlugins.delete(op.name); // remaining entries after map are new-in-theirs only
     if (!tp) return op;
-    return { ...op, version: semverMax(op.version, tp.version) };
+    return { ...op, version: semverMax(op.version ?? '0.0.0', tp.version ?? '0.0.0') };
   });
 
-  for (const tp of (theirs.plugins ?? [])) {
-    if (!seenNames.has(tp.name)) {
+  for (const tp of theirPlugins.values()) {
+    if (!oursRemovedNames.has(tp.name)) {
       merged.plugins.push(tp);
     }
   }

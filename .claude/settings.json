@@ -15,7 +15,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "test -f scripts/setup-merge-driver.sh && bash scripts/setup-merge-driver.sh >/dev/null 2>&1 || true"
+                        "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/setup-merge-driver.sh\" && bash \"$TOPLEVEL/scripts/setup-merge-driver.sh\" >/dev/null 2>&1 || true"
                     }
                 ]
             }
