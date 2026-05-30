@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.0 — 2026-05-30 — Add web research and file delivery tools
+
+### Added
+
+- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — brings the planning skill's exploration capabilities in line with the built-in Plan agent. `WebSearch` and `WebFetch` enable research during §1 Clarify (verifying APIs, checking library versions, confirming best practices). `SendUserFile` delivers the finished plan file directly to the user in §8 Open.
+- **§1 Clarify updated** — now documents when and how to use `WebSearch`/`WebFetch` for plan research, including the `ToolSearch` bootstrap for deferred tools.
+- **§8 Open step 6** — sends the plan file to the user via `SendUserFile` before reporting the URL.
+
+---
+
 ## v0.10.0 — 2026-05-30 — Add built-in structured interview step
 
 ### Added
