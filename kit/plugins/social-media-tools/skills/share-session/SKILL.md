@@ -184,7 +184,7 @@ Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.cla
 Parse the returned `SCRUB RESULT` block:
 - `BLOCKED` → report masked findings, **STOP.**
 - `WARN` → surface the warning, ask the user to confirm before continuing.
-- `PASS` → continue silently.
+- `PASS` → use `AskUserQuestion` to ask: "Security scrub passed — proceed with generating the recap card?" Continue only if the user confirms.
 
 ---
 
