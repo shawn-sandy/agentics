@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.12.0 — 2026-05-30 — Codebase exploration, Grep, and browser fallback
+
+### Added
+
+- **§0 Explore** — new codebase research step before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`. Fixes the orphaned `§0` reference that pointed nowhere.
+- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during §0 Explore and plan drafting.
+- **§8 browser fallback** — `ToolSearch` now checks whether the browser MCP server is connected before attempting browser verification. When unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
+
+### Changed
+
+- **Description tightened** — first sentence shortened from 83 to 72 chars to fit within the ≤80-char guideline.
+
+---
+
 ## v0.11.0 — 2026-05-30 — Add web research and file delivery tools
 
 ### Added
