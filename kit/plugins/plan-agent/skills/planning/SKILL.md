@@ -1,7 +1,7 @@
 ---
 name: planning
 description: "Creates a structured, self-contained HTML implementation plan from a stated objective — enforcing verb-target filenames, required sections, and HTML metadata. Use when the user wants to turn an objective into a detailed plan via /plan-agent:planning. Does not review or modify existing plans — for that use plan-interview:plan-interview."
-allowed-tools: Read, Write, Edit, Glob, Bash, AskUserQuestion, Skill
+allowed-tools: Read, Write, Edit, Glob, Bash, AskUserQuestion, Skill, ToolSearch, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 disable-model-invocation: true
 argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical] [--interview]"
 ---
@@ -45,8 +45,15 @@ Follow these steps exactly.
 5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — confirm overall approval directly with the user after presenting the plan. *(Skip entirely when `--quick` or `--no-align`.)*
 6. **Commit** — **Always** commit plan files to version control alongside the related changes.
 7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
+8. **Open** — After committing, open the plan in a browser via a local Python HTTP server to confirm it renders correctly. This step is mandatory — do not skip it. Steps:
+   1. Find a free port: run `python3 -c "import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()"` and capture the output as `<port>`.
+   2. Start the server in the background from the plan's parent directory: `cd <plan-dir> && python3 -m http.server <port> &`.
+   3. Load the browser tools via `ToolSearch` with `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer`, then call `mcp__claude-in-chrome__tabs_context_mcp` with `createIfEmpty: true` to get a tab ID.
+   4. Navigate to `http://localhost:<port>/<plan-filename>` using `mcp__claude-in-chrome__navigate`.
+   5. Take a screenshot with `mcp__claude-in-chrome__computer` (`action: screenshot`, `save_to_disk: true`) and send it to the user to confirm the plan rendered.
+   6. Report the URL (`http://localhost:<port>/<plan-filename>`) to the user. Leave the server running so the user can continue browsing.
 
-After §7, present the plan file path to the user and offer to open it. If `--interview` was set: call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")` to stress-test the plan. If the plugin is absent, note "plan-interview plugin not found — skipping" and continue.
+After §8, if `--interview` was set: call `Skill(skill: "plan-interview:plan-interview", args: "<plan-path>")` to stress-test the plan. If the plugin is absent, note "plan-interview plugin not found — skipping" and continue.
 
 ## Required Structure
 
