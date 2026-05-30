@@ -1,5 +1,19 @@
 # Changelog — social-media-tools
 
+## v2.3.0 — 2026-05-29
+
+Media library skill now generates an interactive HTML page as its primary action.
+
+- `media-library` skill: restructured to generate and open a filterable HTML page
+  in the browser as the default behavior — no intermediate markdown table or
+  interactive menu; the page lists all saved cards with clickable links that open
+  each card directly; optional follow-up step for extracting copy text on request
+- `templates/gallery.html`: enhanced with type filter chips (All, Diff, Feature,
+  Quote, Blog, Snippet, Video, Project, Session), a search box for filtering by
+  topic or type, a grid/list view toggle, visible-count indicator when filtering,
+  responsive mobile layout, and `data-type`/`data-topic` attributes on card
+  entries for client-side filtering; title changed to "Media Library"
+
 ## v2.2.0 — 2026-05-29
 
 Add visual gallery viewer for saved social cards.
