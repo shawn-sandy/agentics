@@ -34,16 +34,10 @@ Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this
 
 Echo the resolved objective and effective flags before proceeding to §0.
 
-## When to plan
-
-- When a skill/slash-command requires write operations (git, filesystem, migrations), **do not** enter plan mode. Execute directly.
-- Only produce a plan if the change spans multiple files or has unclear requirements; for simple fixes (missing dep, typo, small edit), apply the change directly.
-
 ## Workflow
 
 Follow these steps exactly.
 
-0. **Assess** — Before drafting anything, determine whether the request warrants a plan: does it span multiple files, or involve unclear requirements? If not — single file, simple fix, typo, missing dep, direct skill/git operation — apply the change directly. Never produce a plan document for requests that don't clear this threshold.
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. *(Skip entirely when `--quick` or `--no-clarify`.)*
 2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.**
 3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. If `--priority` was set, also add `<meta name="plan-priority" content="<level>">`. Read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global) and render any extra key-value pairs as additional `<meta name="plan-<key>" content="<value>">` tags; `--priority` overrides any `priority` key from settings.
