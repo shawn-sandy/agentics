@@ -1,5 +1,13 @@
 # Changelog — social-media-tools
 
+## v2.3.1 — 2026-05-30 — Fix section sign rendering
+
+### Fixed
+
+- Replaced `§` (section sign) in references/variables.md with plain text to fix rendering issues.
+
+---
+
 ## v2.3.0 — 2026-05-29
 
 Media library skill now generates an interactive HTML page as its primary action.

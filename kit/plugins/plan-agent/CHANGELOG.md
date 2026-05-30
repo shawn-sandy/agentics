@@ -4,9 +4,9 @@
 
 ### Added
 
-- **§0 Explore** — new codebase research step before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`. Fixes the orphaned `§0` reference that pointed nowhere.
-- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during §0 Explore and plan drafting.
-- **§8 browser fallback** — `ToolSearch` now checks whether the browser MCP server is connected before attempting browser verification. When unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
+- **Step 0 Explore** — new codebase research step before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`. Fixes the orphaned Step 0 reference that pointed nowhere.
+- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during Step 0 Explore and plan drafting.
+- **Step 8 browser fallback** — `ToolSearch` now checks whether the browser MCP server is connected before attempting browser verification. When unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
 
 ### Changed
 
@@ -18,9 +18,17 @@
 
 ### Added
 
-- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — brings the planning skill's exploration capabilities in line with the built-in Plan agent. `WebSearch` and `WebFetch` enable research during §1 Clarify (verifying APIs, checking library versions, confirming best practices). `SendUserFile` delivers the finished plan file directly to the user in §8 Open.
-- **§1 Clarify updated** — now documents when and how to use `WebSearch`/`WebFetch` for plan research, including the `ToolSearch` bootstrap for deferred tools.
-- **§8 Open step 6** — sends the plan file to the user via `SendUserFile` before reporting the URL.
+- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — brings the planning skill's exploration capabilities in line with the built-in Plan agent. `WebSearch` and `WebFetch` enable research during Step 1 Clarify (verifying APIs, checking library versions, confirming best practices). `SendUserFile` delivers the finished plan file directly to the user in Step 8 Open.
+- **Step 1 Clarify updated** — now documents when and how to use `WebSearch`/`WebFetch` for plan research, including the `ToolSearch` bootstrap for deferred tools.
+- **Step 8 Open step 6** — sends the plan file to the user via `SendUserFile` before reporting the URL.
+
+---
+
+## v0.12.1 — 2026-05-30 — Fix section sign rendering
+
+### Fixed
+
+- Replaced `§` (section sign) characters with plain text ("Step N", "Steps N–M") across SKILL.md, README.md, and CHANGELOG.md to fix rendering issues in terminals and markdown viewers.
 
 ---
 
