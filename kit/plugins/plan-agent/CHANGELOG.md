@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.0 — 2026-05-30 — Add mandatory §8 Open step with browser verification
+
+### Added
+
+- **§8 Open** — new mandatory final workflow step that opens the committed plan in a browser to confirm it renders correctly. Steps: find a free port via `python3 -c "import socket…"`, start `python3 -m http.server <port>` in the background from the plan's parent directory, load browser tools via `ToolSearch`, navigate to `http://localhost:<port>/<plan-filename>`, take and send a screenshot, report the URL to the user, and leave the server running. Cannot be skipped.
+- **`allowed-tools` expanded** — added `ToolSearch`, `mcp__claude-in-chrome__tabs_context_mcp`, `mcp__claude-in-chrome__tabs_create_mcp`, `mcp__claude-in-chrome__navigate`, and `mcp__claude-in-chrome__computer` so browser automation tools are pre-approved and never prompt mid-run.
+
+---
+
 ## v0.8.0 — 2026-05-30 — Remove plan-mode handshake; tighten skill consistency
 
 ### Changed
