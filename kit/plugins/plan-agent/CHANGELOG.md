@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.17.0 — 2026-05-31 — Add plans-open skill (open gallery without rebuild)
+
+### Added
+
+- **`plans-open` skill** — opens the existing `index.html` gallery directly without scanning plan files, parsing metadata, or writing any files. Resolves `plansDirectory` from settings (same as `plans-library`). If `index.html` does not exist, tells the user to run `/plan-agent:plans-library` first.
+
+---
+
 ## v0.16.0 — 2026-05-31 — Fix Step 9 status sync and commit instructions
 
 ### Fixed
