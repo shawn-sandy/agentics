@@ -53,7 +53,7 @@ The plugin may be installed as a versioned cached copy (e.g. `…/plan-agent/0.1
 
 ```bash
 TEMPLATES_DIR=$( { \
-  find ~/.claude/plugins -path "*/plan-agent/*/templates" -type d 2>/dev/null; \
+  find ~/.claude/plugins -path "*/plan-agent/*/templates" -type d 2>/dev/null | sort -rV; \
   find ~/.claude/plugins -path "*/plan-agent/templates"   -type d 2>/dev/null; \
   find "$PWD"            -path "*/plan-agent/templates"   -type d 2>/dev/null; \
 } | head -1 )
@@ -69,8 +69,8 @@ If `TEMPLATES_DIR` is empty, output:
 Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Sort newest-modified first.
 
 ```bash
-find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" 2>/dev/null \
-  | xargs ls -t 2>/dev/null
+find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 2>/dev/null \
+  | xargs -0 ls -t 2>/dev/null
 ```
 
 ---

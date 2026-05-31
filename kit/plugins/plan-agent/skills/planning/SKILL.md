@@ -32,7 +32,7 @@ Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this
   - anything else → `chore`
 - `--quick`, `--no-clarify`, `--no-align`, `--no-interview` are opt-in only and are never inferred automatically.
 
-Echo the resolved objective and effective flags before proceeding to Step 0.
+Echo the resolved objective and effective flags after completing the Step 0 self-bootstrap.
 
 ## Scope Constraint — Plans Only
 
@@ -49,9 +49,9 @@ If the objective sounds like "fix X" or "implement Y", write a plan for *how* to
 
 Follow these steps exactly.
 
-0. **Self-bootstrap** — Call `ExitPlanMode` immediately and silently before any other action. Always unconditional — do not prompt the user, do not skip for any flag including `--quick`. It is a no-op when plan mode is already off, so it is safe to call regardless of session state. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
+0. **Self-bootstrap** — Before any filesystem mutation, prompting, or planning steps: load `ExitPlanMode` via `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` silently. Both steps are unconditional — do not prompt the user, do not skip for any flag including `--quick`. `ExitPlanMode` is a no-op when plan mode is already off, so it is safe to call regardless of session state. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
 
-   `ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps happen silently with no user-visible output.
+   Two-step sequence: (1) `ToolSearch(select:ExitPlanMode)` silently, (2) `ExitPlanMode` silently. No user-visible output from either step.
 
 0b. **Explore** — Read the codebase to build context before planning. Use `Glob` to locate relevant files, `Grep` to find symbol definitions and usage patterns, and `Read` to understand the current architecture in areas the plan will touch. Focus on: entry points the plan modifies, existing tests or patterns to follow, and configuration that constrains the approach. Keep exploration proportional to plan scope — a one-file fix needs a quick look; an architecture change warrants broader reading. *(Skip entirely when `--quick`.)*
 
