@@ -159,15 +159,15 @@
       </div>
       <ul class="criteria-list" style="margin-top:1rem" aria-label="Acceptance criteria checklist">
         <li>
-          <input type="checkbox" id="c1">
+          <input type="checkbox" id="c1" checked>
           <label for="c1"><code>ExitPlanMode</code> is in <code>allowed-tools</code> in <code>kit/plugins/plan-agent/skills/planning/SKILL.md</code></label>
         </li>
         <li>
-          <input type="checkbox" id="c2">
+          <input type="checkbox" id="c2" checked>
           <label for="c2">Step 0 (Self-bootstrap) is the first workflow item and calls <code>ExitPlanMode</code> unconditionally before any other action</label>
         </li>
         <li>
-          <input type="checkbox" id="c3">
+          <input type="checkbox" id="c3" checked>
           <label for="c3">Invoking <code>/plan-agent:planning &lt;objective&gt;</code> produces a <code>.html</code> file — never a <code>.md</code> file — even in a session where the harness has entered plan mode</label>
         </li>
       </ul>
@@ -214,11 +214,11 @@
           <div class="step-card-header">
             <div class="step-number" aria-hidden="true">3</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Bump version to <code>0.11.1</code> and update CHANGELOG</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Bump version to <code>0.11.2</code> and update CHANGELOG</span></div>
               <div class="step-why">Patch bump signals a bug fix to downstream consumers. The CHANGELOG entry documents the root cause so the v0.8.0 reasoning is not accidentally re-applied in a future cleanup.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>grep &#34;plan-agent&#34; .claude-plugin/marketplace.json</code> shows <code>0.11.1</code>. <code>CHANGELOG.md</code> has a <code>v0.11.1</code> entry with root-cause context.</div>
+                <div class="verify-body"><code>grep &#34;plan-agent&#34; .claude-plugin/marketplace.json</code> shows <code>0.11.2</code>. <code>CHANGELOG.md</code> has entries for both <code>v0.11.1</code> (ExitPlanMode fix) and <code>v0.11.2</code> (scope constraint) with root-cause context.</div>
               </details>
             </div>
           </div>
@@ -291,6 +291,9 @@ function copyPrompt(btn) {
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy');
     document.body.removeChild(ta);
+    btn.classList.add('copied');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copy prompt'; }, 2000);
   });
 }
 </script>
