@@ -93,6 +93,17 @@ If the command exits zero (upstream exists), run:
 git push
 ```
 
+### Step 4.5: Scan for Issue References
+
+Look for plan files on this branch that link to GitHub or GitLab issues.
+
+Run:
+```
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>
+```
+
+Each line of output is a unique issue URL. If any URLs are returned, include a `## Linked Issues` section in the PR body (Step 5) with one `Closes <url>` line per URL. If the script produces no output, skip this section entirely.
+
 ### Step 5: Create Pull Request
 
 Run:
@@ -112,7 +123,12 @@ gh pr create --title "<title>" --body "<body>"
 
 ## Changes
 <brief description of what changed and why>
+
+## Linked Issues
+Closes <url>
 ```
+
+Omit the `## Linked Issues` section entirely if Step 4.5 found no issue references.
 
 Report the PR URL returned by `gh pr create` and **STOP**.
 

@@ -160,6 +160,19 @@ Strip the `refs/remotes/origin/` prefix to get the base branch name. If this
 command fails, fall back to `main`, then `master` (try
 `git rev-parse --verify main` to confirm existence before falling back).
 
+## Step 7.5: Scan for Issue References
+
+Look for plan files on this branch that link to GitHub or GitLab issues.
+
+Run:
+```
+git diff --name-only <base>...HEAD -- '*.html'
+```
+
+For each file listed, use `Grep` to search for the pattern `<meta name="plan-issue" content="` and extract the URL value. Collect all unique URLs found.
+
+If any URLs are found, include a `## Linked Issues` section in the PR/MR body (Step 8) with one `Closes <url>` line per unique URL. If no plan files are found or none contain issue references, skip this section entirely.
+
 ## Step 8: Create Pull/Merge Request
 
 Gather content:
@@ -181,7 +194,12 @@ mood.
 
 ## Changes
 <brief description of what changed and why>
+
+## Linked Issues
+Closes <url>
 ```
+
+Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
 
 For GitHub, run:
 
