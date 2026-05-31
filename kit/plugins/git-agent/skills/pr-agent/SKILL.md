@@ -88,7 +88,7 @@ Look for plan files on this branch that link to GitHub or GitLab issues.
 
 Run:
 ```
-git diff --name-only <base>...HEAD -- '*.html'
+git diff --name-only <base>...HEAD -- 'docs/plans/*.html' 'docs/plans/**/*.html'
 ```
 
 For each file listed, use `Grep` to search for the pattern `<meta name="plan-issue" content="` and extract the URL value. Collect all unique URLs found.
