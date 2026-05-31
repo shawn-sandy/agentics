@@ -8,12 +8,37 @@ Calls docs/plans/build-index.sh (relative to the project root / cwd).
 Always exits 0 — index-rebuild failures must never block plan writes.
 """
 
+import hashlib
 import json
 import os
 import subprocess
 import sys
+import time
 
 _FALLBACK_PLANS_DIR = "docs/plans"
+_DEBOUNCE_SECS = 2.0
+
+
+def _stamp_path():
+    """Per-project stamp file so concurrent sessions in different repos don't suppress each other."""
+    cwd_hash = hashlib.md5(os.getcwd().encode()).hexdigest()[:8]
+    return f"/tmp/rebuild-plans-index-{cwd_hash}.stamp"
+
+
+def _debounced(stamp):
+    """Return True if a rebuild completed within _DEBOUNCE_SECS seconds."""
+    try:
+        return (time.time() - os.path.getmtime(stamp)) < _DEBOUNCE_SECS
+    except OSError:
+        return False
+
+
+def _touch(stamp):
+    try:
+        with open(stamp, "w") as fh:
+            fh.write("")
+    except OSError:
+        pass
 
 
 def _load_settings(path):
@@ -71,6 +96,11 @@ def main():
     build_script = os.path.join(os.getcwd(), plans_dir, "build-index.sh")
     if not os.path.isfile(build_script):
         sys.exit(0)
+
+    stamp = _stamp_path()
+    if _debounced(stamp):
+        sys.exit(0)
+    _touch(stamp)
 
     try:
         subprocess.run(
