@@ -1,26 +1,18 @@
 # Changelog
 
-## v0.12.0 — 2026-05-30 — Codebase exploration, Grep, and browser fallback
+## v0.13.0 — 2026-05-31 — Add plans-library skill and gallery template
 
 ### Added
 
-- **Step 0 Explore** — new codebase research step before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`. Fixes the orphaned Step 0 reference that pointed nowhere.
-- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during Step 0 Explore and plan drafting.
-- **Step 8 browser fallback** — `ToolSearch` now checks whether the browser MCP server is connected before attempting browser verification. When unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
+- **`plans-library` skill** — scans the configured `plansDirectory`, parses each plan's metadata, and writes a filterable HTML gallery (`index.html`) with status/type chips, title search, and grid/list views. Opened in the browser on completion.
+- **`plans-gallery.html` template** — standalone gallery template with versioned cache path, JSON-safe title parsing, and an explicit `GENERATED_AT` timestamp.
 
-### Changed
+### Fixed
 
-- **Description tightened** — first sentence shortened from 83 to 72 chars to fit within the ≤80-char guideline.
-
----
-
-## v0.11.0 — 2026-05-30 — Add web research and file delivery tools
-
-### Added
-
-- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — brings the planning skill's exploration capabilities in line with the built-in Plan agent. `WebSearch` and `WebFetch` enable research during Step 1 Clarify (verifying APIs, checking library versions, confirming best practices). `SendUserFile` delivers the finished plan file directly to the user in Step 8 Open.
-- **Step 1 Clarify updated** — now documents when and how to use `WebSearch`/`WebFetch` for plan research, including the `ToolSearch` bootstrap for deferred tools.
-- **Step 8 Open step 6** — sends the plan file to the user via `SendUserFile` before reporting the URL.
+- **`plans-library` xargs** — replaced `xargs ls -t` with `xargs -0 ls -t` (null-delimited) to handle plan paths that contain spaces.
+- **`plans-library` template discovery** — versioned cached templates are now sorted by version descending (`sort -rV`) before `head -1`, making the selection deterministic when multiple cached versions exist.
+- **`planning` Step 0 bootstrap wording** — clarified that the `ToolSearch(select:ExitPlanMode)` preflight runs as part of Step 0 (not before it); removed the contradictory "before any other action" phrase.
+- **`planning` preflight echo** — moved the resolved-objective echo to after the Step 0 bootstrap so no user output precedes `ExitPlanMode`.
 
 ---
 
@@ -29,6 +21,47 @@
 ### Fixed
 
 - Replaced `§` (section sign) characters with plain text ("Step N", "Steps N–M") across SKILL.md, README.md, and CHANGELOG.md to fix rendering issues in terminals and markdown viewers.
+
+---
+
+## v0.12.0 — 2026-05-30 — Codebase exploration, Grep, and browser fallback
+
+### Added
+
+- **Step 0b Explore** — new codebase research step after the self-bootstrap and before Clarify. Uses `Glob`, `Grep`, and `Read` to build context on entry points, existing patterns, tests, and configuration before drafting steps. Exploration depth scales with plan scope. Skipped by `--quick`.
+- **`Grep`** added to `allowed-tools` — enables first-class codebase symbol and pattern search without permission prompts during exploration and plan drafting.
+- **Step 8 browser fallback** — when the browser MCP server is unavailable (headless/web environments), falls back to `SendUserFile` with the file path, ensuring plan delivery always works.
+
+### Changed
+
+- **Description tightened** — first sentence shortened to fit within the ≤80-char guideline.
+
+---
+
+## v0.11.2 — 2026-05-30 — Add scope constraint: plans only, no implementation
+
+### Added
+
+- **Scope Constraint section** — explicit rule block inserted before the Workflow prohibiting the skill from editing source files or applying any change described in the plan's steps. The plan is the deliverable; implementation is a separate, user-initiated step. Addresses a case where the skill implemented a fix rather than writing a plan for it.
+
+---
+
+## v0.11.1 — 2026-05-30 — Fix: self-bootstrap out of harness plan mode
+
+### Fixed
+
+- **Step 0 self-bootstrap** — Added unconditional `ExitPlanMode` call as the first step of the workflow. When the harness enters plan mode on "planning"-keyword commands it forces `.md` output to a random-slug path, overriding the skill's `.html` guarantee. Calling `ExitPlanMode` immediately exits harness plan mode so the skill writes directly to disk as designed. Root cause: v0.8.0 removed `ExitPlanMode` from `allowed-tools` but left no escape hatch for harness-triggered plan mode.
+- **`allowed-tools`**: added `ExitPlanMode`, `WebFetch`, `WebSearch`, `SendUserFile`.
+
+---
+
+## v0.11.0 — 2026-05-30 — Add plans-library skill and web research tools
+
+### Added
+
+- **`plans-library` skill** — scans every HTML plan in the plans directory, parses `<meta>` tags (`plan-status`, `plan-type`, `plan-created`) and `<title>`, populates a gallery template, writes `docs/plans/index.html`, and opens it in the browser. Filterable by status (todo / in-progress / completed) and type (feature / fix / refactor / docs / chore) with a title search box. Excludes `index.html` and `archive/` subdirectory.
+- **`templates/plans-gallery.html`** — self-contained gallery template (no external CSS/JS/CDN) with light theme; grid and list views; client-side filtering.
+- **`WebFetch`, `WebSearch`, `SendUserFile`** added to `allowed-tools` — enables research during Clarify (verifying APIs, checking library versions) and delivers the finished plan file to the user in Step 8 Open.
 
 ---
 

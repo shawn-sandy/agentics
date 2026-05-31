@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" data-status="completed">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="completed">
+<meta name="plan-type" content="fix">
+<meta name="plan-created" content="2026-05-30">
+<meta name="plan-repo" content="agentics">
+<title>Plan: Fix planning skill HTML output</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --border: #e5e7eb; --border-mid: #d1d5db;
+    --text: #111827; --muted: #6b7280; --subtle: #9ca3af; --accent: #2563eb;
+    --accent-bg: #eff6ff; --green: #16a34a; --green-bg: #f0fdf4; --amber: #d97706;
+    --grey-bg: #f9fafb; --wish-bg: #fdf8ff; --wish-border: #d8b4fe; --radius: 4px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 15px; line-height: 1.7; color: var(--text); background: var(--bg); }
+  a { color: var(--accent); }
+  code, pre { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .875em; }
+  pre { background: var(--grey-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: .75rem 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+  .icon { width: 1rem; height: 1rem; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+  .skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+  .skip-link:focus { position: fixed; left: 1rem; top: 1rem; width: auto; height: auto; overflow: visible; background: var(--accent); color: #fff; padding: .5rem 1rem; border-radius: var(--radius); font-weight: 700; z-index: 9999; text-decoration: none; }
+  .plan-header { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0; }
+  .plan-header::before { content: ""; display: block; height: 3px; background: var(--accent); }
+  .plan-header-inner { max-width: 1040px; margin: 0 auto; padding: 1.75rem 1.5rem 1.5rem; }
+  .plan-doc-type { font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: .6rem; }
+  .plan-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .plan-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; color: var(--text); flex: 1; }
+  .status-badge { display: inline-flex; align-items: center; gap: .4rem; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .25rem .75rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0; color: #fff; margin-top: .35rem; }
+  .status-badge::before { content: ""; display: inline-block; width: .45em; height: .45em; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  [data-status="todo"] .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"] .status-badge { background: #16a34a; }
+  .plan-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); }
+  .plan-meta span { display: inline-flex; align-items: center; gap: .3rem; }
+  .layout { display: grid; grid-template-columns: 200px 1fr; gap: 3rem; max-width: 1040px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; align-items: start; }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; } }
+  .plan-nav { position: sticky; top: 1.5rem; align-self: start; overflow: hidden; }
+  @media (max-width: 720px) { .plan-nav { position: static; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; } }
+  .nav-heading { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); padding: 0 1rem .6rem; margin-bottom: .25rem; border-bottom: 1px solid var(--border); }
+  .scroll-rail { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--border); border-radius: 1px; overflow: hidden; pointer-events: none; }
+  .scroll-rail::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: calc(var(--scroll-pct, 0) * 1%); background: var(--accent); transition: height .1s linear; }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a { display: flex; align-items: center; min-height: 44px; padding: .125rem 1rem .125rem 1.25rem; font-size: .825rem; color: var(--muted); text-decoration: none; gap: .5rem; border-left: 2px solid transparent; transition: color .12s, border-color .12s; }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .objective-card { background: var(--accent-bg); border: 1px solid #bfdbfe; border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; font-size: 1.05rem; font-weight: 500; color: #1e3a5f; line-height: 1.6; }
+  .objective-card .section-label { font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .5rem; }
+  .progress-wrap { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width .5s cubic-bezier(.4,0,.2,1); width: 0%; }
+  .section-card { background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0; padding: 2rem 0 1.25rem; margin-bottom: 0; box-shadow: none; }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 { font-size: .9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.25rem; display: flex; align-items: center; gap: .45rem; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol { padding-left: 1.4rem; display: flex; flex-direction: column; gap: .4rem; }
+  .steps-list { display: flex; flex-direction: column; gap: .75rem; position: relative; }
+  .steps-list::before { content: ""; position: absolute; left: .9rem; top: 1.75rem; bottom: 1.75rem; width: 1px; background: var(--border); }
+  .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; box-shadow: var(--shadow); position: relative; margin-left: 2.25rem; transition: border-color .15s; }
+  .step-card::before { content: ""; position: absolute; left: -1.6rem; top: 1.1rem; width: .75rem; height: .75rem; border-radius: 50%; background: var(--border); border: 2px solid var(--bg); }
+  .step-card.completed::before { background: var(--green); }
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number { flex-shrink: 0; width: 1.75rem; height: 1.75rem; background: var(--grey-bg); color: var(--muted); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; margin-top: .1rem; }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { flex: 1; min-width: 0; }
+  .step-action { font-weight: 600; margin-bottom: .3rem; display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; color: var(--text); }
+  .step-chip { display: inline-block; font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: .1em .5em; border-radius: 999px; background: var(--grey-bg); color: var(--subtle); border: 1px solid var(--border); vertical-align: middle; user-select: none; flex-shrink: 0; }
+  .step-card.completed .step-chip { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-chip-text { flex: 1; }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle { margin-top: .5rem; border: 0; border-top: 1px solid var(--border); padding-top: .4rem; }
+  .step-verify-toggle summary { font-size: .8rem; font-weight: 600; color: var(--accent); cursor: pointer; list-style: none; display: flex; align-items: center; gap: .35rem; user-select: none; }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body { font-size: .875rem; color: var(--text); margin-top: .4rem; padding-left: .5rem; border-left: 2px solid var(--accent); }
+  .criteria-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+  .criteria-list li { display: flex; align-items: flex-start; gap: .75rem; padding: .6rem .75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  .criteria-list input[type="checkbox"] { flex-shrink: 0; width: 1rem; height: 1rem; margin-top: .2rem; accent-color: var(--green); cursor: pointer; }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .next-step-item summary { font-weight: 600; font-size: .9rem; padding: .75rem 1rem; cursor: pointer; list-style: none; display: flex; align-items: center; gap: .5rem; background: var(--surface); user-select: none; min-height: 44px; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  .copy-prompt-btn { display: inline-flex; align-items: center; gap: .35rem; margin-top: .6rem; padding: .3rem .75rem; font-size: .775rem; font-weight: 500; color: var(--accent); background: var(--accent-bg); border: 1px solid #bfdbfe; border-radius: 999px; cursor: pointer; transition: background .12s, color .12s; }
+  .copy-prompt-btn:hover { background: #dbeafe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  @media print { .plan-nav, .scroll-rail, .copy-prompt-btn, .step-chip { display: none; } .layout { grid-template-columns: 1fr; } }
+  .aria-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="icon-context" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+  <symbol id="icon-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="icon-steps" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="icon-verify" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></symbol>
+  <symbol id="icon-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="icon-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="icon-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+  <symbol id="icon-repo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></symbol>
+</svg>
+
+<header class="plan-header" role="banner">
+  <div class="plan-header-inner">
+    <div class="plan-doc-type">Implementation Plan &mdash; fix</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Fix planning skill HTML output</h1>
+      <span class="status-badge" role="status" aria-label="Plan status: completed">completed</span>
+    </div>
+    <div class="plan-meta">
+      <span><svg class="icon" aria-hidden="true"><use href="#icon-cal"/></svg>2026-05-30</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#icon-repo"/></svg>agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#icon-tag"/></svg>fix</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#icon-context"/></svg>Context</a></li>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#icon-target"/></svg>Objective</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#icon-steps"/></svg>Steps</a></li>
+      <li><a href="#acceptance-criteria"><svg class="icon" aria-hidden="true"><use href="#icon-check"/></svg>Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#icon-verify"/></svg>Verification</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-content">
+    <div class="objective-card" role="note" aria-labelledby="objective-label">
+      <div class="section-label" id="objective-label">Objective</div>
+      Restore the <code>/plan-agent:planning</code> skill&#39;s HTML output guarantee by adding an unconditional <code>ExitPlanMode</code> self-bootstrap step — so the harness can never force the skill into <code>.md</code> output mode regardless of how the session was entered.
+    </div>
+
+    <div class="progress-wrap" id="acceptance-criteria" aria-labelledby="criteria-heading">
+      <div class="progress-header">
+        <span id="criteria-heading">Acceptance Criteria</span>
+        <span id="progress-label" aria-live="polite">0 / 3 done</span>
+      </div>
+      <div class="progress-bar-bg" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-labelledby="criteria-heading">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <ul class="criteria-list" style="margin-top:1rem" aria-label="Acceptance criteria checklist">
+        <li>
+          <input type="checkbox" id="c1" checked>
+          <label for="c1"><code>ExitPlanMode</code> is in <code>allowed-tools</code> in <code>kit/plugins/plan-agent/skills/planning/SKILL.md</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="c2" checked>
+          <label for="c2">Step 0 (Self-bootstrap) is the first workflow item and calls <code>ExitPlanMode</code> unconditionally before any other action</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c3" checked>
+          <label for="c3">Invoking <code>/plan-agent:planning &lt;objective&gt;</code> produces a <code>.html</code> file — never a <code>.md</code> file — even in a session where the harness has entered plan mode</label>
+        </li>
+      </ul>
+    </div>
+
+    <section class="section-card" id="context" aria-labelledby="context-heading">
+      <h2 id="context-heading"><svg class="icon" aria-hidden="true"><use href="#icon-context"/></svg>Context</h2>
+      <p>When the harness sees a command named <code>planning</code> it can independently enter plan mode, which forces a <code>.md</code> plan file with a random slug path — overriding the skill&#39;s own &ldquo;always write HTML&rdquo; guarantee. v0.8.0 deliberately removed <code>ExitPlanMode</code> from <code>allowed-tools</code> as part of the plan-mode handshake removal, but that also removed the escape hatch. The git-agent skills solve this with an unconditional self-bootstrap: call <code>ExitPlanMode</code> as the very first action — a no-op when plan mode is already off, a fix when it is on.</p>
+    </section>
+
+    <section class="section-card" id="steps" aria-labelledby="steps-heading">
+      <h2 id="steps-heading"><svg class="icon" aria-hidden="true"><use href="#icon-steps"/></svg>Steps</h2>
+      <div class="steps-list">
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">1</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Add <code>ExitPlanMode</code> to <code>allowed-tools</code> in <code>SKILL.md</code></span></div>
+              <div class="step-why">Without it in <code>allowed-tools</code>, the model cannot call the tool — the schema is deferred and the call fails silently or triggers a permission prompt.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Grep the <code>allowed-tools</code> line in <code>kit/plugins/plan-agent/skills/planning/SKILL.md</code> and confirm <code>ExitPlanMode</code> appears. <code>ToolSearch</code> must also be present (already was).</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">2</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Add Step 0 (Self-bootstrap) as the unconditional first workflow step</span></div>
+              <div class="step-why">The step must run before any read, write, or clarify action — including <code>--quick</code> — so there is no code path where the skill executes inside harness plan mode. The step text explains the two-part load pattern: <code>ToolSearch select:ExitPlanMode</code> first, then <code>ExitPlanMode</code>.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read the <code>## Workflow</code> section of <code>SKILL.md</code> and confirm Step 0 appears before Step 1 (Clarify) and explicitly states it is unconditional and must not be skipped for any flag.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">3</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Bump version to <code>0.11.2</code> and update CHANGELOG</span></div>
+              <div class="step-why">Patch bump signals a bug fix to downstream consumers. The CHANGELOG entry documents the root cause so the v0.8.0 reasoning is not accidentally re-applied in a future cleanup.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>grep &#34;plan-agent&#34; .claude-plugin/marketplace.json</code> shows <code>0.11.2</code>. <code>CHANGELOG.md</code> has entries for both <code>v0.11.1</code> (ExitPlanMode fix) and <code>v0.11.2</code> (scope constraint) with root-cause context.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section-card" id="verification" aria-labelledby="verification-heading">
+      <h2 id="verification-heading"><svg class="icon" aria-hidden="true"><use href="#icon-verify"/></svg>Verification</h2>
+      <p>Invoke <code>/plan-agent:planning test objective --quick</code> in a session where the harness has entered plan mode. Confirm:</p>
+      <ol>
+        <li>The first tool call is <code>ToolSearch</code> (loading <code>ExitPlanMode</code>), followed immediately by <code>ExitPlanMode</code>.</li>
+        <li>The skill writes a <code>.html</code> file under <code>docs/plans/</code> — not a <code>.md</code> file.</li>
+        <li>The filename follows <code>verb-target</code> kebab-case (e.g. <code>test-objective.html</code>).</li>
+      </ol>
+    </section>
+
+  </main>
+</div>
+
+<div class="aria-live" aria-live="polite" id="aria-announce"></div>
+
+<script>
+(function () {
+  const fill = document.getElementById('progress-fill');
+  const label = document.getElementById('progress-label');
+  const bar = fill && fill.closest('[role="progressbar"]');
+  const announce = document.getElementById('aria-announce');
+  function update() {
+    const boxes = document.querySelectorAll('.criteria-list input[type="checkbox"]');
+    const total = boxes.length;
+    const done = Array.from(boxes).filter(b => b.checked).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('has-progress', done > 0); }
+    if (bar) { bar.setAttribute('aria-valuenow', pct); }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+    if (announce) announce.textContent = done + ' of ' + total + ' criteria complete';
+  }
+  document.querySelectorAll('.criteria-list input[type="checkbox"]').forEach(cb => cb.addEventListener('change', update));
+  update();
+
+  // Scroll-spy
+  const navLinks = Array.from(document.querySelectorAll('.plan-nav a[href^="#"]'));
+  const rail = document.querySelector('.scroll-rail');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('section[id], div[id]').forEach(s => obs.observe(s));
+  document.addEventListener('scroll', () => {
+    const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+    if (rail) rail.style.setProperty('--scroll-pct', Math.min(pct, 100));
+  }, { passive: true });
+})();
+
+function copyPrompt(btn) {
+  const pre = btn.previousElementSibling;
+  if (!pre) return;
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copy prompt'; }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.classList.add('copied');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copy prompt'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>

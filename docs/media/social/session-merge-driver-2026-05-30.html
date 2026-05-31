@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>session recap · 2026-05-30</title>
+  <style>
+    :root { --bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#388bfd;--badge-bg:#1f6feb;--badge-fg:#fff;--green:#3fb950; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column;gap:2rem;align-items:center;justify-content:center;padding:32px}
+    .card{width:min(720px,100%);background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+    .card-header{padding:24px 28px 18px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#161b22 0%,#1c2d3f 100%);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+    .header-text h1{font-size:17px;font-weight:700;color:var(--text);line-height:1.3}
+    .model-badge{display:inline-flex;align-items:center;flex-shrink:0;background:var(--badge-bg);color:var(--badge-fg);font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;letter-spacing:.3px;white-space:nowrap;margin-top:2px}
+    .content{padding:22px 28px 8px}
+    .narrative{font-size:17px;line-height:1.5;color:var(--text);margin-bottom:16px}
+    .accomplishments{list-style:none;display:flex;flex-direction:column;gap:9px}
+    .accomplishments li{font-size:14px;line-height:1.45;color:var(--text);padding-left:22px;position:relative}
+    .accomplishments li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+    .metrics-strip{display:flex;flex-wrap:wrap;gap:20px;padding:14px 28px;border-top:1px solid var(--border);background:var(--bg)}
+    .metric{font-size:12px;color:var(--muted)}
+    .metric b{color:var(--text);font-size:13px;font-weight:700}
+    .metric b.accent{color:var(--accent)}
+    .metric b.green{color:var(--green)}
+    .card-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:var(--bg);border-top:1px solid var(--border)}
+    .footer-tag{font-size:11px;color:var(--muted)}
+    .footer-accent{font-size:11px;color:var(--accent);font-weight:500}
+    .copy-panel{width:min(720px,100%);background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;box-sizing:border-box}
+    .copy-label{color:#8b949e;font-size:12px;margin:0 0 8px}
+    .post-copy-text{width:100%;min-height:80px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:8px;font-family:inherit;font-size:13px;resize:vertical;box-sizing:border-box;display:block}
+    .copy-btn{margin-top:8px;padding:6px 16px;background:#238636;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px}
+    .copy-btn:hover{background:#2ea043}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="header-text"><h1>session recap · 2026-05-30</h1></div>
+      <div class="model-badge">sonnet-4-6</div>
+    </div>
+    <div class="content">
+      <p class="narrative">Built a version-aware git merge driver for marketplace.json that auto-resolves version conflicts using max-semver logic and 3-way field merging — so concurrent PRs bumping different plugins never create manual conflicts again.</p>
+      <ul class="accomplishments">
+        <li>scripts/merge-marketplace.mjs: max(ours,theirs) semver + 3-way field merge preserves description, tags, source edits</li>
+        <li>.gitattributes + setup-merge-driver.sh — wires driver per-clone; SessionStart hook auto-registers in every Claude Code session</li>
+        <li>/code-review --fix (multi-agent) found 5 bugs: plugin resurrection, null version guards, dead base parse, redundant Set</li>
+        <li>Ultrareview caught non-version field data loss + duplicate plan file; fixed with mergeFields() 3-way approach</li>
+        <li>PR #193 merged to main; saved merge-driver workflow preference to project memory</li>
+      </ul>
+    </div>
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">305,296</b> tokens</span>
+      <span class="metric"><b>71 min</b></span>
+      <span class="metric"><b class="green">97.1%</b> cache hit</span>
+      <span class="metric"><b>21</b> files</span>
+      <span class="metric"><b>5</b> commits</span>
+    </div>
+    <div class="card-footer">
+      <span class="footer-tag">Claude Code · session recap</span>
+      <span class="footer-accent">github.com/shawn-sandy/agentics</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">Just shipped a git merge driver that makes marketplace.json version conflicts disappear automatically.
+
+The problem: every PR in this Claude Code plugin marketplace touches a single shared file (.claude-plugin/marketplace.json) to bump version numbers. When two PRs land concurrently, anyone rebasing hits the same version-conflict treadmill — repeatedly.
+
+The fix: a dependency-free Node.js merge driver that runs during every git merge/rebase, resolving conflicts by keeping max(ours, theirs) per plugin semver. No textual conflict, no manual edit.
+
+What this session built:
+→ scripts/merge-marketplace.mjs — 3-way field merge preserves description/tags/source edits, not just version numbers
+→ .gitattributes + setup-merge-driver.sh — wires the driver per-clone; SessionStart hook auto-registers it in every Claude Code session
+→ /code-review --fix (multi-agent) found 5 bugs before merge: plugin resurrection, null version guards, dead base parse, redundant Set
+→ Ultrareview surfaced 2 more: non-version field data loss (fixed with mergeFields()) + a duplicate plan file with a random slug
+→ PR #193 merged to main — 305,296 tokens · 97.1% cache hit · 71 min · 5 commits
+
+The interesting part: the review pipeline caught a real correctness bug I hadn't anticipated — without base, removing a plugin from one branch while the other still had it would silently resurrect it on merge.
+
+Follow along for more git automation, AI-assisted code review patterns, and Claude Code tooling.
+
+#ClaudeCode #GitAutomation #DeveloperTools #AIEngineering</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+  <script>
+    function copyPost(id,btn){var t=document.getElementById(id);if(!t)return;var orig=btn.textContent;function done(){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent=orig},2000)}function fallback(){try{t.select();if(document.execCommand('copy'))done()}catch(_){}}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done).catch(fallback)}else{fallback()}}
+  </script>
+</body>
+</html>

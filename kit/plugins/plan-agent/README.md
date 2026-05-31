@@ -17,6 +17,7 @@ Installers get on-demand planning with argument support and the filename guardra
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `planning` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:planning <objective>` |
+| `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
@@ -180,6 +181,10 @@ plan-agent/
         SKELETON-minimal.md — Minimal template (context + steps + criteria + verification)
         SKELETON-adr.md     — Architecture Decision Record template
         SKELETON-spike.md   — Spike / time-boxed investigation template
+    plans-library/
+      SKILL.md              — Gallery scan/parse/render workflow
+  templates/
+    plans-gallery.html      — Static gallery template (substituted by plans-library)
   hooks/
     validate-plan-filename.py  — PostToolUse filename enforcement script
   hooks.json                — Hook registration (Write|Edit matcher)
@@ -212,6 +217,27 @@ Accepts `.html` plan files (primary) and `.md` plan files (legacy). The `classif
 6. Second token is not a stop-word
 
 Completion is detected via `<meta name="plan-status" content="completed">` for HTML files, or `status: completed` YAML frontmatter for legacy `.md` files.
+
+### `plans-library` Skill
+
+Auto-activates when user intent matches browsing or organising existing plans (e.g. "browse my plans", "show the plans library", "open the plans index").
+
+```
+browse my plans
+view plan history
+open the plans index
+```
+
+The skill scans all `.html` plan files in the plans directory (resolves the same `plansDirectory` setting as the `planning` skill), reads each plan's `<meta>` tags and `<title>`, renders them into a filterable gallery, writes `docs/plans/index.html`, and opens it in the browser.
+
+**Gallery features:**
+- Filter chips for status: **All / Todo / In Progress / Completed**
+- Filter chips for type: **All / Feature / Fix / Refactor / Docs / Chore**
+- Title search box
+- Grid and list view toggle
+- Each card links directly to the underlying plan file
+
+The scan always excludes `index.html` itself and the `docs/plans/archive/` subdirectory.
 
 ### Optional: `plan-interview` pairing
 
