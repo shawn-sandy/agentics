@@ -53,11 +53,12 @@ def find_templates_dir():
 templates_dir = find_templates_dir()
 
 # ── Collect and sort plan files ────────────────────────────────────────────────
-plan_files = [
-    os.path.join(plans_dir, f)
-    for f in os.listdir(plans_dir)
-    if f.endswith('.html') and f != 'index.html'
-]
+plan_files = []
+for dirpath, dirnames, filenames in os.walk(plans_dir):
+    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d != 'archive']
+    for name in filenames:
+        if name.endswith('.html') and name != 'index.html':
+            plan_files.append(os.path.join(dirpath, name))
 plan_files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
 
 if not plan_files:
@@ -89,12 +90,12 @@ for f in plan_files:
     ptype    = get_meta(content, 'plan-type',   'untyped')
     created  = get_meta(content, 'plan-created', '')
     title    = get_title(content, f)
-    basename = os.path.basename(f)
+    rel_path = os.path.relpath(f, plans_dir)
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
 
-    cards.append(f'''<a class="gallery-card" href="{e(basename)}"
+    cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
    data-status="{e(status)}" data-type="{e(ptype)}" data-title="{e(html.unescape(title).lower())}">
   <div class="card-badges">
     <span class="status-chip status-{e(status)}">{e(status_display)}</span>
@@ -103,7 +104,7 @@ for f in plan_files:
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
     {date_span}
-    <span class="card-file">{e(basename)}</span>
+    <span class="card-file">{e(rel_path)}</span>
   </div>
 </a>''')
 

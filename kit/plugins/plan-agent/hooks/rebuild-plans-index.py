@@ -100,7 +100,12 @@ def main():
     except (json.JSONDecodeError, ValueError):
         sys.exit(0)
 
+    if not isinstance(data, dict):
+        sys.exit(0)
+
     tool_input = data.get("tool_input") or {}
+    if not isinstance(tool_input, dict):
+        sys.exit(0)
     path = tool_input.get("file_path", "")
 
     if not path:
@@ -133,15 +138,20 @@ def main():
     _touch(stamp)  # written early to prevent concurrent runs
 
     success = False
-    try:
-        result = subprocess.run(
-            build_cmd,
-            timeout=25,
-            capture_output=True,
-        )
-        success = result.returncode == 0
-    except Exception:
-        pass
+    for delay in (0, 1, 2, 4):
+        if delay:
+            time.sleep(delay)
+        try:
+            result = subprocess.run(
+                build_cmd,
+                timeout=25,
+                capture_output=True,
+            )
+            if result.returncode == 0:
+                success = True
+                break
+        except Exception:
+            pass
 
     if not success:
         _unlink(stamp)  # allow immediate retry after a failed rebuild
