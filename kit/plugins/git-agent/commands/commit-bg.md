@@ -12,7 +12,7 @@ commit to happen while they keep working — do not wait for it to finish.
 ## Instructions
 
 1. Invoke the `Agent` tool with:
-   - `subagent_type: "agent-commit"`
+   - `subagent_type: "git-agent:agent-commit"`
    - `run_in_background: true`
    - `description: "Background commit"`
    - `prompt`: A self-contained instruction telling the agent to stage all
