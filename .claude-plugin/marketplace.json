@@ -244,8 +244,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.14.1",
-      "description": "Plan creation on demand \u2014 explicit /plan-agent:planning skill produces self-contained interactive HTML plans with a built-in structured interview; PostToolUse hook auto-regenerates the plans gallery index on every plan write; filename hook enforces verb-target kebab-case",
+      "version": "0.15.0",
+      "description": "Plan creation on demand \u2014 explicit /plan-agent:planning skill produces self-contained interactive HTML plans; accepts GitHub/GitLab issue URLs and #n references to auto-seed plans from backlog; built-in structured interview; PostToolUse hook auto-regenerates the gallery index; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [
         "planning",

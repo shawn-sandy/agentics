@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.15.0 — 2026-05-31 — Add issue ingestion to /plan-agent:planning
+
+### Added
+
+- **Issue reference detection** — `$ARGUMENTS` is now scanned for a GitHub/GitLab issue URL or bare `#n`/integer before flag parsing. When detected, the reference is stripped from the argument string and stored as `$ISSUE_REF`.
+- **Step 0.5 — Issue Ingestion** — New workflow step that fires when `$ISSUE_REF` is set. Runs `gh issue view` (GitHub) or `glab issue view` (GitLab), maps `title` → objective, `body` → context block, `labels` → type hint, `url` → plan frontmatter. Falls back gracefully to plain-objective mode on any CLI error.
+- **`<meta name="plan-issue">` tag** — Plans seeded from an issue reference now include the source issue URL in the HTML `<head>` for machine readability by the gallery index and downstream tooling.
+- **`argument-hint` updated** — Now reads `<issue-url|#n> | <objective> [flags…]` to expose the new entry point at autocomplete time.
+
+### Example
+
+```
+/plan-agent:planning https://github.com/shawn-sandy/agentics/issues/205
+/plan-agent:planning #205
+/plan-agent:planning #205 focus on the auth layer --quick
+```
+
+---
+
 ## v0.14.1 — 2026-05-31 — Fix MultiEdit path extraction and bundle build-index.sh
 
 ### Fixed

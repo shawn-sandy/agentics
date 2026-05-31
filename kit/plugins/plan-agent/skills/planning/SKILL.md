@@ -3,7 +3,7 @@ name: planning
 description: "Creates HTML plans from objectives, enforcing verb-target filenames. Use via /plan-agent:planning to turn any objective into a structured plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 disable-model-invocation: true
-argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
+argument-hint: "<issue-url|#n> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
 ---
 
 ## Plan Agent — Planning
@@ -12,7 +12,14 @@ argument-hint: "<objective> [--quick] [--no-clarify] [--no-align] [--no-intervie
 
 Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this skill is command-invoked only — `disable-model-invocation: true`):
 
-- **Objective (required):** all text that is not a flag. If empty after parsing, ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
+**Issue reference detection (checked first, before flag parsing):** Treat `$ARGUMENTS` as containing an issue reference if any token matches one of these three patterns:
+- Full GitHub URL: `https://github.com/<owner>/<repo>/issues/<n>`
+- Full GitLab URL: `https://gitlab.com/<owner>/<repo>/-/issues/<n>`
+- Bare `#<n>` or plain integer (e.g. `42`) with no other non-flag text present
+
+When a reference is detected, set an internal `$ISSUE_REF` variable and strip it from the remaining argument string. Everything left (after removing the reference and any flags) becomes the caller's extra text. If extra text is non-empty it overrides the issue title as the objective; if empty, the issue title is used as the objective. Issue ingestion runs in Step 0.5.
+
+- **Objective (required):** all text that is not a flag or issue reference. If empty after parsing (and no issue reference was detected), ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
 - `--quick` — shorthand for `--no-clarify --no-align --no-interview`; skips Step 1 Clarify, Step 5 Align, and Step 5b Interview.
 - `--no-clarify` — skip Step 1 Clarify only. Use when the objective is well-specified but you still want Step 5 Align.
 - `--no-align` — skip Step 5 Align only. Use when steps are pre-agreed but requirements need verification first.
@@ -53,11 +60,41 @@ Follow these steps exactly.
 
    Two-step sequence: (1) `ToolSearch(select:ExitPlanMode)` silently, (2) `ExitPlanMode` silently. No user-visible output from either step.
 
+0.5. **Issue Ingestion** *(skip entirely when no issue reference was detected in Step 0 argument parsing)*
+
+   When `$ISSUE_REF` is set, fetch the issue and inject its data as planning inputs:
+
+   **GitHub URL or bare `#n`/integer:**
+   ```bash
+   # Resolve owner/repo for bare #n — skip if owner/repo already parsed from URL
+   gh repo view --json owner,name
+
+   # Fetch the issue
+   gh issue view <n> --repo <owner>/<repo> \
+     --json title,body,labels,assignees,milestone,url
+   ```
+
+   **GitLab URL:**
+   ```bash
+   glab issue view <n> --repo <owner>/<repo> --output json
+   ```
+
+   **Field mapping:**
+
+   | Issue field | Plan input |
+   |-------------|-----------|
+   | `title` | Objective — used unless caller supplied extra text (extra text always takes precedence) |
+   | `body` | Injected as an "Issue context" block in the Context section of the plan |
+   | `labels` | Hint for `--type` inference when `--type` was not passed (e.g. label `bug` → `fix`, `enhancement` or `feature` → `feature`) |
+   | `url` | Stored as `$ISSUE_URL`; written to plan frontmatter as `<meta name="plan-issue">` in Step 3 |
+
+   **Graceful fallback:** If the CLI call fails (unauthenticated, network error, issue not found), print a one-line error to the user (e.g. `Issue #42 not found — falling back to plain objective`) and continue with `$ARGUMENTS` treated as a plain objective string. Do not abort the planning workflow.
+
 0b. **Explore** — Read the codebase to build context before planning. Use `Glob` to locate relevant files, `Grep` to find symbol definitions and usage patterns, and `Read` to understand the current architecture in areas the plan will touch. Focus on: entry points the plan modifies, existing tests or patterns to follow, and configuration that constrains the approach. Keep exploration proportional to plan scope — a one-file fix needs a quick look; an architecture change warrants broader reading. *(Skip entirely when `--quick`.)*
 
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. When research would strengthen the plan (e.g. verifying an API surface, checking a library's current version, or confirming a best-practice pattern), use `WebSearch` and `WebFetch` — load them first via `ToolSearch` with `select:WebSearch,WebFetch` since they are deferred tools. *(Skip entirely when `--quick` or `--no-clarify`.)*
 2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.**
-3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. If `--priority` was set, also add `<meta name="plan-priority" content="<level>">`. Read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global) and render any extra key-value pairs as additional `<meta name="plan-<key>" content="<value>">` tags; `--priority` overrides any `priority` key from settings.
+3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`. Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. If `--priority` was set, also add `<meta name="plan-priority" content="<level>">`. If an issue URL was fetched in Step 0.5, add `<meta name="plan-issue" content="<url>">` — omit this tag entirely when no issue reference was provided. Read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global) and render any extra key-value pairs as additional `<meta name="plan-<key>" content="<value>">` tags; `--priority` overrides any `priority` key from settings.
 4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from Step 2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
 5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — confirm overall approval directly with the user after presenting the plan. *(Skip entirely when `--quick` or `--no-align`.)*
 5b. **Interview** — Stress-test the drafted plan through a structured interview before committing. *(Skip entirely when `--quick` or `--no-interview`.)*
@@ -123,7 +160,7 @@ The file must:
 - Group blue-sky / wish-list items under a `🔭 Wish List` collapsible inside Next Steps — use a distinct visual treatment (dashed border, muted colour) so they are clearly non-committal
 - Use a progress indicator showing how many acceptance-criteria items are checked
 - Be readable without JavaScript (checkboxes work natively); minimal JS is allowed only to enhance interactivity (e.g. progress bar update on checkbox change)
-- Include `<meta name="plan-status">`, `<meta name="plan-type">`, `<meta name="plan-created">`, and `<meta name="plan-repo">` tags for machine readability
+- Include `<meta name="plan-status">`, `<meta name="plan-type">`, `<meta name="plan-created">`, and `<meta name="plan-repo">` tags for machine readability; include `<meta name="plan-issue" content="<url>">` when the plan was seeded from an issue reference (omit otherwise)
 - **HTML-escape all user-supplied content** before inserting it into the file — replace `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#39;`. This applies especially to file paths, function names, CLI flags, and any prompt text placed inside `<pre>` blocks
 - Include a **"Copy prompt"** button (`<button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>`) immediately after every `<pre>` block inside `.next-step-prompt` and `.unresolved-prompt` elements. Do not remove these when filling placeholders.
 
