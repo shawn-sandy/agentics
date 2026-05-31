@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-05-31">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-issue" content="https://github.com/shawn-sandy/agentics/issues/205">
+<title>Plan: Add Issue Ingestion to /plan-agent:planning</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --amber:      #d97706;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .plan-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+  }
+  .plan-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: .75rem;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .2rem .55rem;
+    border-radius: 99px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .badge-status-todo    { background: #f3f4f6; color: #374151; border-color: var(--border); }
+  .badge-status-in-progress { background: #fffbeb; color: var(--amber); border-color: #fde68a; }
+  .badge-status-completed   { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .badge-type    { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .badge-issue   { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+  .plan-meta-date { font-size: .8rem; color: var(--muted); }
+
+  /* ── Scroll rail ─────────────────────────────────────────────────── */
+  .scroll-rail {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    display: block;
+    height: 100%;
+    width: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: width .1s linear;
+  }
+
+  /* ── Nav ─────────────────────────────────────────────────────────── */
+  .plan-nav {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 900;
+  }
+  .plan-nav-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .plan-nav-inner::-webkit-scrollbar { display: none; }
+  .plan-nav a {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    padding: .6rem .85rem;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .plan-nav a:hover { color: var(--text); }
+  .plan-nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Layout ──────────────────────────────────────────────────────── */
+  .plan-body {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .plan-body { grid-template-columns: 1fr; }
+    .plan-sidebar { display: none; }
+  }
+  .plan-main { min-width: 0; }
+  .plan-sidebar { position: sticky; top: 3rem; }
+
+  /* ── Section ─────────────────────────────────────────────────────── */
+  .plan-section { margin-bottom: 2.5rem; }
+  .plan-section-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .plan-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ── Objective card ──────────────────────────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  /* ── Issue context block ─────────────────────────────────────────── */
+  .issue-ref-block {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    font-size: .85rem;
+    color: #15803d;
+    margin-bottom: 1rem;
+  }
+  .issue-ref-block a { color: #15803d; font-weight: 600; }
+
+  /* ── Context / prose ─────────────────────────────────────────────── */
+  .prose p { margin-bottom: .9rem; }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose ul, .prose ol { padding-left: 1.4rem; margin-bottom: .9rem; }
+  .prose li { margin-bottom: .3rem; }
+
+  /* ── Step cards ──────────────────────────────────────────────────── */
+  .step-list { list-style: none; display: flex; flex-direction: column; gap: .85rem; }
+  .step-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .step-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+  }
+  .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-radius: 50%;
+    font-size: .75rem;
+    font-weight: 700;
+  }
+  .step-content { flex: 1; min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+  .step-chip {
+    font-size: .65rem;
+    font-weight: 700;
+    padding: .15rem .4rem;
+    border-radius: 99px;
+    background: #f3f4f6;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-why {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-bottom: .5rem;
+  }
+  .step-verify-toggle {
+    font-size: .8rem;
+    color: var(--accent);
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+  .step-verify-toggle:hover { text-decoration: underline; }
+  details.step-verify > summary { list-style: none; }
+  details.step-verify > summary::-webkit-details-marker { display: none; }
+  .step-verify-body {
+    margin-top: .5rem;
+    padding: .65rem .85rem;
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .83rem;
+    color: var(--muted);
+  }
+  .step-verify-body code { font-size: .82em; }
+
+  /* ── Acceptance criteria ─────────────────────────────────────────── */
+  .criteria-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .criteria-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .65rem .85rem;
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .criteria-item input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    min-width: 1rem;
+    margin-top: .2rem;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+  .criteria-item label {
+    cursor: pointer;
+    font-size: .9rem;
+    line-height: 1.5;
+    transition: color .15s;
+  }
+  .criteria-item:has(input:checked) label {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  /* ── Progress bar ────────────────────────────────────────────────── */
+  .progress-wrap { margin-bottom: 1rem; }
+  .progress-bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: .35rem;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    width: 0%;
+    transition: width .3s ease;
+  }
+  .progress-bar-fill.has-progress { background: var(--green); }
+  .progress-label { font-size: .78rem; color: var(--muted); }
+
+  /* ── Verification ────────────────────────────────────────────────── */
+  .verification-block {
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+  .verification-block .prose p { font-size: .9rem; }
+
+  /* ── Next steps ──────────────────────────────────────────────────── */
+  .next-step-item {
+    padding: .85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    margin-bottom: .75rem;
+  }
+  .next-step-label { font-weight: 600; margin-bottom: .4rem; font-size: .9rem; }
+  .next-step-prompt { position: relative; }
+  .next-step-prompt pre { padding-right: 5rem; }
+
+  /* ── Wish list ───────────────────────────────────────────────────── */
+  .wish-list-section {
+    margin-top: 1.25rem;
+  }
+  .wish-list-toggle {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    padding: .4rem 0;
+    border: none;
+    background: none;
+  }
+  .wish-list-toggle:hover { color: var(--text); }
+  details.wish-list > summary { list-style: none; }
+  details.wish-list > summary::-webkit-details-marker { display: none; }
+  .wish-item {
+    padding: .85rem 1rem;
+    border: 1px dashed var(--wish-border);
+    border-radius: var(--radius);
+    background: var(--wish-bg);
+    margin-bottom: .75rem;
+    font-size: .9rem;
+  }
+  .wish-badge {
+    font-size: .7rem;
+    font-weight: 700;
+    color: #7c3aed;
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    border-radius: 99px;
+    padding: .15rem .45rem;
+    margin-bottom: .5rem;
+    display: inline-block;
+  }
+
+  /* ── Unresolved questions ────────────────────────────────────────── */
+  details.unresolved-section { margin-top: 2rem; }
+  details.unresolved-section > summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding: .4rem 0;
+  }
+  details.unresolved-section > summary::-webkit-details-marker { display: none; }
+  .unresolved-item {
+    padding: .85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--grey-bg);
+    margin-bottom: .75rem;
+    font-size: .9rem;
+  }
+  .unresolved-prompt { position: relative; }
+  .unresolved-prompt pre { padding-right: 5rem; }
+
+  /* ── Copy prompt button ──────────────────────────────────────────── */
+  .copy-prompt-btn {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    font-size: .72rem;
+    font-weight: 600;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .2rem .55rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: background .15s, color .15s;
+  }
+  .copy-prompt-btn:hover { background: var(--accent-bg); color: var(--accent); }
+
+  /* ── Sidebar card ────────────────────────────────────────────────── */
+  .sidebar-card {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    font-size: .83rem;
+    margin-bottom: 1rem;
+  }
+  .sidebar-card-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: .65rem;
+  }
+  .sidebar-row {
+    display: flex;
+    justify-content: space-between;
+    padding: .3rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .8rem;
+  }
+  .sidebar-row:last-child { border-bottom: none; }
+  .sidebar-row dt { color: var(--muted); }
+  .sidebar-row dd { font-weight: 600; color: var(--text); }
+
+  /* ── File list ───────────────────────────────────────────────────── */
+  .file-list { list-style: none; }
+  .file-list li {
+    font-size: .8rem;
+    padding: .25rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .file-list li:last-child { border-bottom: none; }
+  .file-tag {
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: .1rem .35rem;
+    border-radius: 99px;
+    border: 1px solid transparent;
+  }
+  .file-tag-modify { background: #fffbeb; color: var(--amber); border-color: #fde68a; }
+  .file-tag-create { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+
+  /* ── Live region ─────────────────────────────────────────────────── */
+  #live-region { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<div class="scroll-rail" aria-hidden="true"></div>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ── Header ──────────────────────────────────────────────────────── -->
+<header class="plan-header" role="banner">
+  <div class="plan-header-inner">
+    <p class="plan-doc-type">Implementation Plan</p>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Add Issue Ingestion to /plan-agent:planning</h1>
+    </div>
+    <div class="plan-meta-row">
+      <span class="badge badge-status-todo" id="status-badge" role="status" aria-live="polite">todo</span>
+      <span class="badge badge-type">feature</span>
+      <a href="https://github.com/shawn-sandy/agentics/issues/205" class="badge badge-issue" target="_blank" rel="noopener">&#35;205</a>
+      <span class="plan-meta-date">Created 2026-05-31 &middot; agentics</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Navigation ──────────────────────────────────────────────────── -->
+<nav class="plan-nav" aria-label="Plan sections">
+  <div class="plan-nav-inner">
+    <a href="#context">Context</a>
+    <a href="#objective">Objective</a>
+    <a href="#steps">Steps</a>
+    <a href="#acceptance-criteria">Criteria</a>
+    <a href="#verification">Verify</a>
+    <a href="#next-steps">Next Steps</a>
+  </div>
+</nav>
+
+<!-- ── Body ────────────────────────────────────────────────────────── -->
+<div class="plan-body" id="main-content">
+  <main class="plan-main">
+
+    <!-- Context ─────────────────────────────────────────────────────── -->
+    <section class="plan-section" id="context" aria-labelledby="context-title">
+      <div class="plan-section-header">
+        <span aria-hidden="true">&#x1F4CB;</span>
+        <h2 class="plan-section-title" id="context-title">Context</h2>
+      </div>
+      <div class="issue-ref-block">
+        Source: <a href="https://github.com/shawn-sandy/agentics/issues/205" target="_blank" rel="noopener">Issue #205 &mdash; [FEATURE] Allow passing an issue URL or number to /plan-agent:planning</a>
+      </div>
+      <div class="prose">
+        <p>Developers maintain their backlog in GitHub and GitLab. When they start planning from a ticket, the current workflow is manual: open the issue, copy the title and body, paste it into <code>/plan-agent:planning</code>. This copy-paste step is friction every time and breaks the "issue-to-plan" loop that should feel seamless.</p>
+        <p>The <code>planning</code> skill already has access to the <code>gh</code> and <code>glab</code> CLIs (via the <code>issue-agent</code> plugin's established patterns). Adding argument detection and a new <strong>Step 0.5 &mdash; Issue Ingestion</strong> phase to <code>SKILL.md</code> lets the skill fetch issue data automatically whenever a URL or <code>#n</code> reference is detected in <code>$ARGUMENTS</code>, seeding the plan objective and context without any user copy-paste.</p>
+        <p>This change is purely additive to the planning skill: all existing flags and argument forms continue to work unchanged.</p>
+      </div>
+    </section>
+
+    <!-- Objective ───────────────────────────────────────────────────── -->
+    <section class="plan-section" id="objective" aria-labelledby="objective-title">
+      <div class="plan-section-header">
+        <span aria-hidden="true">&#x1F3AF;</span>
+        <h2 class="plan-section-title" id="objective-title">Objective</h2>
+      </div>
+      <div class="objective-card">
+        Ship native issue ingestion in <code>/plan-agent:planning</code>: when <code>$ARGUMENTS</code> contains a GitHub/GitLab issue URL or <code>#n</code>, automatically fetch the issue via <code>gh</code>/<code>glab</code>, seed the plan title from the issue title, inject the issue body as context, and record the issue URL in plan frontmatter &mdash; eliminating the copy-paste step from backlog to plan.
+      </div>
+    </section>
+
+    <!-- Steps ───────────────────────────────────────────────────────── -->
+    <section class="plan-section" id="steps" aria-labelledby="steps-title">
+      <div class="plan-section-header">
+        <span aria-hidden="true">&#x1F6E0;</span>
+        <h2 class="plan-section-title" id="steps-title">Steps</h2>
+      </div>
+      <ol class="step-list" aria-label="Implementation steps">
+
+        <!-- Step 1 -->
+        <li class="step-card">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">1</div>
+            <div class="step-content">
+              <div class="step-action">
+                <span class="step-chip" aria-label="Status: todo">todo</span>
+                Update <code>argument-hint</code> frontmatter in <code>SKILL.md</code>
+              </div>
+              <p class="step-why"><strong>Why:</strong> The <code>argument-hint</code> field is shown to users in autocomplete and help text. Adding <code>&lt;issue-url|#n&gt;</code> as the leading option communicates the new capability immediately without requiring users to read the full skill body.</p>
+              <details class="step-verify">
+                <summary class="step-verify-toggle">&#x2713; Verify</summary>
+                <div class="step-verify-body">
+                  Read the first 10 lines of <code>kit/plugins/plan-agent/skills/planning/SKILL.md</code> and confirm <code>argument-hint</code> now reads:
+                  <br><code>"&lt;issue-url|#n&gt; | &lt;objective&gt; [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir &lt;path&gt;] [--priority low|medium|high|critical]"</code>
+                </div>
+              </details>
+            </div>
+          </div>
+        </li>
+
+        <!-- Step 2 -->
+        <li class="step-card">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">2</div>
+            <div class="step-content">
+              <div class="step-action">
+                <span class="step-chip" aria-label="Status: todo">todo</span>
+                Add issue reference detection to the Invocation &amp; Arguments section of <code>SKILL.md</code>
+              </div>
+              <p class="step-why"><strong>Why:</strong> The skill needs clear, unambiguous detection rules so the model knows exactly which argument forms trigger issue ingestion versus plain text objectives. Three patterns cover the full surface: full GitHub URL, full GitLab URL, and bare <code>#n</code>/integer (with no other text present).</p>
+              <details class="step-verify">
+                <summary class="step-verify-toggle">&#x2713; Verify</summary>
+                <div class="step-verify-body">
+                  Read the Invocation &amp; Arguments section and confirm all three patterns are documented:
+                  <ul>
+                    <li><code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/issues/&lt;n&gt;</code></li>
+                    <li><code>https://gitlab.com/&lt;owner&gt;/&lt;repo&gt;/-/issues/&lt;n&gt;</code></li>
+                    <li>Bare <code>#&lt;n&gt;</code> or plain integer with no other text</li>
+                  </ul>
+                  Also confirm the precedence rule is stated: caller-supplied extra text overrides the issue title as the objective while the issue body is still injected as context.
+                </div>
+              </details>
+            </div>
+          </div>
+        </li>
+
+        <!-- Step 3 -->
+        <li class="step-card">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">3</div>
+            <div class="step-content">
+              <div class="step-action">
+                <span class="step-chip" aria-label="Status: todo">todo</span>
+                Insert Step 0.5 &mdash; Issue Ingestion into the Workflow section of <code>SKILL.md</code>
+              </div>
+              <p class="step-why"><strong>Why:</strong> The ingestion logic must run after Step 0 (self-bootstrap / ExitPlanMode) but before Step 0b (Explore) so that when exploration runs, it already has the issue title and body available as planning inputs. Numbering it 0.5 inserts it into the existing sequence without renumbering Steps 1&ndash;8.</p>
+              <details class="step-verify">
+                <summary class="step-verify-toggle">&#x2713; Verify</summary>
+                <div class="step-verify-body">
+                  Read the Workflow section and confirm Step 0.5 is present between Step 0 and Step 0b, containing:
+                  <ul>
+                    <li>Conditional trigger: fires only when an issue reference is detected</li>
+                    <li>GitHub branch: <code>gh issue view &lt;n&gt; --repo &lt;owner&gt;/&lt;repo&gt; --json title,body,labels,assignees,milestone,url</code></li>
+                    <li>GitLab branch: <code>glab issue view &lt;n&gt; --repo &lt;owner&gt;/&lt;repo&gt; --output json</code></li>
+                    <li>For bare <code>#n</code>: <code>gh repo view --json owner,name</code> to resolve owner/repo</li>
+                    <li>Field mapping table: <code>title</code> &rarr; objective (unless caller supplied extra text), <code>body</code> &rarr; injected context block, <code>labels</code> &rarr; type hint, <code>url</code> &rarr; frontmatter <code>plan-issue</code></li>
+                    <li>Graceful fallback: on CLI error or non-existent issue, report the error and treat <code>$ARGUMENTS</code> as a plain objective string</li>
+                  </ul>
+                </div>
+              </details>
+            </div>
+          </div>
+        </li>
+
+        <!-- Step 4 -->
+        <li class="step-card">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">4</div>
+            <div class="step-content">
+              <div class="step-action">
+                <span class="step-chip" aria-label="Status: todo">todo</span>
+                Update Step 3 (Frontmatter) in <code>SKILL.md</code> to emit <code>&lt;meta name="plan-issue"&gt;</code> when an issue URL is present
+              </div>
+              <p class="step-why"><strong>Why:</strong> Recording the source issue URL in the HTML <code>&lt;head&gt;</code> makes plans machine-readable and linkable back to their origin ticket. The <code>plan-agent</code> gallery index, hooks, and downstream tooling can then parse <code>&lt;meta name="plan-issue"&gt;</code> the same way they already parse <code>plan-status</code> and <code>plan-type</code>.</p>
+              <details class="step-verify">
+                <summary class="step-verify-toggle">&#x2713; Verify</summary>
+                <div class="step-verify-body">
+                  Read Step 3 of the Workflow section and confirm it now specifies: "If an issue URL was fetched in Step 0.5, add <code>&lt;meta name=&quot;plan-issue&quot; content=&quot;&lt;url&gt;&quot;&gt;</code> to the HTML <code>&lt;head&gt;</code>. Omit this tag when no issue reference was provided."
+                </div>
+              </details>
+            </div>
+          </div>
+        </li>
+
+        <!-- Step 5 -->
+        <li class="step-card">
+          <div class="step-card-header">
+            <div class="step-number" aria-hidden="true">5</div>
+            <div class="step-content">
+              <div class="step-action">
+                <span class="step-chip" aria-label="Status: todo">todo</span>
+                Add <code>CHANGELOG.md</code> entry and bump <code>version</code> to <code>0.15.0</code> in <code>.claude-plugin/marketplace.json</code>
+              </div>
+              <p class="step-why"><strong>Why:</strong> Adding a new detection step and a new frontmatter field is a backward-compatible feature addition (minor version bump per the project's semver convention). The CHANGELOG entry records the intent so future contributors understand why the ingestion step exists.</p>
+              <details class="step-verify">
+                <summary class="step-verify-toggle">&#x2713; Verify</summary>
+                <div class="step-verify-body">
+                  Run <code>grep -A3 '"name": "plan-agent"' .claude-plugin/marketplace.json</code> and confirm <code>"version": "0.15.0"</code>. Read the top of <code>kit/plugins/plan-agent/CHANGELOG.md</code> and confirm a <code>## v0.15.0</code> entry is present describing the issue ingestion feature.
+                </div>
+              </details>
+            </div>
+          </div>
+        </li>
+
+      </ol>
+    </section>
+
+    <!-- Acceptance Criteria ─────────────────────────────────────────── -->
+    <section class="plan-section" id="acceptance-criteria" aria-labelledby="criteria-title">
+      <div class="plan-section-header">
+        <span aria-hidden="true">&#x2705;</span>
+        <h2 class="plan-section-title" id="criteria-title">Acceptance Criteria</h2>
+      </div>
+      <div class="progress-wrap" aria-label="Completion progress">
+        <div class="progress-bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progress">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+        <p class="progress-label" id="progress-label">0 / 7 done</p>
+      </div>
+      <ul class="criteria-list" aria-label="Acceptance criteria checklist">
+        <li class="criteria-item">
+          <input type="checkbox" id="ac1" aria-describedby="ac1-label">
+          <label id="ac1-label" for="ac1">Passing a full GitHub issue URL fetches the issue and seeds the plan objective from the issue title.</label>
+        </li>
+        <li class="criteria-item">
+          <input type="checkbox" id="ac2" aria-describedby="ac2-label">
+          <label id="ac2-label" for="ac2">Passing <code>#42</code> or <code>42</code> fetches issue #42 from the current repo (resolved via <code>gh repo view</code>).</label>
+        </li>
+        <li class="criteria-item">
+          <input type="checkbox" id="ac3" aria-describedby="ac3-label">
+          <label id="ac3-label" for="ac3">Passing a GitLab issue URL triggers <code>glab issue view</code> instead of <code>gh</code>.</label>
+        </li>
+        <li class="criteria-item">
+          <input type="checkbox" id="ac4" aria-describedby="ac4-label">
+          <label id="ac4-label" for="ac4">If the CLI is unauthenticated or the issue does not exist, the skill reports the error and falls back to treating the argument as a plain objective string.</label>
+        </li>
+        <li class="criteria-item">
+          <input type="checkbox" id="ac5" aria-describedby="ac5-label">
+          <label id="ac5-label" for="ac5">The issue URL is written to plan HTML as <code>&lt;meta name="plan-issue" content="&lt;url&gt;"&gt;</code>.</label>
+        </li>
+        <li class="criteria-item">
+          <input type="checkbox" id="ac6" aria-describedby="ac6-label">
+          <label id="ac6-label" for="ac6">Existing arguments (<code>--quick</code>, <code>--type</code>, <code>--dir</code>, etc.) continue to work unchanged alongside an issue reference.</label>
+        </li>
+        <li class="criteria-item">
+          <input type="checkbox" id="ac7" aria-describedby="ac7-label">
+          <label id="ac7-label" for="ac7">When both an issue reference and extra text are provided, the extra text overrides the issue title as the objective while the issue body is still injected as context.</label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Verification ────────────────────────────────────────────────── -->
+    <section class="plan-section" id="verification" aria-labelledby="verification-title">
+      <div class="plan-section-header">
+        <span aria-hidden="true">&#x1F50D;</span>
+        <h2 class="plan-section-title" id="verification-title">Verification</h2>
+      </div>
+      <div class="verification-block prose">
+        <p>Run the following four invocations after implementation and confirm all behave as expected:</p>
+        <ol>
+          <li><code>/plan-agent:planning https://github.com/shawn-sandy/agentics/issues/205 --quick</code> &mdash; confirm the generated plan title matches the issue title, the Context section includes the issue body, and <code>grep plan-issue</code> on the HTML file returns the issue URL.</li>
+          <li><code>/plan-agent:planning #205 --quick</code> &mdash; confirm the skill resolves the current repo via <code>gh repo view</code> and fetches the same issue as above.</li>
+          <li><code>/plan-agent:planning https://github.com/shawn-sandy/agentics/issues/205 override-objective --quick</code> &mdash; confirm the plan title is "override-objective" while the issue body is still injected as context.</li>
+          <li><code>/plan-agent:planning #99999 --quick</code> (non-existent issue) &mdash; confirm the skill prints an error, falls back to treating <code>#99999</code> as a plain objective string, and proceeds without crashing.</li>
+        </ol>
+        <p>Also confirm <code>grep '"version"' .claude-plugin/marketplace.json</code> returns <code>"version": "0.15.0"</code> for the <code>plan-agent</code> entry.</p>
+      </div>
+    </section>
+
+    <!-- Next Steps ──────────────────────────────────────────────────── -->
+    <section class="plan-section" id="next-steps" aria-labelledby="next-steps-title">
+      <div class="plan-section-header">
+        <span aria-hidden="true">&#x1F4CB;</span>
+        <h2 class="plan-section-title" id="next-steps-title">Next Steps</h2>
+      </div>
+
+      <div class="next-step-item">
+        <p class="next-step-label">Surface issue link in the plans gallery index</p>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;">Update <code>plans-library</code> and the gallery template to parse <code>&lt;meta name="plan-issue"&gt;</code> and render a linked badge on each plan card that has one.</p>
+        <div class="next-step-prompt">
+          <pre>Update kit/plugins/plan-agent/skills/plans-library/SKILL.md and the
+plans-gallery.html template to parse &lt;meta name="plan-issue"&gt; from each
+plan file and render a linked GitHub/GitLab badge on the gallery card when
+that tag is present. The badge should link directly to the issue URL and
+display a short label like "#205". No other changes to the gallery layout
+or filtering logic.</pre>
+          <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+        </div>
+      </div>
+
+      <div class="next-step-item">
+        <p class="next-step-label">Support Jira and Linear issue URLs</p>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;">Extend the detection regex to recognise <code>https://linear.app/*/issue/*</code> and <code>https://*.atlassian.net/browse/*</code> URLs, fetching via their respective REST APIs.</p>
+        <div class="next-step-prompt">
+          <pre>Extend Step 0.5 in kit/plugins/plan-agent/skills/planning/SKILL.md to
+detect Linear and Jira issue URLs in addition to GitHub/GitLab. For Linear:
+use the Linear GraphQL API (requires LINEAR_API_KEY env var). For Jira: use
+the Jira REST API v3 (requires JIRA_API_TOKEN and JIRA_BASE_URL env vars).
+Map each to the same objective/context/label/url fields as GitHub. If the
+required env var is missing, fall back to the plain-objective path and
+display a one-line setup hint.</pre>
+          <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+        </div>
+      </div>
+
+      <!-- Wish list -->
+      <div class="wish-list-section">
+        <details class="wish-list">
+          <summary class="wish-list-toggle">&#x1F52D; Wish List <small style="font-weight:400;margin-left:.3rem;">(speculative, not scheduled)</small></summary>
+          <div style="padding-top:.75rem;">
+            <div class="wish-item">
+              <span class="wish-badge">&#x1F52D; Wish List</span>
+              <p class="next-step-label">Bi-directional sync: write plan URL back to the issue</p>
+              <p style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem;">After the plan is committed, post a comment on the originating issue linking to the plan file URL in the repository &mdash; closing the loop so the ticket references its plan.</p>
+              <div class="next-step-prompt">
+                <pre>After kit/plugins/plan-agent/skills/planning/SKILL.md commits a plan that
+was seeded from an issue (i.e. plan-issue meta tag is present), add a Step
+6.5 that posts a comment to the originating issue via
+`gh issue comment &lt;n&gt; --repo &lt;owner&gt;/&lt;repo&gt; --body "Plan created: &lt;url&gt;"`.
+Only run this step when the issue reference is a GitHub URL (skip for
+GitLab until glab comment support is verified). Guard behind a
+`--no-issue-comment` flag so users can opt out.</pre>
+                <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Sidebar ────────────────────────────────────────────────────── -->
+  <aside class="plan-sidebar" aria-label="Plan metadata">
+    <div class="sidebar-card">
+      <p class="sidebar-card-title">Plan Details</p>
+      <dl>
+        <div class="sidebar-row">
+          <dt>Status</dt>
+          <dd>todo</dd>
+        </div>
+        <div class="sidebar-row">
+          <dt>Type</dt>
+          <dd>feature</dd>
+        </div>
+        <div class="sidebar-row">
+          <dt>Repo</dt>
+          <dd>agentics</dd>
+        </div>
+        <div class="sidebar-row">
+          <dt>Created</dt>
+          <dd>2026-05-31</dd>
+        </div>
+        <div class="sidebar-row">
+          <dt>Issue</dt>
+          <dd><a href="https://github.com/shawn-sandy/agentics/issues/205" target="_blank" rel="noopener">#205</a></dd>
+        </div>
+        <div class="sidebar-row">
+          <dt>Version bump</dt>
+          <dd>0.14.1 &rarr; 0.15.0</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="sidebar-card">
+      <p class="sidebar-card-title">Files to modify</p>
+      <ul class="file-list">
+        <li><span class="file-tag file-tag-modify">modify</span> <code>skills/planning/SKILL.md</code></li>
+        <li><span class="file-tag file-tag-modify">modify</span> <code>CHANGELOG.md</code></li>
+        <li><span class="file-tag file-tag-modify">modify</span> <code>.claude-plugin/marketplace.json</code></li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<!-- ── Live region ────────────────────────────────────────────────── -->
+<div id="live-region" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Progress bar ─────────────────────────────────────────────── */
+  var STORAGE_KEY = 'plan-criteria-add-issue-ingestion';
+  var checkboxes  = Array.prototype.slice.call(document.querySelectorAll('.criteria-item input[type="checkbox"]'));
+  var total       = checkboxes.length;
+  var bar         = document.getElementById('progress-bar');
+  var label       = document.getElementById('progress-label');
+  var liveRegion  = document.getElementById('live-region');
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  function saveState() {
+    var state = {};
+    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function restoreState() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!raw) return;
+    var state;
+    try { state = JSON.parse(raw); } catch (e) { return; }
+    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
+    updateProgress();
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      updateProgress();
+      saveState();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  restoreState();
+  updateProgress();
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+
+  /* ── Copy prompt ─────────────────────────────────────────────── */
+  window.copyPrompt = function (btn) {
+    var pre = btn.previousElementSibling;
+    if (!pre) return;
+    var text = pre.textContent || pre.innerText || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = 'Copy prompt'; }, 2000);
+      }).catch(function () {
+        btn.textContent = 'Failed';
+        setTimeout(function () { btn.textContent = 'Copy prompt'; }, 2000);
+      });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        btn.textContent = 'Copied!';
+      } catch (e) {
+        btn.textContent = 'Failed';
+      }
+      document.body.removeChild(ta);
+      setTimeout(function () { btn.textContent = 'Copy prompt'; }, 2000);
+    }
+  };
+})();
+</script>
+</body>
+</html>
