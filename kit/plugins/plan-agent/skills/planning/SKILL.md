@@ -15,7 +15,7 @@ Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this
 **Issue reference detection (checked first, before flag parsing):** Treat `$ARGUMENTS` as containing an issue reference if any token matches one of these three patterns:
 - Full GitHub URL: `https://github.com/<owner>/<repo>/issues/<n>`
 - Full GitLab URL: `https://gitlab.com/<owner>/<repo>/-/issues/<n>`
-- Bare `#<n>` or plain integer (e.g. `42`) with no other non-flag text present
+- Bare `#<n>` or plain integer (e.g. `42`) — always treated as an issue reference even when override text follows (e.g. `/plan-agent:planning #205 focus on the auth layer --quick` is valid)
 
 When a reference is detected, set an internal `$ISSUE_REF` variable and strip it from the remaining argument string. Everything left (after removing the reference and any flags) becomes the caller's extra text. If extra text is non-empty it overrides the issue title as the objective; if empty, the issue title is used as the objective. Issue ingestion runs in Step 0.5.
 
