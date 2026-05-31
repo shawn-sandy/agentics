@@ -11,7 +11,7 @@ repo-name: agentics
 
 The `settings-sync:settings-backup` skill fired as a session-end (Stop hook)
 routine. It is a deterministic write routine — copy user config → commit →
-push — not an open-ended coding task. Per the global plan-mode rule (§0) and the
+push — not an open-ended coding task. Per the global plan-mode rule (Step 0) and the
 project memory note "Skill invocation must not use plan mode", write-operation
 skills should execute directly rather than go through the multi-phase plan
 workflow. Plan mode was nonetheless active, so this short plan documents the

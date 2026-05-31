@@ -14,7 +14,7 @@
 - Findings feed into Step 5 under a new **Deep Grill Findings** section in the summary.
 - `plan-interview` plugin bumped to `1.6.0`.
 
-> See [CHANGELOG §1.6.0](../kit/plugins/plan-interview/CHANGELOG.md#160---2026-03-26) for the authoritative feature list.
+> See [CHANGELOG v1.6.0](../kit/plugins/plan-interview/CHANGELOG.md#160---2026-03-26) for the authoritative feature list.
 
 ## Files changed
 
@@ -60,4 +60,4 @@ Reply "yes" or "no". No special invocation syntax is needed.
 ## References
 
 - Plan: [add-deep-grill-step-plan-interview.md](plans/add-deep-grill-step-plan-interview.md)
-- Changelog: [CHANGELOG §1.6.0](../kit/plugins/plan-interview/CHANGELOG.md#160---2026-03-26)
+- Changelog: [CHANGELOG v1.6.0](../kit/plugins/plan-interview/CHANGELOG.md#160---2026-03-26)

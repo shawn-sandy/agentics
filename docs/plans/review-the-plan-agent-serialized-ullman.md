@@ -9,7 +9,7 @@ repo-name: agentics
 
 ## Context
 
-The `plan-agent` plugin (v0.2.0) is a solid foundation with a well-structured §0–§7 workflow,
+The `plan-agent` plugin (v0.2.0) is a solid foundation with a well-structured Steps 0–7 workflow,
 a reliable filename-validation hook, and a manual-invoke skill. However, three friction points
 limit its usability in diverse team environments:
 
@@ -21,8 +21,8 @@ limit its usability in diverse team environments:
    minimal change-tracking notes all have different natural shapes; forcing them into the
    full plan structure creates unnecessary overhead.
 
-3. **`--quick` is blunt.** The flag collapses two independent workflow stages (§1 Clarify and
-   §5 Align) into a single binary toggle, and the auto-inference heuristic (≥8-word objectives
+3. **`--quick` is blunt.** The flag collapses two independent workflow stages (Step 1 Clarify and
+   Step 5 Align) into a single binary toggle, and the auto-inference heuristic (≥8-word objectives
    treated as `--quick`) can surprise users. Teams often want one stage skipped but not both.
 
 4. **No per-project frontmatter.** Teams that track `priority:`, `team:`, or `milestone:` have
@@ -31,7 +31,7 @@ limit its usability in diverse team environments:
 ## Objective
 
 Add hook extensibility, plan templates, granular skip-flags, and configurable frontmatter
-to the `plan-agent` plugin — all without breaking the existing §0–§7 workflow or the
+to the `plan-agent` plugin — all without breaking the existing Steps 0–7 workflow or the
 `plansDirectory` configuration contract used by other plugins.
 
 ## Steps
@@ -84,11 +84,11 @@ to the `plan-agent` plugin — all without breaking the existing §0–§7 workf
      ```
    - In the Invocation & Arguments section, **replace** the `--quick` bullet and smart-defaults
      paragraph with:
-     - `--quick` — shorthand for `--no-clarify --no-align`; skips both §1 and §5.
-     - `--no-clarify` — skip §1 Clarify only.
-     - `--no-align` — skip §5 Align only.
+     - `--quick` — shorthand for `--no-clarify --no-align`; skips both Step 1 and Step 5.
+     - `--no-clarify` — skip Step 1 Clarify only.
+     - `--no-align` — skip Step 5 Align only.
      - `--template <name>` — plan skeleton variant: `default` (default), `minimal`, `adr`,
-       `spike`. Controls which `SKELETON-<name>.md` is loaded in §2.
+       `spike`. Controls which `SKELETON-<name>.md` is loaded in Step 2.
      - `--priority <level>` — write `priority: <level>` to frontmatter (`low`, `medium`,
        `high`, `critical`). Overrides `planAgent.extraFrontmatter.priority` if both present.
    - **Remove** the auto-`--quick` inference line (current line 32:
@@ -98,16 +98,16 @@ to the `plan-agent` plugin — all without breaking the existing §0–§7 workf
      makes behavior predictable.
    - *Verify:* Read the updated SKILL.md; confirm line 32 no longer mentions auto-inference.
 
-4. **SKILL.md: update §1, §2, §3, §5, and Skeleton sections to use new flags and templates.**
-   - §1 "Clarify" skip condition: change `*(Skip entirely when --quick or when the objective is detailed.)*` → `*(Skip entirely when --quick or --no-clarify.)*`
-   - §2 "Create": after "verb-target kebab-case filename", add: "Load the skeleton using the
+4. **SKILL.md: update Step 1, Step 2, Step 3, Step 5, and Skeleton sections to use new flags and templates.**
+   - Step 1 "Clarify" skip condition: change `*(Skip entirely when --quick or when the objective is detailed.)*` → `*(Skip entirely when --quick or --no-clarify.)*`
+   - Step 2 "Create": after "verb-target kebab-case filename", add: "Load the skeleton using the
      template rule in the **Skeleton** section."
-   - §3 "Frontmatter": extend to add after `repo-name`:
+   - Step 3 "Frontmatter": extend to add after `repo-name`:
      "After writing the standard fields, read `planAgent.extraFrontmatter` from
      `.claude/settings.json` (project first, then global). Append each key-value pair after
      `repo-name:`. If `--priority` was set, write `priority: <level>` (overwriting any
      `priority` from `extraFrontmatter`). Omit `priority:` entirely if neither source sets it."
-   - §5 "Align" skip condition: change `*(Skip entirely when --quick.)*` → `*(Skip entirely
+   - Step 5 "Align" skip condition: change `*(Skip entirely when --quick.)*` → `*(Skip entirely
      when --quick or --no-align.)*`
    - "Skeleton" section (lines 80–83): replace the single-template instruction with a
      template-lookup rule:
@@ -124,8 +124,8 @@ to the `plan-agent` plugin — all without breaking the existing §0–§7 workf
      ```
    - *Why:* The skill body must match the argument-hint or Claude will silently ignore the
      new flags. Explicit template lookup prevents ambiguity.
-   - *Verify:* SKILL.md is under 120 lines total. §1, §5 conditions reference the new flags.
-     §3 mentions `extraFrontmatter`. Skeleton section lists all four variant filenames.
+   - *Verify:* SKILL.md is under 120 lines total. Step 1, Step 5 conditions reference the new flags.
+     Step 3 mentions `extraFrontmatter`. Skeleton section lists all four variant filenames.
 
 5. **CHANGELOG.md: prepend 0.3.0 entry.**
    - File: `kit/plugins/plan-agent/CHANGELOG.md`
@@ -146,7 +146,7 @@ to the `plan-agent` plugin — all without breaking the existing §0–§7 workf
    - After the flags table, add an "Available templates" sub-table:
      | Template | Format | Best for |
      |---|---|---|
-     | `default` | Full §0–§7 plan | Multi-step features, refactors |
+     | `default` | Full Steps 0–7 plan | Multi-step features, refactors |
      | `minimal` | Context + Steps + Criteria | Simple fixes, well-understood changes |
      | `adr` | ADR (Context / Decision / Consequences) | Architecture decisions |
      | `spike` | Goal / Time-box / Findings | Investigations, time-boxed research |
@@ -170,8 +170,8 @@ to the `plan-agent` plugin — all without breaking the existing §0–§7 workf
 - [ ] `classify_filename` signature has optional `verbs`, `stop_words`, `placeholders` params — existing call `classify_filename(stem)` still works unchanged
 - [ ] Three new skeleton files exist: `SKELETON-minimal.md`, `SKELETON-adr.md`, `SKELETON-spike.md`
 - [ ] SKILL.md `argument-hint` lists all new flags; no auto-`--quick` inference in skill body
-- [ ] §1 skip condition references `--no-clarify`; §5 references `--no-align`
-- [ ] §3 documents `planAgent.extraFrontmatter` read and `--priority` override
+- [ ] Step 1 skip condition references `--no-clarify`; Step 5 references `--no-align`
+- [ ] Step 3 documents `planAgent.extraFrontmatter` read and `--priority` override
 - [ ] Skeleton section in SKILL.md maps all four `--template` values to their file
 - [ ] CHANGELOG.md has a `0.3.0` entry at the top
 - [ ] marketplace.json `plan-agent` entry shows `"version": "0.3.0"`
@@ -194,9 +194,9 @@ to the `plan-agent` plugin — all without breaking the existing §0–§7 workf
 
 3. Invoke `/plan-agent:author --template adr decide on database ORM strategy` in a test session — confirm the resulting plan has ADR sections (Status, Decision, Consequences) and no Steps section.
 
-4. Invoke `/plan-agent:author --no-clarify add payment webhook handler` — confirm §1 is skipped but §5 Align is still run.
+4. Invoke `/plan-agent:author --no-clarify add payment webhook handler` — confirm Step 1 is skipped but Step 5 Align is still run.
 
-5. Invoke a 10-word objective without `--quick` — confirm §1 Clarify is NOT auto-skipped.
+5. Invoke a 10-word objective without `--quick` — confirm Step 1 Clarify is NOT auto-skipped.
 
 6. Set `"planAgent":{"extraFrontmatter":{"team":"engineering"}}` in `.claude/settings.json`, invoke `/plan-agent:author add caching layer` — confirm `team: engineering` appears in the written plan frontmatter after `repo-name:`.
 

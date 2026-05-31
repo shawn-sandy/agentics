@@ -452,7 +452,7 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 #### `plan-agent` v0.7.1
 
-Plan creation on demand — invoke `/plan-agent:planning <objective>` to run the full §0–§7 planning workflow; a filename validation hook enforces verb-target kebab-case on every plan write.
+Plan creation on demand — invoke `/plan-agent:planning <objective>` to run the full Steps 0–7 planning workflow; a filename validation hook enforces verb-target kebab-case on every plan write.
 
 **Skills** (activate explicitly):
 

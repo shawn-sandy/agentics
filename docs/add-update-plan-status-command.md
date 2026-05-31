@@ -17,7 +17,7 @@
 - Hybrid write strategy: files without frontmatter use `Bash` bulk prepend; files with existing frontmatter use `Edit` for precision.
 - `plan-interview` plugin bumped to `1.12.0`.
 
-> See [CHANGELOG §1.12.0](../kit/plugins/plan-interview/CHANGELOG.md#1120---2026-03-29) for the authoritative feature list.
+> See [CHANGELOG v1.12.0](../kit/plugins/plan-interview/CHANGELOG.md#1120---2026-03-29) for the authoritative feature list.
 
 ## Files changed
 
@@ -63,4 +63,4 @@ The `--force` flag re-analyzes files that already have a status set.
 ## References
 
 - Plan: [add-update-plan-status-command.md](plans/add-update-plan-status-command.md)
-- Changelog: [CHANGELOG §1.12.0](../kit/plugins/plan-interview/CHANGELOG.md#1120---2026-03-29)
+- Changelog: [CHANGELOG v1.12.0](../kit/plugins/plan-interview/CHANGELOG.md#1120---2026-03-29)

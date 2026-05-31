@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.2 — 2026-05-30 — Fix section sign rendering
+
+### Fixed
+
+- Replaced `§` (section sign) in documenting-plans SKILL.md with plain text to fix rendering issues.
+
+---
+
 ## v2.2.1 — README: sync usage documentation with current skill behavior
 
 - Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.

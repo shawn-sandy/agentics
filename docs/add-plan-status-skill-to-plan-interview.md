@@ -16,7 +16,7 @@
 - Signal extraction scoped to inline backtick tokens only — fenced code block content excluded to avoid false positives.
 - `plan-interview` plugin bumped to `1.8.0`.
 
-> See [CHANGELOG §1.8.0](../kit/plugins/plan-interview/CHANGELOG.md#180---2026-03-26) for the authoritative feature list.
+> See [CHANGELOG v1.8.0](../kit/plugins/plan-interview/CHANGELOG.md#180---2026-03-26) for the authoritative feature list.
 
 ## Files changed
 
@@ -84,4 +84,4 @@ modified: 2026-03-26
 ## References
 
 - Plan: [add-plan-status-skill-to-plan-interview.md](plans/add-plan-status-skill-to-plan-interview.md)
-- Changelog: [CHANGELOG §1.8.0](../kit/plugins/plan-interview/CHANGELOG.md#180---2026-03-26)
+- Changelog: [CHANGELOG v1.8.0](../kit/plugins/plan-interview/CHANGELOG.md#180---2026-03-26)

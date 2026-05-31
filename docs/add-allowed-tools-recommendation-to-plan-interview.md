@@ -14,7 +14,7 @@
 - `allowed-tools` frontmatter added to `kit/plugins/plan-interview/skills/plan-interview/SKILL.md` itself (was missing, despite the skill using `Grep` and `Bash`).
 - `Grep` and `Bash` added to `kit/plugins/plan-interview/commands/plan-interview.md` `allowed-tools` (already used but undeclared).
 
-> See [CHANGELOG §1.7.0](../kit/plugins/plan-interview/CHANGELOG.md#170---2026-03-26) for the authoritative feature list.
+> See [CHANGELOG v1.7.0](../kit/plugins/plan-interview/CHANGELOG.md#170---2026-03-26) for the authoritative feature list.
 
 ## Files changed
 
@@ -73,4 +73,4 @@ allowed-tools: AskUserQuestion, Bash, Edit, Glob, Grep, Read, TodoWrite
 ## References
 
 - Plan: [add-allowed-tools-recommendation-to-plan-interview.md](plans/add-allowed-tools-recommendation-to-plan-interview.md)
-- Changelog: [CHANGELOG §1.7.0](../kit/plugins/plan-interview/CHANGELOG.md#170---2026-03-26)
+- Changelog: [CHANGELOG v1.7.0](../kit/plugins/plan-interview/CHANGELOG.md#170---2026-03-26)

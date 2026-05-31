@@ -2,13 +2,13 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
   "version": "4.0.0",
-  "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization",
+  "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
     "email": "shawnsandy04@gmail.com"
   },
   "metadata": {
-    "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization"
+    "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization"
   },
   "plugins": [
     {
@@ -55,8 +55,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "2.2.1",
-      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins \u2014 auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
+      "version": "2.2.2",
+      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins — auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
       "category": "development",
       "tags": [
         "planning",
@@ -96,7 +96,7 @@
         "path": "kit/plugins/skill-reviewer"
       },
       "version": "2.2.2",
-      "description": "Review and optimize Claude Code skill files \u2014 score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
+      "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
         "skills",
@@ -118,7 +118,7 @@
         "path": "kit/plugins/code-testing-agent"
       },
       "version": "3.4.1",
-      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent \u2014 not arbitrary coverage",
+      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
         "testing",
@@ -139,7 +139,7 @@
         "path": "kit/plugins/git-agent"
       },
       "version": "3.9.2",
-      "description": "Automated git workflow \u2014 create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
+      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
         "git",
@@ -161,7 +161,7 @@
         "path": "kit/plugins/product-plans"
       },
       "version": "3.4.3",
-      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) \u2014 produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
+      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
       "category": "productivity",
       "tags": [
         "panel-review",
@@ -185,7 +185,7 @@
         "path": "kit/plugins/settings-sync"
       },
       "version": "1.0.1",
-      "description": "Back up and restore Claude Code user settings to a dedicated git repo \u2014 routine-compatible for automated backups",
+      "description": "Back up and restore Claude Code user settings to a dedicated git repo — routine-compatible for automated backups",
       "category": "productivity",
       "tags": [
         "settings",
@@ -205,7 +205,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.3.0",
+      "version": "2.3.2",
       "description": "Discover shareable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack",
       "category": "productivity",
       "tags": [
@@ -244,8 +244,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.11.2",
-      "description": "Plan creation on demand \u2014 explicit /plan-agent:planning skill produces self-contained interactive HTML plans with a built-in structured interview; plans-library skill generates a filterable gallery of all plans; filename hook enforces verb-target kebab-case",
+      "version": "0.12.1",
+      "description": "Plan creation on demand — explicit /plan-agent:planning skill produces self-contained interactive HTML plans with a built-in structured interview; plans-library skill generates a filterable gallery of all plans; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [
         "planning",
@@ -266,7 +266,7 @@
         "path": "kit/plugins/issue-agent"
       },
       "version": "0.1.1",
-      "description": "Create GitHub and GitLab issues from any context \u2014 selection, session, bug, or feature \u2014 with host auto-detection and a confirmation gate before writing",
+      "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection and a confirmation gate before writing",
       "category": "development",
       "tags": [
         "issue",

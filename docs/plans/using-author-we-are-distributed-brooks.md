@@ -19,7 +19,7 @@ name that better communicates what the skill actually does.
 **Invocation after rename:** `/plan-agent:planning <objective>`
 
 `planning` is descriptive and unambiguous — it naturally reads as "I am planning something",
-which matches the full §0–§7 plan-authoring workflow the skill runs.
+which matches the full Steps 0–7 plan-authoring workflow the skill runs.
 
 ---
 

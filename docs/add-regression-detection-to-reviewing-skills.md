@@ -16,7 +16,7 @@
 - BREAKING findings trigger a warning note before the Step 5 optimized-version offer without suppressing it.
 - `skill-reviewer` plugin bumped from `1.2.0` → `1.3.0`.
 
-> See [CHANGELOG §1.3.0](../kit/plugins/skill-reviewer/CHANGELOG.md#130---2026-03-03) for the authoritative feature list.
+> See [CHANGELOG v1.3.0](../kit/plugins/skill-reviewer/CHANGELOG.md#130---2026-03-03) for the authoritative feature list.
 
 ## Files changed
 
@@ -73,4 +73,4 @@ Or say "skip regression check" in your message. The audit report will include:
 ## References
 
 - Plan: [add-regression-detection-to-reviewing-skills.md](plans/add-regression-detection-to-reviewing-skills.md)
-- Changelog: [CHANGELOG §1.3.0](../kit/plugins/skill-reviewer/CHANGELOG.md#130---2026-03-03)
+- Changelog: [CHANGELOG v1.3.0](../kit/plugins/skill-reviewer/CHANGELOG.md#130---2026-03-03)

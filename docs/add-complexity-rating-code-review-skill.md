@@ -17,7 +17,7 @@
 - Frontmatter `description` updated to include "assess code complexity" as an activation trigger.
 - `code-review` plugin bumped from `1.1.0` → `1.2.0`.
 
-> See [CHANGELOG §1.2.0](../kit/plugins/code-review/CHANGELOG.md#120---2026-03-03) for the authoritative feature list.
+> See [CHANGELOG v1.2.0](../kit/plugins/code-review/CHANGELOG.md#120---2026-03-03) for the authoritative feature list.
 
 ## Files changed
 
@@ -67,4 +67,4 @@ tightly coupled imports from 7 internal modules, drives the rating.
 ## References
 
 - Plan: [add-complexity-rating-code-review-skill.md](plans/add-complexity-rating-code-review-skill.md)
-- Changelog: [CHANGELOG §1.2.0](../kit/plugins/code-review/CHANGELOG.md#120---2026-03-03)
+- Changelog: [CHANGELOG v1.2.0](../kit/plugins/code-review/CHANGELOG.md#120---2026-03-03)

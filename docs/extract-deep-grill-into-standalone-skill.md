@@ -15,7 +15,7 @@
 - `CHANGELOG.md` — `[1.10.0] - 2026-03-28` entry added.
 - `marketplace.json` — `plan-interview` version bumped from `1.9.1` to `1.10.0`.
 
-> See [CHANGELOG §1.10.0](../kit/plugins/plan-interview/CHANGELOG.md) for the authoritative change log entry.
+> See [CHANGELOG v1.10.0](../kit/plugins/plan-interview/CHANGELOG.md) for the authoritative change log entry.
 
 ## Files changed
 
@@ -59,5 +59,5 @@ The plan-interview skill's Step 4 section was replaced with a short callout note
 ## References
 
 - Plan: [extract-deep-grill-into-standalone-skill.md](plans/extract-deep-grill-into-standalone-skill.md)
-- Changelog: [kit/plugins/plan-interview/CHANGELOG.md §1.10.0](../kit/plugins/plan-interview/CHANGELOG.md)
+- Changelog: [kit/plugins/plan-interview/CHANGELOG.md v1.10.0](../kit/plugins/plan-interview/CHANGELOG.md)
 - Skill: [kit/plugins/plan-interview/skills/deep-grill/SKILL.md](../kit/plugins/plan-interview/skills/deep-grill/SKILL.md)

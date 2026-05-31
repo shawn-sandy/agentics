@@ -13,7 +13,7 @@
 - `plan-interview` plugin bumped to `1.5.0`.
 - README updated with a Hook row in the Components table and a new section explaining hook behavior.
 
-> See [CHANGELOG §1.5.0](../kit/plugins/plan-interview/CHANGELOG.md#150---2026-03-14) for the authoritative feature list.
+> See [CHANGELOG v1.5.0](../kit/plugins/plan-interview/CHANGELOG.md#150---2026-03-14) for the authoritative feature list.
 
 ## Files changed
 
@@ -66,4 +66,4 @@ Write a plan in plan mode, exit, and the prompt will appear.
 ## References
 
 - Plan: [add-plan-interview-exit-hook.md](plans/add-plan-interview-exit-hook.md)
-- Changelog: [CHANGELOG §1.5.0](../kit/plugins/plan-interview/CHANGELOG.md#150---2026-03-14)
+- Changelog: [CHANGELOG v1.5.0](../kit/plugins/plan-interview/CHANGELOG.md#150---2026-03-14)
