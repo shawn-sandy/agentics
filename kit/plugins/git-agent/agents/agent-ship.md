@@ -153,6 +153,17 @@ git symbolic-ref refs/remotes/origin/HEAD
 
 Strip the `refs/remotes/origin/` prefix to get the base branch name. If this command fails, fall back to `main`, then `master` (try `git rev-parse --verify main` to confirm existence before falling back).
 
+### Step 7.5: Scan for Issue References
+
+Look for plan files on this branch that link to GitHub or GitLab issues.
+
+Run:
+```
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>
+```
+
+Each line of output is a unique issue URL. If any URLs are returned, include a `## Linked Issues` section in the PR/MR body (Step 8) with one `Closes <url>` line per URL. If the script produces no output, skip this section entirely.
+
 ### Step 8: Create Pull/Merge Request
 
 Gather content:
@@ -173,7 +184,12 @@ git diff <base>...HEAD --stat
 
 ## Changes
 <brief description of what changed and why>
+
+## Linked Issues
+Closes <url>
 ```
+
+Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
 
 For GitHub, run:
 

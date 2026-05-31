@@ -1,5 +1,16 @@
 # Changelog — git-agent
 
+## v3.10.0 — Auto-link plan issue references in PR descriptions
+
+- PR creation now scans plan files changed on the branch for
+  `<meta name="plan-issue">` tags and appends a `## Linked Issues` section
+  with `Closes <url>` lines to the PR body, enabling GitHub/GitLab to
+  auto-close referenced issues on merge.
+- Added shared `scripts/extract-plan-issues.sh` for background agents;
+  foreground skills use inline `git diff` + `Grep`.
+- Applies to all PR creation paths: `pr-agent`, `agent-pr`, `ship`,
+  `agent-ship`, and `ship-autonomous` (via delegation to `pr-agent`).
+
 ## v3.9.3 — Fix subagent_type namespace qualification in background commands
 
 - `commit-bg`, `pr-bg`, and `ship-bg` now dispatch with fully-qualified
