@@ -34,6 +34,18 @@ Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this
 
 Echo the resolved objective and effective flags before proceeding to §0.
 
+## Scope Constraint — Plans Only
+
+**This skill produces a plan document. It does not implement anything.**
+
+- Do not edit source files, configs, or any file outside `docs/plans/` (or the configured `plansDirectory`).
+- Do not run git commands, shell scripts, or any tool that mutates the codebase.
+- Do not apply fixes, refactors, or any change described in the plan's steps.
+- Use `Read`, `Glob`, `Grep`, and `Bash` for exploration (§0) only — never to make changes.
+- The plan is the deliverable. Implementation is a separate, user-initiated step.
+
+If the objective sounds like "fix X" or "implement Y", write a plan for *how* to fix/implement it — do not do the work.
+
 ## Workflow
 
 Follow these steps exactly.

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.2 — 2026-05-30 — Add scope constraint: plans only, no implementation
+
+### Added
+
+- **Scope Constraint section** — explicit rule block inserted before the Workflow prohibiting the skill from editing source files, running git commands, or applying any change described in the plan's steps. The plan is the deliverable; implementation is a separate, user-initiated step. Addresses a case where the skill explored the codebase and implemented a fix rather than writing a plan for it.
+
+---
+
 ## v0.11.1 — 2026-05-30 — Fix: self-bootstrap out of harness plan mode
 
 ### Fixed
