@@ -53,7 +53,16 @@ Do not proceed past pre-flight if either check fails.
 
 ### Phase 3 — Resolve source and type
 
-Parse `$ARGUMENTS` for:
+Before any other parsing, strip `--no-open` from `$ARGUMENTS` to avoid it appearing in the issue title or description:
+```bash
+ARGS="${ARGUMENTS/--no-open/}"
+ARGS="${ARGS//  / }"  # collapse any double spaces left behind
+ARGS="${ARGS## }"     # trim leading space
+ARGS="${ARGS%% }"     # trim trailing space
+```
+Use `$ARGS` (not `$ARGUMENTS`) for all subsequent argument parsing in this phase.
+
+Parse `$ARGS` for:
 - An explicit source keyword: `bug`, `feature`, `selection`, `session`
 - A title/description (everything after the keyword)
 
