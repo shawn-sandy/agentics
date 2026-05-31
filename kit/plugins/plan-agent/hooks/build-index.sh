@@ -95,7 +95,7 @@ for f in plan_files:
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(basename)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-title="{e(title.lower())}">
+   data-status="{e(status)}" data-type="{e(ptype)}" data-title="{e(html.unescape(title).lower())}">
   <div class="card-badges">
     <span class="status-chip status-{e(status)}">{e(status_display)}</span>
     <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>

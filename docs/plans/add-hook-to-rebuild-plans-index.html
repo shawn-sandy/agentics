@@ -807,10 +807,10 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Register the hook in <code>kit/plugins/plan-agent/hooks.json</code></span>
               </div>
-              <div class="step-why"><code>hooks.json</code> is the canonical hook-registration file for this plugin (the existing <code>validate-plan-filename</code> hook uses this same file, not <code>plugin.json</code>). Using a <code>Write|Edit</code> matcher covers both new plan creation and in-place status edits (e.g. updating a plan's <code>&lt;meta name="plan-status"&gt;</code> tag from <code>todo</code> to <code>completed</code>). Timeout of 30 s accommodates scanning up to ~50 HTML files.</div>
+              <div class="step-why"><code>hooks.json</code> is the canonical hook-registration file for this plugin (the existing <code>validate-plan-filename</code> hook uses this same file, not <code>plugin.json</code>). Using a <code>Write|Edit|MultiEdit</code> matcher covers new plan creation, in-place status edits (e.g. updating a plan's <code>&lt;meta name="plan-status"&gt;</code> tag from <code>todo</code> to <code>completed</code>), and batched multi-edit operations. Timeout of 30 s accommodates scanning up to ~50 HTML files.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Open <code>kit/plugins/plan-agent/hooks.json</code> and confirm two <code>PostToolUse</code> entries are present: the existing <code>Write|Edit</code> matcher for <code>validate-plan-filename.py</code> and a new <code>Write|Edit</code> matcher for <code>rebuild-plans-index.py</code> with <code>timeout: 30</code>.</div>
+                <div class="verify-body">Open <code>kit/plugins/plan-agent/hooks.json</code> and confirm two <code>PostToolUse</code> entries are present: the existing <code>Write|Edit</code> matcher for <code>validate-plan-filename.py</code> and a new <code>Write|Edit|MultiEdit</code> matcher for <code>rebuild-plans-index.py</code> with <code>timeout: 30</code>.</div>
               </details>
             </div>
           </div>
@@ -872,7 +872,7 @@
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3"><code>kit/plugins/plan-agent/hooks.json</code> contains a new PostToolUse entry with a <code>Write|Edit</code> matcher pointing to <code>rebuild-plans-index.py</code> with <code>timeout: 30</code>.</label>
+          <label for="ac3"><code>kit/plugins/plan-agent/hooks.json</code> contains a new PostToolUse entry with a <code>Write|Edit|MultiEdit</code> matcher pointing to <code>rebuild-plans-index.py</code> with <code>timeout: 30</code>.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
@@ -909,26 +909,6 @@
         Next Steps
       </h2>
       <div class="next-steps-list">
-
-        <details class="next-step-item">
-          <summary>Expand matcher to Write|Edit for status-update rebuilds</summary>
-          <div class="next-step-prompt">
-            <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Update kit/plugins/plan-agent/hooks.json to change the rebuild-plans-index.py matcher from `Write` to `Write|Edit`. This ensures the gallery also refreshes when a plan's status chip is updated in-place (e.g. todo -&gt; in-progress -&gt; completed) without requiring a new Write operation. After changing the matcher, verify by editing an existing plan's &lt;meta name="plan-status"&gt; tag and confirming the index regenerates automatically.</pre>
-            <button class="copy-prompt-btn" type="button"
-                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-          </div>
-        </details>
-
-        <details class="next-step-item">
-          <summary>Add debounce to avoid redundant rebuilds on rapid successive writes</summary>
-          <div class="next-step-prompt">
-            <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>The rebuild-plans-index.py hook currently runs build-index.sh synchronously on every matching Write. When a skill writes multiple plan files in quick succession (e.g. a batch update), this triggers redundant rebuilds. Add a simple file-lock or timestamp-based debounce to kit/plugins/plan-agent/hooks/rebuild-plans-index.py so that if a rebuild completed within the last 2 seconds, the hook skips the current invocation. Verify the debounce works by piping two matching Write events within 1 second and confirming build-index.sh is called only once.</pre>
-            <button class="copy-prompt-btn" type="button"
-                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-          </div>
-        </details>
 
         <!-- Wish List -->
         <div class="wish-list-header">
