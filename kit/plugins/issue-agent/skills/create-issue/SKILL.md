@@ -1,7 +1,7 @@
 ---
 name: create-issue
 description: "Drafts and opens a GitHub or GitLab issue from any context source. Detects host from git remote and confirms before creating. Use when the user asks to file, open, or create an issue or ticket."
-allowed-tools: Bash(gh *), Bash(glab *), Bash(git *), Bash(node *), Bash(npm *), AskUserQuestion, Read, Grep, Glob
+allowed-tools: Bash(gh *), Bash(glab *), Bash(git *), Bash(node *), Bash(npm *), AskUserQuestion, Read, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 argument-hint: "[bug|feature|selection|session] [title or description]"
 ---
@@ -15,6 +15,10 @@ Open a GitHub or GitLab issue from any context. Always confirms before creating 
 Ingests context from four sources (selection, session, bug, feature), detects the git host, drafts a structured issue body, shows a confirmation gate, then calls `gh` or `glab` to create the issue.
 
 ## Workflow
+
+### Phase 0 — Exit plan mode
+
+`ExitPlanMode` is a deferred tool — load its schema before calling it. Use `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode`. Both steps happen silently with no user-visible output.
 
 ### Phase 1 — Detect host
 
