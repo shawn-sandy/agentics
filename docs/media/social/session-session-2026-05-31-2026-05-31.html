@@ -1,72 +1,6 @@
 <!DOCTYPE html>
 <!--
   session-card.html — Dark-mode session recap card for social posts.
-
-  Content-first layout: a narrative + accomplishment bullets are the hero; token
-  and activity metrics ride along as a compact secondary strip.
-
-  Variables to substitute (all text values must be HTML-escaped before insertion):
-    session recap · 2026-05-31          — Session title (e.g. "session recap · 2026-05-28")
-    sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
-    Diagnosed accidental commits to main via git reflog, safely reset local main to origin/main, and confirmed a PreToolUse hook blocking commits to protected branches is already in place and verified working.      — 1–2 sentence summary of what the session accomplished
-    <li>Traced root cause via git reflog — feature commits landed on main before the branch was created</li>
-<li>Safely reset local main to origin/main without losing feature branch work</li>
-<li>Confirmed existing PreToolUse hook blocks git commit on main/master/primary</li>
-<li>Pipe-tested the hook to verify exit code 1 fires with a clear warning message</li>— A run of <li>…</li> items (3–5), one per accomplishment;
-                         NO wrapping <ul> (the template provides it). Escape each
-                         item's text, then wrap in <li> (the <li> tags stay literal).
-    16,336   — Total tokens formatted with commas (e.g. "42,180")
-    92.8% — Cache hit rate (e.g. "44.2%")
-    12 min       — Session duration (e.g. "47 min")
-    0  — Files changed count (e.g. "12")
-    0        — Commits in session (e.g. "3")
-    <div class="copy-panel">
-  <p class="copy-label">LinkedIn</p>
-  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just spent 12 minutes diagnosing a git mystery — and `git reflog` had the full answer.
-
-A feature branch had commits that appeared on `main`. Tracing back through the reflog showed the real sequence: both commits were made directly to `main` first, then the feature branch was created from that HEAD. From the remote’s perspective everything looked fine — but locally, `main` was 2 commits ahead of `origin/main`.
-
-What the session covered:
-• Traced root cause via `git reflog --all` — feature commits landed on main before the branch was created
-• Safely reset local `main` to `origin/main` without losing any work
-• Verified the existing PreToolUse hook blocking `git commit` on main/master/primary was correctly configured — pipe-tested with a mocked stdin payload to confirm exit code 1 fires
-
-The hook was already there. This was a pre-existing issue from before it was configured. That’s the thing about defensive tooling: it prevents future mistakes, not past ones.
-
-12 min · 16,336 tokens · 92.8% cache hit
-
-Follow along for more Claude Code git workflow deep-dives.
-
-#ClaudeCode #GitWorkflow #DeveloperTools #AIAssistedDev</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
-</div>
-<div class="copy-panel">
-  <p class="copy-label">Twitter/X</p>
-  <textarea readonly class="post-copy-text" id="post-copy-twitter">`git reflog` diagnosed the whole thing in one command — commits landed on main before the feature branch existed. Reset, verified the PreToolUse guard was already blocking it, moved on. The reflog never lies. #ClaudeCode #git</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
-</div>
-<div class="copy-panel">
-  <p class="copy-label">Bluesky</p>
-  <textarea readonly class="post-copy-text" id="post-copy-bluesky">git reflog is the right tool when you need to know exactly what happened and when. Used it to trace commits that landed on main before a feature branch existed — cleaned it up, confirmed a PreToolUse hook was already blocking future occurrences. #ClaudeCode</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
-</div>
-<div class="copy-panel">
-  <p class="copy-label">Substack</p>
-  <textarea readonly class="post-copy-text" id="post-copy-substack">One thing AI-assisted workflows don’t change: understanding what git actually did.
-
-This session: commits had landed on main before the feature branch was created. `git reflog` showed the exact sequence. A `git reset --hard origin/main` cleaned it up with no work lost.
-
-The interesting detail: a PreToolUse hook blocking commits to main was already in place and pipe-tested as working. The incident predated the safeguard — a good reminder that tooling prevents future mistakes, not past ones.
-
-12 min · 92.8% cache hit — more Claude Code git patterns coming.</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
-</div>    — Copy panel HTML — see references/copy-panels.md
-
-  HTML-escape order (mandatory, apply to every text value above):
-    1. & → &amp;  ← first, prevents double-escaping
-    2. < → &lt;
-    3. > → &gt;
-    4. " → &quot;
 -->
 <html lang="en">
 <head>
@@ -142,7 +76,6 @@ The interesting detail: a PreToolUse hook blocking commits to main was already i
       margin-top: 2px;
     }
 
-    /* ── Hero content: narrative + accomplishments ── */
     .content {
       padding: 22px 28px 8px;
     }
@@ -177,7 +110,6 @@ The interesting detail: a PreToolUse hook blocking commits to main was already i
       font-weight: 700;
     }
 
-    /* ── Demoted metrics strip ── */
     .metrics-strip {
       display: flex;
       flex-wrap: wrap;
@@ -221,7 +153,6 @@ The interesting detail: a PreToolUse hook blocking commits to main was already i
       font-weight: 500;
     }
 
-    /* ── Copy panel ── */
     .copy-panel {
       width: min(720px, 100%);
       background: #161b22;
@@ -230,8 +161,6 @@ The interesting detail: a PreToolUse hook blocking commits to main was already i
       padding: 16px;
       box-sizing: border-box;
     }
-
-    .copy-panel + .copy-panel { margin-top: 0; }
 
     .copy-label {
       color: #8b949e;
@@ -278,19 +207,22 @@ The interesting detail: a PreToolUse hook blocking commits to main was already i
     </div>
 
     <div class="content">
-      <p class="narrative">Diagnosed accidental commits to main via git reflog, safely reset local main to origin/main, and confirmed a PreToolUse hook blocking commits to protected branches is already in place and verified working.</p>
-      <ul class="accomplishments"><li>Traced root cause via git reflog — feature commits landed on main before the branch was created</li>
-<li>Safely reset local main to origin/main without losing feature branch work</li>
-<li>Confirmed existing PreToolUse hook blocks git commit on main/master/primary</li>
-<li>Pipe-tested the hook to verify exit code 1 fires with a clear warning message</li></ul>
+      <p class="narrative">Shipped feat/kit-plan-agent-ingestion-2026-05-31 as PR #206 — adding issue ingestion to plan-agent:planning and centralizing the user gate in social-media-tools security-scrub (v2.4.0). Recovered a missing plan file via cherry-pick from a stale branch.</p>
+      <ul class="accomplishments">
+        <li>Opened PR #206: plan-agent issue ingestion + social-media-tools v2.4.0</li>
+        <li>Added GitHub/GitLab issue ingestion to /plan-agent:planning skill</li>
+        <li>Centralized security-scrub user gate in social-media-tools (v2.4.0)</li>
+        <li>Cherry-picked missing plan file commit to keep PR #206 complete</li>
+        <li>Identified and resolved stale branch with 6 unshipped commits</li>
+      </ul>
     </div>
 
     <div class="metrics-strip">
-      <span class="metric"><b class="accent">16,336</b> tokens</span>
-      <span class="metric"><b>12 min</b></span>
-      <span class="metric"><b class="green">92.8%</b> cache hit</span>
-      <span class="metric"><b>0</b> files</span>
-      <span class="metric"><b>0</b> commits</span>
+      <span class="metric"><b class="accent">7,116</b> tokens</span>
+      <span class="metric"><b>16 min</b></span>
+      <span class="metric"><b class="green">89.9%</b> cache hit</span>
+      <span class="metric"><b>14</b> files</span>
+      <span class="metric"><b>3</b> commits</span>
     </div>
 
     <div class="card-footer">
@@ -299,46 +231,22 @@ The interesting detail: a PreToolUse hook blocking commits to main was already i
     </div>
   </div>
   <div class="copy-panel">
-  <p class="copy-label">LinkedIn</p>
-  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just spent 12 minutes diagnosing a git mystery — and `git reflog` had the full answer.
+    <p class="copy-label">Social media post</p>
+    <textarea readonly class="post-copy-text" id="post-copy">Just shipped PR #206 in a 17-minute Claude Code session — adding issue ingestion to the plan-agent:planning skill and centralizing the security-scrub user gate across all social-media-tools.
 
-A feature branch had commits that appeared on `main`. Tracing back through the reflog showed the real sequence: both commits were made directly to `main` first, then the feature branch was created from that HEAD. From the remote’s perspective everything looked fine — but locally, `main` was 2 commits ahead of `origin/main`.
+What got done:
 
-What the session covered:
-• Traced root cause via `git reflog --all` — feature commits landed on main before the branch was created
-• Safely reset local `main` to `origin/main` without losing any work
-• Verified the existing PreToolUse hook blocking `git commit` on main/master/primary was correctly configured — pipe-tested with a mocked stdin payload to confirm exit code 1 fires
+→ Issue ingestion wired into /plan-agent:planning — planning now reads open GitHub/GitLab issues as context before generating a plan
+→ Centralized the user confirmation gate in security-scrub (v2.4.0), honoring it consistently across all callers
+→ Recovered a missing plan file commit via cherry-pick from a stale branch — PR #206 fully complete
 
-The hook was already there. This was a pre-existing issue from before it was configured. That’s the thing about defensive tooling: it prevents future mistakes, not past ones.
+3 commits · 14 files · 7,116 tokens · 89.9% cache hit · 17 min
 
-12 min · 16,336 tokens · 92.8% cache hit
+More on building with Claude Code plugins coming — follow along.
 
-Follow along for more Claude Code git workflow deep-dives.
-
-#ClaudeCode #GitWorkflow #DeveloperTools #AIAssistedDev</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
-</div>
-<div class="copy-panel">
-  <p class="copy-label">Twitter/X</p>
-  <textarea readonly class="post-copy-text" id="post-copy-twitter">`git reflog` diagnosed the whole thing in one command — commits landed on main before the feature branch existed. Reset, verified the PreToolUse guard was already blocking it, moved on. The reflog never lies. #ClaudeCode #git</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
-</div>
-<div class="copy-panel">
-  <p class="copy-label">Bluesky</p>
-  <textarea readonly class="post-copy-text" id="post-copy-bluesky">git reflog is the right tool when you need to know exactly what happened and when. Used it to trace commits that landed on main before a feature branch existed — cleaned it up, confirmed a PreToolUse hook was already blocking future occurrences. #ClaudeCode</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
-</div>
-<div class="copy-panel">
-  <p class="copy-label">Substack</p>
-  <textarea readonly class="post-copy-text" id="post-copy-substack">One thing AI-assisted workflows don’t change: understanding what git actually did.
-
-This session: commits had landed on main before the feature branch was created. `git reflog` showed the exact sequence. A `git reset --hard origin/main` cleaned it up with no work lost.
-
-The interesting detail: a PreToolUse hook blocking commits to main was already in place and pipe-tested as working. The incident predated the safeguard — a good reminder that tooling prevents future mistakes, not past ones.
-
-12 min · 92.8% cache hit — more Claude Code git patterns coming.</textarea>
-  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
-</div>
+#ClaudeCode #AIEngineering #DevTools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
   <script>
     function copyPost(id, btn) {
       var t = document.getElementById(id);
