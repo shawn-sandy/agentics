@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<!--
+  session-card.html — Dark-mode session recap card for social posts.
+
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
+    session recap · 2026-05-31          — Session title (e.g. "session recap · 2026-05-28")
+    sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
+    Diagnosed accidental commits to main via git reflog, safely reset local main to origin/main, and confirmed a PreToolUse hook blocking commits to protected branches is already in place and verified working.      — 1–2 sentence summary of what the session accomplished
+    <li>Traced root cause via git reflog — feature commits landed on main before the branch was created</li>
+<li>Safely reset local main to origin/main without losing feature branch work</li>
+<li>Confirmed existing PreToolUse hook blocks git commit on main/master/primary</li>
+<li>Pipe-tested the hook to verify exit code 1 fires with a clear warning message</li>— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    16,336   — Total tokens formatted with commas (e.g. "42,180")
+    92.8% — Cache hit rate (e.g. "44.2%")
+    12 min       — Session duration (e.g. "47 min")
+    0  — Files changed count (e.g. "12")
+    0        — Commits in session (e.g. "3")
+    <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just spent 12 minutes diagnosing a git mystery — and `git reflog` had the full answer.
+
+A feature branch had commits that appeared on `main`. Tracing back through the reflog showed the real sequence: both commits were made directly to `main` first, then the feature branch was created from that HEAD. From the remote’s perspective everything looked fine — but locally, `main` was 2 commits ahead of `origin/main`.
+
+What the session covered:
+• Traced root cause via `git reflog --all` — feature commits landed on main before the branch was created
+• Safely reset local `main` to `origin/main` without losing any work
+• Verified the existing PreToolUse hook blocking `git commit` on main/master/primary was correctly configured — pipe-tested with a mocked stdin payload to confirm exit code 1 fires
+
+The hook was already there. This was a pre-existing issue from before it was configured. That’s the thing about defensive tooling: it prevents future mistakes, not past ones.
+
+12 min · 16,336 tokens · 92.8% cache hit
+
+Follow along for more Claude Code git workflow deep-dives.
+
+#ClaudeCode #GitWorkflow #DeveloperTools #AIAssistedDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">`git reflog` diagnosed the whole thing in one command — commits landed on main before the feature branch existed. Reset, verified the PreToolUse guard was already blocking it, moved on. The reflog never lies. #ClaudeCode #git</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">git reflog is the right tool when you need to know exactly what happened and when. Used it to trace commits that landed on main before a feature branch existed — cleaned it up, confirmed a PreToolUse hook was already blocking future occurrences. #ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">One thing AI-assisted workflows don’t change: understanding what git actually did.
+
+This session: commits had landed on main before the feature branch was created. `git reflog` showed the exact sequence. A `git reset --hard origin/main` cleaned it up with no work lost.
+
+The interesting detail: a PreToolUse hook blocking commits to main was already in place and pipe-tested as working. The incident predated the safeguard — a good reminder that tooling prevents future mistakes, not past ones.
+
+12 min · 92.8% cache hit — more Claude Code git patterns coming.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
+    1. & → &amp;  ← first, prevents double-escaping
+    2. < → &lt;
+    3. > → &gt;
+    4. " → &quot;
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>session recap · 2026-05-31</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --green: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(720px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    /* ── Hero content: narrative + accomplishments ── */
+    .content {
+      padding: 22px 28px 8px;
+    }
+
+    .narrative {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .accomplishments {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .accomplishments li {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .accomplishments li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ── Demoted metrics strip ── */
+    .metrics-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .metric {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric b {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric b.accent { color: var(--accent); }
+    .metric b.green  { color: var(--green); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-tag {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-accent {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(720px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="header-text">
+        <h1>session recap · 2026-05-31</h1>
+      </div>
+      <div class="model-badge">sonnet-4-6</div>
+    </div>
+
+    <div class="content">
+      <p class="narrative">Diagnosed accidental commits to main via git reflog, safely reset local main to origin/main, and confirmed a PreToolUse hook blocking commits to protected branches is already in place and verified working.</p>
+      <ul class="accomplishments"><li>Traced root cause via git reflog — feature commits landed on main before the branch was created</li>
+<li>Safely reset local main to origin/main without losing feature branch work</li>
+<li>Confirmed existing PreToolUse hook blocks git commit on main/master/primary</li>
+<li>Pipe-tested the hook to verify exit code 1 fires with a clear warning message</li></ul>
+    </div>
+
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">16,336</b> tokens</span>
+      <span class="metric"><b>12 min</b></span>
+      <span class="metric"><b class="green">92.8%</b> cache hit</span>
+      <span class="metric"><b>0</b> files</span>
+      <span class="metric"><b>0</b> commits</span>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-tag">Claude Code · session recap</span>
+      <span class="footer-accent">github.com/shawn-sandy/agentics</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Just spent 12 minutes diagnosing a git mystery — and `git reflog` had the full answer.
+
+A feature branch had commits that appeared on `main`. Tracing back through the reflog showed the real sequence: both commits were made directly to `main` first, then the feature branch was created from that HEAD. From the remote’s perspective everything looked fine — but locally, `main` was 2 commits ahead of `origin/main`.
+
+What the session covered:
+• Traced root cause via `git reflog --all` — feature commits landed on main before the branch was created
+• Safely reset local `main` to `origin/main` without losing any work
+• Verified the existing PreToolUse hook blocking `git commit` on main/master/primary was correctly configured — pipe-tested with a mocked stdin payload to confirm exit code 1 fires
+
+The hook was already there. This was a pre-existing issue from before it was configured. That’s the thing about defensive tooling: it prevents future mistakes, not past ones.
+
+12 min · 16,336 tokens · 92.8% cache hit
+
+Follow along for more Claude Code git workflow deep-dives.
+
+#ClaudeCode #GitWorkflow #DeveloperTools #AIAssistedDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">`git reflog` diagnosed the whole thing in one command — commits landed on main before the feature branch existed. Reset, verified the PreToolUse guard was already blocking it, moved on. The reflog never lies. #ClaudeCode #git</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">git reflog is the right tool when you need to know exactly what happened and when. Used it to trace commits that landed on main before a feature branch existed — cleaned it up, confirmed a PreToolUse hook was already blocking future occurrences. #ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">One thing AI-assisted workflows don’t change: understanding what git actually did.
+
+This session: commits had landed on main before the feature branch was created. `git reflog` showed the exact sequence. A `git reset --hard origin/main` cleaned it up with no work lost.
+
+The interesting detail: a PreToolUse hook blocking commits to main was already in place and pipe-tested as working. The incident predated the safeguard — a good reminder that tooling prevents future mistakes, not past ones.
+
+12 min · 92.8% cache hit — more Claude Code git patterns coming.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

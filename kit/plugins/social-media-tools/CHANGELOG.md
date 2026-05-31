@@ -1,5 +1,18 @@
 # Changelog — social-media-tools
 
+## v2.4.0 — 2026-05-31 — Centralize user gate inside security-scrub
+
+### Added
+
+- `security-scrub`: added Step 6 (User Gate) — after emitting the SCRUB RESULT block, the skill now gates based on severity: BLOCKED hard-stops with no Continue option; WARN and PASS-with-LOW present an `AskUserQuestion`; clean PASS auto-proceeds without prompting. All callers get consistent gating behavior automatically.
+- `security-scrub`: added `AskUserQuestion` to `allowed-tools`.
+
+### Changed
+
+- `share-session`: removed the redundant post-scrub `AskUserQuestion` gate (previously added in v2.3.2) and the "BLOCKED = hard stop" documentation from Phase 2 — both are now enforced inside `security-scrub`. Callers now check the `GATE RESULT` line instead of parsing `SCRUB RESULT` themselves.
+
+---
+
 ## v2.3.2 — 2026-05-30 — Prompt to continue after security scrub
 
 ### Fixed
