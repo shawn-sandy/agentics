@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.14.1 — 2026-05-31 — Fix MultiEdit path extraction and bundle build-index.sh
+
+### Fixed
+
+- **P2 — MultiEdit `file_path`**: `file_path` is a top-level key on `tool_input` for all tool types including `MultiEdit`; the previous code incorrectly read it from inside `edits[0]`, causing MultiEdit events to always produce an empty path and exit without rebuilding.
+- **P1 — Bundle `build-index.sh` with plugin**: `docs/plans/build-index.sh` is not shipped inside the `plan-agent` plugin directory, so consumer projects that install via the marketplace had no rebuild script and the hook silently exited. Added `hooks/build-index.sh` (identical logic, accepts `PROJECT_ROOT` as `$1`) and updated the hook to prefer the bundled copy via `$CLAUDE_PLUGIN_ROOT`, falling back to a local `build-index.sh` in the plans directory for projects that have it.
+
+---
+
+## v0.14.0 — 2026-05-30 — Add PostToolUse hook to auto-rebuild plans index
+
+### Added
+
+- **`hooks/rebuild-plans-index.py`** — PostToolUse hook that fires on every `Write|Edit` to a non-`index.html` `.html` file inside the configured plans directory. Calls `docs/plans/build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
+- **`docs/plans/build-index.sh`** — self-contained shell entry point that regenerates `docs/plans/index.html` without Claude. Finds the `plans-gallery.html` template via the same plugin-discovery strategy as `plans-library`; falls back to a minimal embedded styled gallery if the template is unavailable.
+- Registered `rebuild-plans-index.py` as a second `PostToolUse` entry in `hooks.json` with `Write|Edit` matcher and a 30-second timeout.
+
 ## v0.13.0 — 2026-05-31 — Add plans-library skill and gallery template
 
 ### Added
