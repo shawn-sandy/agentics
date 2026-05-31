@@ -181,10 +181,9 @@ Then invoke:
 Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
 ```
 
-Parse the returned `SCRUB RESULT` block:
-- `BLOCKED` → report masked findings, **STOP.**
-- `WARN` → surface the warning, ask the user to confirm before continuing.
-- `PASS` → use `AskUserQuestion` to ask: "Security scrub passed — proceed with generating the recap card?" Continue only if the user confirms.
+Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
+- `GATE RESULT: BLOCKED` or `GATE RESULT: CANCELLED` → **STOP.** Do not proceed to Phase 3.
+- `GATE RESULT: APPROVED` → proceed to Phase 3.
 
 ---
 

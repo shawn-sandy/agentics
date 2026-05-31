@@ -1,7 +1,7 @@
 ---
 name: security-scrub
 description: "Scans code and diffs for secrets and sensitive data. Detects credentials, tokens, and PII to prevent leaks before sharing. Use when the user asks to check for secrets or review a diff for leaks."
-allowed-tools: Bash, Read, Grep
+allowed-tools: AskUserQuestion, Bash, Read, Grep
 ---
 
 # security-scrub
@@ -10,7 +10,7 @@ Scan content for secrets and sensitive data. Produces a structured `SCRUB RESULT
 
 ## Overview
 
-Five mandatory steps — none can be skipped. The caller (human or skill) provides the content to scan either as inline text or a file path.
+Six mandatory steps — none can be skipped. The caller (human or skill) provides the content to scan either as inline text or a file path.
 
 ## Step 1 — Load rules
 
@@ -81,3 +81,33 @@ Findings: none
 **`ALLOWLIST verdict: BLOCKED`** when the content originates from a blocked file path (see file-path block list). This overrides `SCRUB RESULT: PASS`.
 
 Callers must treat `SCRUB RESULT: BLOCKED` or `ALLOWLIST verdict: BLOCKED` as a hard stop — do not proceed with sharing.
+
+## Step 6 — User gate
+
+After emitting the SCRUB RESULT block, apply the appropriate gate based on the result. Emit a `GATE RESULT` line at the end so callers have a machine-readable signal.
+
+**BLOCKED** (`SCRUB RESULT: BLOCKED` or `ALLOWLIST verdict: BLOCKED`):
+- Do NOT call `AskUserQuestion`.
+- Output: `GATE RESULT: BLOCKED — hard stop. Sharing is not permitted.`
+- Return immediately. The caller must not proceed.
+
+**WARN** (MEDIUM findings, no HIGH):
+- Call `AskUserQuestion` with one question:
+  - Header: `Security warning`
+  - Question: `The security scan found potential issues (see MEDIUM findings above). Are you sure you want to continue?`
+  - Options: `Continue anyway` (description: "Proceed despite warnings — review findings first") / `Cancel — stop here` (description: "Abort sharing; no content will be sent")
+- If user selects **Cancel**: output `GATE RESULT: CANCELLED — user declined to proceed.` and return.
+- If user selects **Continue anyway**: output `GATE RESULT: APPROVED.` and return.
+
+**PASS with LOW findings only**:
+- Call `AskUserQuestion` with one question:
+  - Header: `Scrub passed`
+  - Question: `Security scan passed with informational notes (see LOW findings above). Continue?`
+  - Options: `Continue` (description: "Proceed with sharing") / `Cancel` (description: "Abort sharing")
+- If user selects **Cancel**: output `GATE RESULT: CANCELLED — user declined to proceed.` and return.
+- If user selects **Continue**: output `GATE RESULT: APPROVED.` and return.
+
+**PASS with no findings**:
+- Do NOT call `AskUserQuestion`.
+- Output: `GATE RESULT: APPROVED (clean — auto-proceeding).`
+- Return immediately.
