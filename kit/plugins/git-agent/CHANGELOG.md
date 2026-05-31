@@ -2,9 +2,12 @@
 
 ## v3.9.3 — Fix subagent_type namespace qualification in background commands
 
-- `commit-bg`, `pr-bg`, and `ship-bg` now pass a fully-qualified
-  `subagent_type` (`plugin:git-agent/...`) so the background agent
-  resolves correctly when invoked from the marketplace.
+- `commit-bg`, `pr-bg`, and `ship-bg` now dispatch with fully-qualified
+  `subagent_type` values so agents resolve correctly when the plugin is
+  installed from the marketplace:
+  - `commit-bg`: `agent-commit` → `git-agent:agent-commit`
+  - `pr-bg`: `agent-pr` → `git-agent:agent-pr`
+  - `ship-bg`: `agent-ship` → `git-agent:agent-ship`
 
 ## v3.9.2 — README: sync usage documentation; split provider-specific CLI requirements
 
