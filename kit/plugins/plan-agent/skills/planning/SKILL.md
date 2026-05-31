@@ -146,9 +146,9 @@ Follow these steps exactly.
      - `Implement now` — Begin implementing the plan steps in the current session.
      - `Exit — I'll implement later` — Stop here; no further action.
 
-   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update the plan's `<meta name="plan-status">` to `in-progress` as work begins, then `completed` when all steps are done. Commit the updated plan file after implementation finishes.
+   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 7's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
 
-   **If the user chooses `Exit`:** Stop immediately. Do not start any implementation work. The plan remains at `status: todo`.
+   **If the user chooses `Exit`:** Stop immediately. Do not start any implementation work. The plan stays at `todo` — no status update is needed; all three representations (`<html data-status>`, `<meta name="plan-status">`, and badge text) were set to `todo` at creation and remain there until implementation begins.
 
 ## Required Structure
 
