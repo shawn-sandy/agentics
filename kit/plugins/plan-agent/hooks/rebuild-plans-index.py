@@ -2,8 +2,8 @@
 """
 PostToolUse hook: auto-rebuild docs/plans/index.html after any plan HTML write.
 
-Fires on every Write/Edit. Triggers only when the written file is a .html file
-inside the configured plans directory that is NOT index.html.
+Fires on every Write/Edit/MultiEdit. Triggers only when the written file is a
+.html file inside the configured plans directory that is NOT index.html.
 Calls docs/plans/build-index.sh (relative to the project root / cwd).
 Always exits 0 — index-rebuild failures must never block plan writes.
 """
@@ -11,6 +11,7 @@ Always exits 0 — index-rebuild failures must never block plan writes.
 import hashlib
 import json
 import os
+import stat
 import subprocess
 import sys
 import time
@@ -20,23 +21,38 @@ _DEBOUNCE_SECS = 2.0
 
 
 def _stamp_path():
-    """Per-project stamp file so concurrent sessions in different repos don't suppress each other."""
+    """Per-user per-project stamp in ~/.cache — avoids /tmp symlink attacks."""
+    base = os.environ.get("XDG_CACHE_HOME") or os.path.join(
+        os.path.expanduser("~"), ".cache"
+    )
+    d = os.path.join(base, "claude-plan-agent")
+    os.makedirs(d, mode=0o700, exist_ok=True)
     cwd_hash = hashlib.md5(os.getcwd().encode()).hexdigest()[:8]
-    return f"/tmp/rebuild-plans-index-{cwd_hash}.stamp"
+    return os.path.join(d, f"rebuild-plans-index-{cwd_hash}.stamp")
 
 
 def _debounced(stamp):
     """Return True if a rebuild completed within _DEBOUNCE_SECS seconds."""
     try:
-        return (time.time() - os.path.getmtime(stamp)) < _DEBOUNCE_SECS
+        st = os.lstat(stamp)
+        if not stat.S_ISREG(st.st_mode):
+            return False
+        return (time.time() - st.st_mtime) < _DEBOUNCE_SECS
     except OSError:
         return False
 
 
 def _touch(stamp):
     try:
-        with open(stamp, "w") as fh:
-            fh.write("")
+        fd = os.open(stamp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.close(fd)
+    except OSError:
+        pass
+
+
+def _unlink(stamp):
+    try:
+        os.unlink(stamp)
     except OSError:
         pass
 
@@ -74,9 +90,7 @@ def _is_plan_html(path, plans_dir):
         return False
     abs_plans = plans_dir if os.path.isabs(plans_dir) else os.path.abspath(plans_dir)
     abs_path = os.path.abspath(path)
-    abs_plans = abs_plans.replace(os.sep, "/").rstrip("/")
-    abs_path = abs_path.replace(os.sep, "/")
-    return abs_path.startswith(abs_plans + "/")
+    return abs_path.startswith(abs_plans.rstrip("/") + "/")
 
 
 def main():
@@ -85,8 +99,19 @@ def main():
     except (json.JSONDecodeError, ValueError):
         sys.exit(0)
 
-    path = (data.get("tool_input") or {}).get("file_path", "")
+    tool_name = data.get("tool_name", "")
+    tool_input = data.get("tool_input") or {}
+    if tool_name == "MultiEdit":
+        edits = tool_input.get("edits") or []
+        path = edits[0].get("file_path", "") if edits else ""
+    else:
+        path = tool_input.get("file_path", "")
+
     if not path:
+        sys.exit(0)
+
+    # cheap check before any I/O — skips settings reads for non-HTML writes
+    if not path.endswith(".html") or os.path.basename(path) == "index.html":
         sys.exit(0)
 
     plans_dir = _get_plans_dir()
@@ -100,17 +125,21 @@ def main():
     stamp = _stamp_path()
     if _debounced(stamp):
         sys.exit(0)
-    _touch(stamp)
+    _touch(stamp)  # written early to prevent concurrent runs
 
+    success = False
     try:
-        subprocess.run(
+        result = subprocess.run(
             ["bash", build_script],
-            cwd=os.getcwd(),
             timeout=25,
             capture_output=True,
         )
+        success = result.returncode == 0
     except Exception:
         pass
+
+    if not success:
+        _unlink(stamp)  # allow immediate retry after a failed rebuild
 
     sys.exit(0)
 
