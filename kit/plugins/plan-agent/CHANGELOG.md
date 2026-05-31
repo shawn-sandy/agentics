@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.14.1 — 2026-05-31 — Fix MultiEdit path extraction and bundle build-index.sh
+
+### Fixed
+
+- **P2 — MultiEdit `file_path`**: `file_path` is a top-level key on `tool_input` for all tool types including `MultiEdit`; the previous code incorrectly read it from inside `edits[0]`, causing MultiEdit events to always produce an empty path and exit without rebuilding.
+- **P1 — Bundle `build-index.sh` with plugin**: `docs/plans/build-index.sh` is not shipped inside the `plan-agent` plugin directory, so consumer projects that install via the marketplace had no rebuild script and the hook silently exited. Added `hooks/build-index.sh` (identical logic, accepts `PROJECT_ROOT` as `$1`) and updated the hook to prefer the bundled copy via `$CLAUDE_PLUGIN_ROOT`, falling back to a local `build-index.sh` in the plans directory for projects that have it.
+
+---
+
 ## v0.14.0 — 2026-05-30 — Add PostToolUse hook to auto-rebuild plans index
 
 ### Added

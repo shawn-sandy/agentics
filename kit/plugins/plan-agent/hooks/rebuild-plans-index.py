@@ -4,7 +4,8 @@ PostToolUse hook: auto-rebuild docs/plans/index.html after any plan HTML write.
 
 Fires on every Write/Edit/MultiEdit. Triggers only when the written file is a
 .html file inside the configured plans directory that is NOT index.html.
-Calls docs/plans/build-index.sh (relative to the project root / cwd).
+Prefers hooks/build-index.sh bundled with the plugin (via $CLAUDE_PLUGIN_ROOT);
+falls back to build-index.sh in the project's plans directory.
 Always exits 0 — index-rebuild failures must never block plan writes.
 """
 
@@ -99,13 +100,8 @@ def main():
     except (json.JSONDecodeError, ValueError):
         sys.exit(0)
 
-    tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input") or {}
-    if tool_name == "MultiEdit":
-        edits = tool_input.get("edits") or []
-        path = edits[0].get("file_path", "") if edits else ""
-    else:
-        path = tool_input.get("file_path", "")
+    path = tool_input.get("file_path", "")
 
     if not path:
         sys.exit(0)
@@ -118,8 +114,17 @@ def main():
     if not _is_plan_html(path, plans_dir):
         sys.exit(0)
 
-    build_script = os.path.join(os.getcwd(), plans_dir, "build-index.sh")
-    if not os.path.isfile(build_script):
+    # Prefer bundled script shipped with the plugin; fall back to one in the
+    # consumer's plans dir (present in projects that adopted the earlier layout).
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
+    bundled = os.path.join(plugin_root, "hooks", "build-index.sh") if plugin_root else ""
+    plans_script = os.path.join(os.getcwd(), plans_dir, "build-index.sh")
+
+    if bundled and os.path.isfile(bundled):
+        build_cmd = ["bash", bundled, os.getcwd()]
+    elif os.path.isfile(plans_script):
+        build_cmd = ["bash", plans_script]
+    else:
         sys.exit(0)
 
     stamp = _stamp_path()
@@ -130,7 +135,7 @@ def main():
     success = False
     try:
         result = subprocess.run(
-            ["bash", build_script],
+            build_cmd,
             timeout=25,
             capture_output=True,
         )
