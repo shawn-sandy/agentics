@@ -184,6 +184,7 @@ Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.cla
 Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
 - `GATE RESULT: BLOCKED` or `GATE RESULT: CANCELLED` → **STOP.** Do not proceed to Phase 3.
 - `GATE RESULT: APPROVED` → proceed to Phase 3.
+- Missing or unrecognized `GATE RESULT` → **STOP** and report an error (treat as gate failure).
 
 ---
 
