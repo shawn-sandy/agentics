@@ -13,7 +13,7 @@ wait for it to finish.
 ## Instructions
 
 1. Invoke the `Agent` tool with:
-   - `subagent_type: "agent-ship"`
+   - `subagent_type: "git-agent:agent-ship"`
    - `run_in_background: true`
    - `description: "Background ship"`
    - `prompt`: A self-contained instruction telling the agent to stage,

@@ -124,6 +124,8 @@ Follow these steps exactly.
 7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
 8. **Open** — After committing, deliver the plan and verify rendering. This step is mandatory — do not skip it.
 
+   After all sub-steps of Step 8 complete, proceed immediately to Step 9 — do not stop here.
+
    **Try browser verification first:**
    1. Load the browser tools via `ToolSearch` with `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer`. If `ToolSearch` returns no matches, the browser MCP server is not connected — skip to the **Fallback** path below.
    2. Find a free port: run `python3 -c "import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()"` and capture the output as `<port>`.
@@ -135,6 +137,18 @@ Follow these steps exactly.
    8. Report the URL (`http://localhost:<port>/<plan-filename>`) to the user. Leave the server running so the user can continue browsing.
 
    **Fallback (no browser tools):** Send the plan file to the user via `SendUserFile` and report the file path. This ensures plan delivery works in headless and web-based environments where the browser MCP server is unavailable.
+
+9. **Implement or Exit** — After Step 8 completes, always ask the user whether to implement the plan or stop.
+
+   Use `AskUserQuestion` with a single question:
+   - Question: "The plan is complete and committed. What would you like to do next?"
+   - Options:
+     - `Implement now` — Begin implementing the plan steps in the current session.
+     - `Exit — I'll implement later` — Stop here; no further action.
+
+   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 7's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
+
+   **If the user chooses `Exit`:** Stop immediately. Do not start any implementation work. The plan stays at `todo` — no status update is needed; all three representations (`<html data-status>`, `<meta name="plan-status">`, and badge text) were set to `todo` at creation and remain there until implementation begins.
 
 ## Required Structure
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.16.0 — 2026-05-31 — Fix Step 9 status sync and commit instructions
+
+### Fixed
+
+- **Step 9 `Implement now` — status sync**: Now updates all three status representations together (`<html data-status>`, `<meta name="plan-status">`, and visible badge text), mirroring Step 7's sync rules. Previously only `<meta name="plan-status">` was mentioned.
+- **Step 9 `Implement now` — commit instruction**: Now explicitly commits source file changes together with the updated plan file. Previously only the plan file was mentioned, leaving source changes potentially uncommitted.
+- **Step 9 `Exit` — state model clarity**: Clarifies that `todo` is the correct terminal state for an unimplemented plan and that no status update is needed on exit, resolving ambiguity with Step 7's `todo → in-progress → completed` progression.
+
+---
+
 ## v0.15.0 — 2026-05-31 — Add issue ingestion to /plan-agent:planning
 
 ### Added

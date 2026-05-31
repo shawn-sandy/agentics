@@ -12,7 +12,7 @@ be created while they keep working — do not wait for it to finish.
 ## Instructions
 
 1. Invoke the `Agent` tool with:
-   - `subagent_type: "agent-pr"`
+   - `subagent_type: "git-agent:agent-pr"`
    - `run_in_background: true`
    - `description: "Background PR creation"`
    - `prompt`: A self-contained instruction telling the agent to push the
