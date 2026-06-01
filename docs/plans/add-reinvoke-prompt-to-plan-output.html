@@ -120,19 +120,18 @@
   .plan-meta .icon { opacity: .55; }
   /* Re-invoke prompt */
   .plan-reinvoke {
-    display: flex; align-items: center; gap: .6rem;
-    margin-top: .75rem; padding: .45rem .75rem;
+    display: flex; align-items: flex-start; gap: .6rem;
+    margin-bottom: 1.5rem; padding: .45rem .75rem;
     background: var(--grey-bg); border: 1px solid var(--border);
-    border-radius: var(--radius); font-size: .8rem; overflow: hidden;
+    border-radius: var(--radius); font-size: .8rem;
   }
   .plan-reinvoke-label {
     font-size: .65rem; font-weight: 700; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--subtle); flex-shrink: 0;
+    text-transform: uppercase; color: var(--subtle); flex-shrink: 0; margin-top: .1rem;
   }
   .plan-reinvoke code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem; color: var(--accent); flex: 1;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: .82rem; color: var(--accent); flex: 1; word-break: break-all;
   }
   .copy-cmd-btn {
     display: inline-flex; align-items: center; gap: .3rem;
@@ -145,6 +144,7 @@
   .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
   .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .copy-cmd-btn { display: none !important; } .plan-reinvoke { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
   /* Layout */
