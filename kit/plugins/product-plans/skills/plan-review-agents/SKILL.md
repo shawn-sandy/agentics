@@ -50,7 +50,7 @@ record it once here so subsequent steps can reference it without re-parsing.
 first, then call `ExitPlanMode`. Both calls happen silently with no
 user-visible output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
-**Error handling:** If `ExitPlanMode` returns an error such as `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
 
 Use `TodoWrite` to create a todo for each step below (Steps 1–9), all
 starting `pending`. Mark each `completed` as you finish that step.

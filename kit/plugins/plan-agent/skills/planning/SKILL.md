@@ -62,7 +62,7 @@ Follow these steps exactly.
 
    Two-step sequence: (1) `ToolSearch(select:ExitPlanMode)` silently, (2) `ExitPlanMode` silently. No user-visible output from either step.
 
-   **Error handling:** If `ExitPlanMode` returns an error such as `"You are not in plan mode"`, treat that as **success** — plan mode was already off, which is the desired state. Do not abort or surface the error to the user; continue immediately to Step 0.5 / Step 0b.
+   **Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off, which is the desired state. Do not abort or surface the error to the user; continue immediately to Step 0.5 / Step 0b.
 
 0.5. **Issue Ingestion** *(skip entirely when no issue reference was detected in Step 0 argument parsing)*
 
