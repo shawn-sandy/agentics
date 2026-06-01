@@ -1,5 +1,13 @@
 # Changelog — git-agent
 
+## v3.10.1 — 2026-06-01 — Minor wording corrections
+
+### Fixed
+
+- `ship-autonomous` skill: minor description wording corrections.
+
+---
+
 ## v3.10.0 — Auto-link plan issue references in PR descriptions
 
 - PR creation now scans plan files changed on the branch for

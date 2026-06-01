@@ -1,6 +1,55 @@
 <!DOCTYPE html>
 <!--
   session-card.html — Dark-mode session recap card for social posts.
+
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
+    session recap · 2026-05-31          — Session title (e.g. "session recap · 2026-05-28")
+    sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
+    Managed Claude Code remote agent routines — listed all 3 scheduled agents and upgraded acc-docs-sync to auto-merge PRs once CI checks pass.      — 1–2 sentence summary of what the session accomplished
+    <li>Listed 3 active routines: backup watchdog, acc-docs-sync, and weekly plan docs sweep</li>
+<li>Diagnosed vague &quot;subscribe to activity&quot; language causing silent non-merges in acc-docs-sync</li>
+<li>Rewrote prompt with explicit gh pr checks polling loop (60s intervals, 20-attempt max)</li>
+<li>Added gh pr merge --squash --auto to fire automatically after all CI checks pass</li>— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    8,407   — Total tokens formatted with commas (e.g. "42,180")
+    81.6% — Cache hit rate (e.g. "44.2%")
+    22 min       — Session duration (e.g. "47 min")
+    0  — Files changed count (e.g. "12")
+    0        — Commits in session (e.g. "3")
+    <div class="copy-panel">
+  <p class="copy-label">Social media post</p>
+  <textarea readonly class="post-copy-text" id="post-copy">Just fixed a Claude Code remote routine that was silently not doing its job.
+
+The `acc-docs-sync` agent was told to "subscribe to its activity and merge it automatically once CI checks pass." Sounds right. Doesn't work — the agent creates the PR, then exits. No one's watching.
+
+The fix: replace the vague instruction with an explicit polling loop.
+
+The agent now:
+→ Polls `gh pr checks` every 60 seconds
+→ Waits up to 20 minutes for CI to pass
+→ Merges with `--squash --auto` when all checks are green
+→ Applies any CodeRabbit fixes and re-polls if needed
+→ Reports status and leaves the PR open if CI times out
+
+This is a pattern worth remembering: remote agents don't have persistent sessions. If you want "wait for X then do Y," the prompt needs to spell out the polling loop — the agent can't subscribe to anything after it exits.
+
+0 commits · 0 files · 8,407 tokens · 81.6% cache hit · 22 min
+
+Follow for more Claude Code automation patterns and remote agent workflows.
+
+#ClaudeCode #AIAutomation #DevOps #RemoteAgents</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+</div>    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
+    1. & → &amp;  ← first, prevents double-escaping
+    2. < → &lt;
+    3. > → &gt;
+    4. " → &quot;
 -->
 <html lang="en">
 <head>
@@ -76,6 +125,7 @@
       margin-top: 2px;
     }
 
+    /* ── Hero content: narrative + accomplishments ── */
     .content {
       padding: 22px 28px 8px;
     }
@@ -110,6 +160,7 @@
       font-weight: 700;
     }
 
+    /* ── Demoted metrics strip ── */
     .metrics-strip {
       display: flex;
       flex-wrap: wrap;
@@ -153,6 +204,7 @@
       font-weight: 500;
     }
 
+    /* ── Copy panel ── */
     .copy-panel {
       width: min(720px, 100%);
       background: #161b22;
@@ -161,6 +213,8 @@
       padding: 16px;
       box-sizing: border-box;
     }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
 
     .copy-label {
       color: #8b949e;
@@ -207,22 +261,19 @@
     </div>
 
     <div class="content">
-      <p class="narrative">Shipped feat/kit-plan-agent-ingestion-2026-05-31 as PR #206 — adding issue ingestion to plan-agent:planning and centralizing the user gate in social-media-tools security-scrub (v2.4.0). Recovered a missing plan file via cherry-pick from a stale branch.</p>
-      <ul class="accomplishments">
-        <li>Opened PR #206: plan-agent issue ingestion + social-media-tools v2.4.0</li>
-        <li>Added GitHub/GitLab issue ingestion to /plan-agent:planning skill</li>
-        <li>Centralized security-scrub user gate in social-media-tools (v2.4.0)</li>
-        <li>Cherry-picked missing plan file commit to keep PR #206 complete</li>
-        <li>Identified and resolved stale branch with 6 unshipped commits</li>
-      </ul>
+      <p class="narrative">Managed Claude Code remote agent routines — listed all 3 scheduled agents and upgraded acc-docs-sync to auto-merge PRs once CI checks pass.</p>
+      <ul class="accomplishments"><li>Listed 3 active routines: backup watchdog, acc-docs-sync, and weekly plan docs sweep</li>
+<li>Diagnosed vague &quot;subscribe to activity&quot; language causing silent non-merges in acc-docs-sync</li>
+<li>Rewrote prompt with explicit gh pr checks polling loop (60s intervals, 20-attempt max)</li>
+<li>Added gh pr merge --squash --auto to fire automatically after all CI checks pass</li></ul>
     </div>
 
     <div class="metrics-strip">
-      <span class="metric"><b class="accent">7,116</b> tokens</span>
-      <span class="metric"><b>17 min</b></span>
-      <span class="metric"><b class="green">89.9%</b> cache hit</span>
-      <span class="metric"><b>14</b> files</span>
-      <span class="metric"><b>3</b> commits</span>
+      <span class="metric"><b class="accent">8,407</b> tokens</span>
+      <span class="metric"><b>22 min</b></span>
+      <span class="metric"><b class="green">81.6%</b> cache hit</span>
+      <span class="metric"><b>0</b> files</span>
+      <span class="metric"><b>0</b> commits</span>
     </div>
 
     <div class="card-footer">
@@ -231,22 +282,29 @@
     </div>
   </div>
   <div class="copy-panel">
-    <label class="copy-label" for="post-copy">Social media post</label>
-    <textarea readonly class="post-copy-text" id="post-copy">Just shipped PR #206 in a 17-minute Claude Code session — adding issue ingestion to the plan-agent:planning skill and centralizing the security-scrub user gate across all social-media-tools.
+  <label class="copy-label" for="post-copy">Social media post</label>
+  <textarea readonly class="post-copy-text" id="post-copy">Just fixed a Claude Code remote routine that was silently not doing its job.
 
-What got done:
+The `acc-docs-sync` agent was told to "subscribe to its activity and merge it automatically once CI checks pass." Sounds right. Doesn't work — the agent creates the PR, then exits. No one's watching.
 
-→ Issue ingestion wired into /plan-agent:planning — planning now reads open GitHub/GitLab issues as context before generating a plan
-→ Centralized the user confirmation gate in security-scrub (v2.4.0), honoring it consistently across all callers
-→ Recovered a missing plan file commit via cherry-pick from a stale branch — PR #206 fully complete
+The fix: replace the vague instruction with an explicit polling loop.
 
-3 commits · 14 files · 7,116 tokens · 89.9% cache hit · 17 min
+The agent now:
+→ Polls `gh pr checks` every 60 seconds
+→ Waits up to 20 minutes for CI to pass
+→ Merges with `--squash --auto` when all checks are green
+→ Applies any CodeRabbit fixes and re-polls if needed
+→ Reports status and leaves the PR open if CI times out
 
-More on building with Claude Code plugins coming — follow along.
+This is a pattern worth remembering: remote agents don't have persistent sessions. If you want "wait for X then do Y," the prompt needs to spell out the polling loop — the agent can't subscribe to anything after it exits.
 
-#ClaudeCode #AIEngineering #DevTools</textarea>
-    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-  </div>
+0 commits · 0 files · 8,407 tokens · 81.6% cache hit · 22 min
+
+Follow for more Claude Code automation patterns and remote agent workflows.
+
+#ClaudeCode #AIAutomation #DevOps #RemoteAgents</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+</div>
   <script>
     function copyPost(id, btn) {
       var t = document.getElementById(id);

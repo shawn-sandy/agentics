@@ -22,7 +22,7 @@ Discover what's worth sharing from your code.
 
 ### Step 0 — Exit plan mode
 
-`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps happen silently with no user-visible output. This is a no-op when plan mode is already off.
+`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps happen silently with no user-visible output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
 ### Step 1 — Run share-scan
 

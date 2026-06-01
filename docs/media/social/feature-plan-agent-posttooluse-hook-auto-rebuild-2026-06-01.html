@@ -1,24 +1,9 @@
 <!DOCTYPE html>
-<!--
-  feature-card.html — Dark-mode feature/release announcement card for social posts.
-
-  Variables to substitute:
-    {{TITLE}}         — Main headline (e.g. social-media-tools plugin v0.1.0)
-    {{SUBTITLE}}      — Supporting line (e.g. Now in the agentics marketplace)
-    {{BADGE}}         — Short label for top badge and footer (e.g. New Plugin, v1.2.0)
-    {{BULLETS}}       — HTML <li> elements, one per feature — no wrapping <ul> needed
-    {{FOOTER_NOTE}}    — Footer left side (e.g. github.com/shawn-sandy/agentics)
-  {{COPY_PANELS}} — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
-
-  Bullet format:
-    <li>Draft LinkedIn, Twitter/X, and Bluesky copy in one command</li>
-    <li>Generates styled dark-mode visual cards via Playwright</li>
--->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{TITLE}}</title>
+  <title>plan-agent PostToolUse auto-rebuild hook</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -110,7 +95,7 @@
     }
 
     .bullets li::before {
-      content: '→';
+      content: '\2192';
       color: var(--bullet-accent);
       flex-shrink: 0;
       margin-top: 1px;
@@ -137,7 +122,7 @@
       font-weight: 500;
     }
 
-    /* ── Copy panel ── */
+    /* Copy panel */
     .copy-panel {
       width: min(1024px, 100%);
       background: #161b22;
@@ -146,8 +131,6 @@
       padding: 16px;
       box-sizing: border-box;
     }
-
-    .copy-panel + .copy-panel { margin-top: 0; }
 
     .copy-label {
       color: #8b949e;
@@ -182,26 +165,41 @@
     }
 
     .copy-btn:hover { background: #2ea043; }
+
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; color: #79c0ff; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="card-header">
-      <div class="badge">{{BADGE}}</div>
-      <h1>{{TITLE}}</h1>
-      <p class="subtitle">{{SUBTITLE}}</p>
+      <div class="badge">New Hook &#xB7; v0.14.1</div>
+      <h1>plan-agent PostToolUse auto-rebuild hook</h1>
+      <p class="subtitle">Plans gallery stays fresh after every write &#x2014; no manual rebuilds needed</p>
     </div>
 
     <ul class="bullets">
-      {{BULLETS}}
+      <li>Fires on every plan HTML write via PostToolUse &#x2014; gallery index rebuilds automatically</li>
+      <li>2-second debounce prevents redundant rebuilds during rapid sequential edits</li>
+      <li>Symlink-safe stamp files via <code>os.lstat</code> + XDG_CACHE_HOME per-project path</li>
+      <li>Always exits 0 &#x2014; a failed index rebuild can never block a plan write</li>
     </ul>
 
     <div class="card-footer">
-      <span class="footer-note">{{FOOTER_NOTE}}</span>
-      <span class="footer-badge">{{BADGE}}</span>
+      <span class="footer-note">github.com/shawn-sandy/agentics</span>
+      <span class="footer-badge">New Hook &#xB7; v0.14.1</span>
     </div>
   </div>
-  {{COPY_PANELS}}
+
+  <div class="copy-panel">
+    <label class="copy-label" for="post-copy">Twitter/X</label>
+    <textarea readonly class="post-copy-text" id="post-copy">The plans gallery now rebuilds itself.
+
+PostToolUse hook fires on every plan HTML write &#x2192; 2s debounce &#x2192; build-index.sh. Symlink-safe stamps, exits 0 always.
+
+Rebuild failures can&#x27;t block plan writes. Follow for more Claude Code plugin patterns. #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+
   <script>
     function copyPost(id, btn) {
       var t = document.getElementById(id);
@@ -211,7 +209,9 @@
         btn.textContent = 'Copied ✓';
         setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t.value).then(done).catch(fallback);
       } else {

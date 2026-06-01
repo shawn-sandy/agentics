@@ -1,24 +1,9 @@
 <!DOCTYPE html>
-<!--
-  feature-card.html — Dark-mode feature/release announcement card for social posts.
-
-  Variables to substitute:
-    {{TITLE}}         — Main headline (e.g. social-media-tools plugin v0.1.0)
-    {{SUBTITLE}}      — Supporting line (e.g. Now in the agentics marketplace)
-    {{BADGE}}         — Short label for top badge and footer (e.g. New Plugin, v1.2.0)
-    {{BULLETS}}       — HTML <li> elements, one per feature — no wrapping <ul> needed
-    {{FOOTER_NOTE}}    — Footer left side (e.g. github.com/shawn-sandy/agentics)
-  {{COPY_PANELS}} — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
-
-  Bullet format:
-    <li>Draft LinkedIn, Twitter/X, and Bluesky copy in one command</li>
-    <li>Generates styled dark-mode visual cards via Playwright</li>
--->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{TITLE}}</title>
+  <title>issue-agent v0.2.0</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -137,7 +122,6 @@
       font-weight: 500;
     }
 
-    /* ── Copy panel ── */
     .copy-panel {
       width: min(1024px, 100%);
       background: #161b22;
@@ -187,21 +171,58 @@
 <body>
   <div class="card">
     <div class="card-header">
-      <div class="badge">{{BADGE}}</div>
-      <h1>{{TITLE}}</h1>
-      <p class="subtitle">{{SUBTITLE}}</p>
+      <div class="badge">v0.2.0</div>
+      <h1>issue-agent v0.2.0</h1>
+      <p class="subtitle">Auto-opens created issues in the browser</p>
     </div>
 
     <ul class="bullets">
-      {{BULLETS}}
+      <li>Created issues auto-open in the browser after successful CLI creation</li>
+      <li>Pass --no-open to suppress browser launch in headless or CI environments</li>
+      <li>Flag is stripped before argument parsing — never bleeds into issue title or body</li>
+      <li>Non-fatal error handling: browser failures don't mask successful issue creation</li>
     </ul>
 
     <div class="card-footer">
-      <span class="footer-note">{{FOOTER_NOTE}}</span>
-      <span class="footer-badge">{{BADGE}}</span>
+      <span class="footer-note">github.com/shawn-sandy/agentics</span>
+      <span class="footer-badge">v0.2.0</span>
     </div>
   </div>
-  {{COPY_PANELS}}
+
+  <div class="copy-panel">
+    <label class="copy-label" for="post-copy-linkedin">LinkedIn</label>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">issue-agent v0.2.0 just shipped a small but satisfying improvement: after creating a GitHub or GitLab issue, the browser opens to it automatically.
+
+No more copying the URL to check what was created. The CLI confirms creation, then `gh issue view --web` (or `glab issue view --web`) fires before handing control back.
+
+A --no-open flag opts out — useful in headless or CI environments where a browser launch would fail. The flag is stripped before argument parsing so it never bleeds into the issue title or body.
+
+Error handling is non-fatal by design: if the browser open fails, issue creation still reports success.
+
+Small DX polish for a command you run dozens of times a week.
+
+Follow for more Claude Code plugin development patterns.
+
+#ClaudeCode #DeveloperExperience #OpenSource</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+
+  <div class="copy-panel">
+    <label class="copy-label" for="post-copy-twitter">Twitter/X</label>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">issue-agent v0.2.0: created issues now auto-open in your browser.
+
+Add --no-open to suppress it in headless/CI. Flag is stripped before parsing — it never bleeds into the title.
+
+#ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+
+  <div class="copy-panel">
+    <label class="copy-label" for="post-copy-bluesky">Bluesky</label>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">issue-agent v0.2.0 auto-opens created issues in the browser. Pass --no-open to skip it in CI or headless environments. Small polish, real time saved.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+
   <script>
     function copyPost(id, btn) {
       var t = document.getElementById(id);

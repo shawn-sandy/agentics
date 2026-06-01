@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.4.4 — 2026-06-01 — Minor wording corrections
+
+### Fixed
+
+- `plan-review-agents` skill and `product-plans-bg` command: minor description wording corrections.
+
+---
+
 ## v3.4.3 — README: sync usage documentation with current skill behavior
 
 - Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.

@@ -32,7 +32,7 @@ does **not** scan git history — that is `code-share`'s job.
 
 `ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
 Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
-happen silently with no user-visible output. This is a no-op when plan mode is already off.
+happen silently with no user-visible output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
 ---
 

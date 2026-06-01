@@ -37,7 +37,7 @@ without re-parsing.
 
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
 first, then call `ExitPlanMode`. Both steps happen silently with no user-visible
-output. This is a no-op when plan mode is already off.
+output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
 Before doing any other work, use `TodoWrite` to create todos for each step of
 this interview. This gives the user visibility into progress and ensures no step

@@ -55,7 +55,7 @@
     }
 
     .card {
-      width: 640px;
+      width: min(1024px, 100%);
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -167,7 +167,7 @@
 
     /* ── Copy panel ── */
     .copy-panel {
-      width: 640px;
+      width: min(1024px, 100%);
       background: #161b22;
       border: 1px solid #30363d;
       border-radius: 8px;
@@ -241,7 +241,7 @@
         btn.textContent = 'Copied ✓';
         setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t.value).then(done).catch(fallback);
       } else {
