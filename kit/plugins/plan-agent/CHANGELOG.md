@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.18.1 — 2026-06-01 — Fix reinvoke command: strip .html token before objective extraction
+
+### Fixed
+
+- **Argument parser — `.html` plan file detection**: A leading `.html` token (e.g. `add-dark-mode-toggle.html`) is now stripped from `$ARGUMENTS` before the objective is extracted, preventing the filename from polluting the objective when the re-invoke command is pasted verbatim. The stripped value is stored as `$PLAN_FILE`; when no remaining objective text exists, the plan's existing `<title>` tag is used as the objective fallback.
+
+---
+
 ## v0.18.0 — 2026-06-01 — Add re-invoke prompt to every generated plan
 
 ### Added

@@ -19,7 +19,9 @@ Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this
 
 When a reference is detected, set an internal `$ISSUE_REF` variable and strip it from the remaining argument string. Everything left (after removing the reference and any flags) becomes the caller's extra text. If extra text is non-empty it overrides the issue title as the objective; if empty, the issue title is used as the objective. Issue ingestion runs in Step 0.5.
 
-- **Objective (required):** all text that is not a flag or issue reference. If empty after parsing (and no issue reference was detected), ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
+**Plan file reference detection (checked after issue ref detection, before objective extraction):** If the first non-flag token ends in `.html`, treat it as a plan file reference — strip it from the argument string and store it as `$PLAN_FILE`. The remaining text becomes the objective. This allows the re-invoke command (e.g. `/plan-agent:planning add-dark-mode-toggle.html add dark mode toggle`) to be pasted verbatim without the filename polluting the objective. When `$PLAN_FILE` is set and the remaining objective text is empty, attempt to read the existing plan's `<title>` tag (strip the leading "Plan: " prefix) as the objective fallback.
+
+- **Objective (required):** all text that is not a flag, issue reference, or `.html` plan file token. If empty after parsing (and no issue reference was detected), ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
 - `--quick` — shorthand for `--no-clarify --no-align --no-interview`; skips Step 1 Clarify, Step 5 Align, and Step 5b Interview.
 - `--no-clarify` — skip Step 1 Clarify only. Use when the objective is well-specified but you still want Step 5 Align.
 - `--no-align` — skip Step 5 Align only. Use when steps are pre-agreed but requirements need verification first.
