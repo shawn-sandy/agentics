@@ -152,7 +152,7 @@ For every unchecked `<input type="checkbox">` inside the acceptance-criteria sec
 ```
 
 **If the user chose `Yes, but leave unverified criteria unchecked`:**
-Only check off criteria that were marked `verified` in Step 3b. Leave `unverified` criteria unchecked. If this results in any unchecked criteria, set the plan status to `in-progress` instead of `completed` in Step 5a (override the status written above by editing it to `in-progress`).
+Only check off criteria that were marked `verified` in Step 3b. Leave `unverified` criteria unchecked — if an unverified criterion is already checked (from a prior manual check), leave it as-is (do not uncheck it). If any criteria remain unchecked after this step, override the status set in Step 5a: edit all three representations (`<html data-status>`, `<meta name="plan-status">`, and the visible badge text/class) from `completed` to `in-progress`.
 
 Do not remove or alter any surrounding markup.
 
@@ -176,7 +176,8 @@ Also update the step chip text from `todo` to `done` for each step card you mark
 Send the updated plan file to the user via `SendUserFile`.
 
 Report one of:
-- If all criteria were checked: `"Plan marked completed: <filename> — all acceptance criteria verified and checked, status updated to completed."`
+- If all criteria were verified and checked: `"Plan marked completed: <filename> — all N acceptance criteria verified and checked, status updated to completed."`
+- If the user chose "check all" but some criteria were unverified: `"Plan marked completed: <filename> — all criteria checked (N verified, K unverified), status updated to completed."` List the unverified criteria so the user is aware.
 - If unverified criteria were left unchecked: `"Plan updated: <filename> — N/M acceptance criteria verified and checked, K criteria left unchecked, status set to in-progress."` List the unchecked criteria so the user knows what remains.
 
 **STOP.** Do not commit, push, or start any implementation work.
