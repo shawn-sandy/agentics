@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.20.0 — 2026-06-01 — Add complete-plan skill
+
+### Added
+
+- **`/plan-agent:complete-plan [plan-filename.html]`** — new skill (`disable-model-invocation: true`) that reviews an HTML plan for codebase implementation evidence, presents a confirmation summary, then marks all acceptance-criteria checkboxes as checked, adds the `completed` class to every step card, and updates all three status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge) to `completed`.
+
+---
+
 ## v0.19.0 — 2026-06-01 — Replace reinvoke prompt with implement prompt
 
 ### Changed
