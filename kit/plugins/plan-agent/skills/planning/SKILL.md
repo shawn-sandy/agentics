@@ -150,7 +150,16 @@ Follow these steps exactly.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
 
-   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 6's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
+   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins.
+
+   **Acceptance criteria gate (mandatory — runs after all steps are done, before marking `completed`):**
+   1. Read each acceptance-criteria checkbox item from the plan HTML.
+   2. For each criterion, verify it is satisfied — run the relevant command, inspect the changed files, or check the codebase for the expected state described in that criterion.
+   3. Check off each criterion (`<input type="checkbox">` → `<input type="checkbox" checked>`) only after confirming it is met.
+   4. If any criterion cannot be verified, present the unverified items to the user via `AskUserQuestion`: "These acceptance criteria could not be verified:\n[numbered list]. Mark them as done anyway?" with options `Yes, check them off` / `No, leave unchecked`.
+   5. Only set status to `completed` (all three representations) after every criterion is checked. If the user chose to leave any unchecked, set status to `in-progress` instead and note which criteria remain open.
+
+   Commit the source file changes together with the updated plan file after implementation finishes.
 
    **If the user chooses `Edit the plan`:** Ask what changes to make via `AskUserQuestion` ("What would you like to change or add to the plan?"), apply the edits to the HTML plan file, re-render it in the browser (repeat the sub-steps from Step 7), then loop back to this step and ask again.
 

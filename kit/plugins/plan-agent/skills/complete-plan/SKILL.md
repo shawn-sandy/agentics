@@ -56,6 +56,8 @@ Read the HTML file. Extract:
 
 ## Step 3 — Analyze codebase for implementation evidence
 
+### 3a — Token-level evidence
+
 For each extracted token, run two checks in parallel:
 1. `Glob` — does it match a file path under `$PWD`?
 2. `Grep` — does it appear as an identifier in the codebase?
@@ -70,6 +72,14 @@ Score:
 - 1–79% found → status evidence = `in-progress`
 - 80%+ found → status evidence = `completed`
 
+### 3b — Per-criterion verification
+
+For each acceptance-criteria checkbox item, determine whether the criterion is satisfied:
+1. Extract the text of each criterion.
+2. Identify implementation tokens (file paths, identifiers, CLI flags) mentioned in or implied by that criterion.
+3. Cross-reference the tokens against the evidence collected in Step 3a — a criterion is **verified** if all its key tokens were found, or if the criterion describes a state that can be confirmed by inspecting the codebase (e.g. "No TypeScript errors" → run `tsc --noEmit`; "Tests pass" → check for test files matching the feature).
+4. Mark each criterion as `verified` or `unverified`.
+
 ---
 
 ## Step 4 — Present findings and confirm
@@ -82,19 +92,31 @@ Output a summary table:
 | File            | docs/plans/my-feature.html         |
 | Current status  | in-progress                        |
 | Evidence        | 4/5 tokens found in codebase       |
-| Checkboxes      | 2 checked / 5 total                |
+| Criteria        | 3 verified / 5 total               |
+| Checkboxes      | 2 already checked / 5 total        |
 ```
 
 List which tokens were found (with file/grep match) and which were missing.
 
+**Per-criterion breakdown:** For each acceptance criterion, show its verification status:
+- `[verified]` — evidence found or condition confirmed
+- `[unverified]` — no supporting evidence found
+
 If evidence score is below 80%, include a warning:
 > "Implementation evidence is below 80% — the plan may not be fully done. Proceeding will mark it completed anyway."
 
+If any criteria are unverified, include a second warning listing them:
+> "The following acceptance criteria could not be verified:
+> 1. <criterion text>
+> 2. <criterion text>
+> Proceeding will check them off anyway unless you choose to leave them unchecked."
+
 Ask via `AskUserQuestion`:
-> "Mark this plan as completed? This will check all acceptance-criteria boxes and update the status badge."
-- Options: `Yes, mark completed` / `No, cancel`
+> "Mark this plan as completed?"
+- Options: `Yes, check all criteria and mark completed` / `Yes, but leave unverified criteria unchecked` / `No, cancel`
 
 If the user cancels, **STOP**.
+If the user chooses to leave unverified criteria unchecked, record that choice for Step 5b.
 
 ---
 
@@ -120,11 +142,17 @@ data-status="in-progress" →  data-status="completed"
 
 ### 5b — Acceptance-criteria checkboxes
 
+Check off acceptance criteria based on the user's choice in Step 4:
+
+**If the user chose `Yes, check all criteria and mark completed`:**
 For every unchecked `<input type="checkbox">` inside the acceptance-criteria section, add the `checked` attribute:
 ```
 <input type="checkbox">           →  <input type="checkbox" checked>
 <input type="checkbox" disabled>  →  <input type="checkbox" checked disabled>
 ```
+
+**If the user chose `Yes, but leave unverified criteria unchecked`:**
+Only check off criteria that were marked `verified` in Step 3b. Leave `unverified` criteria unchecked. If this results in any unchecked criteria, set the plan status to `in-progress` instead of `completed` in Step 5a (override the status written above by editing it to `in-progress`).
 
 Do not remove or alter any surrounding markup.
 
@@ -147,7 +175,8 @@ Also update the step chip text from `todo` to `done` for each step card you mark
 
 Send the updated plan file to the user via `SendUserFile`.
 
-Report:
-> "Plan marked completed: `<filename>` — all acceptance criteria checked, status updated to `completed`."
+Report one of:
+- If all criteria were checked: `"Plan marked completed: <filename> — all acceptance criteria verified and checked, status updated to completed."`
+- If unverified criteria were left unchecked: `"Plan updated: <filename> — N/M acceptance criteria verified and checked, K criteria left unchecked, status set to in-progress."` List the unchecked criteria so the user knows what remains.
 
 **STOP.** Do not commit, push, or start any implementation work.

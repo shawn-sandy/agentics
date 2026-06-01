@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.21.0 — 2026-06-01 — Add acceptance criteria verification gate
+
+### Changed
+
+- **`planning` Step 8 "Implement now"** — added mandatory acceptance criteria gate after all steps are implemented. Each criterion is individually verified against the codebase before being checked off. Unverifiable criteria are flagged to the user; the plan stays `in-progress` unless all criteria are checked.
+- **`complete-plan` Step 3** — new sub-step 3b maps implementation evidence to individual acceptance criteria, classifying each as `verified` or `unverified`.
+- **`complete-plan` Step 4** — summary now shows per-criterion verification status and offers three completion options: check all, leave unverified unchecked, or cancel.
+- **`complete-plan` Step 5b** — respects the user's Step 4 choice: checks only verified criteria when the user opts to leave unverified ones unchecked, and downgrades status to `in-progress` accordingly.
+- **`complete-plan` Step 6** — delivery message reflects whether all criteria were verified or some remain open.
+
+---
+
 ## v0.20.0 — 2026-06-01 — Add complete-plan skill
 
 ### Added
