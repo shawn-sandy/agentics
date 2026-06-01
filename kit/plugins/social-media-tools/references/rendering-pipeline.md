@@ -33,7 +33,7 @@ Parse the `PID:N` line to capture `SERVER_PID`.
 
 Load tools via ToolSearch:
 ```
-select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for
+select:mcp__plugin_playwright_playwright__browser_resize,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for
 ```
 
 Then:

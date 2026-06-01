@@ -1,5 +1,18 @@
 # Changelog — social-media-tools
 
+## v2.4.1 — 2026-06-01 — Widen card templates to 1024px with pipeline and accessibility fixes
+
+### Changed
+
+- All 7 card templates (blog, diff, feature, quote, session, snippet, video): widened from fixed pixel widths to `min(1024px, 100%)` for better social sharing fidelity.
+- `references/rendering-pipeline.md`: added `browser_resize` to the Playwright ToolSearch selector so the resize step is callable in deferred-tool environments.
+
+### Fixed
+
+- `docs/media/social/feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html`: guarded clipboard fallback `done()` behind a successful `execCommand('copy')` to avoid false "Copied ✓" on failure; changed `<p class="copy-label">` to `<label for="post-copy">` for textarea accessibility.
+
+---
+
 ## v2.4.0 — 2026-05-31 — Centralize user gate inside security-scrub
 
 ### Added

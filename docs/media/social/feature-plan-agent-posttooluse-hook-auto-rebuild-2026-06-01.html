@@ -191,7 +191,7 @@
   </div>
 
   <div class="copy-panel">
-    <p class="copy-label">Twitter/X</p>
+    <label class="copy-label" for="post-copy">Twitter/X</label>
     <textarea readonly class="post-copy-text" id="post-copy">The plans gallery now rebuilds itself.
 
 PostToolUse hook fires on every plan HTML write &#x2192; 2s debounce &#x2192; build-index.sh. Symlink-safe stamps, exits 0 always.
@@ -209,7 +209,9 @@ Rebuild failures can&#x27;t block plan writes. Follow for more Claude Code plugi
         btn.textContent = 'Copied ✓';
         setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t.value).then(done).catch(fallback);
       } else {
