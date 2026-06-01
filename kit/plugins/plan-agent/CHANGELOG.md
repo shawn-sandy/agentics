@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.20.0 — 2026-06-01 — Add /workflows support for complex plans
+## v0.21.0 — 2026-06-01 — Add /workflows support for complex plans
 
 ### Added
 
@@ -16,6 +16,14 @@
 - **SKILL.md next-steps** — next-step prompts can now use "Run a workflow to …" prefix for items that benefit from workflow orchestration.
 - **SKELETON.html** — added `.plan-workflow` CSS (blue accent), HTML row with `{workflow-prompt}` placeholder, and `copyWorkflow()` JS function. Row is conditionally removed when no workflow prompt is generated.
 - **CLAUDE.md** — fixed branch naming example from `add-reinvoke-prompt` to `add-implement-prompt`.
+
+## v0.20.0 — 2026-06-01 — Add complete-plan skill
+
+### Added
+
+- **`/plan-agent:complete-plan [plan-filename.html]`** — new skill (`disable-model-invocation: true`) that reviews an HTML plan for codebase implementation evidence, presents a confirmation summary, then marks all acceptance-criteria checkboxes as checked, adds the `completed` class to every step card, and updates all three status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge) to `completed`.
+
+---
 
 ## v0.19.0 — 2026-06-01 — Replace reinvoke prompt with implement prompt
 
