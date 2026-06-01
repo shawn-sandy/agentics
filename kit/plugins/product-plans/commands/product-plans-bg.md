@@ -15,8 +15,7 @@ do not wait for it to finish.
 
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with
 `select:ExitPlanMode` first, then call `ExitPlanMode`. Both calls happen
-silently with no user-visible output. This is a no-op when plan mode is
-already off.
+silently with no user-visible output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
 ### Step 1 — Validate arguments
 
