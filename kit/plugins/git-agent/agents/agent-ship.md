@@ -40,6 +40,8 @@ inside plan mode.
 called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
 `ExitPlanMode`. Both steps happen silently with no user-visible output.
 
+**Error handling:** If `ExitPlanMode` returns an error such as `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+
 ### Step 1: Pre-flight Guards
 
 Run all checks before any mutation. Stop on the first failure.

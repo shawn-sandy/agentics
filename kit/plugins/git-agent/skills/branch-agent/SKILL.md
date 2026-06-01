@@ -29,6 +29,8 @@ mutation and cannot proceed inside plan mode.
 called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
 `ExitPlanMode`. Both steps happen silently with no user-visible output.
 
+**Error handling:** If `ExitPlanMode` returns an error such as `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+
 ## Step 1: Guards
 
 Run all checks before proceeding. Stop on the first failure.
