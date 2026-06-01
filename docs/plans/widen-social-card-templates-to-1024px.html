@@ -7,6 +7,7 @@
 <meta name="plan-type" content="chore">
 <meta name="plan-created" content="2026-06-01">
 <meta name="plan-repo" content="agentics">
+<meta name="plan-reinvoke" content="/plan-agent:planning widen-social-card-templates-to-1024px.html widen social card templates to 1024px">
 <title>Plan: Widen Social Card Templates to 1024px</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
@@ -593,6 +594,36 @@
   .width-old { color: #dc2626; font-family: ui-monospace, monospace; }
   .width-new { color: var(--green); font-family: ui-monospace, monospace; font-weight: 600; }
 
+  /* ── Re-invoke prompt ─────────────────────────────────────────── */
+  .plan-reinvoke {
+    display: flex; align-items: flex-start; gap: .6rem;
+    margin-bottom: 1.5rem; padding: .45rem .75rem;
+    background: var(--grey-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: .8rem;
+  }
+  .plan-reinvoke-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--subtle); flex-shrink: 0; margin-top: .1rem;
+  }
+  .plan-reinvoke code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem; color: var(--accent); flex: 1; word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .2rem .6rem; font-size: .72rem; font-weight: 500;
+    color: var(--muted); background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit; line-height: 1.4; white-space: nowrap; flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-reinvoke { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -714,6 +745,14 @@
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
       <p>Bump every social media card template and its matching copy panel from their current pixel widths (600–760px) to 1024px — the next standard browser breakpoint above 780px — so generated social images fill more screen real estate on modern displays.</p>
+    </div>
+
+    <!-- ── Re-invoke prompt ──────────────────────────────────────── -->
+    <div class="plan-reinvoke">
+      <span class="plan-reinvoke-label">Re-invoke</span>
+      <code id="reinvoke-cmd" aria-label="Re-invoke command">/plan-agent:planning widen-social-card-templates-to-1024px.html widen social card templates to 1024px</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy re-invoke command to clipboard">Copy</button>
     </div>
 
     <!-- ── Progress ─────────────────────────────────────────────── -->
@@ -977,6 +1016,39 @@
 </div><!-- /.layout -->
 
 <script>
+/* ── Copy re-invoke command ──────────────────────────────────── */
+function copyCmd(btn) {
+  var code = document.getElementById('reinvoke-cmd');
+  if (!code) return;
+  var text = code.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
 /* ── Copy prompt button (global — required by inline onclick) ── */
 function copyPrompt(btn) {
   var pre = btn.previousElementSibling;
