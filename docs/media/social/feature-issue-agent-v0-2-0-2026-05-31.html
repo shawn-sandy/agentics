@@ -190,7 +190,7 @@
   </div>
 
   <div class="copy-panel">
-    <p class="copy-label">LinkedIn</p>
+    <label class="copy-label" for="post-copy-linkedin">LinkedIn</label>
     <textarea readonly class="post-copy-text" id="post-copy-linkedin">issue-agent v0.2.0 just shipped a small but satisfying improvement: after creating a GitHub or GitLab issue, the browser opens to it automatically.
 
 No more copying the URL to check what was created. The CLI confirms creation, then `gh issue view --web` (or `glab issue view --web`) fires before handing control back.
@@ -208,7 +208,7 @@ Follow for more Claude Code plugin development patterns.
   </div>
 
   <div class="copy-panel">
-    <p class="copy-label">Twitter/X</p>
+    <label class="copy-label" for="post-copy-twitter">Twitter/X</label>
     <textarea readonly class="post-copy-text" id="post-copy-twitter">issue-agent v0.2.0: created issues now auto-open in your browser.
 
 Add --no-open to suppress it in headless/CI. Flag is stripped before parsing — it never bleeds into the title.
@@ -218,7 +218,7 @@ Add --no-open to suppress it in headless/CI. Flag is stripped before parsing —
   </div>
 
   <div class="copy-panel">
-    <p class="copy-label">Bluesky</p>
+    <label class="copy-label" for="post-copy-bluesky">Bluesky</label>
     <textarea readonly class="post-copy-text" id="post-copy-bluesky">issue-agent v0.2.0 auto-opens created issues in the browser. Pass --no-open to skip it in CI or headless environments. Small polish, real time saved.</textarea>
     <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
   </div>
@@ -232,7 +232,7 @@ Add --no-open to suppress it in headless/CI. Flag is stripped before parsing —
         btn.textContent = 'Copied ✓';
         setTimeout(function () { btn.textContent = orig; }, 2000);
       }
-      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t.value).then(done).catch(fallback);
       } else {
