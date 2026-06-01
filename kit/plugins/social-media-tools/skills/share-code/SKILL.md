@@ -54,6 +54,25 @@ If no directory is found: output "Templates not found. Install the plugin or loa
 
 ---
 
+## Phase 0b — Load Project Sharing Config
+
+Check for `SOCIAL.md` (see `$PLUGIN_DIR/references/social-config.md`):
+
+```bash
+SOCIAL_CONFIG=""
+if [ -f "$PWD/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$PWD/SOCIAL.md"
+elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+fi
+```
+
+If found, `Read` it silently. Extract `DEFAULT_PLATFORM`, `DEFAULT_TONE`,
+`DEFAULT_HASHTAGS`, `FOCUS_AREAS`, and `AUDIENCE` from the parsed sections.
+These serve as defaults — user input in `$ARGUMENTS` always overrides them.
+
+---
+
 ## Phase 1 — Clarify
 
 Run silently:
@@ -66,8 +85,13 @@ head -30 CHANGELOG.md 2>/dev/null
 
 - Non-empty diff stat → auto-select `diff-card`
 - Commit with `feat:` prefix or version bump → auto-select `feature-card`
-- Context found: summarise in one sentence, ask only **platform** and **tone**
+- Context found: summarise in one sentence, ask only **platform** and **tone** (pre-select
+  `DEFAULT_PLATFORM` and `DEFAULT_TONE` from SOCIAL.md if available)
 - No context: ask all three inputs via `AskUserQuestion`
+- When `FOCUS_AREAS` are set, use them to pick the most relevant commit or
+  change as the card's angle
+- When `AUDIENCE` is set, use it to calibrate vocabulary and detail level
+- When `DEFAULT_HASHTAGS` are set, append them per platform rules in Phase 2
 
 ---
 

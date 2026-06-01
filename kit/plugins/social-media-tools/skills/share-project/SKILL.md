@@ -56,6 +56,26 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 
 ---
 
+## Phase 0b — Load Project Sharing Config
+
+Check for `SOCIAL.md` (see `$PLUGIN_DIR/references/social-config.md`):
+
+```bash
+SOCIAL_CONFIG=""
+if [ -f "$PWD/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$PWD/SOCIAL.md"
+elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+fi
+```
+
+If found, `Read` it silently. Extract `DEFAULT_PLATFORM`, `DEFAULT_TONE`,
+`DEFAULT_HASHTAGS`, `FOCUS_AREAS`, `AUDIENCE`, `PROJECT_IDENTITY` (name + tagline),
+and `AVOID_PATTERNS` from the parsed sections. These serve as defaults — explicit
+`$ARGUMENTS` always override them.
+
+---
+
 ## Phase 1 — Parse Inputs
 
 Parse `$ARGUMENTS`:
@@ -69,9 +89,14 @@ If `--topic` is missing, use `AskUserQuestion`:
 > "What would you like to share about this project?"
 > Options: `features`, `bugs`, `changes`, `release`
 
-If `--platform` is missing, ask it in the **same** `AskUserQuestion` call.
+If `--platform` is missing and `DEFAULT_PLATFORM` is set from SOCIAL.md, use it.
+Otherwise ask in the **same** `AskUserQuestion` call.
 
 Set `PATH_ROOT` = `--path` value or `$PWD`. Set `DAYS` = `--days` value or `30`.
+
+When `PROJECT_IDENTITY` is set from SOCIAL.md, use its name and tagline as
+defaults for `PROJECT_NAME` and `PROJECT_DESCRIPTION` in Phase 2 (manifest
+values still override if present).
 
 ---
 
@@ -153,6 +178,12 @@ Combine extracted content and invoke `security-scrub`:
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults,
 **Default Per-Platform Copy Formats**, and **Draft Copy — Standard Procedure**.
 For per-topic tone guide, read `references/topics.md`.
+
+When SOCIAL.md was loaded:
+- Use `DEFAULT_TONE` as the baseline tone (user overrides still take priority)
+- Append `DEFAULT_HASHTAGS` per platform rules
+- Use `FOCUS_AREAS` to shape which extracted items get top billing in the copy
+- Use `AUDIENCE` to calibrate vocabulary and level of technical detail
 
 **Copy structure by topic:**
 - `features`: Hook with the top feature. LinkedIn: story arc. Short: strongest feature + emoji.

@@ -1,5 +1,18 @@
 # Changelog — social-media-tools
 
+## v2.5.0 — 2026-06-01 — Add SOCIAL.md project sharing config
+
+### Added
+
+- `share-init` skill: analyzes the project and generates a `SOCIAL.md` file with default platform, tone, hashtags, focus areas, audience, and avoid patterns
+- `references/social-config.md`: documents the `SOCIAL.md` format and how each skill consumes it
+- `social-share` router: loads `SOCIAL.md` in Phase 0b and uses `DEFAULT_PLATFORM` in Phase 3
+- `share-code`: loads `SOCIAL.md` for default platform, tone, hashtags, focus areas, and audience
+- `share-project`: loads `SOCIAL.md` for defaults and uses project identity, focus areas, and audience in copy drafting
+- `share-scan`: loads `SOCIAL.md` focus areas for score boosting and avoid patterns for candidate filtering
+
+---
+
 ## v2.4.2 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed

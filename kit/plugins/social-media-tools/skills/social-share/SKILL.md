@@ -41,6 +41,32 @@ If not found: output "Templates not found. Install the plugin or load it with `-
 
 ---
 
+## Phase 0b — Load Project Sharing Config
+
+Check for a `SOCIAL.md` at the project root (see `$PLUGIN_DIR/references/social-config.md`
+for format details):
+
+```bash
+SOCIAL_CONFIG=""
+if [ -f "$PWD/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$PWD/SOCIAL.md"
+elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+fi
+```
+
+If `SOCIAL_CONFIG` is non-empty, `Read` it silently. Extract:
+
+- `DEFAULT_PLATFORM` from `## Defaults` → `Platform:` line
+- `DEFAULT_TONE` from `## Defaults` → `Tone:` line
+- `FOCUS_AREAS` from `## Focus` bullet list
+- `AUDIENCE` from `## Audience` section
+
+These values are passed to the dispatched skill as extra context when not
+overridden by the user's explicit request.
+
+---
+
 ## Phase 1 — Classify
 
 Evaluate rules **top-to-bottom; first match wins.** Do not ask the user anything.
@@ -89,7 +115,11 @@ Write the raw code content to `~/.claude/tmp/social-share-selection.txt`.
 
 ## Phase 3 — Resolve Defaults
 
-Set `PLATFORM=all` unless the user specified a platform in `$ARGUMENTS`.
+Set `PLATFORM` using this priority:
+1. Explicit platform in `$ARGUMENTS` (e.g. "post to twitter" → `twitter`)
+2. `DEFAULT_PLATFORM` from `SOCIAL.md` (if loaded in Phase 0b)
+3. `all` (fallback)
+
 For the canonical platform name list, see `$PLUGIN_DIR/references/platforms.md`.
 - Detect phrases naming any supported platform (e.g. "post to twitter", "share on LinkedIn",
   "for Bluesky", "on Substack", "Substack note") → map to the corresponding `--platform=<value>`.

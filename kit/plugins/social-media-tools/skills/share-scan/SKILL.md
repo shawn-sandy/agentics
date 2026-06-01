@@ -27,6 +27,25 @@ happen silently with no user-visible output. Only call `ExitPlanMode` if current
 
 ---
 
+## Step 0b — Load Project Sharing Config
+
+Check for `SOCIAL.md` (see `$PLUGIN_DIR/references/social-config.md` if available):
+
+```bash
+SOCIAL_CONFIG=""
+if [ -f "$PWD/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$PWD/SOCIAL.md"
+elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+fi
+```
+
+If found, `Read` it silently. Extract:
+- `FOCUS_AREAS` — bullet list from `## Focus`; boost candidate scores in Step 3
+- `AVOID_PATTERNS` — bullet list from `## Avoid`; filter candidates in Step 2
+
+---
+
 ## Step 1 — Configure
 
 Parse `$ARGUMENTS`:
@@ -72,12 +91,23 @@ For each file use `Read` to load content. Collect `{file_path, excerpt}` as the 
 
 ---
 
+## Step 2b — Apply Avoid Filters
+
+If `AVOID_PATTERNS` was loaded from SOCIAL.md, remove candidates whose commit
+subject, changed file path, or file path matches any avoid pattern (case-insensitive
+substring or glob match). Log filtered count silently.
+
+---
+
 ## Step 3 — Score candidates
 
 `Read` the `references/interesting-patterns.md` file adjacent to this SKILL.md to load the current scoring table.
 
 - **History mode:** score each commit by message prefix and lines-changed heuristics from the table.
 - **Codebase mode:** score each file by file/function pattern heuristics from the table.
+
+**Focus boost:** If `FOCUS_AREAS` was loaded from SOCIAL.md, add +1 to the score
+of any candidate whose subject or path matches a focus keyword (case-insensitive).
 
 Include candidates with score ≥ 2. If fewer than 3 qualify, fill up with score ≥ 1 candidates until you have 3 (or exhaust the list).
 
