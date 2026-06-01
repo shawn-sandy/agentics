@@ -29,6 +29,8 @@ for a blog post URL or local markdown file.
 Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
 happen silently with no user-visible output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
+**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+
 ---
 
 ## Phase 0 — Locate Plugin Assets

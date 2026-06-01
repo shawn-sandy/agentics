@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "2.2.3",
+      "version": "2.2.4",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins \u2014 auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
       "category": "development",
       "tags": [
@@ -95,7 +95,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "2.2.2",
+      "version": "2.2.3",
       "description": "Review and optimize Claude Code skill files \u2014 score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
@@ -138,7 +138,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.10.1",
+      "version": "3.10.2",
       "description": "Automated git workflow \u2014 create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
@@ -160,7 +160,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/product-plans"
       },
-      "version": "3.4.4",
+      "version": "3.4.5",
       "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) \u2014 produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
       "category": "productivity",
       "tags": [
@@ -205,7 +205,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.4.1",
+      "version": "2.4.2",
       "description": "Discover shareable code, blog posts, videos, GitHub snippets, and selected/pasted code \u2014 scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack",
       "category": "productivity",
       "tags": [
@@ -244,7 +244,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.18.1",
+      "version": "0.18.2",
       "description": "Plan creation on demand \u2014 explicit /plan-agent:planning skill produces self-contained interactive HTML plans; accepts GitHub/GitLab issue URLs and #n references to auto-seed plans from backlog; built-in structured interview; plans-open skill reopens the gallery without rebuilding; PostToolUse hook auto-regenerates the gallery index; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [
@@ -265,7 +265,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/issue-agent"
       },
-      "version": "0.2.0",
+      "version": "0.2.1",
       "description": "Create GitHub and GitLab issues from any context \u2014 selection, session, bug, or feature \u2014 with host auto-detection and a confirmation gate before writing",
       "category": "development",
       "tags": [

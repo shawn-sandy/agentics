@@ -49,7 +49,7 @@ Echo the resolved objective and effective flags after completing the Step 0 self
 
 - Do not edit source files, configs, or any file outside `docs/plans/` (or the configured `plansDirectory`).
 - Do not apply fixes, refactors, or any change described in the plan's steps.
-- Use `Read`, `Glob`, `Grep`, and `Bash` for read-only exploration only — never to edit source files or run codebase-mutating commands. This does not restrict §6 (git commit of the plan file itself) or §8 (local HTTP server for browser preview).
+- Use `Read`, `Glob`, `Grep`, and `Bash` for read-only exploration only — never to edit source files or run codebase-mutating commands. This does not restrict §7 (local HTTP server for browser preview).
 - The plan is the deliverable. Implementation is a separate, user-initiated step.
 
 If the objective sounds like "fix X" or "implement Y", write a plan for *how* to fix/implement it — do not do the work.
@@ -58,9 +58,11 @@ If the objective sounds like "fix X" or "implement Y", write a plan for *how* to
 
 Follow these steps exactly.
 
-0. **Self-bootstrap** — Before any filesystem mutation, prompting, or planning steps: load `ExitPlanMode` via `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` silently. Both steps are **unconditional** — do not prompt the user, do not skip for any flag including `--quick`. `ExitPlanMode` is a no-op when plan mode is already off, so calling it unconditionally is always safe. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
+0. **Self-bootstrap** — Before any filesystem mutation, prompting, or planning steps: load `ExitPlanMode` via `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` silently. Both steps are **unconditional** — do not prompt the user, do not skip for any flag including `--quick`. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
 
    Two-step sequence: (1) `ToolSearch(select:ExitPlanMode)` silently, (2) `ExitPlanMode` silently. No user-visible output from either step.
+
+   **Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off, which is the desired state. Do not abort or surface the error to the user; continue immediately to Step 0.5 / Step 0b.
 
 0.5. **Issue Ingestion** *(skip entirely when no issue reference was detected in Step 0 argument parsing)*
 
@@ -97,9 +99,9 @@ Follow these steps exactly.
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. When research would strengthen the plan (e.g. verifying an API surface, checking a library's current version, or confirming a best-practice pattern), use `WebSearch` and `WebFetch` — load them first via `ToolSearch` with `select:WebSearch,WebFetch` since they are deferred tools. *(Skip entirely when `--quick` or `--no-clarify`.)*
 2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.** After resolving the filename, compute the reinvoke command: `/plan-agent:planning <filename> <short-objective>`, where `<filename>` is the basename of the `.html` file (e.g. `add-dark-mode-toggle.html`) and `<short-objective>` is the objective condensed to ≤60 characters (trim at a word boundary). Store this as `{reinvoke-cmd}` and fill the skeleton placeholder.
 3. **Frontmatter** — Embed plan metadata as `<meta>` tags inside the HTML `<head>`, not as YAML. Include: `status` (`todo` | `in-progress` | `completed`), `type`, `created` (YYYY-MM-DD), `repo-name`, and `reinvoke` (the full reinvoke command computed in Step 2, e.g. `<meta name="plan-reinvoke" content="/plan-agent:planning add-dark-mode-toggle.html add dark mode toggle">`). Resolve `repo-name` from the basename of the `origin` git remote URL (strip trailing `.git`); if no remote exists, fall back to the basename of the current working directory. If `--priority` was set, also add `<meta name="plan-priority" content="<level>">`. If an issue URL was fetched in Step 0.5, add `<meta name="plan-issue" content="<url>">` — omit this tag entirely when no issue reference was provided. Read `planAgent.extraFrontmatter` from `.claude/settings.json` (project first, then global) and render any extra key-value pairs as additional `<meta name="plan-<key>" content="<value>">` tags; `--priority` overrides any `priority` key from settings.
-4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from Step 2 before committing. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before committing. A stale filename is a plan defect — do not commit until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
-5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before committing. This verifies step-to-objective alignment, not overall plan approval — confirm overall approval directly with the user after presenting the plan. *(Skip entirely when `--quick` or `--no-align`.)*
-5b. **Interview** — Stress-test the drafted plan through a structured interview before committing. *(Skip entirely when `--quick` or `--no-interview`.)*
+4. **Rename** — **Always** ensure the filename follows the `verb-target` kebab-case convention from Step 2 before delivering the plan. Two triggers require a rename: (a) the initial filename is auto-generated, placeholder, or otherwise non-descriptive (e.g. a random two-word slug), and (b) the plan's purpose shifts after creation. Re-evaluate before writing the final file. A stale filename is a plan defect — do not write the plan until the name matches the content. Enforced by the `validate-plan-filename` `PostToolUse` hook (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`), which flags non-`verb-target` plan filenames the instant a plan is written.
+5. **Align** — After the plan's steps are drafted, use `AskUserQuestion` (batched, with questions covering each step) to confirm every step aligns with the stated objective before delivering. This verifies step-to-objective alignment, not overall plan approval — confirm overall approval directly with the user after presenting the plan. *(Skip entirely when `--quick` or `--no-align`.)*
+5b. **Interview** — Stress-test the drafted plan through a structured interview before delivering. *(Skip entirely when `--quick` or `--no-interview`.)*
 
     **Complexity detection:** Analyze the plan content just written to classify scope:
     - **Short/focused** (single concern, 1–2 files touched): Round 1 only
@@ -120,13 +122,12 @@ Follow these steps exactly.
     **Round 3 — Edge Cases & Best Practices** (complex only):
     Up to 4 questions covering: critical failure modes or race conditions, concurrent user scenarios or data conflicts, regression risks (existing tests, API contracts, backward compatibility), and remaining open questions from the plan.
 
-    **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings before committing?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions. If declined, proceed to Step 6 without changes.
+    **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions. If declined, proceed to Step 6 without changes.
 
-6. **Commit** — **Always** commit plan files to version control alongside the related changes.
-7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
-8. **Open** — After committing, deliver the plan and verify rendering. This step is mandatory — do not skip it.
+6. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
+7. **Open** — Deliver the plan and verify rendering. This step is mandatory — do not skip it.
 
-   After all sub-steps of Step 8 complete, proceed immediately to Step 9 — do not stop here.
+   After all sub-steps of Step 7 complete, proceed immediately to Step 8 — do not stop here.
 
    **Try browser verification first:**
    1. Load the browser tools via `ToolSearch` with `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer`. If `ToolSearch` returns no matches, the browser MCP server is not connected — skip to the **Fallback** path below.
@@ -140,15 +141,18 @@ Follow these steps exactly.
 
    **Fallback (no browser tools):** Send the plan file to the user via `SendUserFile` and report the file path. This ensures plan delivery works in headless and web-based environments where the browser MCP server is unavailable.
 
-9. **Implement or Exit** — After Step 8 completes, always ask the user whether to implement the plan or stop.
+8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the user what to do next.
 
    Use `AskUserQuestion` with a single question:
-   - Question: "The plan is complete and committed. What would you like to do next?"
+   - Question: "The plan is complete. What would you like to do next?"
    - Options:
      - `Implement now` — Begin implementing the plan steps in the current session.
+     - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
 
-   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 7's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
+   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 6's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
+
+   **If the user chooses `Edit the plan`:** Ask what changes to make via `AskUserQuestion` ("What would you like to change or add to the plan?"), apply the edits to the HTML plan file, re-render it in the browser (repeat the sub-steps from Step 7), then loop back to this step and ask again.
 
    **If the user chooses `Exit`:** Stop immediately. Do not start any implementation work. The plan stays at `todo` — no status update is needed; all three representations (`<html data-status>`, `<meta name="plan-status">`, and badge text) were set to `todo` at creation and remain there until implementation begins.
 

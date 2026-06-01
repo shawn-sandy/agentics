@@ -21,13 +21,14 @@ Does not commit, push, or create PRs — use commit-agent or pr-agent for that.
 ## Step 0: Exit Plan Mode
 
 Call `ExitPlanMode` immediately and silently — always, unconditionally, before
-any other action. Do not prompt the user. This call is a no-op when plan mode
-is already off, so it is safe to call regardless. Branch creation is a git
+any other action. Do not prompt the user. Branch creation is a git
 mutation and cannot proceed inside plan mode.
 
 `ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
 called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
 `ExitPlanMode`. Both steps happen silently with no user-visible output.
+
+**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
 
 ## Step 1: Guards
 

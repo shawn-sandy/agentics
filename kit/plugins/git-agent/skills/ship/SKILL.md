@@ -16,14 +16,15 @@ For commit-only use commit-agent, for PR-only use pr-agent.
 ## Step 0: Exit Plan Mode
 
 Call `ExitPlanMode` immediately and silently — always, unconditionally, before
-any other action. Do not prompt the user. This call is a no-op when plan mode
-is already off, so it is safe to call regardless. Staging, committing,
+any other action. Do not prompt the user. Staging, committing,
 pushing, and creating a pull/merge request are mutations and cannot proceed
 inside plan mode.
 
 `ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
 called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
 `ExitPlanMode`. Both steps happen silently with no user-visible output.
+
+**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
 
 ## Step 1: Pre-flight Guards
 

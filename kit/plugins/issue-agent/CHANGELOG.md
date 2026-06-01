@@ -1,5 +1,11 @@
 # Changelog — issue-agent
 
+## v0.2.1 — 2026-06-01 — Add ExitPlanMode error handling
+
+### Fixed
+
+- fix: add ExitPlanMode error handling — treat 'not in plan mode' error as success
+
 ## v0.2.0 — 2026-05-31
 
 ### Added

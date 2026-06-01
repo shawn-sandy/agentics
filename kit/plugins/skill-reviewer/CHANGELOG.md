@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.3 — 2026-06-01 — Add ExitPlanMode error handling
+
+### Fixed
+
+- fix: add ExitPlanMode error handling — treat 'not in plan mode' error as success
+
 ## v2.2.2 — README: update hook output example to budget-aware phrasing; sync usage docs
 
 - Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.

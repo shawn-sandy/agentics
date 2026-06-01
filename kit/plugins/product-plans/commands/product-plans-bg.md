@@ -17,6 +17,8 @@ do not wait for it to finish.
 `select:ExitPlanMode` first, then call `ExitPlanMode`. Both calls happen
 silently with no user-visible output. Only call `ExitPlanMode` if currently in plan mode — skip this step entirely if plan mode is already off.
 
+**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+
 ### Step 1 — Validate arguments
 
 1. If `$ARGUMENTS` is empty, or if `$ARGUMENTS` contains only flag tokens
