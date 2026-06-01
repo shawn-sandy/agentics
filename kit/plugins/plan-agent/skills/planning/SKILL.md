@@ -156,7 +156,13 @@ Follow these steps exactly.
    1. Read each acceptance-criteria checkbox item from the plan HTML.
    2. For each criterion, verify it is satisfied — run the relevant command, inspect the changed files, or check the codebase for the expected state described in that criterion.
    3. Check off each criterion (`<input type="checkbox">` → `<input type="checkbox" checked>`) only after confirming it is met.
-   4. If any criterion cannot be verified, present the unverified items to the user via `AskUserQuestion`: "These acceptance criteria could not be verified:\n[numbered list]. Mark them as done anyway?" with options `Yes, check them off` / `No, leave unchecked`.
+   4. If any criterion cannot be verified, present the unverified items to the user via `AskUserQuestion`:
+      > "These acceptance criteria could not be verified:
+      > 1. <criterion text>
+      > 2. <criterion text>
+      > Mark them as done anyway?"
+
+      Options: `Yes, check them off` / `No, leave unchecked`.
    5. Only set status to `completed` (all three representations) after every criterion is checked. If the user chose to leave any unchecked, set status to `in-progress` instead and note which criteria remain open.
 
    Commit the source file changes together with the updated plan file after implementation finishes.

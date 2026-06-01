@@ -109,14 +109,14 @@ If any criteria are unverified, include a second warning listing them:
 > "The following acceptance criteria could not be verified:
 > 1. <criterion text>
 > 2. <criterion text>
-> Proceeding will check them off anyway unless you choose to leave them unchecked."
+> Proceeding will check them off anyway unless you choose to only auto-check verified criteria."
 
 Ask via `AskUserQuestion`:
 > "Mark this plan as completed?"
-- Options: `Yes, check all criteria and mark completed` / `Yes, but leave unverified criteria unchecked` / `No, cancel`
+- Options: `Yes, check all criteria and mark completed` / `Yes, but only auto-check verified criteria` / `No, cancel`
 
 If the user cancels, **STOP**.
-If the user chooses to leave unverified criteria unchecked, record that choice for Step 5b.
+If the user chooses to only auto-check verified criteria, record that choice for Step 5b.
 
 ---
 
@@ -151,8 +151,8 @@ For every unchecked `<input type="checkbox">` inside the acceptance-criteria sec
 <input type="checkbox" disabled>  →  <input type="checkbox" checked disabled>
 ```
 
-**If the user chose `Yes, but leave unverified criteria unchecked`:**
-Only check off criteria that were marked `verified` in Step 3b. Leave `unverified` criteria unchecked — if an unverified criterion is already checked (from a prior manual check), leave it as-is (do not uncheck it). If any criteria remain unchecked after this step, override the status set in Step 5a: edit all three representations (`<html data-status>`, `<meta name="plan-status">`, and the visible badge text/class) from `completed` to `in-progress`.
+**If the user chose `Yes, but only auto-check verified criteria`:**
+Only add the `checked` attribute to criteria that were marked `verified` in Step 3b. Do not modify unverified criteria — leave their current checked state unchanged (already-checked items stay checked; unchecked items stay unchecked). If any criteria remain unchecked after this step, override the status set in Step 5a: edit all three representations (`<html data-status>`, `<meta name="plan-status">`, and the visible badge text/class) from `completed` to `in-progress`.
 
 Do not remove or alter any surrounding markup.
 
