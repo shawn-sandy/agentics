@@ -77,6 +77,11 @@ Detailed patterns in `.claude/rules/`:
 - `testing.md` — test fixture guidelines (scoped to `tests/**`)
 - `plan-hygiene.md` — pre-commit plan file rename checks (scoped to `**/plans/**`)
 
+## Git & Branches
+
+- **Always create a new branch off `main` for each feature or fix.** Never commit new work directly to a long-lived shared branch (e.g. a branch from a previous session). Suggested naming: `verb-target-YYYY-MM-DD` (e.g. `add-reinvoke-prompt-2026-06-01`).
+- Run `git checkout main && git pull && git checkout -b <branch-name>` at the start of each new task.
+
 ## Conventions
 
 - Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`

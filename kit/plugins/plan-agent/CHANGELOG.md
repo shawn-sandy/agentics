@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.18.1 — 2026-06-01 — Fix reinvoke command: strip .html token before objective extraction
+
+### Fixed
+
+- **Argument parser — `.html` plan file detection**: A leading `.html` token (e.g. `add-dark-mode-toggle.html`) is now stripped from `$ARGUMENTS` before the objective is extracted, preventing the filename from polluting the objective when the re-invoke command is pasted verbatim. The stripped value is stored as `$PLAN_FILE`; when no remaining objective text exists, the plan's existing `<title>` tag is used as the objective fallback.
+
+---
+
+## v0.18.0 — 2026-06-01 — Add re-invoke prompt to every generated plan
+
+### Added
+
+- **Re-invoke prompt row** — every generated plan HTML now includes a `<div class="plan-reinvoke">` element immediately below the objective card. Shows the `/plan-agent:planning <filename> <short-objective>` command with a copy button so developers can resume or reference the plan without reconstructing the command.
+- **`copyCmd()` JS function** — dedicated clipboard handler for the `<code id="reinvoke-cmd">` element, separate from the existing `copyPrompt()` which targets `<pre>` blocks.
+- **`<meta name="plan-reinvoke">` tag** — machine-readable reinvoke command in the plan `<head>` for plans-library gallery extraction.
+
+### Changed
+
+- **`SKILL.md` Step 2 (Create)** — now instructs the model to compute `{reinvoke-cmd}` = `/plan-agent:planning <filename> <short-objective≤60chars>` and fill the skeleton placeholder.
+- **`SKILL.md` Step 3 (Frontmatter)** — now requires `<meta name="plan-reinvoke" content="…">` alongside the other required meta tags.
+- **`SKILL.md` HTML Output Requirements** — new bullet documents the reinvoke row as a required element.
+
+### UX
+
+- Reinvoke command text soft-wraps (`word-break: break-all`) for long objectives.
+- Copy button is hidden via CSS when `data-status="completed"` — no copy affordance for plans that are done.
+- Row is suppressed in `@media print`.
+
+---
+
 ## v0.17.1 — 2026-06-01 — Minor wording corrections
 
 ### Fixed

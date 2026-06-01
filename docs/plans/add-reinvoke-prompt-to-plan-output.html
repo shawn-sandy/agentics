@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" data-status="{status}">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="{status}">
-<meta name="plan-type" content="{type}">
-<meta name="plan-created" content="{created}">
-<meta name="plan-repo" content="{repo-name}">
-<title>Plan: {title}</title>
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-01">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-reinvoke" content="/plan-agent:planning add-reinvoke-prompt-to-plan-output.html add re-invoke prompt to plan output">
+<title>Plan: Add re-invoke prompt to plan output</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
     --bg:         #ffffff;
     --surface:    #ffffff;
@@ -29,8 +29,6 @@
     --radius:     4px;
     --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   }
-
-  /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
@@ -54,460 +52,278 @@
     white-space: pre-wrap;
     word-break: break-word;
   }
-
-  /* ── SVG icon helper ────────────────────────────────────────────── */
   .icon {
-    width: 1rem;
-    height: 1rem;
+    width: 1rem; height: 1rem;
     display: inline-block;
     vertical-align: middle;
     flex-shrink: 0;
   }
-
-  /* ── Skip link ─────────────────────────────────────────────────── */
   .skip-link {
-    position: absolute;
-    left: -9999px; top: auto;
-    width: 1px; height: 1px;
-    overflow: hidden;
+    position: absolute; left: -9999px; top: auto;
+    width: 1px; height: 1px; overflow: hidden;
   }
   .skip-link:focus {
-    position: fixed;
-    left: 1rem; top: 1rem;
-    width: auto; height: auto;
-    overflow: visible;
-    background: var(--accent);
-    color: #fff;
-    padding: .5rem 1rem;
-    border-radius: var(--radius);
-    font-weight: 700;
-    z-index: 9999;
-    text-decoration: none;
+    position: fixed; left: 1rem; top: 1rem;
+    width: auto; height: auto; overflow: visible;
+    background: var(--accent); color: #fff;
+    padding: .5rem 1rem; border-radius: var(--radius);
+    font-weight: 700; z-index: 9999; text-decoration: none;
   }
-
-  /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
     background: var(--bg);
     border-bottom: 1px solid var(--border);
     padding: 0;
   }
   .plan-header::before {
-    content: "";
-    display: block;
-    height: 3px;
-    background: var(--accent);
+    content: ""; display: block; height: 3px; background: var(--accent);
   }
   .plan-header-inner {
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 1.75rem 1.5rem 1.5rem;
+    max-width: 1040px; margin: 0 auto; padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: .6rem;
+    font-size: .68rem; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: .6rem;
   }
   .plan-header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
-    flex: 1;
+    font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em;
+    line-height: 1.2; color: var(--text); flex: 1;
   }
-
-  /* Status badge */
   .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    padding: .25rem .75rem;
-    border-radius: 999px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    color: #fff;
-    margin-top: .35rem;
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; padding: .25rem .75rem;
+    border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+    color: #fff; margin-top: .35rem;
   }
   .status-badge::before {
-    content: "";
-    display: inline-block;
-    width: .45em;
-    height: .45em;
-    border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
+    content: ""; display: inline-block; width: .45em; height: .45em;
+    border-radius: 50%; background: currentColor; flex-shrink: 0;
   }
   [data-status="todo"]        .status-badge { background: #6b7280; }
   [data-status="in-progress"] .status-badge { background: #d97706; }
   [data-status="completed"]   .status-badge { background: #16a34a; }
-
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
-
-  /* Meta row */
   .plan-meta {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-    padding-top: 1rem;
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    margin-top: 1rem; padding-top: 1rem;
     border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    font-size: .8rem; color: var(--muted);
   }
-  .plan-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-  }
+  .plan-meta span { display: inline-flex; align-items: center; gap: .3rem; }
   .plan-meta .icon { opacity: .55; }
-
-  /* ── Layout ────────────────────────────────────────────────────── */
+  /* Re-invoke prompt */
+  .plan-reinvoke {
+    display: flex; align-items: flex-start; gap: .6rem;
+    margin-bottom: 1.5rem; padding: .45rem .75rem;
+    background: var(--grey-bg); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: .8rem;
+  }
+  .plan-reinvoke-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--subtle); flex-shrink: 0; margin-top: .1rem;
+  }
+  .plan-reinvoke code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem; color: var(--accent); flex: 1; word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .2rem .6rem; font-size: .72rem; font-weight: 500;
+    color: var(--muted); background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit; line-height: 1.4; white-space: nowrap; flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .copy-cmd-btn { display: none !important; } .plan-reinvoke { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+  /* Layout */
   .layout {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem 5rem;
-    align-items: start;
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 3rem; max-width: 1040px; margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem; align-items: start;
   }
   @media (max-width: 720px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
-
-  /* ── Sidebar — table of contents ───────────────────────────────── */
   .plan-nav {
-    position: sticky;
-    top: 1.5rem;
-    align-self: start;
-    overflow: hidden;
+    position: sticky; top: 1.5rem; align-self: start; overflow: hidden;
   }
   @media (max-width: 720px) {
     .plan-nav {
-      position: static;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1.5rem;
-      margin-bottom: 2rem;
+      position: static; border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem; margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--subtle);
-    padding: 0 1rem .6rem;
-    margin-bottom: .25rem;
+    font-size: .68rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--subtle);
+    padding: 0 1rem .6rem; margin-bottom: .25rem;
     border-bottom: 1px solid var(--border);
   }
   .scroll-rail {
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 2px;
-    background: var(--border);
-    border-radius: 1px;
-    overflow: hidden;
-    pointer-events: none;
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--border); border-radius: 1px; overflow: hidden; pointer-events: none;
   }
   .scroll-rail::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: calc(var(--scroll-pct, 0) * 1%);
-    background: var(--accent);
+    content: ""; position: absolute; top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%); background: var(--accent);
     transition: height .1s linear;
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
   .plan-nav li a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    padding: .125rem 1rem .125rem 1.25rem;
-    font-size: .825rem;
-    color: var(--muted);
-    text-decoration: none;
-    gap: .5rem;
-    border-left: 2px solid transparent;
-    transition: color .12s, border-color .12s;
+    display: flex; align-items: center; min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem; font-size: .825rem;
+    color: var(--muted); text-decoration: none; gap: .5rem;
+    border-left: 2px solid transparent; transition: color .12s, border-color .12s;
   }
   .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
   .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
   .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
-
-  /* ── Objective card — executive summary ────────────────────────── */
+  .plan-nav li a.active .icon, .plan-nav li a:hover .icon { opacity: .8; }
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    background: var(--accent-bg); border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent); border-radius: var(--radius);
+    padding: 1.25rem 1.5rem; margin-bottom: 2.5rem;
+    font-size: 1.05rem; font-weight: 500; color: #1e3a5f; line-height: 1.6;
   }
   .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: .5rem;
+    font-size: .65rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: .5rem;
   }
-
-  /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem; padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
   }
   .progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: .6rem;
-    font-size: .75rem;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .06em;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: .6rem; font-size: .75rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
   }
   .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
   @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
   .progress-bar-fill {
-    height: 100%;
-    border-radius: 999px;
+    height: 100%; border-radius: 999px;
     background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
-    transition: width .5s cubic-bezier(.4,0,.2,1);
-    width: 0%;
+    background-size: 200% 100%; animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1); width: 0%;
   }
   .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
-  @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
-  }
-
-  /* ── Document sections ─────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) { .progress-bar-fill { animation: none; transition: none; } }
   .section-card {
-    background: transparent;
-    border: none;
-    border-top: 1px solid var(--border);
-    border-radius: 0;
-    padding: 2rem 0 1.25rem;
-    margin-bottom: 0;
-    box-shadow: none;
+    background: transparent; border: none;
+    border-top: 1px solid var(--border); border-radius: 0;
+    padding: 2rem 0 1.25rem; margin-bottom: 0; box-shadow: none;
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: .45rem;
+    font-size: .9rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: .45rem;
   }
   .section-card h2 .icon { opacity: .6; }
   .section-card p { margin-bottom: .75rem; color: var(--text); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
-    padding-left: 1.4rem;
-    display: flex;
-    flex-direction: column;
-    gap: .4rem;
+    padding-left: 1.4rem; display: flex; flex-direction: column; gap: .4rem;
   }
-
-  /* ── Step timeline ──────────────────────────────────────────────── */
   .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
+    display: flex; flex-direction: column; gap: .75rem; position: relative;
   }
   .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
+    content: ""; position: absolute; left: .9rem; top: 1.75rem; bottom: 1.75rem;
+    width: 1px; background: var(--border);
   }
-
-  /* ── Step cards ────────────────────────────────────────────────── */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
-    position: relative;
-    margin-left: 2.25rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.25rem;
+    box-shadow: var(--shadow); position: relative; margin-left: 2.25rem;
     transition: border-color .15s;
   }
   .step-card:hover { border-color: var(--border-mid); }
   @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
   .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
+    content: ""; position: absolute; left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem; border-radius: 50%;
+    background: var(--border); border: 2px solid var(--bg); transition: background .15s;
   }
   .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
-
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
-    flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    flex-shrink: 0; width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; margin-top: .1rem;
   }
   .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
-    font-weight: 600;
-    margin-bottom: .3rem;
-    display: flex;
-    align-items: baseline;
-    gap: .45rem;
-    flex-wrap: wrap;
-    color: var(--text);
+    font-weight: 600; margin-bottom: .3rem; display: flex;
+    align-items: baseline; gap: .45rem; flex-wrap: wrap; color: var(--text);
   }
   .step-chip {
-    display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
-    vertical-align: middle;
-    user-select: none;
-    flex-shrink: 0;
+    display: inline-block; font-size: .6rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+    padding: .1em .5em; border-radius: 999px;
+    background: var(--grey-bg); color: var(--subtle); border: 1px solid var(--border);
+    vertical-align: middle; user-select: none; flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--green-bg); color: var(--green); border-color: #bbf7d0;
   }
   .step-chip-text { flex: 1; }
   .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
   .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
   .step-verify-toggle {
-    margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    margin-top: .5rem; border: 0; border-top: 1px solid var(--border); padding-top: .4rem;
   }
   .step-verify-toggle summary {
-    font-size: .8rem;
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    font-size: .8rem; font-weight: 600; color: var(--accent); cursor: pointer;
+    list-style: none; display: flex; align-items: center; gap: .35rem; user-select: none;
   }
   .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
   .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
   .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+    font-size: .875rem; color: var(--text); margin-top: .4rem;
+    padding-left: .5rem; border-left: 2px solid var(--accent);
   }
   @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
-
-  /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
-    list-style: none; padding: 0;
-    display: flex; flex-direction: column; gap: .6rem;
+    list-style: none; padding: 0; display: flex; flex-direction: column; gap: .6rem;
   }
   .criteria-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: .75rem;
-    padding: .6rem .75rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-    transition: background .12s;
+    display: flex; align-items: flex-start; gap: .75rem;
+    padding: .6rem .75rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface); transition: background .12s;
   }
   .criteria-list li:has(input:checked) { background: var(--grey-bg); }
   .criteria-list input[type="checkbox"] {
-    flex-shrink: 0;
-    width: 1rem; height: 1rem;
-    margin-top: .2rem;
-    accent-color: var(--green);
-    cursor: pointer;
+    flex-shrink: 0; width: 1rem; height: 1rem; margin-top: .2rem;
+    accent-color: var(--green); cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
   .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
-
-  /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; background: var(--surface);
   }
   .next-step-item summary {
-    font-weight: 600;
-    font-size: .9rem;
-    padding: .75rem 1rem;
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    background: var(--surface);
-    user-select: none;
-    min-height: 44px;
+    font-weight: 600; font-size: .9rem; padding: .75rem 1rem; cursor: pointer;
+    list-style: none; display: flex; align-items: center; gap: .5rem;
+    background: var(--surface); user-select: none; min-height: 44px;
   }
   .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
@@ -515,165 +331,25 @@
   .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
-
-  /* ── Copy prompt button ─────────────────────────────────────── */
   .copy-prompt-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    margin-top: .6rem;
-    padding: .3rem .75rem;
-    font-size: .775rem;
-    font-weight: 500;
-    color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-    cursor: pointer;
+    display: inline-flex; align-items: center; gap: .35rem;
+    margin-top: .6rem; padding: .3rem .75rem; font-size: .775rem; font-weight: 500;
+    color: var(--accent); background: var(--accent-bg); border: 1px solid #bfdbfe;
+    border-radius: var(--radius); cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
+    font-family: inherit; line-height: 1.4;
   }
   .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
   .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
-
-  /* Wish list variant */
-  .wish-list-header {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: #7c3aed;
-    margin: 1.5rem 0 .75rem;
-  }
-  .wish-list-header::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--wish-border);
-    opacity: .5;
-  }
-  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
-  .wish-badge {
-    font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
-    padding: .1rem .5rem;
-    border-radius: 999px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    margin-left: auto;
-    border: 1px solid #ddd6fe;
-  }
-
-  /* ── Collapsible optional sections ─────────────────────────────── */
-  .optional-section {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-top: 1.5rem;
-    overflow: hidden;
-    background: var(--surface);
-  }
-  .optional-section > summary {
-    padding: .875rem 1.25rem;
-    font-weight: 600;
-    font-size: .9rem;
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    user-select: none;
-    min-height: 44px;
-  }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
-  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
-  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
-  .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
-
-  /* ── Re-invoke prompt ─────────────────────────────────────────── */
-  .plan-reinvoke {
-    display: flex;
-    align-items: flex-start;
-    gap: .6rem;
-    margin-bottom: 1.5rem;
-    padding: .45rem .75rem;
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: .8rem;
-  }
-  .plan-reinvoke-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--subtle);
-    flex-shrink: 0;
-    margin-top: .1rem;
-  }
-  .plan-reinvoke code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem;
-    color: var(--accent);
-    flex: 1;
-    word-break: break-all;
-  }
-  .copy-cmd-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .2rem .6rem;
-    font-size: .72rem;
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
-  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  [data-status="completed"] .copy-cmd-btn { display: none; }
-  @media print { .plan-reinvoke { display: none !important; } }
-  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
-
-  /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: .4rem;
-    font-size: .75rem;
-    color: var(--subtle);
-    margin-top: 3rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+    font-size: .75rem; color: var(--subtle);
+    margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
   }
-  .plan-footer .icon { opacity: .35; }
-
-  /* ── Focus styles ───────────────────────────────────────────────── */
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
     .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
     .layout { display: block !important; }
@@ -685,7 +361,6 @@
 </head>
 <body>
 
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -728,26 +403,25 @@
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">{title}</h1>
-      <span class="status-badge">{status}</span>
+      <h1 class="plan-title">Add re-invoke prompt to plan output</h1>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        {created}
+        2026-06-01
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        {repo-name}
+        agentics
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        {type}
+        feature
       </span>
     </div>
   </div>
@@ -755,7 +429,6 @@
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -770,28 +443,25 @@
     </ul>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>{objective}</p>
+      <p>Embed a copyable re-invoke command in every generated plan so any developer can resume, reference, or re-run the planning workflow directly from the plan HTML — no need to reconstruct the command from scratch.</p>
     </div>
 
-    <!-- ── Re-invoke prompt ──────────────────────────────────────── -->
+    <!-- Re-invoke prompt: immediately below the objective card -->
     <div class="plan-reinvoke">
       <span class="plan-reinvoke-label">Re-invoke</span>
-      <code id="reinvoke-cmd" aria-label="Re-invoke command">{reinvoke-cmd}</code>
+      <code id="reinvoke-cmd" aria-label="Re-invoke command">/plan-agent:planning add-reinvoke-prompt-to-plan-output.html add re-invoke prompt to plan output</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy re-invoke command to clipboard">Copy</button>
     </div>
 
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / {criteria-count} done</span>
+        <span id="progress-label">0 / 5 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -800,16 +470,15 @@
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>{context}</p>
+      <p>Plans generated by the <code>plan-agent:planning</code> skill are self-contained HTML files stored in <code>docs/plans/</code>. Once a plan exists, the only way to re-invoke the skill against it (to continue implementation, update status, or run a follow-up) is to manually reconstruct the original command — the filename and a short objective summary. There is no prompt in the plan itself that surfaces this command.</p>
+      <p>The user wants each generated plan to include a visible, copyable re-invoke command in the format <code>/plan-agent:planning &lt;filename&gt;.html &lt;short-objective&gt;</code> so the workflow is recoverable from the artifact alone.</p>
     </section>
 
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
@@ -823,23 +492,88 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">{step-1-action}</span>
+                <span class="step-chip-text">Add <code>.plan-reinvoke</code> CSS block to <code>SKELETON.html</code></span>
               </div>
-              <div class="step-why">{step-1-why}</div>
+              <div class="step-why">The reinvoke row needs a distinct visual treatment — inline monospace command, muted label, compact copy button — without inheriting the full <code>.copy-prompt-btn</code> affordance (which targets <code>&lt;pre&gt;</code> blocks).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">{step-1-verify}</div>
+                <div class="verify-body">Open <code>SKELETON.html</code> and confirm: <code>.plan-reinvoke</code>, <code>.plan-reinvoke-label</code>, <code>.plan-reinvoke code</code>, and <code>.copy-cmd-btn</code> CSS rules exist; <code>@media print</code> hides the row; no existing rule is modified.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <!-- Duplicate the block above for each additional step -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the <code>.plan-reinvoke</code> HTML element to <code>SKELETON.html</code> immediately below the <code>.objective-card</code></span>
+              </div>
+              <div class="step-why">Positioning below the objective card ties the re-invoke command to the plan's stated goal — after reading what the plan is for, a developer immediately sees how to re-invoke it. Placing it in the header would bury it alongside metadata rather than the plan content.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In <code>SKELETON.html</code>, find the <code>#objective</code> div (<code>.objective-card</code>). Confirm a <code>&lt;div class="plan-reinvoke"&gt;</code> element appears immediately after it and before <code>.progress-wrap</code>, and contains: <code>&lt;span class="plan-reinvoke-label"&gt;</code>, <code>&lt;code id="reinvoke-cmd" aria-label="Re-invoke command"&gt;{reinvoke-cmd}&lt;/code&gt;</code>, and a button with <code>onclick="copyCmd(this)"</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>copyCmd()</code> JavaScript function to <code>SKELETON.html</code></span>
+              </div>
+              <div class="step-why">The existing <code>copyPrompt()</code> function targets <code>&lt;pre&gt;</code> siblings; the reinvoke row uses an inline <code>&lt;code&gt;</code> element with a known ID. A separate <code>copyCmd()</code> avoids brittle DOM traversal and keeps the two copy patterns independent.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In the <code>&lt;script&gt;</code> block, confirm <code>copyCmd(btn)</code> is defined — it reads <code>document.getElementById('reinvoke-cmd').textContent</code>, copies via <code>navigator.clipboard.writeText</code> with <code>document.execCommand</code> fallback, and flashes the button with <code>Copied ✓</code> / resets after 2 s.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update <code>SKILL.md</code> Step 2 (Create) and Step 3 (Frontmatter) to compute and populate <code>{reinvoke-cmd}</code> and <code>&lt;meta name="plan-reinvoke"&gt;</code></span>
+              </div>
+              <div class="step-why">Step 2 must instruct the model to build the reinvoke command from the resolved filename + condensed objective. Step 3 must emit a <code>&lt;meta name="plan-reinvoke"&gt;</code> tag so the plans-library gallery can extract the command without parsing the HTML body — this keeps the frontmatter block as the single authoritative source of machine-readable plan metadata.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>SKILL.md</code> Step 2: confirm it instructs the model to set <code>{reinvoke-cmd}</code> = <code>/plan-agent:planning &lt;filename&gt;.html &lt;short-objective≤60chars&gt;</code>. Read Step 3: confirm it now lists <code>&lt;meta name="plan-reinvoke" content="…"&gt;</code> alongside the other required meta tags. Existing rules in both steps are otherwise unchanged.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add a bullet for the reinvoke prompt to <code>SKILL.md</code> HTML Output Requirements</span>
+              </div>
+              <div class="step-why">The requirements list is the single source of truth for what every generated plan must contain; the reinvoke prompt needs a line there so future skill audits and validators can confirm compliance.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read the HTML Output Requirements section of <code>SKILL.md</code>. Confirm a bullet appears stating that every plan must include a <code>.plan-reinvoke</code> element immediately below the <code>.objective-card</code> and before <code>.progress-wrap</code>, containing the <code>/plan-agent:planning &lt;filename&gt; &lt;short-objective&gt;</code> command with a copy button. No other bullets in the section are modified.</div>
+              </details>
+            </div>
+          </div>
+        </div>
 
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
@@ -848,28 +582,44 @@
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">{criterion-1}</label>
+          <label for="ac1">Every new plan HTML file includes a <code>.plan-reinvoke</code> row immediately below the <code>.objective-card</code> and before the <code>.progress-wrap</code>.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">{criterion-2}</label>
+          <label for="ac2">The reinvoke command text follows the exact format <code>/plan-agent:planning &lt;filename&gt;.html &lt;short-objective≤60chars&gt;</code>.</label>
         </li>
-        <!-- Add more <li> items as needed -->
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">Clicking Copy in the reinvoke row writes the command to the clipboard and shows "Copied ✓" feedback for 2 seconds.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">The reinvoke row is suppressed in <code>@media print</code> — it does not appear in printed or PDF output.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5"><code>SKILL.md</code> Step 2, Step 3, and the HTML Output Requirements section all document the <code>{reinvoke-cmd}</code> placeholder, its population rule, and the corresponding <code>&lt;meta name="plan-reinvoke"&gt;</code> tag. The <code>&lt;code&gt;</code> element carries <code>aria-label="Re-invoke command"</code>.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>{end-to-end-verification}</p>
+      <p>Run <code>/plan-agent:planning --quick test reinvoke prompt</code> and open the generated HTML file. Confirm:</p>
+      <ol>
+        <li>A <code>.plan-reinvoke</code> row appears immediately below the <code>.objective-card</code> and before the <code>.progress-wrap</code>.</li>
+        <li>The command text reads <code>/plan-agent:planning test-reinvoke-prompt.html test reinvoke prompt</code> (or a condensed equivalent ≤60 chars).</li>
+        <li>Clicking Copy copies the command text to clipboard and flashes "Copied ✓".</li>
+        <li>Printing the page (Cmd+P → PDF) hides the reinvoke row.</li>
+      </ol>
+      <p>Also confirm that <strong>this plan file itself</strong> already demonstrates the feature — the reinvoke row immediately below the objective card shows the correct command.</p>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -877,31 +627,21 @@
       </h2>
       <div class="next-steps-list">
 
-        <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>{next-step-1-label}</summary>
+          <summary>Backfill existing plan files with the reinvoke row</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>{next-step-1-prompt}</pre>
+            <pre>Scan every .html file under docs/plans/ (excluding docs/plans/archive/) that does NOT contain a &lt;div class="plan-reinvoke"&gt; element. For each, derive the reinvoke command from: (1) the basename of the file, (2) the &lt;title&gt; tag text after stripping the "Plan: " prefix, condensed to ≤60 chars. Insert the .plan-reinvoke HTML element (with CSS and copyCmd JS if missing) immediately after the .objective-card div and before .progress-wrap in each file. Report a list of files modified.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            {wish-1-label}
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Surface reinvoke command in plans-gallery index</summary>
           <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>{wish-1-prompt}</pre>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the plans-library skill (kit/plugins/plan-agent/skills/plans-library/), update the gallery template so each plan card shows the reinvoke command extracted from &lt;meta name="plan-reinvoke"&gt; (add this meta tag to SKELETON.html alongside the reinvoke row). The card should include a copy button matching the plan card's existing button style.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -910,38 +650,50 @@
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>{question-1-label}</summary>
-              <div class="unresolved-prompt">
-                <pre>{question-1-prompt}</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · {created} · {repo-name}
+      Generated by plan-agent · 2026-06-01 · agentics
     </footer>
 
   </main>
-</div><!-- /.layout -->
+</div>
 
 <script>
-/* ── Copy re-invoke command ──────────────────────────────────── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  var text = pre.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy prompt';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
 function copyCmd(btn) {
   var code = document.getElementById('reinvoke-cmd');
   if (!code) return;
@@ -974,49 +726,9 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy prompt button (global — required by inline onclick) ── */
-function copyPrompt(btn) {
-  var pre = btn.previousElementSibling;
-  if (!pre || pre.tagName !== 'PRE') {
-    pre = btn.parentElement && btn.parentElement.querySelector('pre');
-  }
-  if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
-}
-
 (function () {
   'use strict';
 
-  /* ── Progress bar + localStorage ────────────────────────────── */
   var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
@@ -1068,7 +780,6 @@ function copyPrompt(btn) {
   restoreState();
   updateProgress();
 
-  /* ── Scroll rail ─────────────────────────────────────────────── */
   var rail = document.querySelector('.scroll-rail');
   if (rail) {
     function updateRail() {
@@ -1080,7 +791,6 @@ function copyPrompt(btn) {
     updateRail();
   }
 
-  /* ── Scroll spy ──────────────────────────────────────────────── */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
