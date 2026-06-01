@@ -8,24 +8,27 @@ language: "en-US"
 reviews:
   profile: "chill"
   request_changes_workflow: false
-  high_level_summary: true
+  high_level_summary: false
   poem: false
-  review_status: true
-  collapse_walkthrough: false
+  review_status: false
+  collapse_walkthrough: true
 
   auto_review:
     enabled: true
     drafts: false
     base_branches:
       - "^main$"
-      - "^feat/.*$"
-      - "^fix/.*$"
-      - "^claude/.*$"
 
   path_filters:
     - "!**/*.lock"
     - "!**/node_modules/**"
     - "!**/.git/**"
+    - "!docs/plans/**"
+    - "!docs/media/**"
+    - "!**/*.png"
+    - "!**/*.html"
+    - "!**/CHANGELOG.md"
+    - "!kit/plugins/**/references/**"
 
   path_instructions:
     - path: ".claude-plugin/marketplace.json"
@@ -36,13 +39,9 @@ reviews:
       instructions: |
         Flag if: `version` is set here (must be in marketplace.json only), or `homepage` doesn't point to the plugin's own directory.
 
-    - path: "kit/plugins/**"
+    - path: "kit/plugins/**/skills/**/SKILL.md"
       instructions: |
-        Flag if: CHANGELOG.md is missing or not updated, or a SKILL.md file lacks an `allowed-tools:` frontmatter line.
-
-    - path: "docs/plans/**"
-      instructions: |
-        Flag if: the plan filename is a bare timestamp or lacks frontmatter.
+        Flag if: the SKILL.md file lacks an `allowed-tools:` frontmatter line.
 
     - path: "tests/**"
       instructions: |
@@ -64,6 +63,6 @@ chat:
 knowledge_base:
   opt_out: false
   learnings:
-    scope: auto
+    scope: local
   issues:
-    scope: auto
+    scope: local

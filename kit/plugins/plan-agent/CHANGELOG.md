@@ -1,16 +1,33 @@
 # Changelog
 
-## v0.21.0 — 2026-06-01 — Add acceptance criteria verification gate
+## v0.22.0 — 2026-06-01 — Add acceptance criteria verification gate
 
 ### Changed
 
 - **`planning` Step 8 "Implement now"** — added mandatory acceptance criteria gate after all steps are implemented. Each criterion is individually verified against the codebase before being checked off. Unverifiable criteria are flagged to the user; the plan stays `in-progress` unless all criteria are checked.
 - **`complete-plan` Step 3** — new sub-step 3b maps implementation evidence to individual acceptance criteria, classifying each as `verified` or `unverified`.
-- **`complete-plan` Step 4** — summary now shows per-criterion verification status and offers three completion options: check all, leave unverified unchecked, or cancel.
-- **`complete-plan` Step 5b** — respects the user's Step 4 choice: checks only verified criteria when the user opts to leave unverified ones unchecked, and downgrades status to `in-progress` accordingly.
+- **`complete-plan` Step 4** — summary now shows per-criterion verification status and offers three completion options: check all, only auto-check verified, or cancel.
+- **`complete-plan` Step 5b** — respects the user's Step 4 choice: checks only verified criteria when the user opts to auto-check verified only, and downgrades status to `in-progress` accordingly.
 - **`complete-plan` Step 6** — delivery message reflects whether all criteria were verified or some remain open.
 
 ---
+
+## v0.21.0 — 2026-06-01 — Add /workflows support for complex plans
+
+### Added
+
+- **Workflow prompt row** — complex plans now include a `<div class="plan-workflow">` element below the implement prompt with a "Run a workflow to implement the plan at …" prompt and copy button. Triggers Claude Code's `/workflows` runtime when pasted, launching parallel subagent orchestration for large-scale implementations.
+- **`<meta name="plan-workflow">` tag** — machine-readable workflow prompt in the plan `<head>` for gallery extraction.
+- **`copyWorkflow()` JS function** — dedicated clipboard handler for the `<code id="workflow-cmd">` element.
+- **Step 8 "Run as workflow" option** — when a workflow prompt was generated, the post-planning prompt offers a fourth choice to launch a dynamic workflow instead of sequential implementation.
+
+### Changed
+
+- **SKILL.md Step 2 (Create)** — now assesses plan complexity to decide whether to generate a `{workflow-prompt}` alongside `{implement-prompt}`. Workflow prompts are generated when plans touch 5+ files across 3+ directories, involve repetitive per-file changes, include parallelizable steps, or require cross-checking.
+- **SKILL.md Step 3 (Frontmatter)** — includes `<meta name="plan-workflow">` when a workflow prompt was generated.
+- **SKILL.md next-steps** — next-step prompts can now use "Run a workflow to …" prefix for items that benefit from workflow orchestration.
+- **SKELETON.html** — added `.plan-workflow` CSS (blue accent), HTML row with `{workflow-prompt}` placeholder, and `copyWorkflow()` JS function. Row is conditionally removed when no workflow prompt is generated.
+- **CLAUDE.md** — fixed branch naming example from `add-reinvoke-prompt` to `add-implement-prompt`.
 
 ## v0.20.0 — 2026-06-01 — Add complete-plan skill
 
