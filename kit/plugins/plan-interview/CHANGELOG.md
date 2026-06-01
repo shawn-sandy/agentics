@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.3 — 2026-06-01 — Minor wording corrections
+
+### Fixed
+
+- `plan-interview` skill: minor description wording corrections.
+
+---
+
 ## v2.2.2 — 2026-05-30 — Fix section sign rendering
 
 ### Fixed

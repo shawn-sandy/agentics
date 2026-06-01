@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.17.1 — 2026-06-01 — Minor wording corrections
+
+### Fixed
+
+- `planning` and `plans-library` skills: minor description wording corrections.
+
+---
+
 ## v0.17.0 — 2026-05-31 — Add plans-open skill (open gallery without rebuild)
 
 ### Added
