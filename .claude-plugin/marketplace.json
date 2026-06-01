@@ -244,8 +244,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.21.0",
-      "description": "Plan creation on demand — explicit /plan-agent:planning skill produces self-contained interactive HTML plans with implement and workflow prompts; complex plans get a \"Run a workflow to …\" prompt for parallel subagent orchestration; accepts GitHub/GitLab issue URLs and #n references; built-in structured interview; complete-plan skill marks plans as done; plans-open reopens gallery; PostToolUse hooks auto-regenerate gallery and enforce verb-target filenames",
+      "version": "0.22.0",
+      "description": "Plan creation on demand — explicit /plan-agent:planning skill produces self-contained interactive HTML plans with a copy-paste implement prompt and optional workflow prompt for complex plans; /plan-agent:complete-plan skill reviews a plan for completion evidence with per-criterion verification, checks acceptance-criteria boxes (all or only verified, per user choice), and sets status to completed or in-progress accordingly; accepts GitHub/GitLab issue URLs and #n references to auto-seed plans from backlog; built-in structured interview; mandatory acceptance criteria gate during implementation; plans-open skill reopens the gallery without rebuilding; PostToolUse hook auto-regenerates the gallery index; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [
         "planning",
