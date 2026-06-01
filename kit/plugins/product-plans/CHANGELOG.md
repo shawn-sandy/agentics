@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.4.5 — 2026-06-01 — Add ExitPlanMode error handling
+
+### Fixed
+
+- fix: add ExitPlanMode error handling — treat 'not in plan mode' error as success
+
 ## v3.4.4 — 2026-06-01 — Minor wording corrections
 
 ### Fixed

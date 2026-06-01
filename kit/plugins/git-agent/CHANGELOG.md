@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v3.10.2 — 2026-06-01 — Add ExitPlanMode error handling
+
+### Fixed
+
+- fix: add ExitPlanMode error handling — treat 'not in plan mode' error as success
+
 ## v3.10.1 — 2026-06-01 — Minor wording corrections
 
 ### Fixed

@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.4.2 — 2026-06-01 — Add ExitPlanMode error handling
+
+### Fixed
+
+- fix: add ExitPlanMode error handling — treat 'not in plan mode' error as success
+
 ## v2.4.1 — 2026-06-01 — Widen card templates to 1024px with pipeline and accessibility fixes
 
 ### Changed

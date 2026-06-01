@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.18.2 — 2026-06-01 — Add ExitPlanMode error handling; planning workflow improvements
+
+### Fixed
+
+- fix: add ExitPlanMode error handling — treat 'not in plan mode' error as success
+- Remove auto-commit step from planning skill (step 6 removed)
+- Add 'Edit the plan' option to post-planning prompt (step 8)
+
 ## v0.18.1 — 2026-06-01 — Fix reinvoke command: strip .html token before objective extraction
 
 ### Fixed
