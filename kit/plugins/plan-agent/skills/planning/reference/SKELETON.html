@@ -603,31 +603,31 @@
   .unresolved-prompt { margin-top: .5rem; }
   @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
 
-  /* ── Re-invoke prompt ─────────────────────────────────────────── */
-  .plan-reinvoke {
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
     border-radius: var(--radius);
     font-size: .8rem;
   }
-  .plan-reinvoke-label {
+  .plan-implement-label {
     font-size: .65rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--green);
     flex-shrink: 0;
     margin-top: .1rem;
   }
-  .plan-reinvoke code {
+  .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--accent);
+    color: var(--text);
     flex: 1;
     word-break: break-all;
   }
@@ -653,7 +653,7 @@
   .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
-  @media print { .plan-reinvoke { display: none !important; } }
+  @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
   /* ── Footer ────────────────────────────────────────────────────── */
@@ -779,12 +779,12 @@
       <p>{objective}</p>
     </div>
 
-    <!-- ── Re-invoke prompt ──────────────────────────────────────── -->
-    <div class="plan-reinvoke">
-      <span class="plan-reinvoke-label">Re-invoke</span>
-      <code id="reinvoke-cmd" aria-label="Re-invoke command">{reinvoke-cmd}</code>
+    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
       <button class="copy-cmd-btn" type="button"
-              onclick="copyCmd(this)" aria-label="Copy re-invoke command to clipboard">Copy</button>
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
     <!-- ── Progress ─────────────────────────────────────────────── -->
@@ -941,9 +941,9 @@
 </div><!-- /.layout -->
 
 <script>
-/* ── Copy re-invoke command ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
 function copyCmd(btn) {
-  var code = document.getElementById('reinvoke-cmd');
+  var code = document.getElementById('implement-cmd');
   if (!code) return;
   var text = code.textContent;
   function flash() {

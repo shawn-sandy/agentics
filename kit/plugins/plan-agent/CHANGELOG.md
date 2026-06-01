@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.19.0 — 2026-06-01 — Replace reinvoke prompt with implement prompt
+
+### Changed
+
+- **Plan output** — the copy/paste prompt below the objective now generates an implementation prompt (e.g. `Read and implement all steps in the plan at docs/plans/add-dark-mode-toggle.html`) instead of a re-invoke command that re-runs the planning skill
+- **SKELETON.html** — `.plan-reinvoke` CSS/HTML/JS renamed to `.plan-implement` with green accent styling; label changed from "Re-invoke" to "Implement"
+- **Meta tag** — `<meta name="plan-reinvoke">` replaced with `<meta name="plan-implement">`
+- **SKILL.md** — Steps 2, 3, and HTML Output Requirements updated; `{reinvoke-cmd}` placeholder replaced with `{implement-prompt}`; scope constraint reordered to prioritize `plansDirectory` setting over hardcoded `docs/plans`
+
 ## v0.18.2 — 2026-06-01 — Add ExitPlanMode error handling; planning workflow improvements
 
 ### Fixed
