@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
-<meta name="plan-created" content="2026-06-01">
+<meta name="plan-created" content="2026-05-28">
+<meta name="plan-modified" content="2026-06-01">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-reinvoke" content="/plan-agent:planning add-reinvoke-prompt-to-plan-output.html add re-invoke prompt to plan output">
 <title>Plan: Add re-invoke prompt to plan output</title>
@@ -408,7 +409,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Add re-invoke prompt to plan output</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -461,7 +462,7 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 5 done</span>
+        <span id="progress-label">5 / 5 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -486,12 +487,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add <code>.plan-reinvoke</code> CSS block to <code>SKELETON.html</code></span>
               </div>
               <div class="step-why">The reinvoke row needs a distinct visual treatment — inline monospace command, muted label, compact copy button — without inheriting the full <code>.copy-prompt-btn</code> affordance (which targets <code>&lt;pre&gt;</code> blocks).</div>
@@ -503,12 +504,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the <code>.plan-reinvoke</code> HTML element to <code>SKELETON.html</code> immediately below the <code>.objective-card</code></span>
               </div>
               <div class="step-why">Positioning below the objective card ties the re-invoke command to the plan's stated goal — after reading what the plan is for, a developer immediately sees how to re-invoke it. Placing it in the header would bury it alongside metadata rather than the plan content.</div>
@@ -520,12 +521,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add <code>copyCmd()</code> JavaScript function to <code>SKELETON.html</code></span>
               </div>
               <div class="step-why">The existing <code>copyPrompt()</code> function targets <code>&lt;pre&gt;</code> siblings; the reinvoke row uses an inline <code>&lt;code&gt;</code> element with a known ID. A separate <code>copyCmd()</code> avoids brittle DOM traversal and keeps the two copy patterns independent.</div>
@@ -537,12 +538,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update <code>SKILL.md</code> Step 2 (Create) and Step 3 (Frontmatter) to compute and populate <code>{reinvoke-cmd}</code> and <code>&lt;meta name="plan-reinvoke"&gt;</code></span>
               </div>
               <div class="step-why">Step 2 must instruct the model to build the reinvoke command from the resolved filename + condensed objective. Step 3 must emit a <code>&lt;meta name="plan-reinvoke"&gt;</code> tag so the plans-library gallery can extract the command without parsing the HTML body — this keeps the frontmatter block as the single authoritative source of machine-readable plan metadata.</div>
@@ -554,12 +555,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a bullet for the reinvoke prompt to <code>SKILL.md</code> HTML Output Requirements</span>
               </div>
               <div class="step-why">The requirements list is the single source of truth for what every generated plan must contain; the reinvoke prompt needs a line there so future skill audits and validators can confirm compliance.</div>
