@@ -102,6 +102,8 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed
 - **Objective card** — prominent highlighted block at the top
+- **Implement prompt** — copy-paste prompt to begin sequential implementation
+- **Workflow prompt** *(complex plans only)* — copy-paste prompt prefixed with "Run a workflow to …" that triggers Claude Code's `/workflows` runtime for parallel subagent orchestration. Generated when a plan touches 5+ files across 3+ directories, involves repetitive per-file changes, includes parallelizable steps, or requires cross-checking.
 - **Step cards** — numbered, each with an expandable *Verify* disclosure
 - **Interactive checkboxes** — acceptance criteria the user can tick in the browser, with a live progress bar
 - **Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment
