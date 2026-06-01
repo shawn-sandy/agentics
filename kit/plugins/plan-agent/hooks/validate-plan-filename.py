@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PostToolUse hook: enforce plan-agent `/plan-agent:planning` (§4) verb-target kebab-case filenames.
+PostToolUse hook: enforce plan-agent `/plan-agent:implementation-plan` (§4) verb-target kebab-case filenames.
 
 Fires on every Write/Edit. Ignores anything outside the configured plans
 directory (reads `plansDirectory` from the project's .claude/settings.json
@@ -200,7 +200,7 @@ def main():
         sys.exit(0)
 
     msg = (
-        f"\n[plan-filename] '{os.path.basename(path)}' violates plan-agent `/plan-agent:planning` (§4) "
+        f"\n[plan-filename] '{os.path.basename(path)}' violates plan-agent `/plan-agent:implementation-plan` (§4) "
         f"(verb-target kebab-case).\n"
         f"Reason: {reason}.\n"
         f"Rename to an imperative verb-target name before committing, "
