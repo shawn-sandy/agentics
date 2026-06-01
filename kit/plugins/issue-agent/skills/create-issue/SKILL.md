@@ -53,7 +53,16 @@ Do not proceed past pre-flight if either check fails.
 
 ### Phase 3 — Resolve source and type
 
-Parse `$ARGUMENTS` for:
+Before any other parsing, strip `--no-open` from `$ARGUMENTS` to avoid it appearing in the issue title or description:
+```bash
+ARGS="${ARGUMENTS/--no-open/}"
+ARGS="${ARGS//  / }"  # collapse any double spaces left behind
+ARGS="${ARGS## }"     # trim leading space
+ARGS="${ARGS%% }"     # trim trailing space
+```
+Use `$ARGS` (not `$ARGUMENTS`) for all subsequent argument parsing in this phase.
+
+Parse `$ARGS` for:
 - An explicit source keyword: `bug`, `feature`, `selection`, `session`
 - A title/description (everything after the keyword)
 
@@ -138,9 +147,36 @@ gh issue create --web    # GitHub
 glab issue create --web  # GitLab
 ```
 
+When the `--web` fallback is used, skip the post-creation browser open below — the user is already in the browser.
+
+**After successful CLI creation, open the issue in the browser:**
+
+1. Parse the issue number/ID from the CLI output. For GitHub, `gh issue create` returns the issue URL (e.g. `https://github.com/owner/repo/issues/42`); extract the trailing integer. For GitLab, `glab issue create` returns a similar URL.
+
+2. Check whether `--no-open` appears in `$ARGUMENTS`:
+   ```bash
+   echo "$ARGUMENTS" | grep -q -- '--no-open'
+   ```
+   If `--no-open` is present, skip the browser open and proceed directly to Phase 8.
+
+3. If `--no-open` is absent, open the issue in the browser. Wrap the call in error handling — a failure to open the browser is a non-fatal warning; it must not mask the fact that the issue was created:
+   ```bash
+   # GitHub
+   gh issue view <number> --web 2>/dev/null \
+     || echo "Warning: could not open browser — open the issue manually at the URL above."
+
+   # GitLab
+   glab issue view <id> --web 2>/dev/null \
+     || echo "Warning: could not open browser — open the issue manually at the URL above."
+   ```
+
 ### Phase 8 — Report
 
-Print the issue URL and number. Confirm whether `--web` was used.
+Print the issue URL and number. Then indicate what happened with the browser:
+
+- **Browser opened:** "Opened issue #\<number\> in your browser."
+- **`--no-open` was passed:** "Browser open suppressed (`--no-open`). Issue URL: \<url\>"
+- **Browser open failed:** "Issue created at \<url\> — browser could not be opened (see warning above)."
 
 ## Reference Files
 

@@ -14,6 +14,17 @@ Use this table to look up the correct CLI flags per host. The most common mistak
 | Open in browser | `--web` | `--web` |
 | Milestone | `--milestone "v1.0"` | `--milestone "v1.0"` |
 
+## Issue view
+
+| Action | GitHub (`gh`) | GitLab (`glab`) |
+|--------|--------------|----------------|
+| View issue in browser | `gh issue view <number> --web` | `glab issue view <id> --web` |
+| View issue in terminal | `gh issue view <number>` | `glab issue view <id>` |
+
+**Extracting the issue number from CLI output:**
+- `gh issue create` returns the full URL, e.g. `https://github.com/owner/repo/issues/42`. Extract with: `grep -oE '[0-9]+$'`
+- `glab issue create` returns a similar URL. Same extraction pattern applies.
+
 ## Issue list / search
 
 | Action | GitHub (`gh`) | GitLab (`glab`) |
