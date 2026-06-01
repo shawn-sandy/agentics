@@ -47,7 +47,7 @@ Echo the resolved objective and effective flags after completing the Step 0 self
 
 **This skill produces a plan document. It does not implement anything.**
 
-- Do not edit source files, configs, or any file outside `docs/plans/` (or the configured `plansDirectory`).
+- Do not edit source files, configs, or any file outside the configured `plansDirectory` (or `docs/plans/` when no setting exists).
 - Do not apply fixes, refactors, or any change described in the plan's steps.
 - Use `Read`, `Glob`, `Grep`, and `Bash` for read-only exploration only — never to edit source files or run codebase-mutating commands. This does not restrict §7 (local HTTP server for browser preview).
 - The plan is the deliverable. Implementation is a separate, user-initiated step.
