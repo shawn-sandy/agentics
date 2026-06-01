@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.19.1 — 2026-06-01 — Add complete-plan command
+## v0.20.0 — 2026-06-01 — Add complete-plan skill
 
 ### Added
 

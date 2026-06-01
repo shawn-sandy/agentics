@@ -1,8 +1,8 @@
 ---
 name: complete-plan
-description: "Reviews an HTML plan for completion evidence, checks all acceptance criteria, and sets status to completed. Use via /plan-agent:complete-plan to close out a finished plan."
+description: "Marks an HTML plan completed: checks codebase evidence, ticks all acceptance criteria, and updates all status elements. Use via /plan-agent:complete-plan."
 disable-model-invocation: true
-argument-hint: "[plan-filename.html]"
+argument-hint: "[plan-filename.html] [--dir <path>]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile
 ---
 
@@ -46,7 +46,7 @@ Read the HTML file. Extract:
 
 **Acceptance criteria:** Collect the text of every `<input type="checkbox">` item. Note how many are currently checked (have the `checked` attribute) vs unchecked.
 
-**Implementation tokens:** Scan the HTML (excluding `<style>` and `<script>` blocks) for inline backtick-quoted tokens that look like file paths or named identifiers — same heuristic as `plan-interview:plan-status` Step 4:
+**Implementation tokens:** Scan the HTML (excluding `<style>` and `<script>` blocks) for text inside `<code>` elements that looks like file paths or named identifiers — same heuristic as `plan-interview:plan-status` Step 4:
 - File paths: contain `/` or end in a known extension (`.ts`, `.tsx`, `.md`, `.json`, `.py`, `.js`, `.css`, `.scss`)
 - Named identifiers: PascalCase, camelCase, or kebab-case names
 
@@ -136,7 +136,10 @@ class="step-card"     →  class="step-card completed"
 class="step-card ..."  →  class="step-card completed ..."
 ```
 
-The step chip text (`<span class="step-chip">todo</span>`) updates visually via CSS when the `completed` class is present — do not change the chip text in the HTML.
+Also update the step chip text from `todo` to `done` for each step card you mark completed:
+```
+<span class="step-chip">todo</span>  →  <span class="step-chip">done</span>
+```
 
 ---
 
