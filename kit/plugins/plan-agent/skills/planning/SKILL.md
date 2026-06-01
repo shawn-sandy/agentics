@@ -58,9 +58,11 @@ If the objective sounds like "fix X" or "implement Y", write a plan for *how* to
 
 Follow these steps exactly.
 
-0. **Self-bootstrap** — Before any filesystem mutation, prompting, or planning steps: load `ExitPlanMode` via `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` silently. Both steps are **unconditional** — do not prompt the user, do not skip for any flag including `--quick`. `ExitPlanMode` is a no-op when plan mode is already off, so calling it unconditionally is always safe. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
+0. **Self-bootstrap** — Before any filesystem mutation, prompting, or planning steps: load `ExitPlanMode` via `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` silently. Both steps are **unconditional** — do not prompt the user, do not skip for any flag including `--quick`. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
 
    Two-step sequence: (1) `ToolSearch(select:ExitPlanMode)` silently, (2) `ExitPlanMode` silently. No user-visible output from either step.
+
+   **Error handling:** If `ExitPlanMode` returns an error such as `"You are not in plan mode"`, treat that as **success** — plan mode was already off, which is the desired state. Do not abort or surface the error to the user; continue immediately to Step 0.5 / Step 0b.
 
 0.5. **Issue Ingestion** *(skip entirely when no issue reference was detected in Step 0 argument parsing)*
 
@@ -122,11 +124,10 @@ Follow these steps exactly.
 
     **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings before committing?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions. If declined, proceed to Step 6 without changes.
 
-6. **Commit** — **Always** commit plan files to version control alongside the related changes.
-7. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
-8. **Open** — After committing, deliver the plan and verify rendering. This step is mandatory — do not skip it.
+6. **Status** — **Always** update `status` in the HTML plan as the plan progresses: `todo` → `in-progress` → `completed`. Edit **both** the `<html data-status="…">` attribute and the `<meta name="plan-status" content="…">` tag so the CSS badge colour and the hook's completion check stay in sync. Also update the visible badge text. Note: `plan-interview:plan-status` operates on YAML-frontmatter `.md` files only — do not use it for HTML plans until that plugin is updated to support `.html`.
+7. **Open** — Deliver the plan and verify rendering. This step is mandatory — do not skip it.
 
-   After all sub-steps of Step 8 complete, proceed immediately to Step 9 — do not stop here.
+   After all sub-steps of Step 7 complete, proceed immediately to Step 8 — do not stop here.
 
    **Try browser verification first:**
    1. Load the browser tools via `ToolSearch` with `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer`. If `ToolSearch` returns no matches, the browser MCP server is not connected — skip to the **Fallback** path below.
@@ -140,15 +141,18 @@ Follow these steps exactly.
 
    **Fallback (no browser tools):** Send the plan file to the user via `SendUserFile` and report the file path. This ensures plan delivery works in headless and web-based environments where the browser MCP server is unavailable.
 
-9. **Implement or Exit** — After Step 8 completes, always ask the user whether to implement the plan or stop.
+8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the user what to do next.
 
    Use `AskUserQuestion` with a single question:
-   - Question: "The plan is complete and committed. What would you like to do next?"
+   - Question: "The plan is complete. What would you like to do next?"
    - Options:
      - `Implement now` — Begin implementing the plan steps in the current session.
+     - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
 
-   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 7's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
+   **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins, then `completed` when all steps are done (mirroring Step 6's sync rules). Commit the source file changes together with the updated plan file after implementation finishes.
+
+   **If the user chooses `Edit the plan`:** Ask what changes to make via `AskUserQuestion` ("What would you like to change or add to the plan?"), apply the edits to the HTML plan file, re-render it in the browser (repeat the sub-steps from Step 7), then loop back to this step and ask again.
 
    **If the user chooses `Exit`:** Stop immediately. Do not start any implementation work. The plan stays at `todo` — no status update is needed; all three representations (`<html data-status>`, `<meta name="plan-status">`, and badge text) were set to `todo` at creation and remain there until implementation begins.
 
