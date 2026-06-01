@@ -77,7 +77,7 @@ Score:
 For each acceptance-criteria checkbox item, determine whether the criterion is satisfied:
 1. Extract the text of each criterion.
 2. Identify implementation tokens (file paths, identifiers, CLI flags) mentioned in or implied by that criterion.
-3. Cross-reference the tokens against the evidence collected in Step 3a — a criterion is **verified** if all its key tokens were found, or if the criterion describes a state that can be confirmed by inspecting the codebase (e.g. "No TypeScript errors" → run `tsc --noEmit`; "Tests pass" → check for test files matching the feature).
+3. Cross-reference the tokens against the evidence collected in Step 3a — a criterion is **verified** if all its key tokens were found, or if the criterion describes a verifiable state. For state-based criteria, run the relevant command rather than just checking for file existence (e.g. "No TypeScript errors" → run `tsc --noEmit`; "Tests pass" → run the project's test command and confirm it exits 0; "No lint errors" → run the linter). If the command fails, the criterion is `unverified`.
 4. Mark each criterion as `verified` or `unverified`.
 
 ---
