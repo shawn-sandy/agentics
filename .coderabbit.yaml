@@ -37,7 +37,7 @@ reviews:
 
     - path: "kit/plugins/**/.claude-plugin/plugin.json"
       instructions: |
-        Flag if: `version` is set here (must be in marketplace.json only), or `homepage` doesn't point to the plugin's own directory. Also flag if the parent plugin directory is missing a CHANGELOG.md.
+        Flag if: `version` is set here (must be in marketplace.json only), or `homepage` doesn't point to the plugin's own directory.
 
     - path: "kit/plugins/**/skills/**/SKILL.md"
       instructions: |
