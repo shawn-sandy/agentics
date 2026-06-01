@@ -565,7 +565,7 @@
               <div class="step-why">The requirements list is the single source of truth for what every generated plan must contain; the reinvoke prompt needs a line there so future skill audits and validators can confirm compliance.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Read the HTML Output Requirements section of <code>SKILL.md</code>. Confirm a bullet appears stating that every plan must include a <code>.plan-reinvoke</code> element in the header containing the <code>/plan-agent:planning &lt;filename&gt; &lt;short-objective&gt;</code> command with a copy button. No other bullets in the section are modified.</div>
+                <div class="verify-body">Read the HTML Output Requirements section of <code>SKILL.md</code>. Confirm a bullet appears stating that every plan must include a <code>.plan-reinvoke</code> element immediately below the <code>.objective-card</code> and before <code>.progress-wrap</code>, containing the <code>/plan-agent:planning &lt;filename&gt; &lt;short-objective&gt;</code> command with a copy button. No other bullets in the section are modified.</div>
               </details>
             </div>
           </div>
@@ -612,12 +612,12 @@
       </h2>
       <p>Run <code>/plan-agent:planning --quick test reinvoke prompt</code> and open the generated HTML file. Confirm:</p>
       <ol>
-        <li>A <code>.plan-reinvoke</code> row appears in the header below the meta row.</li>
+        <li>A <code>.plan-reinvoke</code> row appears immediately below the <code>.objective-card</code> and before the <code>.progress-wrap</code>.</li>
         <li>The command text reads <code>/plan-agent:planning test-reinvoke-prompt.html test reinvoke prompt</code> (or a condensed equivalent ≤60 chars).</li>
         <li>Clicking Copy copies the command text to clipboard and flashes "Copied ✓".</li>
         <li>Printing the page (Cmd+P → PDF) hides the reinvoke row.</li>
       </ol>
-      <p>Also confirm the <strong>this plan file itself</strong> already demonstrates the feature — the reinvoke row in the header of this document shows the correct command.</p>
+      <p>Also confirm that <strong>this plan file itself</strong> already demonstrates the feature — the reinvoke row immediately below the objective card shows the correct command.</p>
     </section>
 
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
@@ -631,7 +631,7 @@
           <summary>Backfill existing plan files with the reinvoke row</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Scan every .html file under docs/plans/ (excluding docs/plans/archive/) that does NOT contain a &lt;div class="plan-reinvoke"&gt; element. For each, derive the reinvoke command from: (1) the basename of the file, (2) the &lt;title&gt; tag text after stripping the "Plan: " prefix, condensed to ≤60 chars. Insert the .plan-reinvoke HTML element (with CSS and copyCmd JS if missing) immediately after the .plan-meta div in each file. Report a list of files modified.</pre>
+            <pre>Scan every .html file under docs/plans/ (excluding docs/plans/archive/) that does NOT contain a &lt;div class="plan-reinvoke"&gt; element. For each, derive the reinvoke command from: (1) the basename of the file, (2) the &lt;title&gt; tag text after stripping the "Plan: " prefix, condensed to ≤60 chars. Insert the .plan-reinvoke HTML element (with CSS and copyCmd JS if missing) immediately after the .objective-card div and before .progress-wrap in each file. Report a list of files modified.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
