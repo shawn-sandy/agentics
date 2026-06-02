@@ -1,24 +1,29 @@
 # plan-agent Plugin
 
-Explicit plan creation as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow on demand, plus an automatic filename validation hook.
+Plan creation and completion as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow on demand, or `/plan-agent:complete-plan` to review and mark a plan completed.
 
 ## Overview
 
-This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into a **manual-invoke** skill (`implementation-plan`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
+This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into a **manual-invoke** skill (`implementation-plan`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans from backlog items.
 
-Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output.
+Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
-It also ships a `PostToolUse` hook that enforces `verb-target` kebab-case filenames on plan files the moment they are written.
+The `complete-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
 
-Installers get on-demand planning with argument support and the filename guardrail without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
+It also ships two `PostToolUse` hooks: one enforces `verb-target` kebab-case filenames on plan files, and another auto-regenerates the plans gallery index when plans change.
+
+Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
 
 ## Features
 
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `implementation-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:implementation-plan <objective>` |
+| `complete-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:complete-plan [plan-filename.html]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
+| `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
+| `rebuild-plans-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to non-index `.html` plans — auto-regenerates gallery |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
@@ -111,7 +116,33 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 
 Open the `.html` file directly in any browser. No server required.
 
-### Hook (automatic filename validation)
+#### `complete-plan` — Manual invoke only
+
+Reviews an HTML plan for codebase implementation evidence, verifies each acceptance criterion individually, then marks the plan as completed. Each criterion is classified as `verified` or `unverified` based on actual codebase evidence. Offers three completion options: check all criteria, only auto-check verified ones, or cancel.
+
+```
+/plan-agent:complete-plan add-dark-mode-toggle.html
+/plan-agent:complete-plan
+```
+
+When invoked without arguments, prompts for the plan file. The skill:
+1. Reads the plan's acceptance criteria
+2. Searches the codebase for implementation evidence per criterion
+3. Presents a summary showing which criteria are verified vs unverified
+4. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
+
+#### `plans-open` — Auto-activates
+
+Opens the existing plans gallery (`index.html`) directly without scanning, parsing, or writing any files. If `index.html` does not exist, tells the user to run `/plan-agent:plans-library` first.
+
+```
+open the plans gallery
+show the plans page
+```
+
+### Hooks
+
+#### Filename validation (automatic)
 
 The `validate-plan-filename` hook fires on every `Write`/`Edit` that touches a `.html` or `.md` file in the configured plans directory. It exits 2 (actionable feedback) when the filename violates `verb-target` kebab-case, and exits 0 silently on a valid name.
 
@@ -126,6 +157,10 @@ The `validate-plan-filename` hook fires on every `Write`/`Edit` that touches a `
 - Second token is a stop-word (`the`, `a`, `an`, `this`, ...)
 
 HTML plans with `<meta name="plan-status" content="completed">` are skipped (no rename required for shipped work).
+
+#### Gallery index rebuild (automatic)
+
+The `rebuild-plans-index` hook fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. It calls `build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
 
 ### Plans directory resolution
 
@@ -180,16 +215,20 @@ plan-agent/
       SKILL.md              — Plan Mode workflow, arguments, structure, writing style
       reference/
         SKELETON.html       — Default full-plan HTML template
-        SKELETON-minimal.md — Minimal template (context + steps + criteria + verification)
-        SKELETON-adr.md     — Architecture Decision Record template
-        SKELETON-spike.md   — Spike / time-boxed investigation template
+        SKELETON.md         — Markdown skeleton reference
+    complete-plan/
+      SKILL.md              — Plan completion review and acceptance criteria verification
     plans-library/
       SKILL.md              — Gallery scan/parse/render workflow
+    plans-open/
+      SKILL.md              — Open existing gallery without rebuild
   templates/
     plans-gallery.html      — Static gallery template (substituted by plans-library)
   hooks/
     validate-plan-filename.py  — PostToolUse filename enforcement script
-  hooks.json                — Hook registration (Write|Edit matcher)
+    rebuild-plans-index.py     — PostToolUse gallery index auto-rebuild
+    build-index.sh             — Shell entry point for gallery rebuild
+  hooks.json                — Hook registration (Write|Edit and Write|Edit|MultiEdit matchers)
   README.md
   CHANGELOG.md
 ```
@@ -205,6 +244,22 @@ Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
 - **Skeleton reference** — points to `reference/SKELETON.html` (only supported template; `minimal`, `adr`, and `spike` are planned)
+
+### `complete-plan` Skill
+
+Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:complete-plan [plan-filename.html]`.
+
+Reviews an HTML plan for codebase implementation evidence with per-criterion verification:
+1. Reads the plan's acceptance criteria
+2. Maps implementation evidence to individual criteria, classifying each as `verified` or `unverified`
+3. Presents a confirmation summary with per-criterion verification status
+4. Offers three completion options: check all, only auto-check verified, or cancel
+5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
+6. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
+
+### `plans-open` Skill
+
+Auto-activates on "open the gallery", "show the plans page" intent. Opens the existing `index.html` gallery directly without scanning, parsing, or writing any files. Resolves `plansDirectory` from settings (same as `plans-library`). If `index.html` does not exist, tells the user to run `/plan-agent:plans-library` first.
 
 ### `validate-plan-filename` Hook
 
@@ -240,6 +295,10 @@ The skill scans all `.html` plan files in the plans directory (resolves the same
 - Each card links directly to the underlying plan file
 
 The scan always excludes `index.html` itself and the `docs/plans/archive/` subdirectory.
+
+### `rebuild-plans-index` Hook
+
+PostToolUse hook that fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. Calls `build-index.sh` (bundled at `hooks/build-index.sh`) to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
 
 ### Optional: `plan-interview` pairing
 

@@ -1,6 +1,6 @@
 # git-agent
 
-Automated git commit and PR creation for Claude Code. Encodes a strict plan→commit→PR pipeline with hard STOP boundaries — no autonomous test runs, coverage analysis, or scope expansion after the task is done.
+Automated git commit and PR creation for Claude Code. Encodes a strict plan→commit→PR pipeline with hard STOP boundaries — no autonomous test runs, coverage analysis, or scope expansion after the task is done. Automatically links plan issue references (from `<meta name="plan-issue">` tags) in PR descriptions.
 
 ## Features
 
@@ -235,6 +235,8 @@ plugins/git-agent/
 │   ├── commit-bg.md
 │   ├── pr-bg.md
 │   └── ship-bg.md
+├── scripts/
+│   └── extract-plan-issues.sh    # Extracts plan-issue meta tags for PR descriptions
 ├── skills/
 │   ├── branch-agent/
 │   │   └── SKILL.md
