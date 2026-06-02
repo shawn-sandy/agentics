@@ -1,12 +1,12 @@
 ---
-name: complete-plan
-description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks every acceptance-criteria checkbox. Use via /plan-agent:complete-plan."
+name: finalize-plan
+description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks every acceptance-criteria checkbox. Use via /plan-agent:finalize-plan."
 disable-model-invocation: true
 argument-hint: "[plan-filename.html] [--dir <path>]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile
 ---
 
-# complete-plan
+# finalize-plan
 
 Mark a plan as done: inspect the codebase for implementation evidence, confirm with the user, then write all three HTML status representations to `completed` and tick every acceptance-criteria checkbox.
 
@@ -34,7 +34,7 @@ Parse `$ARGUMENTS`:
    find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 \
      | xargs -0 ls -t 2>/dev/null | head -1
    ```
-3. If no file is found, tell the user: `"No HTML plan found. Pass a filename: /plan-agent:complete-plan my-plan.html"` and **STOP**.
+3. If no file is found, tell the user: `"No HTML plan found. Pass a filename: /plan-agent:finalize-plan my-plan.html"` and **STOP**.
 
 Announce: `"Reviewing plan for completion: <resolved-path>"`
 

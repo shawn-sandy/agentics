@@ -1,6 +1,6 @@
 # plan-agent Plugin
 
-Plan creation and completion as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow on demand, or `/plan-agent:complete-plan` to review and mark a plan completed.
+Plan creation and completion as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow on demand, or `/plan-agent:finalize-plan` to review and mark a plan completed.
 
 ## Overview
 
@@ -8,7 +8,7 @@ This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implem
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
-The `complete-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
+The `finalize-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
 
 It also ships two `PostToolUse` hooks: one enforces `verb-target` kebab-case filenames on plan files, and another auto-regenerates the plans gallery index when plans change.
 
@@ -19,7 +19,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `implementation-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:implementation-plan <objective>` |
-| `complete-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:complete-plan [plan-filename.html]` |
+| `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
@@ -116,13 +116,13 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 
 Open the `.html` file directly in any browser. No server required.
 
-#### `complete-plan` — Manual invoke only
+#### `finalize-plan` — Manual invoke only
 
 Reviews an HTML plan for codebase implementation evidence, verifies each acceptance criterion individually, then marks the plan as completed. Each criterion is classified as `verified` or `unverified` based on actual codebase evidence. Offers three completion options: check all criteria, only auto-check verified ones, or cancel.
 
 ```
-/plan-agent:complete-plan add-dark-mode-toggle.html
-/plan-agent:complete-plan
+/plan-agent:finalize-plan add-dark-mode-toggle.html
+/plan-agent:finalize-plan
 ```
 
 When invoked without arguments, prompts for the plan file. The skill:
@@ -216,7 +216,7 @@ plan-agent/
       reference/
         SKELETON.html       — Default full-plan HTML template
         SKELETON.md         — Markdown skeleton reference
-    complete-plan/
+    finalize-plan/
       SKILL.md              — Plan completion review and acceptance criteria verification
     plans-library/
       SKILL.md              — Gallery scan/parse/render workflow
@@ -245,9 +245,9 @@ Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
 - **Skeleton reference** — points to `reference/SKELETON.html` (only supported template; `minimal`, `adr`, and `spike` are planned)
 
-### `complete-plan` Skill
+### `finalize-plan` Skill
 
-Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:complete-plan [plan-filename.html]`.
+Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:finalize-plan [plan-filename.html]`.
 
 Reviews an HTML plan for codebase implementation evidence with per-criterion verification:
 1. Reads the plan's acceptance criteria
