@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-05-31">
 <meta name="plan-repo" content="agentics">
@@ -550,7 +550,7 @@
       <h1 class="plan-title">Add Issue Ingestion to /plan-agent:planning</h1>
     </div>
     <div class="plan-meta-row">
-      <span class="badge badge-status-todo" id="status-badge" role="status" aria-live="polite">todo</span>
+      <span class="badge badge-status-completed" id="status-badge" role="status" aria-live="polite">completed</span>
       <span class="badge badge-type">feature</span>
       <a href="https://github.com/shawn-sandy/agentics/issues/205" class="badge badge-issue" target="_blank" rel="noopener">&#35;205</a>
       <span class="plan-meta-date">Created 2026-05-31 &middot; agentics</span>
@@ -610,12 +610,12 @@
       <ol class="step-list" aria-label="Implementation steps">
 
         <!-- Step 1 -->
-        <li class="step-card">
+        <li class="step-card completed">
           <div class="step-card-header">
             <div class="step-number" aria-hidden="true">1</div>
             <div class="step-content">
               <div class="step-action">
-                <span class="step-chip" aria-label="Status: todo">todo</span>
+                <span class="step-chip" aria-label="Status: done">done</span>
                 Update <code>argument-hint</code> frontmatter in <code>SKILL.md</code>
               </div>
               <p class="step-why"><strong>Why:</strong> The <code>argument-hint</code> field is shown to users in autocomplete and help text. Adding <code>&lt;issue-url|#n&gt;</code> as the leading option communicates the new capability immediately without requiring users to read the full skill body.</p>
@@ -631,12 +631,12 @@
         </li>
 
         <!-- Step 2 -->
-        <li class="step-card">
+        <li class="step-card completed">
           <div class="step-card-header">
             <div class="step-number" aria-hidden="true">2</div>
             <div class="step-content">
               <div class="step-action">
-                <span class="step-chip" aria-label="Status: todo">todo</span>
+                <span class="step-chip" aria-label="Status: done">done</span>
                 Add issue reference detection to the Invocation &amp; Arguments section of <code>SKILL.md</code>
               </div>
               <p class="step-why"><strong>Why:</strong> The skill needs clear, unambiguous detection rules so the model knows exactly which argument forms trigger issue ingestion versus plain text objectives. Three patterns cover the full surface: full GitHub URL, full GitLab URL, and bare <code>#n</code>/integer (with no other text present).</p>
@@ -657,12 +657,12 @@
         </li>
 
         <!-- Step 3 -->
-        <li class="step-card">
+        <li class="step-card completed">
           <div class="step-card-header">
             <div class="step-number" aria-hidden="true">3</div>
             <div class="step-content">
               <div class="step-action">
-                <span class="step-chip" aria-label="Status: todo">todo</span>
+                <span class="step-chip" aria-label="Status: done">done</span>
                 Insert Step 0.5 &mdash; Issue Ingestion into the Workflow section of <code>SKILL.md</code>
               </div>
               <p class="step-why"><strong>Why:</strong> The ingestion logic must run after Step 0 (self-bootstrap / ExitPlanMode) but before Step 0b (Explore) so that when exploration runs, it already has the issue title and body available as planning inputs. Numbering it 0.5 inserts it into the existing sequence without renumbering Steps 1&ndash;8.</p>
@@ -685,12 +685,12 @@
         </li>
 
         <!-- Step 4 -->
-        <li class="step-card">
+        <li class="step-card completed">
           <div class="step-card-header">
             <div class="step-number" aria-hidden="true">4</div>
             <div class="step-content">
               <div class="step-action">
-                <span class="step-chip" aria-label="Status: todo">todo</span>
+                <span class="step-chip" aria-label="Status: done">done</span>
                 Update Step 3 (Frontmatter) in <code>SKILL.md</code> to emit <code>&lt;meta name="plan-issue"&gt;</code> when an issue URL is present
               </div>
               <p class="step-why"><strong>Why:</strong> Recording the source issue URL in the HTML <code>&lt;head&gt;</code> makes plans machine-readable and linkable back to their origin ticket. The <code>plan-agent</code> gallery index, hooks, and downstream tooling can then parse <code>&lt;meta name="plan-issue"&gt;</code> the same way they already parse <code>plan-status</code> and <code>plan-type</code>.</p>
@@ -705,12 +705,12 @@
         </li>
 
         <!-- Step 5 -->
-        <li class="step-card">
+        <li class="step-card completed">
           <div class="step-card-header">
             <div class="step-number" aria-hidden="true">5</div>
             <div class="step-content">
               <div class="step-action">
-                <span class="step-chip" aria-label="Status: todo">todo</span>
+                <span class="step-chip" aria-label="Status: done">done</span>
                 Add <code>CHANGELOG.md</code> entry and bump <code>version</code> to <code>0.15.0</code> in <code>.claude-plugin/marketplace.json</code>
               </div>
               <p class="step-why"><strong>Why:</strong> Adding a new detection step and a new frontmatter field is a backward-compatible feature addition (minor version bump per the project's semver convention). The CHANGELOG entry records the intent so future contributors understand why the ingestion step exists.</p>
@@ -734,38 +734,38 @@
         <h2 class="plan-section-title" id="criteria-title">Acceptance Criteria</h2>
       </div>
       <div class="progress-wrap" aria-label="Completion progress">
-        <div class="progress-bar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progress">
-          <div class="progress-bar-fill" id="progress-bar"></div>
+        <div class="progress-bar-track" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Progress">
+          <div class="progress-bar-fill has-progress" id="progress-bar" style="width:100%"></div>
         </div>
-        <p class="progress-label" id="progress-label">0 / 7 done</p>
+        <p class="progress-label" id="progress-label">7 / 7 done</p>
       </div>
       <ul class="criteria-list" aria-label="Acceptance criteria checklist">
         <li class="criteria-item">
-          <input type="checkbox" id="ac1" aria-describedby="ac1-label">
+          <input type="checkbox" id="ac1" aria-describedby="ac1-label" checked>
           <label id="ac1-label" for="ac1">Passing a full GitHub issue URL fetches the issue and seeds the plan objective from the issue title.</label>
         </li>
         <li class="criteria-item">
-          <input type="checkbox" id="ac2" aria-describedby="ac2-label">
+          <input type="checkbox" id="ac2" aria-describedby="ac2-label" checked>
           <label id="ac2-label" for="ac2">Passing <code>#42</code> or <code>42</code> fetches issue #42 from the current repo (resolved via <code>gh repo view</code>).</label>
         </li>
         <li class="criteria-item">
-          <input type="checkbox" id="ac3" aria-describedby="ac3-label">
+          <input type="checkbox" id="ac3" aria-describedby="ac3-label" checked>
           <label id="ac3-label" for="ac3">Passing a GitLab issue URL triggers <code>glab issue view</code> instead of <code>gh</code>.</label>
         </li>
         <li class="criteria-item">
-          <input type="checkbox" id="ac4" aria-describedby="ac4-label">
+          <input type="checkbox" id="ac4" aria-describedby="ac4-label" checked>
           <label id="ac4-label" for="ac4">If the CLI is unauthenticated or the issue does not exist, the skill reports the error and falls back to treating the argument as a plain objective string.</label>
         </li>
         <li class="criteria-item">
-          <input type="checkbox" id="ac5" aria-describedby="ac5-label">
+          <input type="checkbox" id="ac5" aria-describedby="ac5-label" checked>
           <label id="ac5-label" for="ac5">The issue URL is written to plan HTML as <code>&lt;meta name="plan-issue" content="&lt;url&gt;"&gt;</code>.</label>
         </li>
         <li class="criteria-item">
-          <input type="checkbox" id="ac6" aria-describedby="ac6-label">
+          <input type="checkbox" id="ac6" aria-describedby="ac6-label" checked>
           <label id="ac6-label" for="ac6">Existing arguments (<code>--quick</code>, <code>--type</code>, <code>--dir</code>, etc.) continue to work unchanged alongside an issue reference.</label>
         </li>
         <li class="criteria-item">
-          <input type="checkbox" id="ac7" aria-describedby="ac7-label">
+          <input type="checkbox" id="ac7" aria-describedby="ac7-label" checked>
           <label id="ac7-label" for="ac7">When both an issue reference and extra text are provided, the extra text overrides the issue title as the objective while the issue body is still injected as context.</label>
         </li>
       </ul>
@@ -859,7 +859,7 @@ GitLab until glab comment support is verified). Guard behind a
       <dl>
         <div class="sidebar-row">
           <dt>Status</dt>
-          <dd>todo</dd>
+          <dd>completed</dd>
         </div>
         <div class="sidebar-row">
           <dt>Type</dt>
