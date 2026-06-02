@@ -450,7 +450,7 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v0.23.0
+#### `plan-agent` v0.23.1
 
 Plan creation and completion on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow with built-in structured interview, or `/plan-agent:complete-plan` to review and mark a plan completed. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
 
@@ -487,7 +487,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 ---
 
-#### `git-agent` v3.10.2
+#### `git-agent` v3.10.3
 
 Automated git workflow — create branches, commit with conventional messages, and create PRs. Auto-links plan issue references in PR descriptions.
 
@@ -668,7 +668,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 ---
 
-#### `issue-agent` v0.2.1
+#### `issue-agent` v0.2.2
 
 Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection, a confirmation gate before writing, and automatic browser open on creation.
 
@@ -697,14 +697,14 @@ claude --plugin-dir ./kit/plugins/issue-agent
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.5 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.0 | productivity | 4 skills, 3 hooks |
-| [git-agent](./kit/plugins/git-agent/README.md) | 3.10.2 | development | 3 commands, 5 skills, 3 agents |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.1 | productivity | 4 skills, 3 hooks |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.10.3 | development | 3 commands, 5 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.3 | development | 1 command, 4 skills |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.1 | development | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.4.2 | productivity | 1 command, 11 skills |
-| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.1 | development | 1 skill |
+| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.2 | development | 1 skill |
 
 ---
 

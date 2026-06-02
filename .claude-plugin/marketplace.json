@@ -138,7 +138,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.10.2",
+      "version": "3.10.3",
       "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
       "category": "development",
       "tags": [
@@ -244,7 +244,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "0.23.0",
+      "version": "0.23.1",
       "description": "Plan creation on demand — explicit /plan-agent:implementation-plan skill produces self-contained interactive HTML plans with a copy-paste implement prompt and optional workflow prompt for complex plans; /plan-agent:complete-plan skill reviews a plan for completion evidence with per-criterion verification, checks acceptance-criteria boxes (all or only verified, per user choice), and sets status to completed or in-progress accordingly; accepts GitHub/GitLab issue URLs and #n references to auto-seed plans from backlog; built-in structured interview; mandatory acceptance criteria gate during implementation; plans-open skill reopens the gallery without rebuilding; PostToolUse hook auto-regenerates the gallery index; filename hook enforces verb-target kebab-case",
       "category": "productivity",
       "tags": [
@@ -266,7 +266,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/issue-agent"
       },
-      "version": "0.2.1",
+      "version": "0.2.2",
       "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection and a confirmation gate before writing",
       "category": "development",
       "tags": [
