@@ -54,8 +54,12 @@ with `--plugin-dir`." and **STOP**.
 
 ## Phase 1 — Check for Existing Config
 
+Resolve the project root — always write to the git toplevel so there is one
+canonical config (matches the lookup in consuming skills):
+
 ```bash
-ls "$PWD/SOCIAL.md" 2>/dev/null
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || PROJECT_ROOT="$PWD"
+ls "$PROJECT_ROOT/SOCIAL.md" 2>/dev/null
 ```
 
 If found:
@@ -145,9 +149,9 @@ Use the user's answers alongside detected values for the final config.
 
 ## Phase 4 — Generate SOCIAL.md
 
-Write `$PWD/SOCIAL.md` using the template below. Populate with detected values
-and user answers. If updating an existing file, merge sections intelligently —
-preserve user-written content, update detected values.
+Write `$PROJECT_ROOT/SOCIAL.md` using the template below. Populate with detected
+values and user answers. If updating an existing file, merge sections
+intelligently — preserve user-written content, update detected values.
 
 ```markdown
 # Social Sharing Config
