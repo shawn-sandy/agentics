@@ -1,6 +1,6 @@
 ---
 name: share-github
-description: "Fetches a GitHub file and generates a syntax-highlighted social card with copy. Use when asked to share a code snippet from a GitHub repository."
+description: "Fetches a GitHub file and generates a syntax-highlighted social card with copy. Scrubs, fills snippet-card.html, and screenshots via Playwright. Use when asked to share a code snippet from GitHub."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, Skill, SendUserFile, Glob
 ---
 

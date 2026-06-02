@@ -1,6 +1,6 @@
 ---
 name: media-library
-description: "Builds and opens a filterable HTML gallery of saved social cards. Use when asked to browse the media library, view shares, or see saved posts."
+description: "Builds and opens a filterable HTML gallery of saved social cards. Scans docs/media/social/ and generates a filterable index page. Use when asked to browse the media library or view saved posts."
 allowed-tools: Bash, Read, Write, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 

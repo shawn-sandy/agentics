@@ -1,6 +1,6 @@
 ---
 name: share-selection
-description: "Turns selected or pasted code into platform-aware social copy and a dark-mode card image. Use when asked to share, post, or tweet highlighted or pasted code."
+description: "Turns selected or pasted code into a platform-aware social card. Scrubs, picks a template, and screenshots via Playwright. Use when asked to share, post, or tweet highlighted or pasted code."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 

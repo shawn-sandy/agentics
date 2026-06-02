@@ -1,6 +1,6 @@
 ---
 name: complete-plan
-description: "Marks an HTML plan completed: checks codebase evidence, ticks all acceptance criteria, and updates all status elements. Use via /plan-agent:complete-plan."
+description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks every acceptance-criteria checkbox. Use via /plan-agent:complete-plan."
 disable-model-invocation: true
 argument-hint: "[plan-filename.html] [--dir <path>]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile
