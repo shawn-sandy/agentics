@@ -450,16 +450,16 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v0.23.1
+#### `plan-agent` v1.0.0
 
-Plan creation and completion on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow with built-in structured interview, or `/plan-agent:complete-plan` to review and mark a plan completed. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
+Plan creation and completion on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow with built-in structured interview, or `/plan-agent:finalize-plan` to review and mark a plan completed. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
 
 **Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — manual invoke only |
-| `complete-plan` | Review a plan for completion evidence and mark it completed — manual invoke only |
+| `finalize-plan` | Review a plan for completion evidence and mark it completed — manual invoke only |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
 | `plans-open` | Reopen the plans gallery without rebuilding |
 
@@ -475,7 +475,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:implementation-plan "Add dark mode support to the settings page"
 # /plan-agent:implementation-plan https://github.com/org/repo/issues/42
 # /plan-agent:implementation-plan #42 --quick
-# /plan-agent:complete-plan add-dark-mode-toggle.html
+# /plan-agent:finalize-plan add-dark-mode-toggle.html
 # "Browse my plans"
 ```
 
@@ -697,7 +697,7 @@ claude --plugin-dir ./kit/plugins/issue-agent
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.5 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.1 | productivity | 4 skills, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 1.0.0 | productivity | 4 skills, 2 hooks |
 | [git-agent](./kit/plugins/git-agent/README.md) | 3.10.3 | development | 3 commands, 5 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
