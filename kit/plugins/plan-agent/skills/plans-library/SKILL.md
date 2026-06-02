@@ -43,7 +43,7 @@ EOF
 
 If the directory does not exist or contains no `.html` files (other than `index.html`), tell the user:
 
-> "No HTML plans found in `<PLANS_DIR>`. Run `/plan-agent:planning` to create your first plan."
+> "No HTML plans found in `<PLANS_DIR>`. Run `/plan-agent:implementation-plan` to create your first plan."
 
 **STOP.**
 

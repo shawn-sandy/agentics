@@ -1,6 +1,6 @@
 {
   "name": "plan-agent",
-  "description": "Plan creation on demand — explicit /plan-agent:planning skill runs the full §1–§8 workflow with a built-in structured interview; /plan-agent:complete-plan skill reviews an HTML plan for completion evidence, checks all acceptance-criteria boxes, and sets status to completed; plans-library skill generates a filterable HTML gallery of all plans; plans-open skill reopens the gallery without rebuilding; filename hook enforces verb-target kebab-case on every plan write",
+  "description": "Plan creation on demand — explicit /plan-agent:implementation-plan skill runs the full Steps 1-8 workflow with a built-in structured interview; /plan-agent:complete-plan skill reviews an HTML plan for completion evidence, checks all acceptance-criteria boxes, and sets status to completed; plans-library skill generates a filterable HTML gallery of all plans; plans-open skill reopens the gallery without rebuilding; filename hook enforces verb-target kebab-case on every plan write",
   "author": {
     "name": "Agentics Project"
   },

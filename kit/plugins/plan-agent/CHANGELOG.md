@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.23.0 — 2026-06-01 — Rename `planning` skill to `implementation-plan`
+
+### Changed
+
+- **Renamed the `planning` skill to `implementation-plan`.** Invocation is now `/plan-agent:implementation-plan <objective>` (previously `/plan-agent:planning`). The skill directory moved from `skills/planning/` to `skills/implementation-plan/`; all behavior, arguments, and workflow steps are unchanged. Update any saved commands or aliases that referenced the old name.
+
+---
+
 ## v0.22.0 — 2026-06-01 — Add acceptance criteria verification gate
 
 ### Changed

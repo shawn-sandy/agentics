@@ -452,18 +452,18 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 #### `plan-agent` v0.7.1
 
-Plan creation on demand — invoke `/plan-agent:planning <objective>` to run the full Steps 0–7 planning workflow; a filename validation hook enforces verb-target kebab-case on every plan write.
+Plan creation on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow; a filename validation hook enforces verb-target kebab-case on every plan write.
 
 **Skills** (activate explicitly):
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `planning` | Create a plan via `/plan-agent:planning <objective>` — manual invoke only |
+| `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — manual invoke only |
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
-# /plan-agent:planning "Add dark mode support to the settings page"
-# /plan-agent:planning "Fix login redirect loop --type fix"
+# /plan-agent:implementation-plan "Add dark mode support to the settings page"
+# /plan-agent:implementation-plan "Fix login redirect loop --type fix"
 ```
 
 [View Documentation](./kit/plugins/plan-agent/README.md)

@@ -1,10 +1,10 @@
 # plan-agent Plugin
 
-Explicit plan creation as a Claude Code plugin — invoke `/plan-agent:planning <objective>` to run the full Steps 0–7 planning workflow on demand, plus an automatic filename validation hook.
+Explicit plan creation as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow on demand, plus an automatic filename validation hook.
 
 ## Overview
 
-This plugin packages the Plan Mode workflow (Step 0 Assess through Step 7 Status), required plan structure, and writing style into a **manual-invoke** skill (`planning`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
+This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into a **manual-invoke** skill (`implementation-plan`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output.
 
@@ -16,7 +16,7 @@ Installers get on-demand planning with argument support and the filename guardra
 
 | Component | Type | Activation |
 |-----------|------|-----------|
-| `planning` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:planning <objective>` |
+| `implementation-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:implementation-plan <objective>` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
 
@@ -42,22 +42,22 @@ claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent
 
 ### Skills
 
-#### `planning` — Manual invoke only
+#### `implementation-plan` — Manual invoke only
 
 Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and HTML metadata.
 
-Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `disable-model-invocation: true` and will not auto-activate on ambient intent.
+Manual invoke only — use `/plan-agent:implementation-plan` explicitly. This skill has `disable-model-invocation: true` and will not auto-activate on ambient intent.
 
 ```
-/plan-agent:planning create a todo app for ravens
-/plan-agent:planning fix the login redirect bug in auth middleware
-/plan-agent:planning refactor the user settings module into smaller services
+/plan-agent:implementation-plan create a todo app for ravens
+/plan-agent:implementation-plan fix the login redirect bug in auth middleware
+/plan-agent:implementation-plan refactor the user settings module into smaller services
 ```
 
 **Full invocation syntax:**
 
 ```
-/plan-agent:planning <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:implementation-plan <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
@@ -76,10 +76,10 @@ Manual invoke only — use `/plan-agent:planning` explicitly. This skill has `di
 **Examples with flags:**
 
 ```
-/plan-agent:planning --quick --type fix patch the login redirect
-/plan-agent:planning --no-clarify add dark mode toggle
-/plan-agent:planning --dir tmp/plans add dark mode toggle
-/plan-agent:planning --no-interview fix a config typo
+/plan-agent:implementation-plan --quick --type fix patch the login redirect
+/plan-agent:implementation-plan --no-clarify add dark mode toggle
+/plan-agent:implementation-plan --dir tmp/plans add dark mode toggle
+/plan-agent:implementation-plan --no-interview fix a config typo
 ```
 
 **Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) are opt-in only and are never inferred automatically.
@@ -176,7 +176,7 @@ plan-agent/
   .claude-plugin/
     plugin.json             — Plugin manifest
   skills/
-    planning/
+    implementation-plan/
       SKILL.md              — Plan Mode workflow, arguments, structure, writing style
       reference/
         SKELETON.html       — Default full-plan HTML template
@@ -196,9 +196,9 @@ plan-agent/
 
 ## Components
 
-### `planning` Skill
+### `implementation-plan` Skill
 
-Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:planning <objective>`.
+Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:implementation-plan <objective>`.
 
 - **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority` flags with smart defaults
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
@@ -230,7 +230,7 @@ view plan history
 open the plans index
 ```
 
-The skill scans all `.html` plan files in the plans directory (resolves the same `plansDirectory` setting as the `planning` skill), reads each plan's `<meta>` tags and `<title>`, renders them into a filterable gallery, writes `docs/plans/index.html`, and opens it in the browser.
+The skill scans all `.html` plan files in the plans directory (resolves the same `plansDirectory` setting as the `implementation-plan` skill), reads each plan's `<meta>` tags and `<title>`, renders them into a filterable gallery, writes `<PLANS_DIR>/index.html`, and opens it in the browser.
 
 **Gallery features:**
 - Filter chips for status: **All / Todo / In Progress / Completed**
