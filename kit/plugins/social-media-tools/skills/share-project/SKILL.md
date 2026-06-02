@@ -62,10 +62,11 @@ Check for `SOCIAL.md` (see `$PLUGIN_DIR/references/social-config.md`):
 
 ```bash
 SOCIAL_CONFIG=""
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [ -f "$PWD/SOCIAL.md" ]; then
   SOCIAL_CONFIG="$PWD/SOCIAL.md"
-elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
-  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+elif [ -n "$GIT_ROOT" ] && [ -f "$GIT_ROOT/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$GIT_ROOT/SOCIAL.md"
 fi
 ```
 
@@ -81,7 +82,7 @@ and `AVOID_PATTERNS` from the parsed sections. These serve as defaults — expli
 Parse `$ARGUMENTS`:
 
 - `--topic <value>` — one of: `features`, `bugs`, `changes`, `release` (required)
-- `--platform <value>` — see **Platform Options** in `$PLUGIN_DIR/references/platforms.md` (required)
+- `--platform <value>` — see **Platform Options** in `$PLUGIN_DIR/references/platforms.md` (optional if `DEFAULT_PLATFORM` loaded from SOCIAL.md)
 - `--path <dir>` — project root to analyze (default: `$PWD`)
 - `--days=N` — how far back to look in git history (default: `30`)
 

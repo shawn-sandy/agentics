@@ -118,7 +118,7 @@ Derive:
 ```bash
 # Paths that should never be shared
 ls .env .env.* 2>/dev/null
-ls **/credentials* **/secrets* **/*.pem **/*.key 2>/dev/null
+find . -type f \( -name 'credentials*' -o -name 'secrets*' -o -name '*.pem' -o -name '*.key' \) 2>/dev/null | head -20
 cat .gitignore 2>/dev/null | head -30
 ```
 
@@ -134,6 +134,8 @@ Present analysis results and ask the user to confirm or adjust. Use a **single**
 1. **Platform**: "Which platform(s) do you primarily share on?"
    Options: `All sites (Recommended)`, `LinkedIn`, `Twitter/X`, `Bluesky`
    (multiSelect: false)
+   Map selected label to canonical token before writing: `All sites` → `all`,
+   `LinkedIn` → `LinkedIn`, `Twitter/X` → `twitter`, `Bluesky` → `bluesky`
 
 2. **Tone**: "What tone fits your audience?"
    Options: `Professional (Recommended)`, `Technical`, `Conversational`, `Punchy`

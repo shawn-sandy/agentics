@@ -12,11 +12,6 @@ can still override anything at share time.
 | `share-code` | Default platform, tone, hashtags; content focus for copy angle |
 | `share-project` | Default platform, tone, topic priorities, project identity |
 | `share-scan` | Focus areas boost candidate scores; exclude patterns filter candidates |
-| `share-selection` | Default platform, tone, hashtags |
-| `share-blog` | Default platform, tone, hashtags |
-| `share-video` | Default platform, tone, hashtags |
-| `share-session` | Default platform, tone, hashtags |
-| `share-github` | Default platform, tone, hashtags |
 
 ## Loading Convention
 
@@ -24,10 +19,11 @@ At the start of Phase 1 (or equivalent), check:
 
 ```bash
 SOCIAL_CONFIG=""
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [ -f "$PWD/SOCIAL.md" ]; then
   SOCIAL_CONFIG="$PWD/SOCIAL.md"
-elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
-  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+elif [ -n "$GIT_ROOT" ] && [ -f "$GIT_ROOT/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$GIT_ROOT/SOCIAL.md"
 fi
 ```
 
@@ -45,7 +41,7 @@ Override project name and tagline for cards.
 
 ### `## Defaults`
 
-- `Platform:` → Default `--platform` value (e.g. `all`, `linkedin`, `twitter`)
+- `Platform:` → Default `--platform` value (e.g. `all`, `LinkedIn`, `twitter`)
 - `Tone:` → Default tone for copy drafting
 - `Hashtags:` → Comma-separated default hashtags (appended per platform rules)
 

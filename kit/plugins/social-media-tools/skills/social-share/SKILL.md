@@ -48,10 +48,11 @@ for format details):
 
 ```bash
 SOCIAL_CONFIG=""
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [ -f "$PWD/SOCIAL.md" ]; then
   SOCIAL_CONFIG="$PWD/SOCIAL.md"
-elif [ -f "$(git rev-parse --show-toplevel 2>/dev/null)/SOCIAL.md" ]; then
-  SOCIAL_CONFIG="$(git rev-parse --show-toplevel)/SOCIAL.md"
+elif [ -n "$GIT_ROOT" ] && [ -f "$GIT_ROOT/SOCIAL.md" ]; then
+  SOCIAL_CONFIG="$GIT_ROOT/SOCIAL.md"
 fi
 ```
 

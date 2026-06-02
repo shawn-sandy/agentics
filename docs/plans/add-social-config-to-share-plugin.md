@@ -1,3 +1,10 @@
+---
+title: Add SOCIAL.md Project Sharing Config
+status: complete
+plugin: social-media-tools
+version: "2.5.0"
+---
+
 # Add SOCIAL.md Project Sharing Config
 
 **Status:** complete
