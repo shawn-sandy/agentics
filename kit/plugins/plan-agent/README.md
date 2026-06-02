@@ -1,10 +1,10 @@
 # plan-agent Plugin
 
-Explicit plan creation as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–7 planning workflow on demand, plus an automatic filename validation hook.
+Explicit plan creation as a Claude Code plugin — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow on demand, plus an automatic filename validation hook.
 
 ## Overview
 
-This plugin packages the Plan Mode workflow (Step 0 Assess through Step 7 Status), required plan structure, and writing style into a **manual-invoke** skill (`implementation-plan`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
+This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into a **manual-invoke** skill (`implementation-plan`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent.
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output.
 
@@ -230,7 +230,7 @@ view plan history
 open the plans index
 ```
 
-The skill scans all `.html` plan files in the plans directory (resolves the same `plansDirectory` setting as the `implementation-plan` skill), reads each plan's `<meta>` tags and `<title>`, renders them into a filterable gallery, writes `docs/plans/index.html`, and opens it in the browser.
+The skill scans all `.html` plan files in the plans directory (resolves the same `plansDirectory` setting as the `implementation-plan` skill), reads each plan's `<meta>` tags and `<title>`, renders them into a filterable gallery, writes `<PLANS_DIR>/index.html`, and opens it in the browser.
 
 **Gallery features:**
 - Filter chips for status: **All / Todo / In Progress / Completed**
