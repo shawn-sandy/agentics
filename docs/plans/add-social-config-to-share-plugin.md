@@ -1,13 +1,13 @@
 ---
 title: Add SOCIAL.md Project Sharing Config
-status: complete
+status: completed
 plugin: social-media-tools
 version: "2.5.0"
 ---
 
 # Add SOCIAL.md Project Sharing Config
 
-**Status:** complete
+**Status:** completed
 **Plugin:** social-media-tools
 **Version:** 2.5.0 (minor bump — new skill added)
 

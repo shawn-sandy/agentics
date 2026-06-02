@@ -79,31 +79,30 @@ Extract signals from the codebase to pre-populate the config. Run silently:
 
 ```bash
 # Project name and description from manifest
-cat package.json 2>/dev/null | grep -E '"name"|"description"' | head -2
-cat pyproject.toml 2>/dev/null | grep -E '^name |^description ' | head -2
-cat Cargo.toml 2>/dev/null | grep -E '^name|^description' | head -2
-head -5 go.mod 2>/dev/null
+cat "$PROJECT_ROOT/package.json" 2>/dev/null | grep -E '"name"|"description"' | head -2
+cat "$PROJECT_ROOT/pyproject.toml" 2>/dev/null | grep -E '^name |^description ' | head -2
+cat "$PROJECT_ROOT/Cargo.toml" 2>/dev/null | grep -E '^name|^description' | head -2
+head -5 "$PROJECT_ROOT/go.mod" 2>/dev/null
 ```
 
-Fallback: last segment of `$PWD`.
+Fallback: last segment of `$PROJECT_ROOT`.
 
 ### Tech stack
 
 ```bash
 # Detect languages and frameworks
-ls package.json tsconfig.json 2>/dev/null
-ls requirements.txt pyproject.toml setup.py 2>/dev/null
-ls Cargo.toml go.mod Gemfile 2>/dev/null
-ls *.sln *.csproj 2>/dev/null
+ls "$PROJECT_ROOT/package.json" "$PROJECT_ROOT/tsconfig.json" 2>/dev/null
+ls "$PROJECT_ROOT/requirements.txt" "$PROJECT_ROOT/pyproject.toml" "$PROJECT_ROOT/setup.py" 2>/dev/null
+ls "$PROJECT_ROOT/Cargo.toml" "$PROJECT_ROOT/go.mod" "$PROJECT_ROOT/Gemfile" 2>/dev/null
 ```
 
 ### Content signals
 
 ```bash
 # Recent activity patterns
-git log --oneline -20 --format="%s" 2>/dev/null
-head -40 CHANGELOG.md 2>/dev/null
-head -20 README.md 2>/dev/null
+git -C "$PROJECT_ROOT" log --oneline -20 --format="%s" 2>/dev/null
+head -40 "$PROJECT_ROOT/CHANGELOG.md" 2>/dev/null
+head -20 "$PROJECT_ROOT/README.md" 2>/dev/null
 ```
 
 Derive:
@@ -117,9 +116,9 @@ Derive:
 
 ```bash
 # Paths that should never be shared
-ls .env .env.* 2>/dev/null
-find . -type f \( -name 'credentials*' -o -name 'secrets*' -o -name '*.pem' -o -name '*.key' \) 2>/dev/null | head -20
-cat .gitignore 2>/dev/null | head -30
+ls "$PROJECT_ROOT/.env" "$PROJECT_ROOT/.env."* 2>/dev/null
+find "$PROJECT_ROOT" -type f \( -name 'credentials*' -o -name 'secrets*' -o -name '*.pem' -o -name '*.key' \) 2>/dev/null | head -20
+cat "$PROJECT_ROOT/.gitignore" 2>/dev/null | head -30
 ```
 
 Derive `DETECTED_AVOID` — list of paths/patterns to exclude.

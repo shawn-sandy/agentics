@@ -63,8 +63,10 @@ If `SOCIAL_CONFIG` is non-empty, `Read` it silently. Extract:
 - `FOCUS_AREAS` from `## Focus` bullet list
 - `AUDIENCE` from `## Audience` section
 
-These values are passed to the dispatched skill as extra context when not
-overridden by the user's explicit request.
+These values inform the router's platform resolution in Phase 3. Downstream
+skills also load `SOCIAL.md` independently via their own Phase 0b, so the
+router does not need to forward all fields — only `--platform` is passed
+as a dispatch flag.
 
 ---
 

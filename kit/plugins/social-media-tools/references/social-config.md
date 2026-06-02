@@ -1,8 +1,8 @@
 # SOCIAL.md — Project-Level Sharing Configuration
 
 Skills that generate social content check for a `SOCIAL.md` file at the project
-root (`$PWD/SOCIAL.md`). When present, its settings serve as defaults — the user
-can still override anything at share time.
+root — first at `$PWD`, then falling back to the git toplevel. When present, its
+settings serve as defaults — the user can still override anything at share time.
 
 ## How Skills Use It
 

@@ -29,7 +29,7 @@ happen silently with no user-visible output. Only call `ExitPlanMode` if current
 
 ## Step 0b — Load Project Sharing Config
 
-Check for `SOCIAL.md` (see `$PLUGIN_DIR/references/social-config.md` if available):
+Check for `SOCIAL.md` at the project root:
 
 ```bash
 SOCIAL_CONFIG=""
