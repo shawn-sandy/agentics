@@ -2,7 +2,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+
+**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories are retained in the repository but are no longer installable via the marketplace. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -364,7 +364,7 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 ---
 
-#### `plan-interview` v2.2.1
+#### `plan-interview` v2.2.4
 
 Stress-test implementation plans with structured multi-round interviews before coding begins.
 
@@ -411,7 +411,7 @@ claude --plugin-dir ./kit/plugins/plan-interview
 
 ---
 
-#### `product-plans` v3.4.3
+#### `product-plans` v3.4.5
 
 Improve, optimize, and update product plans, PRDs, and feature proposals using a simulated cross-functional team — PM, Lead Developer, UX Designer, Frontend Engineer, Accessibility Expert, and Security Expert.
 
@@ -450,20 +450,33 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v0.7.1
+#### `plan-agent` v0.23.0
 
-Plan creation on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow; a filename validation hook enforces verb-target kebab-case on every plan write.
+Plan creation and completion on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow with built-in structured interview, or `/plan-agent:complete-plan` to review and mark a plan completed. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
 
-**Skills** (activate explicitly):
+**Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — manual invoke only |
+| `complete-plan` | Review a plan for completion evidence and mark it completed — manual invoke only |
+| `plans-library` | Browse plans, view plan history, or open the plans index |
+| `plans-open` | Reopen the plans gallery without rebuilding |
+
+**Hooks:**
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| `validate-plan-filename` | `PostToolUse` (Write/Edit) | Enforces verb-target kebab-case filenames on plan files |
+| `rebuild-plans-index` | `PostToolUse` (Write/Edit) | Auto-regenerates the gallery index when plans change |
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:implementation-plan "Add dark mode support to the settings page"
-# /plan-agent:implementation-plan "Fix login redirect loop --type fix"
+# /plan-agent:implementation-plan https://github.com/org/repo/issues/42
+# /plan-agent:implementation-plan #42 --quick
+# /plan-agent:complete-plan add-dark-mode-toggle.html
+# "Browse my plans"
 ```
 
 [View Documentation](./kit/plugins/plan-agent/README.md)
@@ -474,9 +487,9 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 ---
 
-#### `git-agent` v3.9.2
+#### `git-agent` v3.10.2
 
-Automated git workflow — create branches, commit with conventional messages, and create PRs.
+Automated git workflow — create branches, commit with conventional messages, and create PRs. Auto-links plan issue references in PR descriptions.
 
 **Commands:**
 
@@ -562,7 +575,7 @@ claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 
 ---
 
-#### `skill-reviewer` v2.2.2
+#### `skill-reviewer` v2.2.3
 
 Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage.
 
@@ -618,9 +631,9 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ---
 
-#### `social-media-tools` v2.2.0
+#### `social-media-tools` v2.4.2
 
-Draft platform-aware social media copy and generate dark-mode cards for code changes, selected/pasted code, GitHub code snippets, blog posts, and videos — for LinkedIn, Twitter/X, and Bluesky.
+Discover shareable code from git history or codebase path, scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack.
 
 **Commands:**
 
@@ -655,9 +668,9 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 ---
 
-#### `issue-agent` v0.1.1
+#### `issue-agent` v0.2.1
 
-Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection and a confirmation gate before writing.
+Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection, a confirmation gate before writing, and automatic browser open on creation.
 
 **Skills** (activate explicitly):
 
@@ -682,16 +695,16 @@ claude --plugin-dir ./kit/plugins/issue-agent
 |--------|---------|----------|------------|
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.1 | development | 1 command, 1 skill, 1 agent |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
-| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.1 | development | 10 commands, 6 skills, 1 agent, 1 hook |
-| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.3 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.7.1 | productivity | 1 skill, 1 hook |
-| [git-agent](./kit/plugins/git-agent/README.md) | 3.9.2 | development | 3 commands, 5 skills, 3 agents |
+| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent |
+| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.5 | productivity | 1 command, 1 skill, 7 agents |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.0 | productivity | 4 skills, 3 hooks |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.10.2 | development | 3 commands, 5 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.2 | development | 1 command, 4 skills, 1 hook |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.3 | development | 1 command, 4 skills |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.1 | development | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.2.0 | productivity | 1 command, 11 skills |
-| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.1.1 | development | 1 skill |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.4.2 | productivity | 1 command, 11 skills |
+| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.1 | development | 1 skill |
 
 ---
 
