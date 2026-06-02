@@ -139,7 +139,7 @@
         "path": "kit/plugins/git-agent"
       },
       "version": "3.10.3",
-      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents and slash commands for fire-and-forget commit, PR, and ship)",
+      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents, slash commands for fire-and-forget commit/PR/ship, and auto-linking plan issue references in PR descriptions)",
       "category": "development",
       "tags": [
         "git",
@@ -267,7 +267,7 @@
         "path": "kit/plugins/issue-agent"
       },
       "version": "0.2.2",
-      "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection and a confirmation gate before writing",
+      "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection, a confirmation gate before writing, and automatic browser open on creation (--no-open to suppress)",
       "category": "development",
       "tags": [
         "issue",
