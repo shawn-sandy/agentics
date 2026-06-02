@@ -25,6 +25,7 @@ No path in this plugin auto-posts — human review is always required before any
 | `share-project` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
 | `share-scan` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
 | `media-library` | Skill | Browse saved posts interactively and retrieve copy for reposting |
+| `share-init` | Skill | Analyze the project and generate a `SOCIAL.md` config with default platform, tone, hashtags, focus areas, and audience |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 
@@ -64,6 +65,7 @@ claude --plugin-dir ~/devbox/agentics/kit/plugins/social-media-tools
 | `share-project` | Manual invoke only — use `/social-media-tools:share-project` explicitly | Reached via `social-share` router with `--topic` flag or explicit dispatch; not activated by passive intent matching |
 | `share-scan` | Automatic | Find commits worth sharing, create a digest, scan codebase for shareable code |
 | `media-library` | Automatic | Browse the media library, find a prior post, view saved posts |
+| `share-init` | Automatic | Set up social sharing preferences, create a SOCIAL.md, configure sharing defaults |
 | `security-scrub` | Automatic | Check for secrets, review a diff for leaks, scrub this file for sensitive data |
 
 ### Discover what's worth sharing
@@ -118,6 +120,17 @@ Skills activate automatically — just describe what you want to share.
 **Use a prompt from the digest:**
 > "share feature-card for LinkedIn: the new security-scrub skill"
 
+### Set up project sharing defaults
+
+The `share-init` skill analyzes your project and generates a `SOCIAL.md` file at the project root. This file configures default platform, tone, hashtags, focus areas, audience, and avoid patterns for all share skills.
+
+```
+"set up social sharing preferences"
+"create a SOCIAL.md for this project"
+```
+
+Once created, share skills automatically read `SOCIAL.md` and use its defaults — no more re-answering platform and tone every time. Edit the file anytime to adjust.
+
 ### Scrub code for secrets before sharing
 
 The `security-scrub` skill activates automatically when you ask to check code for leaks:
@@ -156,6 +169,7 @@ social-media-tools/
 │   ├── rendering-pipeline.md              ← find_free_port → HTTP server → Playwright → kill
 │   ├── reuse-check.md                     ← scan docs/media/social/ + offer reuse
 │   ├── saving-and-delivery.md             ← persistent save block + deliver phase
+│   ├── social-config.md                   ← SOCIAL.md format + loading convention
 │   └── variables.md                       ← per-template variable maps (all 7 cards)
 ├── scripts/
 │   └── find_free_port.py                  ← port helper for Playwright
@@ -176,6 +190,8 @@ social-media-tools/
 │   │       └── variables.md               ← redirects to plugin-root references/
 │   ├── share-github/
 │   │   └── SKILL.md
+│   ├── share-init/
+│   │   └── SKILL.md                       ← generate SOCIAL.md project sharing config
 │   ├── share-project/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -308,6 +324,17 @@ Generates a card for a project **topic** — features, bugs, changes, or release
 Every card-generating skill saves its populated HTML (including the post copy) to `docs/media/social/`. This skill lists saved cards by type and date so you can retrieve copy for reposting and see which skill regenerates each card.
 
 Lists posts and lets you pick one to view/reuse via `AskUserQuestion`.
+
+---
+
+### Skill: `share-init`
+
+**File:** `skills/share-init/SKILL.md`  
+**Activation:** automatic — triggers when the user asks to set up social sharing preferences, create a SOCIAL.md, or configure sharing defaults.
+
+Analyzes the project — manifest files, tech stack, git history, and sensitive paths — then interviews for platform, tone, and audience preferences. Writes a `SOCIAL.md` file at the git root that all share skills read for defaults (platform, tone, hashtags, focus areas, audience, avoid patterns).
+
+**Workflow:** locate plugin assets → check for existing `SOCIAL.md` (offer update/replace/cancel) → analyze project identity, stack, commit themes, and sensitive paths → interview (platform, tone, audience) → write `SOCIAL.md` to project root.
 
 ---
 
