@@ -1,6 +1,6 @@
 ---
 name: plans-library
-description: "Builds and opens a filterable HTML gallery of all plans in the plans directory. Use when asked to browse plans, view plan history, or open the plans index."
+description: "Builds and opens a filterable HTML gallery of all plans in the plans directory. Scans HTML plans, parses metadata, and writes index.html. Use when asked to browse plans or view plan history."
 allowed-tools: Bash, Read, Write, ToolSearch, ExitPlanMode
 ---
 

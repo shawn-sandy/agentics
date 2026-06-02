@@ -1,6 +1,6 @@
 ---
 name: implementation-plan
-description: "Creates HTML plans from objectives, enforcing verb-target filenames. Use via /plan-agent:implementation-plan to turn any objective into a structured plan."
+description: "Creates HTML plans from objectives, enforcing verb-target filenames. Runs a 9-step workflow with optional issue-fetch, interview, and align phases. Use via /plan-agent:implementation-plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 disable-model-invocation: true
 argument-hint: "<issue-url|#n> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"

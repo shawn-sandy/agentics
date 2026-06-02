@@ -1,6 +1,6 @@
 ---
 name: social-share
-description: "Social media share router — classifies content type and runs the right skill. Use when asked to share what you're working on or post code, a blog, video, or project update."
+description: "Social media share router — classifies content type and runs the right skill. Dispatches to the right share-* skill based on content type. Use when asked to share what you're working on."
 allowed-tools: Bash, Read, Write, Skill, ToolSearch, ExitPlanMode
 ---
 

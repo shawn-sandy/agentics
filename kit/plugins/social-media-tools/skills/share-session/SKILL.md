@@ -1,6 +1,6 @@
 ---
 name: share-session
-description: "Session recap card summarizing what you accomplished — a narrative plus highlights, with token usage as a secondary stat. Use when asked to share my session, session recap, what I worked on, what I did today, or session summary."
+description: "Generates a session recap card. Reads session JSONL and git history to produce a narrative plus highlights card. Use when asked to share a session recap or what you worked on today."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 

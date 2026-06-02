@@ -1,6 +1,6 @@
 ---
 name: share-video
-description: "Creates platform-aware social copy and a card for YouTube or Vimeo videos. Use when asked to share or promote a video on social media."
+description: "Creates platform-aware social copy and a card for YouTube or Vimeo videos. Fetches oEmbed metadata and screenshots a video card via Playwright. Use when asked to share a video on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.23.2 — 2026-06-02 — Fix plans-open trigger ambiguity
+
+### Fixed
+
+- **`plans-open` description**: restored "without a rebuild" qualifier to the trigger phrase so it no longer overlaps with `plans-library`'s "browse plans" trigger, preventing mis-routing of first-time or rebuild-needed gallery requests.
+
+---
+
+## v0.23.1 — 2026-06-02 — Optimize skill descriptions to three-part format
+
+### Changed
+
+- Rewrote `description` fields in `complete-plan`, `implementation-plan`, `plans-library`, and `plans-open` to the three-part format (short label ≤80 chars + capability sentence + trigger phrase, total ≤200 chars) for improved skill discoverability.
+
+---
+
 ## v0.23.0 — 2026-06-01 — Rename `planning` skill to `implementation-plan`
 
 ### Changed
