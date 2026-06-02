@@ -23,7 +23,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
-| `rebuild-plans-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit` to non-index `.html` plans — auto-regenerates gallery |
+| `rebuild-plans-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to non-index `.html` plans — auto-regenerates gallery |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
@@ -160,7 +160,7 @@ HTML plans with `<meta name="plan-status" content="completed">` are skipped (no 
 
 #### Gallery index rebuild (automatic)
 
-The `rebuild-plans-index` hook fires on every `Write`/`Edit` to a non-`index.html` `.html` file inside the configured plans directory. It calls `build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
+The `rebuild-plans-index` hook fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. It calls `build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
 
 ### Plans directory resolution
 
@@ -228,7 +228,7 @@ plan-agent/
     validate-plan-filename.py  — PostToolUse filename enforcement script
     rebuild-plans-index.py     — PostToolUse gallery index auto-rebuild
     build-index.sh             — Shell entry point for gallery rebuild
-  hooks.json                — Hook registration (Write|Edit matcher)
+  hooks.json                — Hook registration (Write|Edit and Write|Edit|MultiEdit matchers)
   README.md
   CHANGELOG.md
 ```
@@ -298,7 +298,7 @@ The scan always excludes `index.html` itself and the `docs/plans/archive/` subdi
 
 ### `rebuild-plans-index` Hook
 
-PostToolUse hook that fires on every `Write`/`Edit` to a non-`index.html` `.html` file inside the configured plans directory. Calls `build-index.sh` (bundled at `hooks/build-index.sh`) to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
+PostToolUse hook that fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. Calls `build-index.sh` (bundled at `hooks/build-index.sh`) to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
 
 ### Optional: `plan-interview` pairing
 

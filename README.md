@@ -468,7 +468,7 @@ Plan creation and completion on demand — invoke `/plan-agent:implementation-pl
 | Hook | Trigger | Purpose |
 |------|---------|---------|
 | `validate-plan-filename` | `PostToolUse` (Write/Edit) | Enforces verb-target kebab-case filenames on plan files |
-| `rebuild-plans-index` | `PostToolUse` (Write/Edit) | Auto-regenerates the gallery index when plans change |
+| `rebuild-plans-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the gallery index when plans change |
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
@@ -695,13 +695,13 @@ claude --plugin-dir ./kit/plugins/issue-agent
 |--------|---------|----------|------------|
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.1 | development | 1 command, 1 skill, 1 agent |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
-| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent |
+| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.5 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.1 | productivity | 4 skills, 3 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.1 | productivity | 4 skills, 2 hooks |
 | [git-agent](./kit/plugins/git-agent/README.md) | 3.10.3 | development | 3 commands, 5 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.3 | development | 1 command, 4 skills |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.3 | development | 1 command, 4 skills, 1 hook |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.1 | development | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.4.2 | productivity | 1 command, 11 skills |
 | [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.2 | development | 1 skill |
