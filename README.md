@@ -450,7 +450,7 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v0.23.1
+#### `plan-agent` v0.23.2
 
 Plan creation and completion on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow with built-in structured interview, or `/plan-agent:complete-plan` to review and mark a plan completed. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
 
@@ -583,7 +583,7 @@ Review and plan Claude Code skills, and run tests for changed files — audit SK
 
 | Command | Description |
 |---------|-------------|
-| `/skill-reviewer:check-description` | Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 160-char budget |
+| `/skill-reviewer:check-description` | Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 200-char budget |
 
 **Skills:**
 
@@ -631,9 +631,9 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ---
 
-#### `social-media-tools` v2.4.2
+#### `social-media-tools` v2.5.0
 
-Discover shareable code from git history or codebase path, scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack.
+Discover shareable code from git history or codebase path, scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack. Generate a `SOCIAL.md` project config for default platform, tone, and content preferences.
 
 **Commands:**
 
@@ -656,6 +656,7 @@ Discover shareable code from git history or codebase path, scrub for secrets, dr
 | `share-code` | Post or share a code change |
 | `share-video` | Share or promote a video on social media |
 | `share-project` | Announce features, bugs, changes, or releases on social media — manual invoke only |
+| `share-init` | Set up social sharing preferences and generate a `SOCIAL.md` project config |
 
 ```bash
 claude --plugin-dir ./kit/plugins/social-media-tools
@@ -697,13 +698,13 @@ claude --plugin-dir ./kit/plugins/issue-agent
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.5 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.1 | productivity | 4 skills, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 0.23.2 | productivity | 4 skills, 2 hooks |
 | [git-agent](./kit/plugins/git-agent/README.md) | 3.10.3 | development | 3 commands, 5 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.3 | development | 1 command, 4 skills, 1 hook |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.1 | development | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.4.2 | productivity | 1 command, 11 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.5.0 | productivity | 1 command, 12 skills |
 | [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.2 | development | 1 skill |
 
 ---

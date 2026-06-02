@@ -55,7 +55,7 @@ claude --plugin-dir ./kit/plugins/<name>
 | `memory-tools` | Skills | Auto-activated CLAUDE.md / project memory auditing; enforces optimization principle (keep only rules that change Claude's behavior) |
 | `code-review` | Skills + Agents + Commands | Auto-activated code review; `/code-review:fix-branch` autonomously reviews and applies fixes across the whole branch |
 | `plan-interview` | Commands + Skills | Stress-test plans with deep-grill interview; auto-routes product plans to panel review (Step 1.5 router); `--quick` flag bypasses routing |
-| `skill-reviewer` | Skills | Audit and optimize skill files — enforces two-sentence description format (capability + trigger phrase, ≤160 chars) |
+| `skill-reviewer` | Skills | Audit and optimize skill files — enforces three-part description format (short label + capability + trigger phrase, ≤200 chars) |
 | `code-testing-agent` | Skills + Agents | Test suggestion, review, tdd-fix (bug), tdd-loop (feature); tdd-fix and tdd-loop are manual-invoke only (`disable-model-invocation`) |
 | `git-agent` | Skills + Agents + Commands | Branch creation, commit, PR, and ship workflows; background commands: `commit-bg`, `pr-bg`, `ship-bg`; `ship-autonomous` for supervised full pipeline |
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
