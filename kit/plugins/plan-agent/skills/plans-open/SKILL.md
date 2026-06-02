@@ -1,6 +1,6 @@
 ---
 name: plans-open
-description: "Opens the existing plans gallery (index.html) without rebuilding. Reads plans directory from settings and opens index.html directly. Use when asked to reopen the plans gallery or browse plans."
+description: "Opens the existing plans gallery without rebuilding. Opens index.html directly; run plans-library first if not yet built. Use when asked to reopen the plans gallery or browse plans without a rebuild."
 allowed-tools: Bash
 ---
 

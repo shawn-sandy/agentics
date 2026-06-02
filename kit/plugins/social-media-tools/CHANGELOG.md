@@ -1,5 +1,13 @@
 # Changelog — social-media-tools
 
+## v2.4.3 — 2026-06-02 — Optimize skill descriptions to three-part format
+
+### Changed
+
+- Rewrote `description` fields in nine skills (`media-library`, `share-blog`, `share-code`, `share-github`, `share-project`, `share-selection`, `share-session`, `share-video`, `social-share`) to the three-part format (short label ≤80 chars + capability sentence + trigger phrase, total ≤200 chars) for improved skill discoverability.
+
+---
+
 ## v2.4.2 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed
