@@ -18,7 +18,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/memory-tools"
       },
-      "version": "3.1.1",
+      "version": "3.1.2",
       "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
       "category": "development",
       "tags": [
@@ -95,7 +95,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "2.2.3",
+      "version": "2.2.4",
       "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
@@ -160,7 +160,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/product-plans"
       },
-      "version": "3.4.5",
+      "version": "3.4.6",
       "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
       "category": "productivity",
       "tags": [
@@ -205,7 +205,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.5.0",
+      "version": "2.5.1",
       "description": "Discover shareable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack",
       "category": "productivity",
       "tags": [

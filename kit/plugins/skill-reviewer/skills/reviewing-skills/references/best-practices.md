@@ -76,10 +76,10 @@ description: Reviews X for Y. Use when the user asks to...
 
 **Trigger phrase patterns (good examples):**
 
-Pattern 1 — two-sentence (recommended): capability statement first, then trigger:
+Pattern 1 — three-part (recommended): short label (≤80 chars) + capability sentence + trigger phrase:
 ```
-Reviews SKILL.md files against authoring best practices. Use when the user asks to audit, score, or check skill quality.
-Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter.
+Skill quality auditor. Reviews SKILL.md files against authoring best practices. Use when the user asks to audit, score, or check skill quality.
+Frontmatter optimizer. Rewrites SKILL.md descriptions to three-part format (≤200 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter.
 ```
 
 Pattern 2 — trigger first, capability second:

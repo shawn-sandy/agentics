@@ -214,6 +214,7 @@ social-media-tools/
     ├── blog-card.html
     ├── diff-card.html
     ├── feature-card.html
+    ├── gallery.html
     ├── quote-card.html
     ├── session-card.html
     ├── snippet-card.html
