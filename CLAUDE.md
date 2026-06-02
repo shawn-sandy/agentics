@@ -62,8 +62,8 @@ claude --plugin-dir ./kit/plugins/<name>
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
 | `social-media-tools` | Skills + Commands | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `/social-media-tools:digest` for interactive digest scanning |
-| `plan-agent` | Skills + Hooks | Explicit `/plan-agent:planning <objective>` skill (manual-invoke, `disable-model-invocation`) runs Steps 1–8 plan workflow with built-in structured interview (Step 5b); automatic `verb-target` filename hook on `Write`/`Edit` |
-| `issue-agent` | Skills | Create GitHub and GitLab issues from any context — selection, session, bug, or feature; host auto-detected from git remote; manual-invoke only (`disable-model-invocation`); always confirms before creating |
+| `plan-agent` | Skills + Hooks | `/plan-agent:implementation-plan <objective>` runs Steps 0–8 plan workflow with built-in interview; `/plan-agent:complete-plan` reviews and marks plans completed with per-criterion verification; accepts issue URLs/`#n` to seed plans; `plans-library` builds filterable gallery; `plans-open` reopens gallery; automatic filename hook + gallery index auto-rebuild hook |
+| `issue-agent` | Skills | Create GitHub and GitLab issues from any context — selection, session, bug, or feature; host auto-detected from git remote; auto-opens created issue in browser (`--no-open` to suppress); manual-invoke only (`disable-model-invocation`); always confirms before creating |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference
@@ -79,7 +79,7 @@ Detailed patterns in `.claude/rules/`:
 
 ## Git & Branches
 
-- **Always create a new branch off `main` for each feature or fix.** Never commit new work directly to a long-lived shared branch (e.g. a branch from a previous session). Suggested naming: `verb-target-YYYY-MM-DD` (e.g. `add-reinvoke-prompt-2026-06-01`).
+- **Always create a new branch off `main` for each feature or fix.** Never commit new work directly to a long-lived shared branch (e.g. a branch from a previous session). Suggested naming: `verb-target-YYYY-MM-DD` (e.g. `add-implement-prompt-2026-06-01`).
 - Run `git checkout main && git pull && git checkout -b <branch-name>` at the start of each new task.
 
 ## Conventions

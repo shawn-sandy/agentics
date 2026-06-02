@@ -1,6 +1,6 @@
 ---
 name: share-project
-description: "Generates platform-aware social posts and dark-mode cards for project updates by topic. Use when announcing features, bugs, changes, or releases on social media."
+description: "Generates social posts and dark-mode cards for project updates. Reads git, CHANGELOG, and README then screenshots via Playwright. Use when announcing features, bugs, or releases on social media."
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, Skill
 disable-model-invocation: true
 ---

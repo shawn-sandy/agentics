@@ -1,5 +1,75 @@
 # Changelog
 
+## v0.23.2 — 2026-06-02 — Fix plans-open trigger ambiguity
+
+### Fixed
+
+- **`plans-open` description**: restored "without a rebuild" qualifier to the trigger phrase so it no longer overlaps with `plans-library`'s "browse plans" trigger, preventing mis-routing of first-time or rebuild-needed gallery requests.
+
+---
+
+## v0.23.1 — 2026-06-02 — Optimize skill descriptions to three-part format
+
+### Changed
+
+- Rewrote `description` fields in `complete-plan`, `implementation-plan`, `plans-library`, and `plans-open` to the three-part format (short label ≤80 chars + capability sentence + trigger phrase, total ≤200 chars) for improved skill discoverability.
+
+---
+
+## v0.23.0 — 2026-06-01 — Rename `planning` skill to `implementation-plan`
+
+### Changed
+
+- **Renamed the `planning` skill to `implementation-plan`.** Invocation is now `/plan-agent:implementation-plan <objective>` (previously `/plan-agent:planning`). The skill directory moved from `skills/planning/` to `skills/implementation-plan/`; all behavior, arguments, and workflow steps are unchanged. Update any saved commands or aliases that referenced the old name.
+
+---
+
+## v0.22.0 — 2026-06-01 — Add acceptance criteria verification gate
+
+### Changed
+
+- **`planning` Step 8 "Implement now"** — added mandatory acceptance criteria gate after all steps are implemented. Each criterion is individually verified against the codebase before being checked off. Unverifiable criteria are flagged to the user; the plan stays `in-progress` unless all criteria are checked.
+- **`complete-plan` Step 3** — new sub-step 3b maps implementation evidence to individual acceptance criteria, classifying each as `verified` or `unverified`.
+- **`complete-plan` Step 4** — summary now shows per-criterion verification status and offers three completion options: check all, only auto-check verified, or cancel.
+- **`complete-plan` Step 5b** — respects the user's Step 4 choice: checks only verified criteria when the user opts to auto-check verified only, and downgrades status to `in-progress` accordingly.
+- **`complete-plan` Step 6** — delivery message reflects whether all criteria were verified or some remain open.
+
+---
+
+## v0.21.0 — 2026-06-01 — Add /workflows support for complex plans
+
+### Added
+
+- **Workflow prompt row** — complex plans now include a `<div class="plan-workflow">` element below the implement prompt with a "Run a workflow to implement the plan at …" prompt and copy button. Triggers Claude Code's `/workflows` runtime when pasted, launching parallel subagent orchestration for large-scale implementations.
+- **`<meta name="plan-workflow">` tag** — machine-readable workflow prompt in the plan `<head>` for gallery extraction.
+- **`copyWorkflow()` JS function** — dedicated clipboard handler for the `<code id="workflow-cmd">` element.
+- **Step 8 "Run as workflow" option** — when a workflow prompt was generated, the post-planning prompt offers a fourth choice to launch a dynamic workflow instead of sequential implementation.
+
+### Changed
+
+- **SKILL.md Step 2 (Create)** — now assesses plan complexity to decide whether to generate a `{workflow-prompt}` alongside `{implement-prompt}`. Workflow prompts are generated when plans touch 5+ files across 3+ directories, involve repetitive per-file changes, include parallelizable steps, or require cross-checking.
+- **SKILL.md Step 3 (Frontmatter)** — includes `<meta name="plan-workflow">` when a workflow prompt was generated.
+- **SKILL.md next-steps** — next-step prompts can now use "Run a workflow to …" prefix for items that benefit from workflow orchestration.
+- **SKELETON.html** — added `.plan-workflow` CSS (blue accent), HTML row with `{workflow-prompt}` placeholder, and `copyWorkflow()` JS function. Row is conditionally removed when no workflow prompt is generated.
+- **CLAUDE.md** — fixed branch naming example from `add-reinvoke-prompt` to `add-implement-prompt`.
+
+## v0.20.0 — 2026-06-01 — Add complete-plan skill
+
+### Added
+
+- **`/plan-agent:complete-plan [plan-filename.html]`** — new skill (`disable-model-invocation: true`) that reviews an HTML plan for codebase implementation evidence, presents a confirmation summary, then marks all acceptance-criteria checkboxes as checked, adds the `completed` class to every step card, and updates all three status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge) to `completed`.
+
+---
+
+## v0.19.0 — 2026-06-01 — Replace reinvoke prompt with implement prompt
+
+### Changed
+
+- **Plan output** — the copy/paste prompt below the objective now generates an implementation prompt (e.g. `Read and implement all steps in the plan at docs/plans/add-dark-mode-toggle.html`) instead of a re-invoke command that re-runs the planning skill
+- **SKELETON.html** — `.plan-reinvoke` CSS/HTML/JS renamed to `.plan-implement` with green accent styling; label changed from "Re-invoke" to "Implement"
+- **Meta tag** — `<meta name="plan-reinvoke">` replaced with `<meta name="plan-implement">`
+- **SKILL.md** — Steps 2, 3, and HTML Output Requirements updated; `{reinvoke-cmd}` placeholder replaced with `{implement-prompt}`; scope constraint reordered to prioritize `plansDirectory` setting over hardcoded `docs/plans`
+
 ## v0.18.2 — 2026-06-01 — Add ExitPlanMode error handling; planning workflow improvements
 
 ### Fixed

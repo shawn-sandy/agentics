@@ -77,7 +77,10 @@ def get_meta(content, name, fallback=''):
 
 def get_title(content, fname):
     m = re.search(r'<title>(?:Plan:\s*)?([^<]+)</title>', content, re.IGNORECASE)
-    return m.group(1).strip() if m else os.path.basename(fname)
+    # Decode any HTML entities in the source title (e.g. &rarr;, &mdash;) so the
+    # downstream html.escape() in e() does not double-escape them into literal
+    # "&rarr;" text in the rendered card.
+    return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
 def e(s):
     return html.escape(str(s))

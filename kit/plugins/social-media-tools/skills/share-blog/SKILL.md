@@ -1,6 +1,6 @@
 ---
 name: share-blog
-description: "Creates platform-aware social copy and a dark-mode card for a blog post. Use when asked to share a blog post or article on social media."
+description: "Creates platform-aware social copy and a dark-mode card for a blog post. Fetches OG tags, populates blog-card.html, and screenshots via Playwright. Use when asked to share a blog post on social media."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, WebFetch, SendUserFile, Glob
 ---
 

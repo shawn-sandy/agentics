@@ -1,6 +1,6 @@
 # Changelog — social-media-tools
 
-## v2.5.0 — 2026-06-01 — Add SOCIAL.md project sharing config
+## v2.5.0 — 2026-06-02 — Add SOCIAL.md project sharing config
 
 ### Added
 
@@ -10,6 +10,14 @@
 - `share-code`: loads `SOCIAL.md` for default platform, tone, hashtags, focus areas, and audience
 - `share-project`: loads `SOCIAL.md` for defaults and uses project identity, focus areas, and audience in copy drafting
 - `share-scan`: loads `SOCIAL.md` focus areas for score boosting and avoid patterns for candidate filtering
+
+---
+
+## v2.4.3 — 2026-06-02 — Optimize skill descriptions to three-part format
+
+### Changed
+
+- Rewrote `description` fields in nine skills (`media-library`, `share-blog`, `share-code`, `share-github`, `share-project`, `share-selection`, `share-session`, `share-video`, `social-share`) to the three-part format (short label ≤80 chars + capability sentence + trigger phrase, total ≤200 chars) for improved skill discoverability.
 
 ---
 

@@ -1,6 +1,6 @@
 # issue-agent
 
-Create GitHub or GitLab issues from any context — selection, session, bug, or feature description — without leaving the Claude Code session.
+Create GitHub or GitLab issues from any context — selection, session, bug, or feature description — without leaving the Claude Code session. Automatically opens the created issue in your browser (use `--no-open` to suppress).
 
 ## Installation
 
@@ -101,5 +101,7 @@ kit/plugins/issue-agent/
 **Host detection:** reads `git remote get-url origin` and selects `gh` (GitHub) or `glab` (GitLab). Asks if the host is ambiguous.
 
 **Confirmation gate:** always shows the drafted issue and asks — Create / Edit / Cancel — before calling `gh issue create` or `glab issue create`.
+
+**Browser open:** after successful creation, the issue URL is opened in the default browser automatically. Pass `--no-open` to suppress this behavior.
 
 **Fallback:** if the CLI call fails, opens the browser with `--web`.
