@@ -201,9 +201,9 @@ Does not score or audit general SKILL.md quality — use reviewing-skills for th
 
 ## Worked example B — adding missing short description (Rule 2b)
 
-**Before** (136 chars, two-sentence — REWRITE because short description is missing):
+**Before** (136 chars, two-part — REWRITE because short description is missing):
 ```yaml
-Trims SKILL.md descriptions to ≤160 chars and tunes disable-model-invocation. Use when
+Trims SKILL.md descriptions to ≤200 chars and tunes disable-model-invocation. Use when
 the user asks to optimize SKILL.md frontmatter.
 ```
 

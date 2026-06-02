@@ -268,7 +268,7 @@ Read [references/html-spec.md](references/html-spec.md). Synthesize a single
 self-contained HTML string from both the re-read plan file content and the
 retained `synthesized_report` string produced in Step 6. Do **not**
 re-synthesize from reviewer outputs; do **not** read external CSS. Apply
-`body class="theme-default"` (theme selection is out of scope for v3.4.0).
+`body class="theme-default"` (theme selection is out of scope for v3.4.5).
 
 **Derive the output path:**
 
