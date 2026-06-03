@@ -31,32 +31,31 @@ Add a new `<section>` between the Verification section and the Next Steps sectio
 ```html
 <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
   <h2 id="h-completion">
-    <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+    <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
     Completion Checklist
   </h2>
-  <ul class="criteria-list" id="completion-list">
-    <li>
-      <input type="checkbox" id="cc1">
-      <label for="cc1">All step TODOs marked as done</label>
-    </li>
-    <li>
-      <input type="checkbox" id="cc2">
-      <label for="cc2">All acceptance criteria verified and checked off</label>
-    </li>
-    <li>
-      <input type="checkbox" id="cc3">
-      <label for="cc3">Plan status updated to completed</label>
-    </li>
-  </ul>
-  <div class="completion-report" id="completion-report">
-    <h3 class="report-heading">Completion Report</h3>
-    <p class="report-empty">No items to report — all requirements met.</p>
-    <!-- When populated, replace the <p> above with:
-    <dl class="report-list">
-      <dt>[Item that was not completed]</dt>
-      <dd>[Reason it was not completed]</dd>
-    </dl>
-    -->
+  <div class="completion-checklist" id="completion-checklist">
+    <div class="completion-header">
+      <span class="completion-badge" id="completion-badge">Required</span>
+    </div>
+    <ul class="completion-list" id="completion-list">
+      <li>
+        <input type="checkbox" id="cc1" disabled>
+        <label for="cc1">All step TODOs marked as done</label>
+      </li>
+      <li>
+        <input type="checkbox" id="cc2" disabled>
+        <label for="cc2">All acceptance criteria verified and checked off</label>
+      </li>
+      <li>
+        <input type="checkbox" id="cc3" disabled>
+        <label for="cc3">Plan status updated to completed</label>
+      </li>
+    </ul>
+    <div class="completion-report" id="completion-report">
+      <h3 class="report-heading">Completion Report</h3>
+      <p class="report-empty">No items to report — all requirements met.</p>
+    </div>
   </div>
 </section>
 ```
@@ -72,10 +71,10 @@ Add a new `<section>` between the Verification section and the Next Steps sectio
 
 **Sidebar nav:** Add a nav entry between Verification and Next Steps:
 ```html
-<li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Completion</a></li>
+<li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
 ```
 
-**JavaScript:** Track the three completion checkboxes separately from acceptance criteria. Add a second counter below the main progress bar: "Completion: 0/3". Include them in localStorage persistence using the same `STORAGE_KEY` pattern.
+**JavaScript:** The three completion checkboxes are `disabled` and auto-computed from DOM state — they are not user-interactive. JavaScript checks: (1) all `.step-card` elements have the `completed` class, (2) all `#criteria-list` checkboxes are checked, (3) `<html data-status>` and `<meta name="plan-status">` are both `completed`. A `MutationObserver` on the `data-status` attribute triggers re-evaluation when status changes. No localStorage persistence is needed since the checkboxes reflect computed truth.
 
 ### 2. Update SKILL.md Required Structure
 

@@ -183,7 +183,7 @@ Check off the three completion-checklist checkboxes based on the current plan st
   ```
   <input type="checkbox" id="cc2" disabled>  →  <input type="checkbox" id="cc2" disabled checked>
   ```
-- `cc3` (status updated): Check only if the status was set to `completed` in 5a (i.e., all criteria are checked). If status is `in-progress`, leave `cc3` **unchecked**.
+- `cc3` (status updated): Check only if the **final** status after all overrides (including 5b's potential downgrade to `in-progress`) is `completed`. Read the current `<meta name="plan-status" content="…">` value — if it is `completed`, check cc3; if it is `in-progress` (because 5b left criteria unchecked and downgraded the status), leave cc3 **unchecked**.
   ```
   <input type="checkbox" id="cc3" disabled>  →  <input type="checkbox" id="cc3" disabled checked>
   ```

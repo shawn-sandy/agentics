@@ -1322,7 +1322,10 @@ function copyPrompt(btn) {
       checkboxes.every(function(cb) { return cb.checked; });
     if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
 
-    var statusIsCompleted = document.documentElement.getAttribute('data-status') === 'completed';
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
     if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
 
     var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
