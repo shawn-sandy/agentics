@@ -96,32 +96,97 @@ If `TARGET_RAW` is empty after parsing, ask once via `AskUserQuestion`:
 
 ## Phase 2 — Identify Target and Locate Files
 
-**Skill name detection:** Check if any token in `TARGET_RAW` matches a directory name under
-`$PLUGIN_DIR/skills/` (case-insensitive):
+**Establish project root** — run silently:
 
 ```bash
-ls "$PLUGIN_DIR/skills/"
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+[ -z "$GIT_ROOT" ] && GIT_ROOT="$PWD"
 ```
 
-If matched, set:
+`GIT_ROOT` is the search boundary for all lookups below. Never search outside it.
+
+---
+
+**Match priority — try each tier in order; stop at the first hit:**
+
+### Tier 1 — Skill (SKILL.md)
+
+For each token in `TARGET_RAW`, check if it matches a skill directory name anywhere in
+`$GIT_ROOT` (case-insensitive):
+
+```bash
+find "$GIT_ROOT" -path "*/skills/*/SKILL.md" -not -path "*/archive/*" \
+  -not -path "*/.git/*" -type f 2>/dev/null | \
+  awk -F/ '{print $(NF-1)"|"$0}' | grep -i "^<token>|" | head -1
+```
+
+If matched:
 - `TARGET_TYPE=skill`
-- `TARGET_NAME=<matched-dir-name>` (e.g. `share-session`)
-- `PRIMARY_FILE=$PLUGIN_DIR/skills/$TARGET_NAME/SKILL.md`
+- `TARGET_NAME=<skill-dir-name>`
+- `PRIMARY_FILE=<full-path>`
 
-**Command name detection:** If a token matches a filename under `$PLUGIN_DIR/commands/`
-(strip `.md` for comparison):
-- `TARGET_TYPE=command`
-- `TARGET_NAME=<matched-filename-without-.md>`
-- `PRIMARY_FILE=$PLUGIN_DIR/commands/$TARGET_NAME.md`
+### Tier 2 — Command file
 
-**Reference/concept detection (fallback):** If no skill or command name matched, grep
-`$PLUGIN_DIR/references/` and all SKILL.md bodies for the key terms in `TARGET_RAW`:
+If no skill matched, check each token against command filenames in `$GIT_ROOT`:
 
 ```bash
-grep -ril "<key-terms>" "$PLUGIN_DIR/references/" "$PLUGIN_DIR/skills/"
+find "$GIT_ROOT" -path "*/commands/*.md" -not -path "*/archive/*" \
+  -not -path "*/.git/*" -type f 2>/dev/null | \
+  awk -F/ '{name=$(NF); sub(/\.md$/,"",name); print name"|"$0}' | \
+  grep -i "^<token>|" | head -1
 ```
 
-Set `TARGET_TYPE=concept`. Collect the 3 most relevant result paths as `SOURCE_FILES`.
+If matched:
+- `TARGET_TYPE=command`
+- `TARGET_NAME=<basename-without-.md>`
+- `PRIMARY_FILE=<full-path>`
+
+### Tier 3 — Any source file by name
+
+If still no match, search for any file whose base name (without extension) matches a token
+in `TARGET_RAW` across all tracked files in `$GIT_ROOT`:
+
+```bash
+find "$GIT_ROOT" \
+  -not -path "*/.git/*" -not -path "*/archive/*" -not -path "*/node_modules/*" \
+  -not -path "*/__pycache__/*" -not -path "*/dist/*" -not -path "*/build/*" \
+  -type f \( -name "*.md" -o -name "*.py" -o -name "*.js" -o -name "*.ts" \
+             -o -name "*.mjs" -o -name "*.sh" -o -name "*.json" \) 2>/dev/null | \
+  awk -F/ '{name=$(NF); sub(/\.[^.]+$/,"",name); print name"|"$0}' | \
+  grep -i "^<token>|" | head -3
+```
+
+Set `TARGET_TYPE=file`. Collect all matches as `SOURCE_FILES` (up to 3).
+
+### Tier 4 — Function or symbol search
+
+If still no match, grep the project for a function definition, class, or exported symbol
+whose name contains any token from `TARGET_RAW`:
+
+```bash
+grep -rn --include="*.py" --include="*.js" --include="*.ts" --include="*.mjs" \
+  -E "(def |function |class |export (function|const|class) )<token>" \
+  "$GIT_ROOT" 2>/dev/null | \
+  grep -v "archive\|node_modules\|\.git\|dist\|build" | head -10
+```
+
+Set `TARGET_TYPE=function`. Collect unique file paths from results as `SOURCE_FILES`.
+
+### Tier 5 — Keyword/concept grep (last resort)
+
+If nothing matched above, grep all text files in `$GIT_ROOT` for the key terms in
+`TARGET_RAW`:
+
+```bash
+grep -ril "<key-terms>" "$GIT_ROOT" \
+  --include="*.md" --include="*.py" --include="*.js" --include="*.ts" \
+  --include="*.mjs" --include="*.sh" 2>/dev/null | \
+  grep -v "archive\|node_modules\|\.git\|dist\|build" | head -5
+```
+
+Set `TARGET_TYPE=concept`. Collect up to 5 paths as `SOURCE_FILES`.
+
+---
 
 Derive a `TARGET_NAME` slug from `TARGET_RAW` for use in filenames:
 
@@ -129,29 +194,39 @@ Derive a `TARGET_NAME` slug from `TARGET_RAW` for use in filenames:
 TARGET_NAME=$(echo "$TARGET_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-\|-$//g' | cut -c1-30)
 ```
 
-If nothing is found: output "Could not find a component matching `<TARGET_RAW>`. Available
-skills: `$(ls $PLUGIN_DIR/skills/)`." and **STOP**.
+If nothing matched across all five tiers: output "Could not locate `<TARGET_RAW>` in the
+project. Try the exact file name, function name, or a key term from the code." and **STOP**.
 
 ---
 
 ## Phase 3 — Read Files and Synthesize
 
-Read `PRIMARY_FILE` (or each file in `SOURCE_FILES` for concept targets). For skill targets,
-also read any `$PLUGIN_DIR/references/` files that are explicitly named in the SKILL.md body —
-do not read the entire `references/` directory.
+Read `PRIMARY_FILE` (or each file in `SOURCE_FILES` for multi-file targets). For skill targets,
+also read any reference files explicitly named in the SKILL.md body — do not bulk-read any
+directory. For code targets (file, function, concept), read only the matched files; do not
+speculatively read adjacent files.
 
-Synthesize a structured explanation. Build `EXPLANATION_RAW` as plain text with six sections:
+Adapt the synthesis structure to `TARGET_TYPE`:
+
+**For `skill` or `command` targets** — six sections:
 
 1. **Core Purpose** — 1–2 sentences: what this component does and why it exists
 2. **Activation Conditions** *(skills only)* — what user intent or trigger fires it; the
    frontmatter `description` field is the source of truth
 3. **Workflow Phases** — numbered list, one line per phase: phase name + what it does
-4. **Key Patterns** — bullet list of non-obvious conventions used (e.g. security scrub gate,
-   ExitPlanMode deferred-tool bootstrap, HTML-escape order, reuse-check, SOCIAL.md loading)
+4. **Key Patterns** — bullet list of non-obvious conventions used
 5. **Important Files** — `path/to/file — purpose` for each file the component reads or writes
 6. **Invocation** — exact syntax with a brief usage example
 
-Write concretely — real file names, real phase labels, real flag names. No filler.
+**For `file`, `function`, or `concept` targets** — five sections:
+
+1. **Core Purpose** — what this code does and the problem it solves
+2. **How It Works** — numbered steps describing the logic flow or algorithm
+3. **Key Patterns** — non-obvious conventions, assumptions, or design choices
+4. **Dependencies / Callers** — what calls this and what it depends on (from the source)
+5. **Usage Example** — minimal concrete call or invocation
+
+Write concretely — real file names, real function signatures, real variable names. No filler.
 
 `SUMMARY_RAW` = full `EXPLANATION_RAW` text (passed to security scrub in Phase 4).
 

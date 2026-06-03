@@ -1,5 +1,21 @@
 # Changelog — social-media-tools
 
+## v2.8.0 — 2026-06-03 — Expand share-explanation to entire project codebase
+
+### Changed
+
+- `share-explanation` Phase 2: replaced single-plugin skill/command scan with a five-tier
+  lookup rooted at `$GIT_ROOT`: (1) skill by dir name, (2) command by filename, (3) any
+  source file by base name, (4) function/class/symbol grep, (5) keyword grep. Searches all
+  tracked files (`.md`, `.py`, `.js`, `.ts`, `.mjs`, `.sh`, `.json`) across the project.
+- Phase 3: synthesis structure now adapts to `TARGET_TYPE` — skills/commands get the
+  six-section workflow breakdown; files, functions, and concepts get a five-section code
+  explanation (purpose, how-it-works, patterns, dependencies, usage example).
+- "Not found" error message no longer hard-codes plugin skill listing.
+- Search excludes `archive/`, `node_modules/`, `.git/`, `dist/`, `build/` to avoid noise.
+
+---
+
 ## v2.7.0 — 2026-06-03 — Add "View image" link to media library gallery cards
 
 ### Added
