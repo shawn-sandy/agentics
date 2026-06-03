@@ -84,6 +84,8 @@ If no directory is found: output "Templates not found. Install the plugin or loa
    </div>
    ```
 
+   Only include the `.open-img-link` anchor when a matching `.png` file exists alongside the `.html` card (test with `-f "$MEDIA_DIR/${BASENAME_PNG}"`). Omit the link element entirely for cards without a screenshot to avoid dead links.
+
    Where:
    - `{BASENAME}` = filename without path (e.g., `diff-add-copy-button-2026-05-27.html`)
    - `{BASENAME_PNG}` = same with `.png` extension
