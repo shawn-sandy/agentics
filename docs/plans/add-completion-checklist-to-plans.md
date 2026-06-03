@@ -142,9 +142,10 @@ Add entry for v1.1.0 documenting the new Completion Checklist section and Comple
 1. Run `/plan-agent:implementation-plan test completion checklist --quick` and confirm the generated HTML contains a "Completion Checklist" section with three checkboxes and an empty Completion Report
 2. Open the generated plan in a browser and verify:
    - The Completion Checklist section appears between Verification and Next Steps
-   - All three checkboxes are interactive and persist via localStorage
+   - All three checkboxes are `disabled` (auto-computed, not user-interactive)
+   - Checkboxes auto-update based on step card completion, acceptance criteria state, and `data-status` attribute
    - The sidebar nav includes a "Completion" entry that scrolls to the section
    - The Completion Report shows "No items to report" placeholder text
-   - A separate "Completion: 0/3" counter appears below the main progress bar
+   - The amber border transitions to green when all conditions are met (`all-complete` class)
 3. Confirm the `finalize-plan` skill checks off completion items and populates the report when criteria are left unverified
 4. Validate `marketplace.json` JSON syntax (auto-validated by settings hook)
