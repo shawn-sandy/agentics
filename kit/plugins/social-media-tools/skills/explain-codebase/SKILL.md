@@ -213,8 +213,8 @@ Content guidance per platform:
 ```bash
 TEMPLATE_FILE=$TEMPLATES_DIR/<selected-template>
 TEMP_HTML=explain-share-card.html
-SLUG_INPUT="explain-${TARGET_NAME}-${TODAY}"
 TODAY=$(date '+%Y-%m-%d')
+SLUG_INPUT="explain-${TARGET_NAME}-${TODAY}"
 ```
 
 Read `$PLUGIN_DIR/references/variables.md` for the variable reference.
