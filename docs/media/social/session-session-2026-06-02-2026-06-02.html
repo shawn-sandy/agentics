@@ -1,4 +1,73 @@
 <!DOCTYPE html>
+<!--
+  session-card.html — Dark-mode session recap card for social posts.
+
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
+    session recap · 2026-06-02          — Session title (e.g. "session recap · 2026-05-28")
+    sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
+    Diagnosed and fixed the Playwright element screenshot bug in the social-media-tools rendering pipeline — the browser_snapshot step was missing, causing full-page captures instead of cropping to the .card element.      — 1–2 sentence summary of what the session accomplished
+    <li>Root-caused full-page screenshot: browser_take_screenshot needs an element ref from browser_snapshot</li><li>Added browser_snapshot step to rendering-pipeline.md — affects all 7 share skills</li><li>Added browser_snapshot to the ToolSearch selector for deferred-tool environments</li><li>Added CHANGELOG v2.5.1 entry documenting the fix</li>— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    18,179   — Total tokens formatted with commas (e.g. "42,180")
+    94.7% — Cache hit rate (e.g. "44.2%")
+    7 min       — Session duration (e.g. "47 min")
+    2  — Files changed count (e.g. "12")
+    0        — Commits in session (e.g. "3")
+    <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Tracked down a subtle Playwright bug in the Claude Code social-media-tools rendering pipeline today.
+
+The symptom: every share-session card was screenshotting the entire page instead of cropping to the .card element. The `target: ".card"` parameter looked correct — but the output was always full-viewport.
+
+Root cause: `browser_take_screenshot` needs an element `ref` from a prior `browser_snapshot` call, not just a CSS selector passed cold. Without the snapshot, Playwright silently falls back to full-viewport capture with no error.
+
+The fix: add a `browser_snapshot` step between page load and screenshot, grab the `.card` ref, and pass it as `target`. One change to a shared reference file — all 7 share skills fixed at once.
+
+The lesson: silent fallback behavior is the hardest kind to debug. No error, no warning — just wrong output until you read the schema.
+
+Follow for more Claude Code debugging and agent workflow patterns.
+
+#ClaudeCode #Playwright #Debugging</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Playwright's browser_take_screenshot silently falls back to full-page when target has no element ref from a prior browser_snapshot.
+
+Fix: snapshot first → grab the .card ref → pass it as target.
+
+No error. No warning. Just wrong output until you read the schema.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">Tracked down why share-session cards were always full-page screenshots. Missing browser_snapshot step — Playwright needs a real DOM ref, not a bare CSS selector, to crop screenshots. Silent fallback, no error. One step added, 7 skills fixed.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">Today's session was a single quiet bug with a satisfying root cause.
+
+Every share-session card was screenshotting the whole page instead of the card element. The pipeline said `target: ".card"` — which looked right — but output was always full-viewport.
+
+Root cause: Playwright's `browser_take_screenshot` needs an element `ref` from a prior `browser_snapshot`, not just a CSS selector. No ref → silent full-page fallback. No error, no warning.
+
+One snapshot step added. All seven share skills fixed at once.
+
+Follow for more agent debugging and Claude Code workflow patterns.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
+    1. & → &amp;  ← first, prevents double-escaping
+    2. < → &lt;
+    3. > → &gt;
+    4. " → &quot;
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -73,7 +142,10 @@
       margin-top: 2px;
     }
 
-    .content { padding: 22px 28px 8px; }
+    /* ── Hero content: narrative + accomplishments ── */
+    .content {
+      padding: 22px 28px 8px;
+    }
 
     .narrative {
       font-size: 17px;
@@ -105,6 +177,7 @@
       font-weight: 700;
     }
 
+    /* ── Demoted metrics strip ── */
     .metrics-strip {
       display: flex;
       flex-wrap: wrap;
@@ -114,8 +187,17 @@
       background: var(--bg);
     }
 
-    .metric { font-size: 12px; color: var(--muted); }
-    .metric b { color: var(--text); font-size: 13px; font-weight: 700; }
+    .metric {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric b {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
     .metric b.accent { color: var(--accent); }
     .metric b.green  { color: var(--green); }
 
@@ -128,9 +210,18 @@
       border-top: 1px solid var(--border);
     }
 
-    .footer-tag   { font-size: 11px; color: var(--muted); }
-    .footer-accent { font-size: 11px; color: var(--accent); font-weight: 500; }
+    .footer-tag {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
+    .footer-accent {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
     .copy-panel {
       width: min(1024px, 100%);
       background: #161b22;
@@ -140,7 +231,13 @@
       box-sizing: border-box;
     }
 
-    .copy-label { color: #8b949e; font-size: 12px; margin: 0 0 8px; }
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
 
     .post-copy-text {
       width: 100%;
@@ -181,21 +278,15 @@
     </div>
 
     <div class="content">
-      <p class="narrative">Planned a UX improvement to the social-media-tools media library — traced the nested-anchor HTML constraint, designed a clean sibling-link solution, and shipped a browser-verified implementation plan.</p>
-      <ul class="accomplishments">
-        <li>Explored gallery.html + SKILL.md to map where per-card HTML lives in the skill file</li>
-        <li>Identified the nested-anchor HTML validity issue blocking a simple inner image link</li>
-        <li>Designed sibling-link approach: .gallery-card-wrap + plain &lt;a&gt; below each card</li>
-        <li>Wrote and browser-verified an HTML implementation plan at docs/plans/</li>
-        <li>Revised plan live when simpler approach emerged — removed JS click-handler complexity</li>
-      </ul>
+      <p class="narrative">Diagnosed and fixed the Playwright element screenshot bug in the social-media-tools rendering pipeline — the browser_snapshot step was missing, causing full-page captures instead of cropping to the .card element.</p>
+      <ul class="accomplishments"><li>Root-caused full-page screenshot: browser_take_screenshot needs an element ref from browser_snapshot</li><li>Added browser_snapshot step to rendering-pipeline.md — affects all 7 share skills</li><li>Added browser_snapshot to the ToolSearch selector for deferred-tool environments</li><li>Added CHANGELOG v2.5.1 entry documenting the fix</li></ul>
     </div>
 
     <div class="metrics-strip">
-      <span class="metric"><b class="accent">93,919</b> tokens</span>
-      <span class="metric"><b>23 min</b></span>
-      <span class="metric"><b class="green">93.9%</b> cache hit</span>
-      <span class="metric"><b>0</b> files</span>
+      <span class="metric"><b class="accent">18,179</b> tokens</span>
+      <span class="metric"><b>7 min</b></span>
+      <span class="metric"><b class="green">94.7%</b> cache hit</span>
+      <span class="metric"><b>2</b> files</span>
       <span class="metric"><b>0</b> commits</span>
     </div>
 
@@ -204,31 +295,50 @@
       <span class="footer-accent">github.com/shawn-sandy/agentics</span>
     </div>
   </div>
-
   <div class="copy-panel">
-    <p class="copy-label">LinkedIn</p>
-    <textarea readonly class="post-copy-text" id="post-copy">Just planned a UX improvement for the social-media-tools media library in a Claude Code session — and the HTML spec forced a better design.
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Tracked down a subtle Playwright bug in the Claude Code social-media-tools rendering pipeline today.
 
-The media library gallery shows every social post you've generated as a card. Clicking a card opens the HTML file, but there was no way to open the PNG image directly. Simple ask — until you see the constraint: the whole card is already an &lt;a&gt; element, and HTML forbids anchoring inside an anchor.
+The symptom: every share-session card was screenshotting the entire page instead of cropping to the .card element. The `target: ".card"` parameter looked correct — but the output was always full-viewport.
 
-What the session covered:
+Root cause: `browser_take_screenshot` needs an element `ref` from a prior `browser_snapshot` call, not just a CSS selector passed cold. Without the snapshot, Playwright silently falls back to full-viewport capture with no error.
 
-→ Traced the gallery architecture across gallery.html and SKILL.md — the per-card HTML lives in the skill file, not the template
-→ Identified the nested-anchor blocker; explored a div + JS click-handler approach
-→ Simplified on user feedback: wrap in .gallery-card-wrap, place a plain sibling &lt;a&gt; below the card — no JS needed
-→ Wrote and browser-verified an HTML implementation plan
-→ Revised and re-rendered the plan live in one pass
+The fix: add a `browser_snapshot` step between page load and screenshot, grab the `.card` ref, and pass it as `target`. One change to a shared reference file — all 7 share skills fixed at once.
 
-Sometimes the spec constraint is the signal: if you can't nest anchors, you probably shouldn't be nesting them. The sibling approach is cleaner, more accessible, and requires zero JavaScript.
+The lesson: silent fallback behavior is the hardest kind to debug. No error, no warning — just wrong output until you read the schema.
 
-93,919 tokens · 93.9% cache hit · 23 min
+Follow for more Claude Code debugging and agent workflow patterns.
 
-Follow for more Claude Code workflows and HTML/CSS deep-dives.
+#ClaudeCode #Playwright #Debugging</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Playwright's browser_take_screenshot silently falls back to full-page when target has no element ref from a prior browser_snapshot.
 
-#ClaudeCode #WebDev #HTML #DeveloperTools</textarea>
-    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
-  </div>
+Fix: snapshot first → grab the .card ref → pass it as target.
 
+No error. No warning. Just wrong output until you read the schema.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">Tracked down why share-session cards were always full-page screenshots. Missing browser_snapshot step — Playwright needs a real DOM ref, not a bare CSS selector, to crop screenshots. Silent fallback, no error. One step added, 7 skills fixed.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">Today's session was a single quiet bug with a satisfying root cause.
+
+Every share-session card was screenshotting the whole page instead of the card element. The pipeline said `target: ".card"` — which looked right — but output was always full-viewport.
+
+Root cause: Playwright's `browser_take_screenshot` needs an element `ref` from a prior `browser_snapshot`, not just a CSS selector. No ref → silent full-page fallback. No error, no warning.
+
+One snapshot step added. All seven share skills fixed at once.
+
+Follow for more agent debugging and Claude Code workflow patterns.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
   <script>
     function copyPost(id, btn) {
       var t = document.getElementById(id);

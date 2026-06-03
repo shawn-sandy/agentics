@@ -33,14 +33,17 @@ Parse the `PID:N` line to capture `SERVER_PID`.
 
 Load tools via ToolSearch:
 ```
-select:mcp__plugin_playwright_playwright__browser_resize,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for
+select:mcp__plugin_playwright_playwright__browser_resize,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for,mcp__plugin_playwright_playwright__browser_snapshot
 ```
 
 Then:
 1. Resize the viewport to at least 1280×900 with `browser_resize` before navigating — card templates use `min(1024px, 100%)` so they need the viewport to be at least 1024px wide to render at full width.
 2. Navigate to `http://localhost:$PORT/$TEMP_HTML`
 3. Wait for `networkidle` or 2000ms
-4. Call `browser_take_screenshot` with `filename: $SAVE_PATH_PNG` and `target: ".card"` and `element: "card"` to capture only the card element. Do **not** pass `fullPage: true` — that overrides element targeting and captures the entire page.
+4. Call `browser_snapshot` to get DOM element references. Find the element whose role or selector matches `.card` and capture its `ref` value as `$CARD_REF`.
+5. Call `browser_take_screenshot` with `filename: $SAVE_PATH_PNG`, `target: $CARD_REF` (the ref from step 4), and `element: "card"`. Do **not** pass `fullPage: true` — that overrides element targeting and captures the entire page.
+
+**Why the snapshot step is required:** `browser_take_screenshot`'s `target` parameter expects either an exact element `ref` from a prior `browser_snapshot` or a CSS selector. Without a snapshot, there is no DOM ref to bind to, and Playwright silently falls back to a full-viewport capture instead of cropping to the element.
 
 ## Step 4 — Kill server
 

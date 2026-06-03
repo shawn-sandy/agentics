@@ -1,5 +1,13 @@
 # Changelog — social-media-tools
 
+## v2.5.1 — 2026-06-02 — Fix element screenshot falling back to full page
+
+### Fixed
+
+- `references/rendering-pipeline.md`: added `browser_snapshot` step between page-load wait and screenshot. `browser_take_screenshot`'s `target` requires either an element `ref` from a prior snapshot or a CSS selector — without a snapshot the tool silently falls back to a full-viewport capture. The snapshot step resolves the `.card` ref so the screenshot is cropped to the card element as intended. Also added `mcp__plugin_playwright_playwright__browser_snapshot` to the ToolSearch selector in Step 3 so it is callable in deferred-tool environments. Affects all 7 skills that delegate to this pipeline.
+
+---
+
 ## v2.5.0 — 2026-06-02 — Add SOCIAL.md project sharing config
 
 ### Added
