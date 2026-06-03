@@ -65,6 +65,7 @@ If no directory is found: output "Templates not found. Install the plugin or loa
    (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one `<a>` block:
 
    ```html
+   <div class="gallery-card-wrap">
    <a class="gallery-card" href="{BASENAME}" data-type="{TYPE}" data-topic="{TOPIC}">
      <div class="thumb-container">
        <img src="{BASENAME_PNG}" alt="{TOPIC}" onerror="showFallback(this)">
@@ -79,6 +80,8 @@ If no directory is found: output "Templates not found. Install the plugin or loa
        <span class="card-file">{BASENAME}</span>
      </div>
    </a>
+   <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener">View image</a>
+   </div>
    ```
 
    Where:

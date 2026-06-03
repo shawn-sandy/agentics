@@ -1,5 +1,19 @@
 # Changelog — social-media-tools
 
+## v2.7.0 — 2026-06-03 — Add "View image" link to media library gallery cards
+
+### Added
+
+- Gallery cards now show a "View image" link below each card that opens the PNG screenshot directly in a new browser tab.
+- New `.gallery-card-wrap` container wraps each card and its image link so the filter JS hides both together.
+- New `.open-img-link` CSS rule in `gallery.html` for the image link styling.
+
+### Changed
+
+- `applyFilters()` in `gallery.html` now targets `.gallery-card-wrap` for show/hide, reading `data-type` and `data-topic` from the inner `.gallery-card`.
+
+---
+
 ## v2.6.4 — 2026-06-03 — Slug normalization and rule 8 clarity
 
 ### Fixed
