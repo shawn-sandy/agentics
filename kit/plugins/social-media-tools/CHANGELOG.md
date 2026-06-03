@@ -1,5 +1,25 @@
 # Changelog — social-media-tools
 
+## v2.6.2 — 2026-06-03 — Rename explain-codebase to share-explanation
+
+### Changed
+
+- Renamed `explain-codebase` skill directory to `share-explanation` and updated `name:` frontmatter to `share-explanation` to align with the `share-*` plugin naming convention.
+- `social-share` router rule 8: updated dispatch target from `explain-codebase` to `share-explanation`.
+
+---
+
+## v2.6.1 — 2026-06-03 — Fix explain-codebase review findings
+
+### Fixed
+
+- `explain-codebase` Phase 2: concept targets now derive `TARGET_NAME` from `TARGET_RAW` slug — previously `SLUG_INPUT` built an empty name for concept queries
+- `explain-codebase`: moved reuse-check from Phase 1c to Phase 5b so both `TARGET_NAME` and `PLATFORM` are resolved before the check runs; reuse path no longer produces blank platform headings
+- `explain-codebase` Phase 6: `{{ATTRIBUTION}}` in `quote-card.html` now maps to plugin/project name instead of a raw file path
+- `social-share` rule 8: added guard to exclude session-context phrases (`my session`, `session recap`, etc.) so "explain my session" correctly falls through to the session rule (rule 9)
+
+---
+
 ## v2.6.0 — 2026-06-03 — Add explain-codebase skill
 
 ### Added
