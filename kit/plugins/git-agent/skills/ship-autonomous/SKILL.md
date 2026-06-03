@@ -15,7 +15,7 @@ event wakes it; they are not a synchronous loop you run inside one turn.
 
 ## Step 0: Exit Plan Mode
 
-Call `ExitPlanMode` immediately and silently if currently in plan mode — skip this step entirely if plan mode is already off. Committing, pushing, and opening a PR are mutations that cannot proceed inside plan mode.
+Call `ExitPlanMode` immediately and silently — always, unconditionally, before any other action. Do not prompt the user. Committing, pushing, and opening a PR are mutations that cannot proceed inside plan mode.
 
 `ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
 first to load its schema, then call `ExitPlanMode`. Both steps run silently

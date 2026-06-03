@@ -33,8 +33,7 @@ security scrub → platform-aware copy → dark-mode card → persistent save.
 
 `ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
 Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
-happen silently with no user-visible output. Only call this if currently in plan mode — skip
-entirely if plan mode is already off.
+happen silently with no user-visible output.
 
 **Error handling:** If `ExitPlanMode` returns `"You are not in plan mode"`, treat that as
 **success** — continue immediately.
