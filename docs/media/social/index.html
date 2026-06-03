@@ -297,6 +297,26 @@
       flex-shrink: 0;
     }
 
+    .gallery-card-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .open-img-link {
+      display: block;
+      font-size: 12px;
+      color: var(--accent);
+      text-align: center;
+      padding: 4px 0 8px;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .open-img-link:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
     .no-results {
       max-width: 1200px;
       margin: 64px auto;
@@ -334,7 +354,7 @@
 <body>
   <div class="gallery-header">
     <h1>Media Library</h1>
-    <p>23 saved cards &mdash; click any card to view it</p>
+    <p>26 saved cards &mdash; click any card to view it</p>
   </div>
 
   <div class="toolbar">
@@ -359,335 +379,478 @@
   <div class="visible-count" id="visibleCount"></div>
 
   <div class="gallery-grid" id="galleryGrid">
-        <a class="gallery-card" href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html" data-type="feature" data-topic="Plan Agent Posttooluse Hook Auto Rebuild">
-      <div class="thumb-container">
-        <img src="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png" alt="Plan Agent Posttooluse Hook Auto Rebuild" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">feature</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-feature">feature</span>
-          <span class="card-date">2026-06-01</span>
-        </div>
-        <span class="card-topic">Plan Agent Posttooluse Hook Auto Rebuild</span>
-        <span class="card-file">feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="feature-issue-agent-v0-2-0-2026-05-31.html" data-type="feature" data-topic="Issue Agent V0 2 0">
-      <div class="thumb-container">
-        <img src="feature-issue-agent-v0-2-0-2026-05-31.png" alt="Issue Agent V0 2 0" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">feature</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-feature">feature</span>
-          <span class="card-date">2026-05-31</span>
-        </div>
-        <span class="card-topic">Issue Agent V0 2 0</span>
-        <span class="card-file">feature-issue-agent-v0-2-0-2026-05-31.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-session-2026-05-31-2026-05-31.html" data-type="session" data-topic="Session 2026 05 31">
-      <div class="thumb-container">
-        <img src="session-session-2026-05-31-2026-05-31.png" alt="Session 2026 05 31" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-31</span>
-        </div>
-        <span class="card-topic">Session 2026 05 31</span>
-        <span class="card-file">session-session-2026-05-31-2026-05-31.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-merge-driver-2026-05-30.html" data-type="session" data-topic="Merge Driver">
-      <div class="thumb-container">
-        <img src="session-merge-driver-2026-05-30.png" alt="Merge Driver" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-30</span>
-        </div>
-        <span class="card-topic">Merge Driver</span>
-        <span class="card-file">session-merge-driver-2026-05-30.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-plan-agent-v0-9-0-2026-05-30.html" data-type="session" data-topic="Plan Agent V0 9 0">
-      <div class="thumb-container">
-        <img src="session-plan-agent-v0-9-0-2026-05-30.png" alt="Plan Agent V0 9 0" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-30</span>
-        </div>
-        <span class="card-topic">Plan Agent V0 9 0</span>
-        <span class="card-file">session-plan-agent-v0-9-0-2026-05-30.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-session-2026-05-30-2026-05-30.html" data-type="session" data-topic="Session 2026 05 30">
-      <div class="thumb-container">
-        <img src="session-session-2026-05-30-2026-05-30.png" alt="Session 2026 05 30" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-30</span>
-        </div>
-        <span class="card-topic">Session 2026 05 30</span>
-        <span class="card-file">session-session-2026-05-30-2026-05-30.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="diff-v4-0-0-removal-list-fix-2026-05-29.html" data-type="diff" data-topic="V4 0 0 Removal List Fix">
-      <div class="thumb-container">
-        <img src="diff-v4-0-0-removal-list-fix-2026-05-29.png" alt="V4 0 0 Removal List Fix" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">diff</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-diff">diff</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">V4 0 0 Removal List Fix</span>
-        <span class="card-file">diff-v4-0-0-removal-list-fix-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="blog-social-media-tools-2026-05-29.html" data-type="blog" data-topic="Social Media Tools">
-      <div class="thumb-container">
-        <img src="blog-social-media-tools-2026-05-29.png" alt="Social Media Tools" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">blog</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-blog">blog</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Social Media Tools</span>
-        <span class="card-file">blog-social-media-tools-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-session-2026-05-29-2026-05-29.html" data-type="session" data-topic="Session 2026 05 29">
-      <div class="thumb-container">
-        <img src="session-session-2026-05-29-2026-05-29.png" alt="Session 2026 05 29" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Session 2026 05 29</span>
-        <span class="card-file">session-session-2026-05-29-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-media-library-gallery-2026-05-29.html" data-type="session" data-topic="Media Library Gallery">
-      <div class="thumb-container">
-        <img src="session-media-library-gallery-2026-05-29.png" alt="Media Library Gallery" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Media Library Gallery</span>
-        <span class="card-file">session-media-library-gallery-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="diff-update-plugin-readmes-workflow-2026-05-29.html" data-type="diff" data-topic="Update Plugin Readmes Workflow">
-      <div class="thumb-container">
-        <img src="diff-update-plugin-readmes-workflow-2026-05-29.png" alt="Update Plugin Readmes Workflow" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">diff</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-diff">diff</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Update Plugin Readmes Workflow</span>
-        <span class="card-file">diff-update-plugin-readmes-workflow-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-readme-workflow-audit-2026-05-29.html" data-type="session" data-topic="Readme Workflow Audit">
-      <div class="thumb-container">
-        <img src="session-readme-workflow-audit-2026-05-29.png" alt="Readme Workflow Audit" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Readme Workflow Audit</span>
-        <span class="card-file">session-readme-workflow-audit-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-archive-exclusion-2026-05-29.html" data-type="session" data-topic="Archive Exclusion">
-      <div class="thumb-container">
-        <img src="session-archive-exclusion-2026-05-29.png" alt="Archive Exclusion" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Archive Exclusion</span>
-        <span class="card-file">session-archive-exclusion-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="diff-archive-exclude-layered-enforcement-2026-05-29.html" data-type="diff" data-topic="Archive Exclude Layered Enforcement">
-      <div class="thumb-container">
-        <img src="diff-archive-exclude-layered-enforcement-2026-05-29.png" alt="Archive Exclude Layered Enforcement" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">diff</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-diff">diff</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Archive Exclude Layered Enforcement</span>
-        <span class="card-file">diff-archive-exclude-layered-enforcement-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="session-workflow-2026-05-29-2026-05-29.html" data-type="session" data-topic="Workflow 2026 05 29">
-      <div class="thumb-container">
-        <img src="session-workflow-2026-05-29-2026-05-29.png" alt="Workflow 2026 05 29" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">session</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-session">session</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Workflow 2026 05 29</span>
-        <span class="card-file">session-workflow-2026-05-29-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="blog-settings-sync-2026-05-29.html" data-type="blog" data-topic="Settings Sync">
-      <div class="thumb-container">
-        <img src="blog-settings-sync-2026-05-29.png" alt="Settings Sync" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">blog</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-blog">blog</span>
-          <span class="card-date">2026-05-29</span>
-        </div>
-        <span class="card-topic">Settings Sync</span>
-        <span class="card-file">blog-settings-sync-2026-05-29.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="snippet-skill-md-2026-05-28.html" data-type="snippet" data-topic="Skill Md">
-      <div class="thumb-container">
-        <img src="snippet-skill-md-2026-05-28.png" alt="Skill Md" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">snippet</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-snippet">snippet</span>
-          <span class="card-date">2026-05-28</span>
-        </div>
-        <span class="card-topic">Skill Md</span>
-        <span class="card-file">snippet-skill-md-2026-05-28.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="feature-issue-agent-plugin-v3-9-0-2026-05-28.html" data-type="feature" data-topic="Issue Agent Plugin V3 9 0">
-      <div class="thumb-container">
-        <img src="feature-issue-agent-plugin-v3-9-0-2026-05-28.png" alt="Issue Agent Plugin V3 9 0" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">feature</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-feature">feature</span>
-          <span class="card-date">2026-05-28</span>
-        </div>
-        <span class="card-topic">Issue Agent Plugin V3 9 0</span>
-        <span class="card-file">feature-issue-agent-plugin-v3-9-0-2026-05-28.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="diff-code-review-fixes-2026-05-28.html" data-type="diff" data-topic="Code Review Fixes">
-      <div class="thumb-container">
-        <img src="diff-code-review-fixes-2026-05-28.png" alt="Code Review Fixes" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">diff</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-diff">diff</span>
-          <span class="card-date">2026-05-28</span>
-        </div>
-        <span class="card-topic">Code Review Fixes</span>
-        <span class="card-file">diff-code-review-fixes-2026-05-28.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="diff-branch-agent-skill-2026-05-28.html" data-type="diff" data-topic="Branch Agent Skill">
-      <div class="thumb-container">
-        <img src="diff-branch-agent-skill-2026-05-28.png" alt="Branch Agent Skill" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">diff</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-diff">diff</span>
-          <span class="card-date">2026-05-28</span>
-        </div>
-        <span class="card-topic">Branch Agent Skill</span>
-        <span class="card-file">diff-branch-agent-skill-2026-05-28.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="feature-issue-agent-plugin-2026-05-28.html" data-type="feature" data-topic="Issue Agent Plugin">
-      <div class="thumb-container">
-        <img src="feature-issue-agent-plugin-2026-05-28.png" alt="Issue Agent Plugin" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">feature</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-feature">feature</span>
-          <span class="card-date">2026-05-28</span>
-        </div>
-        <span class="card-topic">Issue Agent Plugin</span>
-        <span class="card-file">feature-issue-agent-plugin-2026-05-28.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="diff-optimizing-skill-frontmatter-2026-05-28.html" data-type="diff" data-topic="Optimizing Skill Frontmatter">
-      <div class="thumb-container">
-        <img src="diff-optimizing-skill-frontmatter-2026-05-28.png" alt="Optimizing Skill Frontmatter" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">diff</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-diff">diff</span>
-          <span class="card-date">2026-05-28</span>
-        </div>
-        <span class="card-topic">Optimizing Skill Frontmatter</span>
-        <span class="card-file">diff-optimizing-skill-frontmatter-2026-05-28.html</span>
-      </div>
-    </a>
-    <a class="gallery-card" href="feature-plan-agent-v0-2-0-2026-05-27.html" data-type="feature" data-topic="Plan Agent V0 2 0">
-      <div class="thumb-container">
-        <img src="feature-plan-agent-v0-2-0-2026-05-27.png" alt="Plan Agent V0 2 0" onerror="showFallback(this)">
-        <span class="thumb-fallback" style="display:none">feature</span>
-      </div>
-      <div class="card-info">
-        <div class="card-info-top">
-          <span class="type-badge type-feature">feature</span>
-          <span class="card-date">2026-05-27</span>
-        </div>
-        <span class="card-topic">Plan Agent V0 2 0</span>
-        <span class="card-file">feature-plan-agent-v0-2-0-2026-05-27.html</span>
-      </div>
-    </a>
+    <div class="gallery-card-wrap">
+<a class="gallery-card" href="explain-implementation-plan-2026-06-03.html" data-type="explain" data-topic="Implementation Plan">
+  <div class="thumb-container">
+    <img src="explain-implementation-plan-2026-06-03.png" alt="Implementation Plan" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">explain</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-explain">explain</span>
+      <span class="card-date">2026-06-03</span>
+    </div>
+    <span class="card-topic">Implementation Plan</span>
+    <span class="card-file">explain-implementation-plan-2026-06-03.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="explain-implementation-plan-2026-06-03.png" target="_blank" rel="noopener" aria-label="View image: Implementation Plan">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-rendering-pipeline-snapshot-fix-2026-06-02.html" data-type="diff" data-topic="Rendering Pipeline Snapshot Fix">
+  <div class="thumb-container">
+    <img src="diff-rendering-pipeline-snapshot-fix-2026-06-02.png" alt="Rendering Pipeline Snapshot Fix" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-06-02</span>
+    </div>
+    <span class="card-topic">Rendering Pipeline Snapshot Fix</span>
+    <span class="card-file">diff-rendering-pipeline-snapshot-fix-2026-06-02.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-rendering-pipeline-snapshot-fix-2026-06-02.png" target="_blank" rel="noopener" aria-label="View image: Rendering Pipeline Snapshot Fix">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-session-2026-06-02-2026-06-02.html" data-type="session" data-topic="Session 2026 06 02">
+  <div class="thumb-container">
+    <img src="session-session-2026-06-02-2026-06-02.png" alt="Session 2026 06 02" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-06-02</span>
+    </div>
+    <span class="card-topic">Session 2026 06 02</span>
+    <span class="card-file">session-session-2026-06-02-2026-06-02.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-session-2026-06-02-2026-06-02.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 06 02">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html" data-type="feature" data-topic="Plan Agent Posttooluse Hook Auto Rebuild">
+  <div class="thumb-container">
+    <img src="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png" alt="Plan Agent Posttooluse Hook Auto Rebuild" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">feature</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-feature">feature</span>
+      <span class="card-date">2026-06-01</span>
+    </div>
+    <span class="card-topic">Plan Agent Posttooluse Hook Auto Rebuild</span>
+    <span class="card-file">feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png" target="_blank" rel="noopener" aria-label="View image: Plan Agent Posttooluse Hook Auto Rebuild">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-session-2026-05-31-2026-05-31.html" data-type="session" data-topic="Session 2026 05 31">
+  <div class="thumb-container">
+    <img src="session-session-2026-05-31-2026-05-31.png" alt="Session 2026 05 31" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-31</span>
+    </div>
+    <span class="card-topic">Session 2026 05 31</span>
+    <span class="card-file">session-session-2026-05-31-2026-05-31.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-session-2026-05-31-2026-05-31.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 05 31">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="feature-issue-agent-v0-2-0-2026-05-31.html" data-type="feature" data-topic="Issue Agent V0 2 0">
+  <div class="thumb-container">
+    <img src="feature-issue-agent-v0-2-0-2026-05-31.png" alt="Issue Agent V0 2 0" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">feature</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-feature">feature</span>
+      <span class="card-date">2026-05-31</span>
+    </div>
+    <span class="card-topic">Issue Agent V0 2 0</span>
+    <span class="card-file">feature-issue-agent-v0-2-0-2026-05-31.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="feature-issue-agent-v0-2-0-2026-05-31.png" target="_blank" rel="noopener" aria-label="View image: Issue Agent V0 2 0">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-session-2026-05-30-2026-05-30.html" data-type="session" data-topic="Session 2026 05 30">
+  <div class="thumb-container">
+    <img src="session-session-2026-05-30-2026-05-30.png" alt="Session 2026 05 30" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-30</span>
+    </div>
+    <span class="card-topic">Session 2026 05 30</span>
+    <span class="card-file">session-session-2026-05-30-2026-05-30.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-session-2026-05-30-2026-05-30.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 05 30">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-plan-agent-v0-9-0-2026-05-30.html" data-type="session" data-topic="Plan Agent V0 9 0">
+  <div class="thumb-container">
+    <img src="session-plan-agent-v0-9-0-2026-05-30.png" alt="Plan Agent V0 9 0" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-30</span>
+    </div>
+    <span class="card-topic">Plan Agent V0 9 0</span>
+    <span class="card-file">session-plan-agent-v0-9-0-2026-05-30.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-plan-agent-v0-9-0-2026-05-30.png" target="_blank" rel="noopener" aria-label="View image: Plan Agent V0 9 0">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-merge-driver-2026-05-30.html" data-type="session" data-topic="Merge Driver">
+  <div class="thumb-container">
+    <img src="session-merge-driver-2026-05-30.png" alt="Merge Driver" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-30</span>
+    </div>
+    <span class="card-topic">Merge Driver</span>
+    <span class="card-file">session-merge-driver-2026-05-30.html</span>
+  </div>
+</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="blog-social-media-tools-2026-05-29.html" data-type="blog" data-topic="Social Media Tools">
+  <div class="thumb-container">
+    <img src="blog-social-media-tools-2026-05-29.png" alt="Social Media Tools" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">blog</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-blog">blog</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Social Media Tools</span>
+    <span class="card-file">blog-social-media-tools-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="blog-social-media-tools-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Social Media Tools">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="blog-settings-sync-2026-05-29.html" data-type="blog" data-topic="Settings Sync">
+  <div class="thumb-container">
+    <img src="blog-settings-sync-2026-05-29.png" alt="Settings Sync" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">blog</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-blog">blog</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Settings Sync</span>
+    <span class="card-file">blog-settings-sync-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="blog-settings-sync-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Settings Sync">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-archive-exclude-layered-enforcement-2026-05-29.html" data-type="diff" data-topic="Archive Exclude Layered Enforcement">
+  <div class="thumb-container">
+    <img src="diff-archive-exclude-layered-enforcement-2026-05-29.png" alt="Archive Exclude Layered Enforcement" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Archive Exclude Layered Enforcement</span>
+    <span class="card-file">diff-archive-exclude-layered-enforcement-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-archive-exclude-layered-enforcement-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Archive Exclude Layered Enforcement">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-media-library-gallery-2026-05-29.html" data-type="session" data-topic="Media Library Gallery">
+  <div class="thumb-container">
+    <img src="session-media-library-gallery-2026-05-29.png" alt="Media Library Gallery" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Media Library Gallery</span>
+    <span class="card-file">session-media-library-gallery-2026-05-29.html</span>
+  </div>
+</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-archive-exclusion-2026-05-29.html" data-type="session" data-topic="Archive Exclusion">
+  <div class="thumb-container">
+    <img src="session-archive-exclusion-2026-05-29.png" alt="Archive Exclusion" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Archive Exclusion</span>
+    <span class="card-file">session-archive-exclusion-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-archive-exclusion-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Archive Exclusion">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-session-2026-05-29-2026-05-29.html" data-type="session" data-topic="Session 2026 05 29">
+  <div class="thumb-container">
+    <img src="session-session-2026-05-29-2026-05-29.png" alt="Session 2026 05 29" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Session 2026 05 29</span>
+    <span class="card-file">session-session-2026-05-29-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-session-2026-05-29-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 05 29">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-update-plugin-readmes-workflow-2026-05-29.html" data-type="diff" data-topic="Update Plugin Readmes Workflow">
+  <div class="thumb-container">
+    <img src="diff-update-plugin-readmes-workflow-2026-05-29.png" alt="Update Plugin Readmes Workflow" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Update Plugin Readmes Workflow</span>
+    <span class="card-file">diff-update-plugin-readmes-workflow-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-update-plugin-readmes-workflow-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Update Plugin Readmes Workflow">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-readme-workflow-audit-2026-05-29.html" data-type="session" data-topic="Readme Workflow Audit">
+  <div class="thumb-container">
+    <img src="session-readme-workflow-audit-2026-05-29.png" alt="Readme Workflow Audit" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Readme Workflow Audit</span>
+    <span class="card-file">session-readme-workflow-audit-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-readme-workflow-audit-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Readme Workflow Audit">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-v4-0-0-removal-list-fix-2026-05-29.html" data-type="diff" data-topic="V4 0 0 Removal List Fix">
+  <div class="thumb-container">
+    <img src="diff-v4-0-0-removal-list-fix-2026-05-29.png" alt="V4 0 0 Removal List Fix" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">V4 0 0 Removal List Fix</span>
+    <span class="card-file">diff-v4-0-0-removal-list-fix-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-v4-0-0-removal-list-fix-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: V4 0 0 Removal List Fix">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="session-workflow-2026-05-29-2026-05-29.html" data-type="session" data-topic="Workflow 2026 05 29">
+  <div class="thumb-container">
+    <img src="session-workflow-2026-05-29-2026-05-29.png" alt="Workflow 2026 05 29" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">session</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-session">session</span>
+      <span class="card-date">2026-05-29</span>
+    </div>
+    <span class="card-topic">Workflow 2026 05 29</span>
+    <span class="card-file">session-workflow-2026-05-29-2026-05-29.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="session-workflow-2026-05-29-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Workflow 2026 05 29">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-code-review-fixes-2026-05-28.html" data-type="diff" data-topic="Code Review Fixes">
+  <div class="thumb-container">
+    <img src="diff-code-review-fixes-2026-05-28.png" alt="Code Review Fixes" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-05-28</span>
+    </div>
+    <span class="card-topic">Code Review Fixes</span>
+    <span class="card-file">diff-code-review-fixes-2026-05-28.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-code-review-fixes-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Code Review Fixes">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-optimizing-skill-frontmatter-2026-05-28.html" data-type="diff" data-topic="Optimizing Skill Frontmatter">
+  <div class="thumb-container">
+    <img src="diff-optimizing-skill-frontmatter-2026-05-28.png" alt="Optimizing Skill Frontmatter" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-05-28</span>
+    </div>
+    <span class="card-topic">Optimizing Skill Frontmatter</span>
+    <span class="card-file">diff-optimizing-skill-frontmatter-2026-05-28.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-optimizing-skill-frontmatter-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Optimizing Skill Frontmatter">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="feature-issue-agent-plugin-v3-9-0-2026-05-28.html" data-type="feature" data-topic="Issue Agent Plugin V3 9 0">
+  <div class="thumb-container">
+    <img src="feature-issue-agent-plugin-v3-9-0-2026-05-28.png" alt="Issue Agent Plugin V3 9 0" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">feature</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-feature">feature</span>
+      <span class="card-date">2026-05-28</span>
+    </div>
+    <span class="card-topic">Issue Agent Plugin V3 9 0</span>
+    <span class="card-file">feature-issue-agent-plugin-v3-9-0-2026-05-28.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="feature-issue-agent-plugin-v3-9-0-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Issue Agent Plugin V3 9 0">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="snippet-skill-md-2026-05-28.html" data-type="snippet" data-topic="Skill Md">
+  <div class="thumb-container">
+    <img src="snippet-skill-md-2026-05-28.png" alt="Skill Md" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">snippet</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-snippet">snippet</span>
+      <span class="card-date">2026-05-28</span>
+    </div>
+    <span class="card-topic">Skill Md</span>
+    <span class="card-file">snippet-skill-md-2026-05-28.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="snippet-skill-md-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Skill Md">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="feature-issue-agent-plugin-2026-05-28.html" data-type="feature" data-topic="Issue Agent Plugin">
+  <div class="thumb-container">
+    <img src="feature-issue-agent-plugin-2026-05-28.png" alt="Issue Agent Plugin" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">feature</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-feature">feature</span>
+      <span class="card-date">2026-05-28</span>
+    </div>
+    <span class="card-topic">Issue Agent Plugin</span>
+    <span class="card-file">feature-issue-agent-plugin-2026-05-28.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="feature-issue-agent-plugin-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Issue Agent Plugin">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="diff-branch-agent-skill-2026-05-28.html" data-type="diff" data-topic="Branch Agent Skill">
+  <div class="thumb-container">
+    <img src="diff-branch-agent-skill-2026-05-28.png" alt="Branch Agent Skill" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">diff</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-diff">diff</span>
+      <span class="card-date">2026-05-28</span>
+    </div>
+    <span class="card-topic">Branch Agent Skill</span>
+    <span class="card-file">diff-branch-agent-skill-2026-05-28.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="diff-branch-agent-skill-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Branch Agent Skill">View image</a>
+</div>
+
+<div class="gallery-card-wrap">
+<a class="gallery-card" href="feature-plan-agent-v0-2-0-2026-05-27.html" data-type="feature" data-topic="Plan Agent V0 2 0">
+  <div class="thumb-container">
+    <img src="feature-plan-agent-v0-2-0-2026-05-27.png" alt="Plan Agent V0 2 0" onerror="showFallback(this)">
+    <span class="thumb-fallback" style="display:none">feature</span>
+  </div>
+  <div class="card-info">
+    <div class="card-info-top">
+      <span class="type-badge type-feature">feature</span>
+      <span class="card-date">2026-05-27</span>
+    </div>
+    <span class="card-topic">Plan Agent V0 2 0</span>
+    <span class="card-file">feature-plan-agent-v0-2-0-2026-05-27.html</span>
+  </div>
+</a>
+<a class="open-img-link" href="feature-plan-agent-v0-2-0-2026-05-27.png" target="_blank" rel="noopener" aria-label="View image: Plan Agent V0 2 0">View image</a>
+</div>
   </div>
 
   <div class="no-results" id="noResults">No cards match your search.</div>
 
   <div class="gallery-footer">
-    <span>23 cards</span>
-    <span>Generated 2026-06-02 17:12</span>
+    <span>26 cards</span>
+    <span>Generated 2026-06-03 13:06</span>
   </div>
 
   <script>
@@ -701,7 +864,7 @@
     var activeType = 'all';
     var searchText = '';
     var grid = document.getElementById('galleryGrid');
-    var cards = grid.querySelectorAll('.gallery-card');
+    var cards = grid.querySelectorAll('.gallery-card-wrap');
     var chips = document.querySelectorAll('.filter-chip');
     var searchBox = document.getElementById('searchBox');
     var noResults = document.getElementById('noResults');
@@ -710,18 +873,19 @@
     function applyFilters() {
       var shown = 0;
       for (var i = 0; i < cards.length; i++) {
-        var card = cards[i];
-        var type = card.getAttribute('data-type') || '';
-        var topic = card.getAttribute('data-topic') || '';
+        var wrap = cards[i];
+        var inner = wrap.querySelector('.gallery-card');
+        var type = inner ? inner.getAttribute('data-type') || '' : '';
+        var topic = inner ? inner.getAttribute('data-topic') || '' : '';
         var matchType = activeType === 'all' || type === activeType;
         var matchSearch = !searchText ||
           topic.toLowerCase().indexOf(searchText) !== -1 ||
           type.toLowerCase().indexOf(searchText) !== -1;
         if (matchType && matchSearch) {
-          card.style.display = '';
+          wrap.style.display = '';
           shown++;
         } else {
-          card.style.display = 'none';
+          wrap.style.display = 'none';
         }
       }
       noResults.style.display = shown === 0 ? 'block' : 'none';

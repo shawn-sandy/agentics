@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Card</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --quote-mark: #1f6feb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .context-tag {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      padding: 16px 32px 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-weight: 600;
+    }
+
+    .quote-body {
+      padding: 32px 48px;
+    }
+
+    .quote-mark {
+      font-size: 72px;
+      line-height: 0.8;
+      color: var(--quote-mark);
+      opacity: 0.6;
+      font-family: Georgia, serif;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    blockquote {
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin: 16px auto;
+      border-radius: 1px;
+    }
+
+    .attribution {
+      padding: 0 48px 28px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .attribution::before {
+      content: '— ';
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="context-tag">Claude Code · Skill Design</span>
+    <div class="quote-body">
+      <span class="quote-mark">"</span>
+      <blockquote>Make a skill model-invocable and its description stops being documentation — it becomes the activation trigger. Word it loosely and it fights built-in Plan Mode for the same intent.</blockquote>
+    </div>
+    <div class="divider"></div>
+    <p class="attribution">agentics · plan-agent plugin</p>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">One flag flip taught me the subtlest rule in Claude Code skill authoring.
+
+A skill in our plan-agent plugin was manual-only — it ran only when you typed the slash command. We wanted Claude to reach for it automatically. The fix looks like a one-line deletion: drop `disable-model-invocation: true`.
+
+It isn't that simple. The moment a skill becomes model-invocable, its `description` field stops being documentation and becomes the activation trigger. Word it loosely and the skill fights Claude Code's built-in Plan Mode for the same "plan this" intent.
+
+Three things made it safe:
+
+1. Scope the trigger to concrete artifact nouns — "create an HTML plan", "implementation-plan document" — not generic verbs like "plan how to X". Specific nouns win; broad intent collides.
+
+2. Make argument-sourcing dual-mode. The command path still parses $ARGUMENTS; the model path reads the objective from the conversation and only asks when nothing can be inferred.
+
+3. Ship it as a MINOR bump — a new activation path on top of an unchanged command is purely additive.
+
+The lesson: for a model-invocable skill, precision in the description is everything. It's not where you explain the skill — it's where you decide when it fires.
+
+Follow for more Claude Code plugin patterns like this.
+
+#ClaudeCode #AITools #DeveloperTools #Plugins</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Making a Claude Code skill model-invocable is nearly a one-line change: delete `disable-model-invocation`.
+
+But that line turns your `description` from docs into the activation trigger. Scope it to artifact nouns, not generic verbs, or it fights built-in Plan Mode.
+
+#ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">Subtle Claude Code lesson: making a skill model-invocable is a one-line flag deletion — but it flips the `description` field from docs into the activation trigger.
+
+Scope it to concrete artifact nouns ("create an HTML plan"), not generic "plan how to X", or it collides with built-in Plan Mode.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">A subtlety worth sitting with: in Claude Code, the moment you make a skill model-invocable, its `description` field changes jobs. It stops being where you document the skill and becomes where you decide when it fires.
+
+A vague description isn't just unhelpful — it's an activation bug. Scope it to concrete artifact nouns and it cooperates with built-in Plan Mode; leave it generic and the two compete for the same intent.
+
+Follow for more Claude Code patterns.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

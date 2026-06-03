@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>implementation-plan</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --bullet-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bullets {
+      padding: 20px 32px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: rgba(56, 139, 253, 0.05);
+      border-left: 3px solid var(--bullet-accent);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .bullets li::before {
+      content: '→';
+      color: var(--bullet-accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-badge {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="badge">skill</div>
+      <h1>implementation-plan</h1>
+      <p class="subtitle">From plan generator to verified executor — recent changes to the plan-agent skill</p>
+    </div>
+
+    <ul class="bullets">
+      <li>Mandatory Completion Checklist + Report — plans document what didn't finish, and why</li>
+      <li>Acceptance-criteria gate — each criterion verified against the codebase before 'completed'</li>
+      <li>/workflows handoff — complex plans emit a paste-ready 'Run a workflow…' prompt</li>
+      <li>Scoped checkbox extraction — completion checkboxes never miscounted as criteria</li>
+      <li>Pinned to Opus — plan quality independent of the session model</li>
+    </ul>
+
+    <div class="card-footer">
+      <span class="footer-note">/plan-agent:implementation-plan &lt;objective&gt; [--quick]</span>
+      <span class="footer-badge">skill</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">A plan that refuses to lie about being finished.
+
+Recent changes to the implementation-plan skill (in my plan-agent plugin for Claude Code) moved it from "plan generator" to "plan generator + verified executor." Three changes did the heavy lifting:
+
+• Mandatory Completion Checklist + Report — every generated plan ships a non-removable checklist (step TODOs done, acceptance criteria checked, status updated). If something couldn't be finished, a Completion Report names the exact step or criterion and the specific reason. No vague "some steps incomplete."
+
+• Acceptance-criteria verification gate — before a plan can be marked completed, each criterion is checked against the real codebase, not assumed. Unverifiable items get surfaced to you instead of silently passing.
+
+• /workflows handoff — complex plans (5+ files, parallelizable steps) now emit a paste-ready "Run a workflow…" prompt so implementation fans out across subagents.
+
+It's also pinned to Opus, so plan quality doesn't drift with the session default.
+
+The throughline: a plan should be honest about its own state. Gates beat good intentions.
+
+/plan-agent:implementation-plan add a dark-mode toggle that persists across themes
+
+Follow for more Claude Code plugin-authoring breakdowns like this.
+
+#ClaudeCode #AITools #DeveloperTools #Automation</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">Recent changes to my plan-agent skill: a plan can't mark itself 'completed' until every acceptance criterion is verified against the real codebase — and a Completion Report names what failed and why.
+
+Gates beat good intentions. #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">Reworked my plan-agent's implementation-plan skill: generated plans now carry a verification gate. A plan can't call itself 'done' until each acceptance criterion is checked against the actual codebase — and a report names anything that failed, and why. Honest plans beat optimistic ones.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">The latest changes to implementation-plan (in my plan-agent plugin) come down to one idea: a plan should be honest about its own state.
+
+It now ships a mandatory completion checklist, verifies each acceptance criterion against the actual codebase before allowing a 'completed' status, and writes a Completion Report naming anything it couldn't finish — and why. Complex plans also hand off a /workflows prompt to fan implementation across subagents.
+
+Small in code, big in trust. Follow for more on Claude Code plugin design.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
