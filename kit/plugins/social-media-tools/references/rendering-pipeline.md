@@ -33,14 +33,21 @@ Parse the `PID:N` line to capture `SERVER_PID`.
 
 Load tools via ToolSearch:
 ```
-select:mcp__plugin_playwright_playwright__browser_resize,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for
+select:mcp__plugin_playwright_playwright__browser_resize,mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_take_screenshot,mcp__plugin_playwright_playwright__browser_wait_for,mcp__plugin_playwright_playwright__browser_snapshot
 ```
 
 Then:
 1. Resize the viewport to at least 1280×900 with `browser_resize` before navigating — card templates use `min(1024px, 100%)` so they need the viewport to be at least 1024px wide to render at full width.
 2. Navigate to `http://localhost:$PORT/$TEMP_HTML`
 3. Wait for `networkidle` or 2000ms
-4. Call `browser_take_screenshot` with `filename: $SAVE_PATH_PNG` and `target: ".card"` and `element: "card"` to capture only the card element. Do **not** pass `fullPage: true` — that overrides element targeting and captures the entire page.
+4. Call `browser_snapshot` to verify the page is fully rendered and to collect DOM element references. Look for a `ref` matching the `.card` element and capture it as `$CARD_REF` if the snapshot returns one. Note: card templates use a plain `<div class="card">` with no semantic role, so the snapshot may not expose a named ref for it.
+5. Call `browser_take_screenshot` with `filename: $SAVE_PATH_PNG` and one of:
+   - `target: $CARD_REF` (the ref from step 4) if the snapshot returned a ref for the card element, **or**
+   - `target: ".card"` (CSS selector) if no ref was found.
+   
+   Do **not** pass `fullPage: true` — that overrides element targeting and captures the entire page.
+
+**Why the snapshot step is required:** `browser_take_screenshot`'s `target` accepts either an element `ref` from a prior `browser_snapshot` or a CSS selector. CSS selector-only targeting is unreliable without a prior snapshot — the tool may fall back to a full-viewport capture if the element is not yet fully rendered and bound in the DOM. The `browser_snapshot` step ensures the page is loaded before capture, regardless of whether you use the returned ref or a CSS selector for `target`.
 
 ## Step 4 — Kill server
 
