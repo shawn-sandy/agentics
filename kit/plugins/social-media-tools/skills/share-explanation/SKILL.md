@@ -185,7 +185,15 @@ Check the returned `GATE RESULT` line:
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, Follow CTA
 rule, and Default Per-Platform Copy Formats.
 
-Ask for `PLATFORM` and `TONE` in a single `AskUserQuestion` if not already in `$ARGUMENTS`.
+Resolve `PLATFORM` and `TONE` concretely before prompting:
+
+```bash
+# PLATFORM and TONE were parsed from $ARGUMENTS in Phase 1
+[ -z "$PLATFORM" ] && [ -n "$DEFAULT_PLATFORM" ] && PLATFORM="$DEFAULT_PLATFORM"
+[ -z "$TONE" ]     && [ -n "$DEFAULT_TONE" ]     && TONE="$DEFAULT_TONE"
+```
+
+Only if either variable is still empty after applying the above, ask for both in a single `AskUserQuestion`.
 
 **Lead with insight, not process.** The hook should surface the most interesting or surprising
 aspect of how the component works — not just "here's how X works."
@@ -222,7 +230,9 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 TEMPLATE_FILE=$TEMPLATES_DIR/<selected-template>
 TEMP_HTML=explain-share-card.html
 TODAY=$(date '+%Y-%m-%d')
-SLUG_INPUT="explain-${TARGET_NAME}-${TODAY}"
+# Normalize TARGET_NAME (or TARGET_RAW for concept targets) through the same slug pipeline
+TARGET_SLUG="$(printf '%s' "${TARGET_NAME:-$TARGET_RAW}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//;s/-*$//' | cut -c1-30)"
+SLUG_INPUT="explain-${TARGET_SLUG}-${TODAY}"
 ```
 
 Read `$PLUGIN_DIR/references/variables.md` for the variable reference.

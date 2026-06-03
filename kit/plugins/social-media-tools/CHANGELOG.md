@@ -1,5 +1,24 @@
 # Changelog — social-media-tools
 
+## v2.6.4 — 2026-06-03 — Slug normalization and rule 8 clarity
+
+### Fixed
+
+- `share-explanation` Phase 6: normalize `TARGET_NAME` (or `TARGET_RAW` for concept targets) through the same slug pipeline (lowercase, slug-safe chars, 30-char cap) using `printf` instead of `echo` to avoid edge cases with leading `-n` and escape sequences.
+- `social-share` router rule 8 "Extra flags" cell: reworded to explicitly state that `EXTRA_FLAGS` = `$ARGUMENTS` with only the `--platform=...` token removed; all other text and flags (including `--tone`, query text) are forwarded as-is.
+
+---
+
+## v2.6.3 — 2026-06-03 — Fix share-explanation routing and defaults
+
+### Fixed
+
+- `social-share` router rule 8: strip `--platform=...` from `$ARGUMENTS` before using as `EXTRA_FLAGS` so Phase 3's prepended `--platform` flag is never duplicated.
+- `share-explanation` Phase 5: spell out concrete variable-resolution steps — `PLATFORM`/`TONE` are set from `DEFAULT_PLATFORM`/`DEFAULT_TONE` (Phase 0b) before prompting via `AskUserQuestion`.
+- `share-explanation` Phase 6: derive `TARGET_SLUG` from `TARGET_RAW` for concept targets where `TARGET_NAME` is empty, preventing `explain--YYYY-MM-DD` filenames.
+
+---
+
 ## v2.6.2 — 2026-06-03 — Rename explain-codebase to share-explanation
 
 ### Changed
