@@ -169,6 +169,54 @@ Also update the step chip text from `todo` to `done` for each step card you mark
 <span class="step-chip">todo</span>  →  <span class="step-chip">done</span>
 ```
 
+### 5d — Completion checklist
+
+If the `#completion-list` section does not exist in the plan HTML, skip this sub-step.
+
+Check off the three completion-checklist checkboxes based on the current plan state:
+
+- `cc1` (all steps done): Always check — step cards are always marked completed by finalize-plan in 5c.
+  ```
+  <input type="checkbox" id="cc1" disabled>  →  <input type="checkbox" id="cc1" disabled checked>
+  ```
+- `cc2` (acceptance criteria): Check only if **all** acceptance-criteria checkboxes are checked after 5b. If the user chose "only auto-check verified criteria" and some remain unchecked, leave `cc2` **unchecked**.
+  ```
+  <input type="checkbox" id="cc2" disabled>  →  <input type="checkbox" id="cc2" disabled checked>
+  ```
+- `cc3` (status updated): Check only if the status was set to `completed` in 5a (i.e., all criteria are checked). If status is `in-progress`, leave `cc3` **unchecked**.
+  ```
+  <input type="checkbox" id="cc3" disabled>  →  <input type="checkbox" id="cc3" disabled checked>
+  ```
+
+When all three checkboxes are checked, add the `all-complete` class:
+```
+class="completion-checklist"  →  class="completion-checklist all-complete"
+```
+
+### 5e — Completion report
+
+If the `#completion-report` section does not exist in the plan HTML, skip this sub-step.
+
+Populate the Completion Report based on the findings from Steps 3a and 3b:
+
+**If all criteria were verified and all steps marked done:** Leave the existing `<p class="report-empty">No items to report — all requirements met.</p>` text unchanged.
+
+**If any criteria were marked `unverified` and left unchecked (user chose "auto-check verified only"):** Replace the `<p class="report-empty">…</p>` element with a `<dl class="report-list">` listing each unverified criterion:
+```html
+<dl class="report-list">
+  <dt>[Criterion text]</dt>
+  <dd>[Verification failure reason — e.g., "No matching file found in codebase", "tsc --noEmit exited with code 1", "Identifier not found in grep search"]</dd>
+</dl>
+```
+
+**If the token-level evidence score was below 80%:** Add a report entry noting the evidence gap:
+```html
+<dt>Implementation evidence gap</dt>
+<dd>3/5 tokens found — missing: AuthProvider, useAuth</dd>
+```
+
+Each `<dt>` must name the specific criterion or token, not a generic summary.
+
 ---
 
 ## Step 6 — Deliver
