@@ -2,6 +2,7 @@
 name: explain-codebase
 description: "Explains how plugin components work. Reads source files and synthesizes developer-friendly principles, social copy, and a dark-mode card. Use when asked 'how does X work' or 'explain X'."
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, SendUserFile
+model: opus
 ---
 
 # explain-codebase
