@@ -1,11 +1,11 @@
 ---
-name: explain-codebase
+name: share-explanation
 description: "Explains how plugin components work. Reads source files and synthesizes developer-friendly principles, social copy, and a dark-mode card. Use when asked 'how does X work' or 'explain X'."
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, SendUserFile
 model: opus
 ---
 
-# explain-codebase
+# share-explanation
 
 Answer **"how does X work"** questions about any social-media-tools component — skills, commands,
 or reference patterns — by reading the actual source files and synthesizing a structured
@@ -19,11 +19,11 @@ security scrub → platform-aware copy → dark-mode card → persistent save.
 | 0 — Locate | Locate `templates/` and derive `PLUGIN_DIR` |
 | 0b — Config | Load `SOCIAL.md` for platform/tone defaults |
 | 1 — Parse | Extract target name/concept and flags from `$ARGUMENTS` |
-| 1c — Reuse | Check `docs/media/social/` for an existing post on this target |
 | 2 — Locate files | Map target to SKILL.md, reference docs, and scripts |
 | 3 — Synthesize | Read files and build structured explanation |
 | 4 — Scrub | `security-scrub` the full explanation (BLOCKED = hard stop) |
 | 5 — Draft | Write content-first, platform-aware social copy |
+| 5b — Reuse | Check `docs/media/social/` for an existing post on this target |
 | 6 — Populate | Select template, substitute `{{VARIABLES}}` |
 | 6b — Save | Persistent save to `docs/media/social/` |
 | 7 — Screenshot | Serve HTML locally, Playwright screenshot |
@@ -94,16 +94,6 @@ If `TARGET_RAW` is empty after parsing, ask once via `AskUserQuestion`:
 
 ---
 
-## Phase 1c — Reuse Check
-
-```bash
-FILE_PREFIX=explain
-```
-
-Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
-
----
-
 ## Phase 2 — Identify Target and Locate Files
 
 **Skill name detection:** Check if any token in `TARGET_RAW` matches a directory name under
@@ -132,6 +122,12 @@ grep -ril "<key-terms>" "$PLUGIN_DIR/references/" "$PLUGIN_DIR/skills/"
 ```
 
 Set `TARGET_TYPE=concept`. Collect the 3 most relevant result paths as `SOURCE_FILES`.
+
+Derive a `TARGET_NAME` slug from `TARGET_RAW` for use in filenames:
+
+```bash
+TARGET_NAME=$(echo "$TARGET_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-\|-$//g' | cut -c1-30)
+```
 
 If nothing is found: output "Could not find a component matching `<TARGET_RAW>`. Available
 skills: `$(ls $PLUGIN_DIR/skills/)`." and **STOP**.
@@ -204,6 +200,18 @@ Content guidance per platform:
 
 ---
 
+## Phase 5b — Reuse Check
+
+Now that `TARGET_NAME` and `PLATFORM` are both resolved, check for an existing post:
+
+```bash
+FILE_PREFIX=explain
+```
+
+Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
+
+---
+
 ## Phase 6 — Populate Template
 
 **Select template based on target type:**
@@ -244,7 +252,7 @@ Apply in this exact order:
 | Template variable | Value |
 |-------------------|-------|
 | `{{QUOTE}}` | Most important Key Pattern principle, ≤200 chars (HTML-escaped) |
-| `{{ATTRIBUTION}}` | Source file or pattern name (HTML-escaped) |
+| `{{ATTRIBUTION}}` | Plugin or project name (HTML-escaped; e.g. `social-media-tools`) |
 | `{{CONTEXT}}` | Pattern category (HTML-escaped; e.g. `Security pattern`, `Bootstrap pattern`) |
 | `{{COPY_PANELS}}` | Copy panel HTML — see `references/copy-panels.md` |
 
