@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.0 — 2026-06-03 — Pin implementation-plan skill to Opus model
+## v1.0.1 — 2026-06-03 — Pin implementation-plan skill to Opus model
 
 ### Changed
 
