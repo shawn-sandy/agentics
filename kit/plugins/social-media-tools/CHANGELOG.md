@@ -1,5 +1,14 @@
 # Changelog — social-media-tools
 
+## v2.6.0 — 2026-06-03 — Add explain-codebase skill
+
+### Added
+
+- `explain-codebase` skill: answers natural-language questions ("how does share-session work?") by reading source SKILL.md and reference files, synthesizing a structured developer-friendly explanation (Core Purpose, Activation Conditions, Workflow Phases, Key Patterns, Important Files, Invocation), then delivering platform-aware social copy and a dark-mode card image following the full share-* pipeline (security scrub → copy → feature-card or quote-card template → persistent save → screenshot → deliver).
+- `social-share` router: added rule 8 routing `explain`, `how does`, `how do`, `how it works`, `what is`, `what does`, `describe` queries to `explain-codebase`; renumbered former rules 8–10 to 9–11.
+
+---
+
 ## v2.5.2 — 2026-06-02 — Fix element screenshot falling back to full page
 
 ### Fixed
