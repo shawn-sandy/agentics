@@ -62,7 +62,7 @@ If no directory is found: output "Templates not found. Install the plugin or loa
 1. **Read the gallery template** from `$PLUGIN_DIR/templates/gallery.html`.
 
 2. **Build `{{GALLERY_ENTRIES}}`** — for each card file (most recent first), parse the filename
-   (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one `<a>` block:
+   (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one card entry:
 
    ```html
    <div class="gallery-card-wrap">
@@ -80,7 +80,7 @@ If no directory is found: output "Templates not found. Install the plugin or loa
        <span class="card-file">{BASENAME}</span>
      </div>
    </a>
-   <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener">View image</a>
+   <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener" aria-label="View image: {TOPIC}">View image</a>
    </div>
    ```
 
