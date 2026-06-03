@@ -297,6 +297,26 @@
       flex-shrink: 0;
     }
 
+    .gallery-card-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .open-img-link {
+      display: block;
+      font-size: 12px;
+      color: var(--accent);
+      text-align: center;
+      padding: 4px 0 8px;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .open-img-link:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
     .no-results {
       max-width: 1200px;
       margin: 64px auto;
@@ -380,7 +400,7 @@
     var activeType = 'all';
     var searchText = '';
     var grid = document.getElementById('galleryGrid');
-    var cards = grid.querySelectorAll('.gallery-card');
+    var cards = grid.querySelectorAll('.gallery-card-wrap');
     var chips = document.querySelectorAll('.filter-chip');
     var searchBox = document.getElementById('searchBox');
     var noResults = document.getElementById('noResults');
@@ -389,18 +409,19 @@
     function applyFilters() {
       var shown = 0;
       for (var i = 0; i < cards.length; i++) {
-        var card = cards[i];
-        var type = card.getAttribute('data-type') || '';
-        var topic = card.getAttribute('data-topic') || '';
+        var wrap = cards[i];
+        var inner = wrap.querySelector('.gallery-card');
+        var type = inner ? inner.getAttribute('data-type') || '' : '';
+        var topic = inner ? inner.getAttribute('data-topic') || '' : '';
         var matchType = activeType === 'all' || type === activeType;
         var matchSearch = !searchText ||
           topic.toLowerCase().indexOf(searchText) !== -1 ||
           type.toLowerCase().indexOf(searchText) !== -1;
         if (matchType && matchSearch) {
-          card.style.display = '';
+          wrap.style.display = '';
           shown++;
         } else {
-          card.style.display = 'none';
+          wrap.style.display = 'none';
         }
       }
       noResults.style.display = shown === 0 ? 'block' : 'none';

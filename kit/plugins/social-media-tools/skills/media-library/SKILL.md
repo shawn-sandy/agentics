@@ -62,9 +62,10 @@ If no directory is found: output "Templates not found. Install the plugin or loa
 1. **Read the gallery template** from `$PLUGIN_DIR/templates/gallery.html`.
 
 2. **Build `{{GALLERY_ENTRIES}}`** — for each card file (most recent first), parse the filename
-   (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one `<a>` block:
+   (`{type}-{slug}-{YYYY-MM-DD}.html`) and generate one card entry:
 
    ```html
+   <div class="gallery-card-wrap">
    <a class="gallery-card" href="{BASENAME}" data-type="{TYPE}" data-topic="{TOPIC}">
      <div class="thumb-container">
        <img src="{BASENAME_PNG}" alt="{TOPIC}" onerror="showFallback(this)">
@@ -79,7 +80,11 @@ If no directory is found: output "Templates not found. Install the plugin or loa
        <span class="card-file">{BASENAME}</span>
      </div>
    </a>
+   <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener" aria-label="View image: {TOPIC}">View image</a>
+   </div>
    ```
+
+   Only include the `.open-img-link` anchor when a matching `.png` file exists alongside the `.html` card (test with `-f "$MEDIA_DIR/${BASENAME_PNG}"`). Omit the link element entirely for cards without a screenshot to avoid dead links.
 
    Where:
    - `{BASENAME}` = filename without path (e.g., `diff-add-copy-button-2026-05-27.html`)
