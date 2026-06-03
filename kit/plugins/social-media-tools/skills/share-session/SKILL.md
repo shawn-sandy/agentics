@@ -34,7 +34,7 @@ signals and uses git history for activity context. No code selection required.
 
 `ExitPlanMode` is a deferred tool whose schema must be loaded before it can be called.
 Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps
-happen silently with no user-visible output. Only call this if currently in plan mode — skip this step entirely if plan mode is already off.
+happen silently with no user-visible output.
 
 **Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
 
