@@ -161,7 +161,7 @@ Follow these steps exactly.
    **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins.
 
    **Acceptance criteria gate (mandatory — runs after all steps are done, before marking `completed`):**
-   1. Read each acceptance-criteria checkbox item from the plan HTML.
+   1. Read each acceptance-criteria checkbox item from the `#criteria-list` element in the plan HTML. Do not include checkboxes from the `#completion-list` completion checklist.
    2. For each criterion, verify it is satisfied — run the relevant command, inspect the changed files, or check the codebase for the expected state described in that criterion.
    3. Check off each criterion (`<input type="checkbox">` → `<input type="checkbox" checked>`) only after confirming it is met.
    4. If any criterion cannot be verified, present the unverified items to the user via `AskUserQuestion`:

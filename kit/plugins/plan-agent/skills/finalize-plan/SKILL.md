@@ -44,7 +44,7 @@ Announce: `"Reviewing plan for completion: <resolved-path>"`
 
 Read the HTML file. Extract:
 
-**Acceptance criteria:** Collect the text of every `<input type="checkbox">` item. Note how many are currently checked (have the `checked` attribute) vs unchecked.
+**Acceptance criteria:** Collect the text of every `<input type="checkbox">` item inside the `#criteria-list` element only. Do not include checkboxes from other sections (e.g., the `#completion-list` completion checklist). Note how many are currently checked (have the `checked` attribute) vs unchecked.
 
 **Implementation tokens:** Scan the HTML (excluding `<style>` and `<script>` blocks) for text inside `<code>` elements that looks like file paths or named identifiers — same heuristic as `plan-interview:plan-status` Step 4:
 - File paths: contain `/` or end in a known extension (`.ts`, `.tsx`, `.md`, `.json`, `.py`, `.js`, `.css`, `.scss`)
