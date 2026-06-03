@@ -35,7 +35,7 @@ Both skills are auto-activated — there is no manual slash command. Just descri
 
 Audits a CLAUDE.md file against a 6-dimension scoring rubric and optionally rewrites it.
 
-**Optimization principle (v3.1.0):** The skill applies a core filter — keep only rules that would change Claude's behavior versus its built-in defaults; cut everything else. Tighten the rules that survive to crisp verb-first imperatives.
+**Optimization principle (v3.1.1):** The skill applies a core filter — keep only rules that would change Claude's behavior versus its built-in defaults; cut everything else. Tighten the rules that survive to crisp verb-first imperatives.
 
 **Example prompts:**
 
@@ -108,7 +108,7 @@ This is a skills-only plugin — no commands or agents.
 
 ## Version History
 
-Current version: **3.1.0**
+Current version: **3.1.1**
 
 ### Breaking Changes
 

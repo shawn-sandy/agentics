@@ -411,7 +411,7 @@ claude --plugin-dir ./kit/plugins/plan-interview
 
 ---
 
-#### `product-plans` v3.4.5
+#### `product-plans` v3.4.6
 
 Improve, optimize, and update product plans, PRDs, and feature proposals using a simulated cross-functional team — PM, Lead Developer, UX Designer, Frontend Engineer, Accessibility Expert, and Security Expert.
 
@@ -575,7 +575,7 @@ claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 
 ---
 
-#### `skill-reviewer` v2.2.3
+#### `skill-reviewer` v2.2.4
 
 Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage.
 
@@ -583,7 +583,7 @@ Review and plan Claude Code skills, and run tests for changed files — audit SK
 
 | Command | Description |
 |---------|-------------|
-| `/skill-reviewer:check-description` | Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 160-char budget |
+| `/skill-reviewer:check-description` | Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 200-char budget |
 
 **Skills:**
 
@@ -609,7 +609,7 @@ claude --plugin-dir ./kit/plugins/skill-reviewer
 
 ---
 
-#### `memory-tools` v3.1.1
+#### `memory-tools` v3.1.2
 
 Audit and optimize CLAUDE.md project memory files against Claude Code best practices.
 
@@ -631,9 +631,9 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ---
 
-#### `social-media-tools` v2.4.2
+#### `social-media-tools` v2.5.1
 
-Discover shareable code from git history or codebase path, scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack.
+Discover shareable code from git history or codebase path, scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack. Generate a `SOCIAL.md` project config for default platform, tone, and content preferences.
 
 **Commands:**
 
@@ -656,6 +656,7 @@ Discover shareable code from git history or codebase path, scrub for secrets, dr
 | `share-code` | Post or share a code change |
 | `share-video` | Share or promote a video on social media |
 | `share-project` | Announce features, bugs, changes, or releases on social media — manual invoke only |
+| `share-init` | Set up social sharing preferences and generate a `SOCIAL.md` project config |
 
 ```bash
 claude --plugin-dir ./kit/plugins/social-media-tools
@@ -701,9 +702,9 @@ claude --plugin-dir ./kit/plugins/issue-agent
 | [git-agent](./kit/plugins/git-agent/README.md) | 3.10.3 | development | 3 commands, 5 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.3 | development | 1 command, 4 skills, 1 hook |
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.1 | development | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.4.2 | productivity | 1 command, 11 skills |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.4 | development | 1 command, 4 skills, 1 hook |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.2 | development | 2 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.5.1 | productivity | 1 command, 12 skills |
 | [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.2 | development | 1 skill |
 
 ---

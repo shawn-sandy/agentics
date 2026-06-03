@@ -464,7 +464,7 @@ alter landmark nesting, heading levels, or the `<head>` element order.
         content="default-src 'none'; style-src 'self' 'unsafe-inline';
                  script-src 'self' 'unsafe-inline'; img-src data:;
                  base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
-  <meta name="generator" content="product-plans v3.4.0">
+  <meta name="generator" content="product-plans v3.4.5">
   <title><!-- plan H1 heading text (HTML-escaped), or filename stem if no H1 --></title>
   <style>
     /* ── reset ──────────────────────────────────────────────── */
