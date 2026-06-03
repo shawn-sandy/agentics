@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>session recap · 2026-06-02</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --green: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .content { padding: 22px 28px 8px; }
+
+    .narrative {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .accomplishments {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .accomplishments li {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .accomplishments li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .metrics-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .metric { font-size: 12px; color: var(--muted); }
+    .metric b { color: var(--text); font-size: 13px; font-weight: 700; }
+    .metric b.accent { color: var(--accent); }
+    .metric b.green  { color: var(--green); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-tag   { font-size: 11px; color: var(--muted); }
+    .footer-accent { font-size: 11px; color: var(--accent); font-weight: 500; }
+
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-label { color: #8b949e; font-size: 12px; margin: 0 0 8px; }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="header-text">
+        <h1>session recap · 2026-06-02</h1>
+      </div>
+      <div class="model-badge">sonnet-4-6</div>
+    </div>
+
+    <div class="content">
+      <p class="narrative">Planned a UX improvement to the social-media-tools media library — traced the nested-anchor HTML constraint, designed a clean sibling-link solution, and shipped a browser-verified implementation plan.</p>
+      <ul class="accomplishments">
+        <li>Explored gallery.html + SKILL.md to map where per-card HTML lives in the skill file</li>
+        <li>Identified the nested-anchor HTML validity issue blocking a simple inner image link</li>
+        <li>Designed sibling-link approach: .gallery-card-wrap + plain &lt;a&gt; below each card</li>
+        <li>Wrote and browser-verified an HTML implementation plan at docs/plans/</li>
+        <li>Revised plan live when simpler approach emerged — removed JS click-handler complexity</li>
+      </ul>
+    </div>
+
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">93,919</b> tokens</span>
+      <span class="metric"><b>23 min</b></span>
+      <span class="metric"><b class="green">93.9%</b> cache hit</span>
+      <span class="metric"><b>0</b> files</span>
+      <span class="metric"><b>0</b> commits</span>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-tag">Claude Code · session recap</span>
+      <span class="footer-accent">github.com/shawn-sandy/agentics</span>
+    </div>
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy">Just planned a UX improvement for the social-media-tools media library in a Claude Code session — and the HTML spec forced a better design.
+
+The media library gallery shows every social post you've generated as a card. Clicking a card opens the HTML file, but there was no way to open the PNG image directly. Simple ask — until you see the constraint: the whole card is already an &lt;a&gt; element, and HTML forbids anchoring inside an anchor.
+
+What the session covered:
+
+→ Traced the gallery architecture across gallery.html and SKILL.md — the per-card HTML lives in the skill file, not the template
+→ Identified the nested-anchor blocker; explored a div + JS click-handler approach
+→ Simplified on user feedback: wrap in .gallery-card-wrap, place a plain sibling &lt;a&gt; below the card — no JS needed
+→ Wrote and browser-verified an HTML implementation plan
+→ Revised and re-rendered the plan live in one pass
+
+Sometimes the spec constraint is the signal: if you can't nest anchors, you probably shouldn't be nesting them. The sibling approach is cleaner, more accessible, and requires zero JavaScript.
+
+93,919 tokens · 93.9% cache hit · 23 min
+
+Follow for more Claude Code workflows and HTML/CSS deep-dives.
+
+#ClaudeCode #WebDev #HTML #DeveloperTools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy', this)">Copy post</button>
+  </div>
+
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
