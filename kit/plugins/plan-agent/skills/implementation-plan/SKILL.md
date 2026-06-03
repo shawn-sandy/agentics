@@ -161,7 +161,7 @@ Follow these steps exactly.
    **If the user chooses `Implement now`:** Lift the Scope Constraint for this session only. Work through each step in the plan sequentially, applying changes to source files, running commands, and verifying each step before moving to the next. Update each step card's chip from `todo` to `done` (add `completed` class to `.step-card`) and update all three status representations together — `<html data-status="…">`, `<meta name="plan-status" content="…">`, and the visible badge text — to `in-progress` as work begins.
 
    **Acceptance criteria gate (mandatory — runs after all steps are done, before marking `completed`):**
-   1. Read each acceptance-criteria checkbox item from the plan HTML.
+   1. Read each acceptance-criteria checkbox item from the `#criteria-list` element in the plan HTML. Do not include checkboxes from the `#completion-list` completion checklist.
    2. For each criterion, verify it is satisfied — run the relevant command, inspect the changed files, or check the codebase for the expected state described in that criterion.
    3. Check off each criterion (`<input type="checkbox">` → `<input type="checkbox" checked>`) only after confirming it is met.
    4. If any criterion cannot be verified, present the unverified items to the user via `AskUserQuestion`:
@@ -172,6 +172,18 @@ Follow these steps exactly.
 
       Options: `Yes, check them off` / `No, leave unchecked`.
    5. Only set status to `completed` (all three representations) after every criterion is checked. If the user chose to leave any unchecked, set status to `in-progress` instead and note which criteria remain open.
+
+   **Completion checklist gate (mandatory — runs after the acceptance criteria gate, before committing):**
+   1. Verify all three completion checklist conditions in the plan HTML:
+      a. All `.step-card` elements have the `completed` class.
+      b. All acceptance-criteria checkboxes have the `checked` attribute.
+      c. The status is set to `completed` in all three representations.
+   2. Check off each completion checklist checkbox (`<input type="checkbox" id="cc1" disabled>` → `<input type="checkbox" id="cc1" disabled checked>`) only after confirming the corresponding condition is met.
+   3. If all three conditions are met, add the `all-complete` class to `<div class="completion-checklist" id="completion-checklist">`.
+   4. If any condition is not met (e.g., the user chose to leave acceptance criteria unchecked), leave the corresponding completion checklist checkbox unchecked, keep status at `in-progress`, and **populate the Completion Report**:
+      - Replace the `<p class="report-empty">` paragraph inside `#completion-report` with a `<dl class="report-list">` element.
+      - For each incomplete requirement, add a `<dt>` naming the exact step or criterion that was not completed and a `<dd>` explaining why (e.g., `<dt>Step 3: Wire up auth middleware</dt><dd>Blocked by missing OAuth credentials configuration</dd>` or `<dt>Criterion: No TypeScript errors</dt><dd>tsc reports 2 errors in src/auth.ts</dd>`).
+      - Each report entry must be specific — name the exact step or criterion, not a generic "some steps incomplete".
 
    Commit the source file changes together with the updated plan file after implementation finishes.
 
@@ -190,6 +202,7 @@ Every HTML plan must include the following sections rendered as visible, styled 
 - **steps** — A numbered list where each item has three parts: the action, a brief *why*, and a *verify* line. Render each step as a card with an expandable Verify section. Per-step verification is local; the top-level `verification` section covers end-to-end correctness.
 - **acceptance-criteria** — Interactive checkboxes (`<input type="checkbox">`) the user can tick off in the browser. Each item is a short, falsifiable statement.
 - **verification** — How to confirm the entire plan was executed correctly end-to-end.
+- **completion-checklist** — Three mandatory `disabled` checkboxes: (1) all step TODOs marked as done, (2) all acceptance criteria verified and checked off, (3) plan status updated to `completed`. Includes a **Completion Report** sub-section that documents any items that could not be completed and the reason why. Render between the verification and next-steps sections. Always present — never optional, never omitted.
 - **next-steps** *(optional)* — Out-of-scope follow-ups and unsolicited ideas; never place these in `steps`. Include a prompt block the user can paste into Claude. When a next-step item would benefit from workflow orchestration (large-scale migration, multi-file audit, cross-checked research), prefix the prompt with "Run a workflow to …" so it triggers Claude Code's `/workflows` runtime when pasted. If any next-step items are visionary or blue-sky (ambitious, speculative, non-immediate), label them with a `🔭 Wish List` badge and group them in a collapsible "Wish List" subsection at the bottom of Next Steps. Realistic, actionable items stay in the main list. Each prompt `<pre>` must be followed by a copy button.
 - **unresolved-questions** *(optional)* — Collapsible `<details>` section. Omit entirely if none. Each `<pre>` prompt inside an unresolved item must be followed by a copy button.
 
@@ -210,6 +223,7 @@ The file must:
 - Include a **"Copy prompt"** button (`<button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>`) immediately after every `<pre>` block inside `.next-step-prompt` and `.unresolved-prompt` elements. Do not remove these when filling placeholders.
 - Include an **implement prompt row** (`<div class="plan-implement">`) immediately below the `.objective-card` and before `.progress-wrap`. It must contain: the `{implement-prompt}` value in `<code id="implement-cmd" aria-label="Implement prompt">`, and a Copy button with `onclick="copyCmd(this)"`. The copy button is hidden via CSS when `data-status="completed"`. The row is suppressed in `@media print`.
 - When a workflow prompt was generated, include a **workflow prompt row** (`<div class="plan-workflow">`) immediately below the `.plan-implement` row and before `.progress-wrap`. It must contain: the `{workflow-prompt}` value in `<code id="workflow-cmd" aria-label="Workflow prompt">`, and a Copy button with `onclick="copyWorkflow(this)"`. Same visibility rules as the implement row (hidden when completed, suppressed in print). **Remove the entire `.plan-workflow` element when no workflow prompt was generated** — do not render an empty row.
+- Include a **completion checklist** section (`<section class="section-card card-completion" id="completion">`) between Verification and Next Steps with three `disabled` checkboxes for the mandatory completion requirements (step TODOs done, acceptance criteria checked, status updated). The checkboxes auto-update via JavaScript. Include a **Completion Report** (`<div class="completion-report">`) inside the checklist that initially shows "No items to report" and is populated with a `<dl class="report-list">` detailing any incomplete items and their reasons when the plan cannot be fully completed.
 
 ## Writing Style
 
@@ -222,3 +236,5 @@ Direct, imperative, developer-friendly — real names (file paths, function name
 Copy `reference/SKELETON.html` from this plugin's skill directory as a starter for every new plan. Locate it by reading the same directory that contains this `SKILL.md` file — use `Glob` with pattern `**/plan-agent/skills/implementation-plan/reference/SKELETON.html` if the path is uncertain. Fill every placeholder (wrapped in `{curly braces}`) before writing the file. The skeleton includes copy buttons after every prompt `<pre>`; do not remove them when filling placeholders. `minimal`, `adr`, and `spike` template variants are planned but not yet implemented — use `SKELETON.html` for all plans until those variants ship.
 
 Each step card in the skeleton includes a `<span class="step-chip">todo</span>` before the action text. Always write `todo` as the initial chip value — the chip visually updates to `done` via CSS when the `.step-card.completed` class is applied. Do not change the chip text from `todo` in the initial HTML output.
+
+The skeleton includes a Completion Checklist section with three fixed checkbox items (all step TODOs done, all acceptance criteria checked, status updated) and an empty Completion Report. These items are identical in every plan and have no placeholders to fill. Do not remove this section or change its checkbox items.

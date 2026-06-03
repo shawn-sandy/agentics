@@ -491,6 +491,110 @@
   .criteria-list label { cursor: pointer; font-size: .9rem; }
   .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
 
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
@@ -780,6 +884,9 @@
   <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
   </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
@@ -822,6 +929,7 @@
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
       <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
     </ul>
   </nav>
@@ -931,6 +1039,37 @@
         Verification
       </h2>
       <p>{end-to-end-verification}</p>
+    </section>
+
+    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Completion Checklist
+      </h2>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
     </section>
 
     <!-- ── Next Steps (optional — remove section if empty) ──────── -->
@@ -1164,6 +1303,49 @@ function copyPrompt(btn) {
 
   restoreState();
   updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
 
   /* ── Scroll rail ─────────────────────────────────────────────── */
   var rail = document.querySelector('.scroll-rail');

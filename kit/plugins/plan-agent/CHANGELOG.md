@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.1.0 — 2026-06-03 — Add mandatory completion checklist and report to plans
+
+### Added
+
+- **SKELETON.html**: new "Completion Checklist" section between Verification and Next Steps with three `disabled` checkboxes — (1) all step TODOs marked as done, (2) all acceptance criteria verified and checked, (3) plan status updated to `completed`. Checkboxes auto-update via JavaScript based on DOM state. Amber border transitions to green when all conditions are met.
+- **SKELETON.html**: new "Completion Report" sub-section inside the checklist. Initially shows "No items to report"; populated with a `<dl>` detailing each incomplete item and the reason it could not be completed when the plan is finalized with unresolved items.
+- **SKELETON.html**: new `ic-clipboard-check` SVG icon symbol and sidebar nav entry for the Completion section.
+- **SKILL.md**: `completion-checklist` added to the Required Structure list as a mandatory (never-optional) section.
+- **SKILL.md Step 8**: new "Completion checklist gate" runs after the acceptance criteria gate — verifies all three completion requirements, checks them off, and populates the Completion Report with specific details for any items that could not be completed.
+- **finalize-plan SKILL.md**: new Steps 5d (completion checklist checkboxes) and 5e (completion report population) handle the checklist during plan finalization, with defensive skip when the section doesn't exist in older plans.
+
+---
+
 ## v1.0.1 — 2026-06-03 — Pin implementation-plan skill to Opus model
 
 ### Changed
