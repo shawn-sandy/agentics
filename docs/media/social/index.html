@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
   gallery.html — Media library for saved social media cards.
 
@@ -8,936 +8,1499 @@
     GENERATED_AT     — ISO timestamp of gallery generation
 -->
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Media Library</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #388bfd;
-      --accent-hover: #58a6ff;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      padding: 32px;
-    }
-
-    .gallery-header {
-      max-width: 1200px;
-      margin: 0 auto 24px;
-    }
-
-    .gallery-header h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .gallery-header p {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .toolbar {
-      max-width: 1200px;
-      margin: 0 auto 24px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .search-box {
-      flex: 1;
-      min-width: 200px;
-      max-width: 360px;
-      padding: 8px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .search-box:focus {
-      border-color: var(--accent);
-    }
-
-    .search-box::placeholder {
-      color: var(--muted);
-    }
-
-    .filter-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .filter-chip {
-      padding: 4px 12px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-
-    .filter-chip:hover {
-      border-color: var(--accent);
-      color: var(--text);
-    }
-
-    .filter-chip.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    .view-toggle {
-      margin-left: auto;
-      display: flex;
-      gap: 4px;
-    }
-
-    .view-btn {
-      padding: 6px 10px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.15s;
-    }
-
-    .view-btn:first-child { border-radius: 6px 0 0 6px; }
-    .view-btn:last-child { border-radius: 0 6px 6px 0; }
-
-    .view-btn.active {
-      background: var(--surface);
-      border-color: var(--accent);
-      color: var(--text);
-    }
-
-    .visible-count {
-      font-size: 12px;
-      color: var(--muted);
-      max-width: 1200px;
-      margin: 0 auto 16px;
-    }
-
-    /* Grid view */
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .gallery-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .gallery-card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 4px 16px rgba(56, 139, 253, 0.15);
-    }
-
-    .thumb-container {
-      width: 100%;
-      aspect-ratio: 16 / 10;
-      background: var(--bg);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .thumb-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .thumb-fallback {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--border);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-
-    .card-info {
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .card-info-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .type-badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      white-space: nowrap;
-    }
-
-    .type-diff     { background: #f8514933; color: #f85149; }
-    .type-feature  { background: #3fb95033; color: #3fb950; }
-    .type-quote    { background: #d2a8ff33; color: #d2a8ff; }
-    .type-blog     { background: #388bfd33; color: #388bfd; }
-    .type-snippet  { background: #79c0ff33; color: #79c0ff; }
-    .type-video    { background: #ff7b7233; color: #ff7b72; }
-    .type-project  { background: #ffa65733; color: #ffa657; }
-    .type-session  { background: #7ee78733; color: #7ee787; }
-    .type-explain  { background: #56d3ff33; color: #56d3ff; }
-
-    .card-date {
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-    }
-
-    .card-topic {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text);
-      line-height: 1.4;
-    }
-
-    .card-file {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-      word-break: break-all;
-    }
-
-    /* List view */
-    .gallery-grid.list-view {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .list-view .gallery-card {
-      flex-direction: row;
-      align-items: center;
-      border-radius: 6px;
-    }
-
-    .list-view .thumb-container {
-      width: 120px;
-      min-width: 120px;
-      aspect-ratio: 16 / 10;
-      border-bottom: none;
-      border-right: 1px solid var(--border);
-    }
-
-    .list-view .card-info {
-      flex-direction: row;
-      align-items: center;
-      gap: 16px;
-      padding: 12px 16px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .list-view .card-info-top {
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .list-view .card-topic {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .list-view .card-file {
-      flex-shrink: 0;
-    }
-
-    .gallery-card-wrap {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .list-view .open-img-link {
-      display: none;
-    }
-
-    .open-img-link {
-      display: block;
-      font-size: 12px;
-      color: var(--accent);
-      text-align: center;
-      padding: 4px 0 8px;
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .open-img-link:hover {
-      color: var(--accent-hover);
-      text-decoration: underline;
-    }
-
-    .no-results {
-      max-width: 1200px;
-      margin: 64px auto;
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      display: none;
-    }
-
-    .gallery-footer {
-      max-width: 1200px;
-      margin: 32px auto 0;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .gallery-footer span {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    @media (max-width: 640px) {
-      body { padding: 16px; }
-      .toolbar { gap: 8px; }
-      .search-box { max-width: none; }
-      .list-view .thumb-container { display: none; }
-      .list-view .card-info { flex-wrap: wrap; gap: 8px; }
-      .list-view .card-topic { white-space: normal; }
-    }
-  </style>
-</head>
-<body>
-  <div class="gallery-header">
-    <h1>Media Library</h1>
-    <p>26 saved cards &mdash; click any card to view it</p>
-  </div>
-
-  <div class="toolbar">
-    <input type="text" class="search-box" placeholder="Search by topic or type..." id="searchBox" aria-label="Search cards by topic or type">
-    <div class="filter-chips" id="filterChips">
-      <button class="filter-chip active" data-type="all" aria-pressed="true">All</button>
-      <button class="filter-chip" data-type="diff" aria-pressed="false">Diff</button>
-      <button class="filter-chip" data-type="feature" aria-pressed="false">Feature</button>
-      <button class="filter-chip" data-type="quote" aria-pressed="false">Quote</button>
-      <button class="filter-chip" data-type="blog" aria-pressed="false">Blog</button>
-      <button class="filter-chip" data-type="snippet" aria-pressed="false">Snippet</button>
-      <button class="filter-chip" data-type="video" aria-pressed="false">Video</button>
-      <button class="filter-chip" data-type="project" aria-pressed="false">Project</button>
-      <button class="filter-chip" data-type="session" aria-pressed="false">Session</button>
-      <button class="filter-chip" data-type="explain" aria-pressed="false">Explain</button>
-    </div>
-    <div class="view-toggle">
-      <button class="view-btn active" id="gridBtn" title="Grid view" aria-label="Grid view" aria-pressed="true">&#9638;</button>
-      <button class="view-btn" id="listBtn" title="List view" aria-label="List view" aria-pressed="false">&#9776;</button>
-    </div>
-  </div>
-
-  <div class="visible-count" id="visibleCount"></div>
-
-  <div class="gallery-grid" id="galleryGrid">
-    <div class="gallery-card-wrap">
-<a class="gallery-card" href="explain-implementation-plan-2026-06-03.html" data-type="explain" data-topic="Implementation Plan">
-  <div class="thumb-container">
-    <img src="explain-implementation-plan-2026-06-03.png" alt="Implementation Plan" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">explain</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-explain">explain</span>
-      <span class="card-date">2026-06-03</span>
-    </div>
-    <span class="card-topic">Implementation Plan</span>
-    <span class="card-file">explain-implementation-plan-2026-06-03.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="explain-implementation-plan-2026-06-03.png" target="_blank" rel="noopener" aria-label="View image: Implementation Plan">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-rendering-pipeline-snapshot-fix-2026-06-02.html" data-type="diff" data-topic="Rendering Pipeline Snapshot Fix">
-  <div class="thumb-container">
-    <img src="diff-rendering-pipeline-snapshot-fix-2026-06-02.png" alt="Rendering Pipeline Snapshot Fix" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-06-02</span>
-    </div>
-    <span class="card-topic">Rendering Pipeline Snapshot Fix</span>
-    <span class="card-file">diff-rendering-pipeline-snapshot-fix-2026-06-02.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-rendering-pipeline-snapshot-fix-2026-06-02.png" target="_blank" rel="noopener" aria-label="View image: Rendering Pipeline Snapshot Fix">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-session-2026-06-02-2026-06-02.html" data-type="session" data-topic="Session 2026 06 02">
-  <div class="thumb-container">
-    <img src="session-session-2026-06-02-2026-06-02.png" alt="Session 2026 06 02" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-06-02</span>
-    </div>
-    <span class="card-topic">Session 2026 06 02</span>
-    <span class="card-file">session-session-2026-06-02-2026-06-02.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-session-2026-06-02-2026-06-02.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 06 02">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html" data-type="feature" data-topic="Plan Agent Posttooluse Hook Auto Rebuild">
-  <div class="thumb-container">
-    <img src="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png" alt="Plan Agent Posttooluse Hook Auto Rebuild" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">feature</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-feature">feature</span>
-      <span class="card-date">2026-06-01</span>
-    </div>
-    <span class="card-topic">Plan Agent Posttooluse Hook Auto Rebuild</span>
-    <span class="card-file">feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png" target="_blank" rel="noopener" aria-label="View image: Plan Agent Posttooluse Hook Auto Rebuild">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-session-2026-05-31-2026-05-31.html" data-type="session" data-topic="Session 2026 05 31">
-  <div class="thumb-container">
-    <img src="session-session-2026-05-31-2026-05-31.png" alt="Session 2026 05 31" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-31</span>
-    </div>
-    <span class="card-topic">Session 2026 05 31</span>
-    <span class="card-file">session-session-2026-05-31-2026-05-31.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-session-2026-05-31-2026-05-31.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 05 31">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="feature-issue-agent-v0-2-0-2026-05-31.html" data-type="feature" data-topic="Issue Agent V0 2 0">
-  <div class="thumb-container">
-    <img src="feature-issue-agent-v0-2-0-2026-05-31.png" alt="Issue Agent V0 2 0" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">feature</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-feature">feature</span>
-      <span class="card-date">2026-05-31</span>
-    </div>
-    <span class="card-topic">Issue Agent V0 2 0</span>
-    <span class="card-file">feature-issue-agent-v0-2-0-2026-05-31.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="feature-issue-agent-v0-2-0-2026-05-31.png" target="_blank" rel="noopener" aria-label="View image: Issue Agent V0 2 0">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-session-2026-05-30-2026-05-30.html" data-type="session" data-topic="Session 2026 05 30">
-  <div class="thumb-container">
-    <img src="session-session-2026-05-30-2026-05-30.png" alt="Session 2026 05 30" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-30</span>
-    </div>
-    <span class="card-topic">Session 2026 05 30</span>
-    <span class="card-file">session-session-2026-05-30-2026-05-30.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-session-2026-05-30-2026-05-30.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 05 30">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-plan-agent-v0-9-0-2026-05-30.html" data-type="session" data-topic="Plan Agent V0 9 0">
-  <div class="thumb-container">
-    <img src="session-plan-agent-v0-9-0-2026-05-30.png" alt="Plan Agent V0 9 0" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-30</span>
-    </div>
-    <span class="card-topic">Plan Agent V0 9 0</span>
-    <span class="card-file">session-plan-agent-v0-9-0-2026-05-30.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-plan-agent-v0-9-0-2026-05-30.png" target="_blank" rel="noopener" aria-label="View image: Plan Agent V0 9 0">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-merge-driver-2026-05-30.html" data-type="session" data-topic="Merge Driver">
-  <div class="thumb-container">
-    <img src="session-merge-driver-2026-05-30.png" alt="Merge Driver" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-30</span>
-    </div>
-    <span class="card-topic">Merge Driver</span>
-    <span class="card-file">session-merge-driver-2026-05-30.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-merge-driver-2026-05-30.png" target="_blank" rel="noopener" aria-label="View image: Merge Driver">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="blog-social-media-tools-2026-05-29.html" data-type="blog" data-topic="Social Media Tools">
-  <div class="thumb-container">
-    <img src="blog-social-media-tools-2026-05-29.png" alt="Social Media Tools" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">blog</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-blog">blog</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Social Media Tools</span>
-    <span class="card-file">blog-social-media-tools-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="blog-social-media-tools-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Social Media Tools">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="blog-settings-sync-2026-05-29.html" data-type="blog" data-topic="Settings Sync">
-  <div class="thumb-container">
-    <img src="blog-settings-sync-2026-05-29.png" alt="Settings Sync" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">blog</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-blog">blog</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Settings Sync</span>
-    <span class="card-file">blog-settings-sync-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="blog-settings-sync-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Settings Sync">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-archive-exclude-layered-enforcement-2026-05-29.html" data-type="diff" data-topic="Archive Exclude Layered Enforcement">
-  <div class="thumb-container">
-    <img src="diff-archive-exclude-layered-enforcement-2026-05-29.png" alt="Archive Exclude Layered Enforcement" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Archive Exclude Layered Enforcement</span>
-    <span class="card-file">diff-archive-exclude-layered-enforcement-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-archive-exclude-layered-enforcement-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Archive Exclude Layered Enforcement">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-media-library-gallery-2026-05-29.html" data-type="session" data-topic="Media Library Gallery">
-  <div class="thumb-container">
-    <img src="session-media-library-gallery-2026-05-29.png" alt="Media Library Gallery" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Media Library Gallery</span>
-    <span class="card-file">session-media-library-gallery-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-media-library-gallery-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Media Library Gallery">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-archive-exclusion-2026-05-29.html" data-type="session" data-topic="Archive Exclusion">
-  <div class="thumb-container">
-    <img src="session-archive-exclusion-2026-05-29.png" alt="Archive Exclusion" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Archive Exclusion</span>
-    <span class="card-file">session-archive-exclusion-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-archive-exclusion-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Archive Exclusion">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-session-2026-05-29-2026-05-29.html" data-type="session" data-topic="Session 2026 05 29">
-  <div class="thumb-container">
-    <img src="session-session-2026-05-29-2026-05-29.png" alt="Session 2026 05 29" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Session 2026 05 29</span>
-    <span class="card-file">session-session-2026-05-29-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-session-2026-05-29-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Session 2026 05 29">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-update-plugin-readmes-workflow-2026-05-29.html" data-type="diff" data-topic="Update Plugin Readmes Workflow">
-  <div class="thumb-container">
-    <img src="diff-update-plugin-readmes-workflow-2026-05-29.png" alt="Update Plugin Readmes Workflow" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Update Plugin Readmes Workflow</span>
-    <span class="card-file">diff-update-plugin-readmes-workflow-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-update-plugin-readmes-workflow-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Update Plugin Readmes Workflow">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-readme-workflow-audit-2026-05-29.html" data-type="session" data-topic="Readme Workflow Audit">
-  <div class="thumb-container">
-    <img src="session-readme-workflow-audit-2026-05-29.png" alt="Readme Workflow Audit" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Readme Workflow Audit</span>
-    <span class="card-file">session-readme-workflow-audit-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-readme-workflow-audit-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Readme Workflow Audit">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-v4-0-0-removal-list-fix-2026-05-29.html" data-type="diff" data-topic="V4 0 0 Removal List Fix">
-  <div class="thumb-container">
-    <img src="diff-v4-0-0-removal-list-fix-2026-05-29.png" alt="V4 0 0 Removal List Fix" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">V4 0 0 Removal List Fix</span>
-    <span class="card-file">diff-v4-0-0-removal-list-fix-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-v4-0-0-removal-list-fix-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: V4 0 0 Removal List Fix">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="session-workflow-2026-05-29-2026-05-29.html" data-type="session" data-topic="Workflow 2026 05 29">
-  <div class="thumb-container">
-    <img src="session-workflow-2026-05-29-2026-05-29.png" alt="Workflow 2026 05 29" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">session</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-session">session</span>
-      <span class="card-date">2026-05-29</span>
-    </div>
-    <span class="card-topic">Workflow 2026 05 29</span>
-    <span class="card-file">session-workflow-2026-05-29-2026-05-29.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="session-workflow-2026-05-29-2026-05-29.png" target="_blank" rel="noopener" aria-label="View image: Workflow 2026 05 29">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-code-review-fixes-2026-05-28.html" data-type="diff" data-topic="Code Review Fixes">
-  <div class="thumb-container">
-    <img src="diff-code-review-fixes-2026-05-28.png" alt="Code Review Fixes" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-05-28</span>
-    </div>
-    <span class="card-topic">Code Review Fixes</span>
-    <span class="card-file">diff-code-review-fixes-2026-05-28.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-code-review-fixes-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Code Review Fixes">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-optimizing-skill-frontmatter-2026-05-28.html" data-type="diff" data-topic="Optimizing Skill Frontmatter">
-  <div class="thumb-container">
-    <img src="diff-optimizing-skill-frontmatter-2026-05-28.png" alt="Optimizing Skill Frontmatter" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-05-28</span>
-    </div>
-    <span class="card-topic">Optimizing Skill Frontmatter</span>
-    <span class="card-file">diff-optimizing-skill-frontmatter-2026-05-28.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-optimizing-skill-frontmatter-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Optimizing Skill Frontmatter">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="feature-issue-agent-plugin-v3-9-0-2026-05-28.html" data-type="feature" data-topic="Issue Agent Plugin V3 9 0">
-  <div class="thumb-container">
-    <img src="feature-issue-agent-plugin-v3-9-0-2026-05-28.png" alt="Issue Agent Plugin V3 9 0" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">feature</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-feature">feature</span>
-      <span class="card-date">2026-05-28</span>
-    </div>
-    <span class="card-topic">Issue Agent Plugin V3 9 0</span>
-    <span class="card-file">feature-issue-agent-plugin-v3-9-0-2026-05-28.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="feature-issue-agent-plugin-v3-9-0-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Issue Agent Plugin V3 9 0">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="snippet-skill-md-2026-05-28.html" data-type="snippet" data-topic="Skill Md">
-  <div class="thumb-container">
-    <img src="snippet-skill-md-2026-05-28.png" alt="Skill Md" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">snippet</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-snippet">snippet</span>
-      <span class="card-date">2026-05-28</span>
-    </div>
-    <span class="card-topic">Skill Md</span>
-    <span class="card-file">snippet-skill-md-2026-05-28.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="snippet-skill-md-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Skill Md">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="feature-issue-agent-plugin-2026-05-28.html" data-type="feature" data-topic="Issue Agent Plugin">
-  <div class="thumb-container">
-    <img src="feature-issue-agent-plugin-2026-05-28.png" alt="Issue Agent Plugin" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">feature</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-feature">feature</span>
-      <span class="card-date">2026-05-28</span>
-    </div>
-    <span class="card-topic">Issue Agent Plugin</span>
-    <span class="card-file">feature-issue-agent-plugin-2026-05-28.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="feature-issue-agent-plugin-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Issue Agent Plugin">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="diff-branch-agent-skill-2026-05-28.html" data-type="diff" data-topic="Branch Agent Skill">
-  <div class="thumb-container">
-    <img src="diff-branch-agent-skill-2026-05-28.png" alt="Branch Agent Skill" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">diff</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-diff">diff</span>
-      <span class="card-date">2026-05-28</span>
-    </div>
-    <span class="card-topic">Branch Agent Skill</span>
-    <span class="card-file">diff-branch-agent-skill-2026-05-28.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="diff-branch-agent-skill-2026-05-28.png" target="_blank" rel="noopener" aria-label="View image: Branch Agent Skill">View image</a>
-</div>
-
-<div class="gallery-card-wrap">
-<a class="gallery-card" href="feature-plan-agent-v0-2-0-2026-05-27.html" data-type="feature" data-topic="Plan Agent V0 2 0">
-  <div class="thumb-container">
-    <img src="feature-plan-agent-v0-2-0-2026-05-27.png" alt="Plan Agent V0 2 0" onerror="showFallback(this)">
-    <span class="thumb-fallback" style="display:none">feature</span>
-  </div>
-  <div class="card-info">
-    <div class="card-info-top">
-      <span class="type-badge type-feature">feature</span>
-      <span class="card-date">2026-05-27</span>
-    </div>
-    <span class="card-topic">Plan Agent V0 2 0</span>
-    <span class="card-file">feature-plan-agent-v0-2-0-2026-05-27.html</span>
-  </div>
-</a>
-<a class="open-img-link" href="feature-plan-agent-v0-2-0-2026-05-27.png" target="_blank" rel="noopener" aria-label="View image: Plan Agent V0 2 0">View image</a>
-</div>
-  </div>
-
-  <div class="no-results" id="noResults">No cards match your search.</div>
-
-  <div class="gallery-footer">
-    <span>26 cards</span>
-    <span>Generated 2026-06-03 13:06</span>
-  </div>
-
-  <script>
-    function showFallback(img) {
-      var container = img.parentElement;
-      img.style.display = 'none';
-      var fb = container.querySelector('.thumb-fallback');
-      if (fb) fb.style.display = 'block';
-    }
-
-    var activeType = 'all';
-    var searchText = '';
-    var grid = document.getElementById('galleryGrid');
-    var cards = grid.querySelectorAll('.gallery-card-wrap');
-    var chips = document.querySelectorAll('.filter-chip');
-    var searchBox = document.getElementById('searchBox');
-    var noResults = document.getElementById('noResults');
-    var visibleCount = document.getElementById('visibleCount');
-
-    function applyFilters() {
-      var shown = 0;
-      for (var i = 0; i < cards.length; i++) {
-        var wrap = cards[i];
-        var inner = wrap.querySelector('.gallery-card');
-        var type = inner ? inner.getAttribute('data-type') || '' : '';
-        var topic = inner ? inner.getAttribute('data-topic') || '' : '';
-        var matchType = activeType === 'all' || type === activeType;
-        var matchSearch = !searchText ||
-          topic.toLowerCase().indexOf(searchText) !== -1 ||
-          type.toLowerCase().indexOf(searchText) !== -1;
-        if (matchType && matchSearch) {
-          wrap.style.display = '';
-          shown++;
-        } else {
-          wrap.style.display = 'none';
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Library</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #388bfd;
+        --accent-hover: #58a6ff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+        padding: 32px;
+      }
+
+      .gallery-header {
+        max-width: 1200px;
+        margin: 0 auto 24px;
+      }
+
+      .gallery-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      .gallery-header p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .toolbar {
+        max-width: 1200px;
+        margin: 0 auto 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .search-box {
+        flex: 1;
+        min-width: 200px;
+        max-width: 360px;
+        padding: 8px 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      .search-box:focus {
+        border-color: var(--accent);
+      }
+
+      .search-box::placeholder {
+        color: var(--muted);
+      }
+
+      .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .filter-chip {
+        padding: 4px 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+
+      .filter-chip:hover {
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      .filter-chip.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .view-toggle {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+      }
+
+      .view-btn {
+        padding: 6px 10px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.15s;
+      }
+
+      .view-btn:first-child {
+        border-radius: 6px 0 0 6px;
+      }
+      .view-btn:last-child {
+        border-radius: 0 6px 6px 0;
+      }
+
+      .view-btn.active {
+        background: var(--surface);
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      .visible-count {
+        font-size: 12px;
+        color: var(--muted);
+        max-width: 1200px;
+        margin: 0 auto 16px;
+      }
+
+      /* Grid view */
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .gallery-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .gallery-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 16px rgba(56, 139, 253, 0.15);
+      }
+
+      .thumb-container {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        background: var(--bg);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .thumb-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .thumb-fallback {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--border);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .card-info {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .card-info-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .type-badge {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+      }
+
+      .type-diff {
+        background: #f8514933;
+        color: #f85149;
+      }
+      .type-feature {
+        background: #3fb95033;
+        color: #3fb950;
+      }
+      .type-quote {
+        background: #d2a8ff33;
+        color: #d2a8ff;
+      }
+      .type-blog {
+        background: #388bfd33;
+        color: #388bfd;
+      }
+      .type-snippet {
+        background: #79c0ff33;
+        color: #79c0ff;
+      }
+      .type-video {
+        background: #ff7b7233;
+        color: #ff7b72;
+      }
+      .type-project {
+        background: #ffa65733;
+        color: #ffa657;
+      }
+      .type-session {
+        background: #7ee78733;
+        color: #7ee787;
+      }
+
+      .type-explain {
+        background: #56d3ff33;
+        color: #56d3ff;
+      }
+
+      .card-date {
+        font-size: 12px;
+        color: var(--muted);
+        font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+      }
+
+      .card-topic {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        line-height: 1.4;
+      }
+
+      .card-file {
+        font-size: 11px;
+        color: var(--muted);
+        font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+        word-break: break-all;
+      }
+
+      /* List view */
+      .gallery-grid.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .list-view .gallery-card {
+        flex-direction: row;
+        align-items: center;
+        border-radius: 6px;
+      }
+
+      .list-view .thumb-container {
+        width: 120px;
+        min-width: 120px;
+        aspect-ratio: 16 / 10;
+        border-bottom: none;
+        border-right: 1px solid var(--border);
+      }
+
+      .list-view .card-info {
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 16px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .list-view .card-info-top {
+        gap: 12px;
+        flex-shrink: 0;
+      }
+
+      .list-view .card-topic {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .list-view .card-file {
+        flex-shrink: 0;
+      }
+
+      .gallery-card-wrap {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .list-view .open-img-link {
+        display: none;
+      }
+
+      .open-img-link {
+        display: block;
+        font-size: 12px;
+        color: var(--accent);
+        text-align: center;
+        padding: 4px 0 8px;
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+
+      .open-img-link:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+      }
+
+      .no-results {
+        max-width: 1200px;
+        margin: 64px auto;
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+        display: none;
+      }
+
+      .gallery-footer {
+        max-width: 1200px;
+        margin: 32px auto 0;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .gallery-footer span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 16px;
+        }
+        .toolbar {
+          gap: 8px;
+        }
+        .search-box {
+          max-width: none;
+        }
+        .list-view .thumb-container {
+          display: none;
+        }
+        .list-view .card-info {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .list-view .card-topic {
+          white-space: normal;
         }
       }
-      noResults.style.display = shown === 0 ? 'block' : 'none';
-      visibleCount.textContent = shown === cards.length
-        ? ''
-        : 'Showing ' + shown + ' of ' + cards.length + ' cards';
-    }
+    </style>
+  </head>
+  <body>
+    <div class="gallery-header">
+      <h1>Media Library</h1>
+      <p>26 saved cards &mdash; click any card to view it</p>
+    </div>
 
-    for (var i = 0; i < chips.length; i++) {
-      chips[i].addEventListener('click', function() {
-        for (var j = 0; j < chips.length; j++) {
-          chips[j].classList.remove('active');
-          chips[j].setAttribute('aria-pressed', 'false');
+    <div class="toolbar">
+      <input
+        type="text"
+        class="search-box"
+        placeholder="Search by topic or type..."
+        id="searchBox"
+        aria-label="Search cards by topic or type"
+      />
+      <div class="filter-chips" id="filterChips">
+        <button class="filter-chip active" data-type="all" aria-pressed="true">
+          All
+        </button>
+        <button class="filter-chip" data-type="diff" aria-pressed="false">
+          Diff
+        </button>
+        <button class="filter-chip" data-type="feature" aria-pressed="false">
+          Feature
+        </button>
+        <button class="filter-chip" data-type="quote" aria-pressed="false">
+          Quote
+        </button>
+        <button class="filter-chip" data-type="blog" aria-pressed="false">
+          Blog
+        </button>
+        <button class="filter-chip" data-type="snippet" aria-pressed="false">
+          Snippet
+        </button>
+        <button class="filter-chip" data-type="video" aria-pressed="false">
+          Video
+        </button>
+        <button class="filter-chip" data-type="project" aria-pressed="false">
+          Project
+        </button>
+        <button class="filter-chip" data-type="session" aria-pressed="false">
+          Session
+        </button>
+        <button class="filter-chip" data-type="explain" aria-pressed="false">
+          Explain
+        </button>
+      </div>
+      <div class="view-toggle">
+        <button
+          class="view-btn active"
+          id="gridBtn"
+          title="Grid view"
+          aria-label="Grid view"
+          aria-pressed="true"
+        >
+          &#9638;
+        </button>
+        <button
+          class="view-btn"
+          id="listBtn"
+          title="List view"
+          aria-label="List view"
+          aria-pressed="false"
+        >
+          &#9776;
+        </button>
+      </div>
+    </div>
+
+    <div class="visible-count" id="visibleCount"></div>
+
+    <div class="gallery-grid" id="galleryGrid">
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="explain-implementation-plan-2026-06-03.html"
+          data-type="explain"
+          data-topic="Implementation Plan"
+        >
+          <div class="thumb-container">
+            <img
+              src="explain-implementation-plan-2026-06-03.png"
+              alt="Implementation Plan"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">explain</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-explain">explain</span>
+              <span class="card-date">2026-06-03</span>
+            </div>
+            <span class="card-topic">Implementation Plan</span>
+            <span class="card-file"
+              >explain-implementation-plan-2026-06-03.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="explain-implementation-plan-2026-06-03.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Implementation Plan"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-rendering-pipeline-snapshot-fix-2026-06-02.html"
+          data-type="diff"
+          data-topic="Rendering Pipeline Snapshot Fix"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-rendering-pipeline-snapshot-fix-2026-06-02.png"
+              alt="Rendering Pipeline Snapshot Fix"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-06-02</span>
+            </div>
+            <span class="card-topic">Rendering Pipeline Snapshot Fix</span>
+            <span class="card-file"
+              >diff-rendering-pipeline-snapshot-fix-2026-06-02.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-rendering-pipeline-snapshot-fix-2026-06-02.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Rendering Pipeline Snapshot Fix"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-session-2026-06-02-2026-06-02.html"
+          data-type="session"
+          data-topic="Session 2026 06 02"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-session-2026-06-02-2026-06-02.png"
+              alt="Session 2026 06 02"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-06-02</span>
+            </div>
+            <span class="card-topic">Session 2026 06 02</span>
+            <span class="card-file"
+              >session-session-2026-06-02-2026-06-02.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-session-2026-06-02-2026-06-02.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Session 2026 06 02"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html"
+          data-type="feature"
+          data-topic="Plan Agent Posttooluse Hook Auto Rebuild"
+        >
+          <div class="thumb-container">
+            <img
+              src="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png"
+              alt="Plan Agent Posttooluse Hook Auto Rebuild"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">feature</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-feature">feature</span>
+              <span class="card-date">2026-06-01</span>
+            </div>
+            <span class="card-topic"
+              >Plan Agent Posttooluse Hook Auto Rebuild</span
+            >
+            <span class="card-file"
+              >feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="feature-plan-agent-posttooluse-hook-auto-rebuild-2026-06-01.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Plan Agent Posttooluse Hook Auto Rebuild"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-session-2026-05-31-2026-05-31.html"
+          data-type="session"
+          data-topic="Session 2026 05 31"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-session-2026-05-31-2026-05-31.png"
+              alt="Session 2026 05 31"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-31</span>
+            </div>
+            <span class="card-topic">Session 2026 05 31</span>
+            <span class="card-file"
+              >session-session-2026-05-31-2026-05-31.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-session-2026-05-31-2026-05-31.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Session 2026 05 31"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="feature-issue-agent-v0-2-0-2026-05-31.html"
+          data-type="feature"
+          data-topic="Issue Agent V0 2 0"
+        >
+          <div class="thumb-container">
+            <img
+              src="feature-issue-agent-v0-2-0-2026-05-31.png"
+              alt="Issue Agent V0 2 0"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">feature</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-feature">feature</span>
+              <span class="card-date">2026-05-31</span>
+            </div>
+            <span class="card-topic">Issue Agent V0 2 0</span>
+            <span class="card-file"
+              >feature-issue-agent-v0-2-0-2026-05-31.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="feature-issue-agent-v0-2-0-2026-05-31.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Issue Agent V0 2 0"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-session-2026-05-30-2026-05-30.html"
+          data-type="session"
+          data-topic="Session 2026 05 30"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-session-2026-05-30-2026-05-30.png"
+              alt="Session 2026 05 30"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-30</span>
+            </div>
+            <span class="card-topic">Session 2026 05 30</span>
+            <span class="card-file"
+              >session-session-2026-05-30-2026-05-30.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-session-2026-05-30-2026-05-30.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Session 2026 05 30"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-plan-agent-v0-9-0-2026-05-30.html"
+          data-type="session"
+          data-topic="Plan Agent V0 9 0"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-plan-agent-v0-9-0-2026-05-30.png"
+              alt="Plan Agent V0 9 0"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-30</span>
+            </div>
+            <span class="card-topic">Plan Agent V0 9 0</span>
+            <span class="card-file"
+              >session-plan-agent-v0-9-0-2026-05-30.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-plan-agent-v0-9-0-2026-05-30.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Plan Agent V0 9 0"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-merge-driver-2026-05-30.html"
+          data-type="session"
+          data-topic="Merge Driver"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-merge-driver-2026-05-30.png"
+              alt="Merge Driver"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-30</span>
+            </div>
+            <span class="card-topic">Merge Driver</span>
+            <span class="card-file">session-merge-driver-2026-05-30.html</span>
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-merge-driver-2026-05-30.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Merge Driver"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="blog-social-media-tools-2026-05-29.html"
+          data-type="blog"
+          data-topic="Social Media Tools"
+        >
+          <div class="thumb-container">
+            <img
+              src="blog-social-media-tools-2026-05-29.png"
+              alt="Social Media Tools"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">blog</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-blog">blog</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Social Media Tools</span>
+            <span class="card-file"
+              >blog-social-media-tools-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="blog-social-media-tools-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Social Media Tools"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="blog-settings-sync-2026-05-29.html"
+          data-type="blog"
+          data-topic="Settings Sync"
+        >
+          <div class="thumb-container">
+            <img
+              src="blog-settings-sync-2026-05-29.png"
+              alt="Settings Sync"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">blog</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-blog">blog</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Settings Sync</span>
+            <span class="card-file">blog-settings-sync-2026-05-29.html</span>
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="blog-settings-sync-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Settings Sync"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-archive-exclude-layered-enforcement-2026-05-29.html"
+          data-type="diff"
+          data-topic="Archive Exclude Layered Enforcement"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-archive-exclude-layered-enforcement-2026-05-29.png"
+              alt="Archive Exclude Layered Enforcement"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Archive Exclude Layered Enforcement</span>
+            <span class="card-file"
+              >diff-archive-exclude-layered-enforcement-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-archive-exclude-layered-enforcement-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Archive Exclude Layered Enforcement"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-media-library-gallery-2026-05-29.html"
+          data-type="session"
+          data-topic="Media Library Gallery"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-media-library-gallery-2026-05-29.png"
+              alt="Media Library Gallery"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Media Library Gallery</span>
+            <span class="card-file"
+              >session-media-library-gallery-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-media-library-gallery-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Media Library Gallery"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-archive-exclusion-2026-05-29.html"
+          data-type="session"
+          data-topic="Archive Exclusion"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-archive-exclusion-2026-05-29.png"
+              alt="Archive Exclusion"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Archive Exclusion</span>
+            <span class="card-file"
+              >session-archive-exclusion-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-archive-exclusion-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Archive Exclusion"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-session-2026-05-29-2026-05-29.html"
+          data-type="session"
+          data-topic="Session 2026 05 29"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-session-2026-05-29-2026-05-29.png"
+              alt="Session 2026 05 29"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Session 2026 05 29</span>
+            <span class="card-file"
+              >session-session-2026-05-29-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-session-2026-05-29-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Session 2026 05 29"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-update-plugin-readmes-workflow-2026-05-29.html"
+          data-type="diff"
+          data-topic="Update Plugin Readmes Workflow"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-update-plugin-readmes-workflow-2026-05-29.png"
+              alt="Update Plugin Readmes Workflow"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Update Plugin Readmes Workflow</span>
+            <span class="card-file"
+              >diff-update-plugin-readmes-workflow-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-update-plugin-readmes-workflow-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Update Plugin Readmes Workflow"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-readme-workflow-audit-2026-05-29.html"
+          data-type="session"
+          data-topic="Readme Workflow Audit"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-readme-workflow-audit-2026-05-29.png"
+              alt="Readme Workflow Audit"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Readme Workflow Audit</span>
+            <span class="card-file"
+              >session-readme-workflow-audit-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-readme-workflow-audit-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Readme Workflow Audit"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-v4-0-0-removal-list-fix-2026-05-29.html"
+          data-type="diff"
+          data-topic="V4 0 0 Removal List Fix"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-v4-0-0-removal-list-fix-2026-05-29.png"
+              alt="V4 0 0 Removal List Fix"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">V4 0 0 Removal List Fix</span>
+            <span class="card-file"
+              >diff-v4-0-0-removal-list-fix-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-v4-0-0-removal-list-fix-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: V4 0 0 Removal List Fix"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="session-workflow-2026-05-29-2026-05-29.html"
+          data-type="session"
+          data-topic="Workflow 2026 05 29"
+        >
+          <div class="thumb-container">
+            <img
+              src="session-workflow-2026-05-29-2026-05-29.png"
+              alt="Workflow 2026 05 29"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">session</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-session">session</span>
+              <span class="card-date">2026-05-29</span>
+            </div>
+            <span class="card-topic">Workflow 2026 05 29</span>
+            <span class="card-file"
+              >session-workflow-2026-05-29-2026-05-29.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="session-workflow-2026-05-29-2026-05-29.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Workflow 2026 05 29"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-code-review-fixes-2026-05-28.html"
+          data-type="diff"
+          data-topic="Code Review Fixes"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-code-review-fixes-2026-05-28.png"
+              alt="Code Review Fixes"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-05-28</span>
+            </div>
+            <span class="card-topic">Code Review Fixes</span>
+            <span class="card-file"
+              >diff-code-review-fixes-2026-05-28.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-code-review-fixes-2026-05-28.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Code Review Fixes"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-optimizing-skill-frontmatter-2026-05-28.html"
+          data-type="diff"
+          data-topic="Optimizing Skill Frontmatter"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-optimizing-skill-frontmatter-2026-05-28.png"
+              alt="Optimizing Skill Frontmatter"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-05-28</span>
+            </div>
+            <span class="card-topic">Optimizing Skill Frontmatter</span>
+            <span class="card-file"
+              >diff-optimizing-skill-frontmatter-2026-05-28.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-optimizing-skill-frontmatter-2026-05-28.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Optimizing Skill Frontmatter"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="feature-issue-agent-plugin-v3-9-0-2026-05-28.html"
+          data-type="feature"
+          data-topic="Issue Agent Plugin V3 9 0"
+        >
+          <div class="thumb-container">
+            <img
+              src="feature-issue-agent-plugin-v3-9-0-2026-05-28.png"
+              alt="Issue Agent Plugin V3 9 0"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">feature</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-feature">feature</span>
+              <span class="card-date">2026-05-28</span>
+            </div>
+            <span class="card-topic">Issue Agent Plugin V3 9 0</span>
+            <span class="card-file"
+              >feature-issue-agent-plugin-v3-9-0-2026-05-28.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="feature-issue-agent-plugin-v3-9-0-2026-05-28.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Issue Agent Plugin V3 9 0"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="snippet-skill-md-2026-05-28.html"
+          data-type="snippet"
+          data-topic="Skill Md"
+        >
+          <div class="thumb-container">
+            <img
+              src="snippet-skill-md-2026-05-28.png"
+              alt="Skill Md"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">snippet</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-snippet">snippet</span>
+              <span class="card-date">2026-05-28</span>
+            </div>
+            <span class="card-topic">Skill Md</span>
+            <span class="card-file">snippet-skill-md-2026-05-28.html</span>
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="snippet-skill-md-2026-05-28.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Skill Md"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="feature-issue-agent-plugin-2026-05-28.html"
+          data-type="feature"
+          data-topic="Issue Agent Plugin"
+        >
+          <div class="thumb-container">
+            <img
+              src="feature-issue-agent-plugin-2026-05-28.png"
+              alt="Issue Agent Plugin"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">feature</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-feature">feature</span>
+              <span class="card-date">2026-05-28</span>
+            </div>
+            <span class="card-topic">Issue Agent Plugin</span>
+            <span class="card-file"
+              >feature-issue-agent-plugin-2026-05-28.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="feature-issue-agent-plugin-2026-05-28.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Issue Agent Plugin"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="diff-branch-agent-skill-2026-05-28.html"
+          data-type="diff"
+          data-topic="Branch Agent Skill"
+        >
+          <div class="thumb-container">
+            <img
+              src="diff-branch-agent-skill-2026-05-28.png"
+              alt="Branch Agent Skill"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">diff</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-diff">diff</span>
+              <span class="card-date">2026-05-28</span>
+            </div>
+            <span class="card-topic">Branch Agent Skill</span>
+            <span class="card-file"
+              >diff-branch-agent-skill-2026-05-28.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="diff-branch-agent-skill-2026-05-28.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Branch Agent Skill"
+          >View image</a
+        >
+      </div>
+
+      <div class="gallery-card-wrap">
+        <a
+          class="gallery-card"
+          href="feature-plan-agent-v0-2-0-2026-05-27.html"
+          data-type="feature"
+          data-topic="Plan Agent V0 2 0"
+        >
+          <div class="thumb-container">
+            <img
+              src="feature-plan-agent-v0-2-0-2026-05-27.png"
+              alt="Plan Agent V0 2 0"
+              onerror="showFallback(this)"
+            />
+            <span class="thumb-fallback" style="display: none">feature</span>
+          </div>
+          <div class="card-info">
+            <div class="card-info-top">
+              <span class="type-badge type-feature">feature</span>
+              <span class="card-date">2026-05-27</span>
+            </div>
+            <span class="card-topic">Plan Agent V0 2 0</span>
+            <span class="card-file"
+              >feature-plan-agent-v0-2-0-2026-05-27.html</span
+            >
+          </div>
+        </a>
+        <a
+          class="open-img-link"
+          href="feature-plan-agent-v0-2-0-2026-05-27.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="View image: Plan Agent V0 2 0"
+          >View image</a
+        >
+      </div>
+    </div>
+
+    <div class="no-results" id="noResults">No cards match your search.</div>
+
+    <div class="gallery-footer">
+      <span>26 cards</span>
+      <span>Generated 2026-06-03 13:06</span>
+    </div>
+
+    <script>
+      function showFallback(img) {
+        var container = img.parentElement;
+        img.style.display = "none";
+        var fb = container.querySelector(".thumb-fallback");
+        if (fb) fb.style.display = "block";
+      }
+
+      var activeType = "all";
+      var searchText = "";
+      var grid = document.getElementById("galleryGrid");
+      var cards = grid.querySelectorAll(".gallery-card-wrap");
+      var chips = document.querySelectorAll(".filter-chip");
+      var searchBox = document.getElementById("searchBox");
+      var noResults = document.getElementById("noResults");
+      var visibleCount = document.getElementById("visibleCount");
+
+      function applyFilters() {
+        var shown = 0;
+        for (var i = 0; i < cards.length; i++) {
+          var wrap = cards[i];
+          var inner = wrap.querySelector(".gallery-card");
+          var type = inner ? inner.getAttribute("data-type") || "" : "";
+          var topic = inner ? inner.getAttribute("data-topic") || "" : "";
+          var matchType = activeType === "all" || type === activeType;
+          var matchSearch =
+            !searchText ||
+            topic.toLowerCase().indexOf(searchText) !== -1 ||
+            type.toLowerCase().indexOf(searchText) !== -1;
+          if (matchType && matchSearch) {
+            wrap.style.display = "";
+            shown++;
+          } else {
+            wrap.style.display = "none";
+          }
         }
-        this.classList.add('active');
-        this.setAttribute('aria-pressed', 'true');
-        activeType = this.getAttribute('data-type');
+        noResults.style.display = shown === 0 ? "block" : "none";
+        visibleCount.textContent =
+          shown === cards.length
+            ? ""
+            : "Showing " + shown + " of " + cards.length + " cards";
+      }
+
+      for (var i = 0; i < chips.length; i++) {
+        chips[i].addEventListener("click", function () {
+          for (var j = 0; j < chips.length; j++) {
+            chips[j].classList.remove("active");
+            chips[j].setAttribute("aria-pressed", "false");
+          }
+          this.classList.add("active");
+          this.setAttribute("aria-pressed", "true");
+          activeType = this.getAttribute("data-type");
+          applyFilters();
+        });
+      }
+
+      searchBox.addEventListener("input", function () {
+        searchText = this.value.trim().toLowerCase();
         applyFilters();
       });
-    }
 
-    searchBox.addEventListener('input', function() {
-      searchText = this.value.trim().toLowerCase();
-      applyFilters();
-    });
+      var gridBtn = document.getElementById("gridBtn");
+      var listBtn = document.getElementById("listBtn");
 
-    var gridBtn = document.getElementById('gridBtn');
-    var listBtn = document.getElementById('listBtn');
+      gridBtn.addEventListener("click", function () {
+        grid.classList.remove("list-view");
+        gridBtn.classList.add("active");
+        gridBtn.setAttribute("aria-pressed", "true");
+        listBtn.classList.remove("active");
+        listBtn.setAttribute("aria-pressed", "false");
+      });
 
-    gridBtn.addEventListener('click', function() {
-      grid.classList.remove('list-view');
-      gridBtn.classList.add('active');
-      gridBtn.setAttribute('aria-pressed', 'true');
-      listBtn.classList.remove('active');
-      listBtn.setAttribute('aria-pressed', 'false');
-    });
-
-    listBtn.addEventListener('click', function() {
-      grid.classList.add('list-view');
-      listBtn.classList.add('active');
-      listBtn.setAttribute('aria-pressed', 'true');
-      gridBtn.classList.remove('active');
-      gridBtn.setAttribute('aria-pressed', 'false');
-    });
-  </script>
-</body>
+      listBtn.addEventListener("click", function () {
+        grid.classList.add("list-view");
+        listBtn.classList.add("active");
+        listBtn.setAttribute("aria-pressed", "true");
+        gridBtn.classList.remove("active");
+        gridBtn.setAttribute("aria-pressed", "false");
+      });
+    </script>
+  </body>
 </html>
