@@ -1,5 +1,15 @@
 # Changelog — social-media-tools
 
+## v2.6.3 — 2026-06-03 — Fix share-explanation routing and defaults
+
+### Fixed
+
+- `social-share` router rule 8: strip `--platform=...` from `$ARGUMENTS` before using as `EXTRA_FLAGS` so Phase 3's prepended `--platform` flag is never duplicated.
+- `share-explanation` Phase 5: spell out concrete variable-resolution steps — `PLATFORM`/`TONE` are set from `DEFAULT_PLATFORM`/`DEFAULT_TONE` (Phase 0b) before prompting via `AskUserQuestion`.
+- `share-explanation` Phase 6: derive `TARGET_SLUG` from `TARGET_RAW` for concept targets where `TARGET_NAME` is empty, preventing `explain--YYYY-MM-DD` filenames.
+
+---
+
 ## v2.6.2 — 2026-06-03 — Rename explain-codebase to share-explanation
 
 ### Changed
