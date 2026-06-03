@@ -185,7 +185,7 @@ Check the returned `GATE RESULT` line:
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, Follow CTA
 rule, and Default Per-Platform Copy Formats.
 
-Ask for `PLATFORM` and `TONE` in a single `AskUserQuestion` if not already in `$ARGUMENTS`.
+Apply defaults in priority order: (1) explicit flag in `$ARGUMENTS`, (2) `DEFAULT_PLATFORM` / `DEFAULT_TONE` from Phase 0b, (3) ask via a single `AskUserQuestion` if still unset after (1) and (2).
 
 **Lead with insight, not process.** The hook should surface the most interesting or surprising
 aspect of how the component works — not just "here's how X works."
