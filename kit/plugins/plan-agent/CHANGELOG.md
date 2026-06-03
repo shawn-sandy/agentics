@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.1 — 2026-06-03 — Pin implementation-plan skill to Opus model
+
+### Changed
+
+- **`implementation-plan` skill**: added `model: opus` to frontmatter so the skill always runs on the latest Opus model regardless of the session's default model.
+
+---
+
 ## v1.0.0 — 2026-06-02 — Rename `complete-plan` skill to `finalize-plan`
 
 ### Breaking Changes
