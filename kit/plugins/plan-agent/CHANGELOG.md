@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.0 — 2026-06-02 — Rename `complete-plan` skill to `finalize-plan`
+
+### Breaking Changes
+
+- **`complete-plan` → `finalize-plan`**: the skill directory and invocation path have changed. Update any existing invocations from `/plan-agent:complete-plan` to `/plan-agent:finalize-plan`. Functionality is identical.
+
+---
+
 ## v0.23.2 — 2026-06-02 — Fix plans-open trigger ambiguity
 
 ### Fixed
