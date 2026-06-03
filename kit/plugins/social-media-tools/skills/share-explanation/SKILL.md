@@ -230,8 +230,8 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 TEMPLATE_FILE=$TEMPLATES_DIR/<selected-template>
 TEMP_HTML=explain-share-card.html
 TODAY=$(date '+%Y-%m-%d')
-# TARGET_NAME is empty for concept targets; derive a slug from TARGET_RAW as fallback
-TARGET_SLUG="${TARGET_NAME:-$(echo "$TARGET_RAW" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//;s/-*$//' | cut -c1-30)}"
+# Normalize TARGET_NAME (or TARGET_RAW for concept targets) through the same slug pipeline
+TARGET_SLUG="$(printf '%s' "${TARGET_NAME:-$TARGET_RAW}" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//;s/-*$//' | cut -c1-30)"
 SLUG_INPUT="explain-${TARGET_SLUG}-${TODAY}"
 ```
 

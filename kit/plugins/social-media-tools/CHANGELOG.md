@@ -1,5 +1,14 @@
 # Changelog — social-media-tools
 
+## v2.6.4 — 2026-06-03 — Slug normalization and rule 8 clarity
+
+### Fixed
+
+- `share-explanation` Phase 6: normalize `TARGET_NAME` (or `TARGET_RAW` for concept targets) through the same slug pipeline (lowercase, slug-safe chars, 30-char cap) using `printf` instead of `echo` to avoid edge cases with leading `-n` and escape sequences.
+- `social-share` router rule 8 "Extra flags" cell: reworded to explicitly state that `EXTRA_FLAGS` = `$ARGUMENTS` with only the `--platform=...` token removed; all other text and flags (including `--tone`, query text) are forwarded as-is.
+
+---
+
 ## v2.6.3 — 2026-06-03 — Fix share-explanation routing and defaults
 
 ### Fixed
