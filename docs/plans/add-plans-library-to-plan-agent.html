@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
+<meta name="plan-modified" content="2026-06-03">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-05-30">
 <meta name="plan-repo" content="agentics">
@@ -35,7 +36,7 @@
   .plan-title { font-size:1.75rem; font-weight:700; letter-spacing:-.025em; line-height:1.2; color:var(--text); flex:1; }
   .status-badge { display:inline-flex; align-items:center; gap:.4rem; font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:.25rem .75rem; border-radius:999px; white-space:nowrap; flex-shrink:0; color:#fff; margin-top:.35rem; }
   .status-badge::before { content:""; display:inline-block; width:.45em; height:.45em; border-radius:50%; background:currentColor; flex-shrink:0; }
-  [data-status="todo"] .status-badge { background:#6b7280; }
+  [data-status="completed"] .status-badge { background:#6b7280; }
   [data-status="in-progress"] .status-badge { background:#d97706; }
   [data-status="completed"] .status-badge { background:#16a34a; }
   @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:.3;} }
