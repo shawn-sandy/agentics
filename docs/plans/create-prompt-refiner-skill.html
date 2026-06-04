@@ -1018,7 +1018,7 @@
               <div class="step-why">The SKILL.md is the runtime artifact &mdash; its frontmatter controls activation and its body defines the entire workflow. The pipeline maps directly to Anthropic&rsquo;s best practices guide: <strong>Classify</strong> (identify prompt type and select applicable techniques) &rarr; <strong>Interview</strong> (gather context per &ldquo;Add context to improve performance&rdquo;) &rarr; <strong>Structure</strong> (apply XML tags, role, examples per &ldquo;Structure prompts with XML tags&rdquo; and &ldquo;Give Claude a role&rdquo;) &rarr; <strong>Draft</strong> (assemble the prompt with CoT scaffolding per &ldquo;Leverage thinking capabilities&rdquo;) &rarr; <strong>Recommend</strong> (surface matching skills/agents) &rarr; <strong>Deliver</strong> (present in a copy-pasteable fenced block).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Read <code>kit/plugins/plan-agent/skills/prompt-refiner/SKILL.md</code> and confirm: (1) YAML frontmatter includes <code>name</code>, <code>description</code>, and <code>allowed-tools</code>; (2) body contains all six workflow phases with explicit references to the Anthropic best practices each phase implements; (3) <code>AskUserQuestion</code> is used in the Interview phase with batched questions.</div>
+                <div class="verify-body">Read <code>kit/plugins/plan-agent/skills/prompt-refiner/SKILL.md</code> and confirm: (1) YAML frontmatter includes <code>name</code>, <code>description</code>, and <code>allowed-tools</code> (with <code>ToolSearch</code> listed for the Recommend phase); (2) body contains all six workflow phases with explicit references to the Anthropic best practices each phase implements; (3) <code>AskUserQuestion</code> is used in the Interview phase with batched questions.</div>
               </details>
             </div>
           </div>
@@ -1083,10 +1083,10 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Implement the skill/agent/workflow recommendation engine grounded in &ldquo;Tool use and agentic patterns&rdquo;</span>
               </div>
-              <div class="step-why">The Anthropic guide&rsquo;s &ldquo;Tool use&rdquo; and &ldquo;Agentic coding&rdquo; sections describe how Claude works best when given concrete tools with clear descriptions. The recommendation engine applies this principle in reverse: it scans installed plugins via <code>Glob</code> and <code>Read</code>, matches skill <code>description</code> frontmatter against the user&rsquo;s intent, and surfaces the most relevant tools. This turns a generated prompt into an actionable recommendation &mdash; &ldquo;you could also run <code>/code-review</code> for this&rdquo; &mdash; and when the recommended tool is itself the better path, prevents the user from needing a prompt at all.</div>
+              <div class="step-why">The Anthropic guide&rsquo;s &ldquo;Tool use&rdquo; and &ldquo;Agentic coding&rdquo; sections describe how Claude works best when given concrete tools with clear descriptions. The recommendation engine applies this principle in reverse: it queries the session&rsquo;s live tool registry via <code>ToolSearch</code> with keyword queries derived from the user&rsquo;s intent, and surfaces the most relevant tools. <code>ToolSearch</code> is session-scoped (only returns tools actually loaded), includes MCP tools, and requires no filesystem path assumptions. This turns a generated prompt into an actionable recommendation &mdash; &ldquo;you could also run <code>/code-review</code> for this&rdquo; &mdash; and when the recommended tool is itself the better path, prevents the user from needing a prompt at all.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Confirm the Recommend phase in <code>SKILL.md</code> uses <code>Glob</code> to scan <code>**/SKILL.md</code>, <code>**/commands/*.md</code>, and <code>**/agents/*.md</code> files, reads their <code>description</code> frontmatter, and matches against the user&#39;s stated intent. Verify the output format: a ranked list of 1&ndash;3 recommendations with invocation syntax (e.g. <code>/plugin:command</code>) and a one-line explanation of why each matches. Confirm the skill explains when a recommended tool supersedes the prompt entirely (i.e. the user&rsquo;s intent is best served by running the tool directly rather than crafting a prompt).</div>
+                <div class="verify-body">Confirm the Recommend phase in <code>SKILL.md</code> extracts 2&ndash;3 keyword queries from the user&#39;s stated intent and calls <code>ToolSearch</code> (keyword search mode, <code>max_results: 5</code>) for each. Verify results are deduplicated and filtered to skills/commands/agents (excluding low-level tools like <code>Read</code>/<code>Edit</code>). Verify the output format: a ranked list of 1&ndash;3 recommendations with invocation syntax (e.g. <code>/plugin:command</code>) and a one-line explanation of why each matches. Confirm the skill explains when a recommended tool supersedes the prompt entirely (i.e. the user&rsquo;s intent is best served by running the tool directly rather than crafting a prompt). Confirm <code>ToolSearch</code> is listed in <code>allowed-tools</code>.</div>
               </details>
             </div>
           </div>
@@ -1158,7 +1158,7 @@
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">The recommendation engine scans installed skills/agents via <code>Glob</code> + <code>Read</code> and surfaces 1&ndash;3 matching tools with invocation syntax</label>
+          <label for="ac6">The recommendation engine uses <code>ToolSearch</code> to query the session&rsquo;s live tool registry and surfaces 1&ndash;3 matching tools with invocation syntax</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
@@ -1325,12 +1325,10 @@
             </details>
           </li>
           <li>
-            <details class="unresolved-item">
-              <summary>How deep should the recommendation engine scan?</summary>
+            <details class="unresolved-item resolved">
+              <summary><s>How deep should the recommendation engine scan?</s> <span class="step-chip" style="background:#f0fdf4;color:#16a34a;font-size:.75rem;">resolved</span></summary>
               <div class="unresolved-prompt">
-                <pre>The recommendation engine needs to scan installed skills and agents to suggest relevant tools. Options: (a) scan only the current project&#39;s plugins (fast, but misses global skills), (b) scan ~/.claude/plugins/ plus project plugins (comprehensive, but slower and may surface irrelevant results from other projects), (c) scan only the agentics marketplace registry as a curated list. Evaluate the trade-offs of scan depth vs. relevance vs. performance. Recommend one approach and specify the Glob patterns to use.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+                <pre>Resolved: use ToolSearch (the harness&rsquo;s live tool registry) instead of filesystem scanning. ToolSearch is session-scoped (returns only loaded tools), includes MCP tools, and requires no path assumptions. No flag needed &mdash; ToolSearch is the sole discovery mechanism. The Recommend phase extracts 2&ndash;3 keyword queries from user intent, calls ToolSearch for each, deduplicates, filters to skills/commands/agents, and presents the top 3 matches.</pre>
               </div>
             </details>
           </li>
