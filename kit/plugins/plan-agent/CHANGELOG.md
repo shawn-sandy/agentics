@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.2 — 2026-06-04 — Revert sort-by-created-date to mtime
+
+### Fixed
+
+- **build-index.sh**: reverts gallery sort back to filesystem mtime (newest-modified first); removes the `plan-created` metadata sort introduced in v1.3.1.
+- **plans-library SKILL.md**: Step 3 reverts to `xargs ls -t` mtime sort; removes the collect-then-sort-by-created-date instruction from Step 4.
+
+---
+
 ## v1.3.0 — 2026-06-04 — Rich implementation prompt with plan context
 
 ### Changed
