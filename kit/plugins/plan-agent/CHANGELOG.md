@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.0 — 2026-06-04 — Make implementation-plan model-invocable
+
+### Changed
+
+- **`implementation-plan` skill**: removed `disable-model-invocation: true` — the skill is now both command-invocable (`/plan-agent:implementation-plan <objective>`) and model-invocable (auto-activates on plan-document intent).
+- **`implementation-plan` description**: rewritten to a narrow, artifact-scoped three-part trigger ("generate an HTML implementation-plan document … Use when the user asks to create a plan document, generate an HTML plan, or write a plan file") that avoids colliding with built-in Plan Mode.
+- **`implementation-plan` Invocation & Arguments**: documents both activation paths — command (with `$ARGUMENTS` and flags) and model (derives objective from conversation context, runs full workflow by default).
+- **README.md**: updated all `implementation-plan` sections to reflect dual-mode activation; `finalize-plan` manual-only status unchanged.
+
+---
+
 ## v1.1.0 — 2026-06-03 — Add mandatory completion checklist and report to plans
 
 ### Added
