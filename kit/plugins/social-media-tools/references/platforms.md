@@ -25,8 +25,10 @@ When asking the user to choose a platform, **always offer all five options**:
 
 Never filter, omit, or selectively hide platforms based on content type, context,
 card type, or any other heuristic. Every share skill must present all five options
-in every `AskUserQuestion` call. "All sites" drafts one variant per platform and
-renders a separate copy panel for each (see `$PLUGIN_DIR/references/copy-panels.md`).
+in every `AskUserQuestion` call **that asks the user to choose a platform**. Non-platform
+questions (reuse checks, URL collection, tone, etc.) are unaffected by this rule.
+"All sites" drafts one variant per platform and renders a separate copy panel
+for each (see `$PLUGIN_DIR/references/copy-panels.md`).
 
 ---
 

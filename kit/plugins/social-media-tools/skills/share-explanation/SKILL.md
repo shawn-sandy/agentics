@@ -298,6 +298,7 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 
 **Select template based on target type:**
 - `TARGET_TYPE=skill` or `TARGET_TYPE=command` → use `feature-card.html`
+- `TARGET_TYPE=file` or `TARGET_TYPE=function` → use `feature-card.html`
 - `TARGET_TYPE=concept` → use `quote-card.html`
 
 ```bash
