@@ -1,5 +1,18 @@
 # Changelog — social-media-tools
 
+## v2.9.0 — 2026-06-04 — Open gallery images in a native dialog modal
+
+### Changed
+
+- "View image" control changed from an `<a target="_blank">` anchor to a `<button>` that opens the card's PNG in a native `<dialog>` modal overlay, keeping the user in the gallery.
+- Added `<dialog id="imgDialog">` element to `gallery.html` with a close button, backdrop click, and Escape-to-close support; native `<dialog>` provides focus trapping and focus restoration automatically.
+- Dialog image receives meaningful `alt` text from the card's `data-topic` attribute.
+- Updated `.open-img-link` CSS to reset button defaults so the control renders identically to the previous link.
+- Open/close animations gated behind `prefers-reduced-motion: reduce`.
+- Updated `media-library/SKILL.md` Step 3 to emit `<button>` markup with `data-img` and `data-topic` attributes instead of anchor markup.
+
+---
+
 ## v2.8.0 — 2026-06-03 — Expand share-explanation to entire project codebase
 
 ### Changed

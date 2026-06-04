@@ -310,11 +310,71 @@
       padding: 4px 0 8px;
       text-decoration: none;
       transition: color 0.15s;
+      background: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      width: 100%;
     }
 
     .open-img-link:hover {
       color: var(--accent-hover);
       text-decoration: underline;
+    }
+
+    #imgDialog {
+      border: none;
+      background: transparent;
+      padding: 0;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+
+    #imgDialog::backdrop {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    #imgDialog .dialog-content {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #imgDialog img {
+      max-width: 90vw;
+      max-height: 85vh;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    #imgDialog .dialog-close {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    #imgDialog .dialog-close:hover {
+      background: var(--border);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #imgDialog, #imgDialog::backdrop {
+        transition: none;
+        animation: none;
+      }
     }
 
     .no-results {
@@ -389,6 +449,13 @@
     <span>Generated {{GENERATED_AT}}</span>
   </div>
 
+  <dialog id="imgDialog">
+    <div class="dialog-content">
+      <img id="imgDialogImg" src="" alt="">
+      <button class="dialog-close" aria-label="Close">&times;</button>
+    </div>
+  </dialog>
+
   <script>
     function showFallback(img) {
       var container = img.parentElement;
@@ -396,6 +463,28 @@
       var fb = container.querySelector('.thumb-fallback');
       if (fb) fb.style.display = 'block';
     }
+
+    var imgDialog = document.getElementById('imgDialog');
+    var imgDialogImg = document.getElementById('imgDialogImg');
+    var dialogCloseBtn = imgDialog.querySelector('.dialog-close');
+
+    document.getElementById('galleryGrid').addEventListener('click', function(e) {
+      var btn = e.target.closest('.open-img-link');
+      if (!btn) return;
+      var imgSrc = btn.getAttribute('data-img');
+      if (!imgSrc || !/^[a-zA-Z0-9._-]+\.png$/i.test(imgSrc)) return;
+      imgDialogImg.src = encodeURI(imgSrc);
+      imgDialogImg.alt = btn.getAttribute('data-topic') || 'Social card image';
+      imgDialog.showModal();
+    });
+
+    dialogCloseBtn.addEventListener('click', function() {
+      imgDialog.close();
+    });
+
+    imgDialog.addEventListener('click', function(e) {
+      if (e.target === imgDialog) imgDialog.close();
+    });
 
     var activeType = 'all';
     var searchText = '';
