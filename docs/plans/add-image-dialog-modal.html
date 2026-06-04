@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
+<meta name="plan-modified" content="2026-06-03">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-03">
 <meta name="plan-repo" content="agentics">
@@ -377,10 +378,10 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill" id="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -470,14 +471,14 @@
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Acceptance Criteria</h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1">Clicking "View image" opens a native <code>&lt;dialog&gt;</code> modal showing the card's PNG; it does NOT open a new tab or navigate away.</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2">The modal closes via the close button, a click on the backdrop, and the Escape key.</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3">On close, keyboard focus returns to the "View image" button that opened the modal.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4">The dialog image has meaningful <code>alt</code> text derived from the card topic.</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">A regenerated gallery emits <code>&lt;button class="open-img-link" data-img=… data-topic=…&gt;</code> markup — no <code>&lt;a … target="_blank"&gt;</code> for image viewing.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The "View image" button visually matches the previous link (centered, blue, hover underline).</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">Any open/close animation is suppressed under <code>prefers-reduced-motion: reduce</code>.</label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8"><code>social-media-tools</code> is bumped to 2.9.0 in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry.</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1">Clicking "View image" opens a native <code>&lt;dialog&gt;</code> modal showing the card's PNG; it does NOT open a new tab or navigate away.</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2">The modal closes via the close button, a click on the backdrop, and the Escape key.</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3">On close, keyboard focus returns to the "View image" button that opened the modal.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4">The dialog image has meaningful <code>alt</code> text derived from the card topic.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">A regenerated gallery emits <code>&lt;button class="open-img-link" data-img=… data-topic=…&gt;</code> markup — no <code>&lt;a … target="_blank"&gt;</code> for image viewing.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The "View image" button visually matches the previous link (centered, blue, hover underline).</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">Any open/close animation is suppressed under <code>prefers-reduced-motion: reduce</code>.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8"><code>social-media-tools</code> is bumped to 2.9.0 in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>

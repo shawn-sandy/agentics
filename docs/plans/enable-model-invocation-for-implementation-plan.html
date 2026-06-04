@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="chore">
 <meta name="plan-created" content="2026-06-03">
 <meta name="plan-repo" content="agentics">
@@ -842,7 +842,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Make implementation-plan model-invocable without colliding with Plan Mode</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -932,12 +932,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Delete the <code>disable-model-invocation: true</code> line from the skill frontmatter</span>
               </div>
               <div class="step-why">Remove line 6 of <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code>. This single flag is the only thing gating model activation — once gone, the skill becomes eligible to auto-trigger on matching intent.</div>
@@ -949,12 +949,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite the <code>description:</code> into a narrow, artifact-scoped three-part trigger</span>
               </div>
               <div class="step-why">Once the skill is model-invocable, the <code>description</code> field <em>is</em> the activation trigger. Scope it to explicit plan-artifact intent — "create an HTML plan / plan file / implementation-plan document" — and deliberately omit generic "plan how to do X" phrasing so it does not compete with built-in Plan Mode. Keep the <code>/plan-agent:implementation-plan</code> command hint. Follow the three-part format from <code>plugin-patterns.md</code> (short description + capability + "Use when…"), aiming for the ≤200-char budget.</div>
@@ -966,12 +966,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Make the Invocation &amp; Arguments section dual-mode (command + model)</span>
               </div>
               <div class="step-why">The body hardcodes "command-invoked only" (line 14) and "continue with <code>$ARGUMENTS</code> treated as a plain objective" (line ~96). Add an "Invocation modes" note: if <code>$ARGUMENTS</code> is non-empty, parse it exactly as today (issue ref → plan file → flags → objective); if empty (model-invocation), derive the objective from the user's triggering message / recent conversation context, falling back to <code>AskUserQuestion("What is the objective for this plan?")</code> only when nothing can be inferred. Reword the two "command-invoked only" claims so they no longer assert the skill is command-exclusive. <strong>Ambient default:</strong> since command-only flags (<code>--quick</code>, <code>--no-align</code>, etc.) can't be passed on the model path, document that ambient activation runs the <em>full</em> workflow (Clarify + Align + Interview) by default — users who want a fast run use the <code>/command</code> form with flags.</div>
@@ -983,12 +983,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update <code>plan-agent/README.md</code> to describe dual-mode activation</span>
               </div>
               <div class="step-why">README lines 7, 21, 50, and 54 describe the skill as "manual-invoke only", "<code>disable-model-invocation: true</code>", and "will not auto-activate on ambient intent" — now stale and self-contradictory. Update those to state the skill is both command-invocable and model-invocable (with the narrow artifact-scoped trigger), and remove the "Manual only" labels for <code>implementation-plan</code>. Leave <code>finalize-plan</code>'s manual-only description untouched.</div>
@@ -1000,12 +1000,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump <code>plan-agent</code> to 1.2.0 and add a CHANGELOG entry</span>
               </div>
               <div class="step-why">Adding a new activation path is an additive MINOR change. Update <code>"version"</code> for the <code>plan-agent</code> entry in <code>.claude-plugin/marketplace.json</code> from <code>1.1.1</code> to <code>1.2.0</code>, prepend a <code>## v1.2.0</code> section to <code>kit/plugins/plan-agent/CHANGELOG.md</code> describing the model-invocation enablement and trigger scoping, and refresh the marketplace <code>description</code> if it asserts "explicit" invocation. The <code>.claude/settings.json</code> hook auto-validates the JSON on save.</div>
@@ -1028,27 +1028,27 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>disable-model-invocation</code> is no longer present in the <code>implementation-plan</code> SKILL.md frontmatter.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The skill <code>description</code> includes a narrow, artifact-scoped "Use when" trigger and omits generic planning phrasing that would collide with built-in Plan Mode.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">The Invocation &amp; Arguments section documents how the objective is sourced when <code>$ARGUMENTS</code> is empty (conversation context, then <code>AskUserQuestion</code>).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Command invocation <code>/plan-agent:implementation-plan &lt;objective&gt;</code> still works unchanged (issue refs, plan-file refs, and all flags still parse).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">The <code>plan-agent</code> README no longer claims the <code>implementation-plan</code> skill is manual-only / non-auto-activating.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>marketplace.json</code> lists <code>plan-agent</code> at <code>1.2.0</code> and <code>CHANGELOG.md</code> has a matching <code>v1.2.0</code> entry.</label>
         </li>
       </ul>
@@ -1078,21 +1078,21 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
