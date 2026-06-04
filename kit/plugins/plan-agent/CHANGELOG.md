@@ -1,14 +1,5 @@
 # Changelog
 
-## v1.3.1 — 2026-06-04 — Sort plans gallery by created date
-
-### Fixed
-
-- **build-index.sh**: gallery cards now sort by `plan-created` metadata (newest first) instead of filesystem modification time; plans with no created date sort last.
-- **plans-library SKILL.md**: Step 3 no longer sorts by mtime; Step 4 instructions updated to collect-then-sort by created date descending.
-
----
-
 ## v1.3.0 — 2026-06-04 — Rich implementation prompt with plan context
 
 ### Changed
