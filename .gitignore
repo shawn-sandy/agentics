@@ -1,6 +1,7 @@
 
 # User-specific Claude Code configuration
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # Claude Code local overrides
 CLAUDE.local.md
