@@ -1,7 +1,7 @@
 ---
 title: Add project-wide skill discovery and visible-SKIP to optimizing-descriptions
 date: 2026-05-12
-status: draft
+status: todo
 authors:
   - shawnsandy
 summary: Add discovery-first flow, visible SKIP confirmation, and follow-up optimization prompts to optimizing-descriptions.

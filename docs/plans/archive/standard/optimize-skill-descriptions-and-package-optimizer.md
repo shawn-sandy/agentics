@@ -1,5 +1,5 @@
 ---
-status: draft
+status: todo
 created: 2026-05-11
 ---
 

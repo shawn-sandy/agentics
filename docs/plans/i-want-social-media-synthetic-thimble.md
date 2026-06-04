@@ -1,5 +1,5 @@
 ---
-status: planned
+status: todo
 type: enhancement
 plugin: code-share (kit/plugins/social-media-tools)
 created: 2026-05-27

@@ -1,6 +1,6 @@
 ---
 description: Optimize ~/.claude/rules/plan-mode.md for clarity and reduced redundancy
-status: proposed
+status: todo
 ---
 
 # Optimize `plan-mode.md` Rule File

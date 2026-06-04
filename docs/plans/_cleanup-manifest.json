@@ -1,0 +1,481 @@
+{
+  "generated": "2026-06-04",
+  "rootDocs": [
+    "docs/add-agentic-trigger-to-plan-interview-skills.md",
+    "docs/add-allowed-tools-recommendation-to-plan-interview.md",
+    "docs/add-background-mode-product-plans.md",
+    "docs/add-breaking-change-regression-detection.md",
+    "docs/add-code-review-fix-branch-command.md",
+    "docs/add-code-reviewer-agent.md",
+    "docs/add-complexity-rating-code-review-skill.md",
+    "docs/add-deep-grill-step-plan-interview.md",
+    "docs/add-domain-tools-to-product-plan-agents.md",
+    "docs/add-html-output-to-plan-interview-skill.md",
+    "docs/add-html-output-to-rename-workflow.md",
+    "docs/add-marketplace-builder-plugin.md",
+    "docs/add-plan-interview-exit-hook.md",
+    "docs/add-plan-name-validation-to-interview.md",
+    "docs/add-plan-status-skill-to-plan-interview.md",
+    "docs/add-plan-to-html-skill-to-plan-interview.md",
+    "docs/add-regression-detection-to-reviewing-skills.md",
+    "docs/add-review-rename-plans-command.md",
+    "docs/add-running-tests-skill-to-skill-reviewer.md",
+    "docs/add-ship-skill-to-git-agent.md",
+    "docs/add-skill-description-length-hook.md",
+    "docs/add-type-field-to-plan-status-skill.md",
+    "docs/add-update-plan-status-command.md",
+    "docs/address-pr-120-review-comments.md",
+    "docs/agent-creator-plugin.md",
+    "docs/agentic-plugin-dev-skills.md",
+    "docs/assign-role-optimized-models-to-product-plan-agents.md",
+    "docs/audit-claude-md-optimizer-skill.md",
+    "docs/audit-planning-skills-skill.md",
+    "docs/audit-test-review-skill-md.md",
+    "docs/cleanup-marketplace-json-unsupported-fields.md",
+    "docs/code-review-fix-agent-name.md",
+    "docs/code-review-fix-skill-agent-conflict.md",
+    "docs/code-review-progressive-disclosure.md",
+    "docs/code-simplifier-plugin.md",
+    "docs/conditional-exit-plan-mode.md",
+    "docs/create-dev-tools-skill-readmes.md",
+    "docs/create-git-agent-plugin-commit-pr-skills.md",
+    "docs/create-hello-world-testing-docs.md",
+    "docs/create-path-rules-advisor-skill.md",
+    "docs/create-product-plan-review-panel-plugin.md",
+    "docs/create-tdd-loop-skill.md",
+    "docs/demo-tdd-loop.md",
+    "docs/document-plugin-version-bump-process.md",
+    "docs/enhance-claude-md-optimizer-path-rules.md",
+    "docs/enhance-installation-instructions.md",
+    "docs/enhance-readmes-with-setup-docs.md",
+    "docs/extend-frontmatter-optimizer-with-invocation-control.md",
+    "docs/extract-deep-grill-into-standalone-skill.md",
+    "docs/fix-claude-md-stale-local-filename.md",
+    "docs/fix-local-md-stale-filename-reference.md",
+    "docs/fix-plugin-version-hygiene.md",
+    "docs/improve-code-reviewer-agent-v2.3.md",
+    "docs/improve-skill-reviewer-against-official-best-practices.md",
+    "docs/optimize-plan-to-html-skill-performance.md",
+    "docs/remove-dev-tools-hello-world-plugins.md",
+    "docs/rename-md-optimizer-to-memory-doctor.md",
+    "docs/rename-memory-doctor-to-agentic-memory-doctor.md",
+    "docs/rename-product-plans-skill-to-plan-review-agents.md",
+    "docs/ship-autonomous-skill.md"
+  ],
+  "plans": {
+    "docs/plans/add-a-copy-button-purrfect-fern.md": {
+      "status": "completed",
+      "type": "feature",
+      "created": "2026-05-29"
+    },
+    "docs/plans/add-a-step-0-serialized-mochi.md": {},
+    "docs/plans/add-allowed-tools-to-git-agent-skills.md": {
+      "status": "in-progress",
+      "created": "2026-03-15"
+    },
+    "docs/plans/add-argument-support-to-code-test-suggestion-skill.md": {
+      "status": "in-progress",
+      "created": "2026-03-01"
+    },
+    "docs/plans/add-async-flag-to-plan-to-html.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-05-14"
+    },
+    "docs/plans/add-branch-agent-skill.md": {},
+    "docs/plans/add-built-in-interview-step.md": {
+      "status": "completed",
+      "type": "feature",
+      "created": "2026-05-30"
+    },
+    "docs/plans/add-claude-md-optimizer-skill-to-dev-tools.md": {
+      "status": "in-progress",
+      "created": "2026-02-22"
+    },
+    "docs/plans/add-completion-checklist-to-plans.md": {},
+    "docs/plans/add-documenting-plans-skill-to-plan-interview.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-04-14"
+    },
+    "docs/plans/add-follow-cta-to-social-posts.md": {},
+    "docs/plans/add-gallery-viewer-social-media.md": {},
+    "docs/plans/add-marketplace-merge-driver.md": {
+      "status": "todo",
+      "type": "fix",
+      "created": "2026-05-30"
+    },
+    "docs/plans/add-plan-documenter-agent.md": {
+      "status": "todo",
+      "type": "standard",
+      "created": "2026-04-15"
+    },
+    "docs/plans/add-plan-maintenance-command.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-05-18"
+    },
+    "docs/plans/add-skill-checklist-reference.md": {
+      "status": "in-progress",
+      "created": "2026-04-01"
+    },
+    "docs/plans/add-social-config-to-share-plugin.md": {
+      "status": "completed"
+    },
+    "docs/plans/add-tdd-fix-skill.md": {},
+    "docs/plans/add-test-review-skill-to-code-test-suggestion.md": {
+      "status": "in-progress",
+      "created": "2026-03-01"
+    },
+    "docs/plans/allow-read-tools-in-git-agent-skills.md": {},
+    "docs/plans/auditing-allowed-tools-skill.md": {},
+    "docs/plans/auto-detect-branch-names-from-working-tree-changes.md": {},
+    "docs/plans/backup-claude-settings-observed-state.md": {
+      "status": "todo",
+      "type": "chore",
+      "created": "2026-05-29"
+    },
+    "docs/plans/backup-claude-settings-to-git.md": {
+      "status": "todo",
+      "type": "chore",
+      "created": "2026-05-29"
+    },
+    "docs/plans/batch-update-plan-status.md": {
+      "status": "in-progress",
+      "created": "2026-03-30"
+    },
+    "docs/plans/branch-agent-always-exit-plan-mode.md": {},
+    "docs/plans/branch-agent-append-date-suffix.md": {},
+    "docs/plans/code-review-plan-fix-agent-name.md": {
+      "status": "todo",
+      "created": "2026-03-08"
+    },
+    "docs/plans/code-testing-agent-skill-audit-fix.md": {
+      "status": "ready"
+    },
+    "docs/plans/create-agent-creator-plugin-alt.md": {
+      "status": "in-progress",
+      "created": "2026-03-08"
+    },
+    "docs/plans/create-agent-creator-readme.md": {
+      "status": "in-progress",
+      "created": "2026-03-08"
+    },
+    "docs/plans/create-agent-reviewer-plugin.md": {},
+    "docs/plans/create-plan-mode-plugin.md": {
+      "status": "superseded",
+      "type": "feature",
+      "created": "2026-05-27"
+    },
+    "docs/plans/create-plans-index-debounce-issue.md": {
+      "status": "in-progress",
+      "type": "chore",
+      "created": "2026-05-31"
+    },
+    "docs/plans/create-product-plan-review-panel-plugin-revised.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-05-15"
+    },
+    "docs/plans/create-skill-authoring-rule.md": {
+      "status": "todo",
+      "type": "standard"
+    },
+    "docs/plans/create-skill-reviewer-plugin.md": {
+      "status": "in-progress",
+      "created": "2026-02-25"
+    },
+    "docs/plans/declare-allowed-tools-for-unrestricted-skills.md": {},
+    "docs/plans/enhance-plan-to-html-unreasonable-effectiveness.md": {
+      "status": "todo",
+      "type": "standard",
+      "created": "2026-05-13"
+    },
+    "docs/plans/fix-claude-md-optimizer-skill-violations.md": {
+      "status": "in-progress",
+      "created": "2026-02-25"
+    },
+    "docs/plans/fix-code-review-agent-skill-audit.md": {
+      "status": "draft"
+    },
+    "docs/plans/fix-git-subdir-ssh-to-https.md": {
+      "status": "draft",
+      "created": "2026-04-05"
+    },
+    "docs/plans/fix-marketplace-json-location-in-claude-md.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/fix-plan-interview-stress-test-trigger.md": {
+      "status": "in-progress",
+      "created": "2026-04-20"
+    },
+    "docs/plans/fix-pr-agent-skill-md.md": {
+      "status": "in-progress",
+      "created": "2026-03-03"
+    },
+    "docs/plans/fix-stale-commands-in-claude-md.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/fix-test-review-skill-cross-skill-reference.md": {
+      "status": "in-progress",
+      "created": "2026-03-02"
+    },
+    "docs/plans/functional-knitting-toast.md": {},
+    "docs/plans/git-push-warm-sprout.md": {},
+    "docs/plans/harden-plan-documenter-completion-guard.md": {},
+    "docs/plans/i-m-constantly-running-to-sprightly-chipmunk.md": {
+      "status": "implemented"
+    },
+    "docs/plans/i-wanna-create-turn-sprightly-turing.md": {},
+    "docs/plans/i-want-social-media-synthetic-thimble.md": {
+      "status": "planned",
+      "type": "enhancement",
+      "created": "2026-05-27"
+    },
+    "docs/plans/i-want-to-add-inherited-squirrel.md": {},
+    "docs/plans/implement-marketplace-api-service.md": {
+      "status": "in-progress",
+      "created": "2026-01-19"
+    },
+    "docs/plans/improve-claude-md-optimizer-accuracy.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/improve-plugin-skill-adoption.md": {
+      "status": "implemented",
+      "created": "2026-05-07"
+    },
+    "docs/plans/improve-skill-reviewer-plugin.md": {
+      "status": "in-progress",
+      "created": "2026-02-26"
+    },
+    "docs/plans/in-its-use-there-atomic-horizon.md": {
+      "status": "draft"
+    },
+    "docs/plans/init-claude-md-skills-hook-setup.md": {
+      "status": "in-progress",
+      "created": "2026-03-26"
+    },
+    "docs/plans/lower-skill-description-target-to-200.md": {
+      "status": "todo",
+      "type": "refactor",
+      "created": "2026-05-28"
+    },
+    "docs/plans/make-deep-grill-default-yes.md": {
+      "status": "in-progress",
+      "created": "2026-03-27"
+    },
+    "docs/plans/make-deep-grill-optional.md": {
+      "status": "in-progress",
+      "created": "2026-03-26"
+    },
+    "docs/plans/move-claude-plugin-to-kit.md": {},
+    "docs/plans/move-claude-plugin-to-project-root.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/open-source-readiness-plan.md": {
+      "status": "in-progress",
+      "created": "2026-03-05"
+    },
+    "docs/plans/optimize-claude-md-optimizer-progressive-disclosure.md": {
+      "status": "in-progress",
+      "created": "2026-02-27"
+    },
+    "docs/plans/optimize-claude-md-optimizer-skill.md": {
+      "status": "in-progress",
+      "created": "2026-02-24"
+    },
+    "docs/plans/optimize-code-review-skill.md": {
+      "status": "in-progress",
+      "created": "2026-03-03"
+    },
+    "docs/plans/optimize-code-review-trigger-description.md": {
+      "status": "in-progress",
+      "created": "2026-03-06"
+    },
+    "docs/plans/optimize-plan-interview-skill.md": {
+      "status": "in-progress",
+      "created": "2026-02-24"
+    },
+    "docs/plans/optimize-plan-mode-rules.md": {
+      "status": "proposed"
+    },
+    "docs/plans/optimize-planning-skill.md": {
+      "status": "todo",
+      "type": "refactor",
+      "created": "2026-05-30"
+    },
+    "docs/plans/optimize-running-tests-skill.md": {
+      "status": "draft"
+    },
+    "docs/plans/optimize-skill-descriptions-and-package-optimizer.md": {
+      "status": "draft",
+      "created": "2026-05-11"
+    },
+    "docs/plans/optimize-test-review-skill-md.md": {
+      "status": "in-progress",
+      "created": "2026-03-02"
+    },
+    "docs/plans/plan-status-skill-audit-fixes.md": {
+      "status": "todo",
+      "created": "2026-03-28"
+    },
+    "docs/plans/plugin-development-guide.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/product-plans-integrate-panel-findings.md": {
+      "status": "todo",
+      "type": "refactor",
+      "created": "2026-05-15"
+    },
+    "docs/plans/promote-deep-grill-to-mandatory-step.md": {
+      "status": "in-progress",
+      "created": "2026-03-26"
+    },
+    "docs/plans/react-perf-analyzer-plugin.md": {
+      "status": "in-progress",
+      "created": "2026-03-08"
+    },
+    "docs/plans/react-perf-analyzer-v1.1.0-runtime-testing.md": {
+      "status": "in-progress",
+      "created": "2026-03-08"
+    },
+    "docs/plans/reduce-coderabbit-tokens-2026-06-01.md": {},
+    "docs/plans/refactor-dev-tools-extract-standalone-plugins.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/register-wcag-reviewer-plugin.md": {
+      "status": "in-progress",
+      "created": "2026-02-24"
+    },
+    "docs/plans/remove-background-social-media-tools.md": {
+      "status": "completed",
+      "type": "refactor",
+      "created": "2026-05-29"
+    },
+    "docs/plans/remove-git-agent-branching-agent-skill.md": {},
+    "docs/plans/rename-code-reviewer-to-agent-code-reviewer.md": {
+      "status": "in-progress",
+      "created": "2026-03-08"
+    },
+    "docs/plans/rename-code-test-suggestion-to-code-testing-agent-alt.md": {
+      "status": "in-progress",
+      "created": "2026-03-06"
+    },
+    "docs/plans/rename-code-test-suggestion-to-code-testing-agent.md": {
+      "status": "in-progress",
+      "created": "2026-03-06"
+    },
+    "docs/plans/rename-plan-files-to-descriptive-names.md": {
+      "status": "in-progress",
+      "created": "2026-02-26"
+    },
+    "docs/plans/rename-skill-code-review-to-code-review-agent.md": {
+      "status": "in-progress",
+      "created": "2026-03-03"
+    },
+    "docs/plans/review-plugins-skills-and-groovy-pixel.md": {},
+    "docs/plans/review-the-plan-agent-serialized-ullman.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-05-28"
+    },
+    "docs/plans/run-panel-review-on-rename-plan-to-html.md": {
+      "status": "todo",
+      "created": "2026-05-18"
+    },
+    "docs/plans/run-settings-sync-backup-routine.md": {
+      "status": "todo",
+      "type": "chore",
+      "created": "2026-05-29"
+    },
+    "docs/plans/run-share-selection-social-share-router.md": {
+      "status": "todo",
+      "created": "2026-05-28"
+    },
+    "docs/plans/run-tdd-fix-demo-on-calculator-bug.md": {},
+    "docs/plans/ship-gitlab-support.md": {
+      "status": "in-progress",
+      "created": "2026-03-12"
+    },
+    "docs/plans/show-the-claude-changelog-clever-rabbit.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-05-29"
+    },
+    "docs/plans/social-media-tools-plugin-purring-tome.md": {},
+    "docs/plans/stress-test-agent-creator-plugin.md": {
+      "status": "in-progress",
+      "created": "2026-03-08"
+    },
+    "docs/plans/stress-test-open-source-readiness.md": {
+      "status": "in-progress",
+      "created": "2026-03-05"
+    },
+    "docs/plans/test-marketplace-dir-branch.md": {
+      "status": "draft",
+      "created": "2026-04-05"
+    },
+    "docs/plans/the-current-media-social-memoized-token.md": {},
+    "docs/plans/the-share-session-skill-unified-simon.md": {},
+    "docs/plans/the-shipit-subagent-must-drifting-twilight.md": {},
+    "docs/plans/the-social-media-tools-tender-grove.md": {},
+    "docs/plans/update-claude-md-plugin-list.md": {
+      "status": "in-progress",
+      "created": "2026-02-23"
+    },
+    "docs/plans/update-plan-interview-readme-v1-6-v1-7.md": {
+      "status": "in-progress",
+      "created": "2026-03-26"
+    },
+    "docs/plans/update-plan-interview-readme-with-plan-hygiene-info.md": {
+      "status": "in-progress",
+      "created": "2026-03-10"
+    },
+    "docs/plans/update-plan-interview-three-part-steps-verb-led.md": {
+      "status": "todo",
+      "type": "feature",
+      "created": "2026-05-14"
+    },
+    "docs/plans/update-plan-status-skill-description.md": {
+      "status": "todo",
+      "created": "2026-03-31"
+    },
+    "docs/plans/update-readme-with-current-plugin-data.md": {},
+    "docs/plans/update-wcag-reference-to-2.2.md": {
+      "status": "in-progress",
+      "created": "2026-02-24"
+    },
+    "docs/plans/update-wcag-reviewer-to-2.2.md": {
+      "status": "in-progress",
+      "created": "2026-02-26"
+    },
+    "docs/plans/using-author-we-are-distributed-brooks.md": {
+      "status": "todo",
+      "type": "refactor",
+      "created": "2026-05-28"
+    },
+    "docs/plans/we-update-the-skill-frolicking-planet.md": {},
+    "docs/plans/when-the-planning-skill-whimsical-sprout.md": {}
+  },
+  "summary": {
+    "rootDocCount": 60,
+    "planCount": 119,
+    "statusDistribution": {
+      "in-progress": 49,
+      "todo": 23,
+      "draft": 6,
+      "completed": 4,
+      "implemented": 2,
+      "ready": 1,
+      "superseded": 1,
+      "planned": 1,
+      "proposed": 1
+    }
+  }
+}

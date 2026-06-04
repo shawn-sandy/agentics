@@ -1,5 +1,5 @@
 ---
-status: draft
+status: todo
 branch: fix/sub-dir
 created: 2026-04-05
 ---
