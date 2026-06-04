@@ -1,12 +1,12 @@
 ---
-name: refine-prompt
-description: "Refine-prompt skill — interviews users about their intent and constraints, then assembles a copy-pasteable AI prompt grounded in Anthropic's best practices (clarity, XML structure, role, examples, CoT, output format). Use via /plan-agent:refine-prompt."
+name: craft-prompt
+description: "Craft-prompt skill — interviews users about their intent and constraints, then assembles a copy-pasteable AI prompt grounded in Anthropic's best practices (clarity, XML structure, role, examples, CoT, output format). Use via /plan-agent:craft-prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
 allowed-tools: AskUserQuestion, ToolSearch, Read
 ---
 
-# refine-prompt
+# craft-prompt
 
 Interview the user about their prompting need, classify the prompt type, apply the applicable Anthropic best-practice techniques, and deliver a copy-pasteable, well-structured AI prompt.
 
@@ -14,7 +14,7 @@ Interview the user about their prompting need, classify the prompt type, apply t
 
 ## Entry — Read $ARGUMENTS
 
-On invocation via `/plan-agent:refine-prompt`, `$ARGUMENTS` contains the user's initial intent or topic. If `$ARGUMENTS` is non-empty, use it to seed Phase 1 (Classify) and skip the "what do you need?" opener. If empty, ask: "What kind of prompt do you need help crafting?"
+On invocation via `/plan-agent:craft-prompt`, `$ARGUMENTS` contains the user's initial intent or topic. If `$ARGUMENTS` is non-empty, use it to seed Phase 1 (Classify) and skip the "what do you need?" opener. If empty, ask: "What kind of prompt do you need help crafting?"
 
 ---
 
@@ -100,7 +100,7 @@ Template selection by type:
 - creative → references/creative-prompt-template.md
 - analytical → references/analytical-prompt-template.md
 
-Read the template with the Read tool (path: `kit/plugins/plan-agent/skills/refine-prompt/references/<type>-prompt-template.md`).
+Read the template with the Read tool (path: `kit/plugins/plan-agent/skills/craft-prompt/references/<type>-prompt-template.md`).
 
 Substitute all {{PLACEHOLDER}} values in the template with the structured content from Phase 3, the interview answers from Phase 2, and the user's intent from Phase 1. Remove any placeholder lines where the technique was not selected by the matrix (e.g. remove `<thinking>` block for creative prompts).
 

@@ -1,10 +1,10 @@
 # Changelog
 
-## v1.4.0 — 2026-06-04 — Add refine-prompt skill
+## v1.4.0 — 2026-06-04 — Add craft-prompt skill
 
 ### Added
 
-- **`/plan-agent:refine-prompt [intent]`** — new skill (`disable-model-invocation: true`) that interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in Anthropic's official Claude Prompting Best Practices.
+- **`/plan-agent:craft-prompt [intent]`** — new skill (`disable-model-invocation: true`) that interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in Anthropic's official Claude Prompting Best Practices.
   - **Phase 1 — Classify**: identifies the prompt type (system, task, creative, analytical) and applies a technique matrix mapping each type to its applicable best-practice layers.
   - **Phase 2 — Interview**: uses `AskUserQuestion` with type-specific questions derived from the technique matrix; always asks the user's *why* (per "Add context to improve performance"); offers progressive depth on user opt-in.
   - **Phase 3 — Structure**: maps interview answers to XML layers — `<role>`, `<instructions>`, `<constraints>`, `<context>`, `<example>`, `<thinking>`, `<document>` — applying only the techniques selected for the classified type.
