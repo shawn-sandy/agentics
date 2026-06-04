@@ -1,5 +1,5 @@
 ---
-status: draft
+status: todo
 scope: plugins/code-review/skills/code-review-agent/SKILL.md
 ---
 

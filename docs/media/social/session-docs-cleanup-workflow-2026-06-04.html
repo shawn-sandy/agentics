@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<!--
+  session-card.html — Dark-mode session recap card for social posts.
+
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
+    {{TITLE}}          — Session title (e.g. "session recap · 2026-05-28")
+    {{MODEL}}          — Model name badge (e.g. "claude-sonnet-4-6")
+    {{NARRATIVE}}      — 1–2 sentence summary of what the session accomplished
+    {{ACCOMPLISHMENTS}}— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    {{TOTAL_TOKENS}}   — Total tokens formatted with commas (e.g. "42,180")
+    {{CACHE_HIT_RATE}} — Cache hit rate (e.g. "44.2%")
+    {{DURATION}}       — Session duration (e.g. "47 min")
+    {{FILES_CHANGED}}  — Files changed count (e.g. "12")
+    {{COMMITS}}        — Commits in session (e.g. "3")
+    {{COPY_PANELS}}    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
+    1. & → &amp;  ← first, prevents double-escaping
+    2. < → &lt;
+    3. > → &gt;
+    4. " → &quot;
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>session recap &middot; 2026-06-04</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --green: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    /* ── Hero content: narrative + accomplishments ── */
+    .content {
+      padding: 22px 28px 8px;
+    }
+
+    .narrative {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .accomplishments {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .accomplishments li {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .accomplishments li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ── Demoted metrics strip ── */
+    .metrics-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .metric {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric b {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric b.accent { color: var(--accent); }
+    .metric b.green  { color: var(--green); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-tag {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-accent {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="header-text">
+        <h1>session recap &middot; 2026-06-04</h1>
+      </div>
+      <div class="model-badge">opus-4-6</div>
+    </div>
+
+    <div class="content">
+      <p class="narrative">Ran an 11-agent workflow to clean up 179 scattered markdown files across docs/. Relocated developer guides, triaged and archived 95 plans, normalized statuses, and wrote a retention policy &mdash; turning chaos into a navigable library.</p>
+      <ul class="accomplishments"><li>Relocated 60 developer docs from docs/ root to docs/guides/ with git mv (history preserved)</li>
+<li>Triaged 112 remaining plans via 5 parallel agents: 24 keepers flagged, 88 archived</li>
+<li>Archived 7 shipped plans (completed/implemented/superseded) after knowledge check</li>
+<li>Normalized 9 non-canonical status values to canonical todo/in-progress/completed</li>
+<li>Created retention policy README and rebuilt the filterable plans gallery</li></ul>
+    </div>
+
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">1,073,152</b> tokens</span>
+      <span class="metric"><b>81 min</b></span>
+      <span class="metric"><b class="green">94.4%</b> cache hit</span>
+      <span class="metric"><b>159</b> files</span>
+      <span class="metric"><b>2</b> commits</span>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-tag">Claude Code &middot; session recap</span>
+      <span class="footer-accent">github.com/shawn-sandy/agentics</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">179 markdown files scattered across docs/. No consistent status. No retention policy. Just entropy.
+
+So I ran an 11-agent workflow to clean the whole thing up in one pass:
+
+- Relocated 60 developer docs to a dedicated docs/guides/ directory (git mv, full history preserved)
+- Triaged 112 plans with 5 parallel agents &mdash; 24 keepers, 88 archived
+- Archived 7 shipped plans after checking each for reusable knowledge
+- Normalized 9 non-canonical status values down to three: todo, in-progress, completed
+- Wrote a retention policy README and rebuilt the filterable gallery
+
+344K tokens (main loop) + 729K tokens (workflow agents) &middot; 159 files touched &middot; 94% cache hit &middot; 81 min
+
+The big takeaway: multi-agent workflows turn "someday cleanup" into "Tuesday afternoon cleanup." Fan out the triage, pipeline the decisions, collapse the results.
+
+Follow for more on AI-powered developer tooling workflows.
+
+#ClaudeCode #AITools #DeveloperTools #Automation</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Ran an 11-agent workflow to clean up 179 scattered markdown files:
+
+60 docs relocated, 95 plans archived, statuses normalized, retention policy written &mdash; 1M+ tokens across 11 agents in 81 min.
+
+#ClaudeCode #DeveloperTools</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">Just ran an 11-agent cleanup workflow on 179 scattered markdown files. Five parallel triage agents reviewed every plan, flagged 24 keepers, archived 95. Statuses normalized, retention policy written, gallery rebuilt.
+
+Multi-agent workflows turn "someday cleanup" into one session's work.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">Today I pointed an 11-agent workflow at 179 scattered markdown files that had accumulated over months of plugin development. The docs/ directory had become genuinely unmanageable &mdash; seven different status values, no retention policy, developer guides mixed in with plans.
+
+The workflow relocated 60 developer docs, triaged 112 plans (24 keepers, 88 archived), normalized every non-canonical status, and wrote a retention policy. 1M+ tokens across the session, 159 files touched, 94% cache hit rate.
+
+What made this feasible: fan-out triage. Five parallel agents each reviewed ~22 plans, made keep-or-archive decisions, and returned structured results. One orchestrating workflow collapsed everything into a clean directory.
+
+Follow for more on building multi-agent developer workflows with Claude Code.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

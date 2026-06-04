@@ -1,5 +1,5 @@
 ---
-status: ready
+status: todo
 ---
 
 # Fix: Remove `$PWD` anti-pattern from code-testing-agent SKILL.md
