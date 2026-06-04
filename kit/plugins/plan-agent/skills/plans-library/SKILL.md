@@ -68,10 +68,11 @@ If `TEMPLATES_DIR` is empty, output:
 
 ## Step 3 — Scan plan files
 
-Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. List files without sorting — the final order is determined by `plan-created` metadata in Step 4.
+Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Sort newest-modified first.
 
 ```bash
-find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" 2>/dev/null
+find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 2>/dev/null \
+  | xargs -0 ls -t 2>/dev/null
 ```
 
 ---
@@ -107,7 +108,7 @@ print(json.dumps({
 EOF
 ```
 
-Parse the JSON output with `json.loads()` and collect all results into a list. After processing every file, **sort the list by `created` date descending** (newest first). Plans with no `created` value sort last. Then, for each entry in sorted order, generate one `<a>` block:
+Parse the JSON output with `json.loads()`. From each result, generate one `<a>` block:
 
 ```html
 <a class="gallery-card" href="{BASENAME}"
