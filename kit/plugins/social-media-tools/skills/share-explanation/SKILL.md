@@ -1,14 +1,14 @@
 ---
 name: share-explanation
-description: "Explains how plugin components work. Reads source files and synthesizes developer-friendly principles, social copy, and a dark-mode card. Use when asked 'how does X work' or 'explain X'."
+description: "Explains how any project file, component, or concept works. Reads source files and synthesizes developer-friendly principles, social copy, and a dark-mode card. Use when asked 'how does X work' or 'explain X'."
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, SendUserFile
 model: opus
 ---
 
 # share-explanation
 
-Answer **"how does X work"** questions about any social-media-tools component — skills, commands,
-or reference patterns — by reading the actual source files and synthesizing a structured
+Answer **"how does X work"** questions about any file, component, function, or concept in the
+current project — by reading the actual source files and synthesizing a structured
 developer-friendly explanation. Then deliver the result the same way all other share-* skills do:
 security scrub → platform-aware copy → dark-mode card → persistent save.
 

@@ -19,12 +19,14 @@ When adding a new platform, update this file only — all skills read it at runt
 
 ### Platform Options for `AskUserQuestion`
 
-When asking the user to choose a platform, offer these options:
+When asking the user to choose a platform, **always offer all five options**:
 
 > LinkedIn, Twitter/X, Bluesky, Substack, All sites
 
-"All sites" drafts one variant per platform and renders a separate copy panel
-for each (see `$PLUGIN_DIR/references/copy-panels.md`).
+Never filter, omit, or selectively hide platforms based on content type, context,
+card type, or any other heuristic. Every share skill must present all five options
+in every `AskUserQuestion` call. "All sites" drafts one variant per platform and
+renders a separate copy panel for each (see `$PLUGIN_DIR/references/copy-panels.md`).
 
 ---
 

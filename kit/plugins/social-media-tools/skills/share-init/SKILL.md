@@ -129,10 +129,11 @@ Present analysis results and ask the user to confirm or adjust. Use a **single**
 `AskUserQuestion` call with up to 4 questions:
 
 1. **Platform**: "Which platform(s) do you primarily share on?"
-   Options: `All sites (Recommended)`, `LinkedIn`, `Twitter/X`, `Bluesky`
+   Options: `All sites (Recommended)`, `LinkedIn`, `Twitter/X`, `Bluesky`, `Substack`
    (multiSelect: false)
    Map selected label to canonical token before writing: `All sites` → `all`,
-   `LinkedIn` → `LinkedIn`, `Twitter/X` → `twitter`, `Bluesky` → `bluesky`
+   `LinkedIn` → `LinkedIn`, `Twitter/X` → `twitter`, `Bluesky` → `bluesky`,
+   `Substack` → `substack`
 
 2. **Tone**: "What tone fits your audience?"
    Options: `Professional (Recommended)`, `Technical`, `Conversational`, `Punchy`
