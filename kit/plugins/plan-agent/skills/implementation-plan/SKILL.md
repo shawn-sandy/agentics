@@ -1,9 +1,8 @@
 ---
 name: implementation-plan
 model: opus
-description: "Creates HTML plans from objectives, enforcing verb-target filenames. Runs a 9-step workflow with optional issue-fetch, interview, and align phases. Use via /plan-agent:implementation-plan."
+description: "Generate an HTML implementation-plan document. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create a plan document, generate an HTML plan, or write a plan file — not for general planning questions."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
-disable-model-invocation: true
 argument-hint: "<issue-url|#n> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
 ---
 
@@ -11,7 +10,12 @@ argument-hint: "<issue-url|#n> | <objective> [--quick] [--no-clarify] [--no-alig
 
 ## Invocation & Arguments
 
-Read `$ARGUMENTS` on entry (`$ARGUMENTS` substitution is valid here because this skill is command-invoked only — `disable-model-invocation: true`):
+This skill supports two activation paths:
+
+- **Command invocation:** `/plan-agent:implementation-plan <objective> [flags]` — `$ARGUMENTS` contains the objective and flags. All flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`, `--type`, `--template`, `--dir`, `--priority`) are available.
+- **Model invocation (ambient activation):** Claude auto-activates this skill when the user asks to create a plan document, generate an HTML plan, or write a plan file. `$ARGUMENTS` is empty on this path. The objective is derived from the user's triggering message or recent conversation context; if the intent is too vague to infer an objective, ask once via `AskUserQuestion("What is the objective for this plan?")`. Since flags cannot be passed on the model path, ambient activation runs the full workflow (Clarify + Align + Interview) by default — users who want a fast run should use the `/plan-agent:implementation-plan` command form with flags.
+
+Read `$ARGUMENTS` on entry:
 
 **Issue reference detection (checked first, before flag parsing):** Treat `$ARGUMENTS` as containing an issue reference if any token matches one of these three patterns:
 - Full GitHub URL: `https://github.com/<owner>/<repo>/issues/<n>`
@@ -22,7 +26,7 @@ When a reference is detected, set an internal `$ISSUE_REF` variable and strip it
 
 **Plan file reference detection (checked after issue ref detection, before objective extraction):** If the first non-flag token ends in `.html`, treat it as a plan file reference — strip it from the argument string and store it as `$PLAN_FILE`. The remaining text becomes the objective. This allows a plan revision command (e.g. `/plan-agent:implementation-plan add-dark-mode-toggle.html add dark mode toggle`) to be pasted verbatim without the filename polluting the objective. When `$PLAN_FILE` is set and the remaining objective text is empty, attempt to read the existing plan's `<title>` tag (strip the leading "Plan: " prefix) as the objective fallback. **Path safety:** always reduce `$PLAN_FILE` to its basename before any file read — strip all leading path components. Only attempt to read the file from the resolved plan roots (`--dir`, configured `plansDirectory`, or `docs/plans/`). If the basename does not resolve to an existing file under those roots, skip the title fallback entirely. **Graceful fallback:** if `$PLAN_FILE` cannot be found or read, or if no `<title>` tag is present, prompt the user for the objective via `AskUserQuestion` — do not abort.
 
-- **Objective (required):** all text that is not a flag, issue reference, or `.html` plan file token. If empty after parsing (and no issue reference was detected), ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
+- **Objective (required):** all text that is not a flag, issue reference, or `.html` plan file token. When `$ARGUMENTS` is empty (model invocation), derive the objective from the user's triggering message or recent conversation context. If the objective is still empty after parsing and context inference (and no issue reference was detected), ask once via `AskUserQuestion` ("What is the objective for this plan?") and stop if still empty.
 - `--quick` — shorthand for `--no-clarify --no-align --no-interview`; skips Step 1 Clarify, Step 5 Align, and Step 5b Interview.
 - `--no-clarify` — skip Step 1 Clarify only. Use when the objective is well-specified but you still want Step 5 Align.
 - `--no-align` — skip Step 5 Align only. Use when steps are pre-agreed but requirements need verification first.
@@ -93,7 +97,7 @@ Follow these steps exactly.
    | `labels` | Hint for `--type` inference when `--type` was not passed (e.g. label `bug` → `fix`, `enhancement` or `feature` → `feature`) |
    | `url` | Stored as `$ISSUE_URL`; written to plan frontmatter as `<meta name="plan-issue">` in Step 3 |
 
-   **Graceful fallback:** If the CLI call fails (unauthenticated, network error, issue not found), print a one-line error to the user (e.g. `Issue #42 not found — falling back to plain objective`) and continue with `$ARGUMENTS` treated as a plain objective string. Do not abort the planning workflow.
+   **Graceful fallback:** If the CLI call fails (unauthenticated, network error, issue not found), print a one-line error to the user (e.g. `Issue #42 not found — falling back to plain objective`) and continue with the remaining text treated as a plain objective string (or derive the objective from conversation context on the model-invocation path). Do not abort the planning workflow.
 
 0b. **Explore** — Read the codebase to build context before planning. Use `Glob` to locate relevant files, `Grep` to find symbol definitions and usage patterns, and `Read` to understand the current architecture in areas the plan will touch. Focus on: entry points the plan modifies, existing tests or patterns to follow, and configuration that constrains the approach. Keep exploration proportional to plan scope — a one-file fix needs a quick look; an architecture change warrants broader reading. *(Skip entirely when `--quick`.)*
 

@@ -4,7 +4,7 @@ Plan creation and completion as a Claude Code plugin — invoke `/plan-agent:imp
 
 ## Overview
 
-This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into a **manual-invoke** skill (`implementation-plan`, `disable-model-invocation: true`). Planning only happens when you explicitly call it — the skill does not auto-activate on ambient intent. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans from backlog items.
+This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into the `implementation-plan` skill. The skill is both **command-invocable** (`/plan-agent:implementation-plan <objective>`) and **model-invocable** — it auto-activates when you ask to create a plan document, generate an HTML plan, or write a plan file. It does not activate on generic planning questions (those route to built-in Plan Mode). Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans from backlog items.
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
@@ -18,7 +18,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 
 | Component | Type | Activation |
 |-----------|------|-----------|
-| `implementation-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:implementation-plan <objective>` |
+| `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
@@ -47,11 +47,11 @@ claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent
 
 ### Skills
 
-#### `implementation-plan` — Manual invoke only
+#### `implementation-plan` — Command or auto-activate
 
 Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and HTML metadata.
 
-Manual invoke only — use `/plan-agent:implementation-plan` explicitly. This skill has `disable-model-invocation: true` and will not auto-activate on ambient intent.
+Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it auto-activate when you ask to create a plan document, generate an HTML plan, or write a plan file. Generic planning questions ("plan how to do X") route to built-in Plan Mode, not this skill.
 
 ```
 /plan-agent:implementation-plan create a todo app for ravens
@@ -237,9 +237,9 @@ plan-agent/
 
 ### `implementation-plan` Skill
 
-Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:implementation-plan <objective>`.
+Command-invocable via `/plan-agent:implementation-plan <objective>` and model-invocable on plan-document intent (scoped to artifact requests — does not trigger on generic planning questions).
 
-- **Invocation & Arguments** — reads `$ARGUMENTS`; parses objective + `--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority` flags with smart defaults
+- **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
