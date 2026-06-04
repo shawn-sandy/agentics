@@ -471,7 +471,9 @@
     document.getElementById('galleryGrid').addEventListener('click', function(e) {
       var btn = e.target.closest('.open-img-link');
       if (!btn) return;
-      imgDialogImg.src = btn.getAttribute('data-img');
+      var imgSrc = btn.getAttribute('data-img');
+      if (!imgSrc || !/^[a-zA-Z0-9._-]+\.png$/i.test(imgSrc)) return;
+      imgDialogImg.src = encodeURI(imgSrc);
       imgDialogImg.alt = btn.getAttribute('data-topic') || 'Social card image';
       imgDialog.showModal();
     });
