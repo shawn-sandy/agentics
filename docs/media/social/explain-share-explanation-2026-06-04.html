@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>share-explanation</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --bullet-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bullets {
+      padding: 20px 32px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: rgba(56, 139, 253, 0.05);
+      border-left: 3px solid var(--bullet-accent);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .bullets li::before {
+      content: '→';
+      color: var(--bullet-accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-badge {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="badge">skill</div>
+      <h1>share-explanation</h1>
+      <p class="subtitle">Answers &quot;how does X work&quot; by reading the actual source first, then synthesizing — never from memory.</p>
+    </div>
+
+    <ul class="bullets">
+      <li>Locate templates and load SOCIAL.md platform/tone defaults</li>
+      <li>Parse the target name and any --flags from the request</li>
+      <li>Resolve source via a 5-tier ladder: skill, command, file, symbol, keyword</li>
+      <li>Synthesize a structured explanation from only the matched files</li>
+      <li>Scrub for secrets — a BLOCKED result is a hard stop</li>
+      <li>Draft platform-aware copy that leads with insight, not process</li>
+      <li>Reuse-check docs/media/social before regenerating</li>
+      <li>Populate feature-card (skill) or quote-card (concept), then save</li>
+      <li>Screenshot via Playwright, then deliver explanation, copy, and PNG</li>
+    </ul>
+
+    <div class="card-footer">
+      <span class="footer-note">/social-media-tools:share-explanation &lt;target&gt;</span>
+      <span class="footer-badge">skill</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">The hardest part of "explain how X works" isn't the writing. It's making sure the explanation matches the code instead of your memory of it.
+
+The share-explanation skill in our social-media-tools plugin solves this by reading the source first, then writing. Ask it "how does X work" and it runs a five-tier resolution ladder to find the real files before saying a word:
+
+1. Exact skill match (SKILL.md)
+2. Command file
+3. Any source file by name
+4. Function or symbol grep
+5. Keyword / concept grep as a last resort
+
+It stops at the first hit, so cheap exact matches win before expensive searches — and the search is bounded to the git root, never wandering outside the project.
+
+Then it hands the synthesized explanation to the same pipeline every share-* skill uses: a security scrub that hard-stops on any leaked secret, platform-aware copy, a dark-mode card, and a saved file you can reopen later.
+
+One design choice stands out: the explanation is generated from the files, not from the model's assumptions. That's the difference between docs that drift and docs that stay true.
+
+Run it with:
+/social-media-tools:share-explanation &lt;target&gt;
+
+Follow for more Claude Code plugin internals like this.
+
+#ClaudeCode #DeveloperTools #AITools #Plugins</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">Explaining your own tooling drifts the moment you write from memory.
+
+The share-explanation skill reads the source first — a 5-tier file-resolution ladder finds the real files, then synthesizes. Code-true docs, not vibes.
+
+#ClaudeCode #DeveloperTools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">The share-explanation skill (part of the agentics social-media-tools plugin) won't explain a component from memory — it reads the source first. A five-tier resolution ladder finds the actual files, then it synthesizes. Explanations that match the code, not your assumptions.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">Most docs carry a quiet bug: they're written from memory, not the code, so they drift the day after you write them. The share-explanation skill takes the opposite path — it resolves the real source files through a five-tier ladder (exact skill match down to a keyword grep), reads them, then synthesizes. It reuses the same scrub-copy-card-save pipeline as every share skill, so explaining a component and sharing it are one motion. Subscribe for more on Claude Code plugins that document themselves.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.4.0 — 2026-06-04 — Add craft-prompt skill
+
+### Added
+
+- **`/plan-agent:craft-prompt [intent]`** — new skill (`disable-model-invocation: true`) that interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in Anthropic's official Claude Prompting Best Practices.
+  - **Phase 1 — Classify**: identifies the prompt type (system, task, creative, analytical) and applies a technique matrix mapping each type to its applicable best-practice layers.
+  - **Phase 2 — Interview**: uses `AskUserQuestion` with type-specific questions derived from the technique matrix; always asks the user's *why* (per "Add context to improve performance"); offers progressive depth on user opt-in.
+  - **Phase 3 — Structure**: maps interview answers to XML layers — `<role>`, `<instructions>`, `<constraints>`, `<context>`, `<example>`, `<thinking>`, `<document>` — applying only the techniques selected for the classified type.
+  - **Phase 4 — Draft**: reads the appropriate template from `references/` (`system-prompt-template.md`, `task-prompt-template.md`, `creative-prompt-template.md`, `analytical-prompt-template.md`) and substitutes structured content into placeholders.
+  - **Phase 5 — Recommend**: uses `ToolSearch` to surface 1–3 installed skills/agents that may achieve the goal directly, with invocation syntax and rationale.
+  - **Phase 6 — Deliver**: presents the assembled prompt in a fenced block with technique header and tool recommendations.
+- **`references/best-practices-reference.md`** — distilled summary of all eight core techniques from Anthropic's Claude Prompting Best Practices guide, organized by technique name with actionable implementation notes and applied-in phase references.
+- **`references/system-prompt-template.md`** — parameterized template with `<role>`, `<instructions>`, `<constraints>` XML structure plus placeholder guide and assembled example.
+- **`references/task-prompt-template.md`** — parameterized template with `<context>`, `<example>`, `<thinking>` scaffolding, CoT steps, and output format section; includes realistic refactoring example.
+- **`references/creative-prompt-template.md`** — parameterized template with role assignment, voice description, context block, and style requirements; positive framing throughout.
+- **`references/analytical-prompt-template.md`** — parameterized template with `<document>` grounding, `<thinking>` CoT, quote-extraction instruction, self-check, and output format.
+
+---
+
 ## v1.3.2 — 2026-06-04 — Revert sort-by-created-date to mtime
 
 ### Fixed
