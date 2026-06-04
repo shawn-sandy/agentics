@@ -62,7 +62,7 @@ Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it a
 **Full invocation syntax:**
 
 ```
-/plan-agent:implementation-plan <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:implementation-plan <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
@@ -77,6 +77,7 @@ Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it a
 | `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
 | `--priority <level>` | Write `priority` to plan HTML metadata (`low`, `medium`, `high`, `critical`) |
+| `--workflow` | Always generate a workflow prompt, bypassing the complexity heuristic |
 
 **Examples with flags:**
 
@@ -85,9 +86,10 @@ Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it a
 /plan-agent:implementation-plan --no-clarify add dark mode toggle
 /plan-agent:implementation-plan --dir tmp/plans add dark mode toggle
 /plan-agent:implementation-plan --no-interview fix a config typo
+/plan-agent:implementation-plan --workflow migrate all API endpoints to v2
 ```
 
-**Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) are opt-in only and are never inferred automatically.
+**Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) and `--workflow` are opt-in only and are never inferred automatically.
 
 The skill enforces the full Steps 1–8 workflow:
 
@@ -107,8 +109,8 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed
 - **Objective card** — prominent highlighted block at the top
-- **Implement prompt** — copy-paste prompt to begin sequential implementation
-- **Workflow prompt** *(complex plans only)* — copy-paste prompt prefixed with "Run a workflow to …" that triggers Claude Code's `/workflows` runtime for parallel subagent orchestration. Generated when a plan touches 5+ files across 3+ directories, involves repetitive per-file changes, includes parallelizable steps, or requires cross-checking.
+- **Implement prompt** — Copy button produces a concise action-oriented prompt with plan status, step/criteria progress counts, and numbered instructions to implement directly from the plan file
+- **Workflow prompt** *(expandable)* — collapsible "Run as workflow" section that reveals a copy-paste prompt for parallel subagent orchestration via `/workflows`. Generated automatically for complex plans (5+ files across 3+ directories, repetitive per-file changes, parallelizable steps, or adversarial review needs) or explicitly with `--workflow`
 - **Step cards** — numbered, each with an expandable *Verify* disclosure
 - **Interactive checkboxes** — acceptance criteria the user can tick in the browser, with a live progress bar
 - **Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment

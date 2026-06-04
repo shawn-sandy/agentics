@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.3.0 — 2026-06-04 — Rich implementation prompt with plan context
+
+### Changed
+
+- **SKELETON.html**: `copyCmd()` now calls `buildImplementPrompt()` which builds a concise action-oriented prompt from the plan's live DOM state — includes the short implement prompt, a status summary with step/criteria progress counts, and numbered instructions directing the implementer to read the plan, implement todo steps, verify criteria, and complete the checklist directly in the plan file.
+- **SKELETON.html**: workflow prompt row converted from a static `<div>` to an expandable `<details>` element — collapsed by default with summary "Run as workflow — launch parallel subagents", reducing visual clutter while keeping the workflow option accessible.
+- **SKILL.md Step 2**: documented the new "Full implementation prompt (Copy behavior)" paragraph explaining the DOM-driven rich prompt.
+- **SKILL.md flags**: added `--workflow` flag to force workflow prompt generation, bypassing the complexity heuristic.
+
+---
+
 ## v1.2.0 — 2026-06-04 — Make implementation-plan model-invocable
 
 ### Changed
