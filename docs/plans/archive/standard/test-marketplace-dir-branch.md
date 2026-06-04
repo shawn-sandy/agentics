@@ -1,5 +1,5 @@
 ---
-status: draft
+status: todo
 branch: refactor/marketplace-dirs
 created: 2026-04-05
 ---
