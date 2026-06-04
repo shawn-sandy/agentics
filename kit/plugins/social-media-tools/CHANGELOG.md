@@ -1,5 +1,15 @@
 # Changelog — social-media-tools
 
+## v2.9.1 — 2026-06-04 — Enforce all platforms and broaden share-explanation scope
+
+### Fixed
+
+- `platforms.md`: added explicit "always offer all five options, never filter" rule so skills cannot selectively hide platforms in AskUserQuestion.
+- `share-init`: added missing Substack platform option and canonical token mapping.
+- `share-explanation`: broadened description and intro scope from "plugin components" to any project file, component, or concept.
+
+---
+
 ## v2.9.0 — 2026-06-04 — Open gallery images in a native dialog modal
 
 ### Changed
