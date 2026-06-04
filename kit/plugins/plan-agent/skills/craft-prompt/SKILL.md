@@ -1,6 +1,6 @@
 ---
 name: craft-prompt
-description: "Craft-prompt skill — interviews users about their intent and constraints, then assembles a copy-pasteable AI prompt grounded in Anthropic's best practices (clarity, XML structure, role, examples, CoT, output format). Use via /plan-agent:craft-prompt."
+description: "Craft-prompt: interviews users and assembles a structured AI prompt using Anthropic best-practice techniques. Use when the user runs /plan-agent:craft-prompt or asks to craft a prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
 allowed-tools: AskUserQuestion, ToolSearch, Read
@@ -35,8 +35,10 @@ After classifying, apply the **technique matrix** — the set of Anthropic best-
 |-------------|----------------------|
 | system      | Role assignment, XML structure (`<instructions>`, `<constraints>`), output format, guardrails |
 | task        | Clarity/directness, XML structure (`<context>`, `<example>`), thinking/CoT scaffolding, output format |
-| creative    | Role assignment, tone/voice instructions, context/motivation, positive framing |
+| creative    | Role assignment, tone/voice instructions, context/motivation, output format, positive framing |
 | analytical  | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
+
+If the input does not clearly match any single type, ask the user to clarify via `AskUserQuestion` with the four types as options: "Which best describes what you're building?" — then proceed with the chosen type.
 
 Announce the classified type and selected technique matrix to the user in one short sentence:
 > "Classified as **task** prompt — I'll apply: clarity, XML context tags, CoT scaffolding, and output format."
@@ -62,6 +64,7 @@ Use **AskUserQuestion** with a batched set of 2–3 essential questions determin
 **creative prompt questions:**
 - What style, voice, or tone should the output have — any reference works? (feeds Role + Tone)
 - Who is the intended audience and what emotional response should the writing evoke? (feeds Context)
+- What length and structure should the output have — a single paragraph, multiple stanzas, a scene? (feeds Output Format)
 - *Why* this piece — what makes it worth creating right now? (feeds motivation)
 
 **analytical prompt questions:**
@@ -80,7 +83,8 @@ Apply the XML structural techniques selected by the technique matrix from Phase 
 Map interview answers to XML layers:
 
 - **Role assignment** (system + creative types): wrap persona/role answer in `<role>...</role>`
-- **XML structure** (system + task types): wrap instructions in `<instructions>...</instructions>`, constraints in `<constraints>...</constraints>`, context in `<context>...</context>`
+- **XML structure — instructions/constraints** (system type only): wrap instructions in `<instructions>...</instructions>`, constraints in `<constraints>...</constraints>`
+- **Context block** (task + creative types): wrap background and audience context in `<context>...</context>`
 - **Examples** (task type): prepare `<example>...</example>` slot with placeholder from interview answer
 - **Thinking/CoT** (task + analytical types): add `<thinking>...</thinking>` scaffold before the main instruction
 - **Document grounding** (analytical type): add `<document>{{DOCUMENT_CONTENT}}</document>` wrapper and quote-extraction instruction
@@ -95,12 +99,12 @@ Skip any layer whose type is not in the technique matrix for this prompt.
 Assemble the final prompt by reading the relevant template from this skill's references/ directory, substituting the structured Phase 3 output into the template placeholders.
 
 Template selection by type:
-- system → references/system-prompt-template.md
-- task → references/task-prompt-template.md
-- creative → references/creative-prompt-template.md
-- analytical → references/analytical-prompt-template.md
+- system → `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/system-prompt-template.md`
+- task → `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/task-prompt-template.md`
+- creative → `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/creative-prompt-template.md`
+- analytical → `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/analytical-prompt-template.md`
 
-Read the template with the Read tool (path: `kit/plugins/plan-agent/skills/craft-prompt/references/<type>-prompt-template.md`).
+Read the template with the Read tool, resolving the path as `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/<type>-prompt-template.md`. If `${CLAUDE_PLUGIN_ROOT}` is unavailable, fall back to a Glob search: `Glob("**/plan-agent/skills/craft-prompt/references/<type>-prompt-template.md")`.
 
 Substitute all {{PLACEHOLDER}} values in the template with the structured content from Phase 3, the interview answers from Phase 2, and the user's intent from Phase 1. Remove any placeholder lines where the technique was not selected by the matrix (e.g. remove `<thinking>` block for creative prompts).
 
@@ -136,7 +140,7 @@ Present the assembled prompt in a fenced code block the user can copy-paste dire
 
 Format:
 
-```
+````
 **Prompt type:** task — techniques applied: Clarity, XML structure, CoT scaffolding, Output format
 
 ```text
@@ -145,6 +149,6 @@ Format:
 
 **Installed tools that may achieve this directly:**
 - /code-review — Reviews code for bugs and quality. Use when the refactoring goal is code quality rather than transformation.
-```
+````
 
 After delivering, offer: "Want me to refine this further? I can add examples, tighten the output format, or adjust the tone."
