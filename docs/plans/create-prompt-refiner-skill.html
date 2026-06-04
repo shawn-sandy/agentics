@@ -7,9 +7,9 @@
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-04">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/create-prompt-refiner-skill.html &mdash; Ship a prompt-refiner skill that interviews users and generates optimized AI prompts">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/create-prompt-refiner-skill.html &mdash; Ship a prompt-refiner skill that interviews users and generates optimized AI prompts">
-<title>Plan: Create prompt-refiner skill</title>
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts">
+<title>Plan: Create refine-prompt skill</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -895,7 +895,7 @@
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Create prompt-refiner skill</h1>
+      <h1 class="plan-title">Create refine-prompt skill</h1>
       <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
@@ -939,13 +939,13 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a <code>prompt-refiner</code> skill that interviews users about their intent and constraints, then generates a well-structured, copy-pasteable AI prompt grounded in <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s official Claude Prompting Best Practices</a> &mdash; applying the right combination of clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting for each prompt type &mdash; plus recommendations for installed skills, agents, and workflows that can achieve the goal directly.</p>
+      <p>Ship a <code>refine-prompt</code> skill that interviews users about their intent and constraints, then generates a well-structured, copy-pasteable AI prompt grounded in <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s official Claude Prompting Best Practices</a> &mdash; applying the right combination of clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting for each prompt type &mdash; plus recommendations for installed skills, agents, and workflows that can achieve the goal directly.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/create-prompt-refiner-skill.html &mdash; Ship a prompt-refiner skill that interviews users and generates optimized AI prompts</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -953,7 +953,7 @@
     <!-- ── Workflow prompt ──────────────────────────────────────── -->
     <div class="plan-workflow">
       <span class="plan-workflow-label">Workflow</span>
-      <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/create-prompt-refiner-skill.html &mdash; Ship a prompt-refiner skill that interviews users and generates optimized AI prompts</code>
+      <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts</code>
       <button class="copy-workflow-btn" type="button"
               onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
     </div>
@@ -978,8 +978,8 @@
         Context
       </h2>
       <p>Anthropic publishes a comprehensive <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Claude Prompting Best Practices</a> guide covering clarity, XML structuring, few-shot examples, role assignment, thinking/CoT, output formatting, and agentic patterns. Most users never read it &mdash; they write vague instructions, skip context, omit output format specs, and don&#39;t leverage techniques like <code>&lt;example&gt;</code> tags, <code>&lt;thinking&gt;</code> scaffolds, or document-grounding patterns that the guide recommends.</p>
-      <p>The agentics marketplace already ships 12 plugins with dozens of skills and agents. A prompt-refiner skill closes the loop: instead of the user guessing the right prompt or the right technique from the guide, the skill interviews them, applies the relevant best practices automatically (clarity &rarr; XML structure &rarr; role &rarr; examples &rarr; CoT &rarr; output format), and surfaces installed capabilities that match their intent &mdash; turning every user into a power user without requiring them to study the guide.</p>
-      <p>This skill lives inside the existing <code>plan-agent</code> plugin at <code>kit/plugins/plan-agent/skills/prompt-refiner/</code>, since both plan-agent and prompt-refiner are about structuring user intent into well-formed output. Adding it to plan-agent avoids creating a standalone plugin for a single skill and follows the domain-container naming convention. The <code>references/</code> directory includes a distilled version of the Anthropic best practices organized by technique, so the skill can cite specific guidelines as it builds the prompt.</p>
+      <p>The agentics marketplace already ships 12 plugins with dozens of skills and agents. A refine-prompt skill closes the loop: instead of the user guessing the right prompt or the right technique from the guide, the skill interviews them, applies the relevant best practices automatically (clarity &rarr; XML structure &rarr; role &rarr; examples &rarr; CoT &rarr; output format), and surfaces installed capabilities that match their intent &mdash; turning every user into a power user without requiring them to study the guide.</p>
+      <p>This skill lives inside the existing <code>plan-agent</code> plugin at <code>kit/plugins/plan-agent/skills/refine-prompt/</code>, since both plan-agent and refine-prompt are about structuring user intent into well-formed output. Adding it to plan-agent avoids creating a standalone plugin for a single skill and follows the domain-container naming convention. The <code>references/</code> directory includes a distilled version of the Anthropic best practices organized by technique, so the skill can cite specific guidelines as it builds the prompt.</p>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -996,12 +996,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the <code>prompt-refiner</code> skill directory inside the existing <code>plan-agent</code> plugin</span>
+                <span class="step-chip-text">Add the <code>refine-prompt</code> skill directory inside the existing <code>plan-agent</code> plugin</span>
               </div>
-              <div class="step-why">The plan-agent plugin already exists with its own <code>plugin.json</code>, skills, and marketplace entry. Adding a new skill directory under <code>kit/plugins/plan-agent/skills/prompt-refiner/</code> (with <code>references/</code> for templates) is all that&rsquo;s needed &mdash; no new plugin scaffold, no new <code>plugin.json</code>, no marketplace registration.</div>
+              <div class="step-why">The plan-agent plugin already exists with its own <code>plugin.json</code>, skills, and marketplace entry. Adding a new skill directory under <code>kit/plugins/plan-agent/skills/refine-prompt/</code> (with <code>references/</code> for templates) is all that&rsquo;s needed &mdash; no new plugin scaffold, no new <code>plugin.json</code>, no marketplace registration.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Run <code>ls kit/plugins/plan-agent/skills/prompt-refiner/</code> and confirm the directory exists with a <code>references/</code> subdirectory. Confirm <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> still has <code>&quot;name&quot;: &quot;plan-agent&quot;</code> and was not modified.</div>
+                <div class="verify-body">Run <code>ls kit/plugins/plan-agent/skills/refine-prompt/</code> and confirm the directory exists with a <code>references/</code> subdirectory. Confirm <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> still has <code>&quot;name&quot;: &quot;plan-agent&quot;</code> and was not modified.</div>
               </details>
             </div>
           </div>
@@ -1018,7 +1018,7 @@
               <div class="step-why">The SKILL.md is the runtime artifact &mdash; its frontmatter controls activation and its body defines the entire workflow. The pipeline maps directly to Anthropic&rsquo;s best practices guide: <strong>Classify</strong> (identify prompt type and select applicable techniques) &rarr; <strong>Interview</strong> (gather context per &ldquo;Add context to improve performance&rdquo;) &rarr; <strong>Structure</strong> (apply XML tags, role, examples per &ldquo;Structure prompts with XML tags&rdquo; and &ldquo;Give Claude a role&rdquo;) &rarr; <strong>Draft</strong> (assemble the prompt with CoT scaffolding per &ldquo;Leverage thinking capabilities&rdquo;) &rarr; <strong>Recommend</strong> (surface matching skills/agents) &rarr; <strong>Deliver</strong> (present in a copy-pasteable fenced block).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Read <code>kit/plugins/plan-agent/skills/prompt-refiner/SKILL.md</code> and confirm: (1) YAML frontmatter includes <code>name</code>, <code>description</code>, and <code>allowed-tools</code> (with <code>ToolSearch</code> listed for the Recommend phase); (2) body contains all six workflow phases with explicit references to the Anthropic best practices each phase implements; (3) <code>AskUserQuestion</code> is used in the Interview phase with batched questions.</div>
+                <div class="verify-body">Read <code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> and confirm: (1) YAML frontmatter includes <code>name</code>, <code>description</code>, <code>allowed-tools</code> (with <code>ToolSearch</code> listed for the Recommend phase), and <code>disable-model-invocation: true</code>; (2) body contains all six workflow phases with explicit references to the Anthropic best practices each phase implements; (3) <code>AskUserQuestion</code> is used in the Interview phase with batched questions.</div>
               </details>
             </div>
           </div>
@@ -1069,7 +1069,7 @@
               <div class="step-why">The Anthropic guide&rsquo;s techniques must be baked directly into each template as structural scaffolding &mdash; not left to the Draft phase to improvise. Each template implements the techniques from its row in the Step 3 matrix: the system-prompt template uses <code>&lt;role&gt;</code> tags (&ldquo;Give Claude a role&rdquo;), <code>&lt;instructions&gt;</code> and <code>&lt;constraints&gt;</code> XML wrappers (&ldquo;Structure prompts with XML tags&rdquo;), and output-format indicators (&ldquo;Be direct about the desired output&rdquo;). The task-prompt template adds <code>&lt;thinking&gt;</code> scaffolding (&ldquo;Leverage thinking capabilities&rdquo;), <code>&lt;example&gt;</code> tag slots (&ldquo;Provide examples&rdquo;), and step-by-step instruction blocks (&ldquo;Be clear and direct&rdquo;). The analytical template includes document-grounding patterns with <code>&lt;document&gt;</code> tags and quote-extraction (&ldquo;Long-context prompting&rdquo;) plus self-check instructions. The creative template uses tone-setting role assignments and positive-instruction framing. A separate <code>references/best-practices-reference.md</code> file provides a distilled summary of all seven techniques for the SKILL.md to cite.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Run <code>ls kit/plugins/plan-agent/skills/prompt-refiner/references/</code> and confirm at least five files: <code>system-prompt-template.md</code>, <code>task-prompt-template.md</code>, <code>creative-prompt-template.md</code>, <code>analytical-prompt-template.md</code>, and <code>best-practices-reference.md</code>. Read each template and confirm: (1) system template uses <code>&lt;role&gt;</code>, <code>&lt;instructions&gt;</code>, <code>&lt;constraints&gt;</code> XML tags; (2) task template includes <code>&lt;thinking&gt;</code> scaffolding and <code>&lt;example&gt;</code> slots; (3) analytical template includes <code>&lt;document&gt;</code> grounding and self-check blocks; (4) creative template uses role-based tone-setting. Confirm <code>best-practices-reference.md</code> covers all seven core techniques from the Anthropic guide.</div>
+                <div class="verify-body">Run <code>ls kit/plugins/plan-agent/skills/refine-prompt/references/</code> and confirm at least five files: <code>system-prompt-template.md</code>, <code>task-prompt-template.md</code>, <code>creative-prompt-template.md</code>, <code>analytical-prompt-template.md</code>, and <code>best-practices-reference.md</code>. Read each template and confirm: (1) system template uses <code>&lt;role&gt;</code>, <code>&lt;instructions&gt;</code>, <code>&lt;constraints&gt;</code> XML tags; (2) task template includes <code>&lt;thinking&gt;</code> scaffolding and <code>&lt;example&gt;</code> slots; (3) analytical template includes <code>&lt;document&gt;</code> grounding and self-check blocks; (4) creative template uses role-based tone-setting. Confirm <code>best-practices-reference.md</code> covers all seven core techniques from the Anthropic guide.</div>
               </details>
             </div>
           </div>
@@ -1100,10 +1100,10 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Bump <code>plan-agent</code> version in <code>.claude-plugin/marketplace.json</code> and update <code>CHANGELOG.md</code></span>
               </div>
-              <div class="step-why">Adding a new skill is a minor version bump per the marketplace versioning convention. The plan-agent plugin is already registered &mdash; no new entry is needed, just a version increment and a changelog entry documenting the new <code>prompt-refiner</code> skill.</div>
+              <div class="step-why">Adding a new skill is a minor version bump per the marketplace versioning convention. The plan-agent plugin is already registered &mdash; no new entry is needed, just a version increment and a changelog entry documenting the new <code>refine-prompt</code> skill.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Read <code>.claude-plugin/marketplace.json</code> and confirm the <code>plan-agent</code> entry&rsquo;s version has been bumped (minor increment). Read <code>kit/plugins/plan-agent/CHANGELOG.md</code> and confirm a new entry documents the addition of the <code>prompt-refiner</code> skill. Run <code>cat .claude-plugin/marketplace.json | python3 -m json.tool</code> to confirm valid JSON.</div>
+                <div class="verify-body">Read <code>.claude-plugin/marketplace.json</code> and confirm the <code>plan-agent</code> entry&rsquo;s version has been bumped (minor increment). Read <code>kit/plugins/plan-agent/CHANGELOG.md</code> and confirm a new entry documents the addition of the <code>refine-prompt</code> skill. Run <code>cat .claude-plugin/marketplace.json | python3 -m json.tool</code> to confirm valid JSON.</div>
               </details>
             </div>
           </div>
@@ -1115,12 +1115,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a <code>prompt-refiner</code> section to <code>plan-agent</code>&rsquo;s existing README</span>
+                <span class="step-chip-text">Add a <code>refine-prompt</code> section to <code>plan-agent</code>&rsquo;s existing README</span>
               </div>
-              <div class="step-why">The plan-agent README already documents existing skills. Adding a section for the new prompt-refiner skill keeps all plugin documentation in one place. The section must explain that prompts are generated using <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s Claude Prompting Best Practices</a> as the foundation, list the seven techniques, and show a concrete before/after example.</div>
+              <div class="step-why">The plan-agent README already documents existing skills. Adding a section for the new refine-prompt skill keeps all plugin documentation in one place. The section must explain that prompts are generated using <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s Claude Prompting Best Practices</a> as the foundation, list the seven techniques, and show a concrete before/after example.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Read <code>kit/plugins/plan-agent/README.md</code> and confirm it contains a <code>prompt-refiner</code> section with: overview (mentioning and linking to the Anthropic best practices guide), usage (at least one before/after example showing a vague request transformed into a structured prompt), and a feature matrix (table mapping prompt types to which of the seven best-practices techniques each type applies).</div>
+                <div class="verify-body">Read <code>kit/plugins/plan-agent/README.md</code> and confirm it contains a <code>refine-prompt</code> section with: overview (mentioning and linking to the Anthropic best practices guide), usage (at least one before/after example showing a vague request transformed into a structured prompt), and a feature matrix (table mapping prompt types to which of the seven best-practices techniques each type applies).</div>
               </details>
             </div>
           </div>
@@ -1138,11 +1138,11 @@
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1"><code>kit/plugins/plan-agent/skills/prompt-refiner/</code> directory exists with <code>SKILL.md</code> and <code>references/</code> subdirectory inside the existing plan-agent plugin</label>
+          <label for="ac1"><code>kit/plugins/plan-agent/skills/refine-prompt/</code> directory exists with <code>SKILL.md</code> and <code>references/</code> subdirectory inside the existing plan-agent plugin</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2"><code>kit/plugins/plan-agent/skills/prompt-refiner/SKILL.md</code> has valid frontmatter (<code>name</code>, <code>description</code>, <code>allowed-tools</code>) and body under 500 lines</label>
+          <label for="ac2"><code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> has valid frontmatter (<code>name</code>, <code>description</code>, <code>allowed-tools</code>, <code>disable-model-invocation: true</code>) and body under 500 lines</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
@@ -1235,7 +1235,7 @@
           <summary>Add a <code>/plan-agent:refine</code> command for explicit invocation</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Create a command file at kit/plugins/plan-agent/commands/refine.md that explicitly invokes the prompt-refiner skill. The command should accept $ARGUMENTS as the initial prompt text or intent description, pass it to the skill&#39;s Classify phase, and skip the initial &quot;what do you need?&quot; question when arguments are provided. Follow the command pattern in .claude/rules/plugin-patterns.md. Include YAML frontmatter with a description under 80 characters.</pre>
+            <pre>Create a command file at kit/plugins/plan-agent/commands/refine.md that explicitly invokes the refine-prompt skill. The command should accept $ARGUMENTS as the initial prompt text or intent description, pass it to the skill&#39;s Classify phase, and skip the initial &quot;what do you need?&quot; question when arguments are provided. Follow the command pattern in .claude/rules/plugin-patterns.md. Include YAML frontmatter with a description under 80 characters.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1255,7 +1255,7 @@
           <summary>Run <code>/skill-reviewer:reviewing-skills</code> to audit the SKILL.md quality</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Run /skill-reviewer:reviewing-skills on kit/plugins/plan-agent/skills/prompt-refiner/SKILL.md. Apply any fixes from the audit report that score below 4/5 in any dimension. Then run /skill-reviewer:auditing-allowed-tools on the same file to verify the allowed-tools list matches actual tool usage.</pre>
+            <pre>Run /skill-reviewer:reviewing-skills on kit/plugins/plan-agent/skills/refine-prompt/SKILL.md. Apply any fixes from the audit report that score below 4/5 in any dimension. Then run /skill-reviewer:auditing-allowed-tools on the same file to verify the allowed-tools list matches actual tool usage.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1284,7 +1284,7 @@
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Add a prompt-quality scoring system to the prompt-refiner skill grounded in Anthropic's seven core prompting best practices. After generating a prompt, score it on 7 dimensions matching the guide: (1) Clarity/directness, (2) Context/motivation, (3) XML structure, (4) Role assignment, (5) Examples, (6) Thinking/CoT, (7) Output formatting. Each dimension scores 0 (not applicable), 1 (missing but should be present per the technique matrix), or 2 (present and well-formed). If any applicable dimension scores 1, automatically suggest targeted improvements citing the specific guide section and offer to regenerate. Store scoring rubrics in references/scoring-rubric.md with links to the corresponding Anthropic guide sections.</pre>
+            <pre>Add a prompt-quality scoring system to the refine-prompt skill grounded in Anthropic's seven core prompting best practices. After generating a prompt, score it on 7 dimensions matching the guide: (1) Clarity/directness, (2) Context/motivation, (3) XML structure, (4) Role assignment, (5) Examples, (6) Thinking/CoT, (7) Output formatting. Each dimension scores 0 (not applicable), 1 (missing but should be present per the technique matrix), or 2 (present and well-formed). If any applicable dimension scores 1, automatically suggest targeted improvements citing the specific guide section and offer to regenerate. Store scoring rubrics in references/scoring-rubric.md with links to the corresponding Anthropic guide sections.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1297,7 +1297,7 @@
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Extend the prompt-refiner skill to adapt prompts for different AI models. Add a &quot;target model&quot; question to the interview phase (default: Claude). Store model-specific best practices in references/model-guides/ (e.g. claude-guide.md, gpt-guide.md, gemini-guide.md). Each guide documents the model&#39;s strengths, preferred prompt patterns, token limits, and quirks (e.g. Claude prefers XML tags for structure, GPT prefers markdown headers). The Draft phase selects the appropriate guide and adapts the prompt accordingly. Include a &quot;universal&quot; option that generates a model-agnostic prompt when the user doesn&#39;t know which model they&#39;ll use.</pre>
+            <pre>Extend the refine-prompt skill to adapt prompts for different AI models. Add a &quot;target model&quot; question to the interview phase (default: Claude). Store model-specific best practices in references/model-guides/ (e.g. claude-guide.md, gpt-guide.md, gemini-guide.md). Each guide documents the model&#39;s strengths, preferred prompt patterns, token limits, and quirks (e.g. Claude prefers XML tags for structure, GPT prefers markdown headers). The Draft phase selects the appropriate guide and adapts the prompt accordingly. Include a &quot;universal&quot; option that generates a model-agnostic prompt when the user doesn&#39;t know which model they&#39;ll use.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1315,12 +1315,10 @@
       <div class="optional-body">
         <ul class="unresolved-list">
           <li>
-            <details class="unresolved-item">
-              <summary>Should the skill auto-activate or require explicit invocation?</summary>
+            <details class="unresolved-item resolved">
+              <summary><s>Should the skill auto-activate or require explicit invocation?</s> <span class="step-chip" style="background:#f0fdf4;color:#16a34a;font-size:.75rem;">resolved</span></summary>
               <div class="unresolved-prompt">
-                <pre>The prompt-refiner skill could auto-activate when a user says &quot;help me write a prompt&quot; or &quot;refine this prompt&quot;, or it could be command-only (/plan-agent:refine). Auto-activation risks false positives &mdash; any mention of &quot;prompt&quot; in a coding context could trigger it. Command-only means users must discover it first. Recommend one approach with reasoning. Consider: the agentics marketplace pattern where skills like code-review auto-activate but specialized tools like tdd-loop are manual-invoke only (disable-model-invocation).</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+                <pre>Resolved: command-only with disable-model-invocation: true. &ldquo;Prompt&rdquo; is too common a word in coding contexts for safe auto-activation, and the six-phase interview pipeline is too heavyweight for a false trigger. Follows the marketplace pattern where multi-step workflows (tdd-loop, tdd-fix, issue-agent) are manual-invoke only. Users invoke via /plan-agent:refine-prompt. Discoverability comes from tab completion, /help, the plan-agent README, and the Recommend phase of other runs.</pre>
               </div>
             </details>
           </li>
