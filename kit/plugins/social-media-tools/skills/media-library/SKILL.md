@@ -80,11 +80,11 @@ If no directory is found: output "Templates not found. Install the plugin or loa
        <span class="card-file">{BASENAME}</span>
      </div>
    </a>
-   <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener" aria-label="View image: {TOPIC}">View image</a>
+   <button type="button" class="open-img-link" data-img="{BASENAME_PNG}" data-topic="{TOPIC}" aria-label="View image: {TOPIC}">View image</button>
    </div>
    ```
 
-   Only include the `.open-img-link` anchor when a matching `.png` file exists alongside the `.html` card (test with `-f "$MEDIA_DIR/${BASENAME_PNG}"`). Omit the link element entirely for cards without a screenshot to avoid dead links.
+   Only include the `.open-img-link` button when a matching `.png` file exists alongside the `.html` card (test with `-f "$MEDIA_DIR/${BASENAME_PNG}"`). Omit the button element entirely for cards without a screenshot to avoid dead controls.
 
    Where:
    - `{BASENAME}` = filename without path (e.g., `diff-add-copy-button-2026-05-27.html`)
