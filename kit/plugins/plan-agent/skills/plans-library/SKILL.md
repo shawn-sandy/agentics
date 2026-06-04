@@ -68,20 +68,21 @@ If `TEMPLATES_DIR` is empty, output:
 
 ## Step 3 — Scan plan files
 
-Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Sort newest-modified first.
+Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Sort newest-modified first and capture the result in `PLAN_FILES`.
 
 ```bash
-find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 2>/dev/null \
-  | xargs -0 ls -t 2>/dev/null
+PLAN_FILES=$(find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 2>/dev/null \
+  | xargs -0 ls -t 2>/dev/null)
 ```
 
 ---
 
 ## Step 4 — Build `{{GALLERY_ENTRIES}}`
 
-For each plan file, parse its metadata using Python 3. Output is JSON to safely handle titles that contain `|` or other special characters:
+Iterate over each file `$f` from `$PLAN_FILES` (one path per line). For each, parse its metadata using Python 3. Output is JSON to safely handle titles that contain `|` or other special characters:
 
 ```bash
+while IFS= read -r f; do
 python3 - "$f" <<'EOF'
 import re, sys, os, json
 
@@ -106,6 +107,7 @@ print(json.dumps({
     'title':   get_title(),
 }))
 EOF
+done <<< "$PLAN_FILES"
 ```
 
 Parse the JSON output with `json.loads()`. From each result, generate one `<a>` block:
