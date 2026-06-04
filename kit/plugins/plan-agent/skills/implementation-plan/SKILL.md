@@ -13,11 +13,11 @@ argument-hint: "<issue-url|#n> | <objective> [--quick] [--no-clarify] [--no-alig
 This skill supports two activation paths:
 
 - **Command invocation:** `/plan-agent:implementation-plan <objective> [flags]` — `$ARGUMENTS` contains the objective and flags. All flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`, `--type`, `--template`, `--dir`, `--priority`) are available.
-- **Model invocation (ambient activation):** Claude auto-activates this skill when the user asks to create a plan document, generate an HTML plan, or write a plan file. `$ARGUMENTS` is empty on this path. The objective is derived from the user's triggering message or recent conversation context; if the intent is too vague to infer an objective, ask once via `AskUserQuestion("What is the objective for this plan?")`. Since flags cannot be passed on the model path, ambient activation runs the full workflow (Clarify + Align + Interview) by default — users who want a fast run should use the `/plan-agent:implementation-plan` command form with flags.
+- **Model invocation (ambient activation):** Claude auto-activates this skill when the user asks to create a plan document, generate an HTML plan, or write a plan file. `$ARGUMENTS` is empty on this path. The objective is derived from the user's triggering message or recent conversation context. Before treating the derived text as a plain objective, run the same issue-reference and plan-file-reference detection described below against it — e.g. "create a plan document for #42" should detect `#42` as an issue reference and trigger Step 0.5 ingestion. If the intent is too vague to infer an objective, ask once via `AskUserQuestion("What is the objective for this plan?")`. Since flags cannot be passed on the model path, ambient activation runs the full workflow (Clarify + Align + Interview) by default — users who want a fast run should use the `/plan-agent:implementation-plan` command form with flags.
 
-Read `$ARGUMENTS` on entry:
+Read `$ARGUMENTS` on entry (on the model-invocation path, apply these same detection rules to the conversation-derived objective text):
 
-**Issue reference detection (checked first, before flag parsing):** Treat `$ARGUMENTS` as containing an issue reference if any token matches one of these three patterns:
+**Issue reference detection (checked first, before flag parsing):** Treat `$ARGUMENTS` (or the conversation-derived text on the model path) as containing an issue reference if any token matches one of these three patterns:
 - Full GitHub URL: `https://github.com/<owner>/<repo>/issues/<n>`
 - Full GitLab URL: `https://gitlab.com/<owner>/<repo>/-/issues/<n>`
 - Bare `#<n>` or plain integer (e.g. `42`) — always treated as an issue reference even when override text follows (e.g. `/plan-agent:implementation-plan #205 focus on the auth layer --quick` is valid)
