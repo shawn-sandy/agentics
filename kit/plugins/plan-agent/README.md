@@ -110,7 +110,7 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed
 - **Objective card** — prominent highlighted block at the top
 - **Implement prompt** — Copy button produces a concise action-oriented prompt with plan status, step/criteria progress counts, and numbered instructions to implement directly from the plan file
-- **Workflow prompt** *(expandable)* — collapsible "Run as workflow" section that reveals a copy-paste prompt for parallel subagent orchestration via `/workflows`. Generated automatically for complex plans (5+ files, parallelizable steps, etc.) or explicitly with `--workflow`
+- **Workflow prompt** *(expandable)* — collapsible "Run as workflow" section that reveals a copy-paste prompt for parallel subagent orchestration via `/workflows`. Generated automatically for complex plans (5+ files across 3+ directories, repetitive per-file changes, parallelizable steps, or adversarial review needs) or explicitly with `--workflow`
 - **Step cards** — numbered, each with an expandable *Verify* disclosure
 - **Interactive checkboxes** — acceptance criteria the user can tick in the browser, with a live progress bar
 - **Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment
