@@ -85,6 +85,15 @@ def create_session(user_id: int, db) -> str:
 
 def log_auth_event(event: str, username: str) -> None:
     log(event, username)
+
+def login(username: str, password: str, db) -> Optional[str]:
+    user = validate_credentials(username, password, db)
+    if user is None:
+        log_auth_event("login_failed", username)
+        return None
+    token = create_session(user.id, db)
+    log_auth_event("login_success", username)
+    return token
 </output>
 </example>
 
