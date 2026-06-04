@@ -59,7 +59,7 @@ for dirpath, dirnames, filenames in os.walk(plans_dir):
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
-plan_files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+plan_files.sort(key=lambda p: os.path.basename(p))
 
 if not plan_files:
     print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
@@ -80,17 +80,29 @@ def get_title(content, fname):
 def e(s):
     return html.escape(str(s))
 
-cards = []
+entries = []
 for f in plan_files:
     try:
         content = open(f, encoding='utf-8', errors='replace').read()
     except Exception:
         continue
-    status   = get_meta(content, 'plan-status', 'todo')
-    ptype    = get_meta(content, 'plan-type',   'untyped')
-    created  = get_meta(content, 'plan-created', '')
-    title    = get_title(content, f)
-    rel_path = os.path.relpath(f, plans_dir)
+    entries.append({
+        'path':    f,
+        'status':  get_meta(content, 'plan-status', 'todo'),
+        'type':    get_meta(content, 'plan-type',   'untyped'),
+        'created': get_meta(content, 'plan-created', ''),
+        'title':   get_title(content, f),
+    })
+
+entries.sort(key=lambda x: x['created'] or '', reverse=True)
+
+cards = []
+for entry in entries:
+    rel_path = os.path.relpath(entry['path'], plans_dir)
+    status = entry['status']
+    ptype = entry['type']
+    created = entry['created']
+    title = entry['title']
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
