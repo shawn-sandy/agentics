@@ -20,6 +20,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
+| `refine-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:refine-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
@@ -132,6 +133,27 @@ When invoked without arguments, prompts for the plan file. The skill:
 2. Searches the codebase for implementation evidence per criterion
 3. Presents a summary showing which criteria are verified vs unverified
 4. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
+
+#### `refine-prompt` — Manual invoke only
+
+Interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in Anthropic's official Claude Prompting Best Practices. Applies the right combination of techniques (clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting) based on the classified prompt type.
+
+```
+/plan-agent:refine-prompt
+/plan-agent:refine-prompt system prompt for a customer support chatbot
+/plan-agent:refine-prompt refactor Python code task prompt
+```
+
+The skill runs a six-phase pipeline:
+
+1. **Classify** — identifies the prompt type (system, task, creative, analytical) and selects the applicable technique matrix
+2. **Interview** — gathers context with type-specific `AskUserQuestion` batches; always asks the user's *why*; offers progressive depth
+3. **Structure** — maps interview answers to XML layers (`<role>`, `<instructions>`, `<constraints>`, `<context>`, `<example>`, `<thinking>`, `<document>`) — only techniques from the matrix
+4. **Draft** — reads the matching template from `references/` and substitutes structured content into placeholders
+5. **Recommend** — uses `ToolSearch` to surface 1–3 installed skills/agents that may achieve the goal directly
+6. **Deliver** — presents the assembled prompt in a fenced block with technique header and recommendations
+
+Invoke only via `/plan-agent:refine-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
 
 #### `plans-open` — Auto-activates
 

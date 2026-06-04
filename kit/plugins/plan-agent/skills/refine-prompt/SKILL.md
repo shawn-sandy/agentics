@@ -1,0 +1,150 @@
+---
+name: refine-prompt
+description: "Refine-prompt skill — interviews users about their intent and constraints, then assembles a copy-pasteable AI prompt grounded in Anthropic's best practices (clarity, XML structure, role, examples, CoT, output format). Use via /plan-agent:refine-prompt."
+disable-model-invocation: true
+argument-hint: "[intent or topic description]"
+allowed-tools: AskUserQuestion, ToolSearch, Read
+---
+
+# refine-prompt
+
+Interview the user about their prompting need, classify the prompt type, apply the applicable Anthropic best-practice techniques, and deliver a copy-pasteable, well-structured AI prompt.
+
+---
+
+## Entry — Read $ARGUMENTS
+
+On invocation via `/plan-agent:refine-prompt`, `$ARGUMENTS` contains the user's initial intent or topic. If `$ARGUMENTS` is non-empty, use it to seed Phase 1 (Classify) and skip the "what do you need?" opener. If empty, ask: "What kind of prompt do you need help crafting?"
+
+---
+
+## Phase 1 — Classify
+
+Identify the prompt type from $ARGUMENTS or the user's stated need. Classify into one of four types:
+
+| Type | When to use |
+|------|-------------|
+| **system** | A system prompt or persona for an AI assistant, chatbot, or agent |
+| **task** | A one-shot task instruction (refactor code, summarize document, translate text) |
+| **creative** | Creative writing, storytelling, tone generation, or style mimicry |
+| **analytical** | Research, analysis, comparison, or synthesis of information or documents |
+
+After classifying, apply the **technique matrix** — the set of Anthropic best-practice layers that apply to this type:
+
+| Prompt type | Applicable techniques |
+|-------------|----------------------|
+| system      | Role assignment, XML structure (`<instructions>`, `<constraints>`), output format, guardrails |
+| task        | Clarity/directness, XML structure (`<context>`, `<example>`), thinking/CoT scaffolding, output format |
+| creative    | Role assignment, tone/voice instructions, context/motivation, positive framing |
+| analytical  | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
+
+Announce the classified type and selected technique matrix to the user in one short sentence:
+> "Classified as **task** prompt — I'll apply: clarity, XML context tags, CoT scaffolding, and output format."
+
+---
+
+## Phase 2 — Interview
+
+Gather context from the user using type-specific questions grounded in Anthropic's "Add context to improve performance" principle. The key is to extract the user's *why*, not just their *what*.
+
+Use **AskUserQuestion** with a batched set of 2–3 essential questions determined by the classified type:
+
+**system prompt questions:**
+- What is the assistant's persona, name, or role? (feeds Role technique)
+- What tone and boundaries should it have — e.g. formal, concise, never discuss X? (feeds Constraints)
+- *Why* is this assistant being built — what user need or business problem does it solve? (feeds motivation context)
+
+**task prompt questions:**
+- What is the input the model will receive, and what should the output look like? (feeds Clarity + Output Format)
+- Are there edge cases or failure modes the prompt must handle explicitly? (feeds CoT scaffolding)
+- *Why* is this task being automated — what would a bad output look like? (feeds motivation/context)
+
+**creative prompt questions:**
+- What style, voice, or tone should the output have — any reference works? (feeds Role + Tone)
+- Who is the intended audience and what emotional response should the writing evoke? (feeds Context)
+- *Why* this piece — what makes it worth creating right now? (feeds motivation)
+
+**analytical prompt questions:**
+- What documents, data sources, or content will be passed to the model? (feeds Long-context patterns)
+- What is the desired analysis depth — surface summary vs. deep comparison? (feeds CoT + Output Format)
+- *Why* does this analysis matter — what decision or action does it support? (feeds motivation)
+
+After the first AskUserQuestion batch, ask: "Would you like to go deeper for a more refined prompt? I can ask 2–3 follow-up questions." Only run a second AskUserQuestion batch if the user confirms.
+
+---
+
+## Phase 3 — Structure
+
+Apply the XML structural techniques selected by the technique matrix from Phase 1 to the gathered interview responses.
+
+Map interview answers to XML layers:
+
+- **Role assignment** (system + creative types): wrap persona/role answer in `<role>...</role>`
+- **XML structure** (system + task types): wrap instructions in `<instructions>...</instructions>`, constraints in `<constraints>...</constraints>`, context in `<context>...</context>`
+- **Examples** (task type): prepare `<example>...</example>` slot with placeholder from interview answer
+- **Thinking/CoT** (task + analytical types): add `<thinking>...</thinking>` scaffold before the main instruction
+- **Document grounding** (analytical type): add `<document>{{DOCUMENT_CONTENT}}</document>` wrapper and quote-extraction instruction
+- **Self-check** (analytical type): add a final "Before responding, verify..." clause
+
+Skip any layer whose type is not in the technique matrix for this prompt.
+
+---
+
+## Phase 4 — Draft
+
+Assemble the final prompt by reading the relevant template from this skill's references/ directory, substituting the structured Phase 3 output into the template placeholders.
+
+Template selection by type:
+- system → references/system-prompt-template.md
+- task → references/task-prompt-template.md
+- creative → references/creative-prompt-template.md
+- analytical → references/analytical-prompt-template.md
+
+Read the template with the Read tool (path: `kit/plugins/plan-agent/skills/refine-prompt/references/<type>-prompt-template.md`).
+
+Substitute all {{PLACEHOLDER}} values in the template with the structured content from Phase 3, the interview answers from Phase 2, and the user's intent from Phase 1. Remove any placeholder lines where the technique was not selected by the matrix (e.g. remove `<thinking>` block for creative prompts).
+
+Apply these writing rules from Anthropic's best practices:
+- Use positive framing ("Do X" not "Don't do Y") per "Be direct about the desired output"
+- Lead with the most important instruction
+- Be specific about output format (length, structure, tone)
+- Every instruction should be actionable and unambiguous
+
+---
+
+## Phase 5 — Recommend
+
+Search the session's live tool registry for installed skills, agents, or commands that match the user's intent — they may supersede the need for a custom prompt entirely.
+
+Use ToolSearch with 2–3 keyword queries derived from the user's intent and the classified prompt type:
+- Extract the core domain keywords from the interview (e.g. "code refactor", "summarize document", "chatbot system prompt")
+- Run ToolSearch for each keyword phrase
+- Deduplicate results, filter to skills/commands/agents only (not filesystem tools)
+- Present the top 1–3 matches with: the invocation command, a one-sentence description, and a note on when it supersedes a custom prompt
+
+If no relevant tools are found, skip the recommendation block silently.
+
+---
+
+## Phase 6 — Deliver
+
+Present the assembled prompt in a fenced code block the user can copy-paste directly. Include:
+
+1. **A header line**: the classified type and techniques applied
+2. **The prompt itself** in a fenced text block
+3. **Recommendations** (from Phase 5) in a brief bulleted list below the block
+
+Format:
+
+```
+**Prompt type:** task — techniques applied: Clarity, XML structure, CoT scaffolding, Output format
+
+```text
+[assembled prompt here]
+```
+
+**Installed tools that may achieve this directly:**
+- /code-review — Reviews code for bugs and quality. Use when the refactoring goal is code quality rather than transformation.
+```
+
+After delivering, offer: "Want me to refine this further? I can add examples, tighten the output format, or adjust the tone."
