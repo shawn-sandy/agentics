@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.1 — 2026-06-04 — craft-prompt: save prompt output to file
+
+### Changed
+
+- **`craft-prompt` SKILL.md** — added **Phase 7 — Save**: after delivering the prompt in Phase 6, the skill saves it as a markdown file with a `{type}-{intent-slug}-{YYYY-MM-DD}.md` filename and YAML frontmatter (`type`, `intent`, `techniques`, `created`). Output directory resolution (first match wins): (1) `promptsDirectory` from `.claude/settings.json` (project then global); (2) `{git-root}/docs/prompts/` anchored via `git rev-parse --show-toplevel`; (3) `docs/prompts/` relative to `$PWD` if not in a git repo. Includes a uniqueness guard: appends `-2`, `-3`, etc. if the target file already exists.
+- `allowed-tools` extended with `Write`, `Bash(git *)`, and `Bash(mkdir *)` for repo-root detection, directory creation, and file save.
+
+---
+
 ## v1.4.0 — 2026-06-04 — Add craft-prompt skill
 
 ### Added

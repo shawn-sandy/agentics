@@ -3,7 +3,7 @@ name: craft-prompt
 description: "Craft-prompt: interviews users and assembles a structured AI prompt using Anthropic best-practice techniques. Use when the user runs /plan-agent:craft-prompt or asks to craft a prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
-allowed-tools: AskUserQuestion, ToolSearch, Read
+allowed-tools: AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *)
 ---
 
 # craft-prompt
@@ -152,3 +152,55 @@ Format:
 ````
 
 After delivering, offer: "Want me to refine this further? I can add examples, tighten the output format, or adjust the tone."
+
+---
+
+## Phase 7 — Save
+
+After delivering the prompt in Phase 6, save it as a markdown file in the resolved `prompts/` directory.
+
+**Resolve the output directory** (first match wins):
+
+1. Read `promptsDirectory` from `.claude/settings.json` (check project-level `.claude/settings.json` first, then `~/.claude/settings.json`). If the key is present and non-empty, strip any trailing slash and use that path as the output directory.
+2. Otherwise, anchor to the repo root: run `git rev-parse --show-toplevel` and append `/docs/prompts/` to the result. If `git rev-parse` fails (not a git repo), fall back to `docs/prompts/` relative to `$PWD`.
+
+**Create the directory** if it does not already exist:
+
+```bash
+mkdir -p "<resolved-directory>"
+```
+
+**Derive the filename:**
+
+Build the filename from three parts joined with hyphens, all lowercase kebab-case:
+1. The classified prompt type from Phase 1 (e.g. `task`, `system`, `creative`, `analytical`)
+2. A 3–5 word slug derived from the user's core intent (strip stop words; replace spaces with hyphens)
+3. Today's date in `YYYY-MM-DD` format
+
+Pattern: `{type}-{intent-slug}-{YYYY-MM-DD}.md`
+
+Examples:
+- `task-refactor-auth-middleware-2026-06-04.md`
+- `system-customer-support-bot-2026-06-04.md`
+- `analytical-compare-pricing-models-2026-06-04.md`
+
+**Uniqueness guard:** before writing, check whether `{resolved-directory}/{filename}` already exists. If it does, append `-2` to the base name (before `.md`), then `-3`, etc., until the path is unique.
+
+**Write the file** using the Write tool. The file content must be:
+
+```
+---
+type: {classified type}
+intent: {one-sentence summary of the user's stated goal}
+techniques: {comma-separated list of techniques applied}
+created: {YYYY-MM-DD}
+---
+
+# {Prompt type}: {intent slug, title-cased}
+
+{the raw assembled prompt text from Phase 4 — substituted content, NOT the Phase 6 fenced display block; embed the prompt as plain text}
+```
+
+**Confirm to the user** in one line after saving:
+
+> "Saved to `{resolved-directory}/{filename}`."
