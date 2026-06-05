@@ -4,8 +4,8 @@
 
 ### Changed
 
-- **`craft-prompt` SKILL.md** — added **Phase 7 — Save**: after delivering the prompt in Phase 6, the skill saves it as a markdown file to `${CLAUDE_PLUGIN_ROOT}/prompts/` with a `{type}-{intent-slug}-{YYYY-MM-DD}.md` filename, YAML frontmatter (`type`, `intent`, `techniques`, `created`), and a one-line confirmation to the user.
-- `allowed-tools` extended with `Write` and `Bash` to support `mkdir -p` (directory creation) and the Write tool for the file save step.
+- **`craft-prompt` SKILL.md** — added **Phase 7 — Save**: after delivering the prompt in Phase 6, the skill saves it as a markdown file with a `{type}-{intent-slug}-{YYYY-MM-DD}.md` filename and YAML frontmatter (`type`, `intent`, `techniques`, `created`). Output directory resolution (first match wins): (1) `promptsDirectory` from `.claude/settings.json` (project then global); (2) `{git-root}/docs/prompts/` anchored via `git rev-parse --show-toplevel`; (3) `docs/prompts/` relative to `$PWD` if not in a git repo. Includes a uniqueness guard: appends `-2`, `-3`, etc. if the target file already exists.
+- `allowed-tools` extended with `Write`, `Bash(git *)`, and `Bash(mkdir *)` for repo-root detection, directory creation, and file save.
 
 ---
 

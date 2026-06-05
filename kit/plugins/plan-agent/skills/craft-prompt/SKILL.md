@@ -3,7 +3,7 @@ name: craft-prompt
 description: "Craft-prompt: interviews users and assembles a structured AI prompt using Anthropic best-practice techniques. Use when the user runs /plan-agent:craft-prompt or asks to craft a prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
-allowed-tools: AskUserQuestion, ToolSearch, Read, Write, Bash
+allowed-tools: AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *)
 ---
 
 # craft-prompt
@@ -161,10 +161,10 @@ After delivering the prompt in Phase 6, save it as a markdown file in the resolv
 
 **Resolve the output directory** (first match wins):
 
-1. Read `pluginsDirectory` from `.claude/settings.json` (check project-level `.claude/settings.json` first, then `~/.claude/settings.json`). If the key is present, append `/prompts/` to its value — use that as the output directory.
-2. Otherwise, use `docs/prompts/` relative to `$PWD`. Create it if it does not exist.
+1. Read `promptsDirectory` from `.claude/settings.json` (check project-level `.claude/settings.json` first, then `~/.claude/settings.json`). If the key is present and non-empty, strip any trailing slash and use that path as the output directory.
+2. Otherwise, anchor to the repo root: run `git rev-parse --show-toplevel` and append `/docs/prompts/` to the result. If `git rev-parse` fails (not a git repo), fall back to `docs/prompts/` relative to `$PWD`.
 
-**Create the directory** (if it does not already exist):
+**Create the directory** if it does not already exist:
 
 ```bash
 mkdir -p "<resolved-directory>"
@@ -184,9 +184,11 @@ Examples:
 - `system-customer-support-bot-2026-06-04.md`
 - `analytical-compare-pricing-models-2026-06-04.md`
 
-**Write the file** using the Write tool with this structure:
+**Uniqueness guard:** before writing, check whether `{resolved-directory}/{filename}` already exists. If it does, append `-2` to the base name (before `.md`), then `-3`, etc., until the path is unique.
 
-```markdown
+**Write the file** using the Write tool. The file content must be:
+
+```
 ---
 type: {classified type}
 intent: {one-sentence summary of the user's stated goal}
@@ -196,7 +198,7 @@ created: {YYYY-MM-DD}
 
 # {Prompt type}: {intent slug, title-cased}
 
-{the assembled prompt, exactly as delivered in Phase 6 — inside a fenced text block}
+{the raw assembled prompt text from Phase 4 — substituted content, NOT the Phase 6 fenced display block; embed the prompt as plain text}
 ```
 
 **Confirm to the user** in one line after saving:
