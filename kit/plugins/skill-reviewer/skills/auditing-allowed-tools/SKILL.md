@@ -150,13 +150,13 @@ If there are multiple recent sessions and the user's intent is ambiguous, list t
 
 ### Step 2: Run the scan script
 
-The script lives in `scripts/session_tool_scan.py` inside this skill's folder. Invoke it with an **absolute path** constructed from the SKILL.md location — do not rely on the current working directory:
+The script lives in `scripts/session_tool_scan.py` inside this skill's folder. Invoke it via `${CLAUDE_PLUGIN_ROOT}` so it resolves regardless of the current working directory:
 
 ```bash
-python3 "<absolute-path-to-this-skill-dir>/scripts/session_tool_scan.py" <jsonl-path> [--include-subagents]
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/auditing-allowed-tools/scripts/session_tool_scan.py" <jsonl-path> [--include-subagents]
 ```
 
-Replace `<absolute-path-to-this-skill-dir>` with the actual directory containing this SKILL.md (known because you just read it). Pass `--include-subagents` when the user wants subagent transcripts aggregated in, or when running Mode 3.
+If `${CLAUDE_PLUGIN_ROOT}` is unset (e.g. the skill was loaded ad hoc rather than as an installed plugin), fall back to an absolute path built from the directory containing this SKILL.md (known because you just read it). Pass `--include-subagents` when the user wants subagent transcripts aggregated in, or when running Mode 3.
 
 The script emits JSON on stdout with this shape:
 

@@ -40,7 +40,7 @@ No path in this plugin auto-posts — human review is always required before any
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/social-media-tools
+claude --plugin-dir ./kit/plugins/social-media-tools
 ```
 
 ## Usage

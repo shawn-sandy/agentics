@@ -13,7 +13,7 @@ Analyze code and suggest specific, purpose-driven tests tied to actual behavior 
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/code-testing-agent
+claude --plugin-dir ./kit/plugins/code-testing-agent
 ```
 
 ## Usage

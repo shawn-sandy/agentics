@@ -13,7 +13,7 @@ Scaffold Claude Code agent-based plugins with a guided workflow. Instead of manu
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/agent-creator
+claude --plugin-dir ./kit/plugins/agent-creator
 ```
 
 ## Usage

@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.4.8 — 2026-06-05 — Use portable plugin-dir path in README
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/product-plans` path instead of an author-specific home directory.
+
+---
+
 ## v3.4.5 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed

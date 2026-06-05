@@ -33,7 +33,7 @@ There is no `agent-branch` — branch creation is synchronous by design (you nee
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/git-agent
+claude --plugin-dir ./kit/plugins/git-agent
 ```
 
 ## Usage

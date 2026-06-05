@@ -35,7 +35,7 @@ All skills declare `allowed-tools` explicitly in their frontmatter for consisten
 
 ### Local Development
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/react-perf-analyzer
+claude --plugin-dir ./kit/plugins/react-perf-analyzer
 ```
 
 ---

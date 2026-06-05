@@ -1,5 +1,13 @@
 # Changelog — issue-agent
 
+## v0.2.3 — 2026-06-05 — Use portable plugin-dir path in README
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/issue-agent` path instead of an author-specific home directory.
+
+---
+
 ## v0.2.1 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed

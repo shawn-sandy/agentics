@@ -29,7 +29,7 @@ Writing a plan is not the same as stress-testing one. This plugin conducts a str
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-interview
+claude --plugin-dir ./kit/plugins/plan-interview
 ```
 
 ## Usage

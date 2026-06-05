@@ -76,7 +76,7 @@ experimental — see the [Agent Teams docs](https://code.claude.com/docs/en/agen
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/product-plans
+claude --plugin-dir ./kit/plugins/product-plans
 ```
 
 ## Enable Agent Teams
