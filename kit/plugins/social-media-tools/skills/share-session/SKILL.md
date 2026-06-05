@@ -45,8 +45,8 @@ happen silently with no user-visible output.
 Run silently:
 
 ```bash
-[ -n "$CLAUDE_PLUGIN_ROOT" ] && [ -d "$CLAUDE_PLUGIN_ROOT/templates" ] && \
-  echo "$CLAUDE_PLUGIN_ROOT/templates"
+[ -n "${CLAUDE_PLUGIN_ROOT}" ] && [ -d "${CLAUDE_PLUGIN_ROOT}/templates" ] && \
+  echo "${CLAUDE_PLUGIN_ROOT}/templates"
 find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
 find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
 ```

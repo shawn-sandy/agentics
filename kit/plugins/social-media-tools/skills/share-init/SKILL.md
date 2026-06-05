@@ -36,8 +36,8 @@ to the user; continue to the next step.
 Run silently:
 
 ```bash
-[ -n "$CLAUDE_PLUGIN_ROOT" ] && [ -d "$CLAUDE_PLUGIN_ROOT/references" ] && \
-  echo "$CLAUDE_PLUGIN_ROOT/references"
+[ -n "${CLAUDE_PLUGIN_ROOT}" ] && [ -d "${CLAUDE_PLUGIN_ROOT}/references" ] && \
+  echo "${CLAUDE_PLUGIN_ROOT}/references"
 find ~/.claude/plugins -path "*/social-media-tools/references" -type d 2>/dev/null | head -1
 find ~/.claude -path "*/social-media-tools/references" -type d 2>/dev/null | head -1
 ```

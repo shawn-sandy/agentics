@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Replaced hardcoded `~/devbox/agentics/...` author-specific paths with the portable `$CLAUDE_PLUGIN_ROOT` env var in the "Locate Plugin Assets" step of all 10 share skills (`share-code`, `share-init`, `share-project`, `share-explanation`, `share-video`, `share-selection`, `social-share`, `share-github`, `share-blog`, `share-session`). The `~/.claude` discovery `find` calls remain as fallbacks.
+- Replaced hardcoded `~/devbox/agentics/...` author-specific paths with the portable `${CLAUDE_PLUGIN_ROOT}` substitution (braced form, which Claude Code inline-substitutes into skill content — the unbraced form is only guaranteed in hook/MCP/LSP subprocess environments) in the "Locate Plugin Assets" step of all 10 share skills (`share-code`, `share-init`, `share-project`, `share-explanation`, `share-video`, `share-selection`, `social-share`, `share-github`, `share-blog`, `share-session`). The `~/.claude` discovery `find` calls remain as fallbacks.
 - `README.md`: local-development example now uses the repo-relative `./kit/plugins/social-media-tools` path instead of an author-specific home directory.
 
 ---
