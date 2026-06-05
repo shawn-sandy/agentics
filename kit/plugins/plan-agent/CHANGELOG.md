@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.1 — 2026-06-04 — craft-prompt: save prompt output to file
+
+### Changed
+
+- **`craft-prompt` SKILL.md** — added **Phase 7 — Save**: after delivering the prompt in Phase 6, the skill saves it as a markdown file to `${CLAUDE_PLUGIN_ROOT}/prompts/` with a `{type}-{intent-slug}-{YYYY-MM-DD}.md` filename, YAML frontmatter (`type`, `intent`, `techniques`, `created`), and a one-line confirmation to the user.
+- `allowed-tools` extended with `Write` and `Bash` to support `mkdir -p` (directory creation) and the Write tool for the file save step.
+
+---
+
 ## v1.4.0 — 2026-06-04 — Add craft-prompt skill
 
 ### Added
