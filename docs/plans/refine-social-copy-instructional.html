@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" data-status="{status}">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="{status}">
-<meta name="plan-type" content="{type}">
-<meta name="plan-created" content="{created}">
-<meta name="plan-repo" content="{repo-name}">
-<meta name="plan-implement" content="{implement-prompt}">
-<!-- Remove the next line entirely when {workflow-prompt} is empty -->
-<meta name="plan-workflow" content="{workflow-prompt}">
-<title>Plan: {title}</title>
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="refactor">
+<meta name="plan-created" content="2026-06-05">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev">
+<title>Plan: Refine social-media-tools copy to teach, not just promote</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -25,13 +24,7 @@
     --accent-bg:  #eff6ff;
     --green:      #16a34a;
     --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
     --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
     --grey-bg:    #f9fafb;
     --wish-bg:    #fdf8ff;
     --wish-border:#d8b4fe;
@@ -769,7 +762,7 @@
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt ─────────────────────────────────────────── */
   .plan-workflow {
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
@@ -850,67 +843,6 @@
     .step-chip { display: none !important; }
     a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
   }
-
-  /* ═════════════════════════════════════════════════════════════════
-     OPT-IN VISUAL COMPONENTS
-     Pure-CSS / token-driven — no CDN, no external script. These rules
-     are always present (harmless when unused); the matching <body>
-     section blocks are kept only when a plan needs them and deleted
-     otherwise. See SKILL.md → "Visual Components".
-     ═════════════════════════════════════════════════════════════════ */
-
-  /* ── Files file-tree ────────────────────────────────────────────── */
-  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
-  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
-  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
-
-  /* ── Flow / pipeline diagram ────────────────────────────────────── */
-  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
-  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
-
-  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
-  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
-  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
-  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
-
-  /* ── Bar chart (value via inline --val) ─────────────────────────── */
-  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
-  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
-  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
-  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
-
-  /* ── Data table ─────────────────────────────────────────────────── */
-  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
-  .plan-table code { font-size: .8em; }
-
-  /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
 </style>
 </head>
 <body>
@@ -925,9 +857,6 @@
   </symbol>
   <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-  </symbol>
-  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
   </symbol>
   <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
@@ -969,21 +898,21 @@
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">{title}</h1>
-      <span class="status-badge">{status}</span>
+      <h1 class="plan-title">Refine social-media-tools copy to teach, not just promote</h1>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        {created}
+        2026-06-05
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        {repo-name}
+        agentics
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        {type}
+        refactor
       </span>
     </div>
   </div>
@@ -999,10 +928,6 @@
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
       <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
@@ -1017,22 +942,22 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>{objective}</p>
+      <p>Rewire the social-media-tools voice so every generated post leads with a concrete, teachable takeaway about agentic development — turning the plugin's output from "look what I shipped" into a running, shareable curriculum that readers can learn from and apply.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt (remove entire details when {workflow-prompt} is empty) ── -->
+    <!-- ── Workflow prompt ── -->
     <details class="plan-workflow">
       <summary>Run as workflow — launch parallel subagents</summary>
       <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev</code>
         <button class="copy-workflow-btn" type="button"
                 onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
@@ -1042,7 +967,7 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / {criteria-count} done</span>
+        <span id="progress-label">0 / 7 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1057,85 +982,9 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>{context}</p>
-    </section>
-
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Files file-tree.
-         KEEP and fill {file-tree-rows} when the plan touches files
-         (most multi-file plans). DELETE this whole section element and
-         its nav entry (the "#files" link) when not needed.
-         Badge classes: file-badge-new | file-badge-modified |
-         file-badge-deleted | file-badge-generated.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-files" id="files" aria-labelledby="h-files">
-      <h2 id="h-files">
-        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
-      </h2>
-      <div class="file-tree">
-        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> {repo-name}/</div>
-        <ul class="file-list">
-          {file-tree-rows}
-          <!-- Row template (duplicate as needed):
-          <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
-          Nest a directory with: <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/</li> followed by a child <ul class="file-list">…</ul> -->
-        </ul>
-      </div>
-    </section>
-
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <!-- Flow / pipeline — remove if unused -->
-      <div class="diagram-subheading">{diagram-heading}</div>
-      <div class="pipeline">
-        {diagram-nodes}
-        <!-- Node + arrow template (duplicate; drop the trailing arrow on the last node):
-        <div class="pipeline-node"><div class="pipeline-label">Stage</div><code>label</code><div class="pipeline-sub">detail</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div> -->
-      </div>
-
-      <!-- Comparison grid — remove if unused -->
-      <div class="diagram-subheading">{compare-heading}</div>
-      <div class="compare-grid">
-        {compare-columns}
-        <!-- Column template (use compare-col-add | compare-col-neutral | compare-col-remove):
-        <div class="compare-col-add"><div class="compare-header">Title</div><ul class="compare-list"><li>item</li></ul></div> -->
-      </div>
-
-      <!-- Bar chart — remove if unused. role="img" + aria-label restates the data for screen readers -->
-      <div class="diagram-subheading">{chart-heading}</div>
-      <div class="bar-chart" role="img" aria-label="{chart-aria-label}">
-        {chart-rows}
-        <!-- Row template (set --val to a percent; show the real value in .bar-value):
-        <div class="bar-row"><span class="bar-label">label</span><span class="bar-track"><span class="bar-fill" style="--val:72%"></span></span><span class="bar-value">72%</span></div> -->
-      </div>
-
-      <!-- Data table — remove if unused. Keep <caption> and scope="col" for accessibility -->
-      <div class="diagram-subheading">{table-heading}</div>
-      <table class="plan-table">
-        <caption>{table-caption}</caption>
-        <thead>
-          <tr>{table-head-cells}<!-- <th scope="col">Column</th> --></tr>
-        </thead>
-        <tbody>
-          {table-rows}
-          <!-- Row template: <tr><td>cell</td><td>cell</td></tr> -->
-        </tbody>
-      </table>
+      <p>The social-media-tools plugin (currently v2.9.1) ships nine card-generating skills — share-code, share-selection, share-github, share-session, share-project, share-explanation, share-blog, share-video, plus the social-share router. They all draft copy from one shared doctrine in <code>references/platforms.md</code>, which today optimizes for reach and followers: a mandatory promotional "Follow CTA", a "thought leadership" framing on quote cards, and per-platform formats whose arc is hook → insight → CTA.</p>
+      <p>The owner wants the plugin to do double duty: its posts should still travel well, but they should primarily <strong>teach</strong>. Each post should leave the reader with a concrete principle or technique about agentic development they can apply — so the body of work becomes a learning resource, not a highlight reel. Because every skill reads the shared doctrine at runtime, the leverage point is centralized: change the doctrine and the per-skill Draft phases that echo it, and all skills inherit the instructional voice at once.</p>
+      <p>Confirmed decisions: keep a closing follow line but <strong>reframe it as a learn-more invitation</strong> (never a hard sell, always secondary to the takeaway); apply the refactor across the full plugin <em>and</em> the SOCIAL.md config (a new "Instructional" tone); ship as a <strong>MINOR</strong> bump to 2.10.0. Two interview rulings sharpen the doctrine: (1) the teaching-first voice is the <strong>unconditional default</strong> for every skill — the SOCIAL.md tone only nudges register (professional / conversational / technical) and can never switch the takeaway off; (2) on length-tight platforms (Twitter/X 280, Bluesky 300) the <strong>takeaway wins and the learn-more line is dropped</strong>, extending the existing "content wins" budget rule.</p>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -1152,18 +1001,101 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">{step-1-action}</span>
+                <span class="step-chip-text">Add an "Instructional Voice" doctrine to the shared references/platforms.md and reframe its CTA and per-platform formats</span>
               </div>
-              <div class="step-why">{step-1-why}</div>
+              <div class="step-why">This file is read at runtime by every card-generating skill — adding the teaching-first doctrine here propagates the new voice to all nine skills in one edit, rather than nine divergent copies.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">{step-1-verify}</div>
+                <div class="verify-body">In <code>kit/plugins/social-media-tools/references/platforms.md</code>: a new "Instructional Voice" (teach, don't just promote) section exists and states the teaching-first arc is the <strong>unconditional default</strong> for every skill (tone only nudges register, never disables the takeaway); the "Follow CTA" section's examples are learn-more framed (e.g. "more agentic-dev breakdowns like this") with explicit "secondary to the takeaway, never a hard sell" guidance and a rule that on Twitter/X and Bluesky the <strong>takeaway wins and the learn-more line is dropped</strong> when budget is tight; each entry under "Default Per-Platform Copy Formats" names a concrete takeaway/lesson element. The post arc reads hook → takeaway/lesson → learn-more.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <!-- Duplicate the block above for each additional step -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update each skill's Draft phase to require a concrete, applicable takeaway and point at the new doctrine</span>
+              </div>
+              <div class="step-why">Each SKILL.md layers content-specific copy guidance on top of the shared file; without updating these, individual skills (e.g. share-code's diff angle, share-session's recap) keep their old promotional/accomplishment-first arc.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">The Draft phases of <code>share-code</code>, <code>share-selection</code>, <code>share-github</code>, <code>share-session</code>, <code>share-project</code>, and <code>share-explanation</code> SKILL.md each instruct the model to surface a teachable takeaway ("what the reader can learn or apply") and reference the Instructional Voice doctrine. No Draft phase frames the post as accomplishment-first or "thought leadership"-first.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Rewrite the two skill-local copy-format references (share-blog, share-video) to lead with a lesson and use learn-more CTAs</span>
+              </div>
+              <div class="step-why">share-blog and share-video keep their own <code>references/platforms.md</code> with concrete LinkedIn/Substack templates; these must lead with a takeaway and reframe their subscribe/follow CTAs, or they will contradict the shared doctrine.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In <code>skills/share-blog/references/platforms.md</code> and <code>skills/share-video/references/platforms.md</code>: the LinkedIn and Substack structure lines name a takeaway/lesson as the lead element; example CTAs are learn-more / subscribe-to-learn framed, not hard-sell. Twitter/Bluesky examples still lead with the insight.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update the discovery heuristics so "shareable" is judged by teaching value</span>
+              </div>
+              <div class="step-why">share-scan and share-project decide <em>what</em> is worth posting; if their selection criteria still favor "impressive" changes over "instructive" ones, the upstream content choice undercuts the downstream instructional voice.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In <code>skills/share-scan/references/interesting-patterns.md</code>: shareability is scored by teaching/learning value (does this illustrate an agentic-dev lesson?) as a primary criterion. In <code>skills/share-project/references/topics.md</code>: the CTA note aligns with the learn-more framing from the shared doctrine.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add an "Instructional / Educational" tone to share-init and write it into the generated SOCIAL.md</span>
+              </div>
+              <div class="step-why">SOCIAL.md persists per-project register defaults that every skill reads. The teaching-first voice is always on (Step 1), so this tone only sets the <em>register</em> the lesson is delivered in — adding "Instructional / Educational" makes the educational register the recommended starting point without ever gating the takeaway.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In <code>skills/share-init/SKILL.md</code>: the Tone AskUserQuestion lists "Instructional / Educational" (recommended); the generated SOCIAL.md <code>## Defaults</code> template documents the instructional register and notes the teaching-first voice applies regardless of tone. <code>references/social-config.md</code> mentions the new tone option so the config schema stays in sync.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Reword the README, add a CHANGELOG entry, and bump marketplace.json to 2.10.0</span>
+              </div>
+              <div class="step-why">The README's "share/promote" language and the version metadata must reflect the new cross-cutting behavior; per repo convention the marketplace.json version is authoritative and a CHANGELOG entry is required for every bump.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>.claude-plugin/marketplace.json</code> shows social-media-tools at <code>2.10.0</code>; <code>kit/plugins/social-media-tools/CHANGELOG.md</code> has a 2.10.0 entry describing the instructional refactor; the README describes the teaching-first voice and the new tone. The <code>.claude/settings.json</code> JSON-validation hook passes after the marketplace.json edit.</div>
+              </details>
+            </div>
+          </div>
+        </div>
 
       </div>
     </section>
@@ -1177,13 +1109,32 @@
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">{criterion-1}</label>
+          <label for="ac1">references/platforms.md contains an Instructional Voice doctrine declared as the unconditional default, with a short-form "takeaway wins, drop the learn-more line" rule, and the Follow CTA reframed as a learn-more invitation (no "hard sell" or "thought leadership"-first language remains).</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">{criterion-2}</label>
+          <label for="ac2">Every card-generating skill's Draft phase requires a concrete, applicable takeaway and references the shared doctrine.</label>
         </li>
-        <!-- Add more <li> items as needed -->
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">share-blog and share-video copy-format references lead with a lesson/takeaway and use learn-more CTAs.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">share-scan and share-project discovery heuristics judge shareability primarily by teaching value.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">share-init offers an Instructional / Educational tone and writes it to the generated SOCIAL.md defaults; social-config.md documents it.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6">marketplace.json shows social-media-tools at 2.10.0 with a matching CHANGELOG entry and updated README framing.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7">A dry-run of one skill (e.g. share-explanation) produces copy whose lead is a teachable principle, with any follow line clearly secondary.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1195,7 +1146,9 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>{end-to-end-verification}</p>
+      <p>End-to-end: from the plugin root, run <code>grep -rniE "thought leadership|hard sell|promote" kit/plugins/social-media-tools/{references,skills} --include="*.md"</code> and confirm the only remaining hits are intentional (e.g. README descriptive text), with no copy-doctrine instruction still framing posts as promotion-first. Then grep for the new vocabulary — <code>grep -rni "instructional\|takeaway\|learn-more\|teach" kit/plugins/social-media-tools/references kit/plugins/social-media-tools/skills</code> — and confirm the doctrine, the per-skill Draft phases, and the two skill-local references all reference it.</p>
+      <p>Behavioral check: invoke <code>/social-media-tools:share-explanation "how does the security-scrub skill work"</code> and confirm the drafted LinkedIn copy opens with a teachable principle (not "Here's how X works" or a follow plug), names 2–3 applicable patterns, and ends with a learn-more line that could be deleted without breaking the post. Repeat once with <code>share-code</code> on a recent diff to confirm the diff angle leads with the lesson, not the accomplishment.</p>
+      <p>Metadata check: confirm <code>.claude-plugin/marketplace.json</code> reports 2.10.0 for social-media-tools, the CHANGELOG has the matching dated entry, and the settings.json marketplace-validation hook reports no JSON errors.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1229,7 +1182,7 @@
       </div>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
+    <!-- ── Next Steps (optional) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1237,18 +1190,27 @@
       </h2>
       <div class="next-steps-list">
 
-        <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>{next-step-1-label}</summary>
+          <summary>Regenerate the saved social cards under docs/media/social with the new voice</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>{next-step-1-prompt}</pre>
+            <pre>Review the saved social cards in docs/media/social/ in the agentics repo. For each one whose copy reads as promotion-first (accomplishment or follow-plug leads the post), regenerate it with the social-media-tools instructional voice: lead with a concrete, applicable takeaway about agentic development, keep any follow line as a secondary learn-more invitation. Report which cards you changed and which you left as-is and why.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
+        <details class="next-step-item">
+          <summary>Add an instructional-voice eval to lock the behavior in</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a lightweight evaluation for the social-media-tools plugin that runs each card-generating skill against a fixed input and asserts the drafted copy leads with a teachable takeaway and treats any follow line as optional/secondary. Place fixtures under tests/fixtures/ and document how to run the check. Do not change skill behavior — only add the eval.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <!-- Wish List -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1256,12 +1218,25 @@
 
         <details class="next-step-item wish-item">
           <summary>
-            {wish-1-label}
+            Build a dedicated "lesson-card" template for agentic-dev teaching posts
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>{wish-1-prompt}</pre>
+            <pre>Design a new social card template for the social-media-tools plugin called lesson-card.html, purpose-built for teaching posts: a prominent "what you'll learn" header, a numbered principle/steps region, and a small "try it yourself" footer instead of a follow CTA. Match the existing dark-mode design system of the other card templates, wire it into the template-selection heuristics, and document when skills should pick it.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Thread posts into a numbered "agentic dev" learning series
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Explore adding an optional "learning series" mode to the social-media-tools plugin: posts on a recurring topic get auto-numbered (e.g. "Agentic Dev #7") and cross-link to prior entries, so the body of work reads as a curriculum. Recommend where series state should live (SOCIAL.md? a manifest in docs/media/social/?) and sketch the minimal implementation.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1270,31 +1245,9 @@
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>{question-1-label}</summary>
-              <div class="unresolved-prompt">
-                <pre>{question-1-prompt}</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · {created} · {repo-name}
+      Generated by plan-agent · 2026-06-05 · agentics
     </footer>
 
   </main>

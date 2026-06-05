@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOCIAL.md</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --bullet-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bullets {
+      padding: 20px 32px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: rgba(56, 139, 253, 0.05);
+      border-left: 3px solid var(--bullet-accent);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .bullets li::before {
+      content: '→';
+      color: var(--bullet-accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-badge {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="badge">file</div>
+      <h1>SOCIAL.md</h1>
+      <p class="subtitle">Project-root config that gives every social-share skill the same defaults</p>
+    </div>
+
+    <ul class="bullets">
+      <li>Discovery: resolves at $PWD first, then the git root — works from any subdirectory</li>
+      <li>Optional load: parsed only when present; every section and value is optional</li>
+      <li>Named ## sections: Defaults, Identity, Focus, Avoid, Audience, Examples</li>
+      <li>Soft defaults: share-time flags like --platform always override the file</li>
+      <li>Generated for you by /social-media-tools:share-init — no hand-authoring needed</li>
+    </ul>
+
+    <div class="card-footer">
+      <span class="footer-note">/social-media-tools:share-init</span>
+      <span class="footer-badge">file</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">Set your repo's social voice once — and every post inherits it.
+
+That's SOCIAL.md in the agentics plugin marketplace: a plain-Markdown config at the project root that hands every social-media-tools skill the same defaults — platform, tone, hashtags, focus topics, and what to never share.
+
+How it works:
+- Skills look for it at your current dir first, then fall back to the git root, so it resolves from anywhere in the repo.
+- Named ## sections parse into variables: ## Defaults sets platform + tone + hashtags, ## Avoid filters out things like .env files, ## Focus shapes the copy angle.
+- Defaults are soft — a share-time flag like --platform always wins. Less friction, no loss of control.
+- You don't hand-author it: /social-media-tools:share-init analyzes the codebase and writes it for you.
+
+The design choice that makes it nice: convention over configuration. No JSON schema, no YAML to get wrong — just readable Markdown that stays diff-friendly in your repo.
+
+Follow for more Claude Code plugin patterns like this.
+
+#ClaudeCode #DeveloperTools #AITools #Automation</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">SOCIAL.md: one plain-Markdown file at your repo root that gives every social-share skill the same defaults — platform, tone, hashtags, and what to never post.
+
+Soft defaults, never locks: a --platform flag always overrides.
+
+#ClaudeCode #DevTools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">Neat pattern in agentics by Shawn Sandy: SOCIAL.md — a plain-Markdown file at your repo root that gives every social-share skill the same defaults (platform, tone, hashtags, exclusions).
+
+Convention over config. Set it once with share-init; override any value at share time.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">A design decision in the agentics marketplace worth borrowing: SOCIAL.md.
+
+It hands every social-sharing skill the same defaults — platform, tone, hashtags, and what to never share. The trick is the format: plain Markdown with named sections, not JSON or YAML — human-editable and diff-friendly.
+
+The principle: defaults reduce friction, never remove control. Any value is overridable at share time — config as a starting point, not a cage.
+
+Follow for more Claude Code design notes.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
