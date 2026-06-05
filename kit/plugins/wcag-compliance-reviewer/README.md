@@ -19,7 +19,7 @@ This skill is applicable for code reviews, component development, and accessibil
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/wcag-compliance-reviewer
+claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 ```
 
 ## Usage

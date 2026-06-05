@@ -41,7 +41,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent
+claude --plugin-dir ./kit/plugins/plan-agent
 ```
 
 ## Usage

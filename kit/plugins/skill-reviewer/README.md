@@ -28,7 +28,7 @@ All skills declare `allowed-tools` explicitly in their frontmatter for consisten
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/skill-reviewer
+claude --plugin-dir ./kit/plugins/skill-reviewer
 ```
 
 ## Usage

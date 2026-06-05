@@ -24,7 +24,7 @@ Review and audit Claude Code subagent definition files (`agents/*.md`) against o
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/agent-reviewer
+claude --plugin-dir ./kit/plugins/agent-reviewer
 ```
 
 ## Usage

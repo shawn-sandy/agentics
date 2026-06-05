@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.3 — 2026-06-05 — Use portable plugin-dir path in README
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/wcag-compliance-reviewer` path instead of an author-specific home directory.
+
+---
+
 ## v1.2.2 — README: sync usage documentation with current skill behavior
 
 - Updated README.md to accurately reflect current plugin capabilities, component inventory, and usage patterns.

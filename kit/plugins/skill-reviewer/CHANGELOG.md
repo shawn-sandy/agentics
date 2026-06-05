@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.2.5 — 2026-06-05 — Use portable paths for asset references
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/skill-reviewer` path instead of an author-specific home directory.
+- `auditing-allowed-tools`: invoke `session_tool_scan.py` via `${CLAUDE_PLUGIN_ROOT}` instead of a manually constructed absolute path.
+
+---
+
 ## v2.2.3 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed

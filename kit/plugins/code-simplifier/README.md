@@ -15,7 +15,7 @@ steps and before/after code examples, then applies approved changes.
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/code-simplifier
+claude --plugin-dir ./kit/plugins/code-simplifier
 ```
 
 ## Usage

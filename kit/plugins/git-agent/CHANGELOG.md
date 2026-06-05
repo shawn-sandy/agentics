@@ -1,5 +1,13 @@
 # Changelog — git-agent
 
+## v3.10.5 — 2026-06-05 — Use portable plugin-dir path in README
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/git-agent` path instead of an author-specific home directory.
+
+---
+
 ## v3.10.2 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed

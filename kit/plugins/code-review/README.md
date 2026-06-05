@@ -13,7 +13,7 @@ Structured, multi-dimensional code review across quality, bugs, security, best p
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/code-review
+claude --plugin-dir ./kit/plugins/code-review
 ```
 
 ## Usage

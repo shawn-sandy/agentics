@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.6 — 2026-06-05 — Use portable plugin-dir path in README
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/plan-interview` path instead of an author-specific home directory.
+
+---
+
 ## v2.2.4 — 2026-06-01 — Add ExitPlanMode error handling
 
 ### Fixed

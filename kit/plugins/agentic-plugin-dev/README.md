@@ -11,7 +11,7 @@ Create, manage, and validate Claude Code plugins — scaffold new plugins, manag
 
 ### Local Development
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/agentic-plugin-dev
+claude --plugin-dir ./kit/plugins/agentic-plugin-dev
 ```
 
 ## Usage

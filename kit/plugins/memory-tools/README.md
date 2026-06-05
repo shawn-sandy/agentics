@@ -13,7 +13,7 @@ Audits and optimizes CLAUDE.md project memory files against Claude Code best pra
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/memory-tools
+claude --plugin-dir ./kit/plugins/memory-tools
 ```
 
 ## Usage

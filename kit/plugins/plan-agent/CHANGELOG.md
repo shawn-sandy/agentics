@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.1 — 2026-06-05 — Use portable plugin-dir path in README
+
+### Fixed
+
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/plan-agent` path instead of an author-specific home directory.
+
+---
+
 ## v1.5.0 — 2026-06-05 — Add visual components (file-tree, diagrams, charts, tables) to plan template
 
 ### Added

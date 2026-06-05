@@ -11,7 +11,7 @@ Create GitHub or GitLab issues from any context — selection, session, bug, or 
 
 ### Local Development
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/issue-agent
+claude --plugin-dir ./kit/plugins/issue-agent
 ```
 
 ## Usage

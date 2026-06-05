@@ -33,7 +33,7 @@ Auto-generated files (sessions, caches, plugins, telemetry) are excluded.
 ### Local Development
 
 ```bash
-claude --plugin-dir ~/devbox/agentics/kit/plugins/settings-sync
+claude --plugin-dir ./kit/plugins/settings-sync
 ```
 
 ## Usage
