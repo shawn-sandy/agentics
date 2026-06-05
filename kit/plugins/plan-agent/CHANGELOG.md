@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.5.0 — 2026-06-05 — Add visual components (file-tree, diagrams, charts, tables) to plan template
+
+### Added
+
+- **`reference/SKELETON.html`** — four opt-in, pure-CSS visual components, each shipped as a `<body>` block behind a removal comment (kept and filled when relevant, deleted with its sidebar nav link otherwise):
+  - **File-tree** (`.file-tree`) — a `Files to Modify` section (`section.card-files#files`, between Context and Steps) listing files with `file-badge-new` / `file-badge-modified` / `file-badge-deleted` / `file-badge-generated` badges.
+  - **Flow / pipeline diagram** (`.pipeline`) and **comparison grid** (`.compare-grid`, with `compare-col-add` / `compare-col-neutral` / `compare-col-remove` variants) — a `Diagram` section (`section.card-diagram#diagram`). Ported and generalized from the hand-authored components in `docs/plans/build-clean-plugin-dist.html`.
+  - **Bar chart** (`.bar-chart`) — horizontal bars sized by an inline `style="--val:NN%"` custom property; script-free, with a visible `.bar-value` and a descriptive container `aria-label`.
+  - **Data table** (`.plan-table`) — accessible table styling requiring `<caption>` and `<th scope="col">` headers.
+- New `:root` tokens (`--green-border`, `--amber-bg`, `--amber-border`, `--red`, `--red-bg`, `--red-border`) so all visuals theme consistently; new `#ic-folder` icon symbol; conditional `Files` and `Diagram` sidebar nav links.
+
+### Changed
+
+- **`implementation-plan` SKILL.md** — documented the visual components: added an *Optional visual sections* subsection to **Required Structure**, an opt-in/accessibility bullet to **HTML Output Requirements**, a new **Visual Components** reference section (per-component triggers + rules), and a note in **Skeleton** that unused visual blocks are removed like `.plan-workflow`. All visuals stay pure CSS / inline SVG (no CDN); the gallery scanner is unaffected (it reads only meta tags + `<title>`).
+
+---
+
 ## v1.4.1 — 2026-06-04 — craft-prompt: save prompt output to file
 
 ### Changed

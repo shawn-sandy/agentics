@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" data-status="{status}">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="{status}">
-<meta name="plan-type" content="{type}">
-<meta name="plan-created" content="{created}">
-<meta name="plan-repo" content="{repo-name}">
-<meta name="plan-implement" content="{implement-prompt}">
-<!-- Remove the next line entirely when {workflow-prompt} is empty -->
-<meta name="plan-workflow" content="{workflow-prompt}">
-<title>Plan: {title}</title>
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-05">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo">
+<title>Plan: Publish a clean plugin distribution repo</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -25,13 +24,7 @@
     --accent-bg:  #eff6ff;
     --green:      #16a34a;
     --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
     --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
     --grey-bg:    #f9fafb;
     --wish-bg:    #fdf8ff;
     --wish-border:#d8b4fe;
@@ -769,7 +762,7 @@
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt ─────────────────────────────────────────── */
   .plan-workflow {
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
@@ -851,66 +844,141 @@
     a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
   }
 
-  /* ═════════════════════════════════════════════════════════════════
-     OPT-IN VISUAL COMPONENTS
-     Pure-CSS / token-driven — no CDN, no external script. These rules
-     are always present (harmless when unused); the matching <body>
-     section blocks are kept only when a plan needs them and deleted
-     otherwise. See SKILL.md → "Visual Components".
-     ═════════════════════════════════════════════════════════════════ */
-
-  /* ── Files file-tree ────────────────────────────────────────────── */
-  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  /* ── File tree ──────────────────────────────────────────────── */
+  .file-tree {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .85rem;
+  }
+  .file-tree-root {
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+  }
+  .file-list, .file-list ul {
+    list-style: none;
+    padding-left: 1.25rem;
+    margin: 0;
+    border-left: 1px dashed var(--border);
+  }
+  .file-list li {
+    padding: .2rem 0;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    color: var(--muted);
+  }
   .file-list li.file-dir { color: var(--text); font-weight: 600; }
-  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
-  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-list li.file-new     { color: #15803d; }
+  .file-list li.file-modified{ color: #b45309; }
+  .file-list li.file-generated{ color: var(--accent); }
+  .file-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: .1em .45em;
+    border-radius: 999px;
+  }
+  .file-badge-new       { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .file-badge-modified  { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
   .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic;
+               font-family: system-ui, sans-serif; }
 
-  /* ── Flow / pipeline diagram ────────────────────────────────────── */
-  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
-  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  /* ── Pipeline diagram ───────────────────────────────────────── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 0 auto;
+    max-width: 520px;
+  }
+  .pipeline-node {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .85rem 1.25rem;
+    background: var(--surface);
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .pipeline-label {
+    font-size: .63rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .3rem;
+  }
+  .pipeline-node code { font-size: .875rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .3rem; }
+  .pipeline-source  { border-color: #bfdbfe; background: var(--accent-bg); }
+  .pipeline-source  .pipeline-label { color: var(--accent); }
+  .pipeline-script  { border-color: #d1d5db; }
+  .pipeline-script  .pipeline-label { color: var(--muted); }
+  .pipeline-dist    { border-color: #fde68a; background: #fffbeb; }
+  .pipeline-dist    .pipeline-label { color: #d97706; }
+  .pipeline-action  { border-color: #ddd6fe; background: #faf5ff; }
+  .pipeline-action  .pipeline-label { color: #7c3aed; }
+  .pipeline-output  { border-color: #bbf7d0; background: var(--green-bg); }
+  .pipeline-output  .pipeline-label { color: var(--green); }
+  .pipeline-arrow {
+    font-size: .8rem;
+    color: var(--subtle);
+    padding: .3rem 0;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+  }
+  .pipeline-arrow em { font-style: italic; }
 
-  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
-  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
-  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
-  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
-
-  /* ── Bar chart (value via inline --val) ─────────────────────────── */
-  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
-  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
-  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
-  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
-
-  /* ── Data table ─────────────────────────────────────────────────── */
-  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
-  .plan-table code { font-size: .8em; }
-
-  /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  /* ── Allowlist split ────────────────────────────────────────── */
+  .allowlist-diagram {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 600px) { .allowlist-diagram { grid-template-columns: 1fr; } }
+  .allow-header {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .3rem .75rem;
+    border-radius: var(--radius) var(--radius) 0 0;
+    text-align: center;
+  }
+  .allow-keep      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .allow-drop      { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .allow-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .allow-list {
+    list-style: none;
+    padding: .5rem .75rem;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: var(--surface);
+  }
+  .allow-list li {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .8rem;
+    color: var(--muted);
+    padding: .15rem 0;
+  }
+  .diagram-subheading {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 1.75rem 0 .75rem;
+  }
 </style>
 </head>
 <body>
@@ -925,9 +993,6 @@
   </symbol>
   <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
-  </symbol>
-  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
   </symbol>
   <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
@@ -960,6 +1025,12 @@
   <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
   </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v8.25A2.25 2.25 0 0 0 4.5 16.5h15a2.25 2.25 0 0 0 2.25-2.25V9A2.25 2.25 0 0 0 19.5 6.75H9.88a1.5 1.5 0 0 1-1.06-.44l-.5-.5Z"/>
+  </symbol>
+  <symbol id="ic-presentation-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
@@ -969,21 +1040,21 @@
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">{title}</h1>
-      <span class="status-badge">{status}</span>
+      <h1 class="plan-title">Publish a clean plugin distribution repo</h1>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        {created}
+        2026-06-05
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        {repo-name}
+        agentics
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        {type}
+        feature
       </span>
     </div>
   </div>
@@ -999,10 +1070,8 @@
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-presentation-chart"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
       <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
@@ -1017,22 +1086,22 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>{objective}</p>
+      <p>Ship a build pipeline that mirrors the <code>agentics-kit</code> marketplace into a single clean distribution repo — keeping only each plugin's manifest, components, README, and CHANGELOG — so users who install pull plugin-required files instead of <code>docs/</code>, scratch markdown, and repo configs.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt (remove entire details when {workflow-prompt} is empty) ── -->
+    <!-- ── Workflow prompt ── -->
     <details class="plan-workflow">
       <summary>Run as workflow — launch parallel subagents</summary>
       <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo</code>
         <button class="copy-workflow-btn" type="button"
                 onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
@@ -1042,7 +1111,7 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / {criteria-count} done</span>
+        <span id="progress-label">0 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1057,85 +1126,151 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>{context}</p>
+      <p>The <code>agentics</code> repo is both the development workspace and the install source. Its <code>.claude-plugin/marketplace.json</code> registers 12 active plugins via <code>git-subdir</code> sources whose <code>url</code> points at <code>https://github.com/shawn-sandy/agentics.git</code>. When a user installs, Claude Code pulls the plugin's <code>path</code> subtree — but the working repo carries a lot that has no business in an install: a 35&nbsp;KB root <code>README.md</code>, <code>docs/</code>, <code>examples/</code>, <code>scripts/</code>, <code>.playwright-mcp/</code>, a session <code>.png</code>, <code>CLAUDE.local.md</code>, <code>.DS_Store</code> files, and assorted top-level markdown (<code>ROADMAP.md</code>, <code>SECURITY.md</code>, <code>SOCIAL.md</code>). Inside individual plugin dirs there can also be scratch notes that ship unintentionally.</p>
+      <p>The fix is a dedicated, clean distribution repo — one repo shaped exactly like the marketplace (not per-plugin repos) — generated from this source repo by a build script. The build reads <code>marketplace.json</code> <code>plugins[]</code> as the source of truth (so the six entries in <code>removed[]</code> and any reference-only directories never ship), copies only an allowlisted set of files per plugin, rewrites each <code>source.url</code> to point at the distribution repo, and publishes the result. A GitHub Action reruns the build and publishes on every release so the clean repo never drifts from source.</p>
+      <p>Decisions locked in clarification: <strong>keep rules</strong> = manifest + component dirs + README + CHANGELOG; <strong>shape</strong> = one marketplace-style repo like <code>agentics-kit</code>; <strong>automation</strong> = a build script plus a GitHub Action that publishes on release.</p>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Files file-tree.
-         KEEP and fill {file-tree-rows} when the plan touches files
-         (most multi-file plans). DELETE this whole section element and
-         its nav entry (the "#files" link) when not needed.
-         Badge classes: file-badge-new | file-badge-modified |
-         file-badge-deleted | file-badge-generated.
-         ════════════════════════════════════════════════════════════ -->
+    <!-- ── Files ─────────────────────────────────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files
       </h2>
       <div class="file-tree">
-        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> {repo-name}/</div>
+        <div class="file-tree-root">
+          <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+          agentics/
+        </div>
         <ul class="file-list">
-          {file-tree-rows}
-          <!-- Row template (duplicate as needed):
-          <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
-          Nest a directory with: <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/</li> followed by a child <ul class="file-list">…</ul> -->
+          <li class="file-dir">
+            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+            scripts/
+            <ul>
+              <li class="file-new">build-dist.mjs <span class="file-badge file-badge-new">new</span></li>
+            </ul>
+          </li>
+          <li class="file-dir">
+            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+            .github/workflows/
+            <ul>
+              <li class="file-new">publish-dist.yml <span class="file-badge file-badge-new">new</span></li>
+            </ul>
+          </li>
+          <li class="file-modified">
+            README.md <span class="file-badge file-badge-modified">modified</span>
+            <span class="file-note">add Distribution section: build command, strip rules, new install path</span>
+          </li>
+          <li class="file-modified">
+            CLAUDE.md <span class="file-badge file-badge-modified">modified</span>
+            <span class="file-note">add Distribution section</span>
+          </li>
+          <li class="file-dir">
+            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+            .claude/rules/
+            <ul>
+              <li class="file-modified">marketplace.md <span class="file-badge file-badge-modified">modified</span>
+                <span class="file-note">note that source.url rewriting is handled by the build script, not hand-edited</span>
+              </li>
+            </ul>
+          </li>
+          <li class="file-generated">
+            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+            dist/ <span class="file-badge file-badge-generated">generated</span>
+            <span class="file-note">build output — not committed to source repo</span>
+            <ul>
+              <li class="file-generated">.claude-plugin/marketplace.json <span class="file-badge file-badge-generated">rewritten</span></li>
+              <li class="file-generated">README.md <span class="file-badge file-badge-generated">generated</span></li>
+              <li class="file-generated">LICENSE <span class="file-badge file-badge-generated">copied</span></li>
+              <li class="file-generated">kit/plugins/&lt;name&gt;/ × 12 <span class="file-badge file-badge-generated">stripped</span></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
+    <!-- ── Diagram ────────────────────────────────────────────────── -->
     <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
       <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
+        <svg class="icon" aria-hidden="true"><use href="#ic-presentation-chart"/></svg>
+        Build Pipeline
       </h2>
 
-      <!-- Flow / pipeline — remove if unused -->
-      <div class="diagram-subheading">{diagram-heading}</div>
       <div class="pipeline">
-        {diagram-nodes}
-        <!-- Node + arrow template (duplicate; drop the trailing arrow on the last node):
-        <div class="pipeline-node"><div class="pipeline-label">Stage</div><code>label</code><div class="pipeline-sub">detail</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div> -->
+        <div class="pipeline-node pipeline-source">
+          <div class="pipeline-label">Source Repo</div>
+          <code>shawn-sandy/agentics</code>
+          <div class="pipeline-sub">.claude-plugin/marketplace.json &middot; kit/plugins/* (12 active)</div>
+        </div>
+        <div class="pipeline-arrow">&#8595; <em>release: published &mdash; triggers</em></div>
+        <div class="pipeline-node pipeline-action">
+          <div class="pipeline-label">GitHub Action</div>
+          <code>.github/workflows/publish-dist.yml</code>
+          <div class="pipeline-sub">checkout &rarr; setup-node &rarr; build &rarr; --check &rarr; --publish</div>
+        </div>
+        <div class="pipeline-arrow">&#8595; <em>runs</em></div>
+        <div class="pipeline-node pipeline-script">
+          <div class="pipeline-label">Build Script</div>
+          <code>scripts/build-dist.mjs</code>
+          <div class="pipeline-sub">reads plugins[] &middot; copies KEEP &middot; rewrites source.url &middot; drops removed[]</div>
+        </div>
+        <div class="pipeline-arrow">&#8595; <em>writes to</em></div>
+        <div class="pipeline-node pipeline-dist">
+          <div class="pipeline-label">Clean Output</div>
+          <code>dist/</code>
+          <div class="pipeline-sub">manifest &middot; component dirs &middot; README &middot; CHANGELOG &middot; LICENSE &mdash; no docs/ or cruft</div>
+        </div>
+        <div class="pipeline-arrow">&#8595; <em>--publish pushes to</em></div>
+        <div class="pipeline-node pipeline-output">
+          <div class="pipeline-label">Distribution Repo</div>
+          <code>shawn-sandy/agentics-kit</code>
+          <div class="pipeline-sub">/plugin marketplace add shawn-sandy/agentics-kit</div>
+        </div>
       </div>
 
-      <!-- Comparison grid — remove if unused -->
-      <div class="diagram-subheading">{compare-heading}</div>
-      <div class="compare-grid">
-        {compare-columns}
-        <!-- Column template (use compare-col-add | compare-col-neutral | compare-col-remove):
-        <div class="compare-col-add"><div class="compare-header">Title</div><ul class="compare-list"><li>item</li></ul></div> -->
+      <h3 class="diagram-subheading">Per-plugin allowlist</h3>
+      <div class="allowlist-diagram">
+        <div>
+          <div class="allow-header allow-keep">Kept</div>
+          <ul class="allow-list">
+            <li>.claude-plugin/</li>
+            <li>commands/</li>
+            <li>skills/</li>
+            <li>agents/</li>
+            <li>hooks/</li>
+            <li>hooks.json</li>
+            <li>templates/</li>
+            <li>README.md</li>
+            <li>CHANGELOG.md</li>
+            <li>LICENSE</li>
+          </ul>
+        </div>
+        <div>
+          <div class="allow-header allow-drop">Dropped</div>
+          <ul class="allow-list">
+            <li>docs/</li>
+            <li>*.local.md</li>
+            <li>.DS_Store</li>
+            <li>*.png</li>
+            <li>.playwright-mcp/</li>
+            <li>ROADMAP.md</li>
+            <li>SECURITY.md</li>
+            <li>SOCIAL.md</li>
+            <li>examples/</li>
+            <li>scripts/</li>
+          </ul>
+        </div>
+        <div>
+          <div class="allow-header allow-generated">Root (generated)</div>
+          <ul class="allow-list">
+            <li>marketplace.json</li>
+            <li>&nbsp;&nbsp;source.url &rarr; dist repo</li>
+            <li>&nbsp;&nbsp;removed[] dropped</li>
+            <li>README.md (slim)</li>
+            <li>LICENSE (copied)</li>
+          </ul>
+        </div>
       </div>
-
-      <!-- Bar chart — remove if unused. role="img" + aria-label restates the data for screen readers -->
-      <div class="diagram-subheading">{chart-heading}</div>
-      <div class="bar-chart" role="img" aria-label="{chart-aria-label}">
-        {chart-rows}
-        <!-- Row template (set --val to a percent; show the real value in .bar-value):
-        <div class="bar-row"><span class="bar-label">label</span><span class="bar-track"><span class="bar-fill" style="--val:72%"></span></span><span class="bar-value">72%</span></div> -->
-      </div>
-
-      <!-- Data table — remove if unused. Keep <caption> and scope="col" for accessibility -->
-      <div class="diagram-subheading">{table-heading}</div>
-      <table class="plan-table">
-        <caption>{table-caption}</caption>
-        <thead>
-          <tr>{table-head-cells}<!-- <th scope="col">Column</th> --></tr>
-        </thead>
-        <tbody>
-          {table-rows}
-          <!-- Row template: <tr><td>cell</td><td>cell</td></tr> -->
-        </tbody>
-      </table>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -1152,18 +1287,101 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">{step-1-action}</span>
+                <span class="step-chip-text">Scaffold <code>scripts/build-dist.mjs</code> with config and a manifest-driven plugin list</span>
               </div>
-              <div class="step-why">{step-1-why}</div>
+              <div class="step-why">A single ESM script (matching the existing <code>merge-marketplace.mjs</code> convention; no <code>package.json</code>, run via bare <code>node</code>) becomes the one entry point. Define an <code>OUT_DIR</code> (<code>dist/</code>), a <code>DIST_REPO</code> URL constant overridable via the <code>DIST_REPO_URL</code> env var, a <code>KEEP</code> allowlist (<code>.claude-plugin</code>, <code>commands</code>, <code>skills</code>, <code>agents</code>, <code>hooks</code>, <code>hooks.json</code>, <code>templates</code>, <code>README.md</code>, <code>CHANGELOG.md</code>, <code>LICENSE</code>), and a <code>DROP</code> denylist (<code>docs</code>, <code>*.local.md</code>, <code>.DS_Store</code>, <code>*.png</code>, <code>.playwright-mcp</code>). Enumerate plugins by reading <code>marketplace.json</code> <code>plugins[]</code> — never by globbing <code>kit/plugins/*</code>.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">{step-1-verify}</div>
+                <div class="verify-body"><code>node scripts/build-dist.mjs --list</code> prints exactly the 12 active plugin names (<code>memory-tools</code> … <code>issue-agent</code>) and omits the 6 in <code>removed[]</code> (<code>agent-creator</code>, <code>agent-reviewer</code>, <code>marketplace-builder</code>, <code>react-perf-analyzer</code>, <code>agentic-plugin-dev</code>, <code>code-simplifier</code>).</div>
               </details>
             </div>
           </div>
         </div>
 
-        <!-- Duplicate the block above for each additional step -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Implement the per-plugin clean copy into <code>dist/</code></span>
+              </div>
+              <div class="step-why">For each active plugin, resolve its <code>source.path</code> (e.g. <code>kit/plugins/plan-agent</code>) and recursively copy only the <code>KEEP</code> top-level entries into <code>dist/&lt;path&gt;/</code>, pruning any <code>.DS_Store</code> encountered inside kept directories. Component dirs are copied wholesale so nested support files (e.g. <code>skills/*/reference/</code>, <code>templates/</code>) come along automatically. Start from a clean <code>dist/</code> each run (delete and recreate) so stale files never linger.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">After <code>node scripts/build-dist.mjs</code>, <code>find dist/kit/plugins/plan-agent -type f</code> lists the manifest, <code>skills/</code>, <code>hooks/</code>, <code>hooks.json</code>, <code>templates/</code>, <code>README.md</code>, and <code>CHANGELOG.md</code> — and shows no <code>docs/</code>, no <code>*.local.md</code>, no <code>.DS_Store</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Emit a rewritten <code>marketplace.json</code> plus slim root files</span>
+              </div>
+              <div class="step-why">Write <code>dist/.claude-plugin/marketplace.json</code> derived from the source manifest: keep <code>name</code> (<code>agentics-kit</code>), <code>version</code>, <code>owner</code>, and every <code>plugins[]</code> entry, but rewrite each <code>source.url</code> to <code>DIST_REPO</code> (leaving <code>source.path</code> unchanged) and drop the <code>removed[]</code> array entirely. Generate a concise <code>dist/README.md</code> with the new install instructions and copy <code>LICENSE</code> to the dist root. Keep the JSON pretty-printed so the published manifest stays diffable.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>jq -r '.plugins[].source.url' dist/.claude-plugin/marketplace.json | sort -u</code> returns only the distribution repo URL; <code>jq '.removed' dist/.claude-plugin/marketplace.json</code> is <code>null</code>; <code>dist/README.md</code> and <code>dist/LICENSE</code> exist.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>--check</code> and <code>--publish</code> modes</span>
+              </div>
+              <div class="step-why"><code>--check</code> walks the built <code>dist/</code> tree and exits non-zero if any <code>DROP</code> pattern leaked through (a CI tripwire against accidental bloat). <code>--publish</code> syncs <code>dist/</code> into a checkout of the distribution repo, commits with a message referencing the source commit SHA, and pushes — authenticating via a <code>GITHUB_TOKEN</code> env var first, falling back to a PAT (<code>DIST_REPO_TOKEN</code>) when set. <strong>Caveat:</strong> the default Actions <code>GITHUB_TOKEN</code> is scoped to the source repo and usually cannot push to a separate repo like <code>agentics-kit</code>; if the cross-repo push is denied, a fine-grained PAT with write on the dist repo is required (see Unresolved Questions). Publishing must clear the target working tree first so deleted plugins disappear downstream.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">On a clean build, <code>node scripts/build-dist.mjs --check; echo $?</code> prints <code>0</code>. Temporarily drop a <code>docs/</code> folder into the <code>KEEP</code> list, rebuild, rerun <code>--check</code>, and confirm it exits non-zero with a message naming the offending path; then revert.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the <code>.github/workflows/publish-dist.yml</code> Action</span>
+              </div>
+              <div class="step-why">Trigger on <code>release: { types: [published] }</code> plus <code>workflow_dispatch</code> for manual reruns. Steps: checkout, <code>actions/setup-node</code>, <code>node scripts/build-dist.mjs --check</code> (fail fast on leakage), then <code>node scripts/build-dist.mjs --publish</code> with <code>GITHUB_TOKEN</code> wired in (and <code>DIST_REPO_TOKEN</code> as an optional override secret) and <code>DIST_REPO_URL</code> from a repo variable. Because the dist repo is separate, verify the token actually has cross-repo write during the first <code>workflow_dispatch</code> run — if the default <code>GITHUB_TOKEN</code> is rejected, switch the secret to a PAT. This keeps the clean repo in lockstep with releases without manual steps, mirroring the existing <code>version-guard.yml</code>/<code>update-readme.yml</code> patterns.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">YAML parses (<code>actionlint .github/workflows/publish-dist.yml</code> or a YAML lint) with no errors; a <code>workflow_dispatch</code> run from a test branch completes green and pushes a commit to the distribution repo.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Create the distribution repo, wire secrets, and document the flow</span>
+              </div>
+              <div class="step-why">Create the clean GitHub repo <code>shawn-sandy/agentics-kit</code>, set the <code>DIST_REPO_URL</code> variable on the source repo (and add a <code>DIST_REPO_TOKEN</code> PAT secret only if the default <code>GITHUB_TOKEN</code> can't push cross-repo), run the first publish manually, and document the build + install flow in <code>README.md</code> and <code>CLAUDE.md</code> (new "Distribution" section: how to run the build, what gets stripped, and the new <code>/plugin marketplace add</code> path). Note in <code>.claude/rules/marketplace.md</code> that <code>source.url</code> rewriting is handled by the build, not hand-edited.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In a fresh session, <code>/plugin marketplace add shawn-sandy/agentics-kit</code> then <code>/plugin install plan-agent@agentics-kit</code> installs successfully, and the installed tree contains no <code>docs/</code>, <code>*.local.md</code>, or other cruft.</div>
+              </details>
+            </div>
+          </div>
+        </div>
 
       </div>
     </section>
@@ -1177,13 +1395,36 @@
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">{criterion-1}</label>
+          <label for="ac1"><code>scripts/build-dist.mjs</code> enumerates plugins from <code>marketplace.json</code> <code>plugins[]</code>; the 6 <code>removed[]</code> plugins never appear in <code>dist/</code>.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">{criterion-2}</label>
+          <label for="ac2">Each plugin in <code>dist/</code> contains only allowlisted files (manifest, component dirs, <code>hooks.json</code>, <code>templates/</code>, <code>README.md</code>, <code>CHANGELOG.md</code>) — no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, or session PNGs.</label>
         </li>
-        <!-- Add more <li> items as needed -->
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3"><code>dist/.claude-plugin/marketplace.json</code> rewrites every <code>source.url</code> to the distribution repo and omits the <code>removed[]</code> array.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4"><code>dist/</code> root has a slim generated <code>README.md</code> with install instructions and a copied <code>LICENSE</code>.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5"><code>node scripts/build-dist.mjs --check</code> exits 0 on a clean build and non-zero when a denylisted path leaks into <code>dist/</code>.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6"><code>.github/workflows/publish-dist.yml</code> rebuilds and publishes <code>dist/</code> to the distribution repo on <code>release: published</code> (and via <code>workflow_dispatch</code>).</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7">Installing a plugin from the distribution repo (<code>/plugin install &lt;name&gt;@agentics-kit</code>) yields a working plugin with no repo cruft.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8"><code>README.md</code> and <code>CLAUDE.md</code> document the build command, the strip rules, and the new install path.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1195,7 +1436,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>{end-to-end-verification}</p>
+      <p>Run <code>node scripts/build-dist.mjs</code> locally and inspect the tree: <code>find dist -type f | sort</code> should show 12 plugin directories, each carrying only allowlisted files, plus a rewritten root <code>marketplace.json</code>, slim <code>README.md</code>, and <code>LICENSE</code>. Confirm <code>jq</code> reports a single distribution-repo <code>source.url</code> and a null <code>removed</code>. Run <code>node scripts/build-dist.mjs --check</code> and confirm exit code 0, then verify the leak tripwire by temporarily allowlisting <code>docs</code> and confirming a non-zero exit. Trigger the Action via <code>workflow_dispatch</code> and confirm it publishes a commit to the distribution repo. Finally, in a clean session, register <code>shawn-sandy/agentics-kit</code> and install <code>plan-agent</code>, then list the installed files to confirm zero cruft. The source <code>agentics</code> repo and its existing <code>marketplace.json</code> must remain unchanged except for the new script, workflow, and docs.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1229,7 +1470,7 @@
       </div>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
+    <!-- ── Next Steps ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1237,18 +1478,27 @@
       </h2>
       <div class="next-steps-list">
 
-        <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>{next-step-1-label}</summary>
+          <summary>Add a per-plugin install-size report to the build</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>{next-step-1-prompt}</pre>
+            <pre>In scripts/build-dist.mjs (the clean-distribution build for the agentics marketplace), add a post-build summary that prints, per plugin, the source file count and byte size versus the stripped dist file count and byte size, plus a total "bytes saved" line. Drive the plugin list from .claude-plugin/marketplace.json plugins[]. Keep it dependency-free (Node built-ins only) and add a --quiet flag to suppress the table in CI.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
+        <details class="next-step-item">
+          <summary>Validate the published dist marketplace in CI</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a validation step to .github/workflows/publish-dist.yml for the agentics clean-distribution pipeline: after building dist/, assert that every plugin referenced in dist/.claude-plugin/marketplace.json has a valid .claude-plugin/plugin.json at its source.path, that every source.url equals the distribution repo URL, and that no DROP-listed paths exist anywhere under dist/. Fail the job with a clear message if any check fails. Reuse the existing --check logic where possible.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <!-- Wish List -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1256,12 +1506,12 @@
 
         <details class="next-step-item wish-item">
           <summary>
-            {wish-1-label}
+            Per-plugin release tags and changelog automation
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>{wish-1-prompt}</pre>
+            <pre>Explore extending the agentics clean-distribution pipeline so each plugin gets its own version tag in the distribution repo (e.g. plan-agent-v1.4.0) generated from the marketplace.json version, with an auto-aggregated release notes body pulled from each plugin's CHANGELOG.md. Recommend whether GitHub Releases per plugin or a single rolling release is the better model for a single marketplace-shaped repo, with tradeoffs.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1270,7 +1520,7 @@
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
+    <!-- ── Unresolved Questions ─ -->
     <details class="optional-section">
       <summary>
         <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
@@ -1280,9 +1530,9 @@
         <ul class="unresolved-list">
           <li>
             <details class="unresolved-item">
-              <summary>{question-1-label}</summary>
+              <summary>Can the default GITHUB_TOKEN push to the separate agentics-kit repo?</summary>
               <div class="unresolved-prompt">
-                <pre>{question-1-prompt}</pre>
+                <pre>Investigate whether a GitHub Actions workflow in shawn-sandy/agentics can push commits to a separate same-owner repo (shawn-sandy/agentics-kit) using only the default GITHUB_TOKEN. Confirm GitHub's current behavior for cross-repository writes with the default token, and if it cannot, recommend the minimal-privilege alternative (fine-grained PAT scoped to just agentics-kit contents:write, GitHub App installation token, or SSH deploy key) with the exact secret setup steps. Output a concrete recommendation for the publish-dist.yml workflow.</pre>
                 <button class="copy-prompt-btn" type="button"
                         onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
               </div>
@@ -1294,7 +1544,7 @@
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · {created} · {repo-name}
+      Generated by plan-agent · 2026-06-05 · agentics
     </footer>
 
   </main>

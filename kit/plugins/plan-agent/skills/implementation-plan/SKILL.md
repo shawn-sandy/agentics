@@ -213,6 +213,15 @@ Every HTML plan must include the following sections rendered as visible, styled 
 - **next-steps** *(optional)* — Out-of-scope follow-ups and unsolicited ideas; never place these in `steps`. Include a prompt block the user can paste into Claude. When a next-step item would benefit from workflow orchestration (large-scale migration, multi-file audit, cross-checked research), prefix the prompt with "Run a workflow to …" so it triggers Claude Code's `/workflows` runtime when pasted. If any next-step items are visionary or blue-sky (ambitious, speculative, non-immediate), label them with a `🔭 Wish List` badge and group them in a collapsible "Wish List" subsection at the bottom of Next Steps. Realistic, actionable items stay in the main list. Each prompt `<pre>` must be followed by a copy button.
 - **unresolved-questions** *(optional)* — Collapsible `<details>` section. Omit entirely if none. Each `<pre>` prompt inside an unresolved item must be followed by a copy button.
 
+### Optional visual sections *(opt-in — include only when the content warrants)*
+
+These add scannable visuals when a plan benefits from them. All are **pure CSS / inline SVG** (the no-CDN constraint applies) and all are **opt-in**: the skeleton ships each block ready-to-fill behind a removal comment — keep and fill it when relevant, delete the whole block (and its sidebar nav link) otherwise. See the **Visual Components** section for full markup and triggers.
+
+- **files** *(optional)* — A file-tree (`.file-tree`) showing the files the plan creates/modifies/deletes, with `file-badge-new` / `file-badge-modified` / `file-badge-deleted` / `file-badge-generated` badges. Include when the plan touches more than one or two files. Rendered as `section.card-files#files`, between Context and Steps.
+- **diagram** *(optional)* — A flow/pipeline diagram (`.pipeline`) for process, data flow, or architecture stages, and/or a comparison grid (`.compare-grid`) for 2–3-way trade-offs. Include when the plan introduces a flow or a comparison worth visualising.
+- **chart** *(optional)* — A horizontal bar chart (`.bar-chart`) for distributions, before/after, or relative magnitudes. Bar width is set by an inline `style="--val:NN%"`; always show the real value in `.bar-value` and restate the data in the container's `aria-label`. May live inside the **diagram** section.
+- **table** *(optional)* — An accessible data table (`.plan-table`) for structured mappings or option matrices. Always include a `<caption>` and `<th scope="col">` headers.
+
 ## HTML Output Requirements
 
 Every plan is a **single self-contained `.html` file** — no external CSS, no CDN links, no external scripts. All styles and behaviour must be inlined.
@@ -231,6 +240,26 @@ The file must:
 - Include an **implement prompt row** (`<div class="plan-implement">`) immediately below the `.objective-card` and before `.progress-wrap`. It must contain: the `{implement-prompt}` value in `<code id="implement-cmd" aria-label="Implement prompt">`, and a Copy button with `onclick="copyCmd(this)"`. The Copy button copies a concise action-oriented prompt (built by `buildImplementPrompt()` from live DOM state including status, progress counts, and implementation instructions) — not the short `<code>` text. The copy button is hidden via CSS when `data-status="completed"`. The row is suppressed in `@media print`.
 - When a workflow prompt was generated, include an expandable **workflow prompt** (`<details class="plan-workflow">`) immediately below the `.plan-implement` row and before `.progress-wrap`. The `<summary>` reads "Run as workflow — launch parallel subagents". The inner `<div class="plan-workflow-inner">` contains: the `{workflow-prompt}` value in `<code id="workflow-cmd">`, and a Copy button with `onclick="copyWorkflow(this)"`. Collapsed by default. Hidden when `data-status="completed"` and suppressed in print. **Remove the entire `.plan-workflow` element when no workflow prompt was generated.**
 - Include a **completion checklist** section (`<section class="section-card card-completion" id="completion">`) between Verification and Next Steps with three `disabled` checkboxes for the mandatory completion requirements (step TODOs done, acceptance criteria checked, status updated). The checkboxes auto-update via JavaScript. Include a **Completion Report** (`<div class="completion-report">`) inside the checklist that initially shows "No items to report" and is populated with a `<dl class="report-list">` detailing any incomplete items and their reasons when the plan cannot be fully completed.
+- **Visual components are opt-in, not required.** The skeleton ships the optional **files** (`.file-tree`), **diagram** (`.pipeline` / `.compare-grid`), **chart** (`.bar-chart`), and **table** (`.plan-table`) blocks behind removal comments. Keep and fill a block only when the plan's content warrants it; otherwise delete the whole block **and** its matching sidebar nav `<li>` (the `#files` / `#diagram` links). The scroll-spy filters to existing sections, so removal is safe with no JS edits. Never add a CDN, `<canvas>`, or charting library — every visual stays pure CSS / inline SVG. Keep the accessibility affordances when filling: a `<caption>` and `<th scope="col">` on tables, a visible numeric `.bar-value` plus container `aria-label` on charts, and a text label (not colour alone) on every file badge.
+
+## Visual Components
+
+These four components are defined (CSS) once in `reference/SKELETON.html` and shipped as opt-in `<body>` blocks. The CSS is always present and harmless when unused; you only ever keep/delete the markup blocks. Reach for a component when its trigger matches — do not add visuals gratuitously.
+
+| Component | Use when the plan… | Markup | Fill |
+|-----------|--------------------|--------|------|
+| **File-tree** | touches more than one or two files | `.file-tree` → nested `ul.file-list` | one `<li>` per file with a `file-badge-{new\|modified\|deleted\|generated}` badge; `{file-tree-rows}` |
+| **Flow / pipeline** | has a process, data flow, or architecture sequence | `.pipeline` → `.pipeline-node` + `.pipeline-arrow` | one node per stage, arrows between; `{diagram-nodes}` |
+| **Comparison grid** | weighs a 2–3-way trade-off (kept/dropped, before/after, option A/B/C) | `.compare-grid` → `.compare-col-{add\|neutral\|remove}` | one column per side; `{compare-columns}` |
+| **Bar chart** | shows a distribution or relative magnitudes | `.bar-chart` → `.bar-row` | width via inline `style="--val:NN%"`, real value in `.bar-value`, data restated in `aria-label`; `{chart-rows}` |
+| **Data table** | maps structured data (file→change, option→behaviour) | `.plan-table` with `<caption>` + `<th scope="col">` | header cells `{table-head-cells}`, body rows `{table-rows}` |
+
+Rules:
+
+- **Opt-in.** Keep a block only when its trigger matches; delete the whole block and its sidebar nav link otherwise — exactly as you already do for `.plan-workflow` and unresolved-questions.
+- **Self-contained.** Pure CSS / inline SVG only. No CDN, no `<canvas>`, no charting library.
+- **Accessible.** Tables: `<caption>` + scoped headers. Charts: visible numeric values + a descriptive container `aria-label` (never colour-only). File badges: a text label alongside the colour.
+- **HTML-escape** all file paths, code, and user-supplied text inside these blocks (`&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`).
 
 ## Writing Style
 
@@ -245,3 +274,5 @@ Copy `reference/SKELETON.html` from this plugin's skill directory as a starter f
 Each step card in the skeleton includes a `<span class="step-chip">todo</span>` before the action text. Always write `todo` as the initial chip value — the chip visually updates to `done` via CSS when the `.step-card.completed` class is applied. Do not change the chip text from `todo` in the initial HTML output.
 
 The skeleton includes a Completion Checklist section with three fixed checkbox items (all step TODOs done, all acceptance criteria checked, status updated) and an empty Completion Report. These items are identical in every plan and have no placeholders to fill. Do not remove this section or change its checkbox items.
+
+The skeleton also ships the opt-in visual blocks (**files**, **diagram**/**chart**/**table**) behind removal comments, just like `.plan-workflow`. For each one: keep and fill it when the plan's content warrants the visual (see **Visual Components** for triggers), otherwise delete the entire block **and** its sidebar nav `<li>` (the `#files` / `#diagram` links). Their CSS stays in the skeleton's `<style>` either way — it is inert when the markup is absent.
