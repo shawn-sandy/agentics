@@ -237,8 +237,8 @@ resolved `prompts/` directory.
    present and non-empty, strip any trailing slash and use that path as the
    output directory.
 2. Otherwise, anchor to the repo root: run `git rev-parse --show-toplevel` and
-   append `./docs/prompts/` to the result. If `git rev-parse` fails (not a git
-   repo), fall back to `./docs/prompts/` relative to `$PWD`.
+   join the result with `docs/prompts` (e.g. `$(git rev-parse --show-toplevel)/docs/prompts`).
+   If `git rev-parse` fails (not a git repo), fall back to `docs/prompts` relative to `$PWD`.
 
 **Create the directory** if it does not already exist:
 
