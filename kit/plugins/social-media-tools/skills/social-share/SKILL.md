@@ -25,8 +25,8 @@ Route a natural-language share request to the right social media workflow.
 Run silently:
 
 ```bash
-ls ~/devbox/agentics/kit/plugins/social-media-tools/templates 2>/dev/null && \
-  echo "$HOME/devbox/agentics/kit/plugins/social-media-tools/templates"
+[ -n "$CLAUDE_PLUGIN_ROOT" ] && [ -d "$CLAUDE_PLUGIN_ROOT/templates" ] && \
+  echo "$CLAUDE_PLUGIN_ROOT/templates"
 find ~/.claude/plugins -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
 find ~/.claude -path "*/social-media-tools/templates" -type d 2>/dev/null | head -1
 ```

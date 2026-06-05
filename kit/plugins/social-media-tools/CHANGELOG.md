@@ -1,5 +1,14 @@
 # Changelog — social-media-tools
 
+## v2.9.2 — 2026-06-05 — Use portable plugin root for asset lookup
+
+### Fixed
+
+- Replaced hardcoded `~/devbox/agentics/...` author-specific paths with the portable `$CLAUDE_PLUGIN_ROOT` env var in the "Locate Plugin Assets" step of all 10 share skills (`share-code`, `share-init`, `share-project`, `share-explanation`, `share-video`, `share-selection`, `social-share`, `share-github`, `share-blog`, `share-session`). The `~/.claude` discovery `find` calls remain as fallbacks.
+- `README.md`: local-development example now uses the repo-relative `./kit/plugins/social-media-tools` path instead of an author-specific home directory.
+
+---
+
 ## v2.9.1 — 2026-06-04 — Enforce all platforms and broaden share-explanation scope
 
 ### Fixed
