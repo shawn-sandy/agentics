@@ -16,6 +16,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 - [Project Structure](#project-structure)
 - [Installation](#installation)
   - [Install via Marketplace (Recommended)](#install-via-marketplace-recommended)
+  - [Auto-enable for Your Team (Declarative Config)](#auto-enable-for-your-team-declarative-config)
   - [Load Locally for Testing](#load-locally-for-testing)
   - [Troubleshooting](#troubleshooting)
 - [Usage Guide](#usage-guide)
@@ -183,6 +184,42 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 ```
 
 **Or install all at once** — paste the full block above into your Claude Code session.
+
+### Auto-enable for Your Team (Declarative Config)
+
+Instead of every contributor running `/plugin marketplace add` and `/plugin install` for each plugin, you can declare the kit once in `settings.json` using two keys: `extraKnownMarketplaces` (makes Claude Code aware of the marketplace) and `enabledPlugins` (marks which plugins should be enabled by default).
+
+This repo ships these keys in **project scope** (`.claude/settings.json`). On first use, Claude Code prompts the user to trust the repo and add the marketplace; once added, the listed plugins are enabled by default — no per-plugin install commands. To enable the same kit across **all your other repos**, add the two keys to your personal **user settings** (`~/.claude/settings.json`):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "agentics-kit": {
+      "source": { "source": "github", "repo": "shawn-sandy/agentics" }
+    }
+  },
+  "enabledPlugins": {
+    "memory-tools@agentics-kit": true,
+    "code-review@agentics-kit": true,
+    "plan-interview@agentics-kit": true,
+    "wcag-compliance-reviewer@agentics-kit": true,
+    "skill-reviewer@agentics-kit": true,
+    "code-testing-agent@agentics-kit": true,
+    "git-agent@agentics-kit": true,
+    "product-plans@agentics-kit": true,
+    "settings-sync@agentics-kit": true,
+    "social-media-tools@agentics-kit": true,
+    "plan-agent@agentics-kit": true,
+    "issue-agent@agentics-kit": true
+  }
+}
+```
+
+> This config lives in `settings.json`, **not** `CLAUDE.md`. `enabledPlugins` is an object (`"name@agentics-kit": true`), not an array. Merge these keys into any existing settings rather than overwriting the file.
+
+> **Heads-up on first run and web sessions:** the marketplace add is gated by a one-time trust/consent prompt. In a non-interactive context (such as a fresh Claude Code on the web session that can't answer prompts or run `/plugin`), the kit may not load until that prompt is accepted. If a session doesn't pick up the plugins, accept the trust prompt or run `/plugin marketplace add shawn-sandy/agentics` once.
+
+See the full team setup guide — including scope choices and caveats — in [docs/plugin-auto-load-setup.md](./docs/plugin-auto-load-setup.md).
 
 ### Load Locally for Testing
 
