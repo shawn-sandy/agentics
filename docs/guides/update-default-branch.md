@@ -35,7 +35,9 @@ gh repo list --json name,defaultBranchRef --limit 100 | \
 
 ### 3. GitHub Action (Automated Enforcement)
 
-Create a workflow that triggers on repository events to enforce the default branch name:
+Create a workflow that triggers on repository events to enforce the default branch name.
+
+> **Note:** The default `GITHUB_TOKEN` does not have the `administration` scope required by the "Update a repository" API endpoint. You must provide a Personal Access Token (PAT) or GitHub App installation token with **repository administration write** access, stored as a repository secret (e.g., `ADMIN_TOKEN`).
 
 ```yaml
 name: Enforce Default Branch
@@ -50,7 +52,7 @@ jobs:
     steps:
       - name: Update default branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: |
           gh api -X PATCH "repos/${{ github.repository }}" \
             -f default_branch=main
