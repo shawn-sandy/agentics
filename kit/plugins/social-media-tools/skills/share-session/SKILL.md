@@ -193,24 +193,27 @@ Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
 ## Phase 3 — Draft Copy
 
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
-**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
-Procedure**.
+**Instructional Voice** doctrine, **Learn-More CTA** rule, **Default Per-Platform Copy
+Formats**, and **Draft Copy — Standard Procedure**.
 
 **Never include dollar amounts or cost figures — tokens only.**
 
 Ask for `PLATFORM` and `TONE` in a single `AskUserQuestion` if not already in `$ARGUMENTS`.
 
-Lead with **what was accomplished** (`NARRATIVE` + `ACCOMPLISHMENTS`); metrics are supporting
-detail, not the headline.
+**Takeaway-first**: every post must surface a concrete, applicable takeaway — what the
+reader can learn or apply from this session's work (a technique, workflow pattern, or
+development principle). Accomplishments and metrics are supporting evidence for the lesson,
+not the headline.
 
 Content-specific guidance for this skill:
 
-- **LinkedIn**: Hook on the outcome ("Just shipped X in a Claude Code session…") → 2–3
-  accomplishments → *then* one supporting stat line (N commits · N files · ~X tokens · Y% cache
-  hit) → follow CTA
-- **Twitter/X**: One punchy line on what was built; a single stat only if it fits and adds color
-- **Bluesky**: Conversational, same accomplishment-first brevity
-- **Substack**: Reflect on what you built and what you learned; stats as supporting detail
+- **LinkedIn**: Hook on the lesson ("Here's a technique for X I used in a Claude Code
+  session…") → 2–3 things learned or patterns applied → *then* one supporting stat line
+  (N commits · N files · ~X tokens · Y% cache hit) → learn-more CTA
+- **Twitter/X**: One punchy takeaway or technique learned; a single stat only if it fits
+- **Bluesky**: Conversational, lesson-first brevity
+- **Substack**: Reflect on what you learned and the technique worth sharing; stats as
+  supporting detail
 
 The token/duration/cache figures are a single trailing stat line, never the focus.
 

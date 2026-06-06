@@ -2,12 +2,14 @@
 
 > Plugin directory: `kit/plugins/social-media-tools`
 
-Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack.
+Discover teachable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft instructional platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack.
+
+Every post leads with a **concrete, applicable takeaway** about agentic development — a principle, technique, or pattern the reader can learn from and apply. The plugin's teaching-first voice turns your body of work into a running, shareable curriculum, not a highlight reel.
 
 Two complementary workflows:
 
 - **Discovery pipeline** — scan git history or a codebase path → scrub → review → write a digest.
-- **Card generation pipeline** — draft copy → render a dark-mode card image from one of seven templates.
+- **Card generation pipeline** — draft instructional copy → render a dark-mode card image from one of seven templates.
 
 No path in this plugin auto-posts — human review is always required before anything reaches a social network.
 
@@ -16,16 +18,16 @@ No path in this plugin auto-posts — human review is always required before any
 | Component | Type | Description |
 |-----------|------|-------------|
 | `social-share` | Skill | **Router** — classifies a natural-language request and runs the right skill |
-| `share-session` | Skill | Generate a narrative session recap card summarizing accomplishments, highlights, and platform copy |
+| `share-session` | Skill | Generate a narrative session recap card with teachable takeaways, lessons learned, and platform copy |
 | `share-code` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
 | `share-blog` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
 | `share-video` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
 | `share-github` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
 | `share-selection` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
 | `share-project` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
-| `share-scan` | Skill | Discover shareable commits or codebase patterns; write a `.claude/digests/` file |
+| `share-scan` | Skill | Discover teachable commits or codebase patterns; write a `.claude/digests/` file |
 | `media-library` | Skill | Browse saved posts interactively and retrieve copy for reposting |
-| `share-init` | Skill | Analyze the project and generate a `SOCIAL.md` config with default platform, tone, hashtags, focus areas, and audience |
+| `share-init` | Skill | Analyze the project and generate a `SOCIAL.md` config with default platform, tone (including Instructional / Educational), hashtags, focus areas, and audience |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 
@@ -59,7 +61,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | `share-session` | Automatic | Share my session, session recap, what I worked on, what I did today, session summary |
 | `share-code` | Automatic | Post or share a code change, write a LinkedIn post about today's changes |
 | `share-blog` | Automatic | Share a blog post or article on social media |
-| `share-video` | Automatic | Share or promote a video on social media |
+| `share-video` | Automatic | Share a video on social media |
 | `share-github` | Automatic | Share a code snippet from a GitHub repository |
 | `share-selection` | Automatic | Share, post, or tweet selected, highlighted, or pasted code |
 | `share-project` | Manual invoke only — use `/social-media-tools:share-project` explicitly | Reached via `social-share` router with `--topic` flag or explicit dispatch; not activated by passive intent matching |
@@ -90,11 +92,11 @@ The `social-share` router skill classifies your request and runs the right workf
 Just describe what you want to share:
 
 ```
-"share what I just built"
-"post today's changes"
+"share a lesson from what I just built"
+"post today's changes with a takeaway"
 "share this: https://youtu.be/abc123"
-"we just launched v2.0, post about it"
-"share my progress this week"
+"we just launched v2.0, share the key technique"
+"share what I learned this week"
 ```
 
 ### Generate a social media post
@@ -148,7 +150,7 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 | `blog-card` | Blog post or article shares | `templates/blog-card.html` |
 | `video-card` | YouTube or Vimeo video shares | `templates/video-card.html` |
 | `snippet-card` | GitHub code file or snippet shares | `templates/snippet-card.html` |
-| `session-card` | Session recap — accomplishments, highlights, token usage | `templates/session-card.html` |
+| `session-card` | Session recap — lessons learned, takeaways, token usage | `templates/session-card.html` |
 
 See [`references/variables.md`](references/variables.md) for the full variable reference for each card type.
 
@@ -203,7 +205,7 @@ social-media-tools/
 │   ├── share-selection/
 │   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
 │   ├── share-session/
-│   │   └── SKILL.md                       ← narrative session recap card (accomplishments, highlights, tokens)
+│   │   └── SKILL.md                       ← narrative session recap card (lessons learned, takeaways, tokens)
 │   ├── share-video/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -237,9 +239,9 @@ The entry point for everything. It classifies a natural-language request (first-
 **File:** `skills/share-session/SKILL.md`  
 **Activation:** automatic — triggers when the user asks to share their session, create a session recap, summarize what they worked on, or share a session summary.
 
-Generates a narrative-first session recap card — the primary content is a short summary of what was accomplished and the session highlights. Token usage, duration, and commit count appear as secondary stats in the card footer.
+Generates a teaching-first session recap card — the primary content is a short summary of the techniques and lessons learned during the session. Token usage, duration, and commit count appear as secondary stats in the card footer.
 
-**Workflow:** read session context → draft narrative summary + highlights → populate `session-card.html` → Playwright screenshot → deliver copy + PNG.
+**Workflow:** read session context → draft takeaway-first summary + lessons learned → populate `session-card.html` → Playwright screenshot → deliver copy + PNG.
 
 ---
 
@@ -266,7 +268,7 @@ Generates a narrative-first session recap card — the primary content is a shor
 ### Skill: `share-video`
 
 **File:** `skills/share-video/SKILL.md`  
-**Activation:** automatic — triggers when the user asks to share a video, post about a talk, or promote video content.
+**Activation:** automatic — triggers when the user asks to share a video, post about a talk, or share video content.
 
 **Supported platforms:** YouTube (`youtube.com`, `youtu.be`) and Vimeo (`vimeo.com`).
 

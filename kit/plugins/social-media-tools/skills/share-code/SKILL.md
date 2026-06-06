@@ -109,8 +109,12 @@ Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
 ## Phase 2 — Draft Copy
 
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
-**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
-Procedure** (present → approve → store variants).
+**Instructional Voice** doctrine, **Learn-More CTA** rule, **Default Per-Platform Copy
+Formats**, and **Draft Copy — Standard Procedure** (present → approve → store variants).
+
+**Takeaway-first**: every post must surface a concrete, applicable takeaway — what the
+reader can learn or apply from this code change (a pattern, technique, pitfall avoided,
+or design principle). The diff or feature is evidence for the lesson, not the headline.
 
 ---
 
@@ -118,7 +122,7 @@ Procedure** (present → approve → store variants).
 
 - `diff-card.html` — code changes, rule updates, config diffs, PR descriptions
 - `feature-card.html` — releases, new features, version announcements, changelogs
-- `quote-card.html` — insights, opinions, pull quotes, thought leadership
+- `quote-card.html` — insights, opinions, pull quotes, teachable principles
 
 ```bash
 CARD_TYPE=<chosen>          # diff, feature, or quote

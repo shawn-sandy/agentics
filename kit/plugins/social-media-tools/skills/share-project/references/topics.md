@@ -19,14 +19,15 @@ Reference data for the `share-project` skill. Each section defines the card temp
 
 | Topic | LinkedIn | Twitter/X | Bluesky |
 |-------|----------|-----------|---------|
-| `features` | Professional story arc: hook → feature list → CTA | Punchy — strongest feature + emoji | "Just shipped: [feature]" |
-| `bugs` | Narrative: "We fixed [pain point]" → solution → impact | `#bugfix: [what broke] → [now fixed]` | Brief and empathetic |
-| `changes` | "Here's what changed in [project]" + bulleted list | Top 2 changes in 280 chars | "Here's what changed 👇" |
-| `release` | Version + full feature highlights + CTA | `🚀 [name] v[N] is out!` | Same brevity as Twitter/X |
+| `features` | Lesson arc: technique behind the feature → what readers can apply → learn-more | Punchy takeaway — the technique behind the strongest feature | "Here's a technique from [feature]" |
+| `bugs` | Root-cause lesson: what went wrong → the principle that fixes it → what readers can apply | `#bugfix lesson: [root cause] → [principle]` | Brief and instructive |
+| `changes` | "Here's what we learned building [project]" + bulleted techniques | Top 2 lessons in 280 chars | "Here's what we learned 👇" |
+| `release` | Key development principle the release embodies → technique highlights → learn-more | `🚀 [name] v[N] — key technique: [lesson]` | Same brevity as Twitter/X |
 
-The closing CTA above is a topic-matched **follow** CTA tied to the project/topic (e.g.
-"follow for more `<project>` updates") — varied each post, never a generic "follow me";
-on Twitter/Bluesky include it only when it fits the limit. See the Follow CTA rule in
+The closing CTA above is a topic-matched **learn-more** CTA tied to the project/topic
+(e.g. "more `<project>` breakdowns on my feed — follow along to keep learning") — varied
+each post, never a generic "follow me"; on Twitter/Bluesky the **takeaway wins** — drop
+the learn-more line when budget is tight. See the Learn-More CTA rule in
 `$PLUGIN_DIR/references/platforms.md`.
 
 ---
