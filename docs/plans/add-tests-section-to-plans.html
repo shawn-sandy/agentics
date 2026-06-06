@@ -985,7 +985,7 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a mandatory <strong>Tests</strong> section in every implementation plan that specifies real-world application tests &mdash; actual unit, integration, E2E, and other test files written for the application or feature, run by the project&#39;s test runner, and committed to the codebase. Every plan must also include an objective-verification mock/smoke test: a real test file that runs against the application and confirms the plan&#39;s stated goal is actually accomplished.</p>
+      <p>Ship a mandatory <strong>Tests</strong> section in every implementation plan that specifies real-world application tests &mdash; actual unit, integration, E2E, and other test files written for the application or feature, run by the project&#39;s test runner, and committed to the codebase. Every plan must also include an objective-verification mock/smoke test: a real test file that runs against the application and confirms the plan&#39;s stated goal is actually accomplished. The section uses a <strong>two-tier system</strong>: Tier 1 (code-touching plans) requires all applicable test sub-sections; Tier 2 (non-code plans like docs or file-move chores) requires only the mandatory objective-verification test. The author selects the tier based on what the steps actually do, not the <code>type:</code> field.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
@@ -1034,6 +1034,7 @@
       <p>The current implementation plan template (<code>plan-mode.md</code>, <code>reference/SKELETON.md</code>, and the HTML <code>SKELETON.html</code>) defines a robust verification chain: per-step verification confirms each step ran correctly, acceptance criteria confirm the plan meets the definition of done, and end-to-end verification confirms the whole plan executed correctly. However, none of these layers require <em>real application tests</em> &mdash; they are all prose-based assertions written inside the plan document itself.</p>
       <p>This gap means a plan can be marked &quot;completed&quot; without any automated proof that the changes actually work in the running application. A developer could implement all steps, check all criteria boxes, and ship code that has zero test coverage. The missing layer is a <strong>Tests section</strong> that specifies real-world tests &mdash; actual test files (unit, integration, E2E) that are written for the application or feature, run by the project&#39;s test runner, and ship with the codebase. These are not plan-level prose checks; they are the same tests a developer would write and commit alongside feature code.</p>
       <p>Additionally, every plan must include a mandatory <strong>objective-verification test</strong> &mdash; a real mock or smoke test that runs against the actual application and directly asserts the plan&#39;s stated objective is accomplished. Like all tests in this section, the objective-verification test is a real executable test file, not a prose assertion in the plan document. This closes the loop between &quot;what we said we&#39;d do&quot; and &quot;what the application actually does.&quot;</p>
+      <p><strong>Tier decision (resolved):</strong> Investigation of 22 existing plans (17 feature, 4 chore, 1 fix, 1 refactor, 0 docs) showed that chore plans span a wide spectrum &mdash; from pure file moves (<code>clean-up-docs</code>) to code-mutating changes (<code>enable-model-invocation</code>). A conditionally-present rule (skip Tests for docs/chore) would either under-test code-touching chores or force a fuzzy &quot;is this code-touching?&quot; classification on every author. Instead, the Tests section is <strong>always present</strong> with a two-tier depth model: <strong>Tier 1</strong> (code-touching plans) includes all applicable sub-sections (unit, integration, E2E) plus the mandatory objective-verification test; <strong>Tier 2</strong> (non-code plans: docs, file-move chores) requires only the objective-verification test, with other sub-sections omitted entirely rather than left as empty stubs. The author selects the tier based on what the steps actually do, not the <code>type:</code> frontmatter field &mdash; a <code>type: chore</code> plan that changes import paths is Tier 1, while a <code>type: chore</code> plan that moves directories is Tier 2.</p>
     </section>
 
     <!-- ── Files ──────────────────────────────────────────────── -->
@@ -1099,13 +1100,14 @@
         </div>
       </div>
 
-      <div class="diagram-subheading">Test types and when to include them</div>
+      <div class="diagram-subheading">Test types, tiers, and when to include them</div>
       <table class="plan-table">
         <caption>Each test type below is a real application test &mdash; an actual test file written for the feature, run by the project&#39;s test runner, and committed to the codebase</caption>
         <thead>
           <tr>
             <th scope="col">Test Type</th>
             <th scope="col">Scope</th>
+            <th scope="col">Tier</th>
             <th scope="col">Include When</th>
             <th scope="col">Required?</th>
           </tr>
@@ -1114,26 +1116,57 @@
           <tr>
             <td><strong>Unit</strong></td>
             <td>Real test file targeting a single function, method, or module in isolation</td>
+            <td>Tier 1 only</td>
             <td>Plan adds or modifies business logic, utilities, helpers, data transformations</td>
             <td>When applicable</td>
           </tr>
           <tr>
             <td><strong>Integration</strong></td>
             <td>Real test file exercising multiple modules, services, or layers working together</td>
+            <td>Tier 1 only</td>
             <td>Plan touches API routes, database queries, middleware chains, service boundaries</td>
             <td>When applicable</td>
           </tr>
           <tr>
             <td><strong>E2E</strong></td>
             <td>Real test file driving a full user flow through the running application</td>
+            <td>Tier 1 only</td>
             <td>Plan affects user-facing flows, page navigation, form submissions, auth flows</td>
             <td>When applicable</td>
           </tr>
           <tr>
             <td><strong>Objective-verification</strong></td>
             <td>Real mock/smoke test file that runs against the application and asserts the plan&#39;s stated objective is accomplished</td>
+            <td>Both tiers</td>
             <td>Always &mdash; every plan must include one</td>
             <td><strong>Mandatory</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="diagram-subheading">Tier selection guide</div>
+      <table class="plan-table">
+        <caption>The author selects the tier based on what the steps do, not the <code>type:</code> frontmatter field</caption>
+        <thead>
+          <tr>
+            <th scope="col">Tier</th>
+            <th scope="col">When to use</th>
+            <th scope="col">Required sub-sections</th>
+            <th scope="col">Examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tier 1</strong> (code-touching)</td>
+            <td>Any step creates, modifies, or deletes application source files, configs that affect runtime, or test files</td>
+            <td>Unit, Integration, E2E (when applicable) + Objective-verification (always)</td>
+            <td>feature, fix, refactor; chores that change imports, bump deps with code changes</td>
+          </tr>
+          <tr>
+            <td><strong>Tier 2</strong> (non-code)</td>
+            <td>Steps only move, rename, or delete files; write docs; update metadata; or perform other non-code operations</td>
+            <td>Objective-verification only (other sub-sections omitted, not left as empty stubs)</td>
+            <td>docs plans; chores that move directories, rename files, update non-runtime metadata</td>
           </tr>
         </tbody>
       </table>
@@ -1155,11 +1188,11 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Add <code>tests</code> to the Required Structure in <code>plan-mode.md</code></span>
               </div>
-              <div class="step-why">This is the authoritative rule file that all plans must follow. Adding the Tests section here makes it a first-class structural requirement alongside context, objective, steps, acceptance-criteria, and verification.</div>
+              <div class="step-why">This is the authoritative rule file that all plans must follow. Adding the Tests section here makes it a first-class structural requirement alongside context, objective, steps, acceptance-criteria, and verification. The bullet must introduce the two-tier model so all downstream templates and skills inherit it.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Re-read <code>~/.claude/rules/plan-mode.md</code> &sect; Required Structure. Confirm a new <code>tests</code> bullet exists between <code>steps</code> and <code>acceptance-criteria</code>. At this point it only needs to name the section and its purpose &mdash; the detailed specification (sub-categories, mandatory vs. conditional rules) is Step 2&#39;s deliverable. No other sections should be altered.</p>
+                  <p>Re-read <code>~/.claude/rules/plan-mode.md</code> &sect; Required Structure. Confirm a new <code>tests</code> bullet exists between <code>steps</code> and <code>acceptance-criteria</code>, and that it mentions the two-tier depth model (Tier 1 for code-touching plans, Tier 2 for non-code plans). At this point it only needs to name the section, its purpose, and the tier distinction &mdash; the detailed specification (sub-categories, mandatory vs. conditional rules) is Step 2&#39;s deliverable. No other sections should be altered.</p>
                 </div>
               </details>
             </div>
@@ -1174,11 +1207,11 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Define the Tests section specification in <code>plan-mode.md</code></span>
               </div>
-              <div class="step-why">The bullet alone names the section; this step specifies the rules for how to populate it &mdash; which test types are conditional vs. mandatory, what qualifies as an objective-verification test, and how these real application tests relate to the existing prose-based verification chain.</div>
+              <div class="step-why">The bullet alone names the section; this step specifies the rules for how to populate it &mdash; the two-tier depth model, which test types are conditional vs. mandatory, what qualifies as an objective-verification test, and how these real application tests relate to the existing prose-based verification chain.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Read the new <code>tests</code> bullet and confirm it specifies: (1) unit/integration/E2E tests are real application test files included &quot;when applicable&quot; based on what the plan touches; (2) the objective-verification test is a mandatory real mock/smoke test that runs against the application and asserts the plan&#39;s stated objective; (3) the Tests section is explicitly distinct from per-step verification (prose) and end-to-end verification (prose) &mdash; Tests are real test files that ship with the code.</p>
+                  <p>Read the new <code>tests</code> bullet and confirm it specifies: (1) the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E &quot;when applicable&quot; plus mandatory objective-verification; Tier 2 (non-code) includes only the mandatory objective-verification test with other sub-sections omitted entirely; (2) the author selects the tier based on what the steps do, not the <code>type:</code> field; (3) the objective-verification test is a mandatory real mock/smoke test that runs against the application and asserts the plan&#39;s stated objective; (4) the Tests section is explicitly distinct from per-step verification (prose) and end-to-end verification (prose) &mdash; Tests are real test files that ship with the code.</p>
                 </div>
               </details>
             </div>
@@ -1250,11 +1283,11 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Update the <code>SKILL.md</code> Required Structure and HTML Output Requirements</span>
               </div>
-              <div class="step-why">The implementation-plan skill file is the authoritative spec for HTML plan generation. It must document the Tests section alongside the other required sections, specify which real application test types to auto-generate from step analysis, and describe the mandatory objective-verification mock/smoke test &mdash; all of which are real test files for the application, not plan-level prose.</div>
+              <div class="step-why">The implementation-plan skill file is the authoritative spec for HTML plan generation. It must document the Tests section alongside the other required sections, specify the two-tier model, describe which real application test types to auto-generate from step analysis, and describe the mandatory objective-verification mock/smoke test &mdash; all of which are real test files for the application, not plan-level prose.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Read <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> Required Structure and HTML Output Requirements sections. Confirm: (1) <code>tests</code> is listed as a required section between <code>steps</code> and <code>acceptance-criteria</code>; (2) the description specifies unit/integration/E2E as conditional and objective-verification as mandatory; (3) the HTML Output Requirements mention the new CSS classes and the section&#39;s placement.</p>
+                  <p>Read <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> Required Structure and HTML Output Requirements sections. Confirm: (1) <code>tests</code> is listed as a required section between <code>steps</code> and <code>acceptance-criteria</code>; (2) the description specifies the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E as conditional plus objective-verification as mandatory; Tier 2 (non-code) includes only objective-verification with other sub-sections omitted; (3) the tier is selected by step content analysis, not the <code>type:</code> field; (4) the HTML Output Requirements mention the new CSS classes and the section&#39;s placement.</p>
                 </div>
               </details>
             </div>
@@ -1269,11 +1302,11 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Add test-generation guidance to the <code>SKILL.md</code> workflow</span>
               </div>
-              <div class="step-why">The plan-agent skill needs a workflow instruction telling it when and how to populate the Tests section during plan creation &mdash; analyzing the plan&#39;s steps to determine which real application test types apply and auto-drafting the objective-verification mock/smoke test from the objective statement. All generated test entries must describe real test files to be written and committed, not prose assertions.</div>
+              <div class="step-why">The plan-agent skill needs a workflow instruction telling it when and how to populate the Tests section during plan creation &mdash; analyzing the plan&#39;s steps to determine the tier (Tier 1 if any step creates/modifies/deletes application source files; Tier 2 otherwise), selecting which real application test types apply, and auto-drafting the objective-verification mock/smoke test from the objective statement. All generated test entries must describe real test files to be written and committed, not prose assertions.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Read the Workflow section in <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> and confirm a test-generation instruction exists (either as a sub-step of an existing step or as a new step). It should describe: (1) scanning step content to classify needed test types; (2) always generating an objective-verification test entry; (3) populating the <code>{test-items}</code> and <code>{objective-test}</code> placeholders in the skeleton.</p>
+                  <p>Read the Workflow section in <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> and confirm a test-generation instruction exists (either as a sub-step of an existing step or as a new step). It should describe: (1) scanning step content to classify the tier &mdash; Tier 1 if any step touches application source files, Tier 2 otherwise; (2) for Tier 1, selecting applicable test types (unit/integration/E2E) based on what the steps modify; (3) for Tier 2, omitting unit/integration/E2E sub-sections entirely; (4) always generating an objective-verification test entry regardless of tier; (5) populating the <code>{test-items}</code> and <code>{objective-test}</code> placeholders in the skeleton.</p>
                 </div>
               </details>
             </div>
@@ -1322,6 +1355,18 @@
           <input type="checkbox" id="ac8">
           <label for="ac8">No existing required sections (context, objective, steps, acceptance-criteria, verification, completion-checklist, next-steps, unresolved-questions) are removed, reordered, or modified in meaning</label>
         </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">The two-tier model is documented in <code>plan-mode.md</code>, <code>SKILL.md</code>, and <code>SKELETON.html</code> &mdash; Tier 1 (code-touching) requires all applicable test sub-sections; Tier 2 (non-code) requires only the objective-verification test</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">Tier selection is based on step content analysis (do the steps touch application source files?), not the <code>type:</code> frontmatter field</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11">Tier 2 plans omit unit/integration/E2E sub-sections entirely rather than rendering them as empty stubs</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1339,7 +1384,9 @@
         <li>The section contains at least one test card for the applicable test types &mdash; each describing a real test file to be written for the application (the search-bar plan should include unit tests for the search logic, integration tests for the API, and E2E tests for the user flow).</li>
         <li>An <strong>objective-verification test</strong> card is always present, visually distinct, and describes a real mock/smoke test file that runs against the application and asserts the plan&#39;s objective statement is accomplished.</li>
         <li>The sidebar navigation includes a &quot;Tests&quot; link that scrolls to the correct section.</li>
-        <li>Generating a plan for a non-code change (e.g. a docs-only plan) still includes the mandatory objective-verification test but correctly omits unit/integration/E2E test cards.</li>
+        <li><strong>Tier 1 verification:</strong> Generating a plan for a feature or fix (e.g. &quot;Add a search bar&quot;) produces a Tier 1 Tests section with unit/integration/E2E sub-sections populated based on step analysis, plus the mandatory objective-verification test.</li>
+        <li><strong>Tier 2 verification:</strong> Generating a plan for a non-code change (e.g. a docs-only plan or a file-move chore) produces a Tier 2 Tests section with only the mandatory objective-verification test &mdash; unit/integration/E2E sub-sections are omitted entirely, not rendered as empty stubs.</li>
+        <li><strong>Tier boundary test:</strong> Generating a <code>type: chore</code> plan whose steps modify application source files (e.g. &quot;Bump dependency and update import paths&quot;) correctly selects Tier 1, not Tier 2 &mdash; confirming tier is driven by step content, not the <code>type:</code> field.</li>
       </ol>
       <p>Separately, create a markdown plan using the updated <code>SKELETON.md</code> and confirm the <code>## Tests</code> section template renders with all four test-type placeholders.</p>
     </section>
@@ -1458,11 +1505,9 @@
         <ul class="unresolved-list">
           <li>
             <details class="unresolved-item">
-              <summary>Should non-code plans (docs, chore) require the full Tests section?</summary>
+              <summary><s>Should non-code plans (docs, chore) require the full Tests section?</s> <strong>Resolved</strong></summary>
               <div class="unresolved-prompt">
-                <pre>Investigate whether plans of type &quot;docs&quot; or &quot;chore&quot; should require a full Tests section or only the mandatory objective-verification test. Consider: a docs plan might verify that links resolve and content renders correctly (a form of E2E), while a chore plan (dependency bump) might only need a smoke test confirming the build still passes. Recommend whether to make the Tests section always-present (with conditional sub-sections) or conditionally-present (only for code-touching plans), and document the rationale.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+                <p><strong>Decision:</strong> Always-present Tests section with a two-tier depth model. Tier 1 (code-touching plans) includes all applicable sub-sections; Tier 2 (non-code plans) requires only the objective-verification test. The author selects the tier based on step content, not the <code>type:</code> field. Rationale: chore plans span a wide spectrum (file moves to code mutations), making a conditionally-present rule unreliable; the objective-verification test is always mandatory so the section is never truly empty; and consistency reduces cognitive load for authors.</p>
               </div>
             </details>
           </li>
