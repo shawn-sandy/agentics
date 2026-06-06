@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLAUDE.md</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --bullet-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bullets {
+      padding: 20px 32px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: rgba(56, 139, 253, 0.05);
+      border-left: 3px solid var(--bullet-accent);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .bullets li::before {
+      content: '→';
+      color: var(--bullet-accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-badge {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="badge">file</div>
+      <h1>CLAUDE.md</h1>
+      <p class="subtitle">Repo instructions Claude Code auto-loads into context every session</p>
+    </div>
+
+    <ul class="bullets">
+      <li>Auto-loaded into context at the start of every session</li>
+<li>Project file overrides the global ~/.claude/CLAUDE.md on conflict</li>
+<li>Points to path-scoped rules in .claude/rules/ that load on demand</li>
+<li>Secrets and machine-specific paths live in a gitignored CLAUDE.local.md</li>
+<li>Treated as binding policy, e.g. branch off main, version in marketplace.json</li>
+    </ul>
+
+    <div class="card-footer">
+      <span class="footer-note">Auto-loaded · press # or run /init to refresh</span>
+      <span class="footer-badge">file</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Most teams treat their repo's CLAUDE.md like a README. It isn't.
+
+CLAUDE.md is the instruction file Claude Code auto-loads into context at the start of every session — so it shapes how the AI behaves in your repo, not just what a human reads.
+
+A few patterns that make ours work:
+
+→ Precedence chain: a global ~/.claude/CLAUDE.md sets defaults, the project CLAUDE.md overrides it, and path-scoped rules in .claude/rules/ load only when matching files are touched. Progressive disclosure keeps the root file lean.
+→ Single source of truth: plugin versions live only in marketplace.json, so the AI never has to guess which value wins.
+→ Machine-specific paths and secrets go in a gitignored CLAUDE.local.md, never the shared file.
+→ Search exclusions (like docs/plans/archive/) are baked in, so the AI doesn't waste effort where it shouldn't look.
+
+Nothing to invoke — it activates automatically. Press # mid-session to fold new learnings back in, or run /init to regenerate.
+
+The mental shift: stop writing CLAUDE.md for humans. Write it as binding policy the agent executes.
+
+Follow for more Claude Code plugin and workflow breakdowns.
+
+#ClaudeCode #AITools #DeveloperTools #Automation</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Your repo's CLAUDE.md isn't a README — it's instructions Claude Code auto-loads every session. It shapes how the AI behaves, not just what a human reads. Treat it as binding policy, not docs. #ClaudeCode #AITools</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">CLAUDE.md isn't documentation — it's instructions Claude Code auto-loads into context every session. It changes how the AI behaves in your repo, not just what a human reads. The shift: write it as binding policy, and keep machine-specific paths + secrets in a gitignored local file.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">There's a quiet shift hiding in CLAUDE.md. It looks like a README, but Claude Code auto-loads it into context every session — so it's not documentation for humans, it's binding policy the AI executes. Once you see it that way, the design follows: a precedence chain (global → project → path-scoped rules), a single source of truth for things like plugin versions, and a gitignored local file for secrets. Stop writing it for readers; write it for the agent. Follow for more on Claude Code workflows.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
