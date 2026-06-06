@@ -29,6 +29,8 @@ const KEEP = new Set([
   'hooks',
   'hooks.json',
   'templates',
+  'references',
+  'scripts',
   'README.md',
   'CHANGELOG.md',
   'LICENSE',
@@ -338,6 +340,10 @@ if (args.includes('--list')) {
   listPlugins();
 } else if (args.includes('--check')) {
   check();
+} else if (args.includes('--publish') || args.includes('--dry-run')) {
+  console.error('--publish and --dry-run are not yet implemented.');
+  console.error('Run without flags to build, or use --check to verify.');
+  process.exit(1);
 } else {
   build();
 }
