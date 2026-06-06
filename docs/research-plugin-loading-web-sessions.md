@@ -34,7 +34,7 @@ From `docs/plugin-auto-load-setup.md`:
     "memory-tools@agentics-kit": true,
     "code-review@agentics-kit": true,
     "plan-interview@agentics-kit": true,
-    // ... all 12 plugins
+    "plan-agent@agentics-kit": true
   }
 }
 ```
