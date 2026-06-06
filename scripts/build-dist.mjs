@@ -8,8 +8,7 @@
 //   node scripts/build-dist.mjs              # build to dist/
 //   node scripts/build-dist.mjs --list       # print active plugin names
 //   node scripts/build-dist.mjs --check      # verify no DROP patterns leaked
-//   node scripts/build-dist.mjs --publish    # orphan-replace main with dist
-//   node scripts/build-dist.mjs --dry-run    # preview --publish without pushing
+//   # --publish / --dry-run: reserved (not yet implemented)
 
 import { readFileSync, writeFileSync, mkdirSync, cpSync, statSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { join, relative, basename, extname } from 'node:path';
