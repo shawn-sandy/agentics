@@ -213,11 +213,11 @@ Every HTML plan must include the following sections rendered as visible, styled 
 - **next-steps** *(optional)* — Out-of-scope follow-ups and unsolicited ideas; never place these in `steps`. Include a prompt block the user can paste into Claude. When a next-step item would benefit from workflow orchestration (large-scale migration, multi-file audit, cross-checked research), prefix the prompt with "Run a workflow to …" so it triggers Claude Code's `/workflows` runtime when pasted. If any next-step items are visionary or blue-sky (ambitious, speculative, non-immediate), label them with a `🔭 Wish List` badge and group them in a collapsible "Wish List" subsection at the bottom of Next Steps. Realistic, actionable items stay in the main list. Each prompt `<pre>` must be followed by a copy button.
 - **unresolved-questions** *(optional)* — Collapsible `<details>` section. Omit entirely if none. Each `<pre>` prompt inside an unresolved item must be followed by a copy button.
 
-### Optional visual sections *(opt-in — include only when the content warrants)*
+### Visual sections
 
-These add scannable visuals when a plan benefits from them. All are **pure CSS / inline SVG** (the no-CDN constraint applies) and all are **opt-in**: the skeleton ships each block ready-to-fill behind a removal comment — keep and fill it when relevant, delete the whole block (and its sidebar nav link) otherwise. See the **Visual Components** section for full markup and triggers.
+These add scannable visuals when a plan benefits from them. All are **pure CSS / inline SVG** (the no-CDN constraint applies). The **files** section is **auto-generated** from the plan's steps; remaining visuals are **opt-in** — the skeleton ships each block ready-to-fill behind a removal comment. See the **Visual Components** section for full markup and triggers.
 
-- **files** *(optional)* — A file-tree (`.file-tree`) showing the files the plan creates/modifies/deletes, with `file-badge-new` / `file-badge-modified` / `file-badge-deleted` / `file-badge-generated` badges. Include when the plan touches more than one or two files. Rendered as `section.card-files#files`, between Context and Steps.
+- **files** *(auto-generated)* — A file-tree (`.file-tree`) showing the files the plan creates/modifies/deletes, with `file-badge-new` / `file-badge-modified` / `file-badge-deleted` / `file-badge-generated` badges. **Auto-generated** from the plan's steps — see [File-Tree Auto-Generation](#file-tree-auto-generation). Always included when the plan references any files (≥1); only delete the section (and its sidebar nav link) when the plan is purely conceptual with no file references. Rendered as `section.card-files#files`, between Context and Steps.
 - **diagram** *(optional)* — A flow/pipeline diagram (`.pipeline`) for process, data flow, or architecture stages, and/or a comparison grid (`.compare-grid`) for 2–3-way trade-offs. Include when the plan introduces a flow or a comparison worth visualising.
 - **chart** *(optional)* — A horizontal bar chart (`.bar-chart`) for distributions, before/after, or relative magnitudes. Bar width is set by an inline `style="--val:NN%"`; always show the real value in `.bar-value` and restate the data in the container's `aria-label`. May live inside the **diagram** section.
 - **table** *(optional)* — An accessible data table (`.plan-table`) for structured mappings or option matrices. Always include a `<caption>` and `<th scope="col">` headers.
@@ -240,7 +240,7 @@ The file must:
 - Include an **implement prompt row** (`<div class="plan-implement">`) immediately below the `.objective-card` and before `.progress-wrap`. It must contain: the `{implement-prompt}` value in `<code id="implement-cmd" aria-label="Implement prompt">`, and a Copy button with `onclick="copyCmd(this)"`. The Copy button copies a concise action-oriented prompt (built by `buildImplementPrompt()` from live DOM state including status, progress counts, and implementation instructions) — not the short `<code>` text. The copy button is hidden via CSS when `data-status="completed"`. The row is suppressed in `@media print`.
 - When a workflow prompt was generated, include an expandable **workflow prompt** (`<details class="plan-workflow">`) immediately below the `.plan-implement` row and before `.progress-wrap`. The `<summary>` reads "Run as workflow — launch parallel subagents". The inner `<div class="plan-workflow-inner">` contains: the `{workflow-prompt}` value in `<code id="workflow-cmd">`, and a Copy button with `onclick="copyWorkflow(this)"`. Collapsed by default. Hidden when `data-status="completed"` and suppressed in print. **Remove the entire `.plan-workflow` element when no workflow prompt was generated.**
 - Include a **completion checklist** section (`<section class="section-card card-completion" id="completion">`) between Verification and Next Steps with three `disabled` checkboxes for the mandatory completion requirements (step TODOs done, acceptance criteria checked, status updated). The checkboxes auto-update via JavaScript. Include a **Completion Report** (`<div class="completion-report">`) inside the checklist that initially shows "No items to report" and is populated with a `<dl class="report-list">` detailing any incomplete items and their reasons when the plan cannot be fully completed.
-- **Visual components are opt-in, not required.** The skeleton ships the optional **files** (`.file-tree`), **diagram** (`.pipeline` / `.compare-grid`), **chart** (`.bar-chart`), and **table** (`.plan-table`) blocks behind removal comments. Keep and fill a block only when the plan's content warrants it; otherwise delete the whole block **and** its matching sidebar nav `<li>` (the `#files` / `#diagram` links). The scroll-spy filters to existing sections, so removal is safe with no JS edits. Never add a CDN, `<canvas>`, or charting library — every visual stays pure CSS / inline SVG. Keep the accessibility affordances when filling: a `<caption>` and `<th scope="col">` on tables, a visible numeric `.bar-value` plus container `aria-label` on charts, and a text label (not colour alone) on every file badge.
+- **Visual components.** The **files** (`.file-tree`) block is **auto-generated** from the plan's steps (see [File-Tree Auto-Generation](#file-tree-auto-generation)) — always include it when any files are referenced, delete it only for purely conceptual plans. The **diagram** (`.pipeline` / `.compare-grid`), **chart** (`.bar-chart`), and **table** (`.plan-table`) blocks remain opt-in — keep and fill a block only when the plan's content warrants it; otherwise delete the whole block **and** its matching sidebar nav `<li>` (the `#diagram` link). The scroll-spy filters to existing sections, so removal is safe with no JS edits. Never add a CDN, `<canvas>`, or charting library — every visual stays pure CSS / inline SVG. Keep the accessibility affordances when filling: a `<caption>` and `<th scope="col">` on tables, a visible numeric `.bar-value` plus container `aria-label` on charts, and a text label (not colour alone) on every file badge.
 
 ## Visual Components
 
@@ -248,7 +248,7 @@ These four components are defined (CSS) once in `reference/SKELETON.html` and sh
 
 | Component | Use when the plan… | Markup | Fill |
 |-----------|--------------------|--------|------|
-| **File-tree** | touches more than one or two files | `.file-tree` → nested `ul.file-list` | one `<li>` per file with a `file-badge-{new\|modified\|deleted\|generated}` badge; `{file-tree-rows}` |
+| **File-tree** | references any file (≥1) — **auto-generated** from steps | `.file-tree` → nested `ul.file-list` | `{file-tree-rows}` populated automatically — see [File-Tree Auto-Generation](#file-tree-auto-generation) |
 | **Flow / pipeline** | has a process, data flow, or architecture sequence | `.pipeline` → `.pipeline-node` + `.pipeline-arrow` | one node per stage, arrows between; `{diagram-nodes}` |
 | **Comparison grid** | weighs a 2–3-way trade-off (kept/dropped, before/after, option A/B/C) | `.compare-grid` → `.compare-col-{add\|neutral\|remove}` | one column per side; `{compare-columns}` |
 | **Bar chart** | shows a distribution or relative magnitudes | `.bar-chart` → `.bar-row` | width via inline `style="--val:NN%"`, real value in `.bar-value`, data restated in `aria-label`; `{chart-rows}` |
@@ -256,10 +256,48 @@ These four components are defined (CSS) once in `reference/SKELETON.html` and sh
 
 Rules:
 
-- **Opt-in.** Keep a block only when its trigger matches; delete the whole block and its sidebar nav link otherwise — exactly as you already do for `.plan-workflow` and unresolved-questions.
+- **File-tree is auto-generated.** Always populate the files section when any file is referenced in the plan's steps (see [File-Tree Auto-Generation](#file-tree-auto-generation)). Delete the block only when the plan has zero file references.
+- **Other visuals are opt-in.** Keep a block only when its trigger matches; delete the whole block and its sidebar nav link otherwise — exactly as you already do for `.plan-workflow` and unresolved-questions.
 - **Self-contained.** Pure CSS / inline SVG only. No CDN, no `<canvas>`, no charting library.
 - **Accessible.** Tables: `<caption>` + scoped headers. Charts: visible numeric values + a descriptive container `aria-label` (never colour-only). File badges: a text label alongside the colour.
 - **HTML-escape** all file paths, code, and user-supplied text inside these blocks (`&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`).
+
+### File-Tree Auto-Generation
+
+When the plan's steps reference files to create, modify, or delete, automatically generate the Files file-tree section instead of requiring manual construction. Run this after drafting all steps and before writing the final HTML.
+
+**Extraction.** Scan every step's action, why, and verify text for file paths. A file path is any token that contains a `/` separator or ends with a recognised source-code extension (`.ts`, `.tsx`, `.js`, `.jsx`, `.py`, `.rs`, `.go`, `.java`, `.html`, `.css`, `.scss`, `.json`, `.yaml`, `.yml`, `.toml`, `.md`, `.sql`, `.sh`, `.rb`, `.vue`, `.svelte`, `.astro`, `.xml`, `.graphql`, `.proto`, `.env`, `.config.*`). Ignore URLs (`http://`, `https://`), placeholder paths (`path/to/file`, `example.ext`), and duplicate entries.
+
+**Classification.** Assign a badge to each file based on the step's action verb and surrounding context:
+
+| Verb / context | Badge class | Label |
+|----------------|-------------|-------|
+| create, add (new file), introduce, scaffold, generate, init | `file-badge-new` | new |
+| modify, update, edit, change, refactor, rename, extend, wire up, add (to existing file) | `file-badge-modified` | modified |
+| delete, remove, drop, deprecate | `file-badge-deleted` | deleted |
+| auto-generated, codegen, compiled, emitted | `file-badge-generated` | generated |
+
+When ambiguous, default to `file-badge-modified`. When a file appears in multiple steps with different operations, keep the most impactful badge: `deleted` > `new` > `generated` > `modified`.
+
+**Grouping.** Group files by their immediate parent directory. For each directory that contains two or more files, emit a `<li class="file-dir">` directory heading followed by a nested `<ul class="file-list">` containing its children (show only the filename inside the nested list, not the full path). Files whose parent directory has only one entry are shown at the top level with their full relative path — no directory wrapper. Sort directories alphabetically, then files within each directory alphabetically.
+
+**Rendering.** Build the `{file-tree-rows}` markup using this pattern:
+
+```html
+<!-- Directory with 2+ files -->
+<li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> src/components/</li>
+<ul class="file-list">
+  <li><code>Button.tsx</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">primary action component</span></li>
+  <li><code>Modal.tsx</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add close callback prop</span></li>
+</ul>
+
+<!-- Single file in a unique directory — show full path, no wrapper -->
+<li><code>src/index.ts</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">re-export new component</span></li>
+```
+
+The `.file-note` is a terse phrase (3–8 words) summarising what changes in that file — derive it from the step that references the file. HTML-escape all paths and notes.
+
+**Inclusion rule.** Always include the Files section when ≥1 file is detected. Only delete the entire `section.card-files#files` block **and** its sidebar nav `<li>` (`#files` link) when zero files are referenced (purely conceptual plans).
 
 ## Writing Style
 
@@ -275,4 +313,4 @@ Each step card in the skeleton includes a `<span class="step-chip">todo</span>` 
 
 The skeleton includes a Completion Checklist section with three fixed checkbox items (all step TODOs done, all acceptance criteria checked, status updated) and an empty Completion Report. These items are identical in every plan and have no placeholders to fill. Do not remove this section or change its checkbox items.
 
-The skeleton also ships the opt-in visual blocks (**files**, **diagram**/**chart**/**table**) behind removal comments, just like `.plan-workflow`. For each one: keep and fill it when the plan's content warrants the visual (see **Visual Components** for triggers), otherwise delete the entire block **and** its sidebar nav `<li>` (the `#files` / `#diagram` links). Their CSS stays in the skeleton's `<style>` either way — it is inert when the markup is absent.
+The skeleton also ships visual blocks behind removal comments, just like `.plan-workflow`. The **files** block is **auto-generated** from the plan's steps (see [File-Tree Auto-Generation](#file-tree-auto-generation)) — always keep it when any files are referenced, delete it only for purely conceptual plans with zero file references. The **diagram**/**chart**/**table** blocks remain opt-in: keep and fill them when the plan's content warrants the visual (see **Visual Components** for triggers), otherwise delete the entire block **and** its sidebar nav `<li>` (the `#diagram` link). All CSS stays in the skeleton's `<style>` either way — it is inert when the markup is absent.
