@@ -55,3 +55,6 @@ examples/
 # Social card smoke-test and preview artifacts
 docs/media/social/*-smoke-test-*
 docs/media/social/gap-preview-*
+
+# Build output
+dist/
