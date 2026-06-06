@@ -58,7 +58,7 @@ jobs:
 
 ### 4. Organization-Level Repository Rulesets
 
-If you use a GitHub organization, you can create **repository rulesets** at the org level to enforce branch naming conventions and default branch settings across all repos.
+If you use a GitHub organization, you can create **repository rulesets** at the org level to enforce branch and tag interaction policies (e.g., push, merge, deletion restrictions). Rulesets can also restrict administrators from changing a repository's default branch. However, rulesets do not directly set the `default_branch` — to change it, use the GitHub repo settings UI or the API (`gh api -X PATCH repos/OWNER/REPO -f default_branch=main`).
 
 ## Prerequisites
 
@@ -70,4 +70,4 @@ If you use a GitHub organization, you can create **repository rulesets** at the 
 
 - Changing the default branch does **not** rename or delete the old branch — it only changes which branch is shown by default and used as the base for PRs.
 - Make sure the target branch (e.g., `main`) exists in each repo before setting it as default.
-- For repos migrating from `master` to `main`, consider using `gh repo rename-branch` which also updates open PRs and branch protection rules.
+- For repos migrating from `master` to `main`, rename the branch via the GitHub UI or the API (e.g., `gh api -X POST repos/OWNER/REPO/branches/master/rename -f new_name=main`). This updates branch protection rules and the base branch for open PRs. Note: if the renamed branch is the head branch of an open PR, that PR will be closed.
