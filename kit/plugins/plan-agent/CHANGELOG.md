@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.7.0 — 2026-06-06 — Copyable plan file name and relative path in HTML output
+
+### Added
+
+- **Plan source block** — every generated plan now renders a `.plan-source` block below the implement/workflow rows with two copyable rows: the plan **File** name (basename) and its relative **Path**, each with a Copy button. Gives users the plan's name and relative URL to paste into docs and prompts. Stays visible when the plan is `completed`; hidden in print.
+- **`plan-file` and `plan-path` meta tags** — added `<meta name="plan-file">` and `<meta name="plan-path">` to the plan `<head>` for machine readability.
+- **`copyPath()`** helper in `SKELETON.html` to copy either field to the clipboard (with `execCommand` fallback).
+
+### Changed
+
+- **`implementation-plan` SKILL.md** — Step 2 now computes `{plan-filename}` and `{plan-path}` placeholders; Step 3 frontmatter and the HTML Output Requirements document the new meta tags and the plan source block.
+
+---
+
 ## v1.6.0 — 2026-06-06 — Auto-generate Files file-tree from plan steps
 
 ### Added
