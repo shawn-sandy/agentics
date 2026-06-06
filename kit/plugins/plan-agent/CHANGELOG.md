@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.0 — 2026-06-06 — Auto-generate Files file-tree from plan steps
+
+### Added
+
+- **File-Tree Auto-Generation** — new subsection in `implementation-plan` SKILL.md that automatically extracts file references from drafted steps, classifies each as `new`/`modified`/`deleted`/`generated` based on action verbs, groups by directory, and populates `{file-tree-rows}` — eliminating manual file-tree construction.
+
+### Changed
+
+- **`implementation-plan` SKILL.md** — the Files section (`section.card-files#files`) is now auto-generated instead of opt-in. Updated the Visual Sections heading, HTML Output Requirements, Visual Components table/rules, and Skeleton instructions to reflect the new behavior. File-tree is always included when ≥1 file is referenced; only deleted for purely conceptual plans.
+
+---
+
 ## v1.5.1 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed
