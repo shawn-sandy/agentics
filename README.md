@@ -16,7 +16,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 - [Project Structure](#project-structure)
 - [Installation](#installation)
   - [Install via Marketplace (Recommended)](#install-via-marketplace-recommended)
-  - [Auto-enable for Your Team (No Manual Install)](#auto-enable-for-your-team-no-manual-install)
+  - [Auto-enable for Your Team (Declarative Config)](#auto-enable-for-your-team-declarative-config)
   - [Load Locally for Testing](#load-locally-for-testing)
   - [Troubleshooting](#troubleshooting)
 - [Usage Guide](#usage-guide)
