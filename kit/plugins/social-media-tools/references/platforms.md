@@ -38,7 +38,7 @@ for each (see `$PLUGIN_DIR/references/copy-panels.md`).
   plan character budget accordingly.
 - **Lead with takeaway**: open with a concrete, teachable principle or technique the
   reader can apply — not "Great post by…", "I just watched…", or "Check out this…"
-  (see the **Instructional Voice** doctrine above)
+  (see the **Instructional Voice** doctrine below)
 - **Attribution on Bluesky**: name the creator or author — Bluesky culture values attribution;
   do not echo the Twitter copy verbatim.
 - **Hashtags**: LinkedIn supports 2–4 hashtags at end; Twitter/X 1–2 max (they eat budget
