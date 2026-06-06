@@ -1233,7 +1233,7 @@
               <div class="step-why">Turns the file's existing prose into the structured inputs the skeleton-fill consumes; escaping at capture (<code>&amp; &lt; &gt; &quot; &#39;</code>) prevents injection from arbitrary markdown content.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Convert a sample plan (e.g. <code>docs/plans/implement-marketplace-api-service.md</code>) and confirm each parsed section appears in the resolved inputs with special characters escaped.</div>
+                <div class="verify-body">Convert a conforming sample plan (e.g. <code>docs/plans/harden-plan-documenter-completion-guard.md</code>, which uses Context/Objective/Steps/Verification headings matching SKELETON.md) and confirm each parsed section appears in the resolved inputs with special characters escaped.</div>
               </details>
             </div>
           </div>
@@ -1352,7 +1352,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>End-to-end: run <code>/plan-agent:implementation-plan implement-marketplace-api-service.md</code> against an existing markdown plan in <code>docs/plans/</code>. Confirm the skill (1) auto-detects the <code>.md</code> token as the source, (2) parses every section into the skeleton, (3) renders the result in the browser via Step 7 with all sections populated and HTML-escaped, (4) names the output <code>implement-marketplace-api-service.html</code> (source basename), (5) carries the source frontmatter plus a <code>plan-source</code> meta tag, and (6) presents the Step 8 implement/edit/exit menu unchanged. Then re-read <code>SKILL.md</code> end-to-end to confirm no second skill was introduced and the conversion path is a branch of the existing workflow. Finally verify <code>marketplace.json</code> shows <code>1.8.0</code>, <code>plugin.json</code> has no <code>version</code>, and the CHANGELOG/README/argument-hint all mention the markdown source.</p>
+      <p>End-to-end: run <code>/plan-agent:implementation-plan harden-plan-documenter-completion-guard.md</code> against an existing conforming markdown plan in <code>docs/plans/</code> (this file uses Context/Objective/Steps/Verification headings matching SKELETON.md). Confirm the skill (1) auto-detects the <code>.md</code> token as the source, (2) parses every section into the skeleton, (3) renders the result in the browser via Step 7 with all sections populated and HTML-escaped, (4) names the output <code>harden-plan-documenter-completion-guard.html</code> (source basename), (5) carries the source frontmatter plus a <code>plan-source</code> meta tag, and (6) presents the Step 8 implement/edit/exit menu unchanged. Then re-read <code>SKILL.md</code> end-to-end to confirm no second skill was introduced and the conversion path is a branch of the existing workflow. Finally verify <code>marketplace.json</code> shows <code>1.8.0</code>, <code>plugin.json</code> has no <code>version</code>, and the CHANGELOG/README/argument-hint all mention the markdown source.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
