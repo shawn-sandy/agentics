@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-06">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-tests-section-to-plans.html">
+<meta name="plan-path" content="docs/plans/add-tests-section-to-plans.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-tests-section-to-plans.html &mdash; Add a Tests section to the plan template with unit, integration, E2E, and objective-verification tests">
+<title>Plan: Add Tests section to implementation plans</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --green-border:#bbf7d0;
+    --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --amber-border:#fde68a;
+    --red:        #dc2626;
+    --red-bg:     #fef2f2;
+    --red-border: #fecaca;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    color: var(--text);
+    flex: 1;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+    margin-top: .35rem;
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: .8; }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .objective-card .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { flex: 1; min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--text);
+  }
+  .step-chip {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .1em .5em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--subtle);
+    border: 1px solid var(--border);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-chip-text { flex: 1; }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle {
+    margin-top: .5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    padding-top: .4rem;
+  }
+  .step-verify-toggle summary {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "\25B6"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem;
+    color: var(--text);
+    margin-top: .4rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--surface);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "\25B6"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem;
+    background: #f3e8ff;
+    color: #6d28d9;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid #ddd6fe;
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before { content: "\25B6"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-implement code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
+  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table code { font-size: .8em; }
+
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--subtle);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5.532 13.97a8.25 8.25 0 0 0-2.407 5.42 1.125 1.125 0 0 0 1.125 1.236h15.5a1.125 1.125 0 0 0 1.125-1.236 8.25 8.25 0 0 0-2.407-5.42l-3.559-3.56a2.25 2.25 0 0 1-.659-1.592V3.104M9.75 3h4.5M12 7.5h.008v.008H12V7.5Z"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ── Header — document cover ─────────────────────────────────── -->
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Add Tests section to implementation plans</h1>
+      <span class="status-badge">todo</span>
+    </div>
+    <div class="plan-meta">
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
+        2026-06-06
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
+        agentics
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
+        feature
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar — table of contents ─────────────────────────── -->
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── Objective ────────────────────────────────────────────── -->
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Ship a mandatory <strong>Tests</strong> section in every implementation plan that specifies real-world application tests &mdash; actual unit, integration, E2E, and other test files written for the application or feature, run by the project&#39;s test runner, and committed to the codebase. Every plan must also include an objective-verification mock/smoke test: a real test file that runs against the application and confirms the plan&#39;s stated goal is actually accomplished. The section uses a <strong>two-tier system</strong>: Tier 1 (code-touching plans) requires all applicable test sub-sections; Tier 2 (non-code plans like docs or file-move chores) requires only the mandatory objective-verification test. The author selects the tier based on what the steps actually do, not the <code>type:</code> field.</p>
+    </div>
+
+    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-tests-section-to-plans.html &mdash; Add a Tests section to the plan template with unit, integration, E2E, and objective-verification tests</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">add-tests-section-to-plans.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-tests-section-to-plans.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+    <!-- ── Progress ─────────────────────────────────────────────── -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">0 / 8 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p>The current implementation plan template (<code>plan-mode.md</code>, <code>reference/SKELETON.md</code>, and the HTML <code>SKELETON.html</code>) defines a robust verification chain: per-step verification confirms each step ran correctly, acceptance criteria confirm the plan meets the definition of done, and end-to-end verification confirms the whole plan executed correctly. However, none of these layers require <em>real application tests</em> &mdash; they are all prose-based assertions written inside the plan document itself.</p>
+      <p>This gap means a plan can be marked &quot;completed&quot; without any automated proof that the changes actually work in the running application. A developer could implement all steps, check all criteria boxes, and ship code that has zero test coverage. The missing layer is a <strong>Tests section</strong> that specifies real-world tests &mdash; actual test files (unit, integration, E2E) that are written for the application or feature, run by the project&#39;s test runner, and ship with the codebase. These are not plan-level prose checks; they are the same tests a developer would write and commit alongside feature code.</p>
+      <p>Additionally, every plan must include a mandatory <strong>objective-verification test</strong> &mdash; a real mock or smoke test that runs against the actual application and directly asserts the plan&#39;s stated objective is accomplished. Like all tests in this section, the objective-verification test is a real executable test file, not a prose assertion in the plan document. This closes the loop between &quot;what we said we&#39;d do&quot; and &quot;what the application actually does.&quot;</p>
+      <p><strong>Tier decision (resolved):</strong> Investigation of 22 existing plans (17 feature, 4 chore, 1 fix, 1 refactor, 0 docs) showed that chore plans span a wide spectrum &mdash; from pure file moves (<code>clean-up-docs</code>) to code-mutating changes (<code>enable-model-invocation</code>). A conditionally-present rule (skip Tests for docs/chore) would either under-test code-touching chores or force a fuzzy &quot;is this code-touching?&quot; classification on every author. Instead, the Tests section is <strong>always present</strong> with a two-tier depth model: <strong>Tier 1</strong> (code-touching plans) includes all applicable sub-sections (unit, integration, E2E) plus the mandatory objective-verification test; <strong>Tier 2</strong> (non-code plans: docs, file-move chores) requires only the objective-verification test, with other sub-sections omitted entirely rather than left as empty stubs. The author selects the tier based on what the steps actually do, not the <code>type:</code> frontmatter field &mdash; a <code>type: chore</code> plan that changes import paths is Tier 1, while a <code>type: chore</code> plan that moves directories is Tier 2.</p>
+    </section>
+
+    <!-- ── Files ──────────────────────────────────────────────── -->
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files to Modify
+      </h2>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> ~/.claude/rules/
+            <ul class="file-list">
+              <li><code>plan-mode.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add tests to Required Structure</span></li>
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> ~/.claude/rules/reference/
+            <ul class="file-list">
+              <li><code>SKELETON.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Tests section template</span></li>
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/implementation-plan/
+            <ul class="file-list">
+              <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Tests to Required Structure and HTML Output</span></li>
+              <li><code>reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Tests section HTML, CSS, and nav link</span></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── Diagram ──────────────────────────────────────────────── -->
+    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
+      <h2 id="h-diagram">
+        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
+        Diagram
+      </h2>
+
+      <div class="diagram-subheading">Verification layers after this change</div>
+      <div class="pipeline">
+        <div class="pipeline-node">
+          <div class="pipeline-label">Layer 1</div>
+          <code>Per-step verification</code>
+          <div class="pipeline-sub">Local: did this step do what it should?</div>
+        </div>
+        <div class="pipeline-arrow" aria-hidden="true">&darr;</div>
+        <div class="pipeline-node">
+          <div class="pipeline-label">Layer 2 (new)</div>
+          <code>Tests section</code>
+          <div class="pipeline-sub">Real application tests: unit, integration, E2E, and objective-verification test files that ship with the code</div>
+        </div>
+        <div class="pipeline-arrow" aria-hidden="true">&darr;</div>
+        <div class="pipeline-node">
+          <div class="pipeline-label">Layer 3</div>
+          <code>Acceptance criteria</code>
+          <div class="pipeline-sub">Definition of done: falsifiable conditions</div>
+        </div>
+        <div class="pipeline-arrow" aria-hidden="true">&darr;</div>
+        <div class="pipeline-node">
+          <div class="pipeline-label">Layer 4</div>
+          <code>End-to-end verification</code>
+          <div class="pipeline-sub">Whole-plan confirmation</div>
+        </div>
+      </div>
+
+      <div class="diagram-subheading">Test types, tiers, and when to include them</div>
+      <table class="plan-table">
+        <caption>Each test type below is a real application test &mdash; an actual test file written for the feature, run by the project&#39;s test runner, and committed to the codebase</caption>
+        <thead>
+          <tr>
+            <th scope="col">Test Type</th>
+            <th scope="col">Scope</th>
+            <th scope="col">Tier</th>
+            <th scope="col">Include When</th>
+            <th scope="col">Required?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Unit</strong></td>
+            <td>Real test file targeting a single function, method, or module in isolation</td>
+            <td>Tier 1 only</td>
+            <td>Plan adds or modifies business logic, utilities, helpers, data transformations</td>
+            <td>When applicable</td>
+          </tr>
+          <tr>
+            <td><strong>Integration</strong></td>
+            <td>Real test file exercising multiple modules, services, or layers working together</td>
+            <td>Tier 1 only</td>
+            <td>Plan touches API routes, database queries, middleware chains, service boundaries</td>
+            <td>When applicable</td>
+          </tr>
+          <tr>
+            <td><strong>E2E</strong></td>
+            <td>Real test file driving a full user flow through the running application</td>
+            <td>Tier 1 only</td>
+            <td>Plan affects user-facing flows, page navigation, form submissions, auth flows</td>
+            <td>When applicable</td>
+          </tr>
+          <tr>
+            <td><strong>Objective-verification</strong></td>
+            <td>Real mock/smoke test file that runs against the application and asserts the plan&#39;s stated objective is accomplished</td>
+            <td>Both tiers</td>
+            <td>Always &mdash; every plan must include one; <strong>always appears first</strong> in the Tests section as a highlighted hero card</td>
+            <td><strong>Mandatory</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="diagram-subheading">Tier selection guide</div>
+      <table class="plan-table">
+        <caption>The author selects the tier based on what the steps do, not the <code>type:</code> frontmatter field</caption>
+        <thead>
+          <tr>
+            <th scope="col">Tier</th>
+            <th scope="col">When to use</th>
+            <th scope="col">Required sub-sections</th>
+            <th scope="col">Examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tier 1</strong> (code-touching)</td>
+            <td>Any step creates, modifies, or deletes application source files, configs that affect runtime, or test files</td>
+            <td>Unit, Integration, E2E (when applicable) + Objective-verification (always)</td>
+            <td>feature, fix, refactor; chores that change imports, bump deps with code changes</td>
+          </tr>
+          <tr>
+            <td><strong>Tier 2</strong> (non-code)</td>
+            <td>Steps only move, rename, or delete files; write docs; update metadata; or perform other non-code operations</td>
+            <td>Objective-verification only (other sub-sections omitted, not left as empty stubs)</td>
+            <td>docs plans; chores that move directories, rename files, update non-runtime metadata</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── Steps ────────────────────────────────────────────────── -->
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <div class="steps-list">
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>tests</code> to the Required Structure in <code>plan-mode.md</code></span>
+              </div>
+              <div class="step-why">This is the authoritative rule file that all plans must follow. Adding the Tests section here makes it a first-class structural requirement alongside context, objective, steps, acceptance-criteria, and verification. The bullet must introduce the two-tier model so all downstream templates and skills inherit it.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Re-read <code>~/.claude/rules/plan-mode.md</code> &sect; Required Structure. Confirm a new <code>tests</code> bullet exists between <code>steps</code> and <code>acceptance-criteria</code>, and that it mentions the two-tier depth model (Tier 1 for code-touching plans, Tier 2 for non-code plans). At this point it only needs to name the section, its purpose, and the tier distinction &mdash; the detailed specification (sub-categories, mandatory vs. conditional rules) is Step 2&#39;s deliverable. No other sections should be altered.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Define the Tests section specification in <code>plan-mode.md</code></span>
+              </div>
+              <div class="step-why">The bullet alone names the section; this step specifies the rules for how to populate it &mdash; the two-tier depth model, which test types are conditional vs. mandatory, what qualifies as an objective-verification test, and how these real application tests relate to the existing prose-based verification chain.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Read the new <code>tests</code> bullet and confirm it specifies: (1) the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E &quot;when applicable&quot; plus mandatory objective-verification; Tier 2 (non-code) includes only the mandatory objective-verification test with other sub-sections omitted entirely; (2) the author selects the tier based on what the steps do, not the <code>type:</code> field; (3) the objective-verification test is a mandatory real mock/smoke test that runs against the application and asserts the plan&#39;s stated objective; (4) the objective-verification test always appears first in the Tests section as a highlighted hero card, before any unit/integration/E2E sub-sections; (5) the Tests section is explicitly distinct from per-step verification (prose) and end-to-end verification (prose) &mdash; Tests are real test files that ship with the code.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the Tests template to <code>reference/SKELETON.md</code></span>
+              </div>
+              <div class="step-why">The skeleton is copied as the starter for every new markdown plan. Without the Tests section in the skeleton, authors will produce plans missing the new required section despite the rule.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Open <code>~/.claude/rules/reference/SKELETON.md</code> and confirm a <code>## Tests</code> section exists between <code>## Steps</code> and <code>## Acceptance Criteria</code>. The objective-verification test placeholder must appear first (before unit/integration/E2E sub-headings), reflecting the hero-card-first layout. Confirm no existing sections were removed or reordered.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add Tests section CSS to the HTML <code>SKELETON.html</code></span>
+              </div>
+              <div class="step-why">The HTML plan skeleton needs dedicated styling for the Tests section &mdash; test-type badges (unit/integration/E2E/objective), a test list layout consistent with step cards, and a visually distinct objective-verification hero card that appears first in the section.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Open <code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> <code>&lt;style&gt;</code> block and confirm new CSS rules exist for: <code>.test-list</code>, <code>.test-card</code>, <code>.test-badge</code> (with variants <code>.test-badge-unit</code>, <code>.test-badge-integration</code>, <code>.test-badge-e2e</code>, <code>.test-badge-objective</code>), and <code>.objective-test-card</code>. Confirm the objective test card has a visually distinct treatment (e.g. accent border, highlighted background).</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add Tests section HTML markup to <code>SKELETON.html</code></span>
+              </div>
+              <div class="step-why">The HTML body needs the actual section element with placeholders for test items, positioned between the Steps section and Acceptance Criteria. This includes the nav sidebar link and the beaker icon reference.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Open <code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> and confirm: (1) a <code>&lt;section class=&quot;section-card card-tests&quot; id=&quot;tests&quot;&gt;</code> element exists between the Steps and Acceptance Criteria sections; (2) the <code>.objective-test-card</code> appears first inside the section as a highlighted hero card, before the <code>.test-list</code> container with unit/integration/E2E placeholder <code>.test-card</code> items; (3) a nav sidebar <code>&lt;li&gt;</code> with <code>href=&quot;#tests&quot;</code> and a beaker icon is present between Steps and Criteria links.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update the <code>SKILL.md</code> Required Structure and HTML Output Requirements</span>
+              </div>
+              <div class="step-why">The implementation-plan skill file is the authoritative spec for HTML plan generation. It must document the Tests section alongside the other required sections, specify the two-tier model, describe which real application test types to auto-generate from step analysis, and describe the mandatory objective-verification mock/smoke test &mdash; all of which are real test files for the application, not plan-level prose.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Read <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> Required Structure and HTML Output Requirements sections. Confirm: (1) <code>tests</code> is listed as a required section between <code>steps</code> and <code>acceptance-criteria</code>; (2) the description specifies the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E as conditional plus objective-verification as mandatory; Tier 2 (non-code) includes only objective-verification with other sub-sections omitted; (3) the tier is selected by step content analysis, not the <code>type:</code> field; (4) the HTML Output Requirements mention the new CSS classes and the section&#39;s placement.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add test-generation guidance to the <code>SKILL.md</code> workflow</span>
+              </div>
+              <div class="step-why">The plan-agent skill needs a workflow instruction telling it when and how to populate the Tests section during plan creation &mdash; analyzing the plan&#39;s steps to determine the tier (Tier 1 if any step creates/modifies/deletes application source files; Tier 2 otherwise), selecting which real application test types apply, and auto-drafting the objective-verification mock/smoke test from the objective statement. All generated test entries must describe real test files to be written and committed, not prose assertions.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">
+                  <p>Read the Workflow section in <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> and confirm a test-generation instruction exists (either as a sub-step of an existing step or as a new step). It should describe: (1) scanning step content to classify the tier &mdash; Tier 1 if any step touches application source files, Tier 2 otherwise; (2) for Tier 1, selecting applicable test types (unit/integration/E2E) based on what the steps modify; (3) for Tier 2, omitting unit/integration/E2E sub-sections entirely; (4) always generating an objective-verification test entry regardless of tier; (5) populating the <code>{test-items}</code> and <code>{objective-test}</code> placeholders in the skeleton.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Acceptance Criteria
+      </h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1">
+          <label for="ac1"><code>plan-mode.md</code> Required Structure lists <code>tests</code> as a required section between <code>steps</code> and <code>acceptance-criteria</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2">The <code>tests</code> specification names four sub-categories of real application tests: unit, integration, E2E, and objective-verification &mdash; with only objective-verification marked as mandatory; all are real test files for the application, not plan-level prose</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3"><code>reference/SKELETON.md</code> includes a <code>## Tests</code> section template with placeholders for all four test categories</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4"><code>SKELETON.html</code> includes new CSS classes for test-type badges (<code>.test-badge-unit</code>, <code>.test-badge-integration</code>, <code>.test-badge-e2e</code>, <code>.test-badge-objective</code>) and a visually distinct objective-test card</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5"><code>SKELETON.html</code> includes a <code>&lt;section id=&quot;tests&quot;&gt;</code> between Steps and Acceptance Criteria with placeholder test cards and a sidebar nav entry</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6"><code>SKILL.md</code> Required Structure includes <code>tests</code> with the same specification as <code>plan-mode.md</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7"><code>SKILL.md</code> workflow includes test-generation guidance that auto-classifies needed real application test types from step content and makes clear all tests are real test files, not prose</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8">No existing required sections (context, objective, steps, acceptance-criteria, verification, completion-checklist, next-steps, unresolved-questions) are removed, reordered, or modified in meaning</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">The two-tier model is documented in <code>plan-mode.md</code>, <code>SKILL.md</code>, and <code>SKELETON.html</code> &mdash; Tier 1 (code-touching) requires all applicable test sub-sections; Tier 2 (non-code) requires only the objective-verification test</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">Tier selection is based on step content analysis (do the steps touch application source files?), not the <code>type:</code> frontmatter field</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11">Tier 2 plans omit unit/integration/E2E sub-sections entirely rather than rendering them as empty stubs</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12">The objective-verification test always renders first in the Tests section as a visually distinct hero card, before any unit/integration/E2E sub-sections</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <!-- ── Verification ──────────────────────────────────────────── -->
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Verification
+      </h2>
+      <p>After implementing all steps, generate a new plan using <code>/plan-agent:implementation-plan</code> for any feature objective (e.g. &quot;Add a search bar to the dashboard&quot;). Open the resulting HTML plan and confirm:</p>
+      <ol>
+        <li>A <strong>Tests</strong> section appears between Steps and Acceptance Criteria in the rendered page.</li>
+        <li>The section contains at least one test card for the applicable test types &mdash; each describing a real test file to be written for the application (the search-bar plan should include unit tests for the search logic, integration tests for the API, and E2E tests for the user flow).</li>
+        <li>An <strong>objective-verification test</strong> hero card is always present, visually distinct, positioned <strong>first</strong> in the Tests section (before any unit/integration/E2E sub-sections), and describes a real mock/smoke test file that runs against the application and asserts the plan&#39;s objective statement is accomplished.</li>
+        <li>The sidebar navigation includes a &quot;Tests&quot; link that scrolls to the correct section.</li>
+        <li><strong>Tier 1 verification:</strong> Generating a plan for a feature or fix (e.g. &quot;Add a search bar&quot;) produces a Tier 1 Tests section with unit/integration/E2E sub-sections populated based on step analysis, plus the mandatory objective-verification test.</li>
+        <li><strong>Tier 2 verification:</strong> Generating a plan for a non-code change (e.g. a docs-only plan or a file-move chore) produces a Tier 2 Tests section with only the mandatory objective-verification test &mdash; unit/integration/E2E sub-sections are omitted entirely, not rendered as empty stubs.</li>
+        <li><strong>Tier boundary test:</strong> Generating a <code>type: chore</code> plan whose steps modify application source files (e.g. &quot;Bump dependency and update import paths&quot;) correctly selects Tier 1, not Tier 2 &mdash; confirming tier is driven by step content, not the <code>type:</code> field.</li>
+      </ol>
+      <p>Separately, create a markdown plan using the updated <code>SKELETON.md</code> and confirm the <code>## Tests</code> section template renders with all four test-type placeholders.</p>
+    </section>
+
+    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Completion Checklist
+      </h2>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report &mdash; all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Next Steps ──────────────────────────────────────────── -->
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next Steps
+      </h2>
+      <div class="next-steps-list">
+
+        <details class="next-step-item">
+          <summary>Backfill Tests sections into existing HTML plans</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Scan every .html plan file under docs/plans/ in the agentics repo. For each plan that lacks a &lt;section id=&quot;tests&quot;&gt;, analyze the plan&#39;s steps to determine which test types apply (unit, integration, E2E) and generate a Tests section with an objective-verification test derived from the plan&#39;s objective. Insert the section between the Steps and Acceptance Criteria sections in the HTML. Report a list of files modified and which test types were added to each.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Add a test-coverage gate to the completion checklist</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Update the plan-agent implementation-plan skill&#39;s completion checklist (the three mandatory disabled checkboxes in SKELETON.html) to include a fourth checkbox: &quot;All tests in the Tests section have been written and pass.&quot; Update the completion-checklist auto-update JavaScript to check this fourth condition by looking for a data attribute or class on the Tests section indicating all test cards are marked as done. Update the SKILL.md to document the new fourth completion requirement.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Add test-runner integration for objective-verification tests</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a &quot;Run test&quot; button to the objective-verification test card in the HTML plan template. When clicked, it should copy a CLI command (e.g. the test file path with the project&#39;s test runner) to the clipboard. Update the SKILL.md to specify that the plan-agent should detect the project&#39;s test framework (Jest, Vitest, pytest, etc.) and generate the appropriate run command. The button should be hidden in print and when status is &quot;completed&quot;.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <!-- Wish List -->
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Auto-generate test file stubs from the Tests section
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Explore adding a &quot;Generate test stubs&quot; button to the Tests section in HTML plans. When the user clicks &quot;Implement now&quot; on a plan that has a Tests section, the implementation phase should auto-scaffold test files alongside the source changes &mdash; creating one test file per test card with the test description as a pending/todo test case. Investigate how to detect the project&#39;s test framework and directory conventions (e.g. __tests__/, *.test.ts, *.spec.ts) to place files correctly. Prototype with Jest and Vitest first.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Visual test-coverage heatmap in the plan sidebar
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Design a compact visual indicator in the HTML plan sidebar that shows test coverage density per step &mdash; which steps have associated tests and which are untested. Render as a small vertical bar chart or dot grid next to each step in the nav. Use pure CSS (no charting library). When a step has zero associated tests, show a red dot; when it has tests, show a green dot. This gives a glanceable &quot;coverage health&quot; view without leaving the plan page.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ── Unresolved Questions ─────────────────────────────────── -->
+    <details class="optional-section">
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item">
+              <summary><s>Should non-code plans (docs, chore) require the full Tests section?</s> <strong>Resolved</strong></summary>
+              <div class="unresolved-prompt">
+                <p><strong>Decision:</strong> Always-present Tests section with a two-tier depth model. Tier 1 (code-touching plans) includes all applicable sub-sections; Tier 2 (non-code plans) requires only the objective-verification test. The author selects the tier based on step content, not the <code>type:</code> field. Rationale: chore plans span a wide spectrum (file moves to code mutations), making a conditionally-present rule unreliable; the objective-verification test is always mandatory so the section is never truly empty; and consistency reduces cognitive load for authors.</p>
+              </div>
+            </details>
+          </li>
+          <li>
+            <details class="unresolved-item">
+              <summary><s>Where should the objective-verification test appear when tests exist in multiple categories?</s> <strong>Resolved</strong></summary>
+              <div class="unresolved-prompt">
+                <p><strong>Decision:</strong> Always first, as a highlighted hero card. The objective-verification test is the one test you&#39;d write if you could only write one &mdash; placing it at the top mirrors that priority. A fixed position eliminates ambiguity: &quot;last&quot; sends the wrong signal (capstone implies &quot;do after everything else&quot; when it should be written first), and &quot;categorized&quot; forces a scope classification (&quot;is this E2E or integration?&quot;) that adds friction without value while making the mandatory test harder to find. The layout reads: hero card (the goal) &rarr; unit tests (details) &rarr; integration tests &rarr; E2E tests &mdash; mirroring how the plan&#39;s objective appears at the top of the document before context and steps.</p>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent &middot; 2026-06-06 &middot; agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan file and implement every step marked todo.');
+  lines.push('2. After completing each step, mark it done in the plan.');
+  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
+  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+
+  return lines.join('\n');
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  var text = buildImplementPrompt();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  var text = pre.textContent;
+
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy prompt';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar + localStorage ────────────────────────────── */
+  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  function saveState() {
+    var state = {};
+    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function restoreState() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!raw) return;
+    var state;
+    try { state = JSON.parse(raw); } catch (e) { return; }
+    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
+    updateProgress();
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      updateProgress();
+      saveState();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  restoreState();
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>
