@@ -66,7 +66,7 @@ Add it as a `SessionStart` hook in `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$TOPLEVEL/scripts/link-plugins.sh\""
+            "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && bash \"$TOPLEVEL/scripts/link-plugins.sh\""
           }
         ]
       }
