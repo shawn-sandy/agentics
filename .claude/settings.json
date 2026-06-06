@@ -9,6 +9,28 @@
         ]
     },
     "plansDirectory": "docs/plans",
+    "extraKnownMarketplaces": {
+        "agentics-kit": {
+            "source": {
+                "source": "github",
+                "repo": "shawn-sandy/agentics"
+            }
+        }
+    },
+    "enabledPlugins": {
+        "memory-tools@agentics-kit": true,
+        "code-review@agentics-kit": true,
+        "plan-interview@agentics-kit": true,
+        "wcag-compliance-reviewer@agentics-kit": true,
+        "skill-reviewer@agentics-kit": true,
+        "code-testing-agent@agentics-kit": true,
+        "git-agent@agentics-kit": true,
+        "product-plans@agentics-kit": true,
+        "settings-sync@agentics-kit": true,
+        "social-media-tools@agentics-kit": true,
+        "plan-agent@agentics-kit": true,
+        "issue-agent@agentics-kit": true
+    },
     "hooks": {
         "SessionStart": [
             {
