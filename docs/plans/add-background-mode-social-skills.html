@@ -8,6 +8,8 @@
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-05-28">
 <meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-background-mode-social-skills.html">
+<meta name="plan-path" content="docs/plans/add-background-mode-social-skills.html">
 <title>Plan: Close background-mode gaps for social-media-tools skills</title>
 <style>
   :root {
@@ -79,6 +81,59 @@
   .wish-item summary { background:var(--wish-bg); color:#6d28d9; }
   .wish-badge { font-size:.65rem; background:#ede9fe; color:#6d28d9; padding:.15rem .5rem; border-radius:999px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-left:auto; }
   .plan-footer { text-align:center; font-size:.75rem; color:var(--muted); margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border); }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 </style>
 </head>
 <body>
@@ -100,6 +155,22 @@
     <div class="section-label">Objective</div>
     <p>Make every <code>social-media-tools</code> skill runnable in the background so the main session's context stays free. The router and two background agents already cover seven of nine skills; this closes the remaining gaps — give <code>media-library</code> a non-interactive mode, make the router reach it, and reconcile the completion-line contract — then version and document the full capability.</p>
   </div>
+
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">add-background-mode-social-skills.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-background-mode-social-skills.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
 
   <div class="progress-wrap">
     <div class="progress-header">
@@ -252,6 +323,39 @@
 </div>
 
 <script>
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied \u2713';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
   (function () {
     var total = document.querySelectorAll('#criteria-list input[type="checkbox"]').length;
     var bar = document.getElementById('progress-bar');
