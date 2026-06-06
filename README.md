@@ -185,11 +185,11 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 
 **Or install all at once** — paste the full block above into your Claude Code session.
 
-### Auto-enable for Your Team (No Manual Install)
+### Auto-enable for Your Team (Declarative Config)
 
-You can make all 12 plugins load automatically — no per-machine `/plugin install`, and it works in Claude Code on the web sessions (which can't run interactive `/plugin` commands). This is done declaratively in `settings.json` using two keys: `extraKnownMarketplaces` (registers the marketplace) and `enabledPlugins` (turns plugins on).
+Instead of every contributor running `/plugin marketplace add` and `/plugin install` for each plugin, you can declare the kit once in `settings.json` using two keys: `extraKnownMarketplaces` (makes Claude Code aware of the marketplace) and `enabledPlugins` (marks which plugins should be enabled by default).
 
-This repo already ships these keys in **project scope** (`.claude/settings.json`), so fresh clones and web sessions of `agentics` auto-load the kit. To enable the same kit across **all your other repos**, add the two keys to your personal **user settings** (`~/.claude/settings.json`):
+This repo ships these keys in **project scope** (`.claude/settings.json`). On first use, Claude Code prompts the user to trust the repo and add the marketplace; once added, the listed plugins are enabled by default — no per-plugin install commands. To enable the same kit across **all your other repos**, add the two keys to your personal **user settings** (`~/.claude/settings.json`):
 
 ```json
 {
@@ -216,6 +216,8 @@ This repo already ships these keys in **project scope** (`.claude/settings.json`
 ```
 
 > This config lives in `settings.json`, **not** `CLAUDE.md`. `enabledPlugins` is an object (`"name@agentics-kit": true`), not an array. Merge these keys into any existing settings rather than overwriting the file.
+
+> **Heads-up on first run and web sessions:** the marketplace add is gated by a one-time trust/consent prompt. In a non-interactive context (such as a fresh Claude Code on the web session that can't answer prompts or run `/plugin`), the kit may not load until that prompt is accepted. If a session doesn't pick up the plugins, accept the trust prompt or run `/plugin marketplace add shawn-sandy/agentics` once.
 
 See the full team setup guide — including scope choices and caveats — in [docs/plugin-auto-load-setup.md](./docs/plugin-auto-load-setup.md).
 

@@ -1,20 +1,25 @@
 # Auto-loading the agentics-kit plugins
 
-This guide explains how the `agentics-kit` plugins are made to load
-automatically — no manual `/plugin install` per machine or per session — and how
-each team member can enable the same kit across **all** their own repos.
+This guide explains how the `agentics-kit` plugins are declared once in
+`settings.json` so contributors don't have to run `/plugin install` for each
+plugin on every machine, and how each team member can enable the same kit across
+**all** their own repos.
 
 ## TL;DR
 
 - Plugin enablement is configured in **`settings.json`**, not `CLAUDE.md`.
   CLAUDE.md is natural-language memory and is never read for plugin config.
-- Two keys do the work: `extraKnownMarketplaces` (registers the marketplace)
-  and `enabledPlugins` (turns plugins on).
-- This repo already ships them in **project scope** (`.claude/settings.json`),
-  so fresh clones and Claude Code on the web sessions of `agentics` auto-load
-  the kit.
+- Two keys do the work: `extraKnownMarketplaces` (makes Claude Code aware of the
+  marketplace) and `enabledPlugins` (marks which plugins are enabled by default).
+- This repo ships them in **project scope** (`.claude/settings.json`). On first
+  use Claude Code prompts to trust the repo and add the marketplace; after that,
+  the listed plugins are enabled by default — no per-plugin install commands.
 - To get the kit in **all your other repos**, add the same two keys to your
   personal **user settings** (`~/.claude/settings.json`).
+- **Caveat:** the one-time trust/marketplace-add prompt is interactive. A
+  non-interactive context (e.g. a fresh Claude Code on the web session that can't
+  answer prompts) may not load the kit until that prompt is accepted — see
+  [Caveats](#caveats).
 
 ## Why not `/plugin install`?
 
@@ -73,8 +78,9 @@ scope** themselves for their other repos.
 
 ### Already done for this repo
 
-Nothing to do for `agentics` itself — pull `main` and start a fresh session.
-The 12 plugins activate automatically.
+The config is committed for `agentics` itself — pull `main` and start a fresh
+session. On first use, accept the trust/marketplace-add prompt if shown; after
+that the 12 plugins are enabled by default with no per-plugin install.
 
 ### Enable in all your other repos (per person)
 
