@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-05">
 <meta name="plan-repo" content="agentics">
@@ -376,7 +376,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-05</span>
@@ -426,10 +426,10 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 7 done</span>
+        <span id="progress-label">7 / 7 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -534,66 +534,66 @@
       <h2 id="h-steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Port the three proven components into the SKELETON <code>&lt;style&gt;</code> block.</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Port the three proven components into the SKELETON <code>&lt;style&gt;</code> block.</span></div>
               <div class="step-why">Reuses already-validated, on-brand CSS instead of reinventing it — guarantees visual fidelity. Generic class names let the comparison block serve any 2–3-way comparison.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Copy <code>.file-tree</code>/<code>.file-list</code>/<code>.file-badge</code> (ref 848–890), <code>.pipeline</code>/<code>.pipeline-node</code>/<code>.pipeline-arrow</code> (893–937), and the comparison rules (940–981) from <code>build-clean-plugin-dist.html</code> into SKELETON.html before <code>&lt;/style&gt;</code>; rename <code>.allowlist-*</code>/<code>.allow-keep|drop|generated</code> to generic <code>.compare-grid</code>/<code>.compare-col-add|neutral|remove</code>. <code>grep -n "\.file-tree\|\.pipeline\|\.compare-grid" SKELETON.html</code> returns the rules; browser console shows no CSS errors.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Tokenize the new colors in <code>:root</code> and add net-new CSS for the bar chart and data table.</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Tokenize the new colors in <code>:root</code> and add net-new CSS for the bar chart and data table.</span></div>
               <div class="step-why">Eliminates one-off hex so all visuals theme consistently; the bar chart and table are the two requested components the reference lacks. Inline <code>--val</code> keeps the bar chart script-free.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Add <code>--amber-bg</code>, <code>--red</code>, <code>--red-bg</code> (and reuse <code>--green</code>/<code>--accent</code>) to <code>:root</code> and repoint the ported rules. Author <code>.bar-chart</code> (label + <code>.bar-track</code>/<code>.bar-fill</code> sized by <code>style="--val:NN%"</code> + visible value) and <code>.plan-table</code> (<code>&lt;caption&gt;</code>, <code>&lt;th scope="col"&gt;</code>, zebra rows). Render a scratch snippet: bars fill to width; table exposes caption + scoped headers in the DevTools a11y pane.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Add the four opt-in section blocks to the SKELETON <code>&lt;body&gt;</code>.</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Add the four opt-in section blocks to the SKELETON <code>&lt;body&gt;</code>.</span></div>
               <div class="step-why">Opt-in means the markup ships ready-to-fill but is removed when unused; the removal-comment convention is already used by <code>.plan-workflow</code> and unresolved-questions, so no new mechanism is introduced.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Insert a <strong>Files</strong> section (<code>card-files#files</code>, after Context), a <strong>Diagram</strong> section (<code>card-diagram#diagram</code>) hosting <code>.pipeline</code>/<code>.compare-grid</code>/<code>.bar-chart</code>, and a <code>.plan-table</code> usage — each wrapped in <code>&lt;!-- OPTIONAL … delete this block otherwise --&gt;</code> with <code>{placeholder}</code> tokens. Open SKELETON.html: all render with placeholders; delete one block and the page still renders cleanly with no orphaned styling.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Wire the new sections into the sidebar nav and confirm scroll-spy tolerates removal.</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Wire the new sections into the sidebar nav and confirm scroll-spy tolerates removal.</span></div>
               <div class="step-why">A nav link to a removed section is a dead anchor; the TOC must stay in sync. The existing <code>IntersectionObserver</code> already iterates only existing sections, so missing ones are a no-op.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Add Files/Diagram <code>&lt;li&gt;</code> entries to <code>.plan-nav ul</code>, documented as add-only-when-section-kept. Scroll a plan with the sections: the matching nav link gains <code>.active</code>/<code>aria-current</code>. Remove a section + its <code>&lt;li&gt;</code>: no console errors; remaining links still highlight.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Document the components in SKILL.md.</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Document the components in SKILL.md.</span></div>
               <div class="step-why">The template markup is inert without skill-side guidance on <em>when</em> to instantiate each visual and <em>how</em> to keep it accessible and self-contained. Content-anchored triggers prevent gratuitous visuals.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">In <strong>Required Structure</strong> add optional <code>files</code>/<code>diagram</code>/<code>chart</code>/<code>table</code> sections with one-line "include when…" triggers. In <strong>HTML Output Requirements</strong> add bullets for each component's classes, the keep/remove rule, the no-CDN/pure-CSS constraint, and a11y (table <code>scope</code>/<code>caption</code>, bar-chart visible numeric labels, badges not color-only). Add a <strong>Visual Components</strong> subsection naming each trigger (Files → multi-file; Diagram → flow/architecture; Chart → distribution/before-after; Table → mappings/matrices). Re-read SKILL.md to confirm.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Bump version and update the changelog.</span></div>
+              <div class="step-action"><span class="step-chip">done</span><span class="step-chip-text">Bump version and update the changelog.</span></div>
               <div class="step-why">A new skill capability is a MINOR bump per <code>marketplace.md</code>; the changelog keeps the marketplace discoverable and honest.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Add <code>## v1.5.0 — 2026-06-05 — Add visual components …</code> under <code>### Added</code> in CHANGELOG.md; change plan-agent <code>version</code> in marketplace.json from <code>1.4.1</code> to <code>1.5.0</code>; leave <code>plugin.json</code> without a version. <code>grep '"version"' .claude-plugin/marketplace.json</code> shows 1.5.0; the settings auto-validator reports valid JSON.</div></details>
             </div>
@@ -607,13 +607,13 @@
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Acceptance Criteria</h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1">SKELETON.html <code>&lt;style&gt;</code> contains pure-CSS rules for <code>.file-tree</code>, <code>.pipeline</code>, the renamed comparison grid, <code>.bar-chart</code>, and <code>.plan-table</code>, all using <code>:root</code> tokens (no stray hardcoded hex in the new rules).</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2">All four visual components are present in SKELETON.html as opt-in <code>&lt;body&gt;</code> blocks with explicit keep/remove comments and <code>{placeholder}</code> tokens.</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3">Removing any one optional visual block (and its nav <code>&lt;li&gt;</code>) leaves the plan rendering cleanly with no console errors and a consistent TOC.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4">The gallery scanner is untouched and still lists the plan (meta tags + <code>&lt;title&gt;</code> unchanged).</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">SKILL.md documents all four components: classes, opt-in trigger conditions, accessibility requirements, and the no-CDN constraint.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">plan-agent version is <code>1.5.0</code> in marketplace.json with a matching v1.5.0 CHANGELOG entry; <code>plugin.json</code> has no version field.</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">A test plan rendered in a browser displays a file-tree, a flow diagram, a bar chart, and a data table correctly and on-brand.</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1">SKELETON.html <code>&lt;style&gt;</code> contains pure-CSS rules for <code>.file-tree</code>, <code>.pipeline</code>, the renamed comparison grid, <code>.bar-chart</code>, and <code>.plan-table</code>, all using <code>:root</code> tokens (no stray hardcoded hex in the new rules).</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2">All four visual components are present in SKELETON.html as opt-in <code>&lt;body&gt;</code> blocks with explicit keep/remove comments and <code>{placeholder}</code> tokens.</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3">Removing any one optional visual block (and its nav <code>&lt;li&gt;</code>) leaves the plan rendering cleanly with no console errors and a consistent TOC.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4">The gallery scanner is untouched and still lists the plan (meta tags + <code>&lt;title&gt;</code> unchanged).</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">SKILL.md documents all four components: classes, opt-in trigger conditions, accessibility requirements, and the no-CDN constraint.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">plan-agent version is <code>1.5.0</code> in marketplace.json with a matching v1.5.0 CHANGELOG entry; <code>plugin.json</code> has no version field.</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">A test plan rendered in a browser displays a file-tree, a flow diagram, a bar chart, and a data table correctly and on-brand.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
@@ -631,12 +631,12 @@
     <!-- ── Completion Checklist (mandatory) ──────────────────────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion Checklist</h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header"><span class="completion-badge" id="completion-badge">Required</span></div>
         <ul class="completion-list" id="completion-list">
-          <li><input type="checkbox" id="cc1" disabled><label for="cc1">All step TODOs marked as done</label></li>
-          <li><input type="checkbox" id="cc2" disabled><label for="cc2">All acceptance criteria verified and checked off</label></li>
-          <li><input type="checkbox" id="cc3" disabled><label for="cc3">Plan status updated to completed</label></li>
+          <li><input type="checkbox" id="cc1" disabled checked><label for="cc1">All step TODOs marked as done</label></li>
+          <li><input type="checkbox" id="cc2" disabled checked><label for="cc2">All acceptance criteria verified and checked off</label></li>
+          <li><input type="checkbox" id="cc3" disabled checked><label for="cc3">Plan status updated to completed</label></li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
