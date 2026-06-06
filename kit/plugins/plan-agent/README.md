@@ -96,7 +96,7 @@ The skill enforces the full Steps 1–8 workflow:
 
 1. **Clarify** — resolves ambiguous requirements (skipped with `--quick`)
 2. **Create** — places the plan in the right directory with a `verb-target.html` filename
-3. **Frontmatter** — writes HTML `<meta>` tags: `plan-status`, `plan-type`, `plan-created`, `plan-repo`
+3. **Frontmatter** — writes HTML `<meta>` tags: `plan-status`, `plan-type`, `plan-created`, `plan-repo`, `plan-file`, `plan-path`
 4. **Rename** — ensures the filename is meaningful before committing
 5. **Align** — confirms each step matches the objective (skipped with `--quick`)
 5b. **Interview** — structured interview to stress-test the plan (skipped with `--quick` or `--no-interview`)
