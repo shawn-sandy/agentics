@@ -13,10 +13,11 @@
 
 import { readFileSync, writeFileSync, mkdirSync, cpSync, statSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { join, relative, basename, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
-const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
+const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '');
 const OUT_DIR = join(ROOT, 'dist');
 const MARKETPLACE_PATH = join(ROOT, '.claude-plugin', 'marketplace.json');
 const PLUGINS_DIR = join(ROOT, 'kit', 'plugins');
