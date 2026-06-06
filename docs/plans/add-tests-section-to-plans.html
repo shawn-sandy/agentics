@@ -1138,7 +1138,7 @@
             <td><strong>Objective-verification</strong></td>
             <td>Real mock/smoke test file that runs against the application and asserts the plan&#39;s stated objective is accomplished</td>
             <td>Both tiers</td>
-            <td>Always &mdash; every plan must include one</td>
+            <td>Always &mdash; every plan must include one; <strong>always appears first</strong> in the Tests section as a highlighted hero card</td>
             <td><strong>Mandatory</strong></td>
           </tr>
         </tbody>
@@ -1211,7 +1211,7 @@
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Read the new <code>tests</code> bullet and confirm it specifies: (1) the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E &quot;when applicable&quot; plus mandatory objective-verification; Tier 2 (non-code) includes only the mandatory objective-verification test with other sub-sections omitted entirely; (2) the author selects the tier based on what the steps do, not the <code>type:</code> field; (3) the objective-verification test is a mandatory real mock/smoke test that runs against the application and asserts the plan&#39;s stated objective; (4) the Tests section is explicitly distinct from per-step verification (prose) and end-to-end verification (prose) &mdash; Tests are real test files that ship with the code.</p>
+                  <p>Read the new <code>tests</code> bullet and confirm it specifies: (1) the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E &quot;when applicable&quot; plus mandatory objective-verification; Tier 2 (non-code) includes only the mandatory objective-verification test with other sub-sections omitted entirely; (2) the author selects the tier based on what the steps do, not the <code>type:</code> field; (3) the objective-verification test is a mandatory real mock/smoke test that runs against the application and asserts the plan&#39;s stated objective; (4) the objective-verification test always appears first in the Tests section as a highlighted hero card, before any unit/integration/E2E sub-sections; (5) the Tests section is explicitly distinct from per-step verification (prose) and end-to-end verification (prose) &mdash; Tests are real test files that ship with the code.</p>
                 </div>
               </details>
             </div>
@@ -1230,7 +1230,7 @@
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Open <code>~/.claude/rules/reference/SKELETON.md</code> and confirm a <code>## Tests</code> section exists between <code>## Steps</code> and <code>## Acceptance Criteria</code>. It should include sub-headings or a template for unit, integration, E2E, and an objective-verification test. Confirm no existing sections were removed or reordered.</p>
+                  <p>Open <code>~/.claude/rules/reference/SKELETON.md</code> and confirm a <code>## Tests</code> section exists between <code>## Steps</code> and <code>## Acceptance Criteria</code>. The objective-verification test placeholder must appear first (before unit/integration/E2E sub-headings), reflecting the hero-card-first layout. Confirm no existing sections were removed or reordered.</p>
                 </div>
               </details>
             </div>
@@ -1245,7 +1245,7 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Add Tests section CSS to the HTML <code>SKELETON.html</code></span>
               </div>
-              <div class="step-why">The HTML plan skeleton needs dedicated styling for the Tests section &mdash; test-type badges (unit/integration/E2E/objective), a test list layout consistent with step cards, and a visually distinct objective-verification test card.</div>
+              <div class="step-why">The HTML plan skeleton needs dedicated styling for the Tests section &mdash; test-type badges (unit/integration/E2E/objective), a test list layout consistent with step cards, and a visually distinct objective-verification hero card that appears first in the section.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
@@ -1268,7 +1268,7 @@
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body">
-                  <p>Open <code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> and confirm: (1) a <code>&lt;section class=&quot;section-card card-tests&quot; id=&quot;tests&quot;&gt;</code> element exists between the Steps and Acceptance Criteria sections; (2) it contains a <code>.test-list</code> container with placeholder <code>.test-card</code> items; (3) it includes a distinct <code>.objective-test-card</code> placeholder; (4) a nav sidebar <code>&lt;li&gt;</code> with <code>href=&quot;#tests&quot;</code> and a beaker icon is present between Steps and Criteria links.</p>
+                  <p>Open <code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> and confirm: (1) a <code>&lt;section class=&quot;section-card card-tests&quot; id=&quot;tests&quot;&gt;</code> element exists between the Steps and Acceptance Criteria sections; (2) the <code>.objective-test-card</code> appears first inside the section as a highlighted hero card, before the <code>.test-list</code> container with unit/integration/E2E placeholder <code>.test-card</code> items; (3) a nav sidebar <code>&lt;li&gt;</code> with <code>href=&quot;#tests&quot;</code> and a beaker icon is present between Steps and Criteria links.</p>
                 </div>
               </details>
             </div>
@@ -1367,6 +1367,10 @@
           <input type="checkbox" id="ac11">
           <label for="ac11">Tier 2 plans omit unit/integration/E2E sub-sections entirely rather than rendering them as empty stubs</label>
         </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12">The objective-verification test always renders first in the Tests section as a visually distinct hero card, before any unit/integration/E2E sub-sections</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1382,7 +1386,7 @@
       <ol>
         <li>A <strong>Tests</strong> section appears between Steps and Acceptance Criteria in the rendered page.</li>
         <li>The section contains at least one test card for the applicable test types &mdash; each describing a real test file to be written for the application (the search-bar plan should include unit tests for the search logic, integration tests for the API, and E2E tests for the user flow).</li>
-        <li>An <strong>objective-verification test</strong> card is always present, visually distinct, and describes a real mock/smoke test file that runs against the application and asserts the plan&#39;s objective statement is accomplished.</li>
+        <li>An <strong>objective-verification test</strong> hero card is always present, visually distinct, positioned <strong>first</strong> in the Tests section (before any unit/integration/E2E sub-sections), and describes a real mock/smoke test file that runs against the application and asserts the plan&#39;s objective statement is accomplished.</li>
         <li>The sidebar navigation includes a &quot;Tests&quot; link that scrolls to the correct section.</li>
         <li><strong>Tier 1 verification:</strong> Generating a plan for a feature or fix (e.g. &quot;Add a search bar&quot;) produces a Tier 1 Tests section with unit/integration/E2E sub-sections populated based on step analysis, plus the mandatory objective-verification test.</li>
         <li><strong>Tier 2 verification:</strong> Generating a plan for a non-code change (e.g. a docs-only plan or a file-move chore) produces a Tier 2 Tests section with only the mandatory objective-verification test &mdash; unit/integration/E2E sub-sections are omitted entirely, not rendered as empty stubs.</li>
@@ -1513,11 +1517,9 @@
           </li>
           <li>
             <details class="unresolved-item">
-              <summary>Where should the objective-verification test appear when tests exist in multiple categories?</summary>
+              <summary><s>Where should the objective-verification test appear when tests exist in multiple categories?</s> <strong>Resolved</strong></summary>
               <div class="unresolved-prompt">
-                <pre>The objective-verification test is mandatory and visually distinct. When a plan has unit, integration, and E2E tests, should the objective-verification test: (a) always appear first in the Tests section as a highlighted hero card, (b) always appear last as a capstone, or (c) appear in whichever test-type category best matches its scope (e.g. if the objective is best verified by an E2E test, show it in the E2E sub-section)? Recommend one approach and explain why it provides the clearest signal to both the plan author and the implementer.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+                <p><strong>Decision:</strong> Always first, as a highlighted hero card. The objective-verification test is the one test you&#39;d write if you could only write one &mdash; placing it at the top mirrors that priority. A fixed position eliminates ambiguity: &quot;last&quot; sends the wrong signal (capstone implies &quot;do after everything else&quot; when it should be written first), and &quot;categorized&quot; forces a scope classification (&quot;is this E2E or integration?&quot;) that adds friction without value while making the mandatory test harder to find. The layout reads: hero card (the goal) &rarr; unit tests (details) &rarr; integration tests &rarr; E2E tests &mdash; mirroring how the plan&#39;s objective appears at the top of the document before context and steps.</p>
               </div>
             </details>
           </li>
