@@ -136,16 +136,20 @@ Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
 ## Phase 3 — Draft Copy
 
 Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
-**Follow CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy — Standard
-Procedure**.
+**Instructional Voice** doctrine, **Learn-More CTA** rule, **Default Per-Platform Copy
+Formats**, and **Draft Copy — Standard Procedure**.
+
+**Takeaway-first**: every post must surface a concrete, applicable takeaway — what the
+reader can learn or apply from this code (a pattern, technique, or design principle).
+The snippet is evidence for the lesson, not the headline.
 
 Draft copy that **serves `OBJECTIVE`** within each platform's limit and the chosen tone:
 
-- **LinkedIn**: Context ("Here's a [LANGUAGE] snippet that…") → what it does → the insight the
-  objective calls for → CTA
-- **Twitter/X**: One punchy line framing the snippet around the objective
-- **Bluesky**: Conversational; name the creator
-- **Substack**: Why this code is interesting + the insight the objective calls for
+- **LinkedIn**: Context ("Here's a [LANGUAGE] pattern that…") → the teachable takeaway the
+  objective calls for → what makes it applicable → learn-more CTA
+- **Twitter/X**: One punchy takeaway framing the snippet around the lesson
+- **Bluesky**: Conversational; lead with the takeaway; name the creator
+- **Substack**: Why this pattern is worth learning + the teachable principle
 
 ---
 

@@ -139,15 +139,20 @@ Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
 
 ## Phase 4 — Draft Copy
 
-Read `$PLUGIN_DIR/references/platforms.md` for character limits, the **Follow CTA** rule,
-**Default Per-Platform Copy Formats**, and **Draft Copy — Standard Procedure**.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, the **Instructional Voice**
+doctrine, **Learn-More CTA** rule, **Default Per-Platform Copy Formats**, and **Draft Copy —
+Standard Procedure**.
+
+**Takeaway-first**: every post must surface a concrete, applicable takeaway — what the
+reader can learn or apply from this code (a pattern, technique, or design principle).
+The code is evidence for the lesson, not the headline.
 
 Content-specific guidance for this skill:
 
-- **LinkedIn**: Context ("Here's [LANGUAGE] code from [OWNER/REPO] that...") + what it does + key design decision or insight + CTA with link
-- **Twitter/X**: "[LANGUAGE] snippet worth seeing → [what it does in one phrase] — [GitHub URL]"
-- **Bluesky**: Similar brevity to Twitter; name the repo
-- **Substack**: Why you found this code interesting + what it demonstrates + link
+- **LinkedIn**: Context ("Here's a [LANGUAGE] pattern from [OWNER/REPO] that…") → the teachable takeaway → what makes it applicable → learn-more CTA with link
+- **Twitter/X**: "[LANGUAGE] pattern worth learning → [the teachable principle] — [GitHub URL]"
+- **Bluesky**: Similar brevity to Twitter; lead with the takeaway; name the repo
+- **Substack**: What this code teaches + the principle you can apply + link
 
 Read the code snippet before drafting.
 

@@ -136,7 +136,7 @@ Present analysis results and ask the user to confirm or adjust. Use a **single**
    `Substack` → `substack`
 
 2. **Tone**: "What tone fits your audience?"
-   Options: `Professional (Recommended)`, `Technical`, `Conversational`, `Punchy`
+   Options: `Instructional / Educational (Recommended)`, `Professional`, `Technical`, `Conversational`
    (multiSelect: false)
 
 3. **Audience**: "Who is your target audience?"
@@ -169,6 +169,11 @@ Skills read this file to pre-populate platform, tone, and content preferences.
 - Platform: <user-selected platform>
 - Tone: <user-selected tone>
 - Hashtags: <DETECTED_HASHTAGS, comma-separated>
+
+> **Note:** The teaching-first voice (Instructional Voice doctrine) applies
+> regardless of the tone setting above. The tone only adjusts the *register* —
+> how formally or casually the lesson is delivered. Every post leads with a
+> concrete, applicable takeaway.
 
 ## Focus
 

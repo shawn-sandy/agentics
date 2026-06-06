@@ -176,9 +176,15 @@ Combine extracted content and invoke `security-scrub`:
 
 ## Phase 5 — Draft Copy
 
-Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults,
-**Default Per-Platform Copy Formats**, and **Draft Copy — Standard Procedure**.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Instructional Voice** doctrine, **Learn-More CTA** rule, **Default Per-Platform Copy
+Formats**, and **Draft Copy — Standard Procedure**.
 For per-topic tone guide, read `references/topics.md`.
+
+**Takeaway-first**: every post must surface a concrete, applicable takeaway — what the
+reader can learn or apply from this project update (a technique, design decision, or
+development principle). Features, fixes, and releases are evidence for the lesson,
+not the headline.
 
 When SOCIAL.md was loaded:
 - Use `DEFAULT_TONE` as the baseline tone (user overrides still take priority)
@@ -187,10 +193,10 @@ When SOCIAL.md was loaded:
 - Use `AUDIENCE` to calibrate vocabulary and level of technical detail
 
 **Copy structure by topic:**
-- `features`: Hook with the top feature. LinkedIn: story arc. Short: strongest feature + emoji.
-- `bugs`: Lead with pain point fixed. LinkedIn: problem → solution → impact. Short: `#bugfix: [broken] → [fixed]`.
-- `changes`: Lead with most significant change. LinkedIn: what changed + why. Short: top 2 changes.
-- `release`: Lead with version + headline. LinkedIn: full highlights. Short: `🚀 [name] v[N] — [tagline]`.
+- `features`: Lead with the technique or principle behind the top feature. LinkedIn: lesson arc. Short: teachable pattern + emoji.
+- `bugs`: Lead with the root-cause lesson. LinkedIn: what went wrong → the principle that fixes it → what readers can apply. Short: `#bugfix lesson: [root cause] → [principle]`.
+- `changes`: Lead with the most instructive change and the design decision behind it. LinkedIn: what changed + the technique worth knowing. Short: top 2 lessons.
+- `release`: Lead with the key development principle the release embodies. LinkedIn: technique highlights. Short: `🚀 [name] v[N] — [key lesson]`.
 
 ---
 

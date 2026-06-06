@@ -256,8 +256,9 @@ Check the returned `GATE RESULT` line:
 
 ## Phase 5 — Draft Copy
 
-Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, Follow CTA
-rule, and Default Per-Platform Copy Formats.
+Read `$PLUGIN_DIR/references/platforms.md` for character limits, tone defaults, the
+**Instructional Voice** doctrine, **Learn-More CTA** rule, and **Default Per-Platform
+Copy Formats**.
 
 Resolve `PLATFORM` and `TONE` concretely before prompting:
 
@@ -269,16 +270,17 @@ Resolve `PLATFORM` and `TONE` concretely before prompting:
 
 Only if either variable is still empty after applying the above, ask for both in a single `AskUserQuestion`.
 
-**Lead with insight, not process.** The hook should surface the most interesting or surprising
-aspect of how the component works — not just "here's how X works."
+**Takeaway-first**: every post must surface a concrete, applicable takeaway — what the
+reader can learn or apply from how this component works (a pattern, technique, or design
+principle). The explanation is evidence for the lesson, not the headline.
 
 Content guidance per platform:
-- **LinkedIn**: hook on the key insight → 2–3 most important patterns → one-line invocation
-  example → follow CTA
-- **Twitter/X**: one sharp principle in ≤280 chars; invocation if space allows
-- **Bluesky**: conversational, principle-first, same brevity as Twitter/X
-- **Substack**: reflect on what the design reveals about the plugin's philosophy; patterns
-  as supporting detail
+- **LinkedIn**: hook on the key takeaway → 2–3 teachable patterns the reader can apply →
+  one-line invocation example → learn-more CTA
+- **Twitter/X**: one sharp teachable principle in ≤280 chars; invocation if space allows
+- **Bluesky**: conversational, takeaway-first, same brevity as Twitter/X
+- **Substack**: reflect on the teachable design principle and what the reader can apply;
+  patterns as supporting detail
 
 ---
 

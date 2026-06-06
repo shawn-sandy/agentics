@@ -42,7 +42,10 @@ Override project name and tagline for cards.
 ### `## Defaults`
 
 - `Platform:` → Default `--platform` value (e.g. `all`, `LinkedIn`, `twitter`)
-- `Tone:` → Default tone for copy drafting
+- `Tone:` → Default tone for copy drafting. Supported values: `Instructional / Educational`
+  (recommended — teaches in a clear, structured register), `Professional`, `Technical`,
+  `Conversational`, `Punchy`. The tone only adjusts register; the teaching-first voice
+  (Instructional Voice doctrine in `$PLUGIN_DIR/references/platforms.md`) applies regardless.
 - `Hashtags:` → Comma-separated default hashtags (appended per platform rules)
 
 ### `## Focus`

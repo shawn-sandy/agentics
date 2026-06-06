@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-06-05">
 <meta name="plan-repo" content="agentics">
@@ -954,7 +954,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Refine social-media-tools copy to teach, not just promote</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1038,12 +1038,12 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 7 done</span>
+        <span id="progress-label">7 / 7 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1066,12 +1066,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add an "Instructional Voice" doctrine to the shared references/platforms.md and reframe its CTA and per-platform formats</span>
               </div>
               <div class="step-why">This file is read at runtime by every card-generating skill — adding the teaching-first doctrine here propagates the new voice to all nine skills in one edit, rather than nine divergent copies.</div>
@@ -1083,12 +1083,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update each skill's Draft phase to require a concrete, applicable takeaway and point at the new doctrine</span>
               </div>
               <div class="step-why">Each SKILL.md layers content-specific copy guidance on top of the shared file; without updating these, individual skills (e.g. share-code's diff angle, share-session's recap) keep their old promotional/accomplishment-first arc.</div>
@@ -1100,12 +1100,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite the two skill-local copy-format references (share-blog, share-video) to lead with a lesson and use learn-more CTAs</span>
               </div>
               <div class="step-why">share-blog and share-video keep their own <code>references/platforms.md</code> with concrete LinkedIn/Substack templates; these must lead with a takeaway and reframe their subscribe/follow CTAs, or they will contradict the shared doctrine.</div>
@@ -1117,12 +1117,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update the discovery heuristics so "shareable" is judged by teaching value</span>
               </div>
               <div class="step-why">share-scan and share-project decide <em>what</em> is worth posting; if their selection criteria still favor "impressive" changes over "instructive" ones, the upstream content choice undercuts the downstream instructional voice.</div>
@@ -1134,12 +1134,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add an "Instructional / Educational" tone to share-init and write it into the generated SOCIAL.md</span>
               </div>
               <div class="step-why">SOCIAL.md persists per-project register defaults that every skill reads. The teaching-first voice is always on (Step 1), so this tone only sets the <em>register</em> the lesson is delivered in — adding "Instructional / Educational" makes the educational register the recommended starting point without ever gating the takeaway.</div>
@@ -1151,12 +1151,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Reword the README, add a CHANGELOG entry, and bump marketplace.json to 2.10.0</span>
               </div>
               <div class="step-why">The README's "share/promote" language and the version metadata must reflect the new cross-cutting behavior; per repo convention the marketplace.json version is authoritative and a CHANGELOG entry is required for every bump.</div>
@@ -1179,31 +1179,31 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">references/platforms.md contains an Instructional Voice doctrine declared as the unconditional default, with a short-form "takeaway wins, drop the learn-more line" rule, and the Follow CTA reframed as a learn-more invitation (no "hard sell" or "thought leadership"-first language remains).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Every card-generating skill's Draft phase requires a concrete, applicable takeaway and references the shared doctrine.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">share-blog and share-video copy-format references lead with a lesson/takeaway and use learn-more CTAs.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">share-scan and share-project discovery heuristics judge shareability primarily by teaching value.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">share-init offers an Instructional / Educational tone and writes it to the generated SOCIAL.md defaults; social-config.md documents it.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">marketplace.json shows social-media-tools at 2.10.0 with a matching CHANGELOG entry and updated README framing.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">A dry-run of one skill (e.g. share-explanation) produces copy whose lead is a teachable principle, with any follow line clearly secondary.</label>
         </li>
       </ul>
@@ -1234,15 +1234,15 @@
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" checked disabled>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" checked disabled>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" checked disabled>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

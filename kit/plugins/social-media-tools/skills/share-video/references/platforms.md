@@ -1,8 +1,12 @@
 # Video Share — Platform Copy Formats & API Reference
 
 Read in Phase 2 (API endpoints) and Phase 3 (copy format + examples).
-For canonical character limits and universal copy rules — including the **Follow CTA**
-rule that closes each post — see `$PLUGIN_DIR/references/platforms.md`.
+For canonical character limits and universal copy rules — including the **Instructional
+Voice** doctrine and **Learn-More CTA** rule — see `$PLUGIN_DIR/references/platforms.md`.
+
+**Takeaway-first**: every video-share post leads with a concrete, applicable lesson
+from the video — a technique, principle, or workflow the reader can learn and apply.
+The video link is supporting evidence, not the point of the post.
 
 ---
 
@@ -21,20 +25,21 @@ rule that closes each post — see `$PLUGIN_DIR/references/platforms.md`.
 
 ## Copy Format — LinkedIn
 
-**Structure:** Why-watch narrative → key insight → watch CTA → follow CTA → hashtags
+**Structure:** Lesson hook → teachable takeaway → watch CTA → learn-more CTA → hashtags
 
 ```
-[Hook that names the video and the channel — one sentence.]
+[Hook naming the key technique or principle from the video — one sentence.]
 
-[Two to three sentences on who made it, what problem it covers, and why it's worth
-watching right now.]
+[Two to three sentences on who made it and the most applicable technique or
+principle it teaches.]
 
-Key insight: [The most concrete or surprising thing you learned — one to two sentences.]
+Key lesson: [The most concrete, applicable thing you can take from this — one to
+two sentences framing it as something the reader can try.]
 
 Watch here ▶ [URL]
 
-[Topic-matched follow CTA — one varied line on the video's subject; see the
-Follow CTA rule in $PLUGIN_DIR/references/platforms.md]
+[Topic-matched learn-more CTA — one varied line on the video's subject; see the
+Learn-More CTA rule in $PLUGIN_DIR/references/platforms.md]
 
 #[Hashtag1] #[Hashtag2] #[Hashtag3]
 ```
@@ -42,19 +47,19 @@ Follow CTA rule in $PLUGIN_DIR/references/platforms.md]
 **Example:**
 
 ```
-Cassidy Williams just dropped a 20-minute breakdown of how she structures Claude
-projects — and it's the most practical take I've seen.
+A technique for structuring AI project context that changes how you think about
+prompt management.
 
-She walks through her actual CLAUDE.md files, how she layers context for different
-project types, and why she stopped putting documentation in the prompt.
+Cassidy Williams walks through her actual CLAUDE.md files, how she layers context
+for different project types, and why she stopped putting documentation in the prompt.
 
-Key insight: treating CLAUDE.md as a living document — edited after each session
-based on what Claude got wrong — is a fundamentally different mindset than "write
-it once and forget it."
+Key lesson: treating CLAUDE.md as a living document — edited after each session
+based on what Claude got wrong — turns static config into an iterative feedback
+loop you can apply to any AI-assisted workflow.
 
 Watch here ▶ https://youtu.be/example
 
-I share Claude workflow breakdowns like this regularly — follow if you want more.
+More agentic-dev breakdowns like this on my feed — follow along to keep learning.
 
 #ClaudeCode #AIEngineering #DeveloperProductivity
 ```
@@ -63,86 +68,88 @@ I share Claude workflow breakdowns like this regularly — follow if you want mo
 
 ## Copy Format — Twitter/X
 
-**Structure:** Hook + "Watch ▶ [URL]"
+**Structure:** Teachable principle + "Watch ▶ [URL]"
 
 ```
-[One punchy sentence naming the video or its key insight.] Watch ▶ [URL]
+[One punchy sentence naming the key technique or principle you can learn.] Watch ▶ [URL]
 ```
 
 **Rules:**
-- Lead with the insight or the creator, not "Great video by…"
+- Lead with the lesson, not "Great video by…"
 - The ▶ symbol is 1 character
 - Hashtags optional; if used, 1 max
-- Add a short, topic-matched follow tag only if it fits the 280-char budget after the
-  URL (the URL counts as 23 chars); drop it if the message would overflow
+- The **takeaway wins** — drop the learn-more line if the 280-char budget is tight
+  (URL counts as 23 chars)
 
 **Example:**
 
 ```
-Cassidy Williams shows her actual CLAUDE.md workflow — treating it as a living
-doc you edit after each session. This changed how I think about context. Watch ▶ https://youtu.be/example — follow for more Claude workflow tips.
+Treat CLAUDE.md as a living doc you edit after each session — it turns static
+config into an iterative feedback loop. Watch ▶ https://youtu.be/example #ClaudeCode
 ```
 
 ---
 
 ## Copy Format — Bluesky
 
-**Structure:** Quick take + link
+**Structure:** Teachable observation + link
 
 ```
-[Two sentences max: name the video + one concrete observation.] [URL]
+[Two sentences max: name the technique or lesson + how the reader can apply it.] [URL]
 ```
 
 **Rules:**
+- Lead with the takeaway
 - Name the creator — Bluesky culture values attribution
 - More casual than LinkedIn; no hashtags required
 - Don't echo the Twitter copy; find a different angle
-- Close with a brief, varied follow line on the topic when it fits the 300-char budget
+- The **takeaway wins** — drop the learn-more line if the 300-char budget is tight
 
 **Example:**
 
 ```
-Cassidy Williams on structuring Claude projects — the part about updating
-CLAUDE.md after each session based on what Claude got wrong is genuinely useful.
-https://youtu.be/example
-Following more Claude project tips here — follow along if that's useful.
+Cassidy Williams on structuring Claude projects — the technique of updating
+CLAUDE.md after each session based on what Claude got wrong turns static config
+into iterative learning. Try it on your next project. https://youtu.be/example
 ```
 
 ---
 
 ## Copy Format — Substack
 
-**Structure:** Personal context + what you got from it + link
+**Structure:** Learning context + teachable takeaway + what to apply + link
 
 ```
-[One sentence on why you watched — what you were looking for or what caught your eye.]
+[One sentence on what you were trying to learn or what question you had.]
 
-[CHANNEL]'s [TITLE] covers [topic] — [one or two concrete takeaways or observations,
-written as personal reaction rather than summary.]
+[CHANNEL]'s [TITLE] covers [topic] — [one or two concrete techniques or principles
+you learned, written as applicable lessons rather than summary.]
 
-[A sentence on what stuck with you or what you'll apply.] [URL]
+[A sentence on what you'll apply differently — the actionable shift.] [URL]
 
-[Topic-matched subscribe CTA — newsletter voice; see the Follow CTA rule in
-$PLUGIN_DIR/references/platforms.md]
+[Topic-matched subscribe/learn-more CTA — newsletter voice; see the Learn-More
+CTA rule in $PLUGIN_DIR/references/platforms.md]
 ```
 
 **Rules:**
 - Newsletter voice: more reflective than LinkedIn, more substantive than Twitter
 - Name the creator — attribution matters
 - No hashtags (Substack Notes don't use them)
-- Add genuine opinion, not just description
+- Lead with the learning, not just a reaction
 - Keep under 500 chars
 
 **Example:**
 
 ```
-I've been rethinking how I structure context for Claude — so Cassidy Williams'
-breakdown of her actual CLAUDE.md workflow was well-timed.
+I've been trying to figure out how to structure context for Claude effectively —
+this video laid out the technique clearly.
 
-The key shift: treating CLAUDE.md as a living document you edit after each
-session based on what Claude got wrong, not a set-it-and-forget-it config file.
+Cassidy Williams' breakdown teaches a specific workflow: treat CLAUDE.md as a
+living document you edit after each session based on what Claude got wrong, not a
+set-it-and-forget-it config file.
 
-That reframe alone changed how I approach project setup. https://youtu.be/example
+That technique alone changed how I approach project setup — I'm applying it to
+every new project now. https://youtu.be/example
 
-I write about Claude workflows and dev productivity — subscribe for more.
+I write about agentic dev techniques — subscribe to keep learning.
 ```

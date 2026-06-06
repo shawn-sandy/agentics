@@ -36,8 +36,9 @@ for each (see `$PLUGIN_DIR/references/copy-panels.md`).
 
 - **URL length**: every URL counts as **23 characters** on Twitter/X (t.co shortener);
   plan character budget accordingly.
-- **Lead with insight**: open with the most surprising or useful observation — not
-  "Great post by…", "I just watched…", or "Check out this…"
+- **Lead with takeaway**: open with a concrete, teachable principle or technique the
+  reader can apply — not "Great post by…", "I just watched…", or "Check out this…"
+  (see the **Instructional Voice** doctrine below)
 - **Attribution on Bluesky**: name the creator or author — Bluesky culture values attribution;
   do not echo the Twitter copy verbatim.
 - **Hashtags**: LinkedIn supports 2–4 hashtags at end; Twitter/X 1–2 max (they eat budget
@@ -50,32 +51,56 @@ for each (see `$PLUGIN_DIR/references/copy-panels.md`).
 
 ---
 
-## Follow CTA
+## Instructional Voice
 
-Close each post with a short invitation to follow for **more on the post's topic** —
-this is what turns reach into followers. It is the closing CTA referenced in the
-per-skill story arcs (hook → insight → CTA).
+Every post this plugin generates must lead with a **concrete, teachable takeaway** —
+a principle, technique, or pattern the reader can learn from and apply. This is the
+**unconditional default** for every card-generating skill; the SOCIAL.md tone setting
+only adjusts the *register* (professional, conversational, technical) and can never
+disable the takeaway.
+
+**Post arc:** hook → takeaway/lesson → learn-more (not hook → insight → CTA).
+
+- **Takeaway first**: the body of the post names a specific principle, pattern, or
+  technique and explains it concisely enough that a reader learns something without
+  clicking through.
+- **Teach, don't just promote**: frame every post as a learning resource. "Here's a
+  technique you can apply" beats "Here's what I shipped." Accomplishments and
+  features are evidence for the lesson, not the headline.
+- **Applicable**: the reader should be able to act on the takeaway — try a pattern,
+  avoid a pitfall, adopt a workflow. Abstract praise ("great article") doesn't count.
+
+---
+
+## Learn-More CTA
+
+Close each post with a short **learn-more invitation** — secondary to the takeaway,
+never a hard sell. This replaces the old follow-for-reach pattern.
 
 - **Topic-matched, never generic**: name what the reader gets more of — the same
   keywords reflected in the post's hashtags (the language, technique, feature area, or
   subject). Never a bare "Follow me" or "Follow for more" with no topic.
-- **Vary it every time**: rotate the wording and structure across posts; do not reuse
-  a stock line. The patterns below are starting points to **adapt, not copy verbatim**:
-  - "Follow for more `<topic>` breakdowns like this."
-  - "I share `<language>` patterns like this regularly — follow along."
-  - "More `<topic>` deep-dives coming; follow to catch them."
-  - "If `<topic>` is your thing, follow for the next one."
-  - "Posting more on `<topic>` soon — follow if it's useful."
+- **Framed as continued learning**: the line invites the reader to keep exploring a
+  topic, not to grow someone's audience. The patterns below are starting points to
+  **adapt, not copy verbatim**:
+  - "More `<topic>` breakdowns like this on my feed."
+  - "I break down `<language>` patterns like this regularly — follow along to learn more."
+  - "More `<topic>` deep-dives coming — follow to keep learning."
+  - "If you're learning `<topic>`, I post more breakdowns like this."
+  - "I post more `<topic>` walkthroughs — follow if they're useful."
+- **Secondary to the takeaway, never a hard sell**: if the post already delivers
+  the lesson, the learn-more line is a bonus, not the purpose of the post. It should
+  read naturally if removed.
 - **Generic, no handle**: the post publishes from the author's own account, so do not
   invent or insert an `@handle`.
 - **Placement & budget**:
   - **LinkedIn** (1,500): one short closing line, after any content/read CTA and
     before the hashtags.
-  - **Twitter/X** (280) & **Bluesky** (300): add a brief follow clause **only if it
-    fits** after the core message and URL (a URL is 23 chars on Twitter/X). If it
-    would crowd the message, **drop it — content wins**.
-  - **Substack** (500): one closing line inviting the reader to subscribe or follow
-    for more on the topic — natural newsletter voice, not a hard sell.
+  - **Twitter/X** (280) & **Bluesky** (300): the **takeaway wins and the learn-more
+    line is dropped** when character budget is tight. Only include it if there is
+    clear room after the core message and URL (a URL is 23 chars on Twitter/X).
+  - **Substack** (500): one closing line inviting the reader to subscribe for more
+    on the topic — natural newsletter voice, framed as continued learning.
 
 ---
 
@@ -104,11 +129,12 @@ Every card-generating skill follows this procedure after drafting:
 Universal copy structure guidance. Skills with content-specific needs add to these
 defaults in their own Draft Copy phase.
 
-- **LinkedIn**: Narrative paragraphs; story arc (hook → insight → CTA); 2–4 hashtags
-  at end
-- **Twitter/X**: One punchy sentence or tight two-liner; 1–2 hashtags max; lead with
-  the insight, not "Great post by…"
-- **Bluesky**: Conversational, similar brevity to Twitter; name the creator; no
-  hashtags required
+- **LinkedIn**: Narrative paragraphs; story arc (hook → takeaway/lesson → learn-more);
+  lead with a concrete principle or technique the reader can apply; 2–4 hashtags at end
+- **Twitter/X**: One punchy takeaway or tight two-liner; 1–2 hashtags max; lead with
+  the lesson, not "Great post by…"; drop the learn-more line if budget is tight
+- **Bluesky**: Conversational; lead with the takeaway; name the creator; no hashtags
+  required; drop the learn-more line if budget is tight
 - **Substack**: Newsletter voice — more reflective than LinkedIn, more substantive
-  than Twitter; add a sentence of context or opinion; no hashtags
+  than Twitter; lead with a teachable principle; add a sentence of context or opinion;
+  no hashtags

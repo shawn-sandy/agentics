@@ -1,5 +1,36 @@
 # Changelog — social-media-tools
 
+## v2.10.0 — 2026-06-06 — Instructional voice: teach, don't just promote
+
+### Changed
+
+- **Instructional Voice doctrine** added to `references/platforms.md` as the unconditional
+  default for every card-generating skill — every post now leads with a concrete, teachable
+  takeaway about agentic development. The SOCIAL.md tone setting adjusts register only and
+  can never disable the takeaway.
+- **Follow CTA → Learn-More CTA**: the closing line is reframed as a learn-more invitation
+  ("more breakdowns like this on my feed"), never a hard sell. On Twitter/X (280) and
+  Bluesky (300), the takeaway wins and the learn-more line is dropped when budget is tight.
+- **Post arc**: hook → takeaway/lesson → learn-more (replaces hook → insight → CTA).
+- **Per-platform copy formats** in the shared `references/platforms.md` now name a takeaway
+  or lesson element for every platform.
+- **Draft phases** of `share-code`, `share-selection`, `share-github`, `share-session`,
+  `share-project`, and `share-explanation` updated to require a concrete, applicable takeaway
+  and reference the Instructional Voice doctrine.
+- **share-blog** and **share-video** skill-local `references/platforms.md` rewritten: LinkedIn
+  and Substack structures lead with a lesson; example CTAs are learn-more framed.
+- **share-scan** scoring tables (`interesting-patterns.md`) judge shareability primarily by
+  teaching value ("does this illustrate an agentic-dev lesson?").
+- **share-project** tone guide (`topics.md`) reframed: each topic leads with the technique or
+  principle behind the update, with learn-more CTAs.
+- **share-init** now offers "Instructional / Educational" as the recommended tone option; the
+  generated SOCIAL.md documents the instructional register.
+- **social-config.md** documents the new tone option and notes the teaching-first voice
+  applies regardless of tone.
+- **README.md** updated to describe the teaching-first voice and the new tone.
+
+---
+
 ## v2.9.2 — 2026-06-05 — Use portable plugin root for asset lookup
 
 ### Fixed
