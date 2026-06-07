@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — Remove review artifact emission from review-plan
+
+### Removed
+
+- **Step 8 (Artifact)** — the skill no longer emits a standalone `*-review.html` file. All review findings are now placed directly into the source plan via the collapsible `<details class="team-review">` block appended in Step 7.
+- **`SendUserFile`** removed from `allowed-tools` — no separate file is delivered.
+
+### Changed
+
+- **Step numbering** — cleanup is now Step 8 (was Step 9); total workflow steps reduced from 9 to 8.
+
+---
+
 ## v1.9.0 — 2026-06-06 — Agent Team–based plan review skill
 
 ### Added
