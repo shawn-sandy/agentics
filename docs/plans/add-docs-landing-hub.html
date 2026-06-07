@@ -1189,7 +1189,7 @@
               <div class="step-why">The meta-refresh document has to go before anything can render at the root; seeding the same <code>:root</code> token block as <code>docs/plans/index.html</code> guarantees visual parity from the first byte and keeps the page fully self-contained (inline CSS, no CDN).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Open <code>docs/index.html</code>: there is no <code>&lt;meta http-equiv="refresh"&gt;</code> and no <code>&lt;link rel="canonical"&gt;</code> redirect; the file starts with <code>&lt;!DOCTYPE html&gt;</code>, <code>&lt;html lang="en"&gt;</code>, includes <code>&lt;meta charset="UTF-8"&gt;</code>, <code>&lt;meta name="viewport"&gt;</code>, a <code>&lt;title&gt;</code>, and a <code>&lt;a class="skip-link" href="#main"&gt;Skip to content&lt;/a&gt;</code>; the <code>:root</code> block declares <code>--bg:#ffffff</code>, <code>--accent:#2563eb</code>, <code>--radius:4px</code> and the same <code>--surface/--border/--text/--muted</code> values as <code>docs/plans/index.html</code>.</div>
+                <div class="verify-body">Open <code>docs/index.html</code>: there is no <code>&lt;meta http-equiv="refresh"&gt;</code> and no <code>&lt;link rel="canonical"&gt;</code> redirect; the file starts with <code>&lt;!DOCTYPE html&gt;</code>, <code>&lt;html lang="en"&gt;</code>, includes <code>&lt;meta charset="UTF-8"&gt;</code>, <code>&lt;meta name="viewport"&gt;</code>, a <code>&lt;title&gt;</code>, and a <code>&lt;a class="skip-link" href="#main"&gt;Skip to content&lt;/a&gt;</code>; the <code>:root</code> block declares <code>--bg:#ffffff</code>, <code>--accent: #2563eb</code>, <code>--radius:4px</code> and the same <code>--surface/--border/--text/--muted</code> values as <code>docs/plans/index.html</code>.</div>
               </details>
             </div>
           </div>
@@ -1274,7 +1274,7 @@
               <div class="step-why">The smoke test codifies the plan's acceptance criteria as automated assertions, and belongs in <code>tests/pages/</code> with the <code>test-*</code> naming convention matching its siblings (<code>test-pages-smoke.sh</code>, <code>test-workflow-config.sh</code>). The existing <code>test-root-redirect.sh</code> asserts the meta-refresh redirect this plan removes, so it must be deleted or rewritten to assert the hub instead.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Run <code>bash tests/pages/test-docs-hub.sh</code> and confirm it exits 0. Confirm the test asserts: no <code>http-equiv="refresh"</code>, <code>href="plans/index.html"</code> present, <code>href="media/social/index.html"</code> present, no absolute-root link (<code>href="/"</code>), and at least one CSS token (<code>--accent:#2563eb</code>). Confirm <code>tests/pages/test-root-redirect.sh</code> no longer asserts a meta-refresh redirect.</div>
+                <div class="verify-body">Run <code>bash tests/pages/test-docs-hub.sh</code> and confirm it exits 0. Confirm the test asserts: no <code>http-equiv="refresh"</code>, <code>href="plans/index.html"</code> present, <code>href="media/social/index.html"</code> present, no absolute-root link (<code>href="/"</code>), and at least one CSS token (<code>--accent:.*#2563eb</code>). Confirm <code>tests/pages/test-root-redirect.sh</code> no longer asserts a meta-refresh redirect.</div>
               </details>
             </div>
           </div>
@@ -1300,7 +1300,7 @@
         <div class="test-card-body">
           <p><strong>File:</strong> <code>tests/pages/test-docs-hub.sh</code></p>
           <p><strong>Type:</strong> smoke test (bash, matches the existing <code>tests/pages/test-*</code> convention)</p>
-          <p><strong>Asserts:</strong> <code>docs/index.html</code> contains no <code>http-equiv="refresh"</code>; contains <code>href="plans/index.html"</code> and <code>href="media/social/index.html"</code>; contains no absolute-root link (<code>grep -q 'href="/'</code> must fail); contains at least one CSS token (<code>--accent:#2563eb</code>); and <code>.github/workflows/deploy-pages.yml</code> exists and was not modified in the current commit (checked via <code>test -f</code>, not <code>git diff</code>). Directly proves the plan's stated objective.</p>
+          <p><strong>Asserts:</strong> <code>docs/index.html</code> contains no <code>http-equiv="refresh"</code>; contains <code>href="plans/index.html"</code> and <code>href="media/social/index.html"</code>; contains no absolute-root link (<code>grep -q 'href="/'</code> must fail); contains at least one CSS token (<code>--accent:.*#2563eb</code>); and <code>.github/workflows/deploy-pages.yml</code> exists and was not modified in the current commit (checked via <code>test -f</code>, not <code>git diff</code>). Directly proves the plan's stated objective.</p>
           <p><strong>Run:</strong> <code>bash tests/pages/test-docs-hub.sh</code></p>
         </div>
       </div>
@@ -1508,7 +1508,7 @@
         <p><strong>Assessment:</strong> Well-scoped and largely executable, but had meaningful gaps. <strong>Key gaps addressed:</strong> (1) No step created test files &mdash; added Step 6. (2) Step 1 verify lacked HTML boilerplate checks &mdash; added DOCTYPE, lang, charset, viewport, title, skip-link assertions. (3) Card descriptions unspecified &mdash; Step 3 verify now requires descriptive subtitles. (4) E2E spec listed as deliverable with no Playwright infra &mdash; deferred to Next Steps.</p>
 
         <h3>Testability</h3>
-        <p><strong>Coverage:</strong> Adequate for the narrow scope after fixes. <strong>Key gaps addressed:</strong> (1) Smoke test had no CSS-token assertion &mdash; added <code>--accent:#2563eb</code> check. (2) Git-diff assertion replaced with <code>test -f</code> check. (3) E2E spec marked deferred with explicit status note. (4) Smoke test <code>Run:</code> command corrected to <code>bash tests/pages/test-docs-hub.sh</code>.</p>
+        <p><strong>Coverage:</strong> Adequate for the narrow scope after fixes. <strong>Key gaps addressed:</strong> (1) Smoke test had no CSS-token assertion &mdash; added <code>--accent:.*#2563eb</code> check. (2) Git-diff assertion replaced with <code>test -f</code> check. (3) E2E spec marked deferred with explicit status note. (4) Smoke test <code>Run:</code> command corrected to <code>bash tests/pages/test-docs-hub.sh</code>.</p>
 
         <h3>Risk</h3>
         <p><strong>Risk level:</strong> Low. Key risks: relative links break if galleries move (medium &mdash; accepted, smoke test covers); CDN propagation delay after deploy (low &mdash; documented in Verification); <code>test-root-redirect.sh</code> would have broken silently (low &mdash; now addressed in Step 6 and AC9).</p>
