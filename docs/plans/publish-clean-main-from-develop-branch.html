@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="completed">
-<meta name="plan-type" content="refactor">
-<meta name="plan-created" content="2026-06-05">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-06">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev">
-<meta name="plan-file" content="refine-social-copy-instructional.html">
-<meta name="plan-path" content="docs/plans/refine-social-copy-instructional.html">
-<title>Plan: Refine social-media-tools copy to teach, not just promote</title>
+<meta name="plan-file" content="publish-clean-main-from-develop-branch.html">
+<meta name="plan-path" content="docs/plans/publish-clean-main-from-develop-branch.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch">
+<title>Plan: Publish a clean main branch from a develop workspace</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -26,7 +26,13 @@
     --accent-bg:  #eff6ff;
     --green:      #16a34a;
     --green-bg:   #f0fdf4;
+    --green-border:#bbf7d0;
     --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --amber-border:#fde68a;
+    --red:        #dc2626;
+    --red-bg:     #fef2f2;
+    --red-border: #fecaca;
     --grey-bg:    #f9fafb;
     --wish-bg:    #fdf8ff;
     --wish-border:#d8b4fe;
@@ -764,7 +770,60 @@
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Workflow prompt ─────────────────────────────────────────── */
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt ──────────────────────────────────────────── */
   .plan-workflow {
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
@@ -846,58 +905,39 @@
     a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
   }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
-  .plan-source {
-    display: flex;
-    flex-direction: column;
-    gap: .4rem;
-    margin: -.5rem 0 1.5rem;
-    padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: .8rem;
-  }
-  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
-  .plan-source-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    flex-shrink: 0;
-    width: 2.4rem;
-  }
-  .plan-source code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem;
-    color: var(--text);
-    flex: 1;
-    word-break: break-all;
-  }
-  .copy-src-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .2rem .6rem;
-    font-size: .72rem;
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
-  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media print { .copy-src-btn { display: none !important; } }
-  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
 </style>
 </head>
 <body>
@@ -912,6 +952,9 @@
   </symbol>
   <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
   </symbol>
   <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
@@ -953,13 +996,13 @@
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Refine social-media-tools copy to teach, not just promote</h1>
-      <span class="status-badge">completed</span>
+      <h1 class="plan-title">Publish a clean main branch from a develop workspace</h1>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-05
+        2026-06-06
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
@@ -967,7 +1010,7 @@
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        refactor
+        feature
       </span>
     </div>
   </div>
@@ -983,6 +1026,8 @@
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
       <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
@@ -997,13 +1042,13 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Rewire the social-media-tools voice so every generated post leads with a concrete, teachable takeaway about agentic development — turning the plugin's output from "look what I shipped" into a running, shareable curriculum that readers can learn from and apply.</p>
+      <p>Split the agentics repo into a <code>develop</code> branch for day-to-day work and a clean <code>main</code> branch (kept as the GitHub default) that carries only the plugin distribution — so every <code>/plugin install</code> pulls stripped plugin files directly from the default branch while docs, scripts, and development live on develop, automatically republished to main on every push.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1012,38 +1057,38 @@
     <details class="plan-workflow">
       <summary>Run as workflow — launch parallel subagents</summary>
       <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev</code>
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch</code>
         <button class="copy-workflow-btn" type="button"
                 onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
     </details>
+
     <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">refine-social-copy-instructional.html</code>
+        <code id="plan-file" aria-label="Plan file name">publish-clean-main-from-develop-branch.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/refine-social-copy-instructional.html</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/publish-clean-main-from-develop-branch.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
     </div>
 
-
     <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">7 / 7 done</span>
+        <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:100%"></div>
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
       </div>
     </div>
 
@@ -1053,9 +1098,88 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The social-media-tools plugin (currently v2.9.1) ships nine card-generating skills — share-code, share-selection, share-github, share-session, share-project, share-explanation, share-blog, share-video, plus the social-share router. They all draft copy from one shared doctrine in <code>references/platforms.md</code>, which today optimizes for reach and followers: a mandatory promotional "Follow CTA", a "thought leadership" framing on quote cards, and per-platform formats whose arc is hook → insight → CTA.</p>
-      <p>The owner wants the plugin to do double duty: its posts should still travel well, but they should primarily <strong>teach</strong>. Each post should leave the reader with a concrete principle or technique about agentic development they can apply — so the body of work becomes a learning resource, not a highlight reel. Because every skill reads the shared doctrine at runtime, the leverage point is centralized: change the doctrine and the per-skill Draft phases that echo it, and all skills inherit the instructional voice at once.</p>
-      <p>Confirmed decisions: keep a closing follow line but <strong>reframe it as a learn-more invitation</strong> (never a hard sell, always secondary to the takeaway); apply the refactor across the full plugin <em>and</em> the SOCIAL.md config (a new "Instructional" tone); ship as a <strong>MINOR</strong> bump to 2.10.0. Two interview rulings sharpen the doctrine: (1) the teaching-first voice is the <strong>unconditional default</strong> for every skill — the SOCIAL.md tone only nudges register (professional / conversational / technical) and can never switch the takeaway off; (2) on length-tight platforms (Twitter/X 280, Bluesky 300) the <strong>takeaway wins and the learn-more line is dropped</strong>, extending the existing "content wins" budget rule.</p>
+      <p>The agentics repo is both the development workspace and the install source. <code>.claude-plugin/marketplace.json</code> registers 12 active plugins via <code>git-subdir</code> sources whose <code>url</code> points at <code>https://github.com/shawn-sandy/agentics.git</code>. When a user installs, Claude Code sparsely clones the plugin's <code>path</code> subtree from the repo's <strong>default branch</strong> — but that branch carries a lot that has no business in an install: a 35&nbsp;KB root <code>README.md</code>, <code>docs/</code>, <code>examples/</code>, <code>scripts/</code>, <code>tests/</code>, <code>.playwright-mcp/</code>, a session <code>.png</code>, <code>CLAUDE.local.md</code>, <code>.DS_Store</code> files, and top-level markdown (<code>ROADMAP.md</code>, <code>SECURITY.md</code>, <code>SOCIAL.md</code>).</p>
+      <p>The sibling plan <code>build-clean-plugin-dist.html</code> solves this by mirroring the marketplace into a <em>separate</em> clean repo (<code>shawn-sandy/agentics-kit</code>) and rewriting each <code>source.url</code>. This plan takes a <strong>branch-based</strong> approach in the <em>same</em> repo instead: <code>main</code> stays as the GitHub default but is replaced with a clean, stripped plugin distribution, while a new <code>develop</code> branch holds the full workspace where all dev work and PRs happen. Because <code>main</code> remains the default branch, <code>git-subdir</code> sources need <strong>no <code>ref</code> field at all</strong> — installs naturally resolve from the default branch and get clean files. No second repo, no <code>source.url</code> rewrite, and no <code>ref</code> pins needed.</p>
+      <p><strong>Decisions locked in clarification:</strong> branch model = developers push to <code>develop</code> first (all feature branches and PRs target develop), and <strong>only develop can be merged/pushed to main</strong> — no direct pushes, no PRs from feature branches to main. A GitHub Action rebuilds and republishes <code>main</code> on <em>every push to develop</em>, orphan-replacing <code>main</code>'s tree with the freshly built clean output (main carries distribution snapshots, not dev history). <code>main</code> stays as the GitHub default so installs resolve from it automatically. A key advantage over the separate-repo plan: publishing stays in-repo, so the default <code>GITHUB_TOKEN</code> can push to <code>main</code> — no cross-repo PAT required. An additional advantage over flipping the default: no user migration needed — existing installs keep resolving from main seamlessly.</p>
+    </section>
+
+    <!-- ── Files ──────────────────────────────────────────────────── -->
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files to Modify
+      </h2>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .github/workflows/</li>
+          <ul class="file-list">
+            <li><code>publish-dist.yml</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">rebuild + publish main on push to develop</span></li>
+            <li><code>version-guard.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">retarget PR branch filter main &rarr; develop</span></li>
+            <li><code>update-readme.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">ensure it writes to develop, not main</span></li>
+          </ul>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">strip removed[] for clean dist; no ref pins needed</span></li>
+          <li><code>scripts/build-dist.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">manifest-driven clean builder + check/publish</span></li>
+          <li><code>.claude/rules/marketplace.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">main is generated; never hand-edit</span></li>
+          <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">branch model &amp; distribution section</span></li>
+          <li><code>CLAUDE.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">develop-default; never commit to main</span></li>
+          <li><code>main (branch)</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">clean plugin distribution snapshot</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── Diagram ────────────────────────────────────────────────── -->
+    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
+      <h2 id="h-diagram">
+        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
+        Diagram
+      </h2>
+
+      <div class="diagram-subheading">Publish pipeline — develop to clean main</div>
+      <div class="pipeline">
+        <div class="pipeline-node"><div class="pipeline-label">Source / dev</div><code>develop</code><div class="pipeline-sub">developers push here first — all feature branches &amp; PRs target develop</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓ push triggers</div>
+        <div class="pipeline-node"><div class="pipeline-label">CI</div><code>.github/workflows/publish-dist.yml</code><div class="pipeline-sub">checkout → setup-node → --check → --publish (GITHUB_TOKEN)</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓ runs</div>
+        <div class="pipeline-node"><div class="pipeline-label">Build</div><code>scripts/build-dist.mjs</code><div class="pipeline-sub">reads plugins[] · copies KEEP · drops cruft &amp; removed[] · strips to clean dist</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓ orphan-replaces</div>
+        <div class="pipeline-node"><div class="pipeline-label">Clean dist (default branch)</div><code>main</code><div class="pipeline-sub">manifest + component dirs + README + LICENSE — no docs/ or cruft</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓ installs pull from default branch</div>
+        <div class="pipeline-node"><div class="pipeline-label">Users</div><code>/plugin install &lt;name&gt;@agentics-kit</code><div class="pipeline-sub">clean tree resolved from main (the default branch)</div></div>
+      </div>
+
+      <div class="diagram-subheading">What lives on each branch</div>
+      <div class="compare-grid">
+        <div class="compare-col-neutral">
+          <div class="compare-header">develop — full workspace</div>
+          <ul class="compare-list">
+            <li>docs/ · examples/</li>
+            <li>scripts/ · tests/</li>
+            <li>*.local.md · ROADMAP/SECURITY/SOCIAL.md</li>
+            <li>full kit/plugins/* (with scratch)</li>
+            <li>all dev CI workflows</li>
+          </ul>
+        </div>
+        <div class="compare-col-add">
+          <div class="compare-header">main — kept (clean, default)</div>
+          <ul class="compare-list">
+            <li>.claude-plugin/marketplace.json</li>
+            <li>&nbsp;&nbsp;no ref needed (default branch)</li>
+            <li>kit/plugins/&lt;name&gt;/ stripped</li>
+            <li>slim README.md · LICENSE</li>
+          </ul>
+        </div>
+        <div class="compare-col-remove">
+          <div class="compare-header">stripped from main</div>
+          <ul class="compare-list">
+            <li>docs/ · examples/ · tests/</li>
+            <li>*.local.md · .DS_Store · *.png</li>
+            <li>.playwright-mcp/</li>
+            <li>ROADMAP/SECURITY/SOCIAL.md</li>
+            <li>removed[] plugins (×6)</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -1066,103 +1190,137 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Add an "Instructional Voice" doctrine to the shared references/platforms.md and reframe its CTA and per-platform formats</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Create the <code>develop</code> branch from <code>main</code> and configure PR targeting</span>
               </div>
-              <div class="step-why">This file is read at runtime by every card-generating skill — adding the teaching-first doctrine here propagates the new voice to all nine skills in one edit, rather than nine divergent copies.</div>
+              <div class="step-why">develop must carry the entire current workspace before main is ever stripped. Tag the pre-split commit (e.g. <code>git tag pre-dist-split</code>) as a safety net so the full history stays reachable. Main stays as the GitHub default so that <code>/plugin install</code> resolves from it without any <code>ref</code> pin — but PRs and dev work must target develop going forward.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>kit/plugins/social-media-tools/references/platforms.md</code>: a new "Instructional Voice" (teach, don't just promote) section exists and states the teaching-first arc is the <strong>unconditional default</strong> for every skill (tone only nudges register, never disables the takeaway); the "Follow CTA" section's examples are learn-more framed (e.g. "more agentic-dev breakdowns like this") with explicit "secondary to the takeaway, never a hard sell" guidance and a rule that on Twitter/X and Bluesky the <strong>takeaway wins and the learn-more line is dropped</strong> when budget is tight; each entry under "Default Per-Platform Copy Formats" names a concrete takeaway/lesson element. The post arc reads hook → takeaway/lesson → learn-more.</div>
+                <div class="verify-body"><code>git checkout main &amp;&amp; git pull &amp;&amp; git checkout -b develop &amp;&amp; git push -u origin develop</code> succeeds; <code>gh repo view --json defaultBranchRef -q .defaultBranchRef.name</code> still returns <code>main</code>; <code>git diff main develop --stat</code> is empty (identical trees at split time); <code>git tag pre-dist-split</code> exists.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Update each skill's Draft phase to require a concrete, applicable takeaway and point at the new doctrine</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Enforce the develop-first workflow and retarget open PRs</span>
               </div>
-              <div class="step-why">Each SKILL.md layers content-specific copy guidance on top of the shared file; without updating these, individual skills (e.g. share-code's diff angle, share-session's recap) keep their old promotional/accomplishment-first arc.</div>
+              <div class="step-why">Developers push to <code>develop</code> first — all feature branches and PRs must target <code>develop</code>, never <code>main</code>. Only the CI publish workflow writes to main. Retarget any open PRs from main to develop and communicate the new branching model to contributors.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">The Draft phases of <code>share-code</code>, <code>share-selection</code>, <code>share-github</code>, <code>share-session</code>, <code>share-project</code>, and <code>share-explanation</code> SKILL.md each instruct the model to surface a teachable takeaway ("what the reader can learn or apply") and reference the Instructional Voice doctrine. No Draft phase frames the post as accomplishment-first or "thought leadership"-first.</div>
+                <div class="verify-body"><code>gh pr list --base main --state open</code> returns no results (all retargeted to develop); commit lands on <code>develop</code>.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Rewrite the two skill-local copy-format references (share-blog, share-video) to lead with a lesson and use learn-more CTAs</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Write <code>scripts/build-dist.mjs</code> — a manifest-driven clean builder</span>
               </div>
-              <div class="step-why">share-blog and share-video keep their own <code>references/platforms.md</code> with concrete LinkedIn/Substack templates; these must lead with a takeaway and reframe their subscribe/follow CTAs, or they will contradict the shared doctrine.</div>
+              <div class="step-why">A deterministic build from develop is the only writer of main, guaranteeing the clean branch never drifts. Mirror the existing <code>merge-marketplace.mjs</code> convention (bare ESM, run via <code>node</code>, no package.json). Enumerate plugins by reading <code>marketplace.json</code> <code>plugins[]</code> (never by globbing); copy only a KEEP allowlist (<code>.claude-plugin</code>, <code>commands</code>, <code>skills</code>, <code>agents</code>, <code>hooks</code>, <code>hooks.json</code>, <code>templates</code>, <code>README.md</code>, <code>CHANGELOG.md</code>, <code>LICENSE</code>) per plugin into an <code>OUT_DIR</code>; drop a DROP denylist (<code>docs</code>, <code>*.local.md</code>, <code>.DS_Store</code>, <code>*.png</code>, <code>.playwright-mcp</code>); emit a clean root (marketplace.json with <code>removed[]</code> stripped, a slim README.md, copied LICENSE).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>skills/share-blog/references/platforms.md</code> and <code>skills/share-video/references/platforms.md</code>: the LinkedIn and Substack structure lines name a takeaway/lesson as the lead element; example CTAs are learn-more / subscribe-to-learn framed, not hard-sell. Twitter/Bluesky examples still lead with the insight.</div>
+                <div class="verify-body"><code>node scripts/build-dist.mjs --list</code> prints exactly the 12 active plugin names and omits the 6 in <code>removed[]</code>; after <code>node scripts/build-dist.mjs</code>, <code>find &lt;OUT_DIR&gt; -name '*.local.md' -o -name '.DS_Store' -o -path '*/docs/*'</code> returns nothing.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Update the discovery heuristics so "shareable" is judged by teaching value</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>--check</code> and orphan-replace <code>--publish</code> modes to the build script</span>
               </div>
-              <div class="step-why">share-scan and share-project decide <em>what</em> is worth posting; if their selection criteria still favor "impressive" changes over "instructive" ones, the upstream content choice undercuts the downstream instructional voice.</div>
+              <div class="step-why"><code>--check</code> walks the built output and exits non-zero if any DROP pattern leaked (a CI tripwire against bloat). <code>--publish</code> implements the chosen "orphan / replace each publish" model: it builds the clean tree, replaces <code>main</code>'s working tree wholesale with that output as a single fresh commit referencing the source develop SHA, and updates <code>main</code> (via <code>git worktree</code> + a clean checkout, or an orphan commit) so deleted plugins disappear downstream. Support <code>--dry-run</code> so the commit can be previewed without pushing.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>skills/share-scan/references/interesting-patterns.md</code>: shareability is scored by teaching/learning value (does this illustrate an agentic-dev lesson?) as a primary criterion. In <code>skills/share-project/references/topics.md</code>: the CTA note aligns with the learn-more framing from the shared doctrine.</div>
+                <div class="verify-body">On a clean build, <code>node scripts/build-dist.mjs --check; echo $?</code> prints <code>0</code>; temporarily adding <code>docs</code> to KEEP, rebuilding, and rerunning <code>--check</code> exits non-zero naming the offending path (then revert). <code>node scripts/build-dist.mjs --publish --dry-run</code> reports the single clean commit it would write to <code>main</code> without pushing.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Add an "Instructional / Educational" tone to share-init and write it into the generated SOCIAL.md</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>.github/workflows/publish-dist.yml</code> triggered on push to <code>develop</code></span>
               </div>
-              <div class="step-why">SOCIAL.md persists per-project register defaults that every skill reads. The teaching-first voice is always on (Step 1), so this tone only sets the <em>register</em> the lesson is delivered in — adding "Instructional / Educational" makes the educational register the recommended starting point without ever gating the takeaway.</div>
+              <div class="step-why">"On every push to develop" keeps main in lockstep automatically. Steps: <code>on: push: branches: [develop]</code> plus <code>workflow_dispatch</code>; checkout develop, <code>actions/setup-node</code>, <code>node scripts/build-dist.mjs --check</code> (fail fast on leakage), then <code>--publish</code> to replace main's tree. Because the dist target is the same repo, set <code>permissions: contents: write</code> and use the default <code>GITHUB_TOKEN</code> — no cross-repo PAT. Add a <code>concurrency</code> group (<code>publish-dist</code>, cancel-in-progress) so rapid pushes don't race on main.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>skills/share-init/SKILL.md</code>: the Tone AskUserQuestion lists "Instructional / Educational" (recommended); the generated SOCIAL.md <code>## Defaults</code> template documents the instructional register and notes the teaching-first voice applies regardless of tone. <code>references/social-config.md</code> mentions the new tone option so the config schema stays in sync.</div>
+                <div class="verify-body">YAML lints clean (<code>actionlint .github/workflows/publish-dist.yml</code>); a <code>workflow_dispatch</code> run (or a test push to develop) completes green and writes a new clean commit to <code>main</code>; <code>git ls-tree -r origin/main --name-only | grep -E 'docs/|\.local\.md|\.DS_Store'</code> returns nothing.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Reword the README, add a CHANGELOG entry, and bump marketplace.json to 2.10.0</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Retarget dev workflows to <code>develop</code> and protect <code>main</code> as generated-only</span>
               </div>
-              <div class="step-why">The README's "share/promote" language and the version metadata must reflect the new cross-cutting behavior; per repo convention the marketplace.json version is authoritative and a CHANGELOG entry is required for every bump.</div>
+              <div class="step-why">Dev automation must run against develop (where all PRs target) and main must have exactly one writer (the publish-dist Action). <code>version-guard.yml</code> filters <code>pull_request: branches: [main]</code> — change to <code>[develop]</code>. Update <code>update-readme.yml</code> to commit to <code>develop</code> instead of <code>main</code>. <code>claude-code-review.yml</code> / <code>claude.yml</code> need PR base branch filter updated to develop. Add branch protection on <code>main</code> to block direct pushes and PRs — only the publish-dist Action (via <code>GITHUB_TOKEN</code>) can write to main.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>.claude-plugin/marketplace.json</code> shows social-media-tools at <code>2.10.0</code>; <code>kit/plugins/social-media-tools/CHANGELOG.md</code> has a 2.10.0 entry describing the instructional refactor; the README describes the teaching-first voice and the new tone. The <code>.claude/settings.json</code> JSON-validation hook passes after the marketplace.json edit.</div>
+                <div class="verify-body"><code>grep -n 'branches:' .github/workflows/version-guard.yml</code> shows <code>[develop]</code>; opening a test PR against <code>develop</code> triggers the version-guard and Claude review workflows; no workflow other than <code>publish-dist.yml</code> pushes to <code>main</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Document the branch model in README, CLAUDE.md, and the marketplace rule</span>
+              </div>
+              <div class="step-why">Contributors and future Claude sessions must know: developers push to <code>develop</code> first, all PRs target develop, and only develop is published to main via CI. Main is a generated artifact (clean dist + default branch) — never commit to main directly. Add a "Branch model &amp; distribution" section to <code>README.md</code> explaining the develop-first workflow. Include an "Existing Users" migration note: installed plugins are safe (local copies in <code>~/.claude/plugins/cache/</code>), the marketplace self-heals on next <code>/plugin marketplace update</code> (one-time re-clone after the orphan-replace), and no action is required — but if users hit issues, they can remove and re-add the marketplace. Update <code>CLAUDE.md</code>'s Git &amp; Branches section to branch off <code>develop</code> and never commit to main. Note in <code>.claude/rules/marketplace.md</code> that main is generated — not hand-edited.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>grep -ri 'develop' README.md CLAUDE.md .claude/rules/marketplace.md</code> shows the new branch-model guidance in all three; CLAUDE.md's branch-creation command branches off <code>develop</code>; marketplace.md states main is generated and not hand-edited; README.md contains an "Existing Users" section with migration guidance.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Cut over: run the first publish and verify a clean end-to-end install</span>
+              </div>
+              <div class="step-why">Proves the split works for real installs. Trigger <code>publish-dist.yml</code> (or run <code>--publish</code> once) to rebuild main clean, then in a fresh session register the marketplace and install a plugin — confirming the catalog and plugin files both resolve from <code>main</code> (the default branch) and contain only clean distribution files.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In a clean session, <code>/plugin marketplace add shawn-sandy/agentics</code> then <code>/plugin install plan-agent@agentics-kit</code> installs successfully; the installed tree contains no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, or session PNGs; <code>git ls-tree origin/main --name-only</code> shows only the clean root set.</div>
               </details>
             </div>
           </div>
@@ -1179,32 +1337,40 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1" checked>
-          <label for="ac1">references/platforms.md contains an Instructional Voice doctrine declared as the unconditional default, with a short-form "takeaway wins, drop the learn-more line" rule, and the Follow CTA reframed as a learn-more invitation (no "hard sell" or "thought leadership"-first language remains).</label>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">A <code>develop</code> branch carries the full pre-split workspace; <code>main</code> remains the GitHub default branch; the pre-split commit is preserved by a tag.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2" checked>
-          <label for="ac2">Every card-generating skill's Draft phase requires a concrete, applicable takeaway and references the shared doctrine.</label>
+          <input type="checkbox" id="ac2">
+          <label for="ac2">No plugin source in <code>.claude-plugin/marketplace.json</code> requires a <code>ref</code> field — installs resolve from <code>main</code> (the default branch) automatically; no <code>source.url</code> was changed.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3" checked>
-          <label for="ac3">share-blog and share-video copy-format references lead with a lesson/takeaway and use learn-more CTAs.</label>
+          <input type="checkbox" id="ac3">
+          <label for="ac3"><code>scripts/build-dist.mjs</code> enumerates the 12 plugins from <code>plugins[]</code>, never ships the 6 in <code>removed[]</code>, and copies only allowlisted files.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4" checked>
-          <label for="ac4">share-scan and share-project discovery heuristics judge shareability primarily by teaching value.</label>
+          <input type="checkbox" id="ac4">
+          <label for="ac4"><code>node scripts/build-dist.mjs --check</code> exits 0 on a clean build and non-zero when a denylisted path leaks into the output.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5" checked>
-          <label for="ac5">share-init offers an Instructional / Educational tone and writes it to the generated SOCIAL.md defaults; social-config.md documents it.</label>
+          <input type="checkbox" id="ac5">
+          <label for="ac5"><code>.github/workflows/publish-dist.yml</code> rebuilds and orphan-replaces <code>main</code> with the clean output on every push to <code>develop</code>, using the in-repo <code>GITHUB_TOKEN</code> (no PAT).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6" checked>
-          <label for="ac6">marketplace.json shows social-media-tools at 2.10.0 with a matching CHANGELOG entry and updated README framing.</label>
+          <input type="checkbox" id="ac6">
+          <label for="ac6"><code>main</code> contains only the clean distribution — no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, session PNGs, or top-level dev markdown.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7" checked>
-          <label for="ac7">A dry-run of one skill (e.g. share-explanation) produces copy whose lead is a teachable principle, with any follow line clearly secondary.</label>
+          <input type="checkbox" id="ac7">
+          <label for="ac7"><code>version-guard.yml</code> targets <code>develop</code>; <code>main</code> is protected and written only by <code>publish-dist.yml</code> — direct pushes and PRs to main are blocked.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8"><code>/plugin install &lt;name&gt;@agentics-kit</code> resolves plugin files from <code>main</code> (the default branch) and yields a working, cruft-free plugin tree.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9"><code>README.md</code>, <code>CLAUDE.md</code>, and <code>.claude/rules/marketplace.md</code> document the develop-for-work / clean-main-as-default model and the "never commit to main" rule.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1217,9 +1383,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>End-to-end: from the plugin root, run <code>grep -rniE "thought leadership|hard sell|promote" kit/plugins/social-media-tools/{references,skills} --include="*.md"</code> and confirm the only remaining hits are intentional (e.g. README descriptive text), with no copy-doctrine instruction still framing posts as promotion-first. Then grep for the new vocabulary — <code>grep -rni "instructional\|takeaway\|learn-more\|teach" kit/plugins/social-media-tools/references kit/plugins/social-media-tools/skills</code> — and confirm the doctrine, the per-skill Draft phases, and the two skill-local references all reference it.</p>
-      <p>Behavioral check: invoke <code>/social-media-tools:share-explanation "how does the security-scrub skill work"</code> and confirm the drafted LinkedIn copy opens with a teachable principle (not "Here's how X works" or a follow plug), names 2–3 applicable patterns, and ends with a learn-more line that could be deleted without breaking the post. Repeat once with <code>share-code</code> on a recent diff to confirm the diff angle leads with the lesson, not the accomplishment.</p>
-      <p>Metadata check: confirm <code>.claude-plugin/marketplace.json</code> reports 2.10.0 for social-media-tools, the CHANGELOG has the matching dated entry, and the settings.json marketplace-validation hook reports no JSON errors.</p>
+      <p>End-to-end: confirm <code>gh repo view --json defaultBranchRef</code> still reports <code>main</code> and that the pre-split tag exists. Run <code>node scripts/build-dist.mjs --check</code> locally (exit 0), then verify the tripwire by temporarily allowlisting <code>docs</code> and confirming a non-zero exit. Trigger <code>publish-dist.yml</code> via <code>workflow_dispatch</code> (or push a no-op commit to develop) and confirm it writes a fresh clean commit to <code>main</code>; then <code>git ls-tree -r origin/main --name-only</code> must show 12 plugin directories carrying only allowlisted files plus a root <code>marketplace.json</code>, slim <code>README.md</code>, and <code>LICENSE</code> — and zero cruft. Finally, in a clean session register <code>shawn-sandy/agentics</code> and install <code>plan-agent</code> (both resolve from main, the default branch), then list the installed files to confirm no <code>docs/</code>, <code>*.local.md</code>, or PNGs. develop must still hold the complete workspace, unchanged except for the new script, workflow, and docs.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1234,15 +1398,15 @@
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" checked disabled>
+            <input type="checkbox" id="cc1" disabled>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" checked disabled>
+            <input type="checkbox" id="cc2" disabled>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" checked disabled>
+            <input type="checkbox" id="cc3" disabled>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1253,7 +1417,7 @@
       </div>
     </section>
 
-    <!-- ── Next Steps (optional) ──────── -->
+    <!-- ── Next Steps ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1262,26 +1426,25 @@
       <div class="next-steps-list">
 
         <details class="next-step-item">
-          <summary>Regenerate the saved social cards under docs/media/social with the new voice</summary>
+          <summary>Add branch protection so only the publish Action writes main</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Review the saved social cards in docs/media/social/ in the agentics repo. For each one whose copy reads as promotion-first (accomplishment or follow-plug leads the post), regenerate it with the social-media-tools instructional voice: lead with a concrete, applicable takeaway about agentic development, keep any follow line as a secondary learn-more invitation. Report which cards you changed and which you left as-is and why.</pre>
+            <pre>In the shawn-sandy/agentics repo, add GitHub branch protection on the main branch so that direct pushes and pull requests are blocked, and only the publish-dist.yml GitHub Action (running with the default GITHUB_TOKEN) can update it. Use the gh CLI (gh api) to configure a branch protection rule on main: block force-pushes from humans but allow the Actions bot, require no PRs (main is generated), and document the rule in .claude/rules/marketplace.md. Confirm a manual push to main is rejected while a publish-dist workflow run still succeeds.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
         <details class="next-step-item">
-          <summary>Add an instructional-voice eval to lock the behavior in</summary>
+          <summary>Add a per-publish leak report and size diff to the build</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Add a lightweight evaluation for the social-media-tools plugin that runs each card-generating skill against a fixed input and asserts the drafted copy leads with a teachable takeaway and treats any follow line as optional/secondary. Place fixtures under tests/fixtures/ and document how to run the check. Do not change skill behavior — only add the eval.</pre>
+            <pre>In scripts/build-dist.mjs (the branch-based clean-distribution build for the agentics marketplace), add a post-build summary that prints, per plugin, the source file count and byte size on develop versus the stripped count and byte size published to main, plus a total "bytes saved" line and an explicit list of any paths that matched the DROP denylist and were excluded. Drive the plugin list from .claude-plugin/marketplace.json plugins[]. Keep it dependency-free.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1289,25 +1452,12 @@
 
         <details class="next-step-item wish-item">
           <summary>
-            Build a dedicated "lesson-card" template for agentic-dev teaching posts
+            Auto-generate release notes on each main publish
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Design a new social card template for the social-media-tools plugin called lesson-card.html, purpose-built for teaching posts: a prominent "what you'll learn" header, a numbered principle/steps region, and a small "try it yourself" footer instead of a follow CTA. Match the existing dark-mode design system of the other card templates, wire it into the template-selection heuristics, and document when skills should pick it.</pre>
-            <button class="copy-prompt-btn" type="button"
-                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-          </div>
-        </details>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Thread posts into a numbered "agentic dev" learning series
-            <span class="wish-badge">Wish List</span>
-          </summary>
-          <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Explore adding an optional "learning series" mode to the social-media-tools plugin: posts on a recurring topic get auto-numbered (e.g. "Agentic Dev #7") and cross-link to prior entries, so the body of work reads as a curriculum. Recommend where series state should live (SOCIAL.md? a manifest in docs/media/social/?) and sketch the minimal implementation.</pre>
+            <pre>Explore extending the agentics publish-dist pipeline so each push to develop that changes a plugin not only republishes the clean main branch but also drafts release notes: diff the new main tree against the previous main commit, group changes by plugin using marketplace.json, and open a GitHub Release (or a CHANGELOG entry) summarizing which plugins changed and their version bumps. Recommend whether this should live in build-dist.mjs or a separate workflow step, and outline the implementation.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1316,48 +1466,37 @@
       </div>
     </section>
 
+    <!-- ── Unresolved Questions ─ -->
+    <details class="optional-section">
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item">
+              <summary>Should main be a true orphan branch or a rolling single-commit branch?</summary>
+              <div class="unresolved-prompt">
+                <pre>For the agentics publish-dist pipeline, decide between two implementations of "orphan / replace each publish" for the main branch: (a) a true orphan branch with no parent (git checkout --orphan) force-pushed each publish, versus (b) a normal branch where each publish commits the fully-replaced clean tree on top of the previous main commit (no force-push, history grows but stays diffable). Weigh force-push safety for downstream consumers, diffability of releases, and CI simplicity, and recommend one. Then specify the exact git commands build-dist.mjs --publish should run.</pre>
+                <button class="copy-prompt-btn" type="button"
+                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · 2026-06-05 · agentics
+      Generated by plan-agent · 2026-06-06 · agentics
     </footer>
 
   </main>
 </div><!-- /.layout -->
 
 <script>
-
-/* ── Copy plan file name / relative path ────────────────────── */
-function copyPath(btn, id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied \u2713';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
-}
 /* ── Build rich implementation prompt from DOM ──────────────── */
 function buildImplementPrompt() {
   var cmdEl = document.getElementById('implement-cmd');
@@ -1423,6 +1562,39 @@ function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
   var text = code.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
   function flash() {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
     btn.textContent = 'Copied ✓';

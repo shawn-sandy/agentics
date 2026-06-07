@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="completed">
-<meta name="plan-type" content="refactor">
-<meta name="plan-created" content="2026-06-05">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-06">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev">
-<meta name="plan-file" content="refine-social-copy-instructional.html">
-<meta name="plan-path" content="docs/plans/refine-social-copy-instructional.html">
-<title>Plan: Refine social-media-tools copy to teach, not just promote</title>
+<meta name="plan-file" content="add-pdf-export-to-html-plans.html">
+<meta name="plan-path" content="docs/plans/add-pdf-export-to-html-plans.html">
+<title>Plan: Add PDF Export to HTML Plans</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -455,7 +453,7 @@
     gap: .35rem;
     user-select: none;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle summary::before { content: "&#9654;"; font-size: .55em; transition: transform .2s; }
   .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
   .step-verify-toggle .verify-body {
     font-size: .875rem;
@@ -492,110 +490,6 @@
   .criteria-list label { cursor: pointer; font-size: .9rem; }
   .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
 
-  /* ── Completion checklist ────────────────────────────────────── */
-  .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
-    margin-top: 1rem;
-  }
-  .completion-checklist.all-complete { border-color: var(--green); }
-  .completion-header {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    margin-bottom: 1rem;
-  }
-  .completion-badge {
-    font-size: .6rem;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    padding: .15rem .6rem;
-    border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
-  }
-  .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
-  }
-  .completion-list {
-    list-style: none; padding: 0;
-    display: flex; flex-direction: column; gap: .6rem;
-  }
-  .completion-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: .75rem;
-    padding: .6rem .75rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-    transition: background .12s;
-  }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
-  .completion-list input[type="checkbox"] {
-    flex-shrink: 0;
-    width: 1rem; height: 1rem;
-    margin-top: .2rem;
-    accent-color: var(--green);
-  }
-  .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
-  @media (prefers-reduced-motion: reduce) {
-    .completion-list li { transition: none; }
-  }
-
-  /* ── Completion report ─────────────────────────────────────── */
-  .completion-report {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-  }
-  .report-heading {
-    font-size: .75rem;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: .75rem;
-  }
-  .report-empty {
-    font-style: italic;
-    color: var(--subtle);
-    font-size: .875rem;
-  }
-  .report-list { margin: 0; padding: 0; }
-  .report-list dt {
-    font-weight: 600;
-    color: var(--text);
-    font-size: .875rem;
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    margin-top: .75rem;
-  }
-  .report-list dt:first-child { margin-top: 0; }
-  .report-list dt::before {
-    content: "";
-    display: inline-block;
-    width: .5rem; height: .5rem;
-    border-radius: 50%;
-    background: #dc2626;
-    flex-shrink: 0;
-  }
-  .report-list dd {
-    color: var(--muted);
-    font-size: .85rem;
-    margin-left: .9rem;
-    margin-top: .2rem;
-    margin-bottom: 0;
-  }
-
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
@@ -617,7 +511,7 @@
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "&#9654;"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
   .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
   .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
@@ -703,122 +597,13 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section > summary::before { content: "&#9654;"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
   .optional-section[open] > summary::before { transform: rotate(90deg); }
   .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
   @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
-
-  /* ── Implement prompt ─────────────────────────────────────────── */
-  .plan-implement {
-    display: flex;
-    align-items: flex-start;
-    gap: .6rem;
-    margin-bottom: 1.5rem;
-    padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
-    border-radius: var(--radius);
-    font-size: .8rem;
-  }
-  .plan-implement-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--green);
-    flex-shrink: 0;
-    margin-top: .1rem;
-  }
-  .plan-implement code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem;
-    color: var(--text);
-    flex: 1;
-    word-break: break-all;
-  }
-  .copy-cmd-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .2rem .6rem;
-    font-size: .72rem;
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
-  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  [data-status="completed"] .copy-cmd-btn { display: none; }
-  @media print { .plan-implement { display: none !important; } }
-  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
-
-  /* ── Workflow prompt ─────────────────────────────────────────── */
-  .plan-workflow {
-    margin: -.5rem 0 1.5rem;
-    font-size: .8rem;
-  }
-  .plan-workflow summary {
-    font-size: .7rem;
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
-  }
-  .plan-workflow summary:hover { text-decoration: underline; }
-  .plan-workflow-inner {
-    display: flex;
-    align-items: flex-start;
-    gap: .6rem;
-    margin-top: .4rem;
-    padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-  }
-  .plan-workflow code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem;
-    color: var(--text);
-    flex: 1;
-    word-break: break-all;
-  }
-  .copy-workflow-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .2rem .6rem;
-    font-size: .72rem;
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
-  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  [data-status="completed"] .plan-workflow { display: none; }
-  @media print { .plan-workflow { display: none !important; } }
-  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
@@ -837,13 +622,65 @@
   /* ── Focus styles ───────────────────────────────────────────────── */
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* ── Print styles ───────────────────────────────────────────────── */
+  /* ── Save as PDF button ────────────────────────────────────────── */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .45rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .15s, box-shadow .15s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .save-pdf-btn:hover { background: #1d4ed8; box-shadow: 0 2px 6px rgba(37,99,235,.3); }
+  .save-pdf-btn:active { background: #1e40af; }
+  .save-pdf-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .save-pdf-btn .icon { width: .9rem; height: .9rem; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* ── Print / PDF styles ────────────────────────────────────────── */
   @media print {
     .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
-    .layout { display: block !important; }
-    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
-    .step-chip { display: none !important; }
-    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+    .save-pdf-btn, .copy-prompt-btn, .copy-src-btn { display: none !important; }
+    .layout { display: block !important; max-width: none !important; padding: 0 !important; }
+    body { font-size: 12pt; line-height: 1.5; color: #000; }
+    .plan-header::before { height: 2px; background: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .plan-header-inner { padding: 1rem 0 .75rem; }
+    .plan-title { font-size: 1.4rem; }
+    .status-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .objective-card {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      border-left-width: 3px;
+      padding: .75rem 1rem;
+    }
+    .section-card { padding: 1rem 0 .75rem; break-inside: avoid; }
+    .step-card { box-shadow: none !important; break-inside: avoid; page-break-inside: avoid; border-color: #ccc; }
+    .step-card::before { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .step-card.completed::before { background: var(--green) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .step-chip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .step-verify-toggle { display: block; }
+    .step-verify-toggle[open] .verify-body { border-left-color: #999; }
+    .criteria-list li { break-inside: avoid; page-break-inside: avoid; }
+    .criteria-list input[type="checkbox"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .next-step-item { break-inside: avoid; }
+    .optional-section { break-inside: avoid; }
+    pre { border-color: #ccc; background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; color: #666; }
+    .plan-footer { border-top-color: #ccc; }
+    @page {
+      size: A4;
+      margin: 1.5cm 1.5cm 2cm 1.5cm;
+    }
   }
 
   /* ── Plan source (file name + relative path) ──────────────────── */
@@ -941,8 +778,8 @@
   <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
   </symbol>
-  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  <symbol id="ic-arrow-down-tray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
   </symbol>
 </svg>
 
@@ -953,13 +790,17 @@
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Refine social-media-tools copy to teach, not just promote</h1>
-      <span class="status-badge">completed</span>
+      <h1 class="plan-title">Add PDF Export to HTML Plans</h1>
+      <button class="save-pdf-btn" type="button" onclick="savePDF()" aria-label="Save this plan as PDF">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-down-tray"/></svg>
+        Save as PDF
+      </button>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-05
+        2026-06-06
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
@@ -967,7 +808,7 @@
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        refactor
+        feature
       </span>
     </div>
   </div>
@@ -986,7 +827,6 @@
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
       <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
     </ul>
   </nav>
@@ -997,53 +837,35 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Rewire the social-media-tools voice so every generated post leads with a concrete, teachable takeaway about agentic development — turning the plugin's output from "look what I shipped" into a running, shareable curriculum that readers can learn from and apply.</p>
+      <p>Add a "Save as PDF" button to every HTML plan so users can download a clean, print-optimized PDF of any plan with a single click -- no external dependencies, no server-side rendering, pure browser-native <code>window.print()</code> with PDF-tuned <code>@media print</code> styles.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
-    <div class="plan-implement">
-      <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev</code>
-      <button class="copy-cmd-btn" type="button"
-              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
-    </div>
-
-    <!-- ── Workflow prompt ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/refine-social-copy-instructional.html — Make social-media-tools copy instructional, a learning resource for agentic dev</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-      </div>
-    </details>
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <!-- ── Plan source ── -->
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">refine-social-copy-instructional.html</code>
+        <code id="plan-file" aria-label="Plan file name">add-pdf-export-to-html-plans.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/refine-social-copy-instructional.html</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-pdf-export-to-html-plans.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
     </div>
 
-
     <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">7 / 7 done</span>
+        <span id="progress-label">0 / 5 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:100%"></div>
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
       </div>
     </div>
 
@@ -1053,9 +875,9 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The social-media-tools plugin (currently v2.9.1) ships nine card-generating skills — share-code, share-selection, share-github, share-session, share-project, share-explanation, share-blog, share-video, plus the social-share router. They all draft copy from one shared doctrine in <code>references/platforms.md</code>, which today optimizes for reach and followers: a mandatory promotional "Follow CTA", a "thought leadership" framing on quote cards, and per-platform formats whose arc is hook → insight → CTA.</p>
-      <p>The owner wants the plugin to do double duty: its posts should still travel well, but they should primarily <strong>teach</strong>. Each post should leave the reader with a concrete principle or technique about agentic development they can apply — so the body of work becomes a learning resource, not a highlight reel. Because every skill reads the shared doctrine at runtime, the leverage point is centralized: change the doctrine and the per-skill Draft phases that echo it, and all skills inherit the instructional voice at once.</p>
-      <p>Confirmed decisions: keep a closing follow line but <strong>reframe it as a learn-more invitation</strong> (never a hard sell, always secondary to the takeaway); apply the refactor across the full plugin <em>and</em> the SOCIAL.md config (a new "Instructional" tone); ship as a <strong>MINOR</strong> bump to 2.10.0. Two interview rulings sharpen the doctrine: (1) the teaching-first voice is the <strong>unconditional default</strong> for every skill — the SOCIAL.md tone only nudges register (professional / conversational / technical) and can never switch the takeaway off; (2) on length-tight platforms (Twitter/X 280, Bluesky 300) the <strong>takeaway wins and the learn-more line is dropped</strong>, extending the existing "content wins" budget rule.</p>
+      <p>HTML plans are self-contained documents that users open in a browser. The existing <code>@media print</code> rules already hide the sidebar, progress bar, and interactive controls, but there is no visible affordance inviting the user to print or save. Users who want a PDF must know to use <kbd>Ctrl+P</kbd> / <kbd>Cmd+P</kbd> and select "Save as PDF" in the print dialog.</p>
+      <p>Adding a dedicated button makes the export discoverable, ensures the print stylesheet is invoked correctly, and sets the document title (which browsers use as the default PDF filename) to a clean slug derived from the plan title.</p>
+      <p>The approach is zero-dependency: <code>window.print()</code> triggers the browser's native print dialog, which on every modern browser (Chrome, Edge, Firefox, Safari) offers a "Save as PDF" destination. No third-party libraries, no server round-trips, no CORS headaches.</p>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -1066,103 +888,103 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Add an "Instructional Voice" doctrine to the shared references/platforms.md and reframe its CTA and per-platform formats</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add a download icon (<code>ic-arrow-down-tray</code>) to the SVG symbol sprite</span>
               </div>
-              <div class="step-why">This file is read at runtime by every card-generating skill — adding the teaching-first doctrine here propagates the new voice to all nine skills in one edit, rather than nine divergent copies.</div>
+              <div class="step-why">The button needs a recognizable download icon; adding it to the existing sprite keeps the file self-contained with no external asset requests.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>kit/plugins/social-media-tools/references/platforms.md</code>: a new "Instructional Voice" (teach, don't just promote) section exists and states the teaching-first arc is the <strong>unconditional default</strong> for every skill (tone only nudges register, never disables the takeaway); the "Follow CTA" section's examples are learn-more framed (e.g. "more agentic-dev breakdowns like this") with explicit "secondary to the takeaway, never a hard sell" guidance and a rule that on Twitter/X and Bluesky the <strong>takeaway wins and the learn-more line is dropped</strong> when budget is tight; each entry under "Default Per-Platform Copy Formats" names a concrete takeaway/lesson element. The post arc reads hook → takeaway/lesson → learn-more.</div>
+                <div class="verify-body">Search for <code>id="ic-arrow-down-tray"</code> in the HTML; confirm it renders at 1rem in the button.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Update each skill's Draft phase to require a concrete, applicable takeaway and point at the new doctrine</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the "Save as PDF" button in the header next to the status badge</span>
               </div>
-              <div class="step-why">Each SKILL.md layers content-specific copy guidance on top of the shared file; without updating these, individual skills (e.g. share-code's diff angle, share-session's recap) keep their old promotional/accomplishment-first arc.</div>
+              <div class="step-why">Placing it in the header makes it immediately visible without scrolling; co-locating with the status badge keeps the action bar compact.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">The Draft phases of <code>share-code</code>, <code>share-selection</code>, <code>share-github</code>, <code>share-session</code>, <code>share-project</code>, and <code>share-explanation</code> SKILL.md each instruct the model to surface a teachable takeaway ("what the reader can learn or apply") and reference the Instructional Voice doctrine. No Draft phase frames the post as accomplishment-first or "thought leadership"-first.</div>
+                <div class="verify-body">Open the plan in a browser; confirm the button appears to the left of the status badge with a download icon and the label "Save as PDF".</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Rewrite the two skill-local copy-format references (share-blog, share-video) to lead with a lesson and use learn-more CTAs</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Style the button with <code>.save-pdf-btn</code> and hide it in <code>@media print</code></span>
               </div>
-              <div class="step-why">share-blog and share-video keep their own <code>references/platforms.md</code> with concrete LinkedIn/Substack templates; these must lead with a takeaway and reframe their subscribe/follow CTAs, or they will contradict the shared doctrine.</div>
+              <div class="step-why">The button must be visible on screen but absent from the printed/PDF output; a dedicated class makes the print rule explicit and prevents it from appearing in the exported document.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>skills/share-blog/references/platforms.md</code> and <code>skills/share-video/references/platforms.md</code>: the LinkedIn and Substack structure lines name a takeaway/lesson as the lead element; example CTAs are learn-more / subscribe-to-learn framed, not hard-sell. Twitter/Bluesky examples still lead with the insight.</div>
+                <div class="verify-body">Open DevTools, toggle print media emulation; confirm the button disappears. Confirm it has hover/focus/active states on screen.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Update the discovery heuristics so "shareable" is judged by teaching value</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Implement the <code>savePDF()</code> function using <code>window.print()</code></span>
               </div>
-              <div class="step-why">share-scan and share-project decide <em>what</em> is worth posting; if their selection criteria still favor "impressive" changes over "instructive" ones, the upstream content choice undercuts the downstream instructional voice.</div>
+              <div class="step-why">The browser's native print dialog is the most reliable cross-browser path to PDF; wrapping it in a named function lets the onclick handler remain a clean one-liner.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>skills/share-scan/references/interesting-patterns.md</code>: shareability is scored by teaching/learning value (does this illustrate an agentic-dev lesson?) as a primary criterion. In <code>skills/share-project/references/topics.md</code>: the CTA note aligns with the learn-more framing from the shared doctrine.</div>
+                <div class="verify-body">Click the button; confirm the print dialog opens. In Chrome/Edge, select "Save as PDF" destination; confirm the downloaded PDF looks correct with no sidebar, no buttons, and clean page breaks.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Add an "Instructional / Educational" tone to share-init and write it into the generated SOCIAL.md</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Enhance <code>@media print</code> styles for PDF-quality output</span>
               </div>
-              <div class="step-why">SOCIAL.md persists per-project register defaults that every skill reads. The teaching-first voice is always on (Step 1), so this tone only sets the <em>register</em> the lesson is delivered in — adding "Instructional / Educational" makes the educational register the recommended starting point without ever gating the takeaway.</div>
+              <div class="step-why">The existing print rules are minimal; PDF output needs explicit <code>@page</code> margins, <code>break-inside: avoid</code> on cards, preserved background colors for status badges and chips, and suppressed link URL suffixes for internal anchors.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">In <code>skills/share-init/SKILL.md</code>: the Tone AskUserQuestion lists "Instructional / Educational" (recommended); the generated SOCIAL.md <code>## Defaults</code> template documents the instructional register and notes the teaching-first voice applies regardless of tone. <code>references/social-config.md</code> mentions the new tone option so the config schema stays in sync.</div>
+                <div class="verify-body">Generate a PDF from a plan with 6+ steps; confirm no step card is split across pages, the objective card retains its blue accent, and the status badge color is preserved.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
-                <span class="step-chip-text">Reword the README, add a CHANGELOG entry, and bump marketplace.json to 2.10.0</span>
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update the <code>markdown-to-html</code> skill template and assets to include the button and styles</span>
               </div>
-              <div class="step-why">The README's "share/promote" language and the version metadata must reflect the new cross-cutting behavior; per repo convention the marketplace.json version is authoritative and a CHANGELOG entry is required for every bump.</div>
+              <div class="step-why">The <code>plan-to-html</code> alias delegates immediately to <code>markdown-to-html</code>, which is the active HTML generator with the template, assets, and spec. Updating the alias alone would leave the actual generator unchanged and future plans would still lack the button.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>.claude-plugin/marketplace.json</code> shows social-media-tools at <code>2.10.0</code>; <code>kit/plugins/social-media-tools/CHANGELOG.md</code> has a 2.10.0 entry describing the instructional refactor; the README describes the teaching-first voice and the new tone. The <code>.claude/settings.json</code> JSON-validation hook passes after the marketplace.json edit.</div>
+                <div class="verify-body">Run <code>/markdown-to-html</code> on any markdown plan; confirm the generated HTML includes the <code>.save-pdf-btn</code> button and the <code>savePDF()</code> function. Also verify <code>kit/plugins/plan-interview/skills/markdown-to-html/reference/html-spec.md</code> documents the button.</div>
               </details>
             </div>
           </div>
@@ -1179,32 +1001,24 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1" checked>
-          <label for="ac1">references/platforms.md contains an Instructional Voice doctrine declared as the unconditional default, with a short-form "takeaway wins, drop the learn-more line" rule, and the Follow CTA reframed as a learn-more invitation (no "hard sell" or "thought leadership"-first language remains).</label>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">A "Save as PDF" button with a download icon is visible in the plan header on screen.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2" checked>
-          <label for="ac2">Every card-generating skill's Draft phase requires a concrete, applicable takeaway and references the shared doctrine.</label>
+          <input type="checkbox" id="ac2">
+          <label for="ac2">Clicking the button opens the browser's print dialog (which offers "Save as PDF" on Chrome, Edge, Firefox, and Safari).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3" checked>
-          <label for="ac3">share-blog and share-video copy-format references lead with a lesson/takeaway and use learn-more CTAs.</label>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">The exported PDF hides the sidebar, progress bar, all buttons (Save as PDF, Copy, Copy prompt), and interactive controls.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4" checked>
-          <label for="ac4">share-scan and share-project discovery heuristics judge shareability primarily by teaching value.</label>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">Step cards and criteria items do not split across page boundaries in the PDF output.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5" checked>
-          <label for="ac5">share-init offers an Instructional / Educational tone and writes it to the generated SOCIAL.md defaults; social-config.md documents it.</label>
-        </li>
-        <li>
-          <input type="checkbox" id="ac6" checked>
-          <label for="ac6">marketplace.json shows social-media-tools at 2.10.0 with a matching CHANGELOG entry and updated README framing.</label>
-        </li>
-        <li>
-          <input type="checkbox" id="ac7" checked>
-          <label for="ac7">A dry-run of one skill (e.g. share-explanation) produces copy whose lead is a teachable principle, with any follow line clearly secondary.</label>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">Status badge, objective card accent, and step chips retain their background colors in the PDF via <code>print-color-adjust: exact</code>.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1217,43 +1031,18 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>End-to-end: from the plugin root, run <code>grep -rniE "thought leadership|hard sell|promote" kit/plugins/social-media-tools/{references,skills} --include="*.md"</code> and confirm the only remaining hits are intentional (e.g. README descriptive text), with no copy-doctrine instruction still framing posts as promotion-first. Then grep for the new vocabulary — <code>grep -rni "instructional\|takeaway\|learn-more\|teach" kit/plugins/social-media-tools/references kit/plugins/social-media-tools/skills</code> — and confirm the doctrine, the per-skill Draft phases, and the two skill-local references all reference it.</p>
-      <p>Behavioral check: invoke <code>/social-media-tools:share-explanation "how does the security-scrub skill work"</code> and confirm the drafted LinkedIn copy opens with a teachable principle (not "Here's how X works" or a follow plug), names 2–3 applicable patterns, and ends with a learn-more line that could be deleted without breaking the post. Repeat once with <code>share-code</code> on a recent diff to confirm the diff angle leads with the lesson, not the accomplishment.</p>
-      <p>Metadata check: confirm <code>.claude-plugin/marketplace.json</code> reports 2.10.0 for social-media-tools, the CHANGELOG has the matching dated entry, and the settings.json marketplace-validation hook reports no JSON errors.</p>
+      <p>Open this plan file in Chrome. Click the "Save as PDF" button. In the print dialog, select "Save as PDF" as the destination and click Save. Open the resulting PDF and confirm:</p>
+      <ol>
+        <li>The sidebar and all buttons are absent.</li>
+        <li>The objective card has a blue left border.</li>
+        <li>Step cards are not split across pages.</li>
+        <li>The status badge retains its gray background.</li>
+        <li>The document title in the PDF metadata matches the plan title.</li>
+      </ol>
+      <p>Repeat in Firefox and Safari. Firefox uses its own print engine — confirm the layout is acceptable (minor differences in page breaks are tolerable).</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
-    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
-      <h2 id="h-completion">
-        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
-      </h2>
-      <div class="completion-checklist" id="completion-checklist">
-        <div class="completion-header">
-          <span class="completion-badge" id="completion-badge">Required</span>
-        </div>
-        <ul class="completion-list" id="completion-list">
-          <li>
-            <input type="checkbox" id="cc1" checked disabled>
-            <label for="cc1">All step TODOs marked as done</label>
-          </li>
-          <li>
-            <input type="checkbox" id="cc2" checked disabled>
-            <label for="cc2">All acceptance criteria verified and checked off</label>
-          </li>
-          <li>
-            <input type="checkbox" id="cc3" checked disabled>
-            <label for="cc3">Plan status updated to completed</label>
-          </li>
-        </ul>
-        <div class="completion-report" id="completion-report">
-          <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Next Steps (optional) ──────── -->
+    <!-- ── Next Steps ────────────────────────────────────────────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1262,26 +1051,25 @@
       <div class="next-steps-list">
 
         <details class="next-step-item">
-          <summary>Regenerate the saved social cards under docs/media/social with the new voice</summary>
+          <summary>Backfill the Save as PDF button into all existing HTML plans</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Review the saved social cards in docs/media/social/ in the agentics repo. For each one whose copy reads as promotion-first (accomplishment or follow-plug leads the post), regenerate it with the social-media-tools instructional voice: lead with a concrete, applicable takeaway about agentic development, keep any follow line as a secondary learn-more invitation. Report which cards you changed and which you left as-is and why.</pre>
+            <pre>Find all HTML plan files in docs/plans/ that do not contain a .save-pdf-btn button. For each file, add the save-pdf-btn markup in the .plan-header-top div (before the status badge), add the .save-pdf-btn CSS rules, add the ic-arrow-down-tray SVG symbol, add the savePDF() JavaScript function, and update the @media print block to hide the button. Do not change any plan content. Commit with message "feat(docs/plans): backfill Save as PDF button into existing HTML plans".</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
         <details class="next-step-item">
-          <summary>Add an instructional-voice eval to lock the behavior in</summary>
+          <summary>Add a keyboard shortcut hint tooltip on hover</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Add a lightweight evaluation for the social-media-tools plugin that runs each card-generating skill against a fixed input and asserts the drafted copy leads with a teachable takeaway and treats any follow line as optional/secondary. Place fixtures under tests/fixtures/ and document how to run the check. Do not change skill behavior — only add the eval.</pre>
+            <pre>Add a title attribute to the .save-pdf-btn button with the text "Save as PDF (Ctrl+P / Cmd+P)" so users learn the keyboard shortcut. Also add a CSS tooltip on hover that shows the same hint below the button. Keep it simple — no JS tooltip library, just a ::after pseudo-element positioned absolutely.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1289,25 +1077,12 @@
 
         <details class="next-step-item wish-item">
           <summary>
-            Build a dedicated "lesson-card" template for agentic-dev teaching posts
+            Client-side PDF generation without print dialog
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Design a new social card template for the social-media-tools plugin called lesson-card.html, purpose-built for teaching posts: a prominent "what you'll learn" header, a numbered principle/steps region, and a small "try it yourself" footer instead of a follow CTA. Match the existing dark-mode design system of the other card templates, wire it into the template-selection heuristics, and document when skills should pick it.</pre>
-            <button class="copy-prompt-btn" type="button"
-                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-          </div>
-        </details>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Thread posts into a numbered "agentic dev" learning series
-            <span class="wish-badge">Wish List</span>
-          </summary>
-          <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Explore adding an optional "learning series" mode to the social-media-tools plugin: posts on a recurring topic get auto-numbered (e.g. "Agentic Dev #7") and cross-link to prior entries, so the body of work reads as a curriculum. Recommend where series state should live (SOCIAL.md? a manifest in docs/media/social/?) and sketch the minimal implementation.</pre>
+            <p>Speculative / blue-sky idea -- not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Investigate using html2pdf.js (a wrapper around html2canvas + jsPDF) to generate a PDF directly in the browser without opening the print dialog. The button should download the PDF file immediately. Evaluate: (1) bundle size impact if loaded via CDN script tag, (2) rendering fidelity compared to window.print(), (3) whether SVG icons render correctly, (4) cross-browser support. Deliver a written recommendation with pros/cons — do not implement yet.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1316,15 +1091,42 @@
       </div>
     </section>
 
+    <!-- ── Unresolved Questions ──────────────────────────────────── -->
+    <details class="optional-section">
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item">
+              <summary>Should the button label say "Save as PDF" or "Download PDF"?</summary>
+              <div class="unresolved-prompt">
+                <pre>The Save as PDF button uses window.print() which opens the browser's print dialog — the user must still select "Save as PDF" as the destination. "Download PDF" implies an instant download. Evaluate which label sets the correct expectation and recommend one. Consider: (1) user familiarity with the print-to-PDF flow, (2) whether "Save" or "Download" is more accurate for a print dialog trigger, (3) what Google Docs and Notion use for similar buttons.</pre>
+                <button class="copy-prompt-btn" type="button"
+                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · 2026-06-05 · agentics
+      Generated by plan-agent &middot; 2026-06-06 &middot; agentics
     </footer>
 
   </main>
 </div><!-- /.layout -->
 
 <script>
+
+/* ── Save as PDF — triggers browser print dialog ─────────────── */
+function savePDF() {
+  window.print();
+}
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
@@ -1333,65 +1135,6 @@ function copyPath(btn, id) {
   var text = el.textContent.trim();
   function flash() {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied \u2713';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
-}
-/* ── Build rich implementation prompt from DOM ──────────────── */
-function buildImplementPrompt() {
-  var cmdEl = document.getElementById('implement-cmd');
-  var status = document.documentElement.getAttribute('data-status') || 'todo';
-  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
-  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
-
-  var totalSteps = stepCards.length;
-  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
-  var totalCriteria = criteriaItems.length;
-  var checkedCriteria = criteriaItems.filter(function(li) {
-    var cb = li.querySelector('input[type="checkbox"]');
-    return cb && cb.checked;
-  }).length;
-
-  var lines = [];
-  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
-  lines.push('');
-  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
-  lines.push('');
-  lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
-
-  return lines.join('\n');
-}
-
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
     btn.textContent = 'Copied ✓';
     btn.classList.add('copied');
     btn._copyTimer = setTimeout(function () {
@@ -1418,40 +1161,7 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
-function copyWorkflow(btn) {
-  var code = document.getElementById('workflow-cmd');
-  if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
-}
-
-/* ── Copy prompt button (global — required by inline onclick) ── */
+/* ── Copy prompt button ──────────────────────────────────────── */
 function copyPrompt(btn) {
   var pre = btn.previousElementSibling;
   if (!pre || pre.tagName !== 'PRE') {
@@ -1544,49 +1254,6 @@ function copyPrompt(btn) {
 
   restoreState();
   updateProgress();
-
-  /* ── Completion checklist auto-update ──────────────────────── */
-  var ccCheckboxes = Array.prototype.slice.call(
-    document.querySelectorAll('#completion-list input[type="checkbox"]')
-  );
-  var completionCard = document.getElementById('completion-checklist');
-
-  function updateCompletion() {
-    var stepCards = document.querySelectorAll('.step-card');
-    var allStepsDone = stepCards.length > 0 &&
-      Array.prototype.slice.call(stepCards).every(function(c) {
-        return c.classList.contains('completed');
-      });
-    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
-
-    var allCriteriaChecked = total > 0 &&
-      checkboxes.every(function(cb) { return cb.checked; });
-    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
-
-    var metaStatus = document.querySelector('meta[name="plan-status"]');
-    var statusIsCompleted =
-      document.documentElement.getAttribute('data-status') === 'completed' &&
-      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
-    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
-
-    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
-    if (completionCard) {
-      if (allComplete) completionCard.classList.add('all-complete');
-      else completionCard.classList.remove('all-complete');
-    }
-  }
-
-  updateCompletion();
-
-  checkboxes.forEach(function(cb) {
-    cb.addEventListener('change', updateCompletion);
-  });
-
-  if ('MutationObserver' in window) {
-    new MutationObserver(updateCompletion).observe(
-      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
-    );
-  }
 
   /* ── Scroll rail ─────────────────────────────────────────────── */
   var rail = document.querySelector('.scroll-rail');
