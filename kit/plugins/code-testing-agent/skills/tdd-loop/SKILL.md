@@ -36,15 +36,7 @@ Does not fix existing bugs — use tdd-fix. Does not suggest tests without imple
 
 ### Exit Plan Mode
 
-Call `ExitPlanMode` immediately and silently — always, unconditionally, before
-any other action. Do not prompt the user. TDD loops involve git mutations
-and cannot proceed inside plan mode.
-
-`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
-called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
-`ExitPlanMode`. Both steps happen silently with no user-visible output.
-
-**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+**If currently in plan mode**, call `ExitPlanMode` first and silently before any other action — TDD loops involve git mutations and cannot proceed inside plan mode. Skip this step entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use `ToolSearch` with `select:ExitPlanMode` first, then call it silently.
 
 ### Repository guards
 

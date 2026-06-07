@@ -35,11 +35,7 @@ literal text `--quick`. If present, set `quick_mode = true`; otherwise
 `quick_mode = false`. Record this once here — subsequent steps reference it
 without re-parsing.
 
-`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
-first, then call `ExitPlanMode`. Both steps happen silently with no user-visible
-output.
-
-**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
 Before doing any other work, use `TodoWrite` to create todos for each step of
 this interview. This gives the user visibility into progress and ensures no step

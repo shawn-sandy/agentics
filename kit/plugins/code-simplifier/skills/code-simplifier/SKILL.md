@@ -119,16 +119,18 @@ revised findings. Loop until the developer approves or discards.
 
 ## Step 6: Apply or Discard
 
+`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
+
 **If approved:**
 
-1. Call `ExitPlanMode` (`ExitPlanMode` is deferred — use `ToolSearch` with `select:ExitPlanMode` first, then call it; if it returns "You are not in plan mode", treat that as success and continue)
+1. Call `ExitPlanMode` (conditional — see above)
 2. Apply each refactoring step from the plan using `Edit` and `Write`
 3. After applying, briefly summarize what was changed
 
 **If discarded:**
 
 1. Delete the plan file
-2. Call `ExitPlanMode` (`ExitPlanMode` is deferred — use `ToolSearch` with `select:ExitPlanMode` first, then call it; if it returns "You are not in plan mode", treat that as success and continue)
+2. Call `ExitPlanMode` (conditional — see above)
 3. Confirm: "Plan discarded. No changes were made."
 
 ## Analysis Format

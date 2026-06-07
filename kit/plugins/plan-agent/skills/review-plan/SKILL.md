@@ -17,9 +17,7 @@ allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSea
 
 ### Step 0 — Exit plan mode and create progress todos
 
-`ExitPlanMode` is deferred. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both happen silently.
-
-**Error handling:** If `ExitPlanMode` returns "You are not in plan mode", treat it as success.
+`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
 Use `TodoWrite` to create todos for Steps 1–9. Mark each `completed` as done.
 

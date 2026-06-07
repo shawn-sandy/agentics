@@ -46,11 +46,7 @@ next to the source plan as a shareable, browser-openable companion.
 `mode = interactive`. This flag governs branching in Steps 1, 2, and 7 —
 record it once here so subsequent steps can reference it without re-parsing.
 
-`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode`
-first, then call `ExitPlanMode`. Both calls happen silently with no
-user-visible output.
-
-**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
 Use `TodoWrite` to create a todo for each step below (Steps 1–9), all
 starting `pending`. Mark each `completed` as you finish that step.
