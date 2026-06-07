@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="in-progress">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="in-progress">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-07">
 <meta name="plan-repo" content="agentics">
@@ -1015,7 +1015,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Publish HTML plans to GitHub Pages</h1>
-      <span class="status-badge">in-progress</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1264,12 +1264,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Merge to <code>main</code>, then confirm the first deploy serves the live gallery</span>
               </div>
               <div class="step-why">The pipeline only proves itself end-to-end once it has actually run. After the change merges to <code>main</code>, the <code>docs/**</code> path filter fires the workflow; watch the run complete, then load the public URL and confirm the gallery and a sample plan render. This is the real acceptance gate — a green Actions run plus a reachable site.</div>
@@ -1344,35 +1344,35 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A workflow at <code>.github/workflows/deploy-pages.yml</code> deploys <code>docs/</code> to GitHub Pages on every push to <code>main</code> that touches <code>docs/**</code> or the workflow file itself, with SHA-pinned actions and a <code>.nojekyll</code> existence assertion in the build job.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2"><code>docs/.nojekyll</code> exists, so the published site serves hand-built HTML without Jekyll processing.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>docs/index.html</code> redirects the site root to the plans gallery using a relative, base-path-safe href.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">GitHub Pages is enabled for the repo with source set to "GitHub Actions" (<code>build_type=workflow</code>).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Visiting <code>https://shawn-sandy.github.io/agentics/</code> lands on the filterable plans gallery.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">All plan files present in <code>docs/plans/</code> at deploy time are reachable at <code>https://shawn-sandy.github.io/agentics/plans/&lt;name&gt;.html</code> and render correctly.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>README.md</code> links to the published Pages site.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">Three test scripts exist in <code>tests/pages/</code> (<code>test-pages-smoke.sh</code>, <code>test-root-redirect.sh</code>, <code>test-workflow-config.sh</code>) and the unit/integration tests pass locally before merge.</label>
         </li>
       </ul>
