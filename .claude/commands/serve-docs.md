@@ -24,7 +24,7 @@ Start a local HTTP server to browse the Plans gallery and Media library HTML fil
 
 4. Open the Plans gallery in the default browser:
    ```bash
-   open "http://localhost:<PORT>/plans/"
+   open "http://localhost:<PORT>/plans/" 2>/dev/null || xdg-open "http://localhost:<PORT>/plans/" 2>/dev/null || true
    ```
 
 5. Tell the user the server is running and how to stop it (`kill %1` or `kill <PID>`).
