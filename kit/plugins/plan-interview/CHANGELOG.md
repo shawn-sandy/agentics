@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.7 — 2026-06-07 — Add Save as PDF button to HTML plans
+
+### Added
+
+- `html-spec.md`: new "Save as PDF Button" section with markup, `.save-pdf-btn` CSS, and `savePDF()` JS function.
+- `assets/scripts.js`: added `savePDF()` global function that calls `window.print()`.
+- `SKILL.md`: Step 5 structure list now mentions the Save as PDF button.
+- `html-spec.md`: updated Header element order, Page Structure skeleton, and `@media print` block to include the button.
+
+---
+
 ## v2.2.6 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed

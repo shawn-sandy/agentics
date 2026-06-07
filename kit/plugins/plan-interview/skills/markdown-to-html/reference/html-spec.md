@@ -111,6 +111,10 @@ Force with `--mode=doc`.
         <div class="progress-fill" style="width:{pct}%"></div>
       </div>
       <h1>{title}</h1>
+      <button class="save-pdf-btn" type="button" onclick="savePDF()"
+              aria-label="Save this plan as PDF">
+        Save as PDF
+      </button>
       <!-- plan mode only: -->
       <span class="status-badge status-{value}">{label}</span>
       <div class="metadata-row">…</div>
@@ -153,8 +157,9 @@ The `<header>` element contains in order:
 
 1. Progress bar (plan mode only — see **Progress Indicator**)
 2. `<h1>` — document title (H1 from source, `Plan:` prefix stripped)
-3. Status badge (plan mode only — see **Status Badge**)
-4. Metadata row
+3. Save as PDF button (both modes — see **Save as PDF Button**)
+4. Status badge (plan mode only — see **Status Badge**)
+5. Metadata row
 
 **Metadata field rendering:**
 
@@ -360,6 +365,55 @@ announces completion to screen readers. JS sets text to
 | absent or unknown | `status-unknown` | unknown | Gray `#6b7280` |
 
 Badge style: rounded pill, small font, white text, `padding: 0.2em 0.7em`.
+
+---
+
+## Save as PDF Button
+
+Present in both plan and doc modes. Placed in the header between `<h1>` and the
+status badge (or metadata row in doc mode).
+
+```html
+<button class="save-pdf-btn" type="button" onclick="savePDF()"
+        aria-label="Save this plan as PDF">
+  Save as PDF
+</button>
+```
+
+Clicking triggers `window.print()`, which opens the browser's native print
+dialog. On Chrome, Edge, Firefox, and Safari the dialog offers a "Save as PDF"
+destination. No external dependencies.
+
+<!-- BUILD-EXTRACT:SAVE-PDF-CSS START -->
+```css
+.save-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.save-pdf-btn:hover {
+  filter: brightness(0.85);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.save-pdf-btn:active { filter: brightness(0.75); }
+.save-pdf-btn:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+```
+<!-- BUILD-EXTRACT:SAVE-PDF-CSS END -->
+
+Hidden in print output (see **Print Styles**).
 
 ---
 
@@ -737,6 +791,14 @@ pre code { background: none; padding: 0; font-size: 0.85em; }
 
 ## JavaScript Features
 
+<!-- BUILD-EXTRACT:SAVE-PDF-JS START -->
+```javascript
+function savePDF() {
+  window.print();
+}
+```
+<!-- BUILD-EXTRACT:SAVE-PDF-JS END -->
+
 <!-- BUILD-EXTRACT:SCROLL-SPY START -->
 ```javascript
 (function () {
@@ -895,6 +957,7 @@ Required in every generated HTML file:
   .progress-bar { display: none; }
   .scroll-rail { display: none; }
   .step-chip { display: none; }
+  .save-pdf-btn { display: none; }
   nav { display: none; }
   .section-diagram { display: none; }
   .skip-link { display: none; }

@@ -1,4 +1,8 @@
-/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */
+/* markdown-to-html v2.1.0 — generated from reference/html-spec.md */
+function savePDF() {
+  window.print();
+}
+
 (function () {
   'use strict';
   var links = {};

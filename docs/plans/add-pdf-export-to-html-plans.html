@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-06">
 <meta name="plan-repo" content="agentics">
@@ -795,7 +795,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-down-tray"/></svg>
         Save as PDF
       </button>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -888,12 +888,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a download icon (<code>ic-arrow-down-tray</code>) to the SVG symbol sprite</span>
               </div>
               <div class="step-why">The button needs a recognizable download icon; adding it to the existing sprite keeps the file self-contained with no external asset requests.</div>
@@ -905,12 +905,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the "Save as PDF" button in the header next to the status badge</span>
               </div>
               <div class="step-why">Placing it in the header makes it immediately visible without scrolling; co-locating with the status badge keeps the action bar compact.</div>
@@ -922,12 +922,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Style the button with <code>.save-pdf-btn</code> and hide it in <code>@media print</code></span>
               </div>
               <div class="step-why">The button must be visible on screen but absent from the printed/PDF output; a dedicated class makes the print rule explicit and prevents it from appearing in the exported document.</div>
@@ -939,12 +939,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Implement the <code>savePDF()</code> function using <code>window.print()</code></span>
               </div>
               <div class="step-why">The browser's native print dialog is the most reliable cross-browser path to PDF; wrapping it in a named function lets the onclick handler remain a clean one-liner.</div>
@@ -956,12 +956,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Enhance <code>@media print</code> styles for PDF-quality output</span>
               </div>
               <div class="step-why">The existing print rules are minimal; PDF output needs explicit <code>@page</code> margins, <code>break-inside: avoid</code> on cards, preserved background colors for status badges and chips, and suppressed link URL suffixes for internal anchors.</div>
@@ -973,12 +973,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update the <code>markdown-to-html</code> skill template and assets to include the button and styles</span>
               </div>
               <div class="step-why">The <code>plan-to-html</code> alias delegates immediately to <code>markdown-to-html</code>, which is the active HTML generator with the template, assets, and spec. Updating the alias alone would leave the actual generator unchanged and future plans would still lack the button.</div>

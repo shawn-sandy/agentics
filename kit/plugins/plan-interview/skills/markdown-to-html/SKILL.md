@@ -198,6 +198,7 @@ Generate a complete, self-contained HTML document. Key requirements:
 - `<html lang="en">`, `<title>`, `<meta charset>`, `<meta name="viewport">`
 - `<a href="#main-content" class="skip-link">Skip to main content</a>` as first element in `<body>`
 - `<header>`, `.layout` grid with `<nav>` + `<main id="main-content">`
+- Save as PDF button (`.save-pdf-btn`) in header — calls `savePDF()` which triggers `window.print()`; hidden in `@media print`
 - Each `<section>` has `aria-labelledby` → its `<h2 id>`
 
 **Plan mode additions:**
