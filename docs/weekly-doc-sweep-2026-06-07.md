@@ -4,20 +4,20 @@ Automated scan of `docs/plans/` for completed plans lacking `docs/guides/<slug>.
 
 ## Summary
 
-| Metric                         | Count |
-| ------------------------------ | ----: |
-| Plans scanned (all statuses)   |   203 |
-| — active (non-archived)        |    26 |
-| — archived                     |   177 |
-| Completed plans found          |    86 |
-| Already documented (skipped)   |    59 |
-| Not yet eligible (< 30 days)   |    27 |
-| **Newly documented**           | **0** |
-| Failures                       |     0 |
+| Metric                               | Count |
+| ------------------------------------ | ----: |
+| Plans scanned (all statuses)         |   203 |
+| — active (non-archived)              |    26 |
+| — archived                           |   177 |
+| Completed plans found                |    86 |
+| — already documented (skipped)       |    59 |
+| — not yet eligible (< 30 days)       |    27 |
+| **Newly documented**                 | **0** |
+| Failures                             |     0 |
 
 ## Already Documented (59 skipped)
 
-Docs exist in `docs/guides/` for 59 completed plans. No action taken.
+Docs exist in `docs/guides/` for 59 of the 86 completed plans. No action taken.
 
 ## Not Yet Eligible — Pending Next Sweep (27)
 
