@@ -6,7 +6,9 @@ Automated scan of `docs/plans/` for completed plans lacking `docs/guides/<slug>.
 
 | Metric                         | Count |
 | ------------------------------ | ----: |
-| Plans scanned (all statuses)   |    26 |
+| Plans scanned (all statuses)   |   203 |
+| — active (non-archived)        |    26 |
+| — archived                     |   177 |
 | Completed plans found          |    86 |
 | Already documented (skipped)   |    59 |
 | Not yet eligible (< 30 days)   |    27 |
