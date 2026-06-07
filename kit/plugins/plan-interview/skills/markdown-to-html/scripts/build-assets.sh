@@ -34,13 +34,15 @@ extract() {
 
 # themes.css — all four body.theme-* rule sets
 {
-  echo "/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */"
+  echo "/* markdown-to-html v2.1.0 — generated from reference/html-spec.md */"
   extract "THEMES"
 } > "$ASSETS/themes.css"
 
-# scripts.js — scroll-spy + step-completion IIFEs
+# scripts.js — savePDF + scroll-spy + step-completion
 {
-  echo "/* markdown-to-html v2.0.0 — generated from reference/html-spec.md */"
+  echo "/* markdown-to-html v2.1.0 — generated from reference/html-spec.md */"
+  extract "SAVE-PDF-JS"
+  echo ""
   extract "SCROLL-SPY"
   echo ""
   extract "STEP-COMPLETION"
