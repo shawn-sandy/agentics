@@ -1125,10 +1125,11 @@
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
           <li><code>docs/index.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">replace meta-refresh redirect with the landing hub</span></li>
-          <li><code>tests/docs-hub-smoke.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test for the hub</span></li>
+          <li><code>tests/pages/test-docs-hub.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test for the hub (matches <code>tests/pages/test-*</code> convention)</span></li>
+          <li><code>tests/pages/test-root-redirect.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">delete or update — currently asserts the meta-refresh redirect this plan removes</span></li>
         </ul>
       </div>
-      <p style="margin-top:1rem;font-size:.85rem;color:var(--muted);">Out of scope and intentionally untouched: <code>.github/workflows/deploy-pages.yml</code>, <code>docs/.nojekyll</code>, <code>docs/plans/index.html</code>, and <code>docs/media/social/index.html</code>.</p>
+      <p style="margin-top:1rem;font-size:.85rem;color:var(--muted);">Out of scope and intentionally untouched: <code>.github/workflows/deploy-pages.yml</code>, <code>docs/.nojekyll</code>, <code>docs/plans/index.html</code>, and <code>docs/media/social/index.html</code>. The E2E spec (<code>tests/e2e/docs-hub.spec.ts</code>) is deferred — no Playwright infrastructure exists in this repo.</p>
     </section>
 
     <!-- ── Diagram: before / after / deferred ─────────────────────── -->
@@ -1188,7 +1189,7 @@
               <div class="step-why">The meta-refresh document has to go before anything can render at the root; seeding the same <code>:root</code> token block as <code>docs/plans/index.html</code> guarantees visual parity from the first byte and keeps the page fully self-contained (inline CSS, no CDN).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Open <code>docs/index.html</code>: there is no <code>&lt;meta http-equiv="refresh"&gt;</code> and no <code>&lt;link rel="canonical"&gt;</code> redirect; the <code>:root</code> block declares <code>--bg:#ffffff</code>, <code>--accent:#2563eb</code>, <code>--radius:4px</code> and the same <code>--surface/--border/--text/--muted</code> values as <code>docs/plans/index.html</code>.</div>
+                <div class="verify-body">Open <code>docs/index.html</code>: there is no <code>&lt;meta http-equiv="refresh"&gt;</code> and no <code>&lt;link rel="canonical"&gt;</code> redirect; the file starts with <code>&lt;!DOCTYPE html&gt;</code>, <code>&lt;html lang="en"&gt;</code>, includes <code>&lt;meta charset="UTF-8"&gt;</code>, <code>&lt;meta name="viewport"&gt;</code>, a <code>&lt;title&gt;</code>, and a <code>&lt;a class="skip-link" href="#main"&gt;Skip to content&lt;/a&gt;</code>; the <code>:root</code> block declares <code>--bg:#ffffff</code>, <code>--accent:#2563eb</code>, <code>--radius:4px</code> and the same <code>--surface/--border/--text/--muted</code> values as <code>docs/plans/index.html</code>.</div>
               </details>
             </div>
           </div>
@@ -1222,7 +1223,7 @@
               <div class="step-why">The cards are the hub's entire reason to exist: one-click routing to each gallery. Using <code>.gallery-grid</code> + <code>.gallery-card</code> reuses the gallery's hover treatment, and relative hrefs (<code>plans/index.html</code>, <code>media/social/index.html</code>) are what keep navigation working under <code>/agentics/</code>.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Exactly two <code>&lt;a class="gallery-card"&gt;</code> elements exist; their <code>href</code> values are <code>plans/index.html</code> and <code>media/social/index.html</code> (no leading <code>/</code>, no protocol); each card shows a title and a one-line description. <code>grep -n 'href="/' docs/index.html</code> returns nothing.</div>
+                <div class="verify-body">Exactly two <code>&lt;a class="gallery-card"&gt;</code> elements exist; their <code>href</code> values are <code>plans/index.html</code> and <code>media/social/index.html</code> (no leading <code>/</code>, no protocol); each card shows a title (e.g. "Plans", "Social Media") and a descriptive subtitle that makes the destination unambiguous (e.g. "Browse implementation plans", "View social media cards and posts"). <code>grep -n 'href="/' docs/index.html</code> returns nothing.</div>
               </details>
             </div>
           </div>
@@ -1234,12 +1235,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Wrap content in semantic landmarks and add a footer, with responsive + reduced-motion behavior.</span>
+                <span class="step-chip-text">Wrap content in semantic landmarks, add a skip-link and footer, with responsive + reduced-motion behavior.</span>
               </div>
-              <div class="step-why">A <code>&lt;main&gt;</code> landmark, a single <code>&lt;h1&gt;</code>, and a <code>.gallery-footer</code> complete the page chrome and keep it accessible and gallery-consistent; the grid must collapse cleanly on narrow screens like the gallery does at its 640px breakpoint.</div>
+              <div class="step-why">A skip-to-content link, a <code>&lt;main&gt;</code> landmark, a single <code>&lt;h1&gt;</code>, and a <code>.gallery-footer</code> complete the page chrome and keep it accessible and gallery-consistent; the grid must collapse cleanly on narrow screens like the gallery does at its 640px breakpoint.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">The cards live inside a <code>&lt;main&gt;</code> element; a <code>.gallery-footer</code> renders at the bottom with the gallery's <code>border-top</code> styling; resizing the viewport below ~640px stacks the two cards into a single column with no horizontal scroll.</div>
+                <div class="verify-body">A <code>&lt;a href="#main" class="skip-link"&gt;</code> appears before the <code>&lt;main&gt;</code> element; the cards live inside <code>&lt;main id="main"&gt;</code>; a <code>.gallery-footer</code> renders at the bottom with the gallery's <code>border-top</code> styling; resizing the viewport below ~640px stacks the two cards into a single column with no horizontal scroll; at tablet widths (640px–1024px) the two-card grid is not awkwardly sparse.</div>
               </details>
             </div>
           </div>
@@ -1256,7 +1257,24 @@
               <div class="step-why">GitHub Pages serves the site under <code>/agentics/</code>, so the only trustworthy check is loading the hub as the served root and actually clicking through to each gallery — and the task forbids changing the deploy pipeline.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Run <code>cd docs &amp;&amp; python3 -m http.server PORT</code>, open <code>http://localhost:PORT/</code>: the hub renders in the light theme, and clicking the Plans card loads "Plans Library" while the Social card loads "Media Library". <code>git diff --name-only</code> lists only <code>docs/index.html</code> and the new test file — never <code>.github/workflows/deploy-pages.yml</code>.</div>
+                <div class="verify-body">Run <code>cd docs &amp;&amp; python3 -m http.server 8123</code>, open <code>http://localhost:8123/</code>: the hub renders in the light theme, and clicking the Plans card loads "Plans Library" while the Social card loads "Media Library". Confirm <code>.github/workflows/deploy-pages.yml</code> exists and is unmodified (<code>test -f</code>).</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Write <code>tests/pages/test-docs-hub.sh</code> and update or delete <code>tests/pages/test-root-redirect.sh</code>.</span>
+              </div>
+              <div class="step-why">The smoke test codifies the plan's acceptance criteria as automated assertions, and belongs in <code>tests/pages/</code> with the <code>test-*</code> naming convention matching its siblings (<code>test-pages-smoke.sh</code>, <code>test-workflow-config.sh</code>). The existing <code>test-root-redirect.sh</code> asserts the meta-refresh redirect this plan removes, so it must be deleted or rewritten to assert the hub instead.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Run <code>bash tests/pages/test-docs-hub.sh</code> and confirm it exits 0. Confirm the test asserts: no <code>http-equiv="refresh"</code>, <code>href="plans/index.html"</code> present, <code>href="media/social/index.html"</code> present, no absolute-root link (<code>href="/"</code>), and at least one CSS token (<code>--accent:#2563eb</code>). Confirm <code>tests/pages/test-root-redirect.sh</code> no longer asserts a meta-refresh redirect.</div>
               </details>
             </div>
           </div>
@@ -1280,10 +1298,10 @@
           <span class="test-card-title">Root is a hub that links both galleries via relative hrefs</span>
         </div>
         <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/docs-hub-smoke.sh</code></p>
-          <p><strong>Type:</strong> smoke test (bash, matches the existing <code>scripts/*.sh</code> convention)</p>
-          <p><strong>Asserts:</strong> <code>docs/index.html</code> contains no <code>http-equiv="refresh"</code>; contains <code>href="plans/index.html"</code> and <code>href="media/social/index.html"</code>; contains no absolute-root link (<code>grep -q 'href="/'</code> must fail); and <code>git diff</code> shows <code>.github/workflows/deploy-pages.yml</code> unchanged. Directly proves the plan's stated objective.</p>
-          <p><strong>Run:</strong> <code>bash tests/docs-hub-smoke.sh</code></p>
+          <p><strong>File:</strong> <code>tests/pages/test-docs-hub.sh</code></p>
+          <p><strong>Type:</strong> smoke test (bash, matches the existing <code>tests/pages/test-*</code> convention)</p>
+          <p><strong>Asserts:</strong> <code>docs/index.html</code> contains no <code>http-equiv="refresh"</code>; contains <code>href="plans/index.html"</code> and <code>href="media/social/index.html"</code>; contains no absolute-root link (<code>grep -q 'href="/'</code> must fail); contains at least one CSS token (<code>--accent:#2563eb</code>); and <code>.github/workflows/deploy-pages.yml</code> exists and was not modified in the current commit (checked via <code>test -f</code>, not <code>git diff</code>). Directly proves the plan's stated objective.</p>
+          <p><strong>Run:</strong> <code>bash tests/pages/test-docs-hub.sh</code></p>
         </div>
       </div>
 
@@ -1294,9 +1312,10 @@
             <span class="test-card-title">Click-through from the served root reaches each gallery</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/e2e/docs-hub.spec.ts</code> (Playwright — the same engine the social-card skills already use)</p>
+            <p><strong>File:</strong> <code>tests/e2e/docs-hub.spec.ts</code> (Playwright)</p>
+            <p><strong>Status:</strong> <em>Deferred</em> — the repo has no Playwright config, no <code>tests/e2e/</code> directory, and no TypeScript tooling. This spec is aspirational; implement it when E2E infrastructure is set up. See Next Steps.</p>
             <p><strong>Targets:</strong> the served <code>docs/</code> root and the two <code>.gallery-card</code> navigation links</p>
-            <p><strong>Key cases:</strong> (1) loading <code>/</code> shows an <code>&lt;h1&gt;</code> and exactly two cards; (2) clicking the Plans card lands on a page whose title is "Plans Library"; (3) clicking the Social card lands on a page whose title is "Media Library"; (4) the page exposes a single <code>main</code> landmark and one <code>h1</code>.</p>
+            <p><strong>Key cases:</strong> (1) loading <code>/</code> shows an <code>&lt;h1&gt;</code>, a skip-link, and exactly two cards; (2) clicking the Plans card lands on a page whose title is "Plans Library"; (3) clicking the Social card lands on a page whose title is "Media Library"; (4) the page exposes a single <code>main</code> landmark and one <code>h1</code>.</p>
           </div>
         </div>
       </div>
@@ -1337,6 +1356,14 @@
           <input type="checkbox" id="ac7">
           <label for="ac7">The page is self-contained (inline CSS, no external stylesheet or CDN) with a single <code>&lt;h1&gt;</code> and a <code>&lt;main&gt;</code> landmark.</label>
         </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8">The hub includes a <code>&lt;a class="skip-link" href="#main"&gt;Skip to content&lt;/a&gt;</code> before <code>&lt;main&gt;</code>.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9"><code>tests/pages/test-root-redirect.sh</code> no longer asserts a meta-refresh redirect (deleted or rewritten).</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1348,7 +1375,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>Serve the docs directory as the site root — <code>cd docs &amp;&amp; python3 -m http.server 8123</code> — and open <code>http://localhost:8123/</code>. Confirm the hub renders in the light theme with the accent top-rule header and two cards, then click each card and confirm it loads the <strong>Plans Library</strong> and the <strong>Media Library</strong> respectively. View source on the served root and confirm there is no <code>&lt;meta http-equiv="refresh"&gt;</code> and no <code>href="/"</code> absolute link. Finally run <code>git diff --name-only</code> and confirm only <code>docs/index.html</code> (and the new <code>tests/docs-hub-smoke.sh</code>) changed — proving the GitHub Pages deploy workflow was left untouched — and run <code>bash tests/docs-hub-smoke.sh</code> to get an automated green check of the same assertions.</p>
+      <p>Serve the docs directory as the site root — <code>cd docs &amp;&amp; python3 -m http.server 8123</code> — and open <code>http://localhost:8123/</code>. Confirm the hub renders in the light theme with the accent top-rule header and two cards with descriptive subtitles, then click each card and confirm it loads the <strong>Plans Library</strong> and the <strong>Media Library</strong> respectively. Tab-focus the page and confirm the skip-link appears and targets <code>#main</code>. View source on the served root and confirm there is no <code>&lt;meta http-equiv="refresh"&gt;</code> and no <code>href="/"</code> absolute link. Run <code>bash tests/pages/test-docs-hub.sh</code> and confirm it exits 0. Confirm <code>.github/workflows/deploy-pages.yml</code> exists unchanged via <code>test -f</code>. Note: after merging to main, GitHub Pages CDN may serve the old redirect for several minutes — wait before declaring the live deploy verified.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1410,6 +1437,16 @@
           </div>
         </details>
 
+        <details class="next-step-item">
+          <summary>Set up Playwright E2E infrastructure and write docs-hub.spec.ts</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Set up Playwright E2E test infrastructure for the agentics repo: install Playwright as a dev dependency, create a playwright.config.ts, and create tests/e2e/docs-hub.spec.ts with these cases: (1) loading the served docs/ root shows an h1, a skip-link, and exactly two .gallery-card elements; (2) clicking the Plans card navigates to a page titled "Plans Library"; (3) clicking the Social card navigates to a page titled "Media Library"; (4) the page has a single main landmark and one h1. The spec should start a local server on docs/ before tests run. Do not modify any existing files outside tests/.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
         <!-- Wish List -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
@@ -1451,6 +1488,133 @@
             </details>
           </li>
         </ul>
+      </div>
+    </details>
+
+    <!-- ── Team Review ────────────────────────────────────────────── -->
+    <details id="team-review-20260607181213" class="team-review" style="margin-top:1.5rem;border:1px solid var(--border);border-radius:var(--radius);padding:0;">
+      <summary style="padding:.75rem 1rem;cursor:pointer;font-weight:700;font-size:.95rem;background:var(--grey-bg);border-radius:var(--radius);list-style:none;user-select:none;">
+        Team Review (2026-06-07 18:12:13 UTC) &mdash; 7 reviewers
+      </summary>
+      <div class="review-body" style="padding:1rem;font-size:.9rem;line-height:1.7;">
+
+        <h3 style="margin-top:0;">Executive Summary</h3>
+        <p>The plan is <strong>sound with revisions</strong>. All seven reviewers agree the scope is appropriate and the architecture is correct for a single-file static HTML change. However, the team identified several actionable gaps: the smoke test path and naming violated project conventions (<code>tests/pages/test-*</code>), no step created the test files described in the Tests section, the E2E spec assumed Playwright infrastructure that does not exist, the existing <code>test-root-redirect.sh</code> would break silently, the hub page lacked a required skip-link, and card descriptions were too vague. All issues have been addressed in the inline edits applied alongside this review.</p>
+
+        <h3>Architecture</h3>
+        <p><strong>Fit:</strong> Architecturally sound for scope &mdash; single static HTML file, no build pipeline, no external dependencies. <strong>Concerns:</strong> CSS duplication across hub and galleries will drift (low); no back-navigation from galleries to hub (low, deferred to Next Steps); smoke test git-diff assertion is brittle (low). All accepted for current scope.</p>
+
+        <h3>Completeness</h3>
+        <p><strong>Assessment:</strong> Well-scoped and largely executable, but had meaningful gaps. <strong>Key gaps addressed:</strong> (1) No step created test files &mdash; added Step 6. (2) Step 1 verify lacked HTML boilerplate checks &mdash; added DOCTYPE, lang, charset, viewport, title, skip-link assertions. (3) Card descriptions unspecified &mdash; Step 3 verify now requires descriptive subtitles. (4) E2E spec listed as deliverable with no Playwright infra &mdash; deferred to Next Steps.</p>
+
+        <h3>Testability</h3>
+        <p><strong>Coverage:</strong> Adequate for the narrow scope after fixes. <strong>Key gaps addressed:</strong> (1) Smoke test had no CSS-token assertion &mdash; added <code>--accent:#2563eb</code> check. (2) Git-diff assertion replaced with <code>test -f</code> check. (3) E2E spec marked deferred with explicit status note. (4) Smoke test <code>Run:</code> command corrected to <code>bash tests/pages/test-docs-hub.sh</code>.</p>
+
+        <h3>Risk</h3>
+        <p><strong>Risk level:</strong> Low. Key risks: relative links break if galleries move (medium &mdash; accepted, smoke test covers); CDN propagation delay after deploy (low &mdash; documented in Verification); <code>test-root-redirect.sh</code> would have broken silently (low &mdash; now addressed in Step 6 and AC9).</p>
+
+        <h3>Conventions</h3>
+        <p><strong>Fit:</strong> Good overall after corrections. <strong>Key issues addressed:</strong> (1) Smoke test moved from <code>tests/docs-hub-smoke.sh</code> to <code>tests/pages/test-docs-hub.sh</code> matching sibling naming convention (high). (2) E2E spec deferred since no Playwright config exists (medium). (3) <code>test-root-redirect.sh</code> breakage added to Files and acceptance criteria (low).</p>
+
+        <h3>UX</h3>
+        <p><strong>User fit:</strong> Clear happy path with direct routing. <strong>Key concerns addressed:</strong> (1) Skip-link added to Step 4 requirements and AC8. (2) Card descriptions required to be meaningful and unambiguous. (3) Tablet-range viewport check (640px&ndash;1024px) added to Step 4 verify. <strong>Accepted as-is:</strong> Back-to-home link deferred to Next Steps (already tracked); headline/tagline copy deferred to Unresolved Questions (implementer must resolve before shipping).</p>
+
+        <h3>Accessibility</h3>
+        <p><strong>A11y compliance:</strong> Largely WCAG 2.1 AA compliant after fixes. <strong>Key issues addressed:</strong> (1) Skip-link requirement added to built hub page (high). (2) E2E test key case updated to check for skip-link. <strong>Accepted as-is:</strong> Copy button touch targets below 44px (low &mdash; non-primary actions); completion checklist disabled checkboxes lack <code>aria-disabled</code> hint (medium &mdash; pre-existing template concern, not plan-specific).</p>
+
+        <h3>Agreements</h3>
+        <ul>
+          <li><strong>Skip-link required</strong> (Accessibility + UX + Completeness): All agree the built hub page must include a skip-to-content link.</li>
+          <li><strong>Test path wrong</strong> (Conventions + Completeness + Testability): All agree smoke test belongs at <code>tests/pages/test-docs-hub.sh</code>.</li>
+          <li><strong>E2E spec not deliverable</strong> (Conventions + Testability + Risk): All agree Playwright spec should be deferred, not listed as current-scope deliverable.</li>
+          <li><strong>test-root-redirect.sh breaks</strong> (Conventions + Risk): Both flagged the existing test will fail after the redirect is removed.</li>
+          <li><strong>Git-diff assertion brittle</strong> (Architecture + Testability + Risk): All agree <code>git diff</code> check should be replaced with a direct file-existence check.</li>
+        </ul>
+
+        <h3>Conflicts</h3>
+        <p>No material conflicts. UX reviewer rated "back-to-home link" as high severity and recommended promoting it to a required step; Architecture and Risk reviewers rated it low. <strong>Resolution:</strong> kept as Next Steps since it modifies files outside this plan's scope (<code>docs/plans/index.html</code> and <code>docs/media/social/index.html</code>), but the Next Steps prompt is already written and ready to execute immediately after this plan ships.</p>
+
+        <h3>Highest-Risk Issues</h3>
+        <ol>
+          <li><strong>Missing test-creation step</strong> (Completeness, high) &mdash; Fixed: added Step 6.</li>
+          <li><strong>Wrong test path/naming</strong> (Conventions, high) &mdash; Fixed: renamed throughout.</li>
+          <li><strong>test-root-redirect.sh breakage</strong> (Conventions, low) &mdash; Fixed: added to Files and AC9.</li>
+          <li><strong>No skip-link on hub</strong> (Accessibility, high) &mdash; Fixed: added to Step 4, AC8.</li>
+          <li><strong>E2E spec assumes missing infra</strong> (Conventions, medium) &mdash; Fixed: deferred with explicit status note.</li>
+        </ol>
+
+        <h3>Edits Applied</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:.85rem;margin-top:.5rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);text-align:left;">
+              <th style="padding:.4rem .5rem;">Target</th>
+              <th style="padding:.4rem .5rem;">Action</th>
+              <th style="padding:.4rem .5rem;">Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Files section</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Renamed smoke test to <code>tests/pages/test-docs-hub.sh</code>; added <code>tests/pages/test-root-redirect.sh</code> as modified</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Step 1 verify</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Added HTML boilerplate checks: DOCTYPE, lang, charset, viewport, title, skip-link</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Step 3 verify</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Required descriptive card subtitles</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Step 4</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Added skip-link requirement, tablet-range viewport check (640px&ndash;1024px)</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Step 5 verify</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Fixed port placeholder to 8123; replaced git-diff with <code>test -f</code></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Steps section</td>
+              <td style="padding:.4rem .5rem;">insert after Step 5</td>
+              <td style="padding:.4rem .5rem;">Added Step 6: write smoke test and update/delete test-root-redirect.sh</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Objective test</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Fixed path, naming convention, added CSS token assertion, replaced git-diff with test -f</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">E2E test</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Marked as deferred; added skip-link to key cases</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Acceptance Criteria</td>
+              <td style="padding:.4rem .5rem;">append</td>
+              <td style="padding:.4rem .5rem;">Added AC8 (skip-link) and AC9 (test-root-redirect.sh updated)</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Verification</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Fixed test path, added skip-link check, CDN propagation note, replaced git-diff</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.4rem .5rem;">Next Steps</td>
+              <td style="padding:.4rem .5rem;">insert</td>
+              <td style="padding:.4rem .5rem;">Added Playwright E2E infrastructure setup prompt</td>
+            </tr>
+            <tr>
+              <td style="padding:.4rem .5rem;">Files note</td>
+              <td style="padding:.4rem .5rem;">edit</td>
+              <td style="padding:.4rem .5rem;">Added E2E spec deferral note to out-of-scope line</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </details>
 
