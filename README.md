@@ -924,6 +924,32 @@ bash tests/demo/run.sh
 ls tests/fixtures/valid-plugin/
 ```
 
+### Browsing Docs Locally
+
+Two ways to serve the HTML galleries (`docs/plans/` and `docs/media/social/`) locally:
+
+**Script — auto-selects a free port:**
+
+```bash
+bash scripts/serve-docs.sh
+# Plans gallery:  http://localhost:<port>/plans/
+# Media library:  http://localhost:<port>/media/social/
+```
+
+Pass an explicit port as the first argument to pin it:
+
+```bash
+bash scripts/serve-docs.sh 8900
+```
+
+**Launch configs — fixed ports (`.claude/launch.json`):**
+
+| Config | URL | Directory |
+|--------|-----|-----------|
+| `plans-gallery` | http://localhost:8901 | `docs/plans/` |
+| `media-library` | http://localhost:8902 | `docs/media/social/` |
+| `docs-all` | http://localhost:8900 | `docs/` |
+
 ---
 
 ## CI/CD
