@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "plans-gallery",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8901", "--bind", "127.0.0.1", "--directory", "docs/plans"],
+      "port": 8901
+    },
+    {
+      "name": "media-library",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8902", "--bind", "127.0.0.1", "--directory", "docs/media/social"],
+      "port": 8902
+    },
+    {
+      "name": "docs-all",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8900", "--bind", "127.0.0.1", "--directory", "docs"],
+      "port": 8900
+    }
+  ]
+}
