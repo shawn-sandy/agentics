@@ -312,6 +312,67 @@ git commit -q -m "feat(beta): add new command"
 output=$(node "$AUTO_BUMP" --dry-run --registry .claude-plugin/marketplace.json 2>&1)
 assert_contains "beta minor via short scope" "beta: 2.0.0 → 2.1.0 (minor)" "$output"
 
+# ── Test 1.11: New plugin is NOT auto-bumped (initial version preserved) ──────
+
+echo ""
+echo "Test 1.11: New plugin's initial version is preserved"
+REPO11="${TMPDIR_ROOT}/test-new-plugin"
+init_repo "$REPO11"
+
+# Add a new plugin in a branch and merge
+git checkout -q -b add-gamma
+mkdir -p kit/plugins/gamma
+echo "# Gamma" > kit/plugins/gamma/README.md
+jq '.plugins += [{"name":"gamma","source":{"source":"git-subdir","url":"test/repo","path":"kit/plugins/gamma"},"version":"0.1.0","description":"Gamma"}]' \
+  .claude-plugin/marketplace.json > tmp.json
+mv tmp.json .claude-plugin/marketplace.json
+git add -A
+git commit -q -m "feat: add gamma plugin"
+
+git checkout -q main
+git merge -q --no-ff add-gamma -m "Merge branch 'add-gamma'"
+
+output=$(node "$AUTO_BUMP" --dry-run --registry .claude-plugin/marketplace.json 2>&1)
+assert_contains "gamma skipped" "gamma: new plugin" "$output"
+
+# Verify gamma's version is NOT bumped when writing
+node "$AUTO_BUMP" --registry .claude-plugin/marketplace.json >/dev/null 2>&1
+gamma_ver=$(get_version "$REPO11" "gamma")
+assert_eq "gamma stays at initial version" "0.1.0" "$gamma_ver"
+
+# ── Test 1.12: PUSH_BEFORE/PUSH_AFTER covers rebase/ff push range ────────────
+
+echo ""
+echo "Test 1.12: PUSH_BEFORE/PUSH_AFTER env vars cover multi-commit linear pushes"
+REPO12="${TMPDIR_ROOT}/test-push-range"
+init_repo "$REPO12"
+
+# Record the base SHA before the two commits
+base_sha=$(git rev-parse HEAD)
+
+echo "fix alpha" >> kit/plugins/alpha/README.md
+git add -A
+git commit -q -m "fix(alpha): fix alpha bug"
+
+echo "feat beta" >> kit/plugins/beta/README.md
+git add -A
+git commit -q -m "feat(beta): add beta feature"
+
+after_sha=$(git rev-parse HEAD)
+
+# Without PUSH_BEFORE/PUSH_AFTER, only the last commit is seen (beta only)
+output_no_env=$(node "$AUTO_BUMP" --dry-run --registry .claude-plugin/marketplace.json 2>&1)
+assert_contains "without env: beta seen" "beta" "$output_no_env"
+
+# Reset to re-test with env vars
+git checkout -q -- .claude-plugin/marketplace.json 2>/dev/null || true
+
+# With PUSH_BEFORE/PUSH_AFTER, both commits are covered
+output_with_env=$(PUSH_BEFORE="$base_sha" PUSH_AFTER="$after_sha" \
+  node "$AUTO_BUMP" --dry-run --registry .claude-plugin/marketplace.json 2>&1)
+assert_contains "with env: alpha seen" "alpha" "$output_with_env"
+assert_contains "with env: beta seen" "beta" "$output_with_env"
+
 # ═════════════════════════════════════════════════════════════════════════════
 # TEST SUITE 2: check-no-manual-bump.sh
 # ═════════════════════════════════════════════════════════════════════════════

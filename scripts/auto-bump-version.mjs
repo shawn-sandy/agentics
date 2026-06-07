@@ -19,6 +19,8 @@
 //   5. Multiple commits touching the same plugin → highest bump wins.
 //
 // ENVIRONMENT:
+//   PUSH_BEFORE   — pre-push SHA (github.event.before); covers rebase/ff merges
+//   PUSH_AFTER    — post-push SHA (github.event.after)
 //   GITHUB_OUTPUT — GitHub Actions output file (set automatically by Actions)
 
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
@@ -83,6 +85,8 @@ function commitToBumpType(parsed, hasBreakingBody) {
 
 // ── Git helpers ──────────────────────────────────────────────────────────────
 
+const ZERO_SHA = '0000000000000000000000000000000000000000';
+
 function git(...args) {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
 }
@@ -92,25 +96,47 @@ function getParentCount() {
   return line.split(' ').length - 1;
 }
 
-function getChangedFiles() {
+// Resolve the diff range for this push.
+// In CI, PUSH_BEFORE..PUSH_AFTER covers all commits in the push — including
+// rebase/fast-forward merges with multiple single-parent commits.
+// Locally, falls back to HEAD^1 (merge) or HEAD~1 (linear).
+function getDiffRange() {
+  const before = process.env.PUSH_BEFORE;
+  const after = process.env.PUSH_AFTER;
+  if (before && after && before !== ZERO_SHA) {
+    return { from: before, to: after };
+  }
   const parentCount = getParentCount();
-  const diffRef = parentCount > 1 ? 'HEAD^1' : 'HEAD~1';
+  const from = parentCount > 1 ? 'HEAD^1' : 'HEAD~1';
+  return { from, to: 'HEAD' };
+}
+
+function getChangedFiles() {
+  const { from, to } = getDiffRange();
   try {
-    return git('diff', '--name-only', diffRef, 'HEAD').split('\n').filter(Boolean);
+    return git('diff', '--name-only', from, to).split('\n').filter(Boolean);
   } catch {
     return [];
   }
 }
 
 function getCommitMessages() {
-  const parentCount = getParentCount();
+  const { from, to } = getDiffRange();
   try {
-    const raw = parentCount > 1
-      ? git('log', '--format=---COMMIT_SEP---%n%B', 'HEAD^1..HEAD')
-      : git('log', '--format=---COMMIT_SEP---%n%B', '-1', 'HEAD');
+    const raw = git('log', '--format=---COMMIT_SEP---%n%B', `${from}..${to}`);
     return raw.split('---COMMIT_SEP---').map(m => m.trim()).filter(Boolean);
   } catch {
     return [];
+  }
+}
+
+// Read the marketplace.json from before this push to identify new plugins.
+function getBaseRegistry(registryPath) {
+  const { from } = getDiffRange();
+  try {
+    return JSON.parse(git('show', `${from}:${registryPath}`));
+  } catch {
+    return null;
   }
 }
 
@@ -139,6 +165,21 @@ try {
 
   if (affectedPlugins.size === 0) {
     console.log('No plugin source changes detected.');
+    process.exit(0);
+  }
+
+  // Step 1b: Exclude newly added plugins — preserve their initial version
+  const baseRegistry = getBaseRegistry(registryPath);
+  const basePluginNames = new Set((baseRegistry?.plugins ?? []).map(p => p.name));
+  for (const name of [...affectedPlugins]) {
+    if (!basePluginNames.has(name)) {
+      console.log(`  ${name}: new plugin — skipping (initial version preserved)`);
+      affectedPlugins.delete(name);
+    }
+  }
+
+  if (affectedPlugins.size === 0) {
+    console.log('No existing plugins require a version bump.');
     process.exit(0);
   }
 

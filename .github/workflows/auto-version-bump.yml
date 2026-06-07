@@ -6,6 +6,10 @@ on:
     paths:
       - 'kit/plugins/**'
 
+concurrency:
+  group: auto-version-bump
+  cancel-in-progress: false
+
 jobs:
   bump-versions:
     name: Bump plugin versions
@@ -24,6 +28,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Sync with latest main
+        run: git pull --rebase origin main
+
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
@@ -31,6 +38,9 @@ jobs:
 
       - name: Run auto-bump
         id: bump
+        env:
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
         run: node scripts/auto-bump-version.mjs
 
       - name: Commit and push
@@ -45,4 +55,5 @@ jobs:
           git commit -m "ci(versions): auto-bump plugin versions [skip ci]
 
           ${BUMP_SUMMARY}"
+          git pull --rebase origin main
           git push
