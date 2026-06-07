@@ -1133,7 +1133,7 @@
               <li><code>SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">team orchestration workflow</span></li>
               <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> references/</li>
               <ul class="file-list">
-                <li><code>role-prompts.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">5 lens-specific spawn prompts</span></li>
+                <li><code>role-prompts.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">7 spawn prompts (5 core + 2 UI-conditional)</span></li>
                 <li><code>output-template.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">synthesis report + inline-edits table</span></li>
               </ul>
             </ul>
@@ -1159,7 +1159,7 @@
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
         <div class="pipeline-node"><div class="pipeline-label">Spawn</div><code>5 core (+2 if UI)</code><div class="pipeline-sub">architecture · completeness · testability · risk · conventions <em>(+ ux · accessibility)</em></div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Debate &amp; collect</div><code>findings via mailbox</code><div class="pipeline-sub">teammates challenge each other; lead waits for all 5</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">Debate &amp; collect</div><code>findings via mailbox</code><div class="pipeline-sub">teammates challenge each other; lead waits for all spawned teammates (5 core or 7 with UI)</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
         <div class="pipeline-node"><div class="pipeline-label">Synthesise</div><code>output-template.md</code><div class="pipeline-sub">agreements, conflicts, inline-edits table</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
@@ -1321,7 +1321,7 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Validate the plugin structure</span>
               </div>
-              <div class="step-why">Catch frontmatter, JSON, and registration errors before commit. Run <code>/validate-plugin plan-agent</code> (or the bundled validation skill) and confirm the new skill and five agents parse, the homepage URL is correct, and <code>marketplace.json</code> registration is intact.</div>
+              <div class="step-why">Catch frontmatter, JSON, and registration errors before commit. Run <code>/validate-plugin plan-agent</code> (or the bundled validation skill) and confirm the new skill and all seven agents parse (five core + two UI-conditional), the homepage URL is correct, and <code>marketplace.json</code> registration is intact.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body"><code>validate-plugin</code> reports no errors for <code>plan-agent</code>; <code>node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json'))"</code> exits 0.</div>
@@ -1346,7 +1346,7 @@
           <span class="completion-badge" style="background: var(--accent-bg); color: var(--accent); border-color:#bfdbfe;">Objective-Verification Test (hero)</span>
         </div>
         <p style="margin:0 0 .5rem;"><strong>Smoke test — review-plan updates a plan in place.</strong> With Agent Teams enabled, run <code>/plan-agent:review-plan tests/fixtures/sample-plan-backend.html</code> against a copied non-UI fixture. Assert the run (1) spawns exactly five core teammates, (2) finishes with the fixture modified — at least one inline edit applied to a step card or criterion AND a "Team Review" <code>&lt;details&gt;</code> appended before <code>&lt;/main&gt;</code>, and (3) writes a sibling <code>sample-plan-backend-review.html</code> artifact. Then run against <code>tests/fixtures/sample-plan-ui.html</code> (a fixture referencing a <code>.tsx</code> component) and assert seven teammates spawn (core + <code>plan-reviewer-ux</code> + <code>plan-reviewer-accessibility</code>). Finally, with the flag unset, re-run and assert the skill hard-stops with the enable message and makes <em>no</em> edits. This proves the objective: a team that reviews <em>and</em> updates an implementation plan, scaling UX/a11y coverage to the plan's content.</p>
-        <p style="margin:0; font-size:.82rem; color:var(--muted);">Fixtures: <code>tests/fixtures/sample-plan-backend.html</code> (no UI signals) and <code>tests/fixtures/sample-plan-ui.html</code> (UI signals). Run manually — Agent Team runs are interactive and not yet CI-automatable.</p>
+        <p style="margin:0; font-size:.82rem; color:var(--muted);">Fixtures: <code>tests/fixtures/sample-plan-backend.html</code> (no UI signals) and <code>tests/fixtures/sample-plan-ui.html</code> (UI signals). <strong>These fixture files must be created before the test can run</strong> — copy any existing <code>docs/plans/*.html</code> to those scratch paths (backend: no UI terms; UI: include at least one <code>.tsx</code> reference in the body, not inside a <code>&lt;style&gt;</code>/<code>&lt;script&gt;</code> block). Run manually — Agent Team runs are interactive and not yet CI-automatable.</p>
       </div>
 
       <h3 class="report-heading" style="margin-bottom:.5rem;">Unit-level (structure validation)</h3>
@@ -1382,6 +1382,7 @@
         <li><input type="checkbox" id="ac8"><label for="ac8">The integrate logic targets HTML structures (<code>.step-card</code>, <code>.verify-body</code>, <code>#criteria-list</code>, <code>.objective-card</code>) and never modifies the skeleton's <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code>.</label></li>
         <li><input type="checkbox" id="ac9"><label for="ac9"><code>marketplace.json</code> bumps plan-agent to <code>1.9.0</code>; <code>CHANGELOG.md</code> and <code>README.md</code> document the new skill.</label></li>
         <li><input type="checkbox" id="ac10"><label for="ac10"><code>validate-plugin plan-agent</code> passes and <code>marketplace.json</code> is valid JSON.</label></li>
+        <li><input type="checkbox" id="ac12"><label for="ac12">After a completed review run, no orphaned teammates remain — the team is fully cleaned up and a subsequent <code>/plan-agent:review-plan</code> on the same file starts a fresh team with no stale members.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1509,6 +1510,51 @@
             </details>
           </li>
         </ul>
+      </div>
+    </details>
+
+    <details id="team-review-20260607" class="team-review" style="margin-top:2rem;border:1px solid #e5e7eb;border-radius:4px;overflow:hidden;">
+      <summary style="padding:.875rem 1.25rem;font-weight:600;font-size:.9rem;cursor:pointer;list-style:none;display:flex;align-items:center;gap:.6rem;background:#f9fafb;min-height:44px;">Team Review (2026-06-07)</summary>
+      <div class="review-body" style="padding:1rem 1.25rem;font-size:.875rem;line-height:1.7;">
+        <h3 style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin-bottom:.75rem;">Executive Summary</h3>
+        <p>The plan is architecturally sound and the overall design is well-matched to the Agent Teams topology, but the team identified two high-severity issues requiring follow-up: (1) the plan is already shipped as v1.9.0 (commit 1352236), so the version bump is a no-op and this review is retrospective; (2) the hero smoke test references fixture files that were never created, leaving the primary verification path unrunnable. A recurring count drift (5 vs 7 reviewers) was present in the Files note, Diagram collect node, and Step 9 — all three have been corrected inline. The conventions reviewer confirmed the shipped agent files use <code>allowed-tools:</code> where the agent runtime expects <code>tools:</code> — a functional correctness issue to address in v1.10.0. UX and accessibility reviewers flagged the lack of progress feedback during the multi-agent run, the absence of an undo/preview gate before in-place mutation, and several contrast failures in the plan document&#39;s own CSS. A new acceptance criterion (AC12) for team cleanup completeness has been added.</p>
+
+        <h3 style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:1.25rem 0 .75rem;">Role-by-Role Findings</h3>
+        <dl style="display:flex;flex-direction:column;gap:.75rem;">
+          <dt style="font-weight:600;">Architecture</dt>
+          <dd style="margin-left:1rem;color:#374151;">Sound topology; key concerns: lossy synthesis data flow (prose &#x2192; table &#x2192; HTML edits with no schema), brittle CSS-selector mutation that silently breaks on skeleton drift, duplicated UI-signal heuristic, and no minimum-quorum gate for partial reviewer failures. Recommend a thin structured contract between reviewer and lead, a selector-sanity guard in Step 7, and an idempotency guard to prevent double-review corruption.</dd>
+          <dt style="font-weight:600;">Completeness</dt>
+          <dd style="margin-left:1rem;color:#374151;">Highly specific plan; gaps: hero test fixtures never created (high), internal 5&#x2F;7 count drift now fixed (medium), <code>SendUserFile</code> in allowed-tools unanchored, unresolved questions block concrete step decisions.</dd>
+          <dt style="font-weight:600;">Testability</dt>
+          <dd style="margin-left:1rem;color:#374151;">Critical: hero smoke test cannot run without fixtures. High: UI-signal detection heuristic has no boundary-case tests; AC6&#x2F;AC11 lack an assertable machine-readable signal. Recommend a deterministic mode-announcement line the test can grep.</dd>
+          <dt style="font-weight:600;">Risk</dt>
+          <dd style="margin-left:1rem;color:#374151;">Medium overall. Key risks: plan already shipped (version collision if re-run), self-mutating file with no backup or atomicity guarantee, HTML-injection risk from LLM-synthesised edits, Bash grant on reviewers is a latent write vector.</dd>
+          <dt style="font-weight:600;">Conventions</dt>
+          <dd style="margin-left:1rem;color:#374151;">Mostly compliant. Critical gap: shipped agent files use <code>allowed-tools:</code> instead of <code>tools:</code> — agent runtime reads <code>tools:</code>, so the restriction may be silently ignored. AC ID sequence has ac11 mid-list (cosmetic). Step 9 &quot;five agents&quot; typo now fixed inline.</dd>
+          <dt style="font-weight:600;">UX</dt>
+          <dd style="margin-left:1rem;color:#374151;">No live progress feedback during multi-agent run (high); in-place mutation with no preview or undo (high); disabled-state error under-specified (high). Recommend task-list-as-progress surface, a consent gate before mutation, and verbatim disabled-state message in SKILL.md.</dd>
+          <dt style="font-weight:600;">Accessibility</dt>
+          <dd style="margin-left:1rem;color:#374151;">Plan document: <code>--subtle</code> (#9ca3af, 2.54:1) and state colors (#16a34a 3.3:1, #d97706 3.19:1) fail WCAG AA contrast. Copy buttons lack aria-live feedback; touch targets below 44&#xD7;44px. Feature: <code>plan-reviewer-accessibility</code> agent lacks a concrete WCAG rubric — will produce shallow findings without one.</dd>
+        </dl>
+
+        <h3 style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:1.25rem 0 .75rem;">Confirmed Concerns (cross-reviewer agreement)</h3>
+        <ul style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem;">
+          <li><strong>Missing fixtures</strong> — Completeness + Testability + Risk all flagged independently. Create <code>tests/fixtures/sample-plan-backend.html</code> and <code>sample-plan-ui.html</code> in a follow-up commit.</li>
+          <li><strong>5&#x2F;7 reviewer count drift</strong> — Completeness + Conventions + Testability. Fixed inline in Files note, Diagram, and Step 9.</li>
+          <li><strong>Unresolved model-invocable question</strong> — UX + Risk both recommend command-only &#x2F; <code>disable-model-invocation</code> given cost and file mutation. Resolve in next iteration.</li>
+          <li><strong>No partial-failure quorum</strong> — Architecture + UX. Add minimum-quorum rule to Step 5 in v1.10.0.</li>
+        </ul>
+
+        <h3 style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:1.25rem 0 .75rem;">Highest-Risk Issues for v1.10.0</h3>
+        <ol style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem;">
+          <li><strong>Agent frontmatter key</strong> — Change <code>allowed-tools:</code> to <code>tools:</code> in all 7 <code>plan-reviewer-*.md</code> files. Functional correctness, not style. (Conventions)</li>
+          <li><strong>Create test fixtures</strong> — <code>tests/fixtures/sample-plan-backend.html</code> + <code>sample-plan-ui.html</code>. Hero test is unrunnable without them. (Completeness, Testability, Risk)</li>
+          <li><strong>Add backup before mutation</strong> — Copy plan to <code>&lt;stem&gt;.bak</code> or verify clean git state before first Edit call; treat any failed Edit as abort. (Risk)</li>
+          <li><strong>Raise CSS contrast tokens</strong> — Darken <code>--subtle</code> to ≥4.5:1 for text use; darken state-as-text colors. (Accessibility)</li>
+          <li><strong>Resolve model-invocability</strong> — Recommend <code>disable-model-invocation</code>; document in SKILL.md and README. (UX, Risk)</li>
+        </ol>
+
+        <p style="margin-top:1rem;font-size:.8rem;color:#9ca3af;">Reviewed by 7-member Agent Team (architecture, completeness, testability, risk, conventions, ux, accessibility) · 2026-06-07 · plan-agent v1.9.0</p>
       </div>
     </details>
 
