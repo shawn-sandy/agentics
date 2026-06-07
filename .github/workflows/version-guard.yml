@@ -8,8 +8,8 @@ on:
       - '.claude-plugin/marketplace.json'
 
 jobs:
-  check-version-bump:
-    name: Plugin version bump check
+  check-no-manual-bump:
+    name: Reject manual version bumps
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,8 +21,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Run version guard
-        run: bash scripts/check-version-bump.sh
+      - name: Check for manual version bumps
+        run: bash scripts/check-no-manual-bump.sh
         env:
           VERSION_GUARD_REGISTRY: .claude-plugin/marketplace.json
           VERSION_GUARD_BASE_BRANCH: main
