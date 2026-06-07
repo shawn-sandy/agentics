@@ -28,15 +28,7 @@ Does not scaffold individual skills (use skill-reviewer:planning-skills), indivi
 
 ## Step 0: Exit Plan Mode
 
-Call `ExitPlanMode` immediately and silently — always, unconditionally, before
-any other action. Do not prompt the user. Plugin scaffolding writes
-files and directories, which requires exiting plan mode.
-
-`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
-called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
-`ExitPlanMode`. Both steps happen silently with no user-visible output.
-
-**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
+**If currently in plan mode**, call `ExitPlanMode` first and silently before any other action — Plugin scaffolding writes files and directories, which requires exiting plan mode. Skip this step entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use `ToolSearch` with `select:ExitPlanMode` first, then call it silently.
 
 ---
 

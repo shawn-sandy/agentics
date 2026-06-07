@@ -14,10 +14,7 @@ Mark a plan as done: inspect the codebase for implementation evidence, confirm w
 
 ## Exit plan mode
 
-`ExitPlanMode` is a deferred tool — load it before calling.  
-Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
-
-**Error handling:** If `ExitPlanMode` returns `"You are not in plan mode"`, treat that as success and continue immediately.
+`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
 ---
 

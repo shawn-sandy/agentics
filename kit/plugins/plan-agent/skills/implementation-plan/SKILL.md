@@ -64,11 +64,7 @@ If the objective sounds like "fix X" or "implement Y", write a plan for *how* to
 
 Follow these steps exactly.
 
-0. **Self-bootstrap** — Before any filesystem mutation, prompting, or planning steps: load `ExitPlanMode` via `ToolSearch` with `select:ExitPlanMode`, then call `ExitPlanMode` silently. Both steps are **unconditional** — do not prompt the user, do not skip for any flag including `--quick`. Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee.
-
-   Two-step sequence: (1) `ToolSearch(select:ExitPlanMode)` silently, (2) `ExitPlanMode` silently. No user-visible output from either step.
-
-   **Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off, which is the desired state. Do not abort or surface the error to the user; continue immediately to Step 0.5 / Step 0b.
+0. **Self-bootstrap** — **If currently in plan mode**, call `ExitPlanMode` first and silently before any other action — Writing HTML plan files is a filesystem mutation that cannot proceed inside harness plan mode; skipping this step causes the harness to force a `.md` output path, defeating the skill's core guarantee. Skip this step entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use `ToolSearch` with `select:ExitPlanMode` first, then call it silently.
 
 0.5. **Issue Ingestion** *(skip entirely when no issue reference was detected in Step 0 argument parsing)*
 
