@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<!--
+  feature-card.html — Dark-mode feature/release announcement card for social posts.
+
+  Variables to substitute:
+    plan-agent v1.8.0         — Main headline (e.g. social-media-tools plugin v0.1.0)
+    Implementation plans now require executable test code, not just prose assertions      — Supporting line (e.g. Now in the agentics marketplace)
+    v1.8.0         — Short label for top badge and footer (e.g. New Plugin, v1.2.0)
+    <li>Mandatory Tests section between Steps and Acceptance Criteria in every generated plan</li>
+<li>Tier 1 (code-touching): unit, integration, E2E, and objective-verification tests</li>
+<li>Tier 2 (non-code plans): objective-verification test only — no empty stubs</li>
+<li>Objective-verification test renders as a hero card asserting the plan&#39;s stated goal is met</li>
+<li>Prose verification (per-step verify, criteria) and executable test code are now separate layers</li>       — HTML <li> elements, one per feature — no wrapping <ul> needed
+    /plan-agent:implementation-plan &lt;objective&gt;    — Footer left side (e.g. github.com/shawn-sandy/agentics)
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Implementation plans have always had prose verification — "run this grep and confirm the output matches." But prose doesn't run. Tests do.
+
+plan-agent v1.8.0 adds a mandatory Tests section to every generated plan, using a two-tier depth model:
+
+- Tier 1 (code-touching plans): unit, integration, E2E, and an objective-verification test — a real test file that directly asserts the plan's stated objective is accomplished.
+- Tier 2 (non-code plans): only the objective-verification test. No empty stubs.
+
+The teachable pattern: per-step verification and acceptance criteria are prose assertions — they check that steps ran and outcomes matched. The Tests section is executable code committed to the codebase, running in CI and proving correctness long after the plan is closed.
+
+Docs say what should be true. Tests say what is.
+
+More agentic-dev tooling breakdowns — follow along.
+
+#ClaudeCode #AITools #DeveloperTools #Plugins</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Plans have prose verification ("run this grep"). But prose doesn't run.
+
+plan-agent v1.8.0 adds a mandatory Tests section: real test code that ships with the codebase. Docs say what should be true; tests say what is. #ClaudeCode #AITools</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">plan-agent v1.8.0 adds a mandatory Tests section to every plan.
+
+The key distinction: per-step verify and acceptance criteria are prose. The Tests section is executable code that runs in CI after the plan is closed.
+
+Docs say what should be true. Tests say what is.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">What's the difference between "confirm the output matches" in a plan and writing a test?
+
+One describes an expectation. The other enforces it.
+
+plan-agent v1.8.0 adds a mandatory Tests section to every plan. Code-touching plans get unit, integration, E2E, and an objective-verification test. Non-code plans get just the objective-verification test — no empty stubs.
+
+The principle: prose assertions document what should be true. Tests prove what is true, in CI, indefinitely.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div> — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
+
+  Bullet format:
+    <li>Draft LinkedIn, Twitter/X, and Bluesky copy in one command</li>
+    <li>Generates styled dark-mode visual cards via Playwright</li>
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>plan-agent v1.8.0</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --bullet-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.4px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bullets {
+      padding: 20px 32px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: rgba(56, 139, 253, 0.05);
+      border-left: 3px solid var(--bullet-accent);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .bullets li::before {
+      content: '→';
+      color: var(--bullet-accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .footer-note {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-badge {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="badge">v1.8.0</div>
+      <h1>plan-agent v1.8.0</h1>
+      <p class="subtitle">Implementation plans now require executable test code, not just prose assertions</p>
+    </div>
+
+    <ul class="bullets">
+      <li>Mandatory Tests section between Steps and Acceptance Criteria in every generated plan</li>
+<li>Tier 1 (code-touching): unit, integration, E2E, and objective-verification tests</li>
+<li>Tier 2 (non-code plans): objective-verification test only — no empty stubs</li>
+<li>Objective-verification test renders as a hero card asserting the plan&#39;s stated goal is met</li>
+<li>Prose verification (per-step verify, criteria) and executable test code are now separate layers</li>
+    </ul>
+
+    <div class="card-footer">
+      <span class="footer-note">/plan-agent:implementation-plan &lt;objective&gt;</span>
+      <span class="footer-badge">v1.8.0</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Implementation plans have always had prose verification — "run this grep and confirm the output matches." But prose doesn't run. Tests do.
+
+plan-agent v1.8.0 adds a mandatory Tests section to every generated plan, using a two-tier depth model:
+
+- Tier 1 (code-touching plans): unit, integration, E2E, and an objective-verification test — a real test file that directly asserts the plan's stated objective is accomplished.
+- Tier 2 (non-code plans): only the objective-verification test. No empty stubs.
+
+The teachable pattern: per-step verification and acceptance criteria are prose assertions — they check that steps ran and outcomes matched. The Tests section is executable code committed to the codebase, running in CI and proving correctness long after the plan is closed.
+
+Docs say what should be true. Tests say what is.
+
+More agentic-dev tooling breakdowns — follow along.
+
+#ClaudeCode #AITools #DeveloperTools #Plugins</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Plans have prose verification ("run this grep"). But prose doesn't run.
+
+plan-agent v1.8.0 adds a mandatory Tests section: real test code that ships with the codebase. Docs say what should be true; tests say what is. #ClaudeCode #AITools</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">plan-agent v1.8.0 adds a mandatory Tests section to every plan.
+
+The key distinction: per-step verify and acceptance criteria are prose. The Tests section is executable code that runs in CI after the plan is closed.
+
+Docs say what should be true. Tests say what is.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">What's the difference between "confirm the output matches" in a plan and writing a test?
+
+One describes an expectation. The other enforces it.
+
+plan-agent v1.8.0 adds a mandatory Tests section to every plan. Code-touching plans get unit, integration, E2E, and an objective-verification test. Non-code plans get just the objective-verification test — no empty stubs.
+
+The principle: prose assertions document what should be true. Tests prove what is true, in CI, indefinitely.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
