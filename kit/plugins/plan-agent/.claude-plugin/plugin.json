@@ -1,6 +1,6 @@
 {
   "name": "plan-agent",
-  "description": "Plan creation on demand — explicit /plan-agent:implementation-plan skill runs the full Steps 1-8 workflow with a built-in structured interview; /plan-agent:finalize-plan skill reviews an HTML plan for completion evidence, checks all acceptance-criteria boxes, and sets status to completed; plans-library skill generates a filterable HTML gallery of all plans; plans-open skill reopens the gallery without rebuilding; filename hook enforces verb-target kebab-case on every plan write",
+  "description": "Plan creation and review on demand — /plan-agent:implementation-plan skill runs the full Steps 1-8 workflow with a built-in structured interview; /plan-agent:review-plan skill spawns an Agent Team (5 core + 2 UI-conditional reviewers) to review, improve, and update implementation plans in place; /plan-agent:finalize-plan skill checks completion evidence and sets status; plans-library generates a filterable HTML gallery; filename hook enforces verb-target kebab-case",
   "author": {
     "name": "Agentics Project"
   },

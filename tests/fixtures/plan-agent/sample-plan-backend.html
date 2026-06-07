@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-06">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="sample-plan-backend.html">
+<meta name="plan-path" content="tests/fixtures/plan-agent/sample-plan-backend.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at tests/fixtures/plan-agent/sample-plan-backend.html — Add a rate-limiting middleware to the API">
+<title>Plan: Add rate-limiting middleware to the API</title>
+<style>
+  body { font-family: system-ui, sans-serif; font-size: 15px; color: #111; margin: 0; padding: 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1rem; margin-top: 1.5rem; }
+  code { background: #f3f4f6; padding: .1em .3em; border-radius: 3px; }
+</style>
+</head>
+<body>
+<main id="main-content">
+
+<h1>Add rate-limiting middleware to the API</h1>
+
+<section id="objective">
+  <h2>Objective</h2>
+  <div class="objective-card">
+    <p>Add request rate-limiting middleware to the Express API that enforces 100 requests per minute per IP address and returns a 429 response with a <code>Retry-After</code> header when the limit is exceeded.</p>
+  </div>
+</section>
+
+<section id="context">
+  <h2>Context</h2>
+  <p>The API currently has no rate limiting. During a load test last week, abusive clients caused a cascading failure in the database connection pool. We need a sliding-window rate limiter at the middleware layer before any route handlers run.</p>
+</section>
+
+<section id="steps">
+  <h2>Steps</h2>
+  <ol>
+    <li class="step-card" id="step-1">
+      <strong>Install <code>express-rate-limit</code></strong>
+      <br><em>Why:</em> Provides a battle-tested sliding-window limiter with minimal setup.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body"><code>node -e "require('express-rate-limit')"</code> exits 0; package appears in <code>package.json</code> dependencies.</div>
+      </details>
+    </li>
+    <li class="step-card" id="step-2">
+      <strong>Create <code>src/middleware/rateLimiter.ts</code></strong> with a 100 req/min window configured for IP-based keying.
+      <br><em>Why:</em> Isolating the middleware in its own file keeps <code>app.ts</code> clean and makes the limiter independently testable.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body">File exists; TypeScript compiles without errors; exported function accepts an Express <code>RequestHandler</code> interface.</div>
+      </details>
+    </li>
+    <li class="step-card" id="step-3">
+      <strong>Register the middleware in <code>src/app.ts</code></strong> before the first <code>router.use</code> call.
+      <br><em>Why:</em> Must intercept all routes; registering before route handlers ensures no request bypasses the limiter.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body"><code>app.ts</code> imports <code>rateLimiter</code> and calls <code>app.use(rateLimiter)</code> before any <code>app.use(router)</code> line.</div>
+      </details>
+    </li>
+    <li class="step-card" id="step-4">
+      <strong>Write unit tests in <code>src/middleware/__tests__/rateLimiter.test.ts</code></strong>
+      <br><em>Why:</em> Validates the limiter allows requests under the threshold and rejects with 429 over it, and confirms the <code>Retry-After</code> header is present.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body"><code>npm test -- rateLimiter</code> passes; coverage shows all limiter branches hit.</div>
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section id="tests">
+  <h2>Tests</h2>
+  <div class="test-card">
+    <strong>Objective-verification test</strong>
+    <p>File: <code>src/middleware/__tests__/rateLimiter.test.ts</code></p>
+    <p>Asserts: Requests 1–100 succeed with 200; request 101 returns 429 with <code>Retry-After</code> header.</p>
+    <p>Run: <code>npm test -- rateLimiter</code></p>
+  </div>
+</section>
+
+<section id="acceptance-criteria">
+  <h2>Acceptance Criteria</h2>
+  <ul id="criteria-list">
+    <li id="ac1"><input type="checkbox"> <label for="ac1"><code>src/middleware/rateLimiter.ts</code> exists and compiles.</label></li>
+    <li id="ac2"><input type="checkbox"> <label for="ac2">100 requests per minute per IP are allowed; the 101st returns 429 with <code>Retry-After</code>.</label></li>
+    <li id="ac3"><input type="checkbox"> <label for="ac3">Unit tests pass (<code>npm test -- rateLimiter</code>).</label></li>
+    <li id="ac4"><input type="checkbox"> <label for="ac4">The middleware is registered before all route handlers in <code>app.ts</code>.</label></li>
+  </ul>
+</section>
+
+<section id="verification">
+  <h2>Verification</h2>
+  <p class="verification-section">Start the server locally. Use <code>ab -n 120 -c 10 http://localhost:3000/api/health</code>. Requests 1–100 should respond 200; the remaining requests should respond 429 with a <code>Retry-After</code> header present in the response.</p>
+</section>
+
+</main>
+</body>
+</html>

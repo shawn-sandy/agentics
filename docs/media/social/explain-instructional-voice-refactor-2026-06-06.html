@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<!--
+  quote-card.html — Dark-mode pull-quote card for social posts.
+  Suited for insights, opinions, thought leadership, and memorable one-liners.
+
+  Variables to substitute:
+    Agentic Dev Pattern       — Small tag line at top (e.g. Developer Insight, Claude Code)
+    Change the shared runtime doctrine — not nine divergent copies. One file is the re-skin point for the whole plugin.         — The pull quote text — no surrounding quotes needed; template adds them
+    social-media-tools refactor · agentics    — Author or source (e.g. Shawn Sandy, @shawnsandy)
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Nine social-media-tools skills share one voice — and that voice changed by editing exactly one file.
+
+When the plugin was refactored from promotional to instructional, the leverage point was a single shared `references/platforms.md` read at runtime by every card-generating skill. Edit the doctrine once, all nine inherit the change. No nine divergent copies to maintain.
+
+Three patterns made it work:
+
+1. Centralized runtime doctrine. When every agent reads one shared file, that file is the full re-skin point. This is a fundamentally different architecture from copy-paste-then-diff — it makes whole-system behavior refactorable in one edit.
+
+2. Separate unconditional defaults from configurable registers. The teaching-first voice is always on. Tone settings (professional / instructional / conversational) only nudge how the lesson reads — they can never switch the takeaway off.
+
+3. Fix both ends. Changing how posts are written without changing what gets selected would have leaked the old promotional voice back in. Discovery heuristics now rank by teaching value, not impressiveness.
+
+For more agentic-dev architecture breakdowns, follow along.
+
+#ClaudeCode #AITools #DeveloperTools #AgenticDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Nine AI skills got a new voice by editing one file. When every skill reads a shared doctrine at runtime, that file is the re-skin point for the whole system. One edit, nine behaviors changed. #ClaudeCode #AgenticDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">Nine social-media-tools skills share one voice. That voice changed by editing one file.
+
+When every skill reads a shared doctrine at runtime, that file is the re-skin point. Change the doc, change the system. No nine divergent copies.
+
+That's the agentic-dev lesson: find the one leverage point.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">What does it look like to refactor the personality of an AI plugin in one move?
+
+When social-media-tools shifted from promotional to instructional, the leverage point was a single shared doctrine file all nine skills read at runtime. One edit, nine behaviors changed.
+
+The deeper pattern: unconditional defaults vs. configurable registers. Teaching-first became invariant; tone settings only nudge the register, not the intent.
+
+Agentic systems built this way are genuinely refactorable.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div> — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Card</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --quote-mark: #1f6feb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .context-tag {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      padding: 16px 32px 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-weight: 600;
+    }
+
+    .quote-body {
+      padding: 32px 48px;
+    }
+
+    .quote-mark {
+      font-size: 72px;
+      line-height: 0.8;
+      color: var(--quote-mark);
+      opacity: 0.6;
+      font-family: Georgia, serif;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    blockquote {
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+      margin: 16px auto;
+      border-radius: 1px;
+    }
+
+    .attribution {
+      padding: 0 48px 28px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .attribution::before {
+      content: '— ';
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="context-tag">Agentic Dev Pattern</span>
+    <div class="quote-body">
+      <span class="quote-mark">"</span>
+      <blockquote>Change the shared runtime doctrine — not nine divergent copies. One file is the re-skin point for the whole plugin.</blockquote>
+    </div>
+    <div class="divider"></div>
+    <p class="attribution">social-media-tools refactor · agentics</p>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">Nine social-media-tools skills share one voice — and that voice changed by editing exactly one file.
+
+When the plugin was refactored from promotional to instructional, the leverage point was a single shared `references/platforms.md` read at runtime by every card-generating skill. Edit the doctrine once, all nine inherit the change. No nine divergent copies to maintain.
+
+Three patterns made it work:
+
+1. Centralized runtime doctrine. When every agent reads one shared file, that file is the full re-skin point. This is a fundamentally different architecture from copy-paste-then-diff — it makes whole-system behavior refactorable in one edit.
+
+2. Separate unconditional defaults from configurable registers. The teaching-first voice is always on. Tone settings (professional / instructional / conversational) only nudge how the lesson reads — they can never switch the takeaway off.
+
+3. Fix both ends. Changing how posts are written without changing what gets selected would have leaked the old promotional voice back in. Discovery heuristics now rank by teaching value, not impressiveness.
+
+For more agentic-dev architecture breakdowns, follow along.
+
+#ClaudeCode #AITools #DeveloperTools #AgenticDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">Nine AI skills got a new voice by editing one file. When every skill reads a shared doctrine at runtime, that file is the re-skin point for the whole system. One edit, nine behaviors changed. #ClaudeCode #AgenticDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">Nine social-media-tools skills share one voice. That voice changed by editing one file.
+
+When every skill reads a shared doctrine at runtime, that file is the re-skin point. Change the doc, change the system. No nine divergent copies.
+
+That's the agentic-dev lesson: find the one leverage point.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">What does it look like to refactor the personality of an AI plugin in one move?
+
+When social-media-tools shifted from promotional to instructional, the leverage point was a single shared doctrine file all nine skills read at runtime. One edit, nine behaviors changed.
+
+The deeper pattern: unconditional defaults vs. configurable registers. Teaching-first became invariant; tone settings only nudge the register, not the intent.
+
+Agentic systems built this way are genuinely refactorable.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {} }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
