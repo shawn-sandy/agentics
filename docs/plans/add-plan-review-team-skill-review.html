@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Review — Add a plan-review Agent Team skill to plan-agent</title>
+<style>
+:root{--bg:#fff;--surface:#fff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;--accent:#2563eb;--accent-bg:#eff6ff;--green:#16a34a;--green-bg:#f0fdf4;--amber:#d97706;--amber-bg:#fffbeb;--red:#dc2626;--red-bg:#fef2f2;--grey-bg:#f9fafb;--radius:4px;--shadow:0 1px 3px rgba(0,0,0,.06)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.7;color:var(--text);background:var(--bg);max-width:860px;margin:0 auto;padding:2rem 1.5rem 5rem}
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.4rem}
+h2{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:2rem 0 .75rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+h2:first-of-type{border-top:none;padding-top:0;margin-top:1.5rem}
+h3{font-size:.85rem;font-weight:700;margin:.75rem 0 .3rem;color:var(--text)}
+p{margin-bottom:.7rem;color:var(--text)}
+ul,ol{padding-left:1.35rem;display:flex;flex-direction:column;gap:.35rem;margin-bottom:.7rem}
+li{font-size:.9rem}
+code{font-family:ui-monospace,"SF Mono","Fira Code",Consolas,monospace;font-size:.85em;background:var(--grey-bg);border:1px solid var(--border);border-radius:3px;padding:.05em .3em}
+.tag{display:inline-block;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:.1em .5em;border-radius:999px;margin-left:.35rem;vertical-align:middle}
+.tag-critical{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.tag-high{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+.tag-medium{background:var(--accent-bg);color:var(--accent);border:1px solid #bfdbfe}
+.tag-low{background:var(--grey-bg);color:var(--muted);border:1px solid var(--border)}
+.reviewer-block{border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:.75rem;background:var(--surface)}
+.reviewer-name{font-weight:700;font-size:.875rem;margin-bottom:.4rem}
+.agreements-box{background:var(--grey-bg);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);padding:.875rem 1.25rem;margin-bottom:.75rem}
+.risk-item{padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.4rem;background:var(--surface)}
+.meta{font-size:.8rem;color:var(--subtle);margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.plan-link{display:inline-flex;align-items:center;gap:.35rem;font-size:.82rem;color:var(--accent);text-decoration:none;margin-top:.25rem}
+.plan-link:hover{text-decoration:underline}
+.edits-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:.75rem}
+.edits-table th{text-align:left;padding:.4rem .6rem;background:var(--grey-bg);border:1px solid var(--border);font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.edits-table td{padding:.4rem .6rem;border:1px solid var(--border);vertical-align:top}
+.edits-table tr:nth-child(even) td{background:var(--grey-bg)}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--subtle);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <strong>Team Review Report</strong> &middot; 7 reviewers &middot; 2026-06-07
+  <br>
+  <a class="plan-link" href="add-plan-review-team-skill.html">&#8592; Back to plan: Add a plan-review Agent Team skill to plan-agent</a>
+</div>
+
+<h1>Team Review — Add a plan-review Agent Team skill</h1>
+
+<h2>Executive Summary</h2>
+<p>The plan is architecturally sound — it cleanly adapts the proven <code>product-plans</code> Agent Team topology for technical implementation plans, with thoughtful conditional UX/a11y reviewer scaling. The team verdict is <strong>sound with revisions</strong>: the core design is correct and the implementation was already shipped as v1.9.0 (commit 1352236), making this a retrospective review.</p>
+<p>Three high-priority follow-up items stand out: (1) the hero smoke test references fixture files that were never created; (2) the shipped agent files use <code>allowed-tools:</code> where the agent runtime reads <code>tools:</code> — a functional correctness gap; (3) the plan mutates the source file in place with no backup or atomicity guarantee. The 5-vs-7 reviewer count drift (Files note, Diagram, Step 9) has been corrected inline. A new AC12 for team cleanup completeness was added.</p>
+
+<h2>Role-by-Role Findings</h2>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">Architecture</div>
+  <p><strong>Fit:</strong> Architecturally sound — clean extension of the <code>product-plans</code> topology with HTML-aware integration layered on cleanly.</p>
+  <ul>
+    <li>Synthesis data flow (prose &rarr; table &rarr; HTML selectors) has no schema between hops — the weakest seam <span class="tag tag-high">high</span></li>
+    <li>HTML mutation via CSS-class string replace; skeleton drift silently breaks integration <span class="tag tag-high">high</span></li>
+    <li>Reviewer dual-role contract (team teammate vs standalone subagent) under-specified <span class="tag tag-medium">medium</span></li>
+    <li>UI-signal heuristic duplicated, not shared with <code>implementation-plan</code> <span class="tag tag-medium">medium</span></li>
+    <li>No minimum-quorum gate — partial reviewer failure masquerades as full review <span class="tag tag-medium">medium</span></li>
+    <li>Re-running appends another Team Review block — no idempotency guard <span class="tag tag-low">low</span></li>
+  </ul>
+</div>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">Completeness</div>
+  <p><strong>Completeness:</strong> Highly specific and well-sequenced; path from scaffold to validate is unbroken, but fixture gap and count drift weaken it.</p>
+  <ul>
+    <li>Fixture files <code>tests/fixtures/sample-plan-backend.html</code> / <code>sample-plan-ui.html</code> referenced but no step creates them <span class="tag tag-high">high</span></li>
+    <li>5-vs-7 reviewer count drift in Files note, Diagram, Step 9 (fixed inline) <span class="tag tag-medium">medium</span></li>
+    <li>Two Unresolved Questions gate concrete step decisions (activation mode, large-plan handling) <span class="tag tag-medium">medium</span></li>
+    <li><code>SendUserFile</code> in <code>allowed-tools</code> but its role in the workflow is unanchored <span class="tag tag-low">low</span></li>
+    <li>No AC or verify asserting no orphaned teammates after a run (AC12 now added) <span class="tag tag-low">low</span></li>
+  </ul>
+</div>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">Testability</div>
+  <p><strong>Test coverage:</strong> Hero smoke test is strong conceptually but cannot run — fixtures are missing; per-step verify lines check file structure, not behavior.</p>
+  <ul>
+    <li>Hero test fixtures never created; primary verification is currently unrunnable <span class="tag tag-critical">critical</span></li>
+    <li>Hero test gated on interactive Agent Teams run, no CI fallback <span class="tag tag-high">high</span></li>
+    <li>AC6/AC11 (reviewer counts) have no machine-assertable signal — human observation only <span class="tag tag-high">high</span></li>
+    <li>UI-signal detection heuristic has no boundary-case tests (false positives/negatives) <span class="tag tag-high">high</span></li>
+    <li>HTML-escaping and <code>&lt;style&gt;</code>/<code>&lt;script&gt;</code> non-mutation have no automated assertion <span class="tag tag-medium">medium</span></li>
+  </ul>
+</div>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">Risk</div>
+  <p><strong>Risk level:</strong> Medium overall.</p>
+  <ul>
+    <li>Plan already shipped as v1.9.0 — re-running would create version collision <span class="tag tag-high">high</span></li>
+    <li>Self-mutating file: N sequential Edits with no backup, no transaction, no rollback on partial failure <span class="tag tag-high">high</span></li>
+    <li>LLM-synthesised HTML edits risk injection or wrong-selector corruption <span class="tag tag-medium">medium</span></li>
+    <li>Bash grant on reviewer agents is a latent write vector <span class="tag tag-medium">medium</span></li>
+    <li>Missing test fixtures leave primary verification path unrunnable <span class="tag tag-medium">medium</span></li>
+  </ul>
+</div>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">Conventions</div>
+  <p><strong>Fit:</strong> Well-aligned overall; one functional correctness issue in the shipped files.</p>
+  <ul>
+    <li>Shipped agent files use <code>allowed-tools:</code> — correct key is <code>tools:</code> (every other agent in repo uses <code>tools:</code>) <span class="tag tag-high">high</span></li>
+    <li>Agent descriptions omit the "teammate-only" clause present in <code>product-plans</code> sibling agents <span class="tag tag-medium">medium</span></li>
+    <li>AC ID sequence: ac11 inserted mid-list, breaking sequential order <span class="tag tag-low">low</span></li>
+    <li>Step 9 "five agents" typo — should be seven (fixed inline) <span class="tag tag-low">low</span></li>
+  </ul>
+</div>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">UX</div>
+  <p><strong>User fit:</strong> Happy path is clear; multi-agent run is opaque; in-place mutation lacks consent moment.</p>
+  <ul>
+    <li>No live progress feedback while 5–7 teammates run — operation appears hung <span class="tag tag-high">high</span></li>
+    <li>In-place mutation with no diff preview or undo path before editing the source plan <span class="tag tag-high">high</span></li>
+    <li>Disabled-state error message content not specified — first-run experience is undefined <span class="tag tag-high">high</span></li>
+    <li>Empty/no-findings outcome undefined — may appear as silent failure <span class="tag tag-medium">medium</span></li>
+    <li>Partial-failure recovery path undefined — a mid-run crash could leave a half-edited plan <span class="tag tag-medium">medium</span></li>
+  </ul>
+</div>
+
+<div class="reviewer-block">
+  <div class="reviewer-name">Accessibility</div>
+  <p><strong>A11y compliance:</strong> Plan document has measurable contrast failures; feature under-specifies the a11y reviewer's rubric.</p>
+  <ul>
+    <li><code>--subtle</code> (#9ca3af) at 2.54:1 fails WCAG AA for normal text <span class="tag tag-high">high</span></li>
+    <li>State colors #16a34a (3.3:1) and #d97706 (3.19:1) fail AA when used as small text labels <span class="tag tag-high">high</span></li>
+    <li><code>plan-reviewer-accessibility</code> agent lacks a concrete WCAG rubric — will produce shallow findings <span class="tag tag-high">high</span></li>
+    <li>Copy buttons lack <code>aria-live</code> confirmation (reuse existing <code>#criteria-status</code> pattern) <span class="tag tag-medium">medium</span></li>
+    <li>Copy buttons and checkboxes below 44&times;44px touch target minimum <span class="tag tag-medium">medium</span></li>
+    <li>Pulse-dot animation not gated by <code>prefers-reduced-motion</code> <span class="tag tag-low">low</span></li>
+  </ul>
+</div>
+
+<h2>Cross-Reviewer Agreements</h2>
+
+<div class="agreements-box">
+  <strong>Missing test fixtures</strong> — flagged independently by Completeness, Testability, and Risk. Highest-priority follow-up: create <code>tests/fixtures/sample-plan-backend.html</code> and <code>sample-plan-ui.html</code> before any verification run.
+</div>
+<div class="agreements-box">
+  <strong>Reviewer count drift (5 vs 7)</strong> — flagged by Completeness, Conventions, and Testability. Corrected inline in the Files note, Diagram collect node, and Step 9.
+</div>
+<div class="agreements-box">
+  <strong>Activation mode: command-only recommended</strong> — UX and Risk both independently recommend <code>disable-model-invocation</code> given cost and file mutation. Resolve in v1.10.0.
+</div>
+<div class="agreements-box">
+  <strong>No quorum / partial-failure path</strong> — Architecture and UX both flagged the absence of a minimum-quorum rule. A degraded run (2 of 5 reviewers) should not silently masquerade as a full review.
+</div>
+
+<h2>Highest-Risk Issues for v1.10.0</h2>
+
+<div class="risk-item"><strong>1. Agent frontmatter key</strong> — Change <code>allowed-tools:</code> to <code>tools:</code> in all 7 <code>plan-reviewer-*.md</code> agent files. Functional correctness: the agent runtime reads <code>tools:</code> — the restriction may be silently ignored as-is. <span class="tag tag-high">high</span></div>
+<div class="risk-item"><strong>2. Create test fixtures</strong> — Create <code>tests/fixtures/sample-plan-backend.html</code> (no UI signals) and <code>sample-plan-ui.html</code> (body references <code>.tsx</code>, not inside <code>&lt;style&gt;</code>/<code>&lt;script&gt;</code>). Hero test is unrunnable without them. <span class="tag tag-critical">critical</span></div>
+<div class="risk-item"><strong>3. Backup before mutation</strong> — Copy plan to <code>&lt;stem&gt;.bak</code> (or assert clean git state) before the first Edit call. Treat any failed Edit as abort-and-report rather than continue. <span class="tag tag-high">high</span></div>
+<div class="risk-item"><strong>4. Raise CSS contrast tokens</strong> — Darken <code>--subtle</code> to &ge;4.5:1; darken <code>--green</code> and <code>--amber</code> text variants for small label use. <span class="tag tag-high">high</span></div>
+<div class="risk-item"><strong>5. Resolve model-invocability</strong> — Set <code>disable-model-invocation</code> in SKILL.md frontmatter; document in README. <span class="tag tag-medium">medium</span></div>
+<div class="risk-item"><strong>6. Add concrete rubric to plan-reviewer-accessibility</strong> — Give the agent a specific WCAG 2.1 AA checklist so its findings are actionable, not generic. <span class="tag tag-high">high</span></div>
+
+<h2>Inline Edits Applied to Source Plan</h2>
+<table class="edits-table">
+  <thead><tr><th>Target</th><th>Action</th><th>Change</th></tr></thead>
+  <tbody>
+    <tr><td><code>.file-note</code> (role-prompts.md)</td><td>edit</td><td>"5 lens-specific spawn prompts" &rarr; "7 spawn prompts (5 core + 2 UI-conditional)"</td></tr>
+    <tr><td>Diagram collect <code>.pipeline-sub</code></td><td>edit</td><td>"lead waits for all 5" &rarr; "lead waits for all spawned teammates (5 core or 7 with UI)"</td></tr>
+    <tr><td>Step 9 <code>.step-why</code></td><td>edit</td><td>"five agents" &rarr; "all seven agents (five core + two UI-conditional)"</td></tr>
+    <tr><td>Tests hero fixture note</td><td>edit</td><td>Added explicit prerequisite: fixtures must be created (copy from <code>docs/plans/</code>) before running the test</td></tr>
+    <tr><td><code>#criteria-list</code></td><td>append</td><td>Added AC12: no orphaned teammates after a completed run</td></tr>
+    <tr><td>Before <code>&lt;footer&gt;</code></td><td>insert</td><td>Appended this Team Review <code>&lt;details&gt;</code> block</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  Generated by plan-agent review-plan &middot; 7-member Agent Team &middot; 2026-06-07 &middot; agentics
+</footer>
+</body>
+</html>
