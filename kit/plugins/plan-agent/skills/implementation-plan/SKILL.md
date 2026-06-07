@@ -134,7 +134,7 @@ Follow these steps exactly.
     **Round 3 — Edge Cases & Best Practices** (complex only):
     Up to 4 questions covering: critical failure modes or race conditions, concurrent user scenarios or data conflicts, regression risks (existing tests, API contracts, backward compatibility), and remaining open questions from the plan.
 
-    **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions. If declined, proceed to Step 5c.
+    **Post-interview:** Present a brief summary listing key decisions confirmed and concerns surfaced. Then ask via `AskUserQuestion`: "Update the plan with interview findings?" If confirmed, edit the HTML plan to incorporate the findings — add missing considerations to step cards, update acceptance criteria, or populate unresolved questions — then proceed to Step 5c. If declined, proceed directly to Step 5c.
 
 5c. **Tests** — After all steps are drafted (and optionally refined by the interview), populate the Tests section. This step always runs — it is never skipped by any flag.
 
@@ -146,6 +146,8 @@ Follow these steps exactly.
     - **Unit** (`.test-badge-unit`) — step adds or modifies business logic, utilities, helpers, data transformations, or pure functions. Target the specific function/module.
     - **Integration** (`.test-badge-integration`) — step touches API routes, database queries, middleware chains, service boundaries, or multi-module interactions.
     - **E2E** (`.test-badge-e2e`) — step affects user-facing flows, page navigation, form submissions, auth flows, or any path a user would walk through in the browser.
+
+    For each test card, include these fields: **File** (test file path), **Targets** (function, module, or endpoint under test), **Key cases** (main scenarios the test covers).
 
     Include each type only when applicable — do not generate empty sub-sections. Render each test item as a `.test-card` inside the `.test-list` container. Fill `{test-items}` with the generated cards.
 
