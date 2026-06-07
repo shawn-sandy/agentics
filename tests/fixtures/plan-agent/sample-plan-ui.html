@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-06">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="sample-plan-ui.html">
+<meta name="plan-path" content="tests/fixtures/plan-agent/sample-plan-ui.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at tests/fixtures/plan-agent/sample-plan-ui.html — Add a dark mode toggle to the settings page">
+<title>Plan: Add dark mode toggle to the settings page</title>
+<style>
+  body { font-family: system-ui, sans-serif; font-size: 15px; color: #111; margin: 0; padding: 1rem 2rem; }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1rem; margin-top: 1.5rem; }
+  code { background: #f3f4f6; padding: .1em .3em; border-radius: 3px; }
+</style>
+</head>
+<body>
+<main id="main-content">
+
+<h1>Add dark mode toggle to the settings page</h1>
+
+<section id="objective">
+  <h2>Objective</h2>
+  <div class="objective-card">
+    <p>Add a toggle button to the user settings page (<code>SettingsPage.tsx</code>) that switches between light and dark mode. The preference is persisted in <code>localStorage</code> and applied via a <code>data-theme</code> attribute on <code>document.documentElement</code>. Toggling respects <code>prefers-color-scheme</code> as the initial default.</p>
+  </div>
+</section>
+
+<section id="context">
+  <h2>Context</h2>
+  <p>Users have requested dark mode support. The design system already has dark-mode CSS variables under <code>[data-theme="dark"]</code> in <code>src/styles/tokens.css</code>, but there is no UI to toggle the theme. The settings page is the right home since it already has user-preference controls (language, timezone).</p>
+</section>
+
+<section id="steps">
+  <h2>Steps</h2>
+  <ol>
+    <li class="step-card" id="step-1">
+      <strong>Create <code>src/hooks/useTheme.ts</code></strong> — a React hook that reads the initial theme from <code>localStorage</code> (fallback: <code>prefers-color-scheme</code>), writes changes back, and applies the <code>data-theme</code> attribute to <code>document.documentElement</code>.
+      <br><em>Why:</em> Isolates theme persistence logic so the toggle component stays presentational.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body">Hook returns <code>[theme, setTheme]</code>; switching theme updates <code>document.documentElement.dataset.theme</code> and persists to <code>localStorage</code>.</div>
+      </details>
+    </li>
+    <li class="step-card" id="step-2">
+      <strong>Create <code>src/components/ThemeToggle.tsx</code></strong> — a <code>&lt;button&gt;</code> that calls <code>useTheme</code>, renders a sun/moon SVG icon, and has an accessible <code>aria-label</code> ("Switch to dark mode" / "Switch to light mode").
+      <br><em>Why:</em> Accessible toggle button with semantic HTML — not a <code>div</code> with onClick.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body">Renders a <code>&lt;button&gt;</code> (not <code>&lt;div&gt;</code>); <code>aria-label</code> reflects current theme state; keyboard-activatable (Enter/Space).</div>
+      </details>
+    </li>
+    <li class="step-card" id="step-3">
+      <strong>Add <code>ThemeToggle</code> to <code>src/pages/SettingsPage.tsx</code></strong> in the Appearance section, alongside the existing language and timezone pickers.
+      <br><em>Why:</em> Co-locates the toggle with other user preferences. The Appearance section already exists; no new section needed.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body"><code>SettingsPage.tsx</code> imports and renders <code>ThemeToggle</code> inside the <code>.appearance-section</code> div.</div>
+      </details>
+    </li>
+    <li class="step-card" id="step-4">
+      <strong>Add unit tests in <code>src/hooks/__tests__/useTheme.test.ts</code></strong> and <code>src/components/__tests__/ThemeToggle.test.tsx</code>.
+      <br><em>Why:</em> Covers the toggle interaction, localStorage persistence, and initial prefers-color-scheme fallback.
+      <details class="step-verify-toggle"><summary>Verify</summary>
+        <div class="verify-body"><code>npm test -- useTheme ThemeToggle</code> passes; toggle renders with correct aria-label for each theme state.</div>
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section id="tests">
+  <h2>Tests</h2>
+  <div class="test-card">
+    <strong>Objective-verification test</strong>
+    <p>File: <code>src/components/__tests__/ThemeToggle.test.tsx</code></p>
+    <p>Asserts: Clicking the toggle switches <code>document.documentElement.dataset.theme</code> between <code>light</code> and <code>dark</code>; <code>aria-label</code> updates to match.</p>
+    <p>Run: <code>npm test -- ThemeToggle</code></p>
+  </div>
+  <div class="test-card">
+    <strong>Unit test — <code>useTheme</code> hook</strong>
+    <p>File: <code>src/hooks/__tests__/useTheme.test.ts</code></p>
+    <p>Covers: initial value from localStorage, fallback to prefers-color-scheme, persistence on change.</p>
+    <p>Run: <code>npm test -- useTheme</code></p>
+  </div>
+</section>
+
+<section id="acceptance-criteria">
+  <h2>Acceptance Criteria</h2>
+  <ul id="criteria-list">
+    <li id="ac1"><input type="checkbox"> <label for="ac1"><code>ThemeToggle.tsx</code> renders a <code>&lt;button&gt;</code> with an accessible <code>aria-label</code> that reflects the current theme.</label></li>
+    <li id="ac2"><input type="checkbox"> <label for="ac2">Clicking the toggle switches <code>document.documentElement.dataset.theme</code> between <code>light</code> and <code>dark</code>.</label></li>
+    <li id="ac3"><input type="checkbox"> <label for="ac3">The selected theme persists across page reloads (localStorage).</label></li>
+    <li id="ac4"><input type="checkbox"> <label for="ac4">The toggle is keyboard-accessible (Enter and Space activate it).</label></li>
+    <li id="ac5"><input type="checkbox"> <label for="ac5">The initial theme defaults to the user's OS preference (<code>prefers-color-scheme</code>).</label></li>
+    <li id="ac6"><input type="checkbox"> <label for="ac6">Unit and component tests pass (<code>npm test -- useTheme ThemeToggle</code>).</label></li>
+  </ul>
+</section>
+
+<section id="verification">
+  <h2>Verification</h2>
+  <p class="verification-section">Load the settings page in Chrome with DevTools open. Click the toggle and confirm (1) <code>document.documentElement.dataset.theme</code> switches in the Elements panel, (2) the page styling changes visibly, (3) reloading the page preserves the selected theme. Tab to the toggle and confirm activation with Enter. Open the page with OS set to dark mode and confirm the default theme is dark.</p>
+</section>
+
+</main>
+</body>
+</html>
