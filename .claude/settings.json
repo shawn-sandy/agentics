@@ -40,6 +40,14 @@
                         "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/setup-merge-driver.sh\" && bash \"$TOPLEVEL/scripts/setup-merge-driver.sh\" >/dev/null 2>&1 || true"
                     }
                 ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||') && test -n \"$DEFAULT_BRANCH\" && CURRENT=$(git branch --show-current 2>/dev/null) && if [ \"$CURRENT\" = \"$DEFAULT_BRANCH\" ]; then git pull --ff-only origin \"$DEFAULT_BRANCH\" 2>/dev/null; else git fetch origin \"$DEFAULT_BRANCH\":\"$DEFAULT_BRANCH\" 2>/dev/null; fi && echo \"OK: $DEFAULT_BRANCH is up to date with origin\" || true"
+                    }
+                ]
             }
         ],
         "PostToolUse": [
