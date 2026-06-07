@@ -8,17 +8,20 @@ This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implem
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
+The `review-plan` skill uses an **Agent Team** (five core reviewers plus two UI-conditional reviewers) to review implementation plans in parallel, synthesize findings, and apply improvements directly in place. Detects UI signals (React, Vue, buttons, modals, etc.) and conditionally runs UX and accessibility reviewers when present. Requires Agent Teams feature flag and Claude Code ≥ 2.1.32.
+
 The `finalize-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
 
 It also ships two `PostToolUse` hooks: one enforces `verb-target` kebab-case filenames on plan files, and another auto-regenerates the plans gallery index when plans change.
 
-Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
+Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, agent-team–powered review, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
 
 ## Features
 
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
+| `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
 | `craft-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:craft-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
@@ -118,6 +121,54 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 - **Collapsible sections** — Next Steps and Unresolved Questions use `<details>` for progressive disclosure
 
 Open the `.html` file directly in any browser. No server required.
+
+#### `review-plan` — Manual invoke or auto-activate
+
+Reviews implementation plans using a seven-reviewer Agent Team (five core reviewers plus two UI-conditional reviewers). Detects UI signals and conditionally spawns UX and accessibility reviewers when present. Synthesizes findings and applies improvements directly to the source plan in place.
+
+**Requires:** Agent Teams enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `~/.claude/settings.json`) and Claude Code ≥ 2.1.32.
+
+```
+/plan-agent:review-plan
+/plan-agent:review-plan add-dark-mode-toggle.html
+/plan-agent:review-plan --dir docs/plans/
+```
+
+The skill spawns the following reviewers:
+
+- **Core reviewers** (always spawned):
+  - Architecture — component boundaries, layer separation, system integration, design patterns
+  - Completeness — step specificity, file coverage, acceptance criteria clarity, verification feasibility
+  - Testability — test coverage, test specificity, objective-verification test, acceptance criteria verifiability
+  - Risk — breaking changes, data safety, concurrency, dependency hazards, rollback feasibility
+  - Conventions — naming, file organization, code style, dependency organization, testing patterns
+
+- **UI-conditional reviewers** (spawned only when UI signals detected):
+  - UX — user flows, error states, loading states, interaction clarity, responsive design, discoverability
+  - Accessibility — WCAG 2.1 AA compliance, keyboard navigation, screen reader support, semantic HTML, motion
+
+**UI signal detection:** Scans the plan HTML for references to React, Vue, Svelte, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components. If 2+ signals or UI-specific keywords are found, UX and accessibility reviewers are spawned.
+
+The workflow:
+
+1. **Resolve** — locates the HTML plan (`--dir` override, or glob `docs/plans/*.html` excluding `index.html`, or newest recent)
+2. **Verify** — confirms Agent Teams are available (feature flag + version check)
+3. **Detect** — scans plan HTML for UI signals to determine reviewer roster
+4. **Spawn** — creates the team and spawns 5 core + optional 2 UI reviewers in parallel
+5. **Collect** — waits for all reviewers to report findings
+6. **Synthesize** — aggregates findings into a structured report (Executive Summary, Role-by-Role, Agreements/Conflicts, Highest-Risk Issues)
+7. **Update** — applies inline edits to the plan HTML (step refinements, criteria corrections, verification improvements) and appends a collapsible "Team Review" section
+8. **Artifact** — emits a self-contained HTML review companion (`*-review.html`) combining the updated plan and team findings
+9. **Cleanup** — tears down the Agent Team
+
+On success:
+
+```
+Reviewing plan: docs/plans/add-dark-mode-toggle.html
+UI signals detected — running 7 reviewers
+Plan updated in place: docs/plans/add-dark-mode-toggle.html
+HTML review artifact written: docs/plans/add-dark-mode-toggle-review.html
+```
 
 #### `finalize-plan` — Manual invoke only
 

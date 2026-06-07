@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.9.0 — 2026-06-06 — Agent Team–based plan review skill
+
+### Added
+
+- **`/plan-agent:review-plan` skill** — new skill that spawns a seven-reviewer Agent Team (5 core + 2 UI-conditional) to review implementation plans, synthesize findings, apply improvements in place, and emit shareable HTML review artifacts. Detects UI signals (React, Vue, Svelte, buttons, modals, forms, etc.) and conditionally runs UX and accessibility reviewers when present.
+- **Seven reviewer agent definitions** under `agents/`:
+  - **Core reviewers** (always spawned): `plan-reviewer-architecture`, `-completeness`, `-testability`, `-risk`, `-conventions`
+  - **UI-conditional reviewers** (spawned when UI signals detected): `plan-reviewer-ux`, `-accessibility`
+- **Reference files** under `skills/review-plan/references/`:
+  - **`role-prompts.md`** — seven lens-specific spawn prompts for Agent Team briefing, with template placeholders for plan path substitution.
+  - **`output-template.md`** — synthesis report structure with Executive Summary, Role-by-Role findings, Agreements/Conflicts, Highest-Risk Issues, and the critical **Inline Edits to Apply** table that maps each improvement to a concrete HTML target element and action.
+- **Agent Teams support** — hard-gates on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code ≥ 2.1.32; requires feature flag and version check before spawning.
+
+### Changed
+
+- **Plugin description** — updated marketplace.json and plugin.json descriptions to include the new `review-plan` skill alongside `implementation-plan`, `finalize-plan`, and `craft-prompt` skills.
+- **Version bump** — from 1.8.0 to 1.9.0 (MINOR bump per marketplace.md — new skill added).
+
+---
+
 ## v1.8.0 — 2026-06-06 — Mandatory Tests section in implementation plans
 
 ### Added
