@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="completed">
-<meta name="plan-type" content="feature">
-<meta name="plan-created" content="2026-06-06">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="fix">
+<meta name="plan-created" content="2026-06-07">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-file" content="add-plan-review-team-skill.html">
-<meta name="plan-path" content="docs/plans/add-plan-review-team-skill.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-plan-review-team-skill.html — Add an agent-team skill that reviews and updates implementation plans">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-plan-review-team-skill.html — Add an agent-team skill that reviews and updates implementation plans">
-<title>Plan: Add a plan-review Agent Team skill to plan-agent</title>
+<meta name="plan-file" content="fix-review-plan-agent-frontmatter.html">
+<meta name="plan-path" content="docs/plans/fix-review-plan-agent-frontmatter.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/fix-review-plan-agent-frontmatter.html &mdash; Fix review-plan agent frontmatter and descriptions to match product-plans pattern">
+<title>Plan: Fix review-plan agent frontmatter and descriptions to match product-plans pattern</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -33,6 +32,9 @@
     --red:        #dc2626;
     --red-bg:     #fef2f2;
     --red-border: #fecaca;
+    --purple:     #a21caf;
+    --purple-bg:  #fdf4ff;
+    --purple-border:#f0abfc;
     --grey-bg:    #f9fafb;
     --wish-bg:    #fdf8ff;
     --wish-border:#d8b4fe;
@@ -168,6 +170,9 @@
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-status="in-progress"] .status-badge::before { animation: none; }
   }
 
   /* Meta row */
@@ -575,32 +580,6 @@
     color: var(--subtle);
     font-size: .875rem;
   }
-  .report-list { margin: 0; padding: 0; }
-  .report-list dt {
-    font-weight: 600;
-    color: var(--text);
-    font-size: .875rem;
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    margin-top: .75rem;
-  }
-  .report-list dt:first-child { margin-top: 0; }
-  .report-list dt::before {
-    content: "";
-    display: inline-block;
-    width: .5rem; height: .5rem;
-    border-radius: 50%;
-    background: #dc2626;
-    flex-shrink: 0;
-  }
-  .report-list dd {
-    color: var(--muted);
-    font-size: .85rem;
-    margin-left: .9rem;
-    margin-top: .2rem;
-    margin-bottom: 0;
-  }
 
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
@@ -689,34 +668,6 @@
     border: 1px solid #ddd6fe;
   }
 
-  /* ── Collapsible optional sections ─────────────────────────────── */
-  .optional-section {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-top: 1.5rem;
-    overflow: hidden;
-    background: var(--surface);
-  }
-  .optional-section > summary {
-    padding: .875rem 1.25rem;
-    font-weight: 600;
-    font-size: .9rem;
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    user-select: none;
-    min-height: 44px;
-  }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
-  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
-  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
-  .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
-
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
     display: flex;
@@ -770,7 +721,7 @@
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source ──────────────────────────────────────────────── */
   .plan-source {
     display: flex;
     flex-direction: column;
@@ -823,61 +774,60 @@
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
-  .plan-workflow {
-    margin: -.5rem 0 1.5rem;
-    font-size: .8rem;
-  }
-  .plan-workflow summary {
-    font-size: .7rem;
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
-  }
-  .plan-workflow summary:hover { text-decoration: underline; }
-  .plan-workflow-inner {
-    display: flex;
-    align-items: flex-start;
-    gap: .6rem;
-    margin-top: .4rem;
-    padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-  }
-  .plan-workflow code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem;
-    color: var(--text);
-    flex: 1;
-    word-break: break-all;
-  }
-  .copy-workflow-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .2rem .6rem;
-    font-size: .72rem;
-    font-weight: 500;
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+
+  /* ── Test section ──────────────────────────────────────────────── */
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
     color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .objective-test-card {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-left: 4px solid var(--green);
     border-radius: var(--radius);
-    cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+  .objective-test-card .test-card-title { color: #14532d; font-weight: 600; font-size: .95rem; flex: 1; }
+  .objective-test-card .test-card-body { color: #166534; font-size: .875rem; }
+  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-body p { margin-bottom: .4rem; }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
-  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  [data-status="completed"] .plan-workflow { display: none; }
-  @media print { .plan-workflow { display: none !important; } }
-  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+  .test-badge-objective { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .test-badge-unit { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
 
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
@@ -904,34 +854,6 @@
     .step-chip { display: none !important; }
     a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
   }
-
-  /* ═════════════════════════════════════════════════════════════════
-     OPT-IN VISUAL COMPONENTS
-     ═════════════════════════════════════════════════════════════════ */
-
-  /* ── Files file-tree ────────────────────────────────────────────── */
-  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
-  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
-  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
-
-  /* ── Flow / pipeline diagram ────────────────────────────────────── */
-  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
-  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
-
-  /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
 </style>
 </head>
 <body>
@@ -975,11 +897,11 @@
   <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
   </symbol>
-  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
-  </symbol>
   <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
 </svg>
 
@@ -990,13 +912,13 @@
   <div class="plan-header-inner">
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Add a plan-review Agent Team skill to plan-agent</h1>
-      <span class="status-badge">completed</span>
+      <h1 class="plan-title">Fix review-plan agent frontmatter and descriptions to match product-plans pattern</h1>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-06
+        2026-06-07
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
@@ -1004,7 +926,7 @@
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
+        fix
       </span>
     </div>
   </div>
@@ -1021,9 +943,8 @@
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
-      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Tests</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
       <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
       <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
@@ -1037,38 +958,28 @@
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a <code>/plan-agent:review-plan</code> skill that spins up a Claude Code Agent Team — five core reviewers always, plus two UI-conditional reviewers (UX/design and accessibility) spawned only when the plan shows UI signals — to critique an HTML implementation plan in parallel, then has the lead synthesise their findings and apply the improvements directly back into the plan file. Turning every plan into a peer-reviewed, self-improving document, with UX and a11y coverage automatically scaled to whether the plan actually touches a user interface.</p>
+      <p>Align the seven <code>plan-reviewer-*.md</code> agent definitions in the <code>plan-agent</code> plugin with the proven <code>product-plans</code> sibling pattern: change the frontmatter key from <code>allowed-tools:</code> to <code>tools:</code>, narrow <code>Bash</code> to <code>Bash(git *)</code>, and append the "Teammate-only" clause to every agent description. Bump plan-agent to 1.10.0 as a PATCH fix for functional correctness.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-plan-review-team-skill.html — Add an agent-team skill that reviews and updates implementation plans</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/fix-review-plan-agent-frontmatter.html &mdash; Fix review-plan agent frontmatter and descriptions to match product-plans pattern</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt ──────────────────────────────────────── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-plan-review-team-skill.html — Add an agent-team skill that reviews and updates implementation plans</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-      </div>
-    </details>
-
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <!-- ── Plan source ──────────────────────────────────────────── -->
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">add-plan-review-team-skill.html</code>
+        <code id="plan-file" aria-label="Plan file name">fix-review-plan-agent-frontmatter.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-plan-review-team-skill.html</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/fix-review-plan-agent-frontmatter.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
@@ -1078,7 +989,7 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 11 done</span>
+        <span id="progress-label">0 / 7 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1093,11 +1004,13 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The <code>plan-agent</code> plugin generates rich, self-contained HTML implementation plans (<code>implementation-plan</code>) and marks them complete (<code>finalize-plan</code>), but there is no automated way to <em>critique and improve</em> a plan before it is implemented. Today a plan's quality depends entirely on the single session that wrote it.</p>
-      <p>The <a href="https://code.claude.com/docs/en/agent-teams">Claude Code Agent Teams</a> feature is purpose-built for exactly this: a lead session spawns independent teammates that each work in their own context window, share a task list, and message each other directly. The docs call out "research and review" as the strongest use case — multiple reviewers investigate different angles simultaneously and challenge each other's findings before converging.</p>
-      <p>The sibling plugin <code>product-plans</code> already proves the pattern with <code>plan-review-agents</code>: a six-role Agent Team that reviews <em>product</em> plans (Markdown) in place using reusable subagent definitions. This plan adapts that proven shape for <strong>technical implementation plans</strong> — five plan-specific reviewer lenses operating on the plugin's own <strong>HTML</strong> plan format, applying edits to HTML step cards and acceptance-criteria items rather than Markdown sections.</p>
-      <p>Because implementation plans are often backend, CLI, or infrastructure work, UX and accessibility lenses would be dead weight on most reviews — but invaluable when a plan describes a UI feature. So instead of permanent UX/a11y teammates, the lead spawns a <strong>UX/design reviewer</strong> and an <strong>accessibility reviewer</strong> only when the plan shows UI signals, reusing the exact heuristic the <code>implementation-plan</code> skill already applies in its interview UI override (references to React/Vue/Svelte, <code>.tsx</code>/<code>.jsx</code>/<code>.css</code>/<code>.html</code>, <code>className</code>/Tailwind, or UX terms like button, modal, form, dialog, page, component). Backend plans stay lean at five reviewers; UI plans automatically get all seven.</p>
-      <p>Agent Teams are experimental and disabled by default (require <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and Claude Code ≥ 2.1.32), so the skill must hard-gate on availability and never silently fall back to single-session role-play.</p>
+      <p>The <code>review-plan</code> Agent Team skill (v1.9.0) shipped with seven <code>plan-reviewer-*.md</code> agent definitions under <code>kit/plugins/plan-agent/agents/</code>. A post-ship team review (<code>add-plan-review-team-skill-review.html</code>) identified two functional correctness issues and one convention gap by comparing the shipped files against the established <code>product-plans</code> sibling agents:</p>
+      <ul>
+        <li><strong>Wrong frontmatter key:</strong> All seven agents use <code>allowed-tools:</code> in their YAML frontmatter. The agent runtime reads <code>tools:</code> &mdash; <code>allowed-tools:</code> is the correct key for skills (<code>SKILL.md</code>), not agents. Every <code>product-plans</code> agent uses <code>tools:</code>. The restriction is likely silently ignored as-is.</li>
+        <li><strong>Unrestricted Bash:</strong> The agents grant bare <code>Bash</code> access, which gives reviewers latent write capability. The <code>product-plans</code> agents use <code>Bash(git *)</code> to restrict Bash to read-only git commands.</li>
+        <li><strong>Missing "Teammate-only" clause:</strong> The <code>product-plans</code> agents all end their descriptions with <em>"Teammate-only &mdash; designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation."</em> The <code>plan-agent</code> reviewer agents omit this, meaning they may auto-activate on broader intent matches than intended.</li>
+      </ul>
+      <p>This is a PATCH fix (correctness of existing metadata, no new behavior) per <code>marketplace.md</code> versioning rules. The version bump is 1.9.0 &rarr; 1.10.0 since the frontmatter key change affects runtime behavior.</p>
     </section>
 
     <!-- ── Files ──────────────────────────────────────────────── -->
@@ -1109,63 +1022,22 @@
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent 1.8.0 → 1.9.0 + description</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent 1.9.0 &rarr; 1.10.0</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
           <ul class="file-list">
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document review-plan skill</span></li>
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 1.9.0 entry</span></li>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .claude-plugin/</li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 1.10.0 entry</span></li>
+            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agents/</li>
             <ul class="file-list">
-              <li><code>plugin.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">mention review-plan in description</span></li>
-            </ul>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agents/ <span class="file-note">(new directory)</span></li>
-            <ul class="file-list">
-              <li><code>plan-reviewer-architecture.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">core: feasibility / ordering lens</span></li>
-              <li><code>plan-reviewer-completeness.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">core: objective coverage / gaps lens</span></li>
-              <li><code>plan-reviewer-testability.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">core: verify lines + Tests section lens</span></li>
-              <li><code>plan-reviewer-risk.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">core: failure modes / regressions lens</span></li>
-              <li><code>plan-reviewer-conventions.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">core: structure / clarity / conventions lens</span></li>
-              <li><code>plan-reviewer-ux.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">conditional: UX / flows / states lens</span></li>
-              <li><code>plan-reviewer-accessibility.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">conditional: WCAG / keyboard / ARIA lens</span></li>
-            </ul>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> skills/review-plan/ <span class="file-note">(new directory)</span></li>
-            <ul class="file-list">
-              <li><code>SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">team orchestration workflow</span></li>
-              <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> references/</li>
-              <ul class="file-list">
-                <li><code>role-prompts.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">5 lens-specific spawn prompts</span></li>
-                <li><code>output-template.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">synthesis report + inline-edits table</span></li>
-              </ul>
+              <li><code>plan-reviewer-architecture.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
+              <li><code>plan-reviewer-completeness.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
+              <li><code>plan-reviewer-testability.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
+              <li><code>plan-reviewer-risk.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
+              <li><code>plan-reviewer-conventions.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
+              <li><code>plan-reviewer-ux.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
+              <li><code>plan-reviewer-accessibility.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">frontmatter key + Bash restriction + teammate clause</span></li>
             </ul>
           </ul>
         </ul>
-      </div>
-    </section>
-
-    <!-- ── Diagram ──────────────────────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">review-plan team lifecycle</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Resolve</div><code>find HTML plan</code><div class="pipeline-sub">arg, settings, or newest in docs/plans/</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Gate</div><code>verify Agent Teams</code><div class="pipeline-sub">flag = 1 AND version ≥ 2.1.32 — else hard-stop</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Detect</div><code>scan plan for UI signals</code><div class="pipeline-sub">React/.tsx/.css/.html or UX terms → add UX + a11y reviewers</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Spawn</div><code>5 core (+2 if UI)</code><div class="pipeline-sub">architecture · completeness · testability · risk · conventions <em>(+ ux · accessibility)</em></div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Debate &amp; collect</div><code>findings via mailbox</code><div class="pipeline-sub">teammates challenge each other; lead waits for all 5</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Synthesise</div><code>output-template.md</code><div class="pipeline-sub">agreements, conflicts, inline-edits table</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Update in place</div><code>Edit the HTML plan</code><div class="pipeline-sub">step cards, #criteria-list, append Team Review &lt;details&gt;</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Emit &amp; clean up</div><code>&lt;stem&gt;-review.html</code><div class="pipeline-sub">shareable artifact, then lead cleans up the team</div></div>
       </div>
     </section>
 
@@ -1183,12 +1055,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Scaffold the new directories under the plan-agent plugin</span>
+                <span class="step-chip-text">Change <code>allowed-tools:</code> to <code>tools:</code> and narrow <code>Bash</code> to <code>Bash(git *)</code> in all 7 agent files</span>
               </div>
-              <div class="step-why">Write tools require parent paths to exist, and <code>agents/</code> is brand-new to this plugin — create <code>kit/plugins/plan-agent/agents/</code> and <code>kit/plugins/plan-agent/skills/review-plan/references/</code> before authoring any files.</div>
+              <div class="step-why">The agent runtime reads <code>tools:</code>, not <code>allowed-tools:</code> (which is the skill-only key). Bare <code>Bash</code> grants write access to reviewers who should only read; <code>Bash(git *)</code> restricts them to git commands, matching the <code>product-plans</code> pattern.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>ls kit/plugins/plan-agent/agents kit/plugins/plan-agent/skills/review-plan/references</code> lists both directories without error.</div>
+                <div class="verify-body"><code>grep -c &apos;^tools:&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> returns 7 (one per file). <code>grep &apos;allowed-tools&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> returns nothing. <code>grep &apos;Bash(git \*)&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> returns 7.</div>
               </details>
             </div>
           </div>
@@ -1200,12 +1072,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Author the seven reviewer subagent definitions (5 core + 2 UI-conditional)</span>
+                <span class="step-chip-text">Append the "Teammate-only" clause to all 7 agent descriptions</span>
               </div>
-              <div class="step-why">Per the Agent Teams guide, defining each role as a reusable subagent (<code>agents/*.md</code>) lets it serve as both a delegated subagent and a team teammate — mirroring <code>product-plans</code>' six <code>product-reviewer-*.md</code> files. Each file needs frontmatter (<code>name</code> matching the filename, a third-person <code>description</code>, a restrictive <code>tools</code> allowlist of <code>Read, Glob, Grep, Bash</code>, and an explicit <code>model</code>) plus a body defining that lens's mandate for implementation plans. The five core lenses always run; the two UI lenses (<code>ux</code>, <code>accessibility</code>) are authored the same way but only spawned when UI signals are present (Step 6).</div>
+              <div class="step-why">Without this clause, the agents may auto-activate on broad intent matches (e.g. "review my architecture"). The clause signals they are designed for team use only, matching the <code>product-plans</code> convention. The clause format is: <code>Teammate-only &mdash; designed to run inside an Agent Team led by the review-plan skill; not for standalone invocation.</code></div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">All seven files exist: core — <code>plan-reviewer-architecture.md</code>, <code>-completeness.md</code>, <code>-testability.md</code>, <code>-risk.md</code>, <code>-conventions.md</code>; conditional — <code>plan-reviewer-ux.md</code>, <code>plan-reviewer-accessibility.md</code>. For each, the <code>name:</code> frontmatter equals the filename stem and the description states what it reviews and when to use it. The two conditional descriptions note they apply to UI-bearing plans.</div>
+                <div class="verify-body"><code>grep -c &apos;Teammate-only&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> returns 7. Each description still starts with its original lens-specific text and ends with the teammate clause.</div>
               </details>
             </div>
           </div>
@@ -1217,12 +1089,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write references/role-prompts.md with seven lens-specific spawn prompts</span>
+                <span class="step-chip-text">Bump plan-agent to 1.10.0 in <code>.claude-plugin/marketplace.json</code></span>
               </div>
-              <div class="step-why">The lead briefs each teammate with a tailored spawn prompt carrying task-specific context (teammates do not inherit the lead's conversation). Each template uses a <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder for the resolved plan, tells the reviewer to read the HTML plan, apply its lens, and report findings back via <code>SendMessage</code> with severity ratings — keeping the heavy prose out of <code>SKILL.md</code> (progressive disclosure). Include all seven (five core + the two UI prompts); group the UX and accessibility prompts under a clearly-marked "conditional — UI plans only" heading so the lead knows they are spawned selectively.</div>
+              <div class="step-why">The frontmatter key change affects runtime behavior (tool restrictions may now be enforced). Per <code>marketplace.md</code>, this is a MINOR bump (1.9.0 &rarr; 1.10.0) since it changes agent activation behavior via the description clause. Set <code>version</code> only in <code>marketplace.json</code>, never in <code>plugin.json</code>.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>grep -c "&lt;ABSOLUTE_PATH&gt;" references/role-prompts.md</code> returns 7, and the file contains one clearly-headed prompt block per reviewer lens, with the UX and accessibility blocks marked conditional.</div>
+                <div class="verify-body"><code>grep -A3 &apos;&quot;plan-agent&quot;&apos; .claude-plugin/marketplace.json | grep version</code> shows <code>&quot;1.10.0&quot;</code>. <code>grep version kit/plugins/plan-agent/.claude-plugin/plugin.json</code> returns nothing. <code>node -e &quot;JSON.parse(require(&apos;fs&apos;).readFileSync(&apos;.claude-plugin/marketplace.json&apos;))&quot;</code> exits 0.</div>
               </details>
             </div>
           </div>
@@ -1234,12 +1106,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write references/output-template.md (synthesis report + inline-edits table)</span>
+                <span class="step-chip-text">Add a <code>v1.10.0</code> CHANGELOG entry</span>
               </div>
-              <div class="step-why">A fixed synthesis template makes the lead's output deterministic. It must include an Executive Summary, Role-by-Role findings, an Agreements/Conflicts section, a Highest-Risk list, and — critically — an <strong>Inline Edits to Apply</strong> table whose rows map each accepted improvement to a concrete HTML target (e.g. <code>step-card #3 verify-body</code>, <code>#criteria-list append</code>, <code>objective-card</code>) plus an action (<code>edit</code> / <code>append</code> / <code>insert</code>). This table is what drives the in-place update in Step 6.</div>
+              <div class="step-why">Project convention requires a CHANGELOG entry for every version bump. Document the three fixes: frontmatter key correction, Bash narrowing, and teammate-only clause addition.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">The file contains an "Inline Edits to Apply" table with columns for target HTML element, action, and new content; section headings match what <code>SKILL.md</code> Step 6 reads.</div>
+                <div class="verify-body"><code>grep &apos;1.10.0&apos; kit/plugins/plan-agent/CHANGELOG.md</code> returns a heading line. The entry lists all three changes (frontmatter key, Bash restriction, teammate clause).</div>
               </details>
             </div>
           </div>
@@ -1251,80 +1123,12 @@
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write skills/review-plan/SKILL.md — the team orchestration workflow</span>
-              </div>
-              <div class="step-why">This is the core. Frontmatter: <code>name: review-plan</code>, a three-part <code>description</code> (≤200 chars), and <code>allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, SendUserFile</code>. Body steps mirror <code>plan-review-agents</code>: (0) exit plan mode via <code>ToolSearch select:ExitPlanMode</code> then <code>ExitPlanMode</code>, treating "not in plan mode" as success; (1) resolve the HTML plan (<code>--dir</code> → <code>plansDirectory</code> → <code>docs/plans/</code> → newest <code>*.html</code> excluding <code>index.html</code>); (2) default to update-in-place + artifact; (3) gate on Agent Teams; (3b) detect UI signals; (4) spawn the team (5 core, +2 UI reviewers when signals present); (5) collect; (6) synthesise; (7) integrate; (8) emit artifact; (9) clean up.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>head</code> shows valid frontmatter with all listed <code>allowed-tools</code> (including both <code>ToolSearch</code> and <code>ExitPlanMode</code>); the body is under 500 lines and contains the Step 0 exit-plan-mode bootstrap and a numbered Step 1–9 workflow.</div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-card-header">
-            <div class="step-number">6</div>
-            <div class="step-body">
-              <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Specify the HTML-aware spawn and integrate logic inside SKILL.md</span>
-              </div>
-              <div class="step-why">The key adaptation from the Markdown-based sibling. (a) UI-signal detection: before spawning, scan the resolved plan's HTML (excluding <code>&lt;style&gt;</code>/<code>&lt;script&gt;</code>) for UI signals — references to React/Vue/Svelte/Angular, <code>.tsx</code>/<code>.jsx</code>/<code>.css</code>/<code>.html</code> file extensions, <code>className</code>/<code>style</code>/Tailwind, or UX terms (button, modal, form, dialog, dropdown, page, component) — reusing the <code>implementation-plan</code> interview UI-override heuristic. (b) Spawn step: a directive that creates the team and spawns the five core <code>plan-reviewer-*</code> subagent types in parallel, plus <code>plan-reviewer-ux</code> and <code>plan-reviewer-accessibility</code> when UI signals were detected; brief each with its <code>role-prompts.md</code> template (<code>&lt;ABSOLUTE_PATH&gt;</code> substituted via <code>realpath</code>), and wait for all spawned teammates before synthesis. Announce which mode ran (e.g. "UI signals detected — running 7 reviewers" vs "no UI signals — running 5 core reviewers"). (c) Integrate step: walk the synthesis "Inline Edits to Apply" table and apply one <code>Edit</code> per row against the HTML plan — targeting <code>.step-card</code> bodies, <code>.verify-body</code>, <code>#criteria-list</code> <code>&lt;li&gt;</code> items, <code>.objective-card</code>, and the Verification paragraph — HTML-escaping all inserted content, never touching <code>&lt;style&gt;</code> / <code>&lt;script&gt;</code>, and appending a collapsible <code>&lt;details&gt;</code> "Team Review (timestamp)" block before <code>&lt;/main&gt;</code>.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>SKILL.md</code> defines the UI-signal detection list, the spawn step names the five core <code>plan-reviewer-*</code> agent types plus the two conditional ones with their gating condition and "wait for all spawned", and the integrate step names the specific HTML selectors above, the HTML-escape rule, and the appended Team Review <code>&lt;details&gt;</code>.</div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-card-header">
-            <div class="step-number">7</div>
-            <div class="step-body">
-              <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Register the skill: bump version and update plugin descriptions</span>
-              </div>
-              <div class="step-why">A new skill is a MINOR bump per <code>marketplace.md</code>. In <code>.claude-plugin/marketplace.json</code> raise the <code>plan-agent</code> entry from <code>1.8.0</code> to <code>1.9.0</code> and extend its <code>description</code> to mention <code>review-plan</code>; update <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> description to match. Set <code>version</code> only in <code>marketplace.json</code>, never in <code>plugin.json</code>.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -A2 '"plan-agent"' .claude-plugin/marketplace.json</code> shows <code>"version": "1.9.0"</code>; <code>plugin.json</code> has no <code>version</code> key; the project's settings hook reports <code>marketplace.json</code> as valid JSON.</div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-card-header">
-            <div class="step-number">8</div>
-            <div class="step-body">
-              <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Document the new skill in CHANGELOG.md and README.md</span>
-              </div>
-              <div class="step-why">Project convention requires a CHANGELOG entry and README update for any new component. Add a dated <code>1.9.0</code> CHANGELOG entry, and a README section documenting <code>/plan-agent:review-plan</code> — the five reviewer roles, the Agent Teams requirement, the enable flag, and the update-in-place default.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>CHANGELOG.md</code> has a <code>1.9.0</code> heading dated 2026-06-06; <code>README.md</code> lists <code>review-plan</code> with its invocation, roles, and the <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code> requirement.</div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-card-header">
-            <div class="step-number">9</div>
-            <div class="step-body">
-              <div class="step-action">
-                <span class="step-chip">todo</span>
                 <span class="step-chip-text">Validate the plugin structure</span>
               </div>
-              <div class="step-why">Catch frontmatter, JSON, and registration errors before commit. Run <code>/validate-plugin plan-agent</code> (or the bundled validation skill) and confirm the new skill and five agents parse, the homepage URL is correct, and <code>marketplace.json</code> registration is intact.</div>
+              <div class="step-why">Catch frontmatter, JSON, and registration errors before commit. Run <code>/validate-plugin plan-agent</code> and confirm all agent definitions parse correctly with the new <code>tools:</code> key.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>validate-plugin</code> reports no errors for <code>plan-agent</code>; <code>node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json'))"</code> exits 0.</div>
+                <div class="verify-body"><code>validate-plugin</code> reports no errors for <code>plan-agent</code>; <code>node -e &quot;JSON.parse(require(&apos;fs&apos;).readFileSync(&apos;.claude-plugin/marketplace.json&apos;))&quot;</code> exits 0.</div>
               </details>
             </div>
           </div>
@@ -1336,32 +1140,36 @@
     <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
-        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
-      <p><strong>Tier 1</strong> — the plan creates skill and agent definition files plus a marketplace registration that change the plugin's runtime behavior. There is no unit-test runner for Markdown/JSON plugin definitions in this repo, so "tests" here are the plugin's real validation harness plus a manual team-run smoke test.</p>
+      <div class="test-tier-label">Tier 1 &mdash; Code-touching plan (agent definition files affect runtime behavior)</div>
 
-      <div class="completion-checklist" style="border-color: var(--accent); margin-bottom: 1.25rem;">
-        <div class="completion-header">
-          <span class="completion-badge" style="background: var(--accent-bg); color: var(--accent); border-color:#bfdbfe;">Objective-Verification Test (hero)</span>
+      <div class="objective-test-card">
+        <div class="test-card-header">
+          <span class="test-badge test-badge-objective">Objective</span>
+          <span class="test-card-title">Agent frontmatter matches product-plans pattern</span>
         </div>
-        <p style="margin:0 0 .5rem;"><strong>Smoke test — review-plan updates a plan in place.</strong> With Agent Teams enabled, run <code>/plan-agent:review-plan tests/fixtures/sample-plan-backend.html</code> against a copied non-UI fixture. Assert the run (1) spawns exactly five core teammates, (2) finishes with the fixture modified — at least one inline edit applied to a step card or criterion AND a "Team Review" <code>&lt;details&gt;</code> appended before <code>&lt;/main&gt;</code>, and (3) writes a sibling <code>sample-plan-backend-review.html</code> artifact. Then run against <code>tests/fixtures/sample-plan-ui.html</code> (a fixture referencing a <code>.tsx</code> component) and assert seven teammates spawn (core + <code>plan-reviewer-ux</code> + <code>plan-reviewer-accessibility</code>). Finally, with the flag unset, re-run and assert the skill hard-stops with the enable message and makes <em>no</em> edits. This proves the objective: a team that reviews <em>and</em> updates an implementation plan, scaling UX/a11y coverage to the plan's content.</p>
-        <p style="margin:0; font-size:.82rem; color:var(--muted);">Fixtures: <code>tests/fixtures/sample-plan-backend.html</code> (no UI signals) and <code>tests/fixtures/sample-plan-ui.html</code> (UI signals). Run manually — Agent Team runs are interactive and not yet CI-automatable.</p>
+        <div class="test-card-body">
+          <p><strong>Type:</strong> Structural validation (smoke test)</p>
+          <p><strong>Asserts:</strong> All 7 <code>plan-reviewer-*.md</code> files use <code>tools:</code> (not <code>allowed-tools:</code>), grant <code>Bash(git *)</code> (not bare <code>Bash</code>), and include the "Teammate-only" description clause &mdash; matching the established <code>product-plans</code> agent convention.</p>
+          <p><strong>Run:</strong> <code>grep -cP &apos;^tools:&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> (expect all 7 return <code>1</code>); <code>grep -l &apos;allowed-tools&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> (expect no output); <code>grep -c &apos;Teammate-only&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> (expect all 7 return <code>1</code>).</p>
+        </div>
       </div>
 
-      <h3 class="report-heading" style="margin-bottom:.5rem;">Unit-level (structure validation)</h3>
-      <ul>
-        <li><strong>File:</strong> existing <code>validate-plugin</code> skill / structural checks.</li>
-        <li><strong>Targets:</strong> <code>review-plan/SKILL.md</code> frontmatter and the seven <code>plan-reviewer-*.md</code> agent definitions (5 core + ux + accessibility).</li>
-        <li><strong>Key cases:</strong> each <code>name:</code> equals its filename stem; descriptions are third-person and non-empty; <code>allowed-tools</code> includes both <code>ToolSearch</code> and <code>ExitPlanMode</code>; no <code>version</code> key in <code>plugin.json</code>.</li>
-      </ul>
-
-      <h3 class="report-heading" style="margin:1rem 0 .5rem;">Integration-level (registration)</h3>
-      <ul>
-        <li><strong>File:</strong> <code>.claude-plugin/marketplace.json</code> + <code>scripts/check-version-bump.sh</code>.</li>
-        <li><strong>Targets:</strong> plan-agent marketplace entry and version guard.</li>
-        <li><strong>Key cases:</strong> <code>marketplace.json</code> parses as valid JSON; the <code>plan-agent</code> version is <code>1.9.0</code>; the version-bump guard passes against <code>main</code>.</li>
-      </ul>
+      <div class="test-list">
+        <div class="test-card" style="border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:.6rem;background:var(--surface);">
+          <div class="test-card-header" style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.5rem;">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title" style="font-weight:600;font-size:.95rem;">marketplace.json version and structure</span>
+          </div>
+          <div class="test-card-body" style="font-size:.875rem;color:var(--muted);">
+            <p><strong>File:</strong> <code>.claude-plugin/marketplace.json</code></p>
+            <p><strong>Targets:</strong> plan-agent entry version and JSON validity</p>
+            <p><strong>Key cases:</strong> version is <code>1.10.0</code>; JSON parses without error; <code>plugin.json</code> has no <code>version</code> key</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ── Acceptance Criteria ───────────────────────────────────── -->
@@ -1371,17 +1179,13 @@
         Acceptance Criteria
       </h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1"><code>skills/review-plan/SKILL.md</code> exists with a valid three-part description and <code>allowed-tools</code> including both <code>ToolSearch</code> and <code>ExitPlanMode</code>.</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2">Seven <code>plan-reviewer-*.md</code> agent definitions exist under <code>kit/plugins/plan-agent/agents/</code> (5 core + <code>ux</code> + <code>accessibility</code>), each with valid frontmatter whose <code>name</code> matches its filename.</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3"><code>references/role-prompts.md</code> contains seven lens-specific spawn prompts, each using the <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder, with the UX and accessibility prompts marked conditional.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4"><code>references/output-template.md</code> includes an "Inline Edits to Apply" table mapping findings to concrete HTML targets and actions.</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">SKILL.md hard-gates on <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and Claude Code ≥ 2.1.32 and does <em>not</em> fall back to single-session role-play.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The spawn step creates the five core <code>plan-reviewer-*</code> teammates in parallel (plus the two UI reviewers when UI signals are detected) and waits for all spawned teammates before synthesising.</label></li>
-        <li><input type="checkbox" id="ac11"><label for="ac11">UI-signal detection gates the UX and accessibility reviewers: a UI-bearing plan spawns 7 teammates, a backend/CLI plan spawns only the 5 core, and the skill announces which mode ran.</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">By default the skill updates the HTML plan in place (inline edits + appended "Team Review" <code>&lt;details&gt;</code>) and emits a <code>&lt;stem&gt;-review.html</code> artifact.</label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8">The integrate logic targets HTML structures (<code>.step-card</code>, <code>.verify-body</code>, <code>#criteria-list</code>, <code>.objective-card</code>) and never modifies the skeleton's <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code>.</label></li>
-        <li><input type="checkbox" id="ac9"><label for="ac9"><code>marketplace.json</code> bumps plan-agent to <code>1.9.0</code>; <code>CHANGELOG.md</code> and <code>README.md</code> document the new skill.</label></li>
-        <li><input type="checkbox" id="ac10"><label for="ac10"><code>validate-plugin plan-agent</code> passes and <code>marketplace.json</code> is valid JSON.</label></li>
+        <li><input type="checkbox" id="ac1"><label for="ac1">All 7 <code>plan-reviewer-*.md</code> files use <code>tools:</code> in frontmatter, not <code>allowed-tools:</code>.</label></li>
+        <li><input type="checkbox" id="ac2"><label for="ac2">All 7 agent files grant <code>Bash(git *)</code>, not bare <code>Bash</code>.</label></li>
+        <li><input type="checkbox" id="ac3"><label for="ac3">All 7 agent descriptions end with the "Teammate-only" clause matching the <code>product-plans</code> wording.</label></li>
+        <li><input type="checkbox" id="ac4"><label for="ac4"><code>marketplace.json</code> shows plan-agent at version <code>1.10.0</code> and is valid JSON.</label></li>
+        <li><input type="checkbox" id="ac5"><label for="ac5"><code>plugin.json</code> has no <code>version</code> key.</label></li>
+        <li><input type="checkbox" id="ac6"><label for="ac6"><code>CHANGELOG.md</code> has a <code>v1.10.0</code> entry documenting the three fixes.</label></li>
+        <li><input type="checkbox" id="ac7"><label for="ac7"><code>validate-plugin plan-agent</code> passes without errors.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1393,10 +1197,9 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p><strong>End-to-end, backend plan (teams enabled):</strong> set <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>, restart Claude Code (≥ 2.1.32), copy a non-UI plan from <code>docs/plans/*.html</code> to a scratch path, and run <code>/plan-agent:review-plan &lt;scratch&gt;.html</code>. Confirm exactly five core teammates spawn (no UX/a11y), the lead synthesises, the scratch plan is edited in place (visible inline improvements + a "Team Review" collapsible at the bottom), a <code>&lt;stem&gt;-review.html</code> companion is written, and the team is cleaned up with no orphaned teammates.</p>
-      <p><strong>End-to-end, UI plan:</strong> repeat with a plan that references UI (e.g. a <code>.tsx</code> component or terms like modal/form) and confirm seven teammates spawn — the five core plus <code>plan-reviewer-ux</code> and <code>plan-reviewer-accessibility</code> — and that the resulting inline edits include UX/accessibility improvements.</p>
-      <p><strong>Negative path (teams disabled):</strong> unset the flag and re-run — the skill must stop immediately with the enable instructions and leave the plan file byte-identical.</p>
-      <p><strong>Reusability:</strong> confirm each reviewer also works as a plain subagent by asking Claude to "use the <code>plan-reviewer-testability</code> agent to review &lt;plan&gt;.html" without a team.</p>
+      <p><strong>Structural parity check:</strong> Run <code>head -6 kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> and <code>head -6 kit/plugins/product-plans/agents/product-reviewer-*.md</code> side by side. The frontmatter shape should now match: both use <code>tools:</code>, both grant <code>Bash(git *)</code>, both have a <code>model:</code> field, and both have descriptions ending with a "Teammate-only" clause.</p>
+      <p><strong>No regressions:</strong> The agent body content (mandate, how-to-review, report-back sections) must be byte-identical to the v1.9.0 versions &mdash; only the frontmatter block changes.</p>
+      <p><strong>JSON validity:</strong> <code>node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json'))"</code> exits 0.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1425,7 +1228,7 @@
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <p class="report-empty">No items to report &mdash; all requirements met.</p>
         </div>
       </div>
     </section>
@@ -1439,20 +1242,20 @@
       <div class="next-steps-list">
 
         <details class="next-step-item">
-          <summary>Add a background-mode variant of review-plan</summary>
+          <summary>Add <code>disable-model-invocation</code> to review-plan SKILL.md</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the agentics repo, add a `--background` mode to the plan-agent `review-plan` skill, mirroring how product-plans ships `product-plans-bg`. In background mode it must require an explicit plan path argument, skip all AskUserQuestion prompts, default to update-in-place + artifact, and be safe to run unattended. Update the SKILL.md, add a background command wrapper if the plugin uses one, bump the plan-agent version in .claude-plugin/marketplace.json, and update the CHANGELOG and README.</pre>
+            <pre>In the agentics repo, add `disable-model-invocation: true` to the frontmatter of `kit/plugins/plan-agent/skills/review-plan/SKILL.md`. The skill spawns a costly Agent Team and mutates plan files, so it should only run when explicitly invoked via `/plan-agent:review-plan`, not on ambient intent matching. Update the README to document this as command-only. Bump the version if this is a separate PR from the frontmatter fix.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
         <details class="next-step-item">
-          <summary>Chain review-plan before finalize-plan</summary>
+          <summary>Add backup-before-mutation to review-plan workflow</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the agentics repo plan-agent plugin, add an optional handoff so that when a user finalizes a plan, finalize-plan can first offer to run review-plan (the Agent Team review) when CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS is enabled. Use AskUserQuestion to offer "review then finalize" vs "finalize only". Do not make it mandatory. Update finalize-plan/SKILL.md, the README, CHANGELOG, and bump the version in marketplace.json.</pre>
+            <pre>In the agentics repo, update `kit/plugins/plan-agent/skills/review-plan/SKILL.md` Step 7 (Integrate) to copy the plan to `&lt;stem&gt;.bak` before the first Edit call. If any Edit fails, abort remaining edits and report the failure rather than continuing with a half-edited plan. This addresses the "self-mutating file with no backup" risk from the team review. Bump version in marketplace.json and add a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1466,12 +1269,12 @@
 
         <details class="next-step-item wish-item">
           <summary>
-            "Reviewed" badge + filter in the plans gallery
+            Add a concrete WCAG rubric to plan-reviewer-accessibility
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Explore extending the plan-agent plans-library gallery so plans that have been reviewed by review-plan (detectable via the appended "Team Review" details block or a new <meta name="plan-reviewed"> tag) get a "Reviewed" badge and a filter chip in index.html. Propose how to mark a plan as reviewed during the review-plan run, then how plans-library should detect and surface it. Return a short design before implementing.</pre>
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Explore enriching the `plan-reviewer-accessibility` agent definition in `kit/plugins/plan-agent/agents/plan-reviewer-accessibility.md` with a concrete WCAG 2.1 AA checklist (contrast ratios, touch targets, focus management, ARIA patterns) so its findings are actionable rather than generic. Compare with the `product-reviewer-accessibility-expert` in the product-plans plugin and the `wcag-compliance-reviewer` plugin for reference. Return a design proposal before implementing.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1480,41 +1283,9 @@
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional) ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>Should review-plan be model-invocable or command-only?</summary>
-              <div class="unresolved-prompt">
-                <pre>For the plan-agent review-plan skill in the agentics repo, recommend whether it should be model-invocable (auto-activates on "review my plan" intent like product-plans:plan-review-agents) or command-only with disable-model-invocation (like finalize-plan). Consider that it spawns a costly Agent Team and mutates the plan file. Weigh discoverability vs accidental expensive runs, and recommend one with reasoning plus the exact frontmatter to use.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-          <li>
-            <details class="unresolved-item">
-              <summary>How should the team handle very large or multi-plan reviews?</summary>
-              <div class="unresolved-prompt">
-                <pre>For the plan-agent review-plan Agent Team skill, recommend how to handle (a) a single very large HTML plan that may exceed a teammate's useful context and (b) a request to review several plans at once. Should the lead chunk a large plan by section across teammates, or keep one-plan-per-run? Recommend an approach and the guardrails to document in SKILL.md.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · 2026-06-06 · agentics
+      Generated by plan-agent &middot; 2026-06-07 &middot; agentics
     </footer>
 
   </main>
@@ -1581,39 +1352,6 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
-function copyWorkflow(btn) {
-  var code = document.getElementById('workflow-cmd');
-  if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
-}
-
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
@@ -1647,7 +1385,7 @@ function copyPath(btn, id) {
   }
 }
 
-/* ── Copy prompt button (global — required by inline onclick) ── */
+/* ── Copy prompt button (global) ── */
 function copyPrompt(btn) {
   var pre = btn.previousElementSibling;
   if (!pre || pre.tagName !== 'PRE') {
