@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.8.0 — 2026-06-06 — Mandatory Tests section in implementation plans
+
+### Added
+
+- **Tests section** — every generated plan now includes a Tests section between Steps and Acceptance Criteria with a two-tier depth model: Tier 1 (code-touching plans) includes unit, integration, E2E, and objective-verification tests; Tier 2 (non-code plans) includes only the objective-verification test.
+- **Objective-verification test** — mandatory for both tiers, renders as a green hero card (`.objective-test-card`) before the test list. Asserts the plan's stated objective is accomplished.
+- **Test badge CSS** — `.test-badge-unit` (blue), `.test-badge-integration` (amber), `.test-badge-e2e` (purple), `.test-badge-objective` (green) with design-token-based colors.
+- **`#ic-beaker` SVG icon** — added to the icon sprite sheet for the Tests nav link and section heading.
+- **Purple design tokens** — `--purple`, `--purple-bg`, `--purple-border` added to `:root` for E2E badge styling.
+- **Step 5c** — new test-generation workflow step that classifies the tier from step content, generates the objective-verification test from the plan objective, and produces unit/integration/E2E test entries for Tier 1 plans.
+
+### Changed
+
+- **`implementation-plan` SKILL.md** — Required Structure now includes `tests`; HTML Output Requirements document the Tests section rendering; Step 5c added to the workflow between Interview and Status.
+- **`SKELETON.html`** — nav sidebar includes Tests link; Tests section HTML with tier label, objective-test card, and test-list placeholders.
+
+---
+
 ## v1.7.0 — 2026-06-06 — Copyable plan file name and relative path in HTML output
 
 ### Added
