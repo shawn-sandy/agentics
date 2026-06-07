@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="review-date" content="2026-06-07">
+<meta name="review-plan" content="publish-plans-to-github-pages.html">
+<meta name="review-verdict" content="approved-with-revisions">
+<meta name="review-reviewers" content="architecture,completeness,testability,risk,conventions">
+<title>Review: Publish HTML plans to GitHub Pages</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --border: #e5e7eb; --border-mid: #d1d5db;
+    --text: #111827; --muted: #6b7280; --subtle: #9ca3af;
+    --accent: #2563eb; --accent-bg: #eff6ff;
+    --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+    --amber: #d97706; --amber-bg: #fffbeb; --amber-border: #fde68a;
+    --red: #dc2626; --red-bg: #fef2f2; --red-border: #fecaca;
+    --radius: 4px; --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px; line-height: 1.7; color: var(--text); background: var(--bg);
+    max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem;
+  }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .875em; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: .25rem; }
+  h2 { font-size: .9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 2rem 0 .75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  h2:first-of-type { border-top: none; padding-top: 0; }
+  h3 { font-size: .85rem; font-weight: 600; color: var(--accent); margin: 1.25rem 0 .4rem; }
+  p { margin-bottom: .75rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: .75rem; }
+  li { margin-bottom: .3rem; }
+  .meta { font-size: .8rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .verdict { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .2rem .7rem; border-radius: 999px; background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); margin-bottom: 1rem; }
+  .summary-card { background: var(--accent-bg); border: 1px solid #bfdbfe; border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+  .risk-item { padding: .5rem .75rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: .5rem; background: var(--surface); }
+  .risk-high { border-left: 3px solid var(--red); }
+  .risk-medium { border-left: 3px solid var(--amber); }
+  .risk-low { border-left: 3px solid var(--green); }
+  .edit-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin: .75rem 0; }
+  .edit-table th { text-align: left; padding: .5rem .6rem; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  .edit-table td { padding: .5rem .6rem; border-bottom: 1px solid var(--border); }
+  .footer { font-size: .75rem; color: var(--subtle); margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border); text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Plan Review: Publish HTML plans to GitHub Pages</h1>
+<div class="meta">Reviewed 2026-06-07 16:09 UTC &middot; 5 core reviewers (architecture, completeness, testability, risk, conventions) &middot; No UI signals detected</div>
+<span class="verdict">Approved with Revisions</span>
+
+<div class="summary-card">
+  <p><strong>Executive Summary:</strong> The plan is architecturally sound, well-aligned with project conventions, and appropriately scoped. All 5 reviewers approved with revisions. Three cross-reviewer concerns dominated: (1) test files described in the Tests section had no corresponding creation step, (2) Pages enablement ordering was implicit rather than enforced, and (3) no pre-deploy CI validation existed. Additional issues: hardcoded &ldquo;32 plans&rdquo; in acceptance criteria and underscore test filenames against the project&rsquo;s kebab-case convention. All issues addressed with 12 inline edits to the source plan.</p>
+</div>
+
+<h2>Role-by-Role Findings</h2>
+
+<h3>Architecture Review</h3>
+<p><strong>Fit:</strong> Architecturally sound &mdash; a thin static-site deployment layer that correctly avoids touching the existing hook-driven content pipeline.</p>
+<ul>
+  <li><strong>Path filter gap</strong> (medium): Workflow changes to <code>deploy-pages.yml</code> itself wouldn&rsquo;t trigger a redeploy. <em>Fixed.</em></li>
+  <li><strong>No .nojekyll guard</strong> (low): Accidental deletion would silently re-enable Jekyll. <em>Fixed: build job now asserts .nojekyll exists.</em></li>
+  <li><strong>Post-deploy-only smoke test</strong> (low): No pre-upload local validation. <em>Mitigated: new step creates locally-runnable tests.</em></li>
+  <li><strong>Root redirect couples landing page</strong> (low): Changing destination requires code change. <em>Acknowledged; deferred to Next Steps hub page.</em></li>
+  <li><strong>SHA divergence across workflows</strong> (low): No sync mechanism. <em>Noted for future Dependabot config.</em></li>
+</ul>
+
+<h3>Completeness Review</h3>
+<p><strong>Completeness:</strong> Well-structured with good specificity, but had two notable gaps around test file creation and prerequisite validation.</p>
+<ul>
+  <li><strong>Missing test file creation step</strong> (high): Tests specified but no step created them. <em>Fixed: new Step 6 added.</em></li>
+  <li><strong>Pages enablement ordering implicit</strong> (medium): No note that Step 4 must precede merge. <em>Fixed: explicit ordering added.</em></li>
+  <li><strong>SHA lookup guidance missing</strong> (medium): Implementer had to find SHAs independently. <em>Fixed: references added to Step 3.</em></li>
+  <li><strong>Hardcoded &ldquo;32&rdquo; in AC6</strong> (low): Would go stale. <em>Fixed: dynamic language used.</em></li>
+  <li><strong>No rollback/recovery step</strong> (low): <em>Addressed with troubleshooting paragraph in Verification.</em></li>
+</ul>
+
+<h3>Testability Review</h3>
+<p><strong>Test coverage:</strong> Present but thin &mdash; tests existed on paper but not as executable files, with no pre-merge CI gate.</p>
+<ul>
+  <li><strong>No pre-deploy CI validation</strong> (high): Only post-deploy smoke test existed. <em>Mitigated: .nojekyll assertion + locally-runnable test files.</em></li>
+  <li><strong>No Jekyll-suppression test</strong> (medium): <em>Partially addressed via build-job assertion.</em></li>
+  <li><strong>AC4 not CI-falsifiable</strong> (medium): Depends on repo API state. <em>Noted; verification section covers manual check.</em></li>
+  <li><strong>Hardcoded plan count</strong> (low): <em>Fixed: dynamic count via find.</em></li>
+  <li><strong>No failure-mode tests</strong> (low): <em>Addressed with troubleshooting guidance.</em></li>
+</ul>
+
+<h3>Risk Review</h3>
+<p><strong>Risk level:</strong> Medium overall.</p>
+<ul>
+  <li><strong>Pages enablement prerequisite</strong> (high): Workflow fails silently if Pages not enabled. <em>Fixed: ordering enforced in Step 4.</em></li>
+  <li><strong>Stale gallery index in CI</strong> (medium): Hook-maintained index could be stale for non-hook commits. <em>Recommend CI-side regeneration as follow-up.</em></li>
+  <li><strong>Public content exposure</strong> (medium): Plans become public and indexable immediately. <em>Recommend content audit before enabling.</em></li>
+  <li><strong>Concurrent deploy queue</strong> (medium): Rapid pushes can queue deploys. <em>Acceptable with cancel-in-progress: false.</em></li>
+  <li><strong>Smoke test propagation delay</strong> (low): <em>Fixed: retry loop specified.</em></li>
+  <li><strong>SHA staleness without Dependabot</strong> (low): <em>Recommend Dependabot config as follow-up.</em></li>
+</ul>
+
+<h3>Conventions Review</h3>
+<p><strong>Fit:</strong> Good alignment with project patterns. Workflow naming, concurrency groups, and permissions blocks all mirror existing workflows.</p>
+<ul>
+  <li><strong>Test file naming</strong> (medium): Used underscores instead of project-standard kebab-case. <em>Fixed: all renamed to test-*.</em></li>
+  <li><strong>Missing tests/pages/ directory creation</strong> (low): <em>Fixed: included in new Step 6.</em></li>
+  <li><strong>Path trigger syntax</strong> (low): Bracket array vs scalar form. <em>Noted; functionally equivalent.</em></li>
+</ul>
+
+<h2>Agreements &amp; Conflicts</h2>
+
+<p><strong>Confirmed concerns</strong> (flagged by 2+ reviewers independently):</p>
+<ol>
+  <li>Missing test file creation step (Completeness + Testability)</li>
+  <li>Pages enablement ordering must be explicit (Completeness + Risk)</li>
+  <li>No pre-deploy CI validation (Architecture + Testability)</li>
+  <li>Hardcoded plan count is fragile (Completeness + Testability)</li>
+  <li>Workflow path filter should include itself (Architecture + Risk)</li>
+</ol>
+<p><strong>Conflicts:</strong> None. All reviewers aligned on recommendations.</p>
+
+<h2>Highest-Risk Issues</h2>
+
+<div class="risk-item risk-high">
+  <strong>1. Pages must be enabled before merge</strong> &mdash; Risk reviewer (high). The workflow fails silently if Pages is not enabled when it first triggers. <em>Fixed: Step 4 now requires completion before PR merge, with admin access fallback guidance.</em>
+</div>
+<div class="risk-item risk-high">
+  <strong>2. Test files must be created, not just described</strong> &mdash; Completeness reviewer (high). Three test scripts were specified in the Tests section with no corresponding creation step. <em>Fixed: new Step 6 creates all three files with specific assertions.</em>
+</div>
+<div class="risk-item risk-high">
+  <strong>3. No pre-deploy CI gate</strong> &mdash; Testability reviewer (high). A broken artifact could reach production with no pre-merge check. <em>Mitigated: .nojekyll build assertion + locally-runnable unit/integration tests.</em>
+</div>
+<div class="risk-item risk-medium">
+  <strong>4. Public content exposure is irreversible</strong> &mdash; Risk reviewer (medium). Plans become publicly accessible and search-indexable immediately after first deploy. <em>Recommend content audit before enabling Pages.</em>
+</div>
+<div class="risk-item risk-medium">
+  <strong>5. Gallery index staleness in CI</strong> &mdash; Risk reviewer (medium). The hook-maintained index may be stale for commits made without the PostToolUse hook. <em>Recommend adding CI-side index regeneration before upload-pages-artifact.</em>
+</div>
+
+<h2>Edits Applied to Source Plan</h2>
+
+<table class="edit-table">
+  <thead><tr><th>Target</th><th>Action</th><th>Change</th></tr></thead>
+  <tbody>
+    <tr><td>AC6 label</td><td>edit</td><td>Replaced &ldquo;All 32 plan files&rdquo; with &ldquo;All plan files present in docs/plans/ at deploy time&rdquo;</td></tr>
+    <tr><td>Step 3 why</td><td>edit</td><td>Added workflow self-trigger path, .nojekyll assertion, SHA lookup guidance</td></tr>
+    <tr><td>Step 3 verify</td><td>edit</td><td>Added path-filter and .nojekyll assertion checks</td></tr>
+    <tr><td>Step 4 why</td><td>edit</td><td>Added &ldquo;must be completed before PR is merged&rdquo; and admin access note</td></tr>
+    <tr><td>After Step 5</td><td>insert</td><td>New Step 6: Create test files in tests/pages/</td></tr>
+    <tr><td>Old Step 6</td><td>edit</td><td>Renumbered to Step 7</td></tr>
+    <tr><td>All test filenames</td><td>edit</td><td>Renamed from underscore to kebab-case (test_* to test-*)</td></tr>
+    <tr><td>Objective test</td><td>edit</td><td>Dynamic plan count + retry loop for propagation delay</td></tr>
+    <tr><td>Verification</td><td>edit</td><td>Removed hardcoded &ldquo;32&rdquo;; added troubleshooting paragraph</td></tr>
+    <tr><td>AC1 label</td><td>edit</td><td>Added workflow self-trigger and .nojekyll assertion mentions</td></tr>
+    <tr><td>Criteria list</td><td>append</td><td>New AC8: test scripts exist and pass locally</td></tr>
+    <tr><td>Progress label</td><td>edit</td><td>Updated from 0/7 to 0/8</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  Generated by plan-agent review-plan &middot; 2026-06-07 &middot; 5 reviewers &middot; agentics
+</div>
+
+</body>
+</html>
