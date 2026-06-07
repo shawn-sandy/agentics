@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Review: Add a docs landing hub linking the Plans and Social galleries</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f9fafb;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --radius: 4px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+  h2 { font-size: 1.15rem; margin: 1.5rem 0 .5rem; border-bottom: 1px solid var(--border); padding-bottom: .3rem; }
+  h3 { font-size: 1rem; margin: 1.2rem 0 .4rem; }
+  p, li { margin-bottom: .4rem; }
+  code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .875em; background: var(--surface); padding: .1rem .3rem; border-radius: 3px; }
+  ul { padding-left: 1.5rem; }
+  .meta { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; }
+  .verdict { display: inline-block; padding: .2rem .6rem; border-radius: var(--radius); font-weight: 700; font-size: .85rem; }
+  .verdict-pass { background: var(--green-bg); color: var(--green); }
+  .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .severity { display: inline-block; font-size: .75rem; font-weight: 600; padding: .1rem .4rem; border-radius: 3px; margin-left: .3rem; }
+  .sev-high { background: var(--red-bg); color: var(--red); }
+  .sev-medium { background: var(--amber-bg); color: var(--amber); }
+  .sev-low { background: var(--surface); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; margin: .5rem 0; }
+  th, td { padding: .4rem .5rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; }
+  .agreement { background: var(--green-bg); border-left: 3px solid var(--green); padding: .5rem .75rem; margin: .4rem 0; border-radius: 0 var(--radius) var(--radius) 0; font-size: .9rem; }
+  footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .8rem; text-align: center; }
+</style>
+</head>
+<body>
+<h1>Plan Review: Add a docs landing hub</h1>
+<div class="meta">
+  Plan: <code>docs/plans/add-docs-landing-hub.html</code> |
+  Reviewed: 2026-06-07 18:12 UTC |
+  Reviewers: 7 (5 core + 2 UI) |
+  Verdict: <span class="verdict verdict-pass">Sound with revisions</span>
+</div>
+
+<h2>Executive Summary</h2>
+<div class="section-card">
+  <p>The plan is <strong>sound with revisions</strong>. All seven reviewers agree the scope is appropriate and the architecture is correct for a single-file static HTML change. The team identified several actionable gaps: the smoke test path and naming violated project conventions (<code>tests/pages/test-*</code>), no step created the test files described in the Tests section, the E2E spec assumed Playwright infrastructure that does not exist, the existing <code>test-root-redirect.sh</code> would break silently, the hub page lacked a required skip-link, and card descriptions were too vague. All issues have been addressed in inline edits applied to the source plan.</p>
+</div>
+
+<h2>Role-by-Role Findings</h2>
+
+<h3>Architecture</h3>
+<div class="section-card">
+  <p><strong>Fit:</strong> Architecturally sound for scope &mdash; single static HTML file, no build pipeline, no external dependencies.</p>
+  <p><strong>Concerns:</strong></p>
+  <ul>
+    <li>CSS duplication across hub and galleries will drift <span class="severity sev-low">low</span></li>
+    <li>No back-navigation from galleries to hub <span class="severity sev-low">low</span></li>
+    <li>Guides directory is a dead branch at launch <span class="severity sev-low">low</span></li>
+    <li>Smoke test git-diff assertion is brittle <span class="severity sev-low">low</span></li>
+  </ul>
+</div>
+
+<h3>Completeness</h3>
+<div class="section-card">
+  <p><strong>Assessment:</strong> Well-scoped and largely executable, but had meaningful gaps.</p>
+  <p><strong>Gaps addressed:</strong></p>
+  <ul>
+    <li>No step created test files &mdash; added Step 6 <span class="severity sev-high">high</span></li>
+    <li>Step 1 verify lacked HTML boilerplate checks <span class="severity sev-medium">medium</span></li>
+    <li>Card descriptions unspecified <span class="severity sev-medium">medium</span></li>
+    <li>E2E spec listed as deliverable with no Playwright infra <span class="severity sev-high">high</span></li>
+    <li>No commit step referencing test-root-redirect.sh <span class="severity sev-medium">medium</span></li>
+  </ul>
+</div>
+
+<h3>Testability</h3>
+<div class="section-card">
+  <p><strong>Coverage:</strong> Adequate for the narrow scope after fixes.</p>
+  <p><strong>Gaps addressed:</strong></p>
+  <ul>
+    <li>Smoke test had no CSS-token assertion <span class="severity sev-medium">medium</span></li>
+    <li>Git-diff assertion replaced with <code>test -f</code> check <span class="severity sev-medium">medium</span></li>
+    <li>E2E spec marked deferred with explicit status note <span class="severity sev-high">high</span></li>
+    <li>No responsive layout test for below 640px <span class="severity sev-low">low</span></li>
+  </ul>
+</div>
+
+<h3>Risk</h3>
+<div class="section-card">
+  <p><strong>Risk level:</strong> Low</p>
+  <ul>
+    <li>Relative links break if galleries move <span class="severity sev-medium">medium</span></li>
+    <li>CDN propagation delay after deploy <span class="severity sev-low">low</span></li>
+    <li><code>test-root-redirect.sh</code> would have broken silently <span class="severity sev-low">low</span></li>
+    <li>No CSP or subresource integrity <span class="severity sev-low">low</span></li>
+  </ul>
+</div>
+
+<h3>Conventions</h3>
+<div class="section-card">
+  <p><strong>Fit:</strong> Good overall after corrections.</p>
+  <ul>
+    <li>Smoke test moved to <code>tests/pages/test-docs-hub.sh</code> <span class="severity sev-high">high</span></li>
+    <li>E2E spec deferred since no Playwright config exists <span class="severity sev-medium">medium</span></li>
+    <li><code>test-root-redirect.sh</code> breakage added to Files and AC9 <span class="severity sev-low">low</span></li>
+  </ul>
+</div>
+
+<h3>UX</h3>
+<div class="section-card">
+  <p><strong>User fit:</strong> Clear happy path with direct routing.</p>
+  <ul>
+    <li>Skip-link added to Step 4 requirements and AC8 <span class="severity sev-low">low</span></li>
+    <li>Card descriptions required to be meaningful <span class="severity sev-medium">medium</span></li>
+    <li>Tablet-range viewport check added <span class="severity sev-low">low</span></li>
+    <li>Back-to-home link deferred to Next Steps <span class="severity sev-high">high</span></li>
+    <li>Headline/tagline copy unresolved <span class="severity sev-medium">medium</span></li>
+  </ul>
+</div>
+
+<h3>Accessibility</h3>
+<div class="section-card">
+  <p><strong>A11y compliance:</strong> Largely WCAG 2.1 AA compliant after fixes.</p>
+  <ul>
+    <li>Skip-link requirement added to built hub page <span class="severity sev-high">high</span></li>
+    <li>E2E test key case updated to check for skip-link <span class="severity sev-medium">medium</span></li>
+    <li>Copy button touch targets below 44px &mdash; accepted as non-primary actions <span class="severity sev-low">low</span></li>
+    <li>Completion checklist disabled checkboxes lack aria-disabled hint <span class="severity sev-medium">medium</span></li>
+  </ul>
+</div>
+
+<h2>Agreements</h2>
+<div class="agreement"><strong>Skip-link required</strong> (Accessibility + UX + Completeness) &mdash; the built hub page must include a skip-to-content link.</div>
+<div class="agreement"><strong>Test path wrong</strong> (Conventions + Completeness + Testability) &mdash; smoke test belongs at <code>tests/pages/test-docs-hub.sh</code>.</div>
+<div class="agreement"><strong>E2E spec not deliverable</strong> (Conventions + Testability + Risk) &mdash; Playwright spec should be deferred, not current-scope.</div>
+<div class="agreement"><strong>test-root-redirect.sh breaks</strong> (Conventions + Risk) &mdash; existing test will fail after redirect removal.</div>
+<div class="agreement"><strong>Git-diff assertion brittle</strong> (Architecture + Testability + Risk) &mdash; should be replaced with <code>test -f</code>.</div>
+
+<h2>Conflicts</h2>
+<div class="section-card">
+  <p>No material conflicts. UX reviewer rated "back-to-home link" as high severity and recommended promoting it to a required step; Architecture and Risk reviewers rated it low. <strong>Resolution:</strong> kept as Next Steps since it modifies files outside this plan's scope (<code>docs/plans/index.html</code> and <code>docs/media/social/index.html</code>), but the prompt is ready to execute immediately after this plan ships.</p>
+</div>
+
+<h2>Highest-Risk Issues (Resolved)</h2>
+<table>
+  <thead>
+    <tr><th>#</th><th>Issue</th><th>Source</th><th>Resolution</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Missing test-creation step</td><td>Completeness</td><td>Added Step 6</td></tr>
+    <tr><td>2</td><td>Wrong test path/naming</td><td>Conventions</td><td>Renamed throughout</td></tr>
+    <tr><td>3</td><td>test-root-redirect.sh breakage</td><td>Conventions + Risk</td><td>Added to Files and AC9</td></tr>
+    <tr><td>4</td><td>No skip-link on hub</td><td>Accessibility</td><td>Added to Step 4 and AC8</td></tr>
+    <tr><td>5</td><td>E2E spec assumes missing infra</td><td>Conventions + Testability</td><td>Deferred with status note</td></tr>
+  </tbody>
+</table>
+
+<h2>Edits Applied to Source Plan</h2>
+<table>
+  <thead>
+    <tr><th>Target</th><th>Action</th><th>Change</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Files section</td><td>edit</td><td>Renamed smoke test to <code>tests/pages/test-docs-hub.sh</code>; added <code>tests/pages/test-root-redirect.sh</code> as modified</td></tr>
+    <tr><td>Step 1 verify</td><td>edit</td><td>Added HTML boilerplate checks: DOCTYPE, lang, charset, viewport, title, skip-link</td></tr>
+    <tr><td>Step 3 verify</td><td>edit</td><td>Required descriptive card subtitles</td></tr>
+    <tr><td>Step 4</td><td>edit</td><td>Added skip-link requirement, tablet-range viewport check (640px&ndash;1024px)</td></tr>
+    <tr><td>Step 5 verify</td><td>edit</td><td>Fixed port placeholder to 8123; replaced git-diff with <code>test -f</code></td></tr>
+    <tr><td>Steps section</td><td>insert</td><td>Added Step 6: write smoke test and update/delete test-root-redirect.sh</td></tr>
+    <tr><td>Objective test</td><td>edit</td><td>Fixed path, naming convention, added CSS token assertion, replaced git-diff</td></tr>
+    <tr><td>E2E test</td><td>edit</td><td>Marked as deferred; added skip-link to key cases</td></tr>
+    <tr><td>Acceptance Criteria</td><td>append</td><td>Added AC8 (skip-link) and AC9 (test-root-redirect.sh updated)</td></tr>
+    <tr><td>Verification</td><td>edit</td><td>Fixed test path, added skip-link check, CDN propagation note</td></tr>
+    <tr><td>Next Steps</td><td>insert</td><td>Added Playwright E2E infrastructure setup prompt</td></tr>
+    <tr><td>Files note</td><td>edit</td><td>Added E2E spec deferral note to out-of-scope line</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  Generated by plan-agent review-plan &middot; 2026-06-07 &middot; agentics &middot; 7 reviewers (architecture, completeness, testability, risk, conventions, UX, accessibility)
+</footer>
+</body>
+</html>
