@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="in-progress">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="in-progress">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-07">
 <meta name="plan-repo" content="agentics">
@@ -1015,7 +1015,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Publish HTML plans to GitHub Pages</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">in-progress</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1162,12 +1162,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the <code>docs/.nojekyll</code> marker file</span>
               </div>
               <div class="step-why">GitHub Pages runs the Jekyll static-site processor by default, which strips files and folders whose names start with an underscore and can rewrite hand-authored HTML. The plans are fully self-contained HTML — an empty <code>.nojekyll</code> file at the published root tells Pages to serve every byte verbatim.</div>
@@ -1179,12 +1179,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create <code>docs/index.html</code> as a relative redirect to the plans gallery</span>
               </div>
               <div class="step-why">Publishing all of <code>docs/</code> means the site root resolves to <code>docs/index.html</code>, which does not yet exist — visitors would hit a 404. A tiny redirect page forwards the root to <code>plans/index.html</code> so visitors land directly on the filterable gallery (the chosen landing page), while <code>docs/plans/index.html</code> stays the single hook-maintained source of truth. Use a <em>relative</em> target (<code>plans/index.html</code>, not a leading slash) so it works under the <code>/agentics/</code> Pages base path, plus a <code>&lt;meta http-equiv="refresh"&gt;</code>, a canonical <code>&lt;link&gt;</code>, and a visible fallback anchor for no-JS/no-refresh clients.</div>
@@ -1196,12 +1196,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the <code>.github/workflows/deploy-pages.yml</code> deploy workflow</span>
               </div>
               <div class="step-why">This is the engine. The workflow triggers on <code>push</code> to <code>main</code> filtered to <code>paths: ['docs/**', '.github/workflows/deploy-pages.yml']</code> (plus <code>workflow_dispatch</code> for manual re-runs), so changes to the workflow itself also trigger a redeploy. It declares the required permissions (<code>pages: write</code>, <code>id-token: write</code>, <code>contents: read</code>) and a <code>concurrency</code> group of <code>pages</code> with <code>cancel-in-progress: false</code>. A build job checks out, asserts <code>docs/.nojekyll</code> exists (fail fast if accidentally deleted), runs <code>actions/configure-pages</code>, and uploads <code>docs</code> via <code>actions/upload-pages-artifact</code>; a deploy job with <code>environment: github-pages</code> runs <code>actions/deploy-pages</code>. Pin every action to a commit SHA with a version comment, matching the convention in <code>auto-version-bump.yml</code>. Look up current SHAs from each action's releases page or the existing pinned versions in <code>auto-version-bump.yml</code>.</div>
@@ -1213,12 +1213,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Enable GitHub Pages with source set to "GitHub Actions"</span>
               </div>
               <div class="step-why">A deploy workflow cannot publish until Pages is enabled on the repo with the build type set to <code>workflow</code> (Pages is currently disabled — the API returns 404). This is a one-time repo setting that <strong>must be completed before the PR is merged</strong>, since the workflow will fail on first trigger if Pages is not enabled. Enable it with <code>gh api -X POST repos/shawn-sandy/agentics/pages -f build_type=workflow</code>, or via Settings → Pages → "Build and deployment" → Source: <em>GitHub Actions</em>. Requires admin on the repo. If admin access is unavailable, coordinate with a repo admin to complete this step before merging.</div>
@@ -1230,12 +1230,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a "Browse the plans" link to <code>README.md</code></span>
               </div>
               <div class="step-why">The published site is only useful if people can find it. Add a short link (or shields.io badge) near the top of <code>README.md</code> pointing at <code>https://shawn-sandy.github.io/agentics/</code> so the gallery is discoverable from the repo's front door. Keep it one line — this is a pointer, not a section.</div>
@@ -1247,12 +1247,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create test files in <code>tests/pages/</code></span>
               </div>
               <div class="step-why">The Tests section specifies three test scripts (<code>test-pages-smoke.sh</code>, <code>test-root-redirect.sh</code>, <code>test-workflow-config.sh</code>) but no earlier step creates them. Create <code>mkdir -p tests/pages</code> and write all three scripts with the assertions described in the Tests section. The unit and integration tests should be runnable locally as pre-merge validation; the smoke test runs post-deploy against the live URL with a retry loop (up to 5 attempts, 15s apart) to handle Pages propagation delay.</div>
