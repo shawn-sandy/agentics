@@ -860,12 +860,12 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 5 done</span>
+        <span id="progress-label">5 / 5 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1001,23 +1001,23 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A "Save as PDF" button with a download icon is visible in the plan header on screen.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Clicking the button opens the browser's print dialog (which offers "Save as PDF" on Chrome, Edge, Firefox, and Safari).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">The exported PDF hides the sidebar, progress bar, all buttons (Save as PDF, Copy, Copy prompt), and interactive controls.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Step cards and criteria items do not split across page boundaries in the PDF output.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Status badge, objective card accent, and step chips retain their background colors in the PDF via <code>print-color-adjust: exact</code>.</label>
         </li>
       </ul>
