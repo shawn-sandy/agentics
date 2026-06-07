@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 INDEX="$ROOT/docs/index.html"
 FAILURES=0
 
-echo "=== Root Redirect Test ==="
+echo "=== Root Index Test (hub, no redirect) ==="
 
 echo "1. docs/index.html exists..."
 if [ -f "$INDEX" ]; then
@@ -15,7 +15,15 @@ else
   exit 1
 fi
 
-echo "2. Contains redirect to plans/index.html..."
+echo "2. No meta-refresh redirect..."
+if grep -q 'http-equiv="refresh"' "$INDEX"; then
+  echo "  FAIL: meta-refresh redirect still present"
+  FAILURES=$((FAILURES + 1))
+else
+  echo "  PASS"
+fi
+
+echo "3. Contains link to plans/index.html..."
 if grep -q 'plans/index.html' "$INDEX"; then
   echo "  PASS"
 else
@@ -23,29 +31,12 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "3. Redirect target is relative (no leading / or http)..."
-redirect_target=$(grep -o 'url=[^"]*' "$INDEX" | sed 's/url=//' | head -1)
-if echo "$redirect_target" | grep -qE '^(/|http)'; then
-  echo "  FAIL: redirect target is absolute ($redirect_target)"
+echo "4. All links are relative (no leading / or http)..."
+if grep -q 'href="/' "$INDEX"; then
+  echo "  FAIL: absolute-root link found"
   FAILURES=$((FAILURES + 1))
 else
-  echo "  PASS ($redirect_target)"
-fi
-
-fallback_href=$(grep -o 'href="[^"]*"' "$INDEX" | sed 's/href="//;s/"//' | head -1)
-if echo "$fallback_href" | grep -qE '^(/|http)'; then
-  echo "  FAIL: fallback href is absolute ($fallback_href)"
-  FAILURES=$((FAILURES + 1))
-else
-  echo "  PASS (fallback href is relative: $fallback_href)"
-fi
-
-echo "4. Visible fallback anchor present..."
-if grep -q '<a href="plans/index.html"' "$INDEX"; then
   echo "  PASS"
-else
-  echo "  FAIL: no visible fallback link"
-  FAILURES=$((FAILURES + 1))
 fi
 
 echo ""
