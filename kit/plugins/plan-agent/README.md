@@ -158,8 +158,7 @@ The workflow:
 5. **Collect** — waits for all reviewers to report findings
 6. **Synthesize** — aggregates findings into a structured report (Executive Summary, Role-by-Role, Agreements/Conflicts, Highest-Risk Issues)
 7. **Update** — applies inline edits to the plan HTML (step refinements, criteria corrections, verification improvements) and appends a collapsible "Team Review" section
-8. **Artifact** — emits a self-contained HTML review companion (`*-review.html`) combining the updated plan and team findings
-9. **Cleanup** — tears down the Agent Team
+8. **Cleanup** — tears down the Agent Team
 
 On success:
 
@@ -167,7 +166,6 @@ On success:
 Reviewing plan: docs/plans/add-dark-mode-toggle.html
 UI signals detected — running 7 reviewers
 Plan updated in place: docs/plans/add-dark-mode-toggle.html
-HTML review artifact written: docs/plans/add-dark-mode-toggle-review.html
 ```
 
 #### `finalize-plan` — Manual invoke only
