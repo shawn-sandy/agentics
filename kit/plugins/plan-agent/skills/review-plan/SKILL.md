@@ -1,12 +1,12 @@
 ---
 name: review-plan
 description: Runs a seven-reviewer Agent Team to review HTML implementation plans in parallel, detect UI signals, synthesize findings, and apply improvements in place. Use when the user asks to review or improve an implementation plan.
-allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, SendUserFile
+allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode
 ---
 
 # Plan Review Team Skill
 
-**Primary purpose: improve and update plans in place.** Orchestrate a seven-reviewer Agent Team — five core plan reviewers (architecture, completeness, testability, risk, conventions) plus two UI-conditional reviewers (UX, accessibility) — to review implementation plans, synthesize findings, and apply concrete improvements directly to the source plan. The team also emits a shareable HTML review artifact.
+**Primary purpose: improve and update plans in place.** Orchestrate a seven-reviewer Agent Team — five core plan reviewers (architecture, completeness, testability, risk, conventions) plus two UI-conditional reviewers (UX, accessibility) — to review implementation plans, synthesize findings, and apply concrete improvements directly to the source plan.
 
 ## When not to use
 
@@ -19,7 +19,7 @@ allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSea
 
 `ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
-Use `TodoWrite` to create todos for Steps 1–9. Mark each `completed` as done.
+Use `TodoWrite` to create todos for Steps 1–8. Mark each `completed` as done.
 
 ### Step 1 — Resolve the plan file
 
@@ -31,7 +31,7 @@ Announce: `"Reviewing plan: <resolved-path>"`
 
 ### Step 2 — Choose output mode
 
-Default to "review + update plan in place + emit artifact". Optionally ask `AskUserQuestion`: "Should I apply improvements directly to the plan?"
+Default to "review + update plan in place". Optionally ask `AskUserQuestion`: "Should I apply improvements directly to the plan?"
 - **Review + update plan in place** _(default)_
 - **Review only**
 
@@ -111,17 +111,7 @@ HTML-escape all inserted content. Never modify `<style>` or `<script>`. Skip row
 
 Announce: "`Plan updated in place: <resolved-path>`"
 
-### Step 8 — Emit self-contained HTML artifact
-
-Skip if `output_mode = "review only"`.
-
-Derive output path: `<plan_dir>/<plan_stem>-review.html` (or `-interview.html` if that exists from prior interview run). Write a self-contained HTML artifact combining the updated plan and the review findings. All content must be HTML-escaped. Apply `body class="theme-default"`.
-
-On success, announce: "`HTML review artifact written: <resolved-html-path>`"
-
-If write fails, announce: "`HTML artifact could not be written: <path> — <reason>`" and continue to Step 9 (cleanup must still run).
-
-### Step 9 — Clean up the team
+### Step 8 — Clean up the team
 
 Ensure all teammates are finished or shut down, then issue: "`Clean up the team.`" (lead cleanup, not teammate cleanup).
 
