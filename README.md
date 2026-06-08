@@ -53,7 +53,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 
 ```
 # 1. Register the agentics-kit marketplace in Claude Code
-/plugin marketplace add shawn-sandy/agentics
+/plugin marketplace add shawn-sandy/agentics-kit
 
 # 2. Install the plugins you want
 /plugin install code-review@agentics-kit

@@ -13,7 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, cpSync, statSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { join, relative, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync, execFileSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
@@ -358,7 +358,13 @@ function publish() {
     if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 
     execFileSync('git', ['clone', '--depth=1', authUrl, tmpDir], { stdio: 'inherit' });
-    execSync('git ls-files | xargs rm -f', { cwd: tmpDir, shell: true, stdio: 'pipe' });
+    const trackedFiles = execFileSync('git', ['ls-files'], { cwd: tmpDir, encoding: 'utf8' })
+      .trim()
+      .split('\n')
+      .filter(f => f.length > 0);
+    for (const f of trackedFiles) {
+      rmSync(join(tmpDir, f), { force: true });
+    }
 
     for (const ent of readdirSync(OUT_DIR, { withFileTypes: true })) {
       const src = join(OUT_DIR, ent.name);
