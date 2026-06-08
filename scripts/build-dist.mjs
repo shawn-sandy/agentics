@@ -186,11 +186,18 @@ function build() {
     JSON.stringify(cleanManifest, null, 2) + '\n',
   );
 
-  const readmeSrc = join(ROOT, 'README.md');
-  if (existsSync(readmeSrc)) cpSync(readmeSrc, join(OUT_DIR, 'README.md'));
-
-  const licenseSrc = join(ROOT, 'LICENSE');
-  if (existsSync(licenseSrc)) cpSync(licenseSrc, join(OUT_DIR, 'LICENSE'));
+  const ROOT_FILES = [
+    'README.md',
+    'LICENSE',
+    'CHANGELOG.md',
+    'ROADMAP.md',
+    'SECURITY.md',
+    'CODE_OF_CONDUCT.md',
+  ];
+  for (const f of ROOT_FILES) {
+    const src = join(ROOT, f);
+    if (existsSync(src)) cpSync(src, join(OUT_DIR, f));
+  }
 
   // ── Print summary ──────────────────────────────────────────────────────
 
