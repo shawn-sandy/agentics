@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-07">
 <meta name="plan-repo" content="agentics">
@@ -1017,7 +1017,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Add a docs landing hub linking the Plans and Social galleries</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1094,7 +1094,7 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 7 done</span>
+        <span id="progress-label">9 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1178,12 +1178,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Replace the redirect with a self-contained hub skeleton carrying the Plans-gallery light-theme tokens.</span>
               </div>
               <div class="step-why">The meta-refresh document has to go before anything can render at the root; seeding the same <code>:root</code> token block as <code>docs/plans/index.html</code> guarantees visual parity from the first byte and keeps the page fully self-contained (inline CSS, no CDN).</div>
@@ -1195,12 +1195,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Build the header band — accent top-rule, an <code>&lt;h1&gt;</code>, and a one-line tagline.</span>
               </div>
               <div class="step-why">Mirroring the Plans gallery's <code>.gallery-header</code> (the 3px <code>--accent</code> rule above the title) gives the hub a recognizable masthead that visually belongs to the same family as the pages it links to.</div>
@@ -1212,12 +1212,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the two destination cards — Plans and Social Media — as relative-href anchors in a responsive grid.</span>
               </div>
               <div class="step-why">The cards are the hub's entire reason to exist: one-click routing to each gallery. Using <code>.gallery-grid</code> + <code>.gallery-card</code> reuses the gallery's hover treatment, and relative hrefs (<code>plans/index.html</code>, <code>media/social/index.html</code>) are what keep navigation working under <code>/agentics/</code>.</div>
@@ -1229,12 +1229,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Wrap content in semantic landmarks, add a skip-link and footer, with responsive + reduced-motion behavior.</span>
               </div>
               <div class="step-why">A skip-to-content link, a <code>&lt;main&gt;</code> landmark, a single <code>&lt;h1&gt;</code>, and a <code>.gallery-footer</code> complete the page chrome and keep it accessible and gallery-consistent; the grid must collapse cleanly on narrow screens like the gallery does at its 640px breakpoint.</div>
@@ -1246,12 +1246,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Serve <code>docs/</code> locally and confirm both relative links resolve from the root, then confirm the deploy workflow is untouched.</span>
               </div>
               <div class="step-why">GitHub Pages serves the site under <code>/agentics/</code>, so the only trustworthy check is loading the hub as the served root and actually clicking through to each gallery — and the task forbids changing the deploy pipeline.</div>
@@ -1263,12 +1263,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code>tests/pages/test-docs-hub.sh</code> and update or delete <code>tests/pages/test-root-redirect.sh</code>.</span>
               </div>
               <div class="step-why">The smoke test codifies the plan's acceptance criteria as automated assertions, and belongs in <code>tests/pages/</code> with the <code>test-*</code> naming convention matching its siblings (<code>test-pages-smoke.sh</code>, <code>test-workflow-config.sh</code>). The existing <code>test-root-redirect.sh</code> asserts the meta-refresh redirect this plan removes, so it must be deleted or rewritten to assert the hub instead.</div>
