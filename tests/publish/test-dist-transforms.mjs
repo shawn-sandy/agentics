@@ -49,7 +49,7 @@ check('README: heads-up note marketplace add uses agentics-kit',
 
 // Preserved: dev-repo references that must NOT change
 check('README: bug report URL still points to agentics',
-  readme.includes('https://github.com/shawn-sandy/agentics/issues/new'));
+  readme.includes('[GitHub Issue](https://github.com/shawn-sandy/agentics/issues/new)'));
 
 check('README: Contributing JSON url still points to agentics',
   readme.includes('"url": "https://github.com/shawn-sandy/agentics.git"'));
