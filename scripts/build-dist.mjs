@@ -111,8 +111,13 @@ function transformPluginJsonForDist(content) {
 }
 
 function copyFileMaybeTransform(src, dest) {
-  if (basename(src) === 'plugin.json') {
+  const name = basename(src);
+  if (name === 'plugin.json') {
     writeFileSync(dest, transformPluginJsonForDist(readFileSync(src, 'utf8')));
+    return;
+  }
+  if (name.endsWith('.md')) {
+    writeFileSync(dest, transformReadmeForDist(readFileSync(src, 'utf8')));
     return;
   }
   cpSync(src, dest);

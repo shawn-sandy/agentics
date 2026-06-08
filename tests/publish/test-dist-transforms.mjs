@@ -80,6 +80,22 @@ if (existsSync(PLUGIN_SAMPLE)) {
   console.log('SKIP: code-review plugin.json not found in dist');
 }
 
+// ── Plugin README transforms ───────────────────────────────────────────────
+
+const PLAN_INTERVIEW_README = join(DIST, 'kit', 'plugins', 'plan-interview', 'README.md');
+
+if (existsSync(PLAN_INTERVIEW_README)) {
+  const pluginReadme = readFileSync(PLAN_INTERVIEW_README, 'utf8');
+
+  check('plugin README: marketplace add uses agentics-kit',
+    pluginReadme.includes('/plugin marketplace add shawn-sandy/agentics-kit'));
+
+  check('plugin README: no marketplace add pointing to plain agentics',
+    !pluginReadme.includes('/plugin marketplace add shawn-sandy/agentics\n'));
+} else {
+  console.log('SKIP: plan-interview README not found in dist');
+}
+
 // ── Summary ────────────────────────────────────────────────────────────────
 
 console.log(`\n${pass} passed, ${fail} failed`);
