@@ -190,6 +190,7 @@ function build() {
     'README.md',
     'LICENSE',
     'CHANGELOG.md',
+    'CONTRIBUTING.md',
     'ROADMAP.md',
     'SECURITY.md',
     'CODE_OF_CONDUCT.md',
