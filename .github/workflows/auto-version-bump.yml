@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -43,17 +44,35 @@ jobs:
           PUSH_AFTER: ${{ github.event.after }}
         run: node scripts/auto-bump-version.mjs
 
-      - name: Commit and push
+      - name: Create PR with version bump
         if: steps.bump.outputs.bumped == 'true'
         env:
           BUMP_SUMMARY: ${{ steps.bump.outputs.summary }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .claude-plugin/marketplace.json
           git diff --cached --quiet && exit 0
+
+          BRANCH="ci/version-bump-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
           git commit -m "ci(versions): auto-bump plugin versions [skip ci]
 
           ${BUMP_SUMMARY}"
-          git pull --rebase origin main
-          git push
+          git push -u origin "$BRANCH"
+
+          gh pr create \
+            --title "ci(versions): auto-bump plugin versions" \
+            --body "$(cat <<EOF
+          ## Auto Version Bump
+
+          ${BUMP_SUMMARY}
+
+          This PR was created automatically by the version-bump workflow.
+          EOF
+          )" \
+            --base main \
+            --head "$BRANCH"
+
+          gh pr merge "$BRANCH" --auto --squash --delete-branch
