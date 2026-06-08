@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Docs landing hub** — Replaced the root `docs/index.html` meta-refresh redirect with a proper landing hub page featuring card-based navigation to the Plans gallery and Social Media gallery (#280)
+- **Plan checkbox persistence** — Plan gallery checkboxes now persist state via HTML `data-checked` attributes, making checked state portable across browsers without JavaScript storage (#281)
+- **Tests** — Added `tests/pages/test-docs-hub.sh` smoke test for the new landing hub; updated `tests/pages/test-root-redirect.sh` to validate hub structure instead of redirect behavior
+
+---
+
 ## [4.0.0] - 2026-05-29 — Remove redundant and specialized plugins from marketplace
 
 ### Removed

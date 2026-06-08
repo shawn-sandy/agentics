@@ -2,7 +2,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse plans](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories are retained in the repository but are no longer installable via the marketplace. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -39,6 +39,8 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
   - [Pull Request Process](#pull-request-process)
   - [Versioning](#versioning)
 - [Development](#development)
+  - [Browsing Docs Online](#browsing-docs-online)
+  - [Browsing Docs Locally](#browsing-docs-locally)
 - [CI/CD](#cicd)
 - [Resources](#resources)
 - [License](#license)
@@ -145,7 +147,11 @@ agentics/
 │       └── wcag-compliance-reviewer/
 ├── tests/
 │   └── fixtures/                 # Validation test fixtures
-├── docs/plans/                   # Plan files (committed alongside plugin changes)
+├── docs/
+│   ├── index.html                # Landing hub — links to Plans gallery & Social cards
+│   ├── plans/                    # HTML plan files & filterable gallery (index.html)
+│   ├── media/social/             # Social media card gallery
+│   └── guides/                   # Reference guides (auto-load setup, etc.)
 ├── examples/                     # Demo scripts
 ├── CONTRIBUTING.md
 ├── CHANGELOG.md
@@ -920,13 +926,21 @@ Three hooks run automatically after every file Write/Edit:
 # Run the demo test suite
 bash tests/demo/run.sh
 
+# Run the docs/pages smoke tests
+bash tests/pages/test-docs-hub.sh
+bash tests/pages/test-root-redirect.sh
+
 # Check fixture validity
 ls tests/fixtures/valid-plugin/
 ```
 
+### Browsing Docs Online
+
+The docs landing hub is deployed to GitHub Pages at [shawn-sandy.github.io/agentics](https://shawn-sandy.github.io/agentics/) and links to the Plans gallery and Social Media card gallery.
+
 ### Browsing Docs Locally
 
-Two ways to serve the HTML galleries (`docs/plans/` and `docs/media/social/`) locally:
+Two ways to serve the HTML galleries (`docs/plans/` and `docs/media/social/`) locally. The root `docs/index.html` is a landing hub with cards linking to each gallery:
 
 **Script — auto-selects a free port:**
 
@@ -948,18 +962,19 @@ bash scripts/serve-docs.sh 8900
 |--------|-----|-----------|
 | `plans-gallery` | http://localhost:8901 | `docs/plans/` |
 | `media-library` | http://localhost:8902 | `docs/media/social/` |
-| `docs-all` | http://localhost:8900 | `docs/` |
+| `docs-all` | http://localhost:8900 | `docs/` (landing hub at root) |
 
 ---
 
 ## CI/CD
 
-Two GitHub Actions workflows run on every PR and push:
+GitHub Actions workflows:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `claude.yml` | `@claude` mention in issues/PRs | Respond to questions and implement requested changes |
 | `claude-code-review.yml` | PR opened / synchronized / reopened | Automated code review as PR comments |
+| `deploy-pages.yml` | Push to `main` (docs changes) | Deploy `docs/` to GitHub Pages |
 | `update-readme.yml` | Every Sunday at 00:00 UTC | Keep the README in sync with `marketplace.json` |
 
 To trigger Claude in any issue or PR comment, mention `@claude`:
