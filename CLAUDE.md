@@ -24,7 +24,10 @@ Two distinct purposes:
 .claude-plugin/       → Marketplace metadata (marketplace.json) — must be at repo root
 kit/plugins/          → Plugin source code (what users install)
 tests/fixtures/       → Test data for validation logic
+tests/pages/          → Smoke tests for docs landing hub and GitHub Pages
 .claude/rules/        → Detailed authoring patterns (scoped rules)
+docs/                 → GitHub Pages site root (deployed via deploy-pages.yml)
+docs/index.html       → Landing hub — links to Plans gallery and Social cards
 docs/plans/           → Plan files (commit with plugin changes)
 docs/plans/archive/   → Archived completed plans — IGNORE in all searches and exploration
 ```
