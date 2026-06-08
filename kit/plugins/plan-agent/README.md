@@ -182,7 +182,7 @@ Plan updated in place: docs/plans/add-dark-mode-toggle.html
 
 #### `finalize-plan` — Manual invoke only
 
-Reviews an HTML plan for codebase implementation evidence, verifies each acceptance criterion individually, then marks the plan as completed. Each criterion is classified as `verified` or `unverified` based on actual codebase evidence. Offers three completion options: check all criteria, only auto-check verified ones, or cancel.
+Reviews an HTML plan for codebase implementation evidence, verifies each acceptance criterion individually, runs the plan's objective-verification test as an end-to-end signal, then marks the plan as completed. Each criterion is classified as `verified` or `unverified` based on actual codebase evidence. Offers three completion options: check all criteria, only auto-check verified ones, or cancel.
 
 ```
 /plan-agent:finalize-plan add-dark-mode-toggle.html
@@ -192,8 +192,9 @@ Reviews an HTML plan for codebase implementation evidence, verifies each accepta
 When invoked without arguments, prompts for the plan file. The skill:
 1. Reads the plan's acceptance criteria
 2. Searches the codebase for implementation evidence per criterion
-3. Presents a summary showing which criteria are verified vs unverified
-4. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
+3. Runs the objective-verification test (the `.objective-test-card` **Run** command) for an end-to-end pass/fail signal
+4. Presents a summary showing which criteria are verified vs unverified, plus the objective-test result
+5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
 
 #### `craft-prompt` — Manual invoke only
 
@@ -336,6 +337,7 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 
 - **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
+- **Implement-now gates** (Step 8) — when implementing in-session, three sequential gates run before completion: an **acceptance-criteria gate** (verify and check off each criterion), an **end-to-end verification gate** (run the plan's objective-verification test + walk the Verification section; on failure, fix and re-verify up to 3 times), and a **completion-checklist gate** (confirm step TODOs, criteria, and status)
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
 - **Skeleton reference** — points to `reference/SKELETON.html` (only supported template; `minimal`, `adr`, and `spike` are planned)
@@ -347,10 +349,11 @@ Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent
 Reviews an HTML plan for codebase implementation evidence with per-criterion verification:
 1. Reads the plan's acceptance criteria
 2. Maps implementation evidence to individual criteria, classifying each as `verified` or `unverified`
-3. Presents a confirmation summary with per-criterion verification status
-4. Offers three completion options: check all, only auto-check verified, or cancel
-5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
-6. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
+3. Runs the objective-verification test (the `.objective-test-card` **Run** command) for an end-to-end pass/fail signal
+4. Presents a confirmation summary with per-criterion verification status plus the objective-test result
+5. Offers three completion options: check all, only auto-check verified, or cancel
+6. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
+7. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
 
 ### `plans-open` Skill
 

@@ -197,7 +197,24 @@ Follow these steps exactly.
       Options: `Yes, check them off` / `No, leave unchecked`.
    5. Only set status to `completed` (all three representations) after every criterion is checked. If the user chose to leave any unchecked, set status to `in-progress` instead and note which criteria remain open.
 
-   **Completion checklist gate (mandatory — runs after the acceptance criteria gate, before committing):**
+   **End-to-end verification gate (mandatory — runs after the acceptance-criteria gate, before the completion-checklist gate):**
+
+   This gate confirms the plan's *objective* actually works end-to-end in the running application — not just that individual criteria are met. It executes the verification work the plan already authored, so the per-criterion checks above are complemented by a holistic run.
+
+   1. Read the plan's **Verification** section (`#verification`) and the **Tests** section: the objective-verification test (`.objective-test-card`) plus any `.test-card` unit/integration/E2E tests.
+   2. Run the objective-verification test using the **Run** command authored in its card. Then run the other `.test-card` tests by invoking the project's test runner (detected during Step 0b Explore) against the **File** paths named in those cards — unit/integration/E2E cards record **File**/**Targets**/**Key cases**, not a per-card run command, so use the project runner rather than expecting an authored command. If no project test runner can be determined, run only the objective-verification test and note that the other cards were not executed. For a Tier 2 plan with no runnable tests, instead walk each step described in the `#verification` section and confirm the end state by inspecting the changed files or running the relevant command.
+   3. Confirm the objective-verification test exits 0 / passes and that every end-to-end verification step from `#verification` holds.
+   4. **On failure — fix and re-verify (bounded loop):** If a test fails or an end-to-end verification step does not hold, diagnose the cause, apply a fix to the source files, and re-run this gate from sub-step 2. Repeat up to 3 times.
+      - If the gate passes on a retry, continue to the completion-checklist gate.
+      - If it still fails after 3 attempts (or the failure is clearly environmental or out of scope), STOP the loop and ask via `AskUserQuestion` ("End-to-end verification is still failing after 3 fix attempts: <summary>. How do you want to proceed?") with options `Keep trying` / `Mark in-progress and stop` / `Mark completed anyway`. Handle the choice — set status only per the option chosen, not before:
+        - `Keep trying` — resume the loop from sub-step 2.
+        - `Mark in-progress and stop` — set status to `in-progress` (all three representations), add a `<dt>`/`<dd>` entry to the Completion Report naming the failing test or verification step and the reason, and STOP without proceeding to the completion-checklist gate.
+        - `Mark completed anyway` — set status to `completed` (all three representations), add a `<dt>`/`<dd>` entry to the Completion Report noting the unresolved failure, and proceed to the completion-checklist gate.
+   5. Only proceed to the completion-checklist gate once the objective-verification test passes and the end-to-end verification holds — or the user explicitly chose to proceed anyway.
+
+   Report the outcome briefly to the user (e.g., "End-to-end verification passed: objective test green, 3/3 verification steps confirmed").
+
+   **Completion checklist gate (mandatory — runs after the end-to-end verification gate, before committing):**
    1. Verify all three completion checklist conditions in the plan HTML:
       a. All `.step-card` elements have the `completed` class.
       b. All acceptance-criteria checkboxes have the `checked` attribute.
