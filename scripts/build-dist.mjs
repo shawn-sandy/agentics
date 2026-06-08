@@ -101,8 +101,9 @@ function transformReadmeForDist(content) {
     // Shell git clone commands: point to dist repo (not the JSON "url" field in Contributing)
     .replace(/git clone https:\/\/github\.com\/shawn-sandy\/agentics\.git/g,
       'git clone https://github.com/shawn-sandy/agentics-kit.git')
-    // cd agentics directory name (always follows a clone command)
-    .replace(/\ncd agentics\n/g, '\ncd agentics-kit\n')
+    // cd agentics directory name — use line-boundary anchors so this matches
+    // at start/end of string and isn't broken by CRLF or missing trailing newline
+    .replace(/(?<=^|\n)cd agentics(?=\n|$)/gm, 'cd agentics-kit')
     // /plugin marketplace add command (skip if already pointing to agentics-kit)
     .replace(/\/plugin marketplace add shawn-sandy\/agentics(?!-kit)/g,
       '/plugin marketplace add shawn-sandy/agentics-kit')
@@ -118,11 +119,13 @@ function transformReadmeForDist(content) {
  * @returns {string} transformed content
  */
 function transformPluginJsonForDist(content) {
-  return content
+  const transformed = content
     .replace(/https:\/\/github\.com\/shawn-sandy\/agentics\/tree\//g,
       'https://github.com/shawn-sandy/agentics-kit/tree/')
     .replace(/"repository": "https:\/\/github\.com\/shawn-sandy\/agentics"/g,
       '"repository": "https://github.com/shawn-sandy/agentics-kit"');
+  JSON.parse(transformed); // validate: throws if regex replacements corrupted the JSON
+  return transformed;
 }
 
 /**

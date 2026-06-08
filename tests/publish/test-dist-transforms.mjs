@@ -91,7 +91,7 @@ if (existsSync(PLAN_INTERVIEW_README)) {
     pluginReadme.includes('/plugin marketplace add shawn-sandy/agentics-kit'));
 
   check('plugin README: no marketplace add pointing to plain agentics',
-    !pluginReadme.includes('/plugin marketplace add shawn-sandy/agentics\n'));
+    !/\/plugin marketplace add shawn-sandy\/agentics(?!-kit)/.test(pluginReadme));
 } else {
   console.log('SKIP: plan-interview README not found in dist');
 }
