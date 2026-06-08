@@ -77,6 +77,17 @@ For each acceptance-criteria checkbox item, determine whether the criterion is s
 3. First check if the criterion's tokens were already found in Step 3a's evidence. For any tokens not covered by 3a (e.g. tokens that appear only in criteria text, not in `<code>` elements), run `Glob` and `Grep` directly against the codebase to avoid false negatives. A criterion is **verified** if all its key tokens were found, or if the criterion describes a verifiable state. For state-based criteria, run the relevant command rather than just checking for file existence (e.g. "No TypeScript errors" → run `tsc --noEmit`; "Tests pass" → run the project's test command and confirm it exits 0; "No lint errors" → run the linter). If the command fails, the criterion is `unverified`.
 4. Mark each criterion as `verified` or `unverified`.
 
+### 3c — Objective-verification test (end-to-end signal)
+
+Locate the `.objective-test-card` in the plan's Tests section and extract its **Run** field — the test-runner command authored at plan time. This test asserts the plan's *stated objective* actually works in the running application, so it is the strongest end-to-end completion signal, complementing the per-token and per-criterion evidence above.
+
+- If a **Run** command is present, execute it and capture the exit status:
+  - Exit 0 → objective test = `pass`
+  - Non-zero → objective test = `fail`
+- If no `.objective-test-card` or no **Run** command is found → objective test = `n/a`.
+
+Do not auto-fix here — `finalize-plan` only inspects and confirms. Carry the result into Step 4 so the user sees it before deciding whether to mark the plan completed.
+
 ---
 
 ## Step 4 — Present findings and confirm
@@ -91,9 +102,13 @@ Output a summary table:
 | Evidence        | 4/5 tokens found in codebase       |
 | Criteria        | 3 verified / 5 total               |
 | Checkboxes      | 2 already checked / 5 total        |
+| Objective test  | pass (npm test -- objective)       |
 ```
 
 List which tokens were found (with file/grep match) and which were missing.
+
+**Objective test (end-to-end):** Show the result from Step 3c — `pass`, `fail`, or `n/a`. If it failed, include a warning before the completion prompt:
+> "The objective-verification test failed (`<run command>`). The plan's stated goal may not actually work end-to-end. Proceeding will mark it completed anyway."
 
 **Per-criterion breakdown:** For each acceptance criterion, show its verification status:
 - `[verified]` — evidence found or condition confirmed
@@ -210,6 +225,12 @@ Populate the Completion Report based on the findings from Steps 3a and 3b:
 ```html
 <dt>Implementation evidence gap</dt>
 <dd>3/5 tokens found — missing: AuthProvider, useAuth</dd>
+```
+
+**If the objective-verification test failed in Step 3c:** Add a report entry naming the test and its run command:
+```html
+<dt>Objective-verification test failed</dt>
+<dd>npm test -- objective exited with code 1 — the plan's stated goal is not confirmed end-to-end</dd>
 ```
 
 Each `<dt>` must name the specific criterion or token, not a generic summary.

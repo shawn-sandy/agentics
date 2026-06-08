@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## Unreleased — End-to-end self-verification gate
+
+### Added
+
+- **End-to-end verification gate in the implement-now flow** (`implementation-plan` Step 8) — after the acceptance-criteria gate and before the completion-checklist gate, Claude now runs the plan's objective-verification test plus the Verification section's end-to-end steps as a holistic check. On failure it diagnoses, fixes the source, and re-verifies in a bounded loop (up to 3 attempts), then asks the user how to proceed if still failing.
+- **Objective-verification test run in `finalize-plan`** (Step 3c) — finalize-plan now executes the `.objective-test-card` **Run** command as an end-to-end pass/fail signal, surfaces the result in the findings summary, warns before completing on failure, and records failures in the Completion Report.
 
 ### Changed
 
