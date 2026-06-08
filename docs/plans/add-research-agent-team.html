@@ -1544,7 +1544,7 @@
           <p><strong>File:</strong> <code>tests/plan-agent/research-team-smoke.test.ts</code></p>
           <p><strong>Type:</strong> Smoke test</p>
           <p><strong>Asserts:</strong> Invoking <code>/plan-agent:implementation-plan --research</code> on a multi-subsystem objective spawns at least 4 researcher teammates, collects structured findings via <code>SendMessage</code>, and produces a Research Brief block in the plan&rsquo;s Context section. Also verifies that <code>--no-research</code> skips the team entirely and produces no Research Brief.</p>
-          <p><strong>Run:</strong> <code>claude --plugin-dir kit/plugins/plan-agent -p &quot;/plan-agent:implementation-plan add auth middleware --research --quick&quot;</code></p>
+          <p><strong>Run:</strong> <code>claude --plugin-dir kit/plugins/plan-agent -p &quot;/plan-agent:implementation-plan add auth middleware --research --no-clarify --no-align --no-interview&quot;</code></p>
         </div>
       </div>
 
@@ -1670,7 +1670,7 @@
         Verification
       </h2>
       <ol>
-        <li><strong>Full-feature path:</strong> Set <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>, run <code>/plan-agent:implementation-plan &quot;Add WebSocket real-time notifications across frontend, backend, and database layers&quot; --research --quick</code>. Confirm: Step 0c spawns at least 4 researchers, collects findings, produces a Research Brief in the plan&rsquo;s Context section as a collapsible <code>&lt;details&gt;</code> block. The plan itself is well-formed HTML with all required sections.</li>
+        <li><strong>Full-feature path:</strong> Set <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>, run <code>/plan-agent:implementation-plan &quot;Add WebSocket real-time notifications across frontend, backend, and database layers&quot; --research --no-clarify --no-align --no-interview</code>. Confirm: Step 0c spawns at least 4 researchers, collects findings, produces a Research Brief in the plan&rsquo;s Context section as a collapsible <code>&lt;details&gt;</code> block. The plan itself is well-formed HTML with all required sections.</li>
         <li><strong>Graceful degradation path:</strong> Unset <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code>, run the same command with <code>--research</code>. Confirm: Step 0c logs &ldquo;Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo; (or similar) and proceeds to Step 1 without error. The plan is produced successfully without a Research Brief block.</li>
         <li><strong>Skip path:</strong> Run <code>/plan-agent:implementation-plan &quot;Fix typo in README&quot; --no-research --quick</code>. Confirm: Step 0c is skipped entirely. No Agent Team is created. Plan is produced as normal.</li>
         <li><strong>Conditional researchers:</strong> Run a plan with UI signals (e.g. &ldquo;Add React dashboard with charts and filters&rdquo;) using <code>--research</code>. Confirm: UX researcher is spawned (6 total researchers). Run a complex non-UI plan. Confirm: devil&rsquo;s advocate is spawned but UX researcher is not (5 total).</li>
