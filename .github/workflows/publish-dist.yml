@@ -1,0 +1,26 @@
+name: Publish dist to agentics-kit
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build dist
+        run: node scripts/build-dist.mjs
+      - name: Verify no leaks
+        run: node scripts/build-dist.mjs --check
+      - name: Publish to agentics-kit
+        run: node scripts/build-dist.mjs --publish
+        env:
+          DIST_REPO_URL: ${{ vars.DIST_REPO_URL }}
+          DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}

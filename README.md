@@ -53,7 +53,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 
 ```
 # 1. Register the agentics-kit marketplace in Claude Code
-/plugin marketplace add shawn-sandy/agentics
+/plugin marketplace add shawn-sandy/agentics-kit
 
 # 2. Install the plugins you want
 /plugin install code-review@agentics-kit
@@ -963,6 +963,33 @@ bash scripts/serve-docs.sh 8900
 | `plans-gallery` | http://localhost:8901 | `docs/plans/` |
 | `media-library` | http://localhost:8902 | `docs/media/social/` |
 | `docs-all` | http://localhost:8900 | `docs/` (landing hub at root) |
+
+---
+
+## Distribution
+
+Plugin releases are published daily to [shawn-sandy/agentics-kit](https://github.com/shawn-sandy/agentics-kit) — a clean, plugin-only distribution repository containing only the installable plugin files with no development scaffolding, test fixtures, or internal tooling.
+
+**Install from the distribution repo:**
+
+```
+/plugin marketplace add shawn-sandy/agentics-kit
+```
+
+**Repository roles:**
+
+| Repo | Purpose |
+|------|---------|
+| `shawn-sandy/agentics` | Development workspace — full source, tests, plans, CI, and authoring tooling |
+| `shawn-sandy/agentics-kit` | Clean distribution — plugin files only, built and published by the daily publish workflow |
+
+**Publish workflow:** [publish-dist.yml](https://github.com/shawn-sandy/agentics/actions/workflows/publish-dist.yml) — runs daily and pushes the current `kit/plugins/` contents to `shawn-sandy/agentics-kit`.
+
+**Trigger a manual publish:**
+
+```bash
+gh workflow run publish-dist.yml --repo shawn-sandy/agentics
+```
 
 ---
 
