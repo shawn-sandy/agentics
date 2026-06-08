@@ -57,21 +57,17 @@ jobs:
 
           BRANCH="ci/version-bump-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git commit -m "ci(versions): auto-bump plugin versions [skip ci]
 
-          ${BUMP_SUMMARY}"
+          # Write commit message to a file to avoid shell expansion of BUMP_SUMMARY
+          printf 'ci(versions): auto-bump plugin versions [skip ci]\n\n%s\n' "$BUMP_SUMMARY" > /tmp/commit-msg.txt
+          git commit -F /tmp/commit-msg.txt
           git push -u origin "$BRANCH"
 
+          # Write PR body to a file to avoid shell expansion in command substitution
+          printf '## Auto Version Bump\n\n%s\n\nThis PR was created automatically by the version-bump workflow.\n' "$BUMP_SUMMARY" > /tmp/pr-body.txt
           gh pr create \
             --title "ci(versions): auto-bump plugin versions" \
-            --body "$(cat <<EOF
-          ## Auto Version Bump
-
-          ${BUMP_SUMMARY}
-
-          This PR was created automatically by the version-bump workflow.
-          EOF
-          )" \
+            --body-file /tmp/pr-body.txt \
             --base main \
             --head "$BRANCH"
 
