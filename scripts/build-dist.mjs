@@ -172,8 +172,13 @@ function build() {
 
   // ── Clean root files ───────────────────────────────────────────────────
 
+  const DIST_REPO_CANONICAL = 'https://github.com/shawn-sandy/agentics-kit.git';
   const cleanManifest = { ...manifest };
   delete cleanManifest.removed;
+  cleanManifest.plugins = (cleanManifest.plugins ?? []).map(p => ({
+    ...p,
+    source: { ...p.source, url: DIST_REPO_CANONICAL },
+  }));
   const rootMarketplace = join(OUT_DIR, '.claude-plugin');
   mkdirSync(rootMarketplace, { recursive: true });
   writeFileSync(
@@ -181,11 +186,19 @@ function build() {
     JSON.stringify(cleanManifest, null, 2) + '\n',
   );
 
-  const readmeSrc = join(ROOT, 'README.md');
-  if (existsSync(readmeSrc)) cpSync(readmeSrc, join(OUT_DIR, 'README.md'));
-
-  const licenseSrc = join(ROOT, 'LICENSE');
-  if (existsSync(licenseSrc)) cpSync(licenseSrc, join(OUT_DIR, 'LICENSE'));
+  const ROOT_FILES = [
+    'README.md',
+    'LICENSE',
+    'CHANGELOG.md',
+    'CONTRIBUTING.md',
+    'ROADMAP.md',
+    'SECURITY.md',
+    'CODE_OF_CONDUCT.md',
+  ];
+  for (const f of ROOT_FILES) {
+    const src = join(ROOT, f);
+    if (existsSync(src)) cpSync(src, join(OUT_DIR, f));
+  }
 
   // ── Print summary ──────────────────────────────────────────────────────
 

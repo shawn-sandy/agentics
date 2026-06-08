@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-08">
 <meta name="plan-repo" content="agentics">
@@ -288,7 +288,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Publish plugin dist to agentics-kit daily</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-08</span>
@@ -450,12 +450,12 @@
       <div class="steps-list">
 
         <!-- Step 1 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create the <code>shawn-sandy/agentics-kit</code> dist repo on GitHub <span class="manual-badge">manual</span></span>
               </div>
               <div class="step-why">The dist repo must exist before any publish can succeed — an empty push target. Creating it first isolates the one-time setup from the automated pipeline and ensures <code>--publish</code> has something to clone.</div>
@@ -469,12 +469,12 @@
         </div>
 
         <!-- Step 2 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Configure <code>DIST_REPO_TOKEN</code> secret and <code>DIST_REPO_URL</code> variable on the source repo <span class="manual-badge">manual</span></span>
               </div>
               <div class="step-why">The default <code>GITHUB_TOKEN</code> in GitHub Actions is scoped to the source repo and cannot push to <code>agentics-kit</code> — a fine-grained PAT with <code>Contents: write</code> on the dist repo is required. Storing it as a secret (not a variable) prevents it from appearing in logs.</div>
@@ -492,12 +492,12 @@
         </div>
 
         <!-- Step 3 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Implement <code>--publish</code> in <code>scripts/build-dist.mjs</code></span>
               </div>
               <div class="step-why">The flag is a stub that exits non-zero. The implementation shallow-clones the dist repo, clears its tracked files, copies <code>dist/</code> contents in, commits with <code>--allow-empty</code> (so every daily run produces a timestamped commit even when content is identical), and pushes — authenticating by embedding the PAT as <code>x-access-token</code> in the clone URL so no credential helper is needed.</div>
@@ -523,12 +523,12 @@
         </div>
 
         <!-- Step 4 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create <code>.github/workflows/publish-dist.yml</code></span>
               </div>
               <div class="step-why">The daily cron trigger (<code>0 6 * * *</code>) keeps the dist repo current with any plugin changes merged since the last run. <code>workflow_dispatch</code> enables manual runs for testing and emergency publishes. Separating the build, check, and publish into distinct steps gives clear CI log sections and fails fast on leakage before attempting the push.</div>
@@ -570,12 +570,12 @@ jobs:
         </div>
 
         <!-- Step 5 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Trigger first publish via <code>workflow_dispatch</code> to seed the dist repo</span>
               </div>
               <div class="step-why">The dist repo was created with an auto-generated README; the first publish overwrites it with the correct plugin marketplace content and establishes the commit-history baseline. Running it manually before the cron fires confirms the token, URL variable, and <code>--publish</code> implementation all work end-to-end in CI.</div>
@@ -594,12 +594,12 @@ jobs:
         </div>
 
         <!-- Step 6 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update all 12 <code>source.url</code> values in <code>.claude-plugin/marketplace.json</code> to point at the dist repo</span>
               </div>
               <div class="step-why">The source manifest currently sends installers to <code>https://github.com/shawn-sandy/agentics.git</code>, the full dev repo. Switching to <code>https://github.com/shawn-sandy/agentics-kit.git</code> means any <code>/plugin install @agentics-kit</code> command pulls from the clean dist going forward. The build script already rewrites <code>source.url</code> in the generated dist manifest — this step makes the source manifest consistent.</div>
@@ -612,12 +612,12 @@ jobs:
         </div>
 
         <!-- Step 7 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a Distribution section to <code>README.md</code> and update <code>CLAUDE.md</code></span>
               </div>
               <div class="step-why">Without documentation, users will not know the install path changed and contributors won't know how to trigger a manual publish or how the build pipeline works.</div>
@@ -690,14 +690,14 @@ jobs:
         Acceptance Criteria
       </h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1"><code>shawn-sandy/agentics-kit</code> exists as a public GitHub repo</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2"><code>DIST_REPO_TOKEN</code> secret is set on <code>shawn-sandy/agentics</code>; <code>DIST_REPO_URL</code> variable is set to <code>https://github.com/shawn-sandy/agentics-kit.git</code></label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3"><code>node scripts/build-dist.mjs --publish</code> exits 0 when <code>DIST_REPO_URL</code> and <code>DIST_REPO_TOKEN</code> are set and <code>dist/</code> exists</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4"><code>.github/workflows/publish-dist.yml</code> exists with <code>schedule: cron: '0 6 * * *'</code> and <code>workflow_dispatch</code> triggers</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">A <code>workflow_dispatch</code> run of <code>publish-dist.yml</code> completes green in CI</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The <code>agentics-kit</code> dist repo contains all 12 active plugins and no <code>docs/</code>, <code>CLAUDE.md</code>, <code>scripts/</code>, or <code>.github/</code> directories</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">All 12 <code>plugins[].source.url</code> values in <code>.claude-plugin/marketplace.json</code> point at <code>https://github.com/shawn-sandy/agentics-kit.git</code></label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8"><code>README.md</code> and <code>CLAUDE.md</code> document the dist repo install path and manual publish command</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1"><code>shawn-sandy/agentics-kit</code> exists as a public GitHub repo</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2"><code>DIST_REPO_TOKEN</code> secret is set on <code>shawn-sandy/agentics</code>; <code>DIST_REPO_URL</code> variable is set to <code>https://github.com/shawn-sandy/agentics-kit.git</code></label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3"><code>node scripts/build-dist.mjs --publish</code> exits 0 when <code>DIST_REPO_URL</code> and <code>DIST_REPO_TOKEN</code> are set and <code>dist/</code> exists</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4"><code>.github/workflows/publish-dist.yml</code> exists with <code>schedule: cron: '0 6 * * *'</code> and <code>workflow_dispatch</code> triggers</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">A <code>workflow_dispatch</code> run of <code>publish-dist.yml</code> completes green in CI</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The <code>agentics-kit</code> dist repo contains all 12 active plugins and no <code>docs/</code>, <code>CLAUDE.md</code>, <code>scripts/</code>, or <code>.github/</code> directories</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">All 12 <code>plugins[].source.url</code> values in <code>.claude-plugin/marketplace.json</code> point at <code>https://github.com/shawn-sandy/agentics-kit.git</code></label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8"><code>README.md</code> and <code>CLAUDE.md</code> document the dist repo install path and manual publish command</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
