@@ -1,6 +1,6 @@
 ---
 description: Run the plan-agent review team in the background. Pass the plan path as argument.
-allowed-tools: Agent, ToolSearch, ExitPlanMode
+allowed-tools: Agent, Bash, ToolSearch, ExitPlanMode
 ---
 
 # Background Plan Review
@@ -19,7 +19,7 @@ silently with no user-visible output.
 
 **Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
 
-### Step 1 — Validate arguments and dispatch
+### Step 1 — Validate arguments and resolve path
 
 1. If `$ARGUMENTS` is empty, or if `$ARGUMENTS` contains only flag tokens
    (tokens starting with `--`) and no non-flag token, output:
@@ -30,22 +30,36 @@ silently with no user-visible output.
 
    Stop. Do not dispatch the agent.
 
-2. Invoke the `Agent` tool with:
+2. Extract the first non-flag token from `$ARGUMENTS` as the plan path.
+   Resolve it to an absolute canonical path using `realpath`. If `realpath`
+   fails (file does not exist), output:
+
+   ```
+   Plan file not found: <path>
+   ```
+
+   Stop. Do not dispatch the agent.
+
+   Store the resolved absolute path as `<resolved-path>`.
+
+### Step 2 — Dispatch background agent
+
+1. Invoke the `Agent` tool with:
    - `subagent_type: "agent-review-plan"`
    - `run_in_background: true`
    - `description: "Background plan review"`
-   - `prompt`: A self-contained instruction embedding `$ARGUMENTS`. Example:
+   - `prompt`: A self-contained instruction embedding only the resolved path:
 
      ```
-     Run the plan-agent review team on $ARGUMENTS in background mode.
-     Invoke Skill(skill: "plan-agent:review-plan", args: "$ARGUMENTS --background")
+     Run the plan-agent review team on "<resolved-path>" in background mode.
+     Invoke Skill(skill: "plan-agent:review-plan", args: "<resolved-path> --background")
      and report the path updated in place when done.
      ```
 
-3. As soon as the agent is dispatched, return control with a single-line ack:
+2. As soon as the agent is dispatched, return control with a single-line ack:
 
    ```
-   Background plan review started: $ARGUMENTS
+   Background plan review started: <resolved-path>
    ```
 
    Do not poll, sleep, or check progress. The user will be notified
