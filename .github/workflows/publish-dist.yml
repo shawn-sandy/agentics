@@ -5,11 +5,16 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: publish-dist
+  cancel-in-progress: true
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,8 +24,20 @@ jobs:
         run: node scripts/build-dist.mjs
       - name: Verify no leaks
         run: node scripts/build-dist.mjs --check
+      - name: Smoke test dist
+        run: bash tests/publish/smoke-clean-dist.sh
       - name: Publish to agentics-kit
         run: node scripts/build-dist.mjs --publish
         env:
           DIST_REPO_URL: ${{ vars.DIST_REPO_URL }}
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+      - name: Notify on failure
+        if: failure()
+        run: |
+          gh issue create \
+            --title "publish-dist failed on $(date -u +'%Y-%m-%d')" \
+            --body "The daily publish-dist workflow failed. [View run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
+            --label "bug" \
+            --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
