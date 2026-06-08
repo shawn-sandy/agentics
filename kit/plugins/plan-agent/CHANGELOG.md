@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Consolidated unreleased changelog entries.
+
+---
+
 ## Unreleased — Add background mode to review-plan
 
 ### Added
