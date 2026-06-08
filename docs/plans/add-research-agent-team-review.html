@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Review: Add Research Agent Team to implementation-plan skill</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --accent-bg: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --purple: #a21caf;
+    --purple-bg: #fdf4ff;
+    --grey-bg: #f9fafb;
+    --radius: 4px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; margin-bottom: .75rem; padding-bottom: .5rem; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: .5rem; }
+  h4 { font-size: .95rem; margin-top: 1rem; margin-bottom: .35rem; color: var(--muted); }
+  p { margin-bottom: .75rem; }
+  ul, ol { margin-left: 1.5rem; margin-bottom: .75rem; }
+  li { margin-bottom: .35rem; }
+  code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .875em; background: var(--grey-bg); padding: .1rem .3rem; border-radius: 3px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-bottom: 1rem; }
+  th, td { padding: .5rem .75rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { font-weight: 600; border-bottom-width: 2px; }
+  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
+  .verdict { display: inline-block; padding: .25rem .75rem; border-radius: var(--radius); font-weight: 600; font-size: .9rem; }
+  .verdict-accept { background: var(--green-bg); color: var(--green); }
+  .verdict-revise { background: var(--amber-bg); color: var(--amber); }
+  .severity-critical { color: var(--red); font-weight: 700; }
+  .severity-high { color: var(--amber); font-weight: 600; }
+  .severity-medium { color: var(--purple); }
+  .severity-low { color: var(--muted); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+  .confirmed { background: var(--amber-bg); border-left: 3px solid var(--amber); padding-left: 1rem; margin-bottom: .5rem; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem; text-align: center; }
+</style>
+</head>
+<body class="theme-default">
+
+<h1>Plan Review: Add Research Agent Team</h1>
+<div class="meta">
+  <strong>Plan:</strong> <code>docs/plans/add-research-agent-team.html</code><br>
+  <strong>Reviewed:</strong> 2026-06-08 13:51 UTC<br>
+  <strong>Reviewers:</strong> 7 (5 core + 2 UI-conditional)<br>
+  <strong>Verdict:</strong> <span class="verdict verdict-revise">Sound with Revisions</span>
+</div>
+
+<h2>Executive Summary</h2>
+<p>The plan is <strong>sound with revisions</strong>. All 7 reviewers agree the design follows the proven <code>review-plan</code> Agent Team pattern and inserts cleanly into the existing pipeline as Step 0c with proper graceful degradation. However, the team identified three high-priority issues that should be resolved before implementation:</p>
+<ol>
+  <li>The <strong>dual-artifact redundancy</strong> between agent definition files and <code>research-prompts.md</code> &mdash; flagged by 5 of 7 reviewers &mdash; needs a single source of truth</li>
+  <li>The <strong>complexity auto-detection heuristic</strong> is underspecified, leaving the most common invocation path (no flags) with an undefined branch</li>
+  <li>The <strong>test infrastructure</strong> is incomplete &mdash; test files are declared but no runner, framework, or directory creation steps exist</li>
+</ol>
+<p>All three issues have been addressed in the inline edits applied to the source plan.</p>
+
+<hr>
+
+<h2>Role-by-Role Findings</h2>
+
+<div class="card">
+<h3>Architecture Review</h3>
+<p><strong>Fit:</strong> Follows the established Agent Team pattern with well-scoped component boundaries and proper graceful degradation.</p>
+<ul>
+  <li><span class="severity-medium">medium</span> &mdash; Dual-artifact redundancy between agent definitions and <code>research-prompts.md</code>; recommends agent definitions as single source of truth</li>
+  <li><span class="severity-medium">medium</span> &mdash; Context injection is implicit and unstructured; Research Brief handoff between 0c and Step 1 has no defined serialization boundary</li>
+  <li><span class="severity-medium">medium</span> &mdash; Complexity auto-detection heuristic underspecified; no programmatic detection logic defined</li>
+  <li><span class="severity-low">low</span> &mdash; Unverified <code>TeamCreate</code>/<code>TeamDelete</code> tool names</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Completeness Review</h3>
+<p><strong>Completeness:</strong> Well-structured with 12 steps covering all named files, but gaps could cause implementation friction.</p>
+<ul>
+  <li><span class="severity-high">high</span> &mdash; Auto-detection heuristic buried in Unresolved Question, not in Step 6</li>
+  <li><span class="severity-high">high</span> &mdash; Test files declared but no creation steps exist in Steps section</li>
+  <li><span class="severity-high">high</span> &mdash; Two Unresolved Questions directly affect Step 6 implementation</li>
+  <li><span class="severity-medium">medium</span> &mdash; No directory creation steps for <code>agents/</code> and <code>references/</code></li>
+  <li><span class="severity-medium">medium</span> &mdash; No step to read existing SKILL.md before editing</li>
+  <li><span class="severity-medium">medium</span> &mdash; No test runner specified for <code>.ts</code> test files</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Testability Review</h3>
+<p><strong>Test coverage:</strong> Adequate for Tier 1, but critical paths lack automated coverage.</p>
+<ul>
+  <li><span class="severity-high">high</span> &mdash; No test for auto-detection heuristic</li>
+  <li><span class="severity-high">high</span> &mdash; Objective-verification test is manual CLI invocation, not automated</li>
+  <li><span class="severity-high">high</span> &mdash; No test runner or framework specified</li>
+  <li><span class="severity-medium">medium</span> &mdash; No test for conditional researcher spawning based on UI signals</li>
+  <li><span class="severity-medium">medium</span> &mdash; Integration test doesn&rsquo;t specify env var manipulation</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Risk Review</h3>
+<p><strong>Risk level:</strong> Medium overall.</p>
+<ul>
+  <li><span class="severity-high">high</span> &mdash; No partial-failure handling for researcher agents; synthesis blocks if one hangs</li>
+  <li><span class="severity-high">high</span> &mdash; Unverified tool names in <code>allowed-tools</code> could cause silent permission failures</li>
+  <li><span class="severity-medium">medium</span> &mdash; Dual-artifact prompt drift risk</li>
+  <li><span class="severity-medium">medium</span> &mdash; No token budget ceiling for 4&ndash;6 parallel researchers</li>
+  <li><span class="severity-medium">medium</span> &mdash; Experimental flag dependency; silent removal could break feature</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Conventions Review</h3>
+<p><strong>Fit:</strong> Closely follows established project patterns.</p>
+<ul>
+  <li><span class="severity-medium">medium</span> &mdash; Redundant prompt storage conflicts with <code>review-plan</code> single-source pattern</li>
+  <li><span class="severity-medium">medium</span> &mdash; Test file placement in non-existent <code>tests/plan-agent/</code> directory</li>
+  <li><span class="severity-medium">medium</span> &mdash; <code>allowed-tools</code> casing for <code>TeamCreate</code>/<code>TeamDelete</code> needs verification</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>UX Review</h3>
+<p><strong>User fit:</strong> Well-structured plan, but research phase UX lacks progress feedback and auto-detection predictability.</p>
+<ul>
+  <li><span class="severity-high">high</span> &mdash; No progress indication during research phase; users face silent wait</li>
+  <li><span class="severity-high">high</span> &mdash; Auto-detection UX undefined; users cannot predict when research spawns</li>
+  <li><span class="severity-medium">medium</span> &mdash; Graceful degradation is too quiet when <code>--research</code> was explicitly requested</li>
+  <li><span class="severity-low">low</span> &mdash; Research Brief hidden by default in collapsed <code>&lt;details&gt;</code></li>
+  <li><span class="severity-low">low</span> &mdash; No empty-state handling for partial researcher failure in the Brief</li>
+</ul>
+</div>
+
+<div class="card">
+<h3>Accessibility Review</h3>
+<p><strong>A11y compliance:</strong> Largely WCAG 2.1 AA compliant, but medium-severity gaps in the HTML template.</p>
+<ul>
+  <li><span class="severity-medium">medium</span> &mdash; <code>status-badge</code> lacks accessible label tying it to plan title</li>
+  <li><span class="severity-medium">medium</span> &mdash; <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> marker removal may break VoiceOver</li>
+  <li><span class="severity-medium">medium</span> &mdash; Disabled checkboxes removed from tab order without <code>aria-disabled</code></li>
+  <li><span class="severity-medium">medium</span> &mdash; <code>compare-grid</code> uses divs instead of semantic table</li>
+  <li><span class="severity-medium">medium</span> &mdash; Pulse-dot animation missing <code>prefers-reduced-motion</code> suppression</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>Agreements &amp; Conflicts</h2>
+
+<h3>Confirmed Concerns (multiple reviewers agree)</h3>
+<div class="confirmed"><strong>Dual-artifact redundancy</strong> &mdash; 5/7 reviewers (architecture, completeness, risk, conventions, accessibility). <em>Consensus: use agent definitions as single source of truth.</em></div>
+<div class="confirmed"><strong>Auto-detection heuristic underspecified</strong> &mdash; 4/7 reviewers (architecture, completeness, UX, risk). <em>Consensus: define concrete rules, default to conservative opt-in bias.</em></div>
+<div class="confirmed"><strong>Unverified tool names</strong> &mdash; 3/7 reviewers (architecture, risk, conventions). <em>Consensus: verify against review-plan&rsquo;s allowed-tools before implementation.</em></div>
+<div class="confirmed"><strong>No partial-failure handling</strong> &mdash; 3/7 reviewers (risk, UX, architecture). <em>Consensus: proceed with available findings after turn limit, note missing roles.</em></div>
+<div class="confirmed"><strong>Test infrastructure incomplete</strong> &mdash; 2/7 reviewers (completeness, testability). <em>Consensus: specify test runner and add test creation steps.</em></div>
+
+<h3>Conflicts</h3>
+<p>None. All reviewers were directionally aligned with no contradictory recommendations.</p>
+
+<hr>
+
+<h2>Highest-Risk Issues (priority order)</h2>
+<ol>
+  <li><strong>Dual-artifact prompt drift</strong> (5 reviewers) &mdash; resolve before implementation by making agent definitions the single canonical prompt source</li>
+  <li><strong>Auto-detection heuristic undefined</strong> (4 reviewers) &mdash; embed concrete detection rules in Step 6 with conservative default</li>
+  <li><strong>No partial-failure / timeout handling</strong> (3 reviewers) &mdash; add turn-limit rule and missing-role notation to synthesis</li>
+  <li><strong>Unverified <code>TeamCreate</code>/<code>TeamDelete</code> tool names</strong> (3 reviewers) &mdash; cross-reference with actual Agent Teams API before writing <code>allowed-tools</code></li>
+  <li><strong>Test infrastructure gaps</strong> (2 reviewers) &mdash; specify test runner, add test creation steps, clarify manual vs automated expectations</li>
+</ol>
+
+<hr>
+
+<h2>Inline Edits Applied to Source Plan</h2>
+<table>
+  <thead><tr><th>Target</th><th>Action</th><th>Change</th></tr></thead>
+  <tbody>
+    <tr><td>Step 1 <code>.step-why</code></td><td>edit</td><td>Added panel recommendation: agent definitions as single source of truth for role prompts</td></tr>
+    <tr><td>Step 6 <code>.step-why</code></td><td>edit</td><td>Added concrete auto-detection heuristic, partial-failure rule, progress reporting, stronger degradation warning</td></tr>
+    <tr><td>Step 5 <code>.step-why</code></td><td>edit</td><td>Added last-wins conflict resolution documentation requirement</td></tr>
+    <tr><td>Step 7 <code>.step-why</code></td><td>edit</td><td>Changed <code>&lt;details&gt;</code> to <code>&lt;details open&gt;</code> for Research Brief discoverability</td></tr>
+    <tr><td>Step 8 <code>.step-why</code></td><td>edit</td><td>Added tool name verification requirement against Agent Teams API</td></tr>
+    <tr><td>Step 1 <code>.verify-body</code></td><td>edit</td><td>Added directory pre-check for <code>references/</code></td></tr>
+    <tr><td>Step 3 <code>.verify-body</code></td><td>edit</td><td>Added directory pre-check for <code>agents/</code></td></tr>
+    <tr><td><code>#criteria-list</code></td><td>append</td><td>Added AC11 (partial-failure handling), AC12 (progress reporting), AC13 (flag conflict docs)</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  Generated by plan-agent review-plan &middot; 7 reviewers &middot; 2026-06-08 &middot; agentics
+</footer>
+
+</body>
+</html>
