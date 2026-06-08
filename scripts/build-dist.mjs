@@ -87,6 +87,15 @@ function matchesDrop(relPath) {
 
 // ── Dist content transforms ────────────────────────────────────────────────
 
+/**
+ * Rewrites dev-repo URLs in a markdown file to point to the dist repo.
+ * Covers: shell git clone commands, cd directory names, /plugin marketplace
+ * add commands, and the extraKnownMarketplaces "repo" field in settings.json
+ * examples. Preserves bug-report URLs, Contributing JSON "url" fields, and
+ * descriptive sections that intentionally reference the dev repo.
+ * @param {string} content - raw markdown file content
+ * @returns {string} transformed content
+ */
 function transformReadmeForDist(content) {
   return content
     // Shell git clone commands: point to dist repo (not the JSON "url" field in Contributing)
@@ -102,6 +111,12 @@ function transformReadmeForDist(content) {
       '"repo": "shawn-sandy/agentics-kit"');
 }
 
+/**
+ * Rewrites homepage tree URLs and repository fields in a plugin.json file
+ * to reference the dist repo instead of the development repo.
+ * @param {string} content - raw plugin.json content
+ * @returns {string} transformed content
+ */
 function transformPluginJsonForDist(content) {
   return content
     .replace(/https:\/\/github\.com\/shawn-sandy\/agentics\/tree\//g,
@@ -110,6 +125,14 @@ function transformPluginJsonForDist(content) {
       '"repository": "https://github.com/shawn-sandy/agentics-kit"');
 }
 
+/**
+ * Copies src to dest, applying content transforms where appropriate:
+ * - plugin.json: rewrites homepage and repository URLs via transformPluginJsonForDist
+ * - *.md files: rewrites install instructions via transformReadmeForDist
+ * - all other files: raw copy via cpSync
+ * @param {string} src - source file path
+ * @param {string} dest - destination file path
+ */
 function copyFileMaybeTransform(src, dest) {
   const name = basename(src);
   if (name === 'plugin.json') {
