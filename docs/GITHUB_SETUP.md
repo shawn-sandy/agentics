@@ -32,6 +32,7 @@ Three mechanisms prevent infinite loops:
 4. Add `github-actions[bot]` — select type **GitHub App** (not "Team" or "Repository role")
 5. Set bypass mode to **Always** (scoped to this ruleset only — does not bypass other rulesets)
 6. Save the ruleset
+7. Verify **Settings > Actions > General > Workflow permissions** is set to **Read repository contents** (the default). Only workflows that explicitly declare `contents: write` in their `permissions:` block can push — this limits the blast radius of the bypass.
 
 **Recommended:** If your ruleset bundles multiple rules (require PR, require status checks, require linear history), consider splitting "Require a pull request before merging" into its own ruleset so the bypass only exempts the bot from the PR requirement while preserving other protections like status checks.
 
