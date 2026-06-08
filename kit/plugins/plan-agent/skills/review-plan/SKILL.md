@@ -1,6 +1,6 @@
 ---
 name: review-plan
-description: Runs a seven-reviewer Agent Team to review HTML implementation plans in parallel, detect UI signals, synthesize findings, and apply improvements in place. Use when the user asks to review or improve an implementation plan.
+description: Plan review Agent Team. Reviews HTML implementation plans in parallel, synthesizes findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
 allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode
 ---
 
@@ -12,6 +12,17 @@ allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSea
 
 - **Not a code reviewer.** For code, use `code-review`. For conversational plan stress-testing, use `plan-interview`.
 - **Requires Agent Teams.** Hard-stops if the feature flag is unset or Claude Code is below v2.1.32.
+
+## Background mode
+
+When invoked with `--background` (typically via `/plan-agent:review-plan-bg <path>` or the `agent-review-plan` background agent):
+
+- **Requires an explicit plan path** — will not glob or prompt for a file.
+- **Skips all `AskUserQuestion` calls** — no interactive prompts.
+- **Defaults to "review + update plan in place"** — always applies improvements directly.
+- **Safe for unattended execution** — no user interaction required at any step.
+
+Detection: check whether `$ARGUMENTS` (or the `args` string passed via `Skill()`) contains the `--background` token. If present, set `background_mode = true` and strip the token before further argument parsing.
 
 ## Workflow
 
@@ -25,13 +36,19 @@ Use `TodoWrite` to create todos for Steps 1–8. Mark each `completed` as done.
 
 Default: glob `docs/plans/*.html` excluding `index.html`, use most recently modified. Accept an explicit `--dir <path>` argument to override.
 
+**Background mode:** an explicit file path is mandatory — `--dir` (directory) arguments are rejected. If `$ARGUMENTS` contains `--dir` or if no non-flag token resolving to a file (not a directory) is present, output: "`Background mode requires an explicit plan file path, not a directory. Usage: /plan-agent:review-plan <file.html> --background`" and stop.
+
 If no file is found, output: "`Plan file not found. Provide an explicit path or place a plan HTML file in docs/plans/.`" and stop.
 
 Announce: `"Reviewing plan: <resolved-path>"`
 
 ### Step 2 — Choose output mode
 
-Default to "review + update plan in place". Optionally ask `AskUserQuestion`: "Should I apply improvements directly to the plan?"
+Default to "review + update plan in place".
+
+**Background mode:** skip the `AskUserQuestion` prompt entirely — always use "review + update plan in place".
+
+**Interactive mode:** Optionally ask `AskUserQuestion`: "Should I apply improvements directly to the plan?"
 - **Review + update plan in place** _(default)_
 - **Review only**
 

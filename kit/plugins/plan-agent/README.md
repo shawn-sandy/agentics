@@ -22,6 +22,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
+| `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
 | `craft-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:craft-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
@@ -132,6 +133,17 @@ Reviews implementation plans using a seven-reviewer Agent Team (five core review
 /plan-agent:review-plan
 /plan-agent:review-plan add-dark-mode-toggle.html
 /plan-agent:review-plan --dir docs/plans/
+/plan-agent:review-plan docs/plans/add-dark-mode-toggle.html --background
+```
+
+**Background mode (`--background`):** When the flag is present, the skill requires an explicit plan path, skips all interactive prompts, and defaults to update-in-place. Safe for unattended execution. Typically invoked via the `/plan-agent:review-plan-bg` command rather than directly.
+
+#### `review-plan-bg` — Background command
+
+Dispatches the `agent-review-plan` background agent to run the full seven-reviewer team without blocking the session. Returns an ack immediately; you are notified when it completes.
+
+```
+/plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
 ```
 
 The skill spawns the following reviewers:
@@ -289,12 +301,22 @@ plan-agent/
       reference/
         SKELETON.html       — Default full-plan HTML template
         SKELETON.md         — Markdown skeleton reference
+    review-plan/
+      SKILL.md              — Agent Team review workflow (supports --background)
+      references/
+        role-prompts.md     — Spawn-prompt templates for each reviewer
+        output-template.md  — Synthesis report structure
     finalize-plan/
       SKILL.md              — Plan completion review and acceptance criteria verification
     plans-library/
       SKILL.md              — Gallery scan/parse/render workflow
     plans-open/
       SKILL.md              — Open existing gallery without rebuild
+  agents/
+    plan-reviewer-*.md      — Seven reviewer agent definitions (5 core + 2 UI-conditional)
+    agent-review-plan.md    — Background agent for fire-and-forget review
+  commands/
+    review-plan-bg.md       — Background review dispatcher command
   templates/
     plans-gallery.html      — Static gallery template (substituted by plans-library)
   hooks/

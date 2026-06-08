@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Add background mode to review-plan
+
+### Added
+
+- **`--background` flag for `review-plan` skill** — when present, the skill requires an explicit plan path, skips all `AskUserQuestion` prompts, defaults to update-in-place mode, and is safe for unattended execution.
+- **`/plan-agent:review-plan-bg <path>` command** — thin background dispatcher that validates the plan path argument, spawns `agent-review-plan` with `run_in_background: true`, and returns an ack immediately.
+- **`agent-review-plan` background agent** — fire-and-forget agent that confirms the plan file exists, invokes the `review-plan` skill with `--background`, and reports the updated path on completion. Runs on Sonnet with a 30-turn cap.
+
+---
+
 ## Unreleased — Remove review artifact emission from review-plan
 
 ### Removed
