@@ -36,7 +36,7 @@ Use `TodoWrite` to create todos for Steps 1–8. Mark each `completed` as done.
 
 Default: glob `docs/plans/*.html` excluding `index.html`, use most recently modified. Accept an explicit `--dir <path>` argument to override.
 
-**Background mode:** the plan path argument is mandatory. If no non-flag token is present in `$ARGUMENTS`, output: "`Background mode requires an explicit plan path.`" and stop.
+**Background mode:** an explicit file path is mandatory — `--dir` (directory) arguments are rejected. If `$ARGUMENTS` contains `--dir` or if no non-flag token resolving to a file (not a directory) is present, output: "`Background mode requires an explicit plan file path, not a directory. Usage: /plan-agent:review-plan <file.html> --background`" and stop.
 
 If no file is found, output: "`Plan file not found. Provide an explicit path or place a plan HTML file in docs/plans/.`" and stop.
 
