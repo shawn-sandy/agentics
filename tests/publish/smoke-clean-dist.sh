@@ -28,7 +28,7 @@ PLUGINS=(
 )
 
 for plugin in "${PLUGINS[@]}"; do
-  [ -d "$ROOT/dist/$plugin" ] || fail "dist/$plugin directory missing"
+  [ -d "$ROOT/dist/kit/plugins/$plugin" ] || fail "dist/kit/plugins/$plugin directory missing"
 done
 
 # Check dist/.claude-plugin/marketplace.json exists
