@@ -85,6 +85,39 @@ function matchesDrop(relPath) {
   return null;
 }
 
+// ── Dist content transforms ────────────────────────────────────────────────
+
+function transformReadmeForDist(content) {
+  return content
+    // Shell git clone commands: point to dist repo (not the JSON "url" field in Contributing)
+    .replace(/git clone https:\/\/github\.com\/shawn-sandy\/agentics\.git/g,
+      'git clone https://github.com/shawn-sandy/agentics-kit.git')
+    // cd agentics directory name (always follows a clone command)
+    .replace(/\ncd agentics\n/g, '\ncd agentics-kit\n')
+    // /plugin marketplace add command (skip if already pointing to agentics-kit)
+    .replace(/\/plugin marketplace add shawn-sandy\/agentics(?!-kit)/g,
+      '/plugin marketplace add shawn-sandy/agentics-kit')
+    // settings.json extraKnownMarketplaces "repo" field
+    .replace(/"repo": "shawn-sandy\/agentics"(?!-kit)/g,
+      '"repo": "shawn-sandy/agentics-kit"');
+}
+
+function transformPluginJsonForDist(content) {
+  return content
+    .replace(/https:\/\/github\.com\/shawn-sandy\/agentics\/tree\//g,
+      'https://github.com/shawn-sandy/agentics-kit/tree/')
+    .replace(/"repository": "https:\/\/github\.com\/shawn-sandy\/agentics"/g,
+      '"repository": "https://github.com/shawn-sandy/agentics-kit"');
+}
+
+function copyFileMaybeTransform(src, dest) {
+  if (basename(src) === 'plugin.json') {
+    writeFileSync(dest, transformPluginJsonForDist(readFileSync(src, 'utf8')));
+    return;
+  }
+  cpSync(src, dest);
+}
+
 // ── Build ──────────────────────────────────────────────────────────────────
 
 function build() {
@@ -139,7 +172,7 @@ function build() {
           dropped.push({ path: `kit/plugins/${plugin.name}/${rel}`, reason: `DROP: ${dropLabel}` });
           continue;
         }
-        cpSync(srcPath, dstPath);
+        copyFileMaybeTransform(srcPath, dstPath);
         destBytes += statSync(dstPath).size;
         destCount++;
       } else if (ent.isDirectory()) {
@@ -153,7 +186,7 @@ function build() {
           }
           const dest = join(pluginDest, rel);
           mkdirSync(join(dest, '..'), { recursive: true });
-          cpSync(f, dest);
+          copyFileMaybeTransform(f, dest);
           destBytes += statSync(dest).size;
           destCount++;
         }
@@ -197,7 +230,13 @@ function build() {
   ];
   for (const f of ROOT_FILES) {
     const src = join(ROOT, f);
-    if (existsSync(src)) cpSync(src, join(OUT_DIR, f));
+    if (!existsSync(src)) continue;
+    const dest = join(OUT_DIR, f);
+    if (f === 'README.md') {
+      writeFileSync(dest, transformReadmeForDist(readFileSync(src, 'utf8')));
+    } else {
+      cpSync(src, dest);
+    }
   }
 
   // ── Print summary ──────────────────────────────────────────────────────
