@@ -28,6 +28,7 @@ tests/pages/          → Smoke tests for docs landing hub and GitHub Pages
 .claude/rules/        → Detailed authoring patterns (scoped rules)
 docs/                 → GitHub Pages site root (deployed via deploy-pages.yml)
 docs/index.html       → Landing hub — links to Plans gallery and Social cards
+docs/guides/          → Reference guides (auto-load setup, etc.)
 docs/plans/           → Plan files (commit with plugin changes)
 docs/plans/archive/   → Archived completed plans — IGNORE in all searches and exploration
 ```
