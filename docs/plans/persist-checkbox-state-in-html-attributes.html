@@ -171,6 +171,9 @@
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+  @media (prefers-reduced-motion: reduce) {
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
 
   /* Meta row */
   .plan-meta {
@@ -1104,7 +1107,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Persist plan-HTML checkbox state in HTML attributes</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge" aria-label="Plan status: todo">todo</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1181,7 +1184,7 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 6 done</span>
+        <span id="progress-label">0 / 7 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1220,8 +1223,8 @@
           <li><code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">remove localStorage, drive state from attributes</span></li>
           <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">attributes as portable source of truth</span></li>
           <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">changelog entry for the change</span></li>
-          <li><code>tests/plan-agent/test-checkbox-portability.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">portability smoke test</span></li>
-          <li><code>tests/fixtures/plan-agent/checkbox-portability-fixture.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">plan with pre-marked attributes</span></li>
+          <li><code>tests/test-checkbox-portability.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">portability smoke test</span></li>
+          <li><code>tests/fixtures/checkbox-portability/fixture.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">plan with pre-marked attributes</span></li>
         </ul>
       </div>
     </section>
@@ -1232,6 +1235,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;">Steps 1–2 must complete before Step 3 (SKILL.md docs depend on the final behavior). Step 4 (fixture + test) may run after Step 1 to support Step 2's verify, but must be committed together.</p>
       <div class="steps-list">
 
         <div class="step-card">
@@ -1262,7 +1266,7 @@
               <div class="step-why">Confirm <code>updateProgress()</code> and <code>updateCompletion()</code> still run once on load, reading <code>cb.checked</code> (the native reflection of the HTML <code>checked</code> attribute) and the <code>.step-card.completed</code> classes; keep the live <code>change</code> listeners for in-browser feedback but with no persistence side effect. <strong>Why:</strong> with <code>localStorage</code> gone, the file's attributes and classes must be the only inputs to the progress bar and completion checklist so a freshly opened file on any machine renders the true state.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Open <code>tests/fixtures/plan-agent/checkbox-portability-fixture.html</code> with two of three criteria carrying <code>checked</code> attributes: the progress label reads "2 / 3 done" and the bar fills to ~67% on first paint, before any click.</div>
+                <div class="verify-body">Open <code>tests/fixtures/checkbox-portability/fixture.html</code> with two of three criteria carrying <code>checked</code> attributes: the progress label reads "2 / 3 done" and the bar fills to ~67% on first paint, before any click.</div>
               </details>
             </div>
           </div>
@@ -1293,10 +1297,10 @@
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Add a portability smoke test and fixture</span>
               </div>
-              <div class="step-why">Create <code>tests/fixtures/plan-agent/checkbox-portability-fixture.html</code> (a minimal plan with some criteria pre-marked via <code>checked</code> attributes and a step pre-marked via <code>.completed</code>) and <code>tests/plan-agent/test-checkbox-portability.sh</code> that asserts (a) <code>reference/SKELETON.html</code> contains no <code>localStorage</code>, and (b) the fixture's <code>checked</code> attributes and <code>.completed</code> class are present in the file on disk. <strong>Why:</strong> locks in the portability guarantee so a later edit cannot silently reintroduce <code>localStorage</code> or break attribute-driven state. Follows the repo's shell-test convention (e.g. <code>tests/pages/test-pages-smoke.sh</code>).</div>
+              <div class="step-why">Create <code>tests/fixtures/checkbox-portability/fixture.html</code> (a minimal plan with some criteria pre-marked via <code>checked</code> attributes and a step pre-marked via <code>.completed</code>) and <code>tests/test-checkbox-portability.sh</code> that asserts (a) <code>reference/SKELETON.html</code> contains no <code>localStorage</code>, and (b) the fixture's <code>checked</code> attributes and <code>.completed</code> class are present in the file on disk. <strong>Why:</strong> locks in the portability guarantee so a later edit cannot silently reintroduce <code>localStorage</code> or break attribute-driven state. Follows the repo's shell-test convention (e.g. <code>tests/pages/test-pages-smoke.sh</code>).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>bash tests/plan-agent/test-checkbox-portability.sh</code> exits <code>0</code>; temporarily re-adding <code>localStorage</code> to the skeleton makes it exit non-zero.</div>
+                <div class="verify-body"><code>bash tests/test-checkbox-portability.sh</code> exits <code>0</code>; temporarily re-adding <code>localStorage</code> to the skeleton makes it exit non-zero.</div>
               </details>
             </div>
           </div>
@@ -1337,10 +1341,10 @@
           <span class="test-card-title">Checked state survives a move across machines</span>
         </div>
         <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/plan-agent/test-checkbox-portability.sh</code></p>
+          <p><strong>File:</strong> <code>tests/test-checkbox-portability.sh</code></p>
           <p><strong>Type:</strong> smoke test</p>
           <p><strong>Asserts:</strong> a plan whose criteria carry <code>checked</code> attributes (and whose step carries <code>.completed</code>) keeps those exact marks in the file bytes — re-reading the file from a clean shell (the proxy for a different machine, with no shared <code>localStorage</code>) still sees them — while <code>reference/SKELETON.html</code> contains zero browser-storage calls.</p>
-          <p><strong>Run:</strong> <code>bash tests/plan-agent/test-checkbox-portability.sh</code></p>
+          <p><strong>Run:</strong> <code>bash tests/test-checkbox-portability.sh</code></p>
         </div>
       </div>
 
@@ -1352,7 +1356,7 @@
             <span class="test-card-title">Skeleton carries no browser-storage APIs</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plan-agent/test-checkbox-portability.sh</code></p>
+            <p><strong>File:</strong> <code>tests/test-checkbox-portability.sh</code></p>
             <p><strong>Targets:</strong> the JS IIFE in <code>reference/SKELETON.html</code></p>
             <p><strong>Key cases:</strong> <code>grep</code> finds 0 occurrences of <code>localStorage</code>, <code>STORAGE_KEY</code>, <code>saveState</code>, and <code>restoreState</code>; <code>updateProgress</code> is still defined.</p>
           </div>
@@ -1363,7 +1367,7 @@
             <span class="test-card-title">Attribute state lives in the file on disk</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/fixtures/plan-agent/checkbox-portability-fixture.html</code> exercised by <code>test-checkbox-portability.sh</code></p>
+            <p><strong>File:</strong> <code>tests/fixtures/checkbox-portability/fixture.html</code> exercised by <code>test-checkbox-portability.sh</code></p>
             <p><strong>Targets:</strong> the fixture's <code>&lt;input ... checked&gt;</code> criteria and <code>.step-card.completed</code> markers</p>
             <p><strong>Key cases:</strong> the <code>checked</code> attributes and <code>completed</code> class are present in the raw file; a fresh read (no prior browser session) returns the same marks, proving portability.</p>
           </div>
@@ -1396,11 +1400,15 @@
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5"><code>bash tests/plan-agent/test-checkbox-portability.sh</code> exits 0.</label>
+          <label for="ac5"><code>bash tests/test-checkbox-portability.sh</code> exits 0.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
           <label for="ac6"><code>kit/plugins/plan-agent/CHANGELOG.md</code> has a new entry describing the change.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7">Completion-checklist items (cc1–cc3) remain computed-only — their <code>disabled</code> attribute is load-bearing, and no <code>checked</code> attributes are agent-written on them.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1413,7 +1421,7 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>Generate a fresh plan from the updated skeleton, then have the agent mark one step done (add <code>.completed</code>) and tick one acceptance criterion (add the <code>checked</code> attribute). Copy the <code>.html</code> file to a second location — or open it in a different browser profile, or commit and re-clone — and confirm the step and criterion render as marked, with the progress bar reflecting the real count on first paint. The marks must travel with the file, not with the browser. Finally run <code>bash tests/plan-agent/test-checkbox-portability.sh</code> and confirm it exits 0, and <code>grep -c localStorage reference/SKELETON.html</code> returns 0.</p>
+      <p>Generate a fresh plan from the updated skeleton, then have the agent mark one step done (add <code>.completed</code>) and tick one acceptance criterion (add the <code>checked</code> attribute). Copy the <code>.html</code> file to a second location — or open it in a different browser profile, or commit and re-clone — and confirm the step and criterion render as marked, with the progress bar reflecting the real count on first paint. The marks must travel with the file, not with the browser. Finally run <code>bash tests/test-checkbox-portability.sh</code> and confirm it exits 0, and <code>grep -c localStorage reference/SKELETON.html</code> returns 0.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1428,18 +1436,19 @@
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled aria-description="Auto-computed from step state">
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled aria-description="Auto-computed from criteria state">
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled aria-description="Auto-computed from plan status">
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
+        <p class="completion-note" style="font-size:.75rem;color:var(--muted);margin-top:.5rem;">These items are computed automatically from step and criteria state — they cannot be ticked manually.</p>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
           <p class="report-empty">No items to report — all requirements met.</p>
@@ -1478,6 +1487,54 @@
 
       </div>
     </section>
+
+    <!-- ── Team Review ─────────────────────────────────────────── -->
+    <details id="team-review-20260608-000412" class="team-review" style="margin-top:2rem;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;">
+      <summary style="cursor:pointer;font-weight:600;font-size:.9rem;">Team Review (2026-06-08 00:04:12 UTC)</summary>
+      <div class="review-body" style="margin-top:1rem;font-size:.85rem;line-height:1.6;">
+        <h3>Executive Summary</h3>
+        <p>The plan is <strong>sound with revisions</strong>. All seven reviewers endorse the core architecture (attribute-based persistence replacing localStorage), but unanimously flagged that the plan file itself still contained the localStorage code it proposes to remove &mdash; a self-referential inconsistency now fixed in this pass. Secondary concerns center on test path conventions (resolved: concern-based naming), completion-checklist ambiguity (resolved: documented as computed-only), and accessibility gaps (resolved: prefers-reduced-motion, aria-labels). No reviewers recommended rejection.</p>
+
+        <h3>Architecture</h3>
+        <p>Architecturally sound. Correctly identifies the single-source-of-truth violation and aligns with existing <code>.completed</code> class pattern. Recommended clarifying completion-list as computed-only and noting step ordering dependencies &mdash; both applied.</p>
+
+        <h3>Completeness</h3>
+        <p>Well-scoped and specific with exact functions, grep commands, and file paths named. Gaps: test directory scaffolding (mkdir) not explicit, Step 2 verify references fixture created in Step 4. Mitigated by adding step ordering note; mkdir is implicit in file creation tools.</p>
+
+        <h3>Testability</h3>
+        <p>Clear objective-verification test and sub-tests. Gap: shell grep tests cannot verify rendered DOM behavior (progress bar on first paint). The plan&rsquo;s Step 2 verify requires manual browser confirmation; this is acceptable given the repo&rsquo;s shell-test convention. A Playwright E2E test is noted as a future enhancement in Next Steps.</p>
+
+        <h3>Risk</h3>
+        <p>Risk level: <strong>low</strong>. No breaking API changes, no shared state, no concurrency hazards. Main risk is orphaning existing localStorage ticks during backfill &mdash; scoped to a next-step with appropriate warning. Rollback is trivial (revert one commit).</p>
+
+        <h3>Conventions</h3>
+        <p>Good fit with project patterns. Test paths corrected from <code>tests/plan-agent/</code> (plugin-scoped, new pattern) to <code>tests/test-checkbox-portability.sh</code> and <code>tests/fixtures/checkbox-portability/</code> (concern-based, existing pattern).</p>
+
+        <h3>UX</h3>
+        <p>Readable and well-structured for developer audiences. Completion checklist &ldquo;disabled&rdquo; state now has an explanatory note. Browser ticks being ephemeral is documented in Context. Progress label clarified as tracking acceptance criteria specifically.</p>
+
+        <h3>Accessibility</h3>
+        <p>Largely WCAG 2.1 AA compliant. Fixes applied: <code>prefers-reduced-motion</code> gate for pulse-dot animation, <code>aria-label</code> on status badge, <code>aria-description</code> on disabled completion items. Remaining low-severity items (touch target size, details/summary toggle text) noted for skeleton-level fix.</p>
+
+        <h3>Agreements</h3>
+        <ul>
+          <li><strong>Confirmed (7/7):</strong> Plan&rsquo;s own script had localStorage &mdash; now removed.</li>
+          <li><strong>Confirmed (4/7):</strong> Step ordering dependencies should be explicit &mdash; note added.</li>
+          <li><strong>Confirmed (3/7):</strong> Completion-list computed-only needs documentation &mdash; AC #7 + note added.</li>
+          <li><strong>Confirmed (3/7):</strong> Grep-only tests don&rsquo;t cover rendered behavior &mdash; acknowledged; browser verify is manual per convention.</li>
+        </ul>
+
+        <h3>Conflicts</h3>
+        <p>None. All recommendations are additive and compatible.</p>
+
+        <h3>Highest-Risk Issues (resolved)</h3>
+        <ol>
+          <li>Self-referential localStorage in plan script (fixed this pass)</li>
+          <li>No browser-level test for first-paint rendering (accepted: shell-test convention; Playwright noted as next-step)</li>
+          <li>Completion-list persistence ambiguity (fixed: documented as computed-only, AC #7 added)</li>
+        </ol>
+      </div>
+    </details>
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
@@ -1656,8 +1713,7 @@ function copyPrompt(btn) {
 (function () {
   'use strict';
 
-  /* ── Progress bar + localStorage ────────────────────────────── */
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1678,26 +1734,9 @@ function copyPrompt(btn) {
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
 
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function restoreState() {
-    var raw;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state;
-    try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
-
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
       updateProgress();
-      saveState();
       if (liveRegion) {
         liveRegion.textContent = 'Criterion ' + (i + 1) +
           ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
@@ -1705,7 +1744,6 @@ function copyPrompt(btn) {
     });
   });
 
-  restoreState();
   updateProgress();
 
   /* ── Completion checklist auto-update ──────────────────────── */
