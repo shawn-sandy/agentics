@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, cpSync, statSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { join, relative, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync, execFileSync } from 'node:child_process';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
@@ -332,6 +333,53 @@ function check() {
   process.exit(0);
 }
 
+// ── publish ────────────────────────────────────────────────────────────────
+
+function publish() {
+  if (!existsSync(OUT_DIR)) {
+    console.error('No dist/ directory found. Run the build first.');
+    process.exit(1);
+  }
+
+  const distUrl = process.env.DIST_REPO_URL;
+  if (!distUrl) {
+    console.error('DIST_REPO_URL environment variable is not set.');
+    process.exit(1);
+  }
+
+  const token = process.env.DIST_REPO_TOKEN;
+  const authUrl = token
+    ? distUrl.replace('https://', `https://x-access-token:${token}@`)
+    : distUrl;
+
+  const tmpDir = join(ROOT, '.dist-checkout');
+
+  try {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
+
+    execFileSync('git', ['clone', '--depth=1', authUrl, tmpDir], { stdio: 'inherit' });
+    execSync('git ls-files | xargs rm -f', { cwd: tmpDir, shell: true, stdio: 'pipe' });
+
+    for (const ent of readdirSync(OUT_DIR, { withFileTypes: true })) {
+      const src = join(OUT_DIR, ent.name);
+      const dst = join(tmpDir, ent.name);
+      cpSync(src, dst, { recursive: true });
+    }
+
+    const sha = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT }).toString().trim();
+
+    execFileSync('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com'], { cwd: tmpDir });
+    execFileSync('git', ['config', 'user.name', 'github-actions[bot]'], { cwd: tmpDir });
+    execFileSync('git', ['add', '-A'], { cwd: tmpDir });
+    execFileSync('git', ['commit', '--allow-empty', '-m', `chore: sync from agentics@${sha}`], { cwd: tmpDir });
+    execFileSync('git', ['push'], { cwd: tmpDir });
+
+    console.log(`Published: agentics@${sha} -> ${distUrl}`);
+  } finally {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
+  }
+}
+
 // ── CLI ────────────────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2);
@@ -340,9 +388,10 @@ if (args.includes('--list')) {
   listPlugins();
 } else if (args.includes('--check')) {
   check();
-} else if (args.includes('--publish') || args.includes('--dry-run')) {
-  console.error('--publish and --dry-run are not yet implemented.');
-  console.error('Run without flags to build, or use --check to verify.');
+} else if (args.includes('--publish')) {
+  publish();
+} else if (args.includes('--dry-run')) {
+  console.error('--dry-run is not yet implemented.');
   process.exit(1);
 } else {
   build();

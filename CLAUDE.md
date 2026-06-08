@@ -31,6 +31,7 @@ docs/index.html       → Landing hub — links to Plans gallery and Social card
 docs/guides/          → Reference guides (auto-load setup, etc.)
 docs/plans/           → Plan files (commit with plugin changes)
 docs/plans/archive/   → Archived completed plans — IGNORE in all searches and exploration
+dist/                 → Local build output, gitignored; populated by node scripts/build-dist.mjs
 ```
 
 > **Search exclusion:** Never include `docs/plans/archive/` in file searches, glob patterns, or exploratory reads. Treat it as off-limits unless the user explicitly targets it by path.
@@ -46,6 +47,9 @@ claude --plugin-dir ./kit/plugins/<name>
 # Register marketplace and install a plugin
 /plugin marketplace add shawn-sandy/agentics
 /plugin install <plugin-name>@agentics-kit
+
+# Trigger a manual publish to the distribution repo
+gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 ```
 
 > Machine-specific paths belong in `CLAUDE.local.md`, not here.

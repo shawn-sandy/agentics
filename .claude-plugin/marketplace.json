@@ -15,7 +15,7 @@
       "name": "memory-tools",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/memory-tools"
       },
       "version": "3.1.3",
@@ -33,7 +33,7 @@
       "name": "code-review",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/code-review"
       },
       "version": "3.3.2",
@@ -52,7 +52,7 @@
       "name": "plan-interview",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/plan-interview"
       },
       "version": "2.2.7",
@@ -70,7 +70,7 @@
       "name": "wcag-compliance-reviewer",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
       "version": "1.2.3",
@@ -92,7 +92,7 @@
       "name": "skill-reviewer",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/skill-reviewer"
       },
       "version": "2.2.6",
@@ -114,7 +114,7 @@
       "name": "code-testing-agent",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/code-testing-agent"
       },
       "version": "3.4.4",
@@ -135,7 +135,7 @@
       "name": "git-agent",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/git-agent"
       },
       "version": "3.10.6",
@@ -157,7 +157,7 @@
       "name": "product-plans",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/product-plans"
       },
       "version": "3.4.9",
@@ -181,7 +181,7 @@
       "name": "settings-sync",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/settings-sync"
       },
       "version": "1.0.2",
@@ -202,7 +202,7 @@
       "name": "social-media-tools",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/social-media-tools"
       },
       "version": "2.10.1",
@@ -244,7 +244,7 @@
       "name": "plan-agent",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/plan-agent"
       },
       "version": "1.10.0",
@@ -266,7 +266,7 @@
       "name": "issue-agent",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
+        "url": "https://github.com/shawn-sandy/agentics-kit.git",
         "path": "kit/plugins/issue-agent"
       },
       "version": "0.2.4",
