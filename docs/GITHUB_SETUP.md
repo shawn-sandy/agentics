@@ -30,8 +30,10 @@ Three mechanisms prevent infinite loops:
 2. Select the ruleset protecting `main` (or the one with "Require a pull request before merging")
 3. Click **Bypass list** (or "Add bypass")
 4. Add `github-actions[bot]` — select type **GitHub App** (not "Team" or "Repository role")
-5. Set bypass mode to **Always**
+5. Set bypass mode to **Always** (scoped to this ruleset only — does not bypass other rulesets)
 6. Save the ruleset
+
+**Recommended:** If your ruleset bundles multiple rules (require PR, require status checks, require linear history), consider splitting "Require a pull request before merging" into its own ruleset so the bypass only exempts the bot from the PR requirement while preserving other protections like status checks.
 
 ### Verifying It Works
 
@@ -42,6 +44,21 @@ gh run list --workflow auto-version-bump.yml --limit 1
 ```
 
 The workflow should complete successfully and push a `ci(versions): auto-bump plugin versions [skip ci]` commit to `main`.
+
+### Security Considerations
+
+The bypass applies to **all workflows** running as `github-actions[bot]`, not just `auto-version-bump`. Any workflow with `contents: write` could push directly to `main` once this bypass is configured.
+
+Workflows in this repo with `contents: write`:
+
+| Workflow | Risk | Mitigation |
+|----------|------|------------|
+| `auto-version-bump.yml` | Intended use of the bypass | Loop guards (`[skip ci]`, `ci(versions):`) prevent runaway commits |
+| `update-readme.yml` | Uses `claude-code-action` with `pull-requests: write`; creates PRs rather than pushing directly | No direct push logic in the workflow — bypass is unused |
+
+**Accepted tradeoff:** A dedicated GitHub App or PAT scoped to only the version-bump workflow would isolate the bypass, but adds operational complexity (secret rotation, app management, token exchange steps). For this repo's threat model — single maintainer, low contributor count — the `github-actions[bot]` bypass with documented audit is sufficient.
+
+**If you add a new workflow with `contents: write`**, review whether it could inadvertently push to `main` without a PR. If it does, either scope it to a branch or consider migrating to a dedicated App identity.
 
 ### Related Files
 
