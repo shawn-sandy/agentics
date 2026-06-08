@@ -172,8 +172,13 @@ function build() {
 
   // ── Clean root files ───────────────────────────────────────────────────
 
+  const DIST_REPO_CANONICAL = 'https://github.com/shawn-sandy/agentics-kit.git';
   const cleanManifest = { ...manifest };
   delete cleanManifest.removed;
+  cleanManifest.plugins = (cleanManifest.plugins ?? []).map(p => ({
+    ...p,
+    source: { ...p.source, url: DIST_REPO_CANONICAL },
+  }));
   const rootMarketplace = join(OUT_DIR, '.claude-plugin');
   mkdirSync(rootMarketplace, { recursive: true });
   writeFileSync(
