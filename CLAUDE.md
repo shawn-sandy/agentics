@@ -91,8 +91,8 @@ Detailed patterns in `.claude/rules/`:
 - Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
 - Always include the plan file in commits for plugin changes, even minor ones.
 - `.claude/settings.json` auto-validates `marketplace.json` JSON syntax after every Write/Edit — fix any errors before committing.
-- **Version bumps are CI-only.** Never manually edit `version` fields in `marketplace.json` — CI auto-bumps after merge based on conventional commit messages (`fix` = patch, `feat` = minor, `feat!` = major). See `.claude/rules/marketplace.md`.
-- For relative-path plugins, do not set `version` in `plugin.json` — it lives only in `marketplace.json` and is managed by CI.
+- **Bump `version` manually in `marketplace.json`** when you change a plugin — the new value must be higher than the value on `main`. Follow semver: `fix` = patch, `feat` = minor, breaking change = major. See `.claude/rules/marketplace.md`.
+- For relative-path plugins, set `version` only in `marketplace.json` — never add a `version` field to `plugin.json` (it silently overrides the marketplace value).
 - Component types: **Commands** (`/plugin:name`), **Skills** (auto-activated), **Agents** (subprocesses), **Hooks** (event-driven).
 - Skill `SKILL.md` can use `allowed-tools` frontmatter to restrict tool access if necessary
 

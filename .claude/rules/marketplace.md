@@ -40,7 +40,7 @@ Tags must be specific, searchable, and related to plugin functionality. Avoid ge
 
 ## Versioning
 
-**Versions are bumped automatically by CI after merge to main.** Do not manually edit `version` fields in `marketplace.json` — the version guard CI check (`check-no-manual-bump.sh`) will reject PRs that do.
+**Bump the `version` field in `marketplace.json` manually** as part of any PR that changes a plugin. The new value must be higher than the value on `main`. There is no CI version guard and no automatic post-merge bump — what you set in the PR is what ships.
 
 | Bump | When |
 |------|------|
@@ -48,35 +48,15 @@ Tags must be specific, searchable, and related to plugin functionality. Avoid ge
 | **MINOR** | New command, skill, agent, or hook added |
 | **MAJOR** | Removing/renaming a command/skill/agent, changing argument format or activation behavior |
 
-### How it works
+### What you do
 
-1. You commit plugin changes using conventional commit messages to signal the bump type
-2. The version guard PR check (`check-no-manual-bump.sh`) verifies you did NOT manually change any version fields
-3. After your PR merges, the `auto-version-bump.yml` workflow detects which plugins changed, reads your commit messages for the bump type, and applies the correct semver bump to `marketplace.json`
-4. The CI commits the version bump with `[skip ci]` to prevent loops
-
-### Signaling bump type
-
-Use conventional commit scopes to control which bump type CI applies:
-
-- Patch: `fix(kit/plugins/<name>): <description>`
-- Minor: `feat(kit/plugins/<name>): <description>`
-- Major: `feat(kit/plugins/<name>)!: <description>` or include `BREAKING CHANGE:` in the commit body
-
-Unscoped commits (`fix: ...`, `feat: ...`) apply to all plugins with changed source files. When multiple commits touch the same plugin, the highest bump wins.
-
-### What you still do manually
-
-1. Add an entry to `kit/plugins/<name>/CHANGELOG.md` describing the change
-2. Use conventional commit messages so CI picks the right bump type
+1. Edit the plugin's `version` in `.claude-plugin/marketplace.json` to the next semver value (see the table above).
+2. Add an entry to `kit/plugins/<name>/CHANGELOG.md` describing the change.
+3. Use conventional commit messages (`feat(...)`, `fix(...)`) so the history stays readable — these are no longer wired to any automatic bump, but remain the project convention.
 
 ### Merge driver
 
-The `scripts/merge-marketplace.mjs` merge driver (registered via `.gitattributes`) still handles non-version merge conflicts in `marketplace.json` — e.g., two branches adding different new plugins or updating metadata fields.
-
-### Legacy scripts
-
-- `scripts/check-version-bump.sh` — the old guard that *required* manual bumps. Superseded by `check-no-manual-bump.sh`. Retained for reference.
+The `scripts/merge-marketplace.mjs` merge driver (registered via `.gitattributes`) handles version merge conflicts in `marketplace.json` — when two branches bump the same plugin, it keeps the higher semver. It also resolves non-version conflicts, e.g. two branches adding different new plugins or updating metadata fields.
 
 ## Removed Plugins — Do Not Re-Add
 
