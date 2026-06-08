@@ -349,10 +349,11 @@ Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent
 Reviews an HTML plan for codebase implementation evidence with per-criterion verification:
 1. Reads the plan's acceptance criteria
 2. Maps implementation evidence to individual criteria, classifying each as `verified` or `unverified`
-3. Presents a confirmation summary with per-criterion verification status
-4. Offers three completion options: check all, only auto-check verified, or cancel
-5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
-6. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
+3. Runs the objective-verification test (the `.objective-test-card` **Run** command) for an end-to-end pass/fail signal
+4. Presents a confirmation summary with per-criterion verification status plus the objective-test result
+5. Offers three completion options: check all, only auto-check verified, or cancel
+6. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
+7. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
 
 ### `plans-open` Skill
 

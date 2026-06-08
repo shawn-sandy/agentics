@@ -1,6 +1,6 @@
 # Add End-to-End Self-Verification Gate to plan-agent
 
-> Adds an explicit end-to-end self-verification step to the `plan-agent` plugin so Claude actually *runs* the verification work a plan authors — executing the objective-verification test and walking the Verification section — before marking a plan completed, in both the implement-now flow and `finalize-plan`.
+> Adds an explicit end-to-end self-verification step to the `plan-agent` plugin so Claude actually *runs* the verification work authored into a plan — executing the objective-verification test and walking the Verification section — before marking a plan completed, in both the implement-now flow and `finalize-plan`.
 
 **Status:** Shipped 2026-06-08   **Branch:** `claude/planning-agent-self-verify-C7BLK`   **Type:** feature
 

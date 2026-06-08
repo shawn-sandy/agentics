@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — End-to-end self-verification gate
+## 1.10.0 — End-to-end self-verification gate (2026-06-08)
 
 ### Added
 
