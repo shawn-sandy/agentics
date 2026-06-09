@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<!--
+  session-card.html — Dark-mode session recap card for social posts.
+
+  Content-first layout: a narrative + accomplishment bullets are the hero; token
+  and activity metrics ride along as a compact secondary strip.
+
+  Variables to substitute (all text values must be HTML-escaped before insertion):
+    session recap · 2026-06-09          — Session title (e.g. "session recap · 2026-05-28")
+    sonnet-4-6          — Model name badge (e.g. "claude-sonnet-4-6")
+    Added a --card-width CSS design token to 7 social card templates, centralizing hardcoded widths into a single token — then caught and fixed a responsive-clamp regression flagged by an automated PR review.      — 1–2 sentence summary of what the session accomplished
+    <li>Added --card-width: 1024px to :root across all 7 card templates</li>
+<li>Replaced 14 hardcoded width: min(1024px, 100%) values with a single token reference</li>
+<li>Codex PR review flagged dropped min() wrapper breaking narrow-viewport overflow</li>
+<li>Fixed all 6 templates to use min(var(--card-width), 100%) for responsive consistency</li>
+<li>Opened PR #303 and pushed a follow-up fix commit with inline review reply</li>— A run of <li>…</li> items (3–5), one per accomplishment;
+                         NO wrapping <ul> (the template provides it). Escape each
+                         item's text, then wrap in <li> (the <li> tags stay literal).
+    n/a   — Total tokens formatted with commas (e.g. "42,180")
+    n/a — Cache hit rate (e.g. "44.2%")
+    ~35 min       — Session duration (e.g. "47 min")
+    7  — Files changed count (e.g. "12")
+    2        — Commits in session (e.g. "3")
+    <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">When you tokenize a CSS dimension, the min() wrapper needs to travel with it.
+
+I refactored 7 social card templates to replace hardcoded widths with a --card-width CSS custom property. The diff looked clean — until an automated PR review caught a silent regression.
+
+The original value was width: min(1024px, 100%) — a responsive clamp, not a bare pixel. Dropping min() while extracting the token turned a layout that shrinks gracefully on narrow viewports into one that overflows.
+
+The correct pattern:
+  :root { --card-width: 1024px; }
+  .card { width: min(var(--card-width), 100%); }
+
+min(var(--card-width), 100%) reads: "be exactly --card-width wide, never wider than the container." It's equivalent to max-width: 1024px; width: 100% in one declaration.
+
+Rule worth keeping: when a token replaces a literal inside a CSS function (min(), clamp(), max()), preserve the function wrapper. The token gets you the value; the function provides the behavior.
+
+The refactor still paid off — a future resize is 7 lines instead of 14. Just don't leave the responsive guard behind.
+
+2 commits · 7 files · PR #303
+
+More CSS architecture patterns like this on my feed.
+
+#CSS #WebDevelopment #FrontendDev #ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">CSS token refactor lesson:
+
+min(1024px, 100%) → min(var(--card-width), 100%)
+
+Not just var(--card-width).
+
+The token inherits the value. The min() provides the responsive clamp. Dropping the wrapper silently breaks narrow-viewport overflow.
+
+#CSS #WebDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">CSS lesson from today: when you extract 1024px into --card-width, don't drop the min() that was already there.
+
+min(var(--card-width), 100%) — the token gets the value, the function handles the responsive clamp. Both needed. Caught by an automated PR review before merge.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">Something small from today's session worth keeping in mind:
+
+When you extract a CSS dimension into a custom property, the function wrapping it needs to come along. I refactored 7 card templates to replace width: min(1024px, 100%) with a --card-width token — and the first pass dropped the min() in the process.
+
+The result: width: var(--card-width) — a fixed 1024px that overflows on narrow viewports instead of clamping.
+
+The right form: width: min(var(--card-width), 100%). The token carries the value; the min() carries the behavior. They're not the same thing, and the browser has no way to warn you when you lose the second one.
+
+An automated PR review (Codex) caught it before merge. The fix was one commit, but the lesson is worth writing down: tokens replace literals, not expressions.
+
+More patterns like this in future notes — subscribe to keep learning.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>    — Copy panel HTML — see references/copy-panels.md
+
+  HTML-escape order (mandatory, apply to every text value above):
+    1. & → &amp;  ← first, prevents double-escaping
+    2. < → &lt;
+    3. > → &gt;
+    4. " → &quot;
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>session recap · 2026-06-09</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --green: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: min(1024px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #161b22 0%, #1c2d3f 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    /* ── Hero content: narrative + accomplishments ── */
+    .content {
+      padding: 22px 28px 8px;
+    }
+
+    .narrative {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .accomplishments {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .accomplishments li {
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text);
+      padding-left: 22px;
+      position: relative;
+    }
+
+    .accomplishments li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ── Demoted metrics strip ── */
+    .metrics-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .metric {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric b {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric b.accent { color: var(--accent); }
+    .metric b.green  { color: var(--green); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-tag {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-accent {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: min(1024px, 100%);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="header-text">
+        <h1>session recap · 2026-06-09</h1>
+      </div>
+      <div class="model-badge">sonnet-4-6</div>
+    </div>
+
+    <div class="content">
+      <p class="narrative">Added a --card-width CSS design token to 7 social card templates, centralizing hardcoded widths into a single token — then caught and fixed a responsive-clamp regression flagged by an automated PR review.</p>
+      <ul class="accomplishments"><li>Added --card-width: 1024px to :root across all 7 card templates</li>
+<li>Replaced 14 hardcoded width: min(1024px, 100%) values with a single token reference</li>
+<li>Codex PR review flagged dropped min() wrapper breaking narrow-viewport overflow</li>
+<li>Fixed all 6 templates to use min(var(--card-width), 100%) for responsive consistency</li>
+<li>Opened PR #303 and pushed a follow-up fix commit with inline review reply</li></ul>
+    </div>
+
+    <div class="metrics-strip">
+      <span class="metric"><b class="accent">n/a</b> tokens</span>
+      <span class="metric"><b>~35 min</b></span>
+      <span class="metric"><b class="green">n/a</b> cache hit</span>
+      <span class="metric"><b>7</b> files</span>
+      <span class="metric"><b>2</b> commits</span>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-tag">Claude Code · session recap</span>
+      <span class="footer-accent">github.com/shawn-sandy/agentics</span>
+    </div>
+  </div>
+  <div class="copy-panel">
+  <p class="copy-label">LinkedIn</p>
+  <textarea readonly class="post-copy-text" id="post-copy-linkedin">When you tokenize a CSS dimension, the min() wrapper needs to travel with it.
+
+I refactored 7 social card templates to replace hardcoded widths with a --card-width CSS custom property. The diff looked clean — until an automated PR review caught a silent regression.
+
+The original value was width: min(1024px, 100%) — a responsive clamp, not a bare pixel. Dropping min() while extracting the token turned a layout that shrinks gracefully on narrow viewports into one that overflows.
+
+The correct pattern:
+  :root { --card-width: 1024px; }
+  .card { width: min(var(--card-width), 100%); }
+
+min(var(--card-width), 100%) reads: "be exactly --card-width wide, never wider than the container." It's equivalent to max-width: 1024px; width: 100% in one declaration.
+
+Rule worth keeping: when a token replaces a literal inside a CSS function (min(), clamp(), max()), preserve the function wrapper. The token gets you the value; the function provides the behavior.
+
+The refactor still paid off — a future resize is 7 lines instead of 14. Just don't leave the responsive guard behind.
+
+2 commits · 7 files · PR #303
+
+More CSS architecture patterns like this on my feed.
+
+#CSS #WebDevelopment #FrontendDev #ClaudeCode</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Twitter/X</p>
+  <textarea readonly class="post-copy-text" id="post-copy-twitter">CSS token refactor lesson:
+
+min(1024px, 100%) → min(var(--card-width), 100%)
+
+Not just var(--card-width).
+
+The token inherits the value. The min() provides the responsive clamp. Dropping the wrapper silently breaks narrow-viewport overflow.
+
+#CSS #WebDev</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Bluesky</p>
+  <textarea readonly class="post-copy-text" id="post-copy-bluesky">CSS lesson from today: when you extract 1024px into --card-width, don't drop the min() that was already there.
+
+min(var(--card-width), 100%) — the token gets the value, the function handles the responsive clamp. Both needed. Caught by an automated PR review before merge.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+</div>
+<div class="copy-panel">
+  <p class="copy-label">Substack</p>
+  <textarea readonly class="post-copy-text" id="post-copy-substack">Something small from today's session worth keeping in mind:
+
+When you extract a CSS dimension into a custom property, the function wrapping it needs to come along. I refactored 7 card templates to replace width: min(1024px, 100%) with a --card-width token — and the first pass dropped the min() in the process.
+
+The result: width: var(--card-width) — a fixed 1024px that overflows on narrow viewports instead of clamping.
+
+The right form: width: min(var(--card-width), 100%). The token carries the value; the min() carries the behavior. They're not the same thing, and the browser has no way to warn you when you lose the second one.
+
+An automated PR review (Codex) caught it before merge. The fix was one commit, but the lesson is worth writing down: tokens replace literals, not expressions.
+
+More patterns like this in future notes — subscribe to keep learning.</textarea>
+  <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+</div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() {
+        try { t.select(); if (document.execCommand('copy')) done(); } catch (_) {}
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>
