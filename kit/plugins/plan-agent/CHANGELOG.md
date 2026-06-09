@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.10.1 — Stable plan-created sort in auto-rebuild hook (2026-06-08)
+
+### Fixed
+- `hooks/build-index.sh`: replaced `os.path.getmtime` sort with `plan-created` meta sort so the auto-rebuild hook produces the same date-descending order as the `plans-library` skill. Editing a plan no longer promotes it to the top of the gallery.
+
 ## 1.10.0 — End-to-end self-verification gate (2026-06-08)
 
 ### Added

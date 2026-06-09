@@ -59,7 +59,21 @@ for dirpath, dirnames, filenames in os.walk(plans_dir):
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
-plan_files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+def _plan_created_sort_key(path):
+    """Sort by plan-created meta descending; plans without the meta sort last by filename."""
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            head = fh.read(2000)
+        m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
+        if m:
+            d = m.group(1).strip()
+            parts = d.split('-')
+            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), os.path.basename(path))
+    except Exception:
+        pass
+    return (1, 0, 0, 0, os.path.basename(path))
+
+plan_files.sort(key=_plan_created_sort_key)
 
 if not plan_files:
     print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
