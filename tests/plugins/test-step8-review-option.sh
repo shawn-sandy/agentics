@@ -82,10 +82,10 @@ else
 fi
 
 echo "10. Background handler dispatches via review-plan-bg..."
-if grep -q "review-plan-bg" "$SKILL"; then
+if grep -A8 "If the user chooses \`Background\`" "$SKILL" | grep -q 'skill: "plan-agent:review-plan-bg"'; then
   echo "  PASS"
 else
-  echo "  FAIL: 'review-plan-bg' not found in handler"
+  echo "  FAIL: 'review-plan-bg' not found in Background handler block"
   FAILURES=$((FAILURES + 1))
 fi
 
