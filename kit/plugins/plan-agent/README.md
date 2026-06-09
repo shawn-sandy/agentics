@@ -113,7 +113,7 @@ The skill enforces the full Steps 1–8 workflow:
 The exit menu always offers `Review the plan` as a one-click path to critique the freshly-generated plan before implementing it. Selecting it triggers a foreground-or-background sub-choice:
 
 - **Run now (foreground):** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, runs the seven-reviewer Agent Team in-session, then re-renders the updated plan and loops back to the menu.
-- **Background:** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path> --background")`, dispatches the review team detached, and returns to the menu immediately.
+- **Background:** invokes `Skill(skill: "plan-agent:review-plan-bg", args: "<plan path>")`, dispatches the review team detached via `agent-review-plan`, and returns to the menu immediately; reopen the plan after completion to view applied updates.
 
 **Adaptive menu swap:** The `AskUserQuestion` tool is capped at 4 options. When a workflow prompt is present the menu would otherwise have 5 slots, so `Edit the plan` is dropped from that variant — the full ordering becomes: `Implement now` / `Run as workflow` / `Review the plan` / `Exit`. Without a workflow prompt all four options appear: `Implement now` / `Review the plan` / `Edit the plan` / `Exit`.
 

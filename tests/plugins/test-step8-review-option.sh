@@ -81,11 +81,11 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "10. Background handler uses --background flag..."
-if grep -q "\-\-background" "$SKILL"; then
+echo "10. Background handler dispatches via review-plan-bg..."
+if grep -q "review-plan-bg" "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: '--background' flag not found in handler"
+  echo "  FAIL: 'review-plan-bg' not found in handler"
   FAILURES=$((FAILURES + 1))
 fi
 
