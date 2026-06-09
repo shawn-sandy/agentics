@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-05">
 <meta name="plan-repo" content="agentics">
@@ -1096,7 +1096,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Publish a clean plugin distribution repo</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1200,6 +1200,7 @@
       <p>The <code>agentics</code> repo is both the development workspace and the install source. Its <code>.claude-plugin/marketplace.json</code> registers 12 active plugins via <code>git-subdir</code> sources whose <code>url</code> points at <code>https://github.com/shawn-sandy/agentics.git</code>. When a user installs, Claude Code pulls the plugin's <code>path</code> subtree — but the working repo carries a lot that has no business in an install: a 35&nbsp;KB root <code>README.md</code>, <code>docs/</code>, <code>examples/</code>, <code>scripts/</code>, <code>.playwright-mcp/</code>, a session <code>.png</code>, <code>CLAUDE.local.md</code>, <code>.DS_Store</code> files, and assorted top-level markdown (<code>ROADMAP.md</code>, <code>SECURITY.md</code>, <code>SOCIAL.md</code>). Inside individual plugin dirs there can also be scratch notes that ship unintentionally.</p>
       <p>The fix is a dedicated, clean distribution repo — one repo shaped exactly like the marketplace (not per-plugin repos) — generated from this source repo by a build script. The build reads <code>marketplace.json</code> <code>plugins[]</code> as the source of truth (so the six entries in <code>removed[]</code> and any reference-only directories never ship), copies only an allowlisted set of files per plugin, rewrites each <code>source.url</code> to point at the distribution repo, and publishes the result. A GitHub Action reruns the build and publishes on every release so the clean repo never drifts from source.</p>
       <p>Decisions locked in clarification: <strong>keep rules</strong> = manifest + component dirs + README + CHANGELOG; <strong>shape</strong> = one marketplace-style repo like <code>agentics-kit</code>; <strong>automation</strong> = a build script plus a GitHub Action that publishes on release.</p>
+      <p><strong>Superseded by <code>publish-plugins-to-dist-repo-daily.html</code></strong> — the <code>--publish</code> implementation, GitHub Action, and dist repo setup described here were completed under that plan with a daily cron trigger instead of release-triggered.</p>
     </section>
 
     <!-- ── Files ─────────────────────────────────────────────────── -->

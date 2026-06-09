@@ -88,7 +88,7 @@ Detailed patterns in `.claude/rules/`:
 ## Git & Branches
 
 - **Always create a new branch off `main` for each feature or fix.** Never commit new work directly to a long-lived shared branch (e.g. a branch from a previous session). Suggested naming: `verb-target-YYYY-MM-DD` (e.g. `add-implement-prompt-2026-06-01`).
-- Run `git checkout main && git pull && git checkout -b <branch-name>` at the start of each new task.
+- Run `git fetch origin && git checkout -b <branch-name> origin/main` at the start of each new task.
 
 ## Conventions
 
