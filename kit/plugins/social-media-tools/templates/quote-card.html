@@ -23,6 +23,7 @@
       --muted: #8b949e;
       --accent: #388bfd;
       --quote-mark: #1f6feb;
+      --card-width: 1024px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,7 +42,7 @@
     }
 
     .card {
-      width: min(1024px, 100%);
+      width: min(var(--card-width), 100%);
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -104,7 +105,7 @@
 
     /* ── Copy panel ── */
     .copy-panel {
-      width: min(1024px, 100%);
+      width: min(var(--card-width), 100%);
       background: #161b22;
       border: 1px solid #30363d;
       border-radius: 8px;
