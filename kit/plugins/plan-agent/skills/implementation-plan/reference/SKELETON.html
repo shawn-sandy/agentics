@@ -1044,6 +1044,19 @@
 
   /* Shared sub-heading used inside visual sections */
   .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -1103,6 +1116,12 @@
 <!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">{title}</h1>

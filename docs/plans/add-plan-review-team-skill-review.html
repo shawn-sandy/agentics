@@ -34,9 +34,27 @@ code{font-family:ui-monospace,"SF Mono","Fira Code",Consolas,monospace;font-size
 .edits-table td{padding:.4rem .6rem;border:1px solid var(--border);vertical-align:top}
 .edits-table tr:nth-child(even) td{background:var(--grey-bg)}
 footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--subtle);text-align:center}
+  .plan-back-nav { margin-bottom: 1rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted, #6b7280);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent, #2563eb); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
 </style>
 </head>
 <body>
+<div class="plan-back-nav">
+  <a href="./index.html" class="plan-back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Plans
+  </a>
+</div>
 
 <div class="meta">
   <strong>Team Review Report</strong> &middot; 7 reviewers &middot; 2026-06-07
