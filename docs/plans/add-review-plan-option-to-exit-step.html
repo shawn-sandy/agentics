@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-08">
 <meta name="plan-repo" content="agentics">
@@ -1038,7 +1038,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Add a &quot;Review the plan&quot; option to the plan exit step</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1195,7 +1195,7 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
@@ -1212,7 +1212,7 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
@@ -1229,7 +1229,7 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
@@ -1246,7 +1246,7 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
@@ -1263,7 +1263,7 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
@@ -1317,31 +1317,31 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" checked id="ac1">
           <label for="ac1">Step 8&#39;s no-workflow menu lists exactly 4 options — Implement now, Review the plan, Edit the plan, Exit — with Review the plan present.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" checked id="ac2">
           <label for="ac2">Step 8&#39;s workflow-prompt menu lists exactly 4 options — Implement now, Run as workflow, Review the plan, Exit — with Edit the plan dropped.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" checked id="ac3">
           <label for="ac3">Selecting Review the plan offers a foreground-vs-background sub-choice: foreground invokes <code>Skill(skill: &quot;plan-agent:review-plan&quot;, args: &quot;&lt;path&gt;&quot;)</code>; background invokes <code>Skill(skill: &quot;plan-agent:review-plan&quot;, args: &quot;&lt;path&gt; --background&quot;)</code> — both paths use the Skill tool, the --background flag triggers detached mode.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" checked id="ac4">
           <label for="ac4">After review-plan finishes, control returns to the Step 8 menu and the plan status remains todo; the Agent-Teams-unavailable case is handled gracefully.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" checked id="ac5">
           <label for="ac5">README.md documents the new option, and CHANGELOG.md has a ## 1.11.0 entry covering the addition and the adaptive menu swap.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" checked id="ac6">
           <label for="ac6">plan-agent version in .claude-plugin/marketplace.json is 1.11.0 and the file parses as valid JSON.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" checked id="ac7">
           <label for="ac7">tests/plugins/test-step8-review-option.sh passes (exit 0).</label>
         </li>
       </ul>
@@ -1366,21 +1366,21 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" checked id="cc1" disabled>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" checked id="cc2" disabled>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" checked id="cc3" disabled>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
