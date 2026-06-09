@@ -26,6 +26,8 @@ jobs:
         run: node scripts/build-dist.mjs --check
       - name: Smoke test dist
         run: bash tests/publish/smoke-clean-dist.sh
+      - name: Test dist transforms
+        run: node tests/publish/test-dist-transforms.mjs
       - name: Publish to agentics-kit
         run: node scripts/build-dist.mjs --publish
         env:
@@ -33,11 +35,13 @@ jobs:
           DIST_REPO_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
       - name: Notify on failure
         if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO: ${{ github.repository }}
         run: |
           gh issue create \
             --title "publish-dist failed on $(date -u +'%Y-%m-%d')" \
-            --body "The daily publish-dist workflow failed. [View run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
+            --body "The daily publish-dist workflow failed. [View run]($RUN_URL)" \
             --label "bug" \
-            --repo "${{ github.repository }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            --repo "$REPO"
