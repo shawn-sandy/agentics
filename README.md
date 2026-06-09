@@ -343,7 +343,7 @@ Use `/help` inside any Claude session to list all active commands.
 
 ---
 
-#### `code-review` v3.3.1
+#### `code-review` v3.3.2
 
 Systematic code review across quality, bugs, security, and best practices with severity-ranked findings, actionable feedback, and line numbers.
 
@@ -380,7 +380,7 @@ claude --plugin-dir ./kit/plugins/code-review
 
 ---
 
-#### `code-testing-agent` v3.4.1
+#### `code-testing-agent` v3.4.4
 
 Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage.
 
@@ -409,9 +409,9 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 ---
 
-#### `plan-interview` v2.2.4
+#### `plan-interview` v2.2.7
 
-Stress-test implementation plans with structured multi-round interviews before coding begins.
+Stress-test implementation plans with structured multi-round interviews before coding begins. Auto-routes product plans to the panel review skill and always emits an interview HTML artifact.
 
 **Commands:**
 
@@ -456,9 +456,9 @@ claude --plugin-dir ./kit/plugins/plan-interview
 
 ---
 
-#### `product-plans` v3.4.6
+#### `product-plans` v3.4.9
 
-Improve, optimize, and update product plans, PRDs, and feature proposals using a simulated cross-functional team — PM, Lead Developer, UX Designer, Frontend Engineer, Accessibility Expert, and Security Expert.
+Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team — PM, Lead Developer, UX Designer, Frontend Engineer, Accessibility Expert, and Security Expert. Produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact.
 
 **Commands:**
 
@@ -495,18 +495,36 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v1.0.0
+#### `plan-agent` v1.10.1
 
-Plan creation and completion on demand — invoke `/plan-agent:implementation-plan <objective>` to run the full Steps 0–8 planning workflow with built-in structured interview, or `/plan-agent:finalize-plan` to review and mark a plan completed. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, or generate Anthropic-best-practice AI prompts with `/plan-agent:craft-prompt`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
+
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/plan-agent:review-plan-bg <path>` | Run the seven-reviewer plan-review Agent Team in the background — validates the path, spawns `agent-review-plan`, and returns an ack immediately |
 
 **Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — manual invoke only |
-| `finalize-plan` | Review a plan for completion evidence and mark it completed — manual invoke only |
+| `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — also auto-activates on plan-document intent |
+| `review-plan` | Spawn a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, + UI-conditional UX and accessibility) to review a plan, synthesize findings, and apply improvements in place |
+| `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
+| `craft-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
 | `plans-open` | Reopen the plans gallery without rebuilding |
+
+**Agents:**
+
+| Agent | Purpose |
+|-------|---------|
+| `agent-review-plan` | Background plan-review agent — invokes the `review-plan` skill with `--background` and reports the updated path on completion |
+| `plan-reviewer-architecture` · `-completeness` · `-testability` · `-risk` · `-conventions` | Five core reviewer teammates, always spawned by the Agent Team |
+| `plan-reviewer-ux` · `-accessibility` | Two UI-conditional reviewer teammates, spawned when UI signals are detected |
+
+> The `review-plan` Agent Team requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code ≥ 2.1.32.
 
 **Hooks:**
 
@@ -519,8 +537,10 @@ Plan creation and completion on demand — invoke `/plan-agent:implementation-pl
 claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:implementation-plan "Add dark mode support to the settings page"
 # /plan-agent:implementation-plan https://github.com/org/repo/issues/42
-# /plan-agent:implementation-plan #42 --quick
+# /plan-agent:review-plan docs/plans/add-dark-mode-toggle.html
+# /plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
 # /plan-agent:finalize-plan add-dark-mode-toggle.html
+# /plan-agent:craft-prompt
 # "Browse my plans"
 ```
 
@@ -532,7 +552,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 ---
 
-#### `git-agent` v3.10.3
+#### `git-agent` v3.10.6
 
 Automated git workflow — create branches, commit with conventional messages, and create PRs. Auto-links plan issue references in PR descriptions.
 
@@ -574,7 +594,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 
 ---
 
-#### `settings-sync` v1.0.1
+#### `settings-sync` v1.0.2
 
 Back up and restore Claude Code user settings to a dedicated git repo. Routine-compatible for automated backups.
 
@@ -599,7 +619,7 @@ claude --plugin-dir ./kit/plugins/settings-sync
 
 ---
 
-#### `wcag-compliance-reviewer` v1.2.2
+#### `wcag-compliance-reviewer` v1.2.3
 
 Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance.
 
@@ -620,7 +640,7 @@ claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 
 ---
 
-#### `skill-reviewer` v2.2.4
+#### `skill-reviewer` v2.2.6
 
 Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage.
 
@@ -654,7 +674,7 @@ claude --plugin-dir ./kit/plugins/skill-reviewer
 
 ---
 
-#### `memory-tools` v3.1.2
+#### `memory-tools` v3.1.3
 
 Audit and optimize CLAUDE.md project memory files against Claude Code best practices.
 
@@ -676,9 +696,9 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ---
 
-#### `social-media-tools` v2.5.1
+#### `social-media-tools` v2.10.1
 
-Discover shareable code from git history or codebase path, scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack. Generate a `SOCIAL.md` project config for default platform, tone, and content preferences.
+Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code from git history or a codebase path, scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards (1024px wide) for LinkedIn, Twitter/X, Bluesky, and Substack. Generate a `SOCIAL.md` project config for default platform, tone, and content preferences.
 
 **Commands:**
 
@@ -699,6 +719,7 @@ Discover shareable code from git history or codebase path, scrub for secrets, dr
 | `share-scan` | Find commits worth sharing or create a digest |
 | `share-blog` | Share a blog post or article on social media |
 | `share-code` | Post or share a code change |
+| `share-explanation` | Explain how a project file, component, or concept works — "how does X work" or "explain X" |
 | `share-video` | Share or promote a video on social media |
 | `share-project` | Announce features, bugs, changes, or releases on social media — manual invoke only |
 | `share-init` | Set up social sharing preferences and generate a `SOCIAL.md` project config |
@@ -714,7 +735,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 ---
 
-#### `issue-agent` v0.2.2
+#### `issue-agent` v0.2.4
 
 Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection, a confirmation gate before writing, and automatic browser open on creation.
 
@@ -739,18 +760,18 @@ claude --plugin-dir ./kit/plugins/issue-agent
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [code-review](./kit/plugins/code-review/README.md) | 3.3.1 | development | 1 command, 1 skill, 1 agent |
-| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.1 | testing | 5 skills |
-| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.4 | development | 10 commands, 6 skills, 1 agent, 1 hook |
-| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.5 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 1.0.0 | productivity | 4 skills, 2 hooks |
-| [git-agent](./kit/plugins/git-agent/README.md) | 3.10.3 | development | 3 commands, 5 skills, 3 agents |
-| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.1 | productivity | 2 skills |
-| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.2 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.4 | development | 1 command, 4 skills, 1 hook |
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.2 | development | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.5.1 | productivity | 1 command, 12 skills |
-| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.2 | development | 1 skill |
+| [code-review](./kit/plugins/code-review/README.md) | 3.3.2 | development | 1 command, 1 skill, 1 agent |
+| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
+| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.7 | development | 10 commands, 6 skills, 1 agent, 1 hook |
+| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.9 | productivity | 1 command, 1 skill, 7 agents |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 1.10.1 | productivity | 1 command, 6 skills, 8 agents, 2 hooks |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.10.6 | development | 3 commands, 5 skills, 3 agents |
+| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
+| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.6 | development | 1 command, 4 skills, 1 hook |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.3 | development | 2 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.10.1 | productivity | 1 command, 13 skills |
+| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.4 | development | 1 skill |
 
 ---
 
