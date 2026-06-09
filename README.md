@@ -1,5 +1,7 @@
 # agentics
 
+[![Publish dist](https://github.com/shawn-sandy/agentics/actions/workflows/publish-dist.yml/badge.svg)](https://github.com/shawn-sandy/agentics/actions/workflows/publish-dist.yml)
+
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
 **Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
