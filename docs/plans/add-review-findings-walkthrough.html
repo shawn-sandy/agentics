@@ -1275,6 +1275,8 @@
         </thead>
         <tbody>
           <tr><td><code>/plan-agent:review-plan plan.html</code></td><td>Shown</td><td>If accepted at gate</td><td>Accepted / modified only</td></tr>
+          <tr><td>Gate declined (&ldquo;Review only&rdquo;)</td><td>Shown</td><td>Declined — sets review-only mode</td><td>None — Team Review appended only</td></tr>
+          <tr><td>Gate &ldquo;Apply all&rdquo;</td><td>Shown</td><td>Bypassed by choice</td><td>All proposed (current behavior)</td></tr>
           <tr><td><code>… --skip-analysis</code></td><td>Skipped</td><td>Never runs</td><td>All proposed (current behavior)</td></tr>
           <tr><td><code>… --triage-top 3</code></td><td>Shown</td><td>Top 3 individually, rest batch-accepted</td><td>Accepted / modified only</td></tr>
           <tr><td><code>… --background</code></td><td>Skipped</td><td>Never runs (implied)</td><td>All proposed</td></tr>
@@ -1336,7 +1338,7 @@
               <div class="step-why">This is the feature — the synthesis&rarr;integration gap is exactly where developer triage belongs; per-finding Accept/Modify/Reject delivers the granular control requested while the gate keeps it skippable without a flag.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">The new <code>### Step 6b</code> defines: (a) skip when <code>skip_analysis</code>, <code>background_mode</code>, or <code>output_mode == "review only"</code>; (b) the ask-first gate (<code>AskUserQuestion</code>: &ldquo;Walk through findings&rdquo; / &ldquo;Apply all&rdquo; / &ldquo;Review only&rdquo;); (c) a per-finding triage loop over the &ldquo;Inline Edits to Apply&rdquo; rows, batched &le;4 findings per <code>AskUserQuestion</code> call, each Accept / Modify / Reject; (d) Modify marks the finding for a single post-walkthrough <em>edit pass</em> (not inline free-text) where the developer revises the kept edits in the plan directly; (e) <code>--triage-top &lt;N&gt;</code> caps individual triage to the N highest-risk findings and batch-accepts the remainder (default unset = full per-finding; ignored when the walkthrough is skipped); (f) it produces an <code>accepted_edits</code> list (accepted as-is + revised-modified) consumed by Step 7. Confirm all of these appear.</div>
+                <div class="verify-body">The new <code>### Step 6b</code> defines: (a) skip when <code>skip_analysis</code>, <code>background_mode</code>, or <code>output_mode == "review only"</code>; (b) the ask-first gate (<code>AskUserQuestion</code>: &ldquo;Walk through findings&rdquo; / &ldquo;Apply all&rdquo; / &ldquo;Review only&rdquo;) — choosing &ldquo;Review only&rdquo; sets <code>output_mode = "review only"</code>, so Step 7 appends the Team Review without applying any edits; declining the gate is <em>not</em> equivalent to <code>--skip-analysis</code>; (c) a per-finding triage loop over the &ldquo;Inline Edits to Apply&rdquo; rows, batched &le;4 findings per <code>AskUserQuestion</code> call, each Accept / Modify / Reject; (d) Modify marks the finding for a single post-walkthrough <em>edit pass</em> (not inline free-text) where the developer revises the kept edits in the plan directly; (e) <code>--triage-top &lt;N&gt;</code> caps individual triage to the N highest-risk findings and batch-accepts the remainder (default unset = full per-finding; ignored when the walkthrough is skipped); (f) it produces an <code>accepted_edits</code> list (accepted as-is + revised-modified) consumed by Step 7. Confirm all of these appear.</div>
               </details>
             </div>
           </div>
@@ -1353,7 +1355,7 @@
               <div class="step-why">Closes the loop so only developer-approved edits land, while the appended review preserves a transparent record of what was dropped and why.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Step 7 Pass 1 iterates <code>accepted_edits</code> when the walkthrough ran, else falls back to the full &ldquo;Inline Edits to Apply&rdquo; table (current behavior). Step 7 Pass 2 (the appended Team Review <code>&lt;details&gt;</code>) gains a triage-outcome summary listing accepted / modified (with revised content) / rejected findings. Confirm both the fallback clause and the triage record are documented.</div>
+                <div class="verify-body">Step 7 Pass 1 iterates <code>accepted_edits</code> when the walkthrough ran. The full-table fallback (current behavior) fires <em>only</em> when the walkthrough was bypassed — <code>--skip-analysis</code>, background mode, or the &ldquo;Apply all&rdquo; gate choice. Declining the gate (&ldquo;Review only&rdquo;) is not a fallback case: it sets <code>output_mode = "review only"</code>, so Pass 1 is skipped entirely and Pass 2 still appends the Team Review. Step 7 Pass 2 (the appended Team Review <code>&lt;details&gt;</code>) gains a triage-outcome summary listing accepted / modified (with revised content) / rejected findings. Confirm the fallback clause, the declined-gate clause, and the triage record are all documented.</div>
               </details>
             </div>
           </div>
@@ -1490,7 +1492,7 @@
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">Step 7 Pass 1 applies only accepted/modified edits when the walkthrough ran, and falls back to the full table when it was skipped.</label>
+          <label for="ac5">Step 7 Pass 1 applies only accepted/modified edits when the walkthrough ran; the full-table fallback fires only for <code>--skip-analysis</code>, background mode, or &ldquo;Apply all&rdquo; — declining the gate (&ldquo;Review only&rdquo;) applies nothing and still appends the Team Review.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
