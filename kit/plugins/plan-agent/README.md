@@ -209,12 +209,43 @@ When invoked without arguments, prompts for the plan file. The skill:
 
 #### `craft-prompt` — Manual invoke only
 
-Interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in Anthropic's official Claude Prompting Best Practices. Applies the right combination of techniques (clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting) based on the classified prompt type.
+Interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). Applies the right combination of techniques (clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting) based on the classified prompt type.
 
 ```
 /plan-agent:craft-prompt
 /plan-agent:craft-prompt system prompt for a customer support chatbot
 /plan-agent:craft-prompt refactor Python code task prompt
+```
+
+**Before / after** — a vague request in, a structured prompt out:
+
+Before:
+
+```
+write me a prompt to summarize stuff
+```
+
+After (classified as `task` — clarity, XML structure, CoT scaffolding, and output format applied):
+
+```text
+Summarize the meeting notes below in exactly 3 bullet points for a busy engineering manager.
+
+<context>
+The summary feeds a weekly status email. Missing a blocker is worse than
+including an extra detail.
+</context>
+
+<thinking>
+Before answering, list every decision, blocker, and date in the notes.
+</thinking>
+
+<example>
+- API migration blocked on pending auth review
+- Launch date moved to July 14
+- Q3 roadmap approved
+</example>
+
+Output format: exactly 3 bullets, each under 20 words, blockers first.
 ```
 
 The skill runs a six-phase pipeline:
@@ -225,6 +256,15 @@ The skill runs a six-phase pipeline:
 4. **Draft** — reads the matching template from `references/` and substitutes structured content into placeholders
 5. **Recommend** — uses `ToolSearch` to surface 1–3 installed skills/agents that may achieve the goal directly
 6. **Deliver** — presents the assembled prompt in a fenced block with technique header and recommendations
+
+**Technique matrix** — which best-practices techniques each prompt type applies:
+
+| Prompt type | Applied techniques |
+|-------------|--------------------|
+| `system` | Role assignment, XML structure (`<instructions>`, `<constraints>`), output format, guardrails |
+| `task` | Clarity/directness, XML structure (`<context>`, `<example>`), thinking/CoT scaffolding, output format |
+| `creative` | Role assignment, tone/voice instructions, context/motivation, output format, positive framing |
+| `analytical` | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
 
 Invoke only via `/plan-agent:craft-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
 
