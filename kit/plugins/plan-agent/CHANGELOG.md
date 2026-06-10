@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0 — Rename craft-prompt skill to refine-prompt (2026-06-10)
+
+### Breaking
+
+- **`craft-prompt` → `refine-prompt`** — the prompt-crafting skill is renamed to match its originating plan (`docs/plans/create-prompt-refiner-skill.html`). Invocation changes from `/plan-agent:craft-prompt` to `/plan-agent:refine-prompt`; the skill directory moves from `skills/craft-prompt/` to `skills/refine-prompt/`. Phases, interview flow, technique matrix, and templates are unchanged.
+
+---
+
+## 1.11.1 — Complete craft-prompt README documentation (2026-06-10)
+
+### Fixed
+
+- **README `craft-prompt` section** — the overview now hyperlinks [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) guide (previously mentioned with no URL); the usage block gains a Before/After example showing a vague request ("write me a prompt to summarize stuff") transformed into the structured XML-layered prompt the skill produces; and a technique-matrix table (mirroring `skills/craft-prompt/SKILL.md`) now maps each prompt type (`system`, `task`, `creative`, `analytical`) to the best-practices techniques it applies.
+
+---
+
 ## 1.11.0 — Review option in the plan exit step (2026-06-09)
 
 ### Added
