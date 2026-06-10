@@ -110,7 +110,7 @@ Read `references/output-template.md`. Gather each reviewer's findings (from thei
 
 An interactive triage of the synthesized findings before any edits are applied.
 
-**Skip condition:** Skip Step 6b entirely when `skip_analysis = true`, when `background_mode = true`, or when `output_mode = "review only"` (chosen at Step 2). When skipped, Step 7 receives the full "Inline Edits to Apply" table.
+**Skip condition:** Skip Step 6b entirely when `skip_analysis = true`, when `background_mode = true`, or when `output_mode = "review only"` (chosen at Step 2). When skipped via `skip_analysis` or `background_mode`, Step 7 receives the full "Inline Edits to Apply" table; when skipped because `output_mode = "review only"`, Step 7 applies no edits — Pass 1 is skipped and only the Team Review is appended.
 
 **Ask-first gate:** Ask `AskUserQuestion`: "Walk through the findings before applying?"
 - **Walk through findings** _(default, recommended)_ — run the per-finding triage loop below.
