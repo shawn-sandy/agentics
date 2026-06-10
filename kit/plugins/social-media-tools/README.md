@@ -24,6 +24,7 @@ No path in this plugin auto-posts — human review is always required before any
 | `share-video` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
 | `share-github` | Skill | Fetch a public GitHub file/snippet; security-scrub + generate card + copy |
 | `share-selection` | Skill | Turn selected/highlighted/open/pasted code into an objective-driven card + copy |
+| `share-react` | Skill | Share a React component as one card: static rendered preview (up to 3 states), implementation code, and a full typed props table |
 | `share-project` | Skill | Generate a card for a project topic (features / bugs / changes / release) from git + CHANGELOG |
 | `share-scan` | Skill | Discover teachable commits or codebase patterns; write a `.claude/digests/` file |
 | `media-library` | Skill | Browse saved posts interactively and retrieve copy for reposting |
@@ -64,6 +65,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | `share-video` | Automatic | Share a video on social media |
 | `share-github` | Automatic | Share a code snippet from a GitHub repository |
 | `share-selection` | Automatic | Share, post, or tweet selected, highlighted, or pasted code |
+| `share-react` | Automatic | Share a React component, share this component with its props, post my Button component |
 | `share-project` | Manual invoke only — use `/social-media-tools:share-project` explicitly | Reached via `social-share` router with `--topic` flag or explicit dispatch; not activated by passive intent matching |
 | `share-scan` | Automatic | Find commits worth sharing, create a digest, scan codebase for shareable code |
 | `media-library` | Automatic | Browse the media library, find a prior post, view saved posts |
@@ -151,6 +153,7 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 | `video-card` | YouTube or Vimeo video shares | `templates/video-card.html` |
 | `snippet-card` | GitHub code file or snippet shares | `templates/snippet-card.html` |
 | `session-card` | Session recap — lessons learned, takeaways, token usage | `templates/session-card.html` |
+| `react-card` | React components — preview + implementation + props table | `templates/react-card.html` |
 
 See [`references/variables.md`](references/variables.md) for the full variable reference for each card type.
 
@@ -198,6 +201,10 @@ social-media-tools/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── topics.md                  ← per-topic extraction patterns + tone guide
+│   ├── share-react/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── props-extraction.md        ← typed props table extraction rules
 │   ├── share-scan/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -218,6 +225,7 @@ social-media-tools/
     ├── feature-card.html
     ├── gallery.html
     ├── quote-card.html
+    ├── react-card.html
     ├── session-card.html
     ├── snippet-card.html
     └── video-card.html

@@ -6,7 +6,7 @@ new content.
 **Required variable** (set by the calling skill before reading this file):
 
 - `$FILE_PREFIX` — the filename type prefix to scan (e.g., `diff`, `feature`, `quote`,
-  `snippet`, `video`, `blog`, `project`)
+  `snippet`, `react`, `video`, `blog`, `project`)
 
 ---
 
