@@ -1092,8 +1092,8 @@ second source-of-truth file while making the spec cheap to read.
 - kit/plugins/plan-agent/skills/review-plan/references/role-prompts.md (modified) — 7 reviewer briefs read the digest
 - kit/plugins/plan-agent/agents/plan-reviewer-*.md (modified) — 7 reviewer defs read the digest
 - scripts/backfill-plan-digests.mjs (new) — idempotent, state-preserving injector over docs/plans/*.html
-- .claude-plugin/marketplace.json (modified) — bump plan-agent 2.0.0 -> 2.1.0
-- kit/plugins/plan-agent/CHANGELOG.md (modified) — 2.1.0 entry
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 2.1.0 -> 2.2.0
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — 2.2.0 entry
 - kit/plugins/plan-agent/README.md (modified) — document the digest + extraction
 - tests/plugins/test-plan-digest.sh (new) — objective smoke test
 - tests/plugins/test-backfill-digest.mjs (new) — backfill unit + integration test
@@ -1137,10 +1137,11 @@ second source-of-truth file while making the spec cheap to read.
    existing plans safely without emitting half-specs. Verify: --dry-run reports
    injected/skipped/failed with 0 failures; skipped plans are listed; a second
    real run injects 0.
-8. Bump version, changelog, README (plan-agent 2.0.0 -> 2.1.0). Why: new
-   behavior is a minor bump; docs/changelog are required with plugin changes.
-   Verify: marketplace.json shows 2.1.0; CHANGELOG top entry is 2.1.0; README
-   documents the digest + extraction.
+8. Bump version, changelog, README (plan-agent 2.1.0 -> 2.2.0; 2.1.0 was
+   taken on main by the findings-walkthrough feature). Why: new behavior is a
+   minor bump; docs/changelog are required with plugin changes; the new value
+   must be higher than main's. Verify: marketplace.json shows 2.2.0; CHANGELOG
+   top entry is 2.2.0; README documents the digest + extraction.
 
 ## Tests
 Tier 1 (touches SKELETON.html, marketplace.json, and a new .mjs script).
@@ -1167,7 +1168,7 @@ Tier 1 (touches SKELETON.html, marketplace.json, and a new .mjs script).
 - All 7 reviewer briefs and agent defs read the digest; the lead reads full HTML.
 - review-plan Step 7 regenerates the digest after applying inline edits.
 - The backfill injects a digest into every existing docs/plans/*.html without altering status/progress and is idempotent.
-- plan-agent is 2.1.0 in marketplace.json with a matching CHANGELOG entry; README documents the digest.
+- plan-agent is 2.2.0 in marketplace.json with a matching CHANGELOG entry; README documents the digest.
 - The digest block does not render in a browser and adds no CDN or external script.
 - A plan whose spec contains a literal closing-script sequence (written here in guarded form: `<\/script`) is injected correctly — the guard fires and the sequence cannot terminate the digest block early.
 
@@ -1364,12 +1365,12 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <ul class="file-list">
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .claude-plugin/</li>
           <ul class="file-list">
-            <li><code>marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent 2.0.0 → 2.1.0</span></li>
+            <li><code>marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent 2.1.0 → 2.2.0</span></li>
           </ul>
 
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
           <ul class="file-list">
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.1.0 entry</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.2.0 entry</span></li>
             <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the digest + extraction</span></li>
             <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agents/</li>
             <ul class="file-list">
@@ -1559,12 +1560,12 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump version, changelog, and README (plan-agent 2.0.0 → 2.1.0)</span>
+                <span class="step-chip-text">Bump version, changelog, and README (plan-agent 2.1.0 → 2.2.0)</span>
               </div>
-              <div class="step-why">Adding new behavior is a minor bump per the project versioning rules, and <code>CLAUDE.md</code> requires docs/changelog updates with any plugin change. Set <code>plan-agent</code> <code>version</code> to <code>2.1.0</code> in <code>marketplace.json</code>, add a <code>2.1.0</code> <code>CHANGELOG.md</code> entry describing the digest + backfill, and add a "Machine-readable digest" subsection to the plugin <code>README.md</code> showing the <code>awk</code> extraction one-liner.</div>
+              <div class="step-why">Adding new behavior is a minor bump per the project versioning rules, and <code>CLAUDE.md</code> requires docs/changelog updates with any plugin change — the new value must be higher than main's, and <code>2.1.0</code> was taken on main by the findings-walkthrough feature. Set <code>plan-agent</code> <code>version</code> to <code>2.2.0</code> in <code>marketplace.json</code>, add a <code>2.2.0</code> <code>CHANGELOG.md</code> entry describing the digest + backfill, and add a "Machine-readable digest" subsection to the plugin <code>README.md</code> showing the <code>awk</code> extraction one-liner.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>marketplace.json</code> shows <code>plan-agent</code> at <code>2.1.0</code> (and the <code>.claude/settings.json</code> JSON-validation hook passes); <code>CHANGELOG.md</code> top entry is <code>2.1.0</code>; the README has the digest subsection with the extraction command.</div>
+                <div class="verify-body"><code>marketplace.json</code> shows <code>plan-agent</code> at <code>2.2.0</code> (and the <code>.claude/settings.json</code> JSON-validation hook passes); <code>CHANGELOG.md</code> top entry is <code>2.2.0</code>; the README has the digest subsection with the extraction command.</div>
               </details>
             </div>
           </div>
@@ -1680,7 +1681,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8"><code>plan-agent</code> is <code>2.1.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry, and the README documents the digest.</label>
+          <label for="ac8"><code>plan-agent</code> is <code>2.2.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry, and the README documents the digest.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
