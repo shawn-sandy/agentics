@@ -33,6 +33,7 @@ else
 fi
 
 echo "2. social-share Phase 1 table has a share-react rule..."
+# shellcheck disable=SC2016 # backticks in the grep pattern are literal markdown, not expansion
 if [ -f "$ROUTER" ] && awk '/^## Phase 1/{flag=1; next} /^## Phase 2/{flag=0} flag' "$ROUTER" \
     | grep -F '| `share-react` |' | grep -q '^|'; then
   echo "  PASS"
@@ -42,7 +43,9 @@ else
 fi
 
 echo "3. share-react rule appears before the share-selection rule..."
+# shellcheck disable=SC2016 # backticks in the grep pattern are literal markdown, not expansion
 REACT_LINE=$(grep -n -F '| `share-react` |' "$ROUTER" | head -1 | cut -d: -f1 || true)
+# shellcheck disable=SC2016 # backticks in the grep pattern are literal markdown, not expansion
 SELECTION_LINE=$(grep -n -F '| `share-selection` |' "$ROUTER" | head -1 | cut -d: -f1 || true)
 if [ -n "$REACT_LINE" ] && [ -n "$SELECTION_LINE" ] && [ "$REACT_LINE" -lt "$SELECTION_LINE" ]; then
   echo "  PASS (share-react line $REACT_LINE < share-selection line $SELECTION_LINE)"

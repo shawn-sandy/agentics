@@ -108,9 +108,15 @@ Capture for later phases:
 
 ### Guards
 
-- **Not a React component** — if the captured source contains no JSX and no React import
-  (`from "react"`, `import React`, `React.createElement`), tell the user what was captured
-  and that it does not look like a React component, and **STOP**.
+- **Not a standalone component** — if the captured source does not define a React component
+  (no function/class component and no component export that returns JSX), or it is clearly a
+  non-component React file by name or shape — a test (`*.test.*`/`*.spec.*`), a Storybook
+  story (`*.stories.*`), a route module, a hooks-only or utility file, or an arbitrary JSX
+  fragment — do **not** stop dead. Tell the user in one line what was captured, write
+  `COMPONENT_RAW` to `~/.claude/tmp/social-share-selection.txt`, then hand off:
+  `Skill(skill: "social-media-tools:share-selection", args: "--code-file=~/.claude/tmp/social-share-selection.txt --objective=demonstrate this code")`
+  and **STOP this skill** once share-selection takes over (it produces the generic snippet
+  card these files actually need).
 - **Long source** — *(Interactive mode)* If the source exceeds 80 lines, use
   `AskUserQuestion` to ask which region to feature (a line range, a single component, or a
   section), then use only that region. Do **not** silently truncate. *(Background mode)* use
