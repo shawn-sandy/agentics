@@ -1,6 +1,6 @@
 # Anthropic Claude Prompting Best Practices — Distilled Reference
 
-This file is consumed by the `craft-prompt` skill to apply the correct technique subset for each prompt type. Each technique maps to a specific phase of the skill's pipeline.
+This file is consumed by the `refine-prompt` skill to apply the correct technique subset for each prompt type. Each technique maps to a specific phase of the skill's pipeline.
 
 ---
 

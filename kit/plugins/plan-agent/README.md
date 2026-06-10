@@ -24,7 +24,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
-| `craft-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:craft-prompt [intent]` |
+| `refine-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:refine-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
@@ -207,14 +207,14 @@ When invoked without arguments, prompts for the plan file. The skill:
 4. Presents a summary showing which criteria are verified vs unverified, plus the objective-test result
 5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
 
-#### `craft-prompt` — Manual invoke only
+#### `refine-prompt` — Manual invoke only
 
 Interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). Applies the right combination of techniques (clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting) based on the classified prompt type.
 
 ```
-/plan-agent:craft-prompt
-/plan-agent:craft-prompt system prompt for a customer support chatbot
-/plan-agent:craft-prompt refactor Python code task prompt
+/plan-agent:refine-prompt
+/plan-agent:refine-prompt system prompt for a customer support chatbot
+/plan-agent:refine-prompt refactor Python code task prompt
 ```
 
 **Before / after** — a vague request in, a structured prompt out:
@@ -266,7 +266,7 @@ The skill runs a six-phase pipeline:
 | `creative` | Role assignment, tone/voice instructions, context/motivation, output format, positive framing |
 | `analytical` | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
 
-Invoke only via `/plan-agent:craft-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
+Invoke only via `/plan-agent:refine-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
 
 #### `plans-open` — Auto-activates
 

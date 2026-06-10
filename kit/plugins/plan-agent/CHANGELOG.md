@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0 — Rename craft-prompt skill to refine-prompt (2026-06-10)
+
+### Breaking
+
+- **`craft-prompt` → `refine-prompt`** — the prompt-crafting skill is renamed to match its originating plan (`docs/plans/create-prompt-refiner-skill.html`). Invocation changes from `/plan-agent:craft-prompt` to `/plan-agent:refine-prompt`; the skill directory moves from `skills/craft-prompt/` to `skills/refine-prompt/`. Phases, interview flow, technique matrix, and templates are unchanged.
+
+---
+
 ## 1.11.1 — Complete craft-prompt README documentation (2026-06-10)
 
 ### Fixed
