@@ -1,6 +1,6 @@
 # Creative Prompt Template
 
-Used by `craft-prompt` for **creative** prompt type.
+Used by `refine-prompt` for **creative** prompt type.
 
 Techniques applied: Role assignment · Tone/voice instructions · Context/motivation · Positive framing
 
