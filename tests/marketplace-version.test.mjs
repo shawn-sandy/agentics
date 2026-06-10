@@ -22,6 +22,13 @@ const BASELINE = '2.0.0'; // plan-agent version on main when this change landed
 let pass = 0;
 let fail = 0;
 
+/**
+ * Record a single assertion result, printing a PASS/FAIL line and
+ * incrementing the matching counter for the final summary.
+ *
+ * @param {string} name - Human-readable description of the assertion.
+ * @param {boolean} cond - Truthy when the assertion holds.
+ */
 function check(name, cond) {
   if (cond) {
     console.log(`PASS: ${name}`);
@@ -32,7 +39,13 @@ function check(name, cond) {
   }
 }
 
-// Strictly-greater comparison on MAJOR.MINOR.PATCH semver strings.
+/**
+ * Strictly-greater comparison on MAJOR.MINOR.PATCH semver strings.
+ *
+ * @param {string} a - Candidate version, e.g. "2.1.0".
+ * @param {string} b - Baseline version to compare against, e.g. "2.0.0".
+ * @returns {boolean} True when a is strictly higher than b.
+ */
 function semverGt(a, b) {
   const pa = a.split('.').map(Number);
   const pb = b.split('.').map(Number);

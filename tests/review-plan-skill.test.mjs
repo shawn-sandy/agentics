@@ -15,6 +15,13 @@ const SKILL = join(ROOT, 'kit', 'plugins', 'plan-agent', 'skills', 'review-plan'
 let pass = 0;
 let fail = 0;
 
+/**
+ * Record a single assertion result, printing a PASS/FAIL line and
+ * incrementing the matching counter for the final summary.
+ *
+ * @param {string} name - Human-readable description of the assertion.
+ * @param {boolean} cond - Truthy when the assertion holds.
+ */
 function check(name, cond) {
   if (cond) {
     console.log(`PASS: ${name}`);
