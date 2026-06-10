@@ -11,6 +11,7 @@ comment block at the top listing its variables and an example.
 - [blog-card.html](#blog-cardhtml)
 - [video-card.html](#video-cardhtml)
 - [snippet-card.html](#snippet-cardhtml)
+- [react-card.html](#react-cardhtml)
 - [session-card.html](#session-cardhtml)
 
 ---
@@ -162,6 +163,57 @@ Apply to `CODE_LINES` in this exact order:
   display name (`TypeScript`).
 - `LANGUAGE_COLOR` is sourced exclusively from `references/language-map.md` (plugin-root
   shared reference) — never from fetched content or user input.
+
+---
+
+## react-card.html
+
+> Used by `share-react` skill. `{{PREVIEW_MARKUP}}` is the **only** raw-injected variable —
+> it must be a skill-authored static mockup (plain divs/spans/buttons using the template's
+> `.preview-state` classes or inline styles), never user-sourced or repo-sourced content.
+> All other text values must be HTML-escaped before substitution.
+
+### HTML-escape order (mandatory)
+
+Apply to `COMPONENT_CODE`, `PROPS_ROWS` cell text, `COMPONENT_NAME`, `SOURCE_PATH`, and
+`REPO_SLUG` in this exact order:
+1. `&` → `&amp;` ← first, to prevent double-escaping
+2. `<` → `&lt;`
+3. `>` → `&gt;`
+4. `"` → `&quot;`
+
+### Variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{COMPONENT_NAME}}` | Component name shown in the header and page title, e.g. `UserBadge` (HTML-escaped) |
+| `{{FRAMEWORK_BADGE}}` | Badge label — `React · TSX` or `React · JSX`, hardcoded by the skill from the file extension; never user-sourced |
+| `{{PREVIEW_MARKUP}}` | Preview pane HTML, injected **raw** — skill-authored static mockup only, never user- or repo-sourced |
+| `{{COMPONENT_CODE}}` | Component source code (HTML-escaped) |
+| `{{PROPS_ROWS}}` | HTML `<tr>` rows for the props table `<tbody>` — max 12 prop rows plus a `+ N more props` overflow row; all cell text HTML-escaped — see row format below |
+| `{{REPO_SLUG}}` | `"owner/repo"` (HTML-escaped) |
+| `{{SOURCE_PATH}}` | Source file path, e.g. `src/components/UserBadge.tsx` (HTML-escaped) |
+| `{{COPY_PANELS}}` | Copy panel HTML — see `references/copy-panels.md` |
+
+### Props row format
+
+The authoritative row contract lives in
+`skills/share-react/references/props-extraction.md` — follow it exactly. Each row supplies
+five `<td>` cells matching the header order — Name, Type, Required, Default, Description —
+with name/type/default wrapped in `<code>` and a plain-text lowercase required cell
+(`yes`, `no`, or `—` for the inference fallback):
+
+```html
+<tr><td><code>variant</code></td><td><code>&quot;primary&quot; | &quot;ghost&quot;</code></td><td>no</td><td><code>&quot;primary&quot;</code></td><td>Visual style of the badge</td></tr>
+<tr><td><code>label</code></td><td><code>string</code></td><td>yes</td><td>—</td><td>Text rendered inside the badge</td></tr>
+```
+
+Cap the table at 12 prop rows. When the component has more, render the first 12 and append
+a single overflow row spanning all five columns:
+
+```html
+<tr><td colspan="5">+ N more props — see source</td></tr>
+```
 
 ---
 

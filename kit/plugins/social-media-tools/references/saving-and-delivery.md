@@ -5,7 +5,7 @@ This file covers two phases used by every card-generating skill.
 **Required variables** (set by the calling skill):
 
 *For Persistent Save:*
-- `$FILE_PREFIX` — filename type prefix (e.g., `diff`, `snippet`, `video`, `blog`, `project`)
+- `$FILE_PREFIX` — filename type prefix (e.g., `diff`, `snippet`, `react`, `video`, `blog`, `project`)
 - `$SLUG_INPUT` — primary subject string to slugify (e.g., `$PRIMARY_SUBJECT`, `$FILENAME`, `$VIDEO_TITLE`)
 - `$TEMP_HTML` — basename of the card HTML in `~/.claude/tmp/` (used in fallback path message)
 

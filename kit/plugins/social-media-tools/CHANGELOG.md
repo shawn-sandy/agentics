@@ -1,5 +1,24 @@
 # Changelog — social-media-tools
 
+## v2.11.0 — 2026-06-09 — share-react: component preview, implementation, and props card
+
+### Added
+
+- `share-react` skill: shares a React component (`.tsx`/`.jsx` path, IDE selection, or paste) as one
+  dark-mode card combining a static rendered preview (up to 3 states), the implementation code, and
+  a full typed props table (name, type, required, default, description) parsed from TS Props/propTypes
+  with JSX-usage inference fallback.
+- `templates/react-card.html`: four-zone card template (header, raw skill-authored preview pane,
+  highlighted implementation, semantic props table) reusing the snippet-card design system and
+  `--card-width` token.
+- `skills/share-react/references/props-extraction.md`: authoritative props-table parsing and
+  rendering rules.
+- `social-share` router rule: `.tsx`/`.jsx` selections and paths now dispatch to `share-react`
+  (above the generic selection rule).
+- `tests/social-media-tools/`: react-card smoke test, registration test, and E2E run README.
+
+---
+
 ## v2.10.0 — 2026-06-06 — Instructional voice: teach, don't just promote
 
 ### Changed
