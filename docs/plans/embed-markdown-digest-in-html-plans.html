@@ -1072,7 +1072,7 @@
 
 ## Objective
 Embed a `<script type="text/markdown" id="plan-digest">` block as the first
-child of `<body>` in every generated HTML plan, holding a spec-only markdown
+element child of `<body>` in every generated HTML plan, holding a spec-only markdown
 rendition (objective, context, files, steps with why/verify, tests, criteria,
 verification). Consumers — the implementer, the workflow author, and the 5–7
 review-team agents — read ~3.7k tokens of spec instead of ~21k tokens of
@@ -1086,7 +1086,7 @@ reviewers each re-reading the same CSS). Embedding a spec-only digest avoids a
 second source-of-truth file while making the spec cheap to read.
 
 ## Files
-- kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html (modified) — add the #plan-digest block as first body child
+- kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html (modified) — add the #plan-digest block as first element child of <body>
 - kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — digest contract, generation, content-edit refresh, prompt clause
 - kit/plugins/plan-agent/skills/review-plan/SKILL.md (modified) — digest-only reviewers + Step 7 refresh pass
 - kit/plugins/plan-agent/skills/review-plan/references/role-prompts.md (modified) — 7 reviewer briefs read the digest
@@ -1099,10 +1099,14 @@ second source-of-truth file while making the spec cheap to read.
 - tests/plugins/test-backfill-digest.mjs (new) — backfill unit + integration test
 
 ## Steps
-1. Add the #plan-digest block to SKELETON.html as the first child of <body>.
-   Why: every plan inherits it from the skeleton; type="text/markdown" never
-   renders or runs, preserving the single self-contained file. Verify: grep
-   shows the block right after <body>; the browser renders nothing for it.
+1. Add the #plan-digest block to SKELETON.html as the first element child of
+   <body>. A guiding HTML comment above it is allowed — comments are not
+   elements, so the script stays the first element child (firstElementChild
+   semantics, which is what the smoke test asserts). Why: every plan inherits
+   it from the skeleton; type="text/markdown" never renders or runs,
+   preserving the single self-contained file. Verify: grep shows the block as
+   the first tag after <body> (skipping comments); the browser renders
+   nothing for it.
 2. Define the digest content + escaping contract in implementation-plan
    SKILL.md (spec-only fields; exclude status/checkbox/progress; guard the
    closing-script sequence with a backslash). Why: one stable contract every
@@ -1147,7 +1151,8 @@ second source-of-truth file while making the spec cheap to read.
 Tier 1 (touches SKELETON.html, marketplace.json, and a new .mjs script).
 - Objective smoke + review-path integration — tests/plugins/test-plan-digest.sh:
   asserts SKELETON.html wraps the digest placeholder in a non-rendering
-  text/markdown script as the first body child; the awk extraction on a
+  text/markdown script as the first element child of <body> (comment nodes
+  before it allowed); the awk extraction on a
   fixture plan returns spec markdown containing the objective and step
   actions; role-prompts.md and the 7 agent defs reference the digest and the
   no-digest full-HTML fallback; review-plan Step 7 inline edits regenerate the
@@ -1161,7 +1166,7 @@ Tier 1 (touches SKELETON.html, marketplace.json, and a new .mjs script).
   node tests/plugins/test-backfill-digest.mjs
 
 ## Acceptance Criteria
-- SKELETON.html has the text/markdown #plan-digest block as the first child of <body>.
+- SKELETON.html has the text/markdown #plan-digest block as the first element child of <body> (a guiding comment node above it is allowed).
 - A generated plan's digest carries objective + every step (action/why/verify) + criteria text + verification, and excludes status/checkbox/completion state.
 - The awk extractor returns the spec as readable markdown.
 - Generated implement & workflow prompts tell the consumer to start from the digest.
@@ -1292,7 +1297,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a machine-readable markdown digest inside every HTML plan — a non-rendering <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first child of <code>&lt;body&gt;</code> — so the implementer, the workflow author, and the 5–7 review-team agents read ~3.7k tokens of spec instead of re-reading ~21k tokens of styled HTML, with zero second source-of-truth file.</p>
+      <p>Ship a machine-readable markdown digest inside every HTML plan — a non-rendering <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first element child of <code>&lt;body&gt;</code> — so the implementer, the workflow author, and the 5–7 review-team agents read ~3.7k tokens of spec instead of re-reading ~21k tokens of styled HTML, with zero second source-of-truth file.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
@@ -1351,7 +1356,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
       <p>A generated HTML plan is a single self-contained file of ~86–97 KB (~21.5k tokens), but only about <strong>17%</strong> of that is plan content — the other ~83% is the fixed skeleton CSS and JS, byte-for-byte identical in every plan. The <code>Read</code> tool cannot skip <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code> blocks, so every consumer that opens a plan pays for the whole file.</p>
       <p>That cost is paid repeatedly. The implementer reads it; a <code>Run a workflow…</code> author reads it; and a single <code>review-plan</code> cycle has the lead plus up to <strong>7 reviewer agents</strong> each instructed to read the plan — roughly ~170k tokens per review, of which ~140k is the same CSS read eight times. <code>review-plan</code> already says "exclude <code>&lt;style&gt;</code> and <code>&lt;script&gt;</code>" but the Read tool can't honor that — it's aspiration, not mechanism.</p>
       <p>This plan embeds a spec-only markdown digest <em>inside</em> the plan rather than writing a sibling <code>.md</code> file. A sibling file is a second source of truth that drifts the moment implementation flips checkboxes or <code>review-plan</code> edits content, and it collides with the <code>plan-interview</code> <code>.md</code> tooling. An embedded <code>&lt;script type="text/markdown"&gt;</code> block keeps the single-file guarantee, never renders, and is extractable in any session — no plugin install required — via a flag-and-exit <code>awk</code>: <code>awk '/&lt;script[^&gt;]*id="plan-digest"/{f=1;next} f&amp;&amp;/&lt;\/script&gt;/{exit} f' &lt;file&gt;</code> (a simple <code>awk</code> range would re-trigger on later mentions of the id, as this very plan demonstrates).</p>
-      <p><strong>Resolved decisions (from clarification):</strong> the block is the <strong>first child of <code>&lt;body&gt;</code></strong> (extracted with <code>awk</code>); the digest is <strong>spec-only</strong> so status flips and checkbox ticks never invalidate it; this plan <strong>backfills</strong> the ~50 existing plans via an idempotent script; and the <strong>7 reviewers read the digest only</strong> while the lead keeps full HTML for its selector-based edits.</p>
+      <p><strong>Resolved decisions (from clarification):</strong> the block is the <strong>first element child of <code>&lt;body&gt;</code></strong> (extracted with <code>awk</code>); the digest is <strong>spec-only</strong> so status flips and checkbox ticks never invalidate it; this plan <strong>backfills</strong> the ~50 existing plans via an idempotent script; and the <strong>7 reviewers read the digest only</strong> while the lead keeps full HTML for its selector-based edits.</p>
     </section>
 
     <!-- ── Files ────────────────────────────────────────────────── -->
@@ -1379,7 +1384,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> skills/implementation-plan/</li>
             <ul class="file-list">
               <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">contract, generation, refresh, prompts; includes <code>buildImplementPrompt()</code> instruction update</span></li>
-              <li><code>reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add #plan-digest block (first body child)</span></li>
+              <li><code>reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add #plan-digest block (first element child of body)</span></li>
             </ul>
             <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> skills/review-plan/</li>
             <ul class="file-list">
@@ -1413,7 +1418,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
       <div class="pipeline">
         <div class="pipeline-node"><div class="pipeline-label">Generate</div><code>plan-agent drafts the spec</code><div class="pipeline-sub">objective, steps, tests, criteria</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Embed</div><code>fill #plan-digest</code><div class="pipeline-sub">first child of &lt;body&gt;, never renders</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">Embed</div><code>fill #plan-digest</code><div class="pipeline-sub">first element child of &lt;body&gt;, never renders</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
         <div class="pipeline-node"><div class="pipeline-label">Extract</div><code>awk on the consumer side</code><div class="pipeline-sub">~3.7k tokens of spec, any session</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
@@ -1441,9 +1446,9 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the <code>#plan-digest</code> block to <code>SKELETON.html</code> as the first child of <code>&lt;body&gt;</code></span>
+                <span class="step-chip-text">Add the <code>#plan-digest</code> block to <code>SKELETON.html</code> as the first element child of <code>&lt;body&gt;</code></span>
               </div>
-              <div class="step-why">Every generated plan inherits structure from the skeleton, so the block must live there once. Place it immediately after <code>&lt;body&gt;</code> (before the icon sprite) as <code>&lt;script type="text/markdown" id="plan-digest"&gt;{plan-digest}&lt;/script&gt;</code> — a non-executable script type the browser never renders or fetches, preserving the no-CDN, single-file guarantee. Add a guiding HTML comment above it documenting the spec-only rule and the flag-and-exit <code>awk</code> extraction.</div>
+              <div class="step-why">Every generated plan inherits structure from the skeleton, so the block must live there once. Place it immediately after <code>&lt;body&gt;</code> (before the icon sprite) as <code>&lt;script type="text/markdown" id="plan-digest"&gt;{plan-digest}&lt;/script&gt;</code> — a non-executable script type the browser never renders or fetches, preserving the no-CDN, single-file guarantee. Add a guiding HTML comment above it documenting the spec-only rule and the flag-and-exit <code>awk</code> extraction — the comment is a comment node, not an element, so the script remains the first <em>element</em> child of <code>&lt;body&gt;</code> (the property the smoke test asserts, mirroring DOM <code>firstElementChild</code> semantics).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body"><code>grep -n 'id="plan-digest"' SKELETON.html</code> shows the block within the first lines after <code>&lt;body&gt;</code>; open the skeleton in a browser and confirm the block produces no visible output and no console error. Also confirm the placeholder token used (e.g. <code>{plan-digest}</code>) is documented in a comment or in <code>implementation-plan/SKILL.md</code> Step 2 so the generator knows exactly what string to replace when filling the block.</div>
@@ -1545,7 +1550,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Create the backfill injector <code>scripts/backfill-plan-digests.mjs</code></span>
               </div>
-              <div class="step-why">The chosen scope backfills the ~50 existing plans. Write an idempotent Node script (matching the repo's existing <code>scripts/*.mjs</code> convention) that scans <code>docs/plans/*.html</code> (skipping <code>index.html</code> and any file already containing <code>#plan-digest</code>), parses title/objective/files/steps/tests/criteria/verification from the stable skeleton structure (IDs/classes: <code>#objective</code>, <code>.step-card</code>, <code>#tests</code>, <code>#criteria-list</code>, <code>#verification</code>, <code>.file-tree</code>), builds the digest (with the <code>&lt;\/script</code> guard), and inserts it as the first body child. It must never touch status, checkboxes, or progress state, must <strong>only inject when all expected sections parse</strong> — skipping and reporting any plan it cannot fully parse rather than writing a partial digest — and must support <code>--dry-run</code>, printing injected / skipped / failed counts.</div>
+              <div class="step-why">The chosen scope backfills the ~50 existing plans. Write an idempotent Node script (matching the repo's existing <code>scripts/*.mjs</code> convention) that scans <code>docs/plans/*.html</code> (skipping <code>index.html</code> and any file already containing <code>#plan-digest</code>), parses title/objective/files/steps/tests/criteria/verification from the stable skeleton structure (IDs/classes: <code>#objective</code>, <code>.step-card</code>, <code>#tests</code>, <code>#criteria-list</code>, <code>#verification</code>, <code>.file-tree</code>), builds the digest (with the <code>&lt;\/script</code> guard), and inserts it as the first element child of <code>&lt;body&gt;</code>. It must never touch status, checkboxes, or progress state, must <strong>only inject when all expected sections parse</strong> — skipping and reporting any plan it cannot fully parse rather than writing a partial digest — and must support <code>--dry-run</code>, printing injected / skipped / failed counts.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
                 <div class="verify-body"><code>node scripts/backfill-plan-digests.mjs --dry-run</code> reports counts with zero failures; a real run injects digests; a second real run injects 0 (all skipped). Plans that cannot be fully parsed are listed as skipped, not partially injected; <code>git diff</code> on a completed plan shows only the added digest block, no status/checkbox changes.</div>
@@ -1591,7 +1596,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <div class="test-card-body">
           <p><strong>File:</strong> <code>tests/plugins/test-plan-digest.sh</code></p>
           <p><strong>Type:</strong> smoke test (shell, matching the repo's <code>tests/&lt;area&gt;/*.sh</code> convention)</p>
-          <p><strong>Asserts:</strong> (1) <code>SKELETON.html</code> wraps the <code>{plan-digest}</code> placeholder in a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> that is the first child of <code>&lt;body&gt;</code>; (2) running the <code>awk</code> extractor against a committed fixture plan returns non-empty markdown containing the fixture's objective and at least one step action; (3) <code>review-plan</code> <code>role-prompts.md</code> and all 7 <code>agents/plan-reviewer-*.md</code> files reference <code>plan-digest</code> and the no-digest full-HTML fallback.</p>
+          <p><strong>Asserts:</strong> (1) <code>SKELETON.html</code> wraps the <code>{plan-digest}</code> placeholder in a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> that is the first element child of <code>&lt;body&gt;</code> (comment nodes before it are allowed — match the first tag after <code>&lt;body&gt;</code>, skipping comments); (2) running the <code>awk</code> extractor against a committed fixture plan returns non-empty markdown containing the fixture's objective and at least one step action; (3) <code>review-plan</code> <code>role-prompts.md</code> and all 7 <code>agents/plan-reviewer-*.md</code> files reference <code>plan-digest</code> and the no-digest full-HTML fallback.</p>
           <p><strong>Run:</strong> <code>bash tests/plugins/test-plan-digest.sh</code></p>
         </div>
       </div>
@@ -1653,7 +1658,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1"><code>SKELETON.html</code> has a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first child of <code>&lt;body&gt;</code>.</label>
+          <label for="ac1"><code>SKELETON.html</code> has a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first element child of <code>&lt;body&gt;</code> (a guiding comment node above it is allowed).</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
@@ -1702,7 +1707,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p><strong>Generation path:</strong> run <code>/plan-agent:implementation-plan</code> on a throwaway objective and confirm the resulting plan has a <code>#plan-digest</code> block as the first body child, that its markdown matches the visible objective/steps/criteria/verification, that the block renders nothing in a browser, and that the canonical flag-and-exit <code>awk</code> extractor returns the spec. Confirm both the implement and workflow prompts carry the extraction clause.</p>
+      <p><strong>Generation path:</strong> run <code>/plan-agent:implementation-plan</code> on a throwaway objective and confirm the resulting plan has a <code>#plan-digest</code> block as the first element child of <code>&lt;body&gt;</code>, that its markdown matches the visible objective/steps/criteria/verification, that the block renders nothing in a browser, and that the canonical flag-and-exit <code>awk</code> extractor returns the spec. Confirm both the implement and workflow prompts carry the extraction clause.</p>
       <p><strong>Backfill path:</strong> run <code>node scripts/backfill-plan-digests.mjs --dry-run</code> then a real run over <code>docs/plans/</code>; spot-check one completed, one in-progress, and one todo plan — each must gain a digest while <code>git diff</code> shows no change to <code>data-status</code>, <code>&lt;meta name="plan-status"&gt;</code>, or any criteria checkbox. Re-run and confirm 0 injected.</p>
       <p><strong>Review path:</strong> run <code>review-plan</code> on a sample plan; confirm each reviewer was briefed with the digest (not full HTML), that a digest-less plan falls back to full HTML, and that Step 7 regenerated the digest after applying inline edits.</p>
       <p><strong>Tests:</strong> <code>bash tests/plugins/test-plan-digest.sh</code> and <code>node tests/plugins/test-backfill-digest.mjs</code> both exit 0.</p>
@@ -1751,7 +1756,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           <summary>Add a CI guard so new plans must ship a digest</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Add a CI check to the agentics repo that fails a PR when any added or modified file under docs/plans/ ending in .html (excluding index.html) does not contain a `&lt;script type="text/markdown" id="plan-digest"&gt;` block as the first child of &lt;body&gt;. Implement it as a small Node script under scripts/ plus a step in the existing GitHub Actions workflow, mirroring the style of scripts/merge-marketplace.mjs and the tests/ shell smoke tests. Skip plans whose frontmatter meta plan-status is "completed" only if they predate the digest feature; otherwise require the block. Report the files you changed.</pre>
+            <pre>Add a CI check to the agentics repo that fails a PR when any added or modified file under docs/plans/ ending in .html (excluding index.html) does not contain a `&lt;script type="text/markdown" id="plan-digest"&gt;` block as the first element child of &lt;body&gt; (skip comment nodes when checking). Implement it as a small Node script under scripts/ plus a step in the existing GitHub Actions workflow, mirroring the style of scripts/merge-marketplace.mjs and the tests/ shell smoke tests. Skip plans whose frontmatter meta plan-status is "completed" only if they predate the digest feature; otherwise require the block. Report the files you changed.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1771,7 +1776,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           <summary>Teach the <code>plan-interview</code> markdown tooling about the digest</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>The plan-interview plugin's markdown-to-html and plan-status skills operate on .md plan files. Update them to be digest-aware: when markdown-to-html converts a plan to HTML, emit a #plan-digest block as the first body child using the same spec-only contract defined in plan-agent's implementation-plan SKILL.md; and when plan-status reads a plan, prefer the digest for status-independent spec inspection. Keep the two contracts in sync by referencing plan-agent's definition rather than duplicating it. Report which skills you changed and any contract divergences you had to resolve.</pre>
+            <pre>The plan-interview plugin's markdown-to-html and plan-status skills operate on .md plan files. Update them to be digest-aware: when markdown-to-html converts a plan to HTML, emit a #plan-digest block as the first element child of &lt;body&gt; using the same spec-only contract defined in plan-agent's implementation-plan SKILL.md; and when plan-status reads a plan, prefer the digest for status-independent spec inspection. Keep the two contracts in sync by referencing plan-agent's definition rather than duplicating it. Report which skills you changed and any contract divergences you had to resolve.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
