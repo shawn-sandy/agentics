@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-10">
 <meta name="plan-repo" content="agentics">
@@ -1121,7 +1121,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Walkthrough &amp; analysis of review-plan findings</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1208,12 +1208,12 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1293,12 +1293,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Parse and strip the new <code>--skip-analysis</code> and <code>--triage-top &lt;N&gt;</code> flags in <code>review-plan/SKILL.md</code>.</span>
               </div>
               <div class="step-why">The flag is the developer's explicit opt-out; tying it to background mode guarantees unattended runs never block on an interactive prompt.</div>
@@ -1310,12 +1310,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Document the flag interaction in the <code>## Background mode</code> section.</span>
               </div>
               <div class="step-why">Keeps the two flags' relationship explicit where background behavior is already specified, so a future reader can't assume the walkthrough runs detached.</div>
@@ -1327,12 +1327,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Insert <code>Step 6b — Walkthrough &amp; Analysis</code> between Synthesize (Step 6) and Integrate (Step 7).</span>
               </div>
               <div class="step-why">This is the feature — the synthesis&rarr;integration gap is exactly where developer triage belongs; per-finding Accept/Modify/Reject delivers the granular control requested while the gate keeps it skippable without a flag.</div>
@@ -1344,12 +1344,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Wire Step 7 to consume <code>accepted_edits</code> and record triage outcomes.</span>
               </div>
               <div class="step-why">Closes the loop so only developer-approved edits land, while the appended review preserves a transparent record of what was dropped and why.</div>
@@ -1361,12 +1361,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Extend <code>output-template.md</code> with a <code>Source / Rationale</code> column and a Triage Outcome subsection.</span>
               </div>
               <div class="step-why">The walkthrough needs each finding's originating reviewer and rationale to present an informed Accept/Modify/Reject choice; the placeholder gives the triage record a defined home.</div>
@@ -1378,12 +1378,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Document <code>--skip-analysis</code> and the walkthrough in the plan-agent README.</span>
               </div>
               <div class="step-why">The new flag and interactive behavior must be discoverable in plugin docs, consistent with how <code>--background</code> is already documented.</div>
@@ -1395,12 +1395,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump plan-agent to <code>1.12.0</code> and add a CHANGELOG entry.</span>
               </div>
               <div class="step-why">Project convention requires a manual minor bump and changelog entry for any added skill capability — the <code>marketplace.json</code> value is what ships.</div>
@@ -1475,35 +1475,35 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>review-plan/SKILL.md</code> parses and strips <code>--skip-analysis</code> (sets <code>skip_analysis</code>) and <code>--triage-top &lt;N&gt;</code>; <code>background_mode</code> forces <code>skip_analysis</code> true.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">A <code>Step 6b — Walkthrough &amp; Analysis</code> section exists between Step 6 (Synthesize) and Step 7 (Integrate).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">By default Step 6b presents an ask-first gate the developer can decline; <code>--skip-analysis</code> bypasses it entirely.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The walkthrough triages findings per-finding (Accept / Modify / Reject) batched &le;4 per <code>AskUserQuestion</code> call; Modify defers to a post-walkthrough edit pass; <code>--triage-top N</code> caps individual triage to the N highest-risk findings.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Step 7 Pass 1 applies only accepted/modified edits when the walkthrough ran; the full-table fallback fires only for <code>--skip-analysis</code>, background mode, or &ldquo;Apply all&rdquo; — declining the gate (&ldquo;Review only&rdquo;) applies nothing and still appends the Team Review.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">Step 7 Pass 2 (appended Team Review) records accepted / modified / rejected outcomes; rejected findings are recorded but not applied.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>output-template.md</code> has a <code>Source / Rationale</code> column and a Triage Outcome subsection; the plan-agent README documents the flag and walkthrough.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>.claude-plugin/marketplace.json</code> sets plan-agent to <code>1.12.0</code> (valid JSON) and the CHANGELOG has a matching <code>1.12.0</code> entry.</label>
         </li>
       </ul>
@@ -1526,27 +1526,32 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Deviation — version bump landed as 2.0.0 &rarr; 2.1.0</dt>
+            <dd>The plan stated a plan-agent <code>1.11.0</code> &rarr; <code>1.12.0</code> bump, but <code>main</code> had already shipped plan-agent <code>2.0.0</code> (the <code>refine-prompt</code> rename) before implementation began. The bump therefore landed as <code>2.0.0</code> &rarr; <code>2.1.0</code> (minor); the CHANGELOG entry and <code>tests/marketplace-version.test.mjs</code> target <code>2.1.0</code>.</dd>
+            <dt>Note — objective smoke test is agent-driven</dt>
+            <dd>The objective smoke test is provided as a fixture (<code>tests/fixtures/review-plan-sample.html</code>) with documented Run A / Run B commands. It is agent-driven and requires an interactive developer session to execute, per this plan's own Tests section.</dd>
+          </dl>
         </div>
       </div>
     </section>

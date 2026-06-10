@@ -20,9 +20,10 @@ When invoked with `--background` (typically via `/plan-agent:review-plan-bg <pat
 - **Requires an explicit plan path** — will not glob or prompt for a file.
 - **Skips all `AskUserQuestion` calls** — no interactive prompts.
 - **Defaults to "review + update plan in place"** — always applies improvements directly.
+- **Implies `--skip-analysis`** — the Step 6b walkthrough never runs unattended.
 - **Safe for unattended execution** — no user interaction required at any step.
 
-Detection: check whether `$ARGUMENTS` (or the `args` string passed via `Skill()`) contains the `--background` token. If present, set `background_mode = true` and strip the token before further argument parsing.
+Detection: check whether `$ARGUMENTS` (or the `args` string passed via `Skill()`) contains the `--background` token. If present, set `background_mode = true` and strip the token before further argument parsing. In the same pass, detect a `--skip-analysis` token (set `skip_analysis = true`) and a `--triage-top <N>` token (capture the integer `N`; default unset = full per-finding triage); strip both tokens before further argument parsing. `background_mode = true` forces `skip_analysis = true`, whether or not `--skip-analysis` was passed.
 
 ## Workflow
 
@@ -100,16 +101,40 @@ Read `references/output-template.md`. Gather each reviewer's findings (from thei
 - **Role-by-Role:** Summarize each reviewer's findings.
 - **Agreements & Conflicts:** Where reviewers agree (amplify), conflict (explain tradeoff).
 - **Highest-Risk Issues:** Distilled list from all findings.
-- **Inline Edits to Apply:** For each accepted improvement, a table row with: target HTML element (CSS selector), action (`edit`/`append`/`insert`), and new content.
+- **Inline Edits to Apply:** For each accepted improvement, a table row with: target HTML element (CSS selector), action (`edit`/`append`/`insert`), new content, and Source / Rationale — the originating reviewer plus a brief why. Step 6b's triage presents this Source / Rationale alongside each finding.
 - **Revised Plan:** (Filled after Step 7.)
 
 **Rejection path:** If the team consensus is "reject", populate the reject-only subsections per the template. Otherwise, omit reject-only content.
 
+### Step 6b — Walkthrough & Analysis
+
+An interactive triage of the synthesized findings before any edits are applied.
+
+**Skip condition:** Skip Step 6b entirely when `skip_analysis = true`, when `background_mode = true`, or when `output_mode = "review only"` (chosen at Step 2). When skipped via `skip_analysis` or `background_mode`, Step 7 receives the full "Inline Edits to Apply" table; when skipped because `output_mode = "review only"`, Step 7 applies no edits — Pass 1 is skipped and only the Team Review is appended.
+
+**Ask-first gate:** Ask `AskUserQuestion`: "Walk through the findings before applying?"
+- **Walk through findings** _(default, recommended)_ — run the per-finding triage loop below.
+- **Apply all** — bypass the walkthrough by choice; Step 7 applies the full table.
+- **Review only** — set `output_mode = "review only"`; Step 7 applies no edits but still appends the Team Review.
+
+Declining the gate is **not** equivalent to `--skip-analysis`: the gate was still shown. `--skip-analysis` suppresses the gate itself.
+
+**Per-finding triage loop:** Iterate the rows of the "Inline Edits to Apply" table, batching at most 4 findings per `AskUserQuestion` call (one question per finding). Each question presents the finding's Source / Rationale (originating reviewer + why, from the synthesis table) and its proposed content, with options:
+- **Accept** — keep the edit as-is.
+- **Modify** — keep the edit, marked for revision.
+- **Reject** — drop the edit.
+
+**Modify semantics:** Modify does **not** collect inline free-text. It marks the finding for a single post-walkthrough edit pass that runs once after the triage loop, in which the developer revises the kept edits directly in the plan.
+
+**`--triage-top <N>`:** When set, individually triage only the `N` highest-risk findings (ranked per the Highest-Risk Issues synthesis section) and batch-accept the remainder. Default unset = full per-finding triage. The flag is ignored whenever the walkthrough is skipped.
+
+**Output:** Step 6b produces an `accepted_edits` list — findings accepted as-is plus modified findings with their revised content; rejected findings are excluded. `accepted_edits` is consumed by Step 7 Pass 1, and all triage decisions (accepted / modified / rejected) are retained for Step 7 Pass 2's triage record.
+
 ### Step 7 — Integrate panel findings into the source plan
 
-Skip if `output_mode = "review only"`.
+Pass 1 is skipped when `output_mode = "review only"`; Pass 2 always runs. (When the Step 6b gate was declined via "Review only": no edits applied, Team Review still appended.)
 
-**Pass 1 — Inline edits:** For each row in the "Inline Edits to Apply" table, apply one `Edit` call against the resolved plan:
+**Pass 1 — Inline edits:** When the Step 6b walkthrough ran, iterate **only** `accepted_edits` — findings accepted as-is plus revised-modified findings. The full-table fallback — iterating every row of the "Inline Edits to Apply" table — fires **only** when the walkthrough was bypassed: `--skip-analysis`, background mode, or the "Apply all" gate choice. Declining the gate ("Review only") is **not** a fallback case. For each edit, apply one `Edit` call against the resolved plan:
 - `edit` — replace targeted element's content.
 - `append` — add to the end of the element.
 - `insert after "[anchor]"` — insert new sibling after anchor.
@@ -125,6 +150,8 @@ HTML-escape all inserted content. Never modify `<style>` or `<script>`. Skip row
   </div>
 </details>
 ```
+
+When the Step 6b walkthrough ran, the review body also includes a triage-outcome summary — accepted findings (applied as-is), modified findings (with their revised content), and rejected findings (recorded but not applied) — per the "Triage Outcome" subsection of `references/output-template.md`.
 
 Announce: "`Plan updated in place: <resolved-path>`"
 

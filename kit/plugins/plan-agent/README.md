@@ -145,9 +145,17 @@ Reviews implementation plans using a seven-reviewer Agent Team (five core review
 /plan-agent:review-plan add-dark-mode-toggle.html
 /plan-agent:review-plan --dir docs/plans/
 /plan-agent:review-plan docs/plans/add-dark-mode-toggle.html --background
+/plan-agent:review-plan docs/plans/add-dark-mode-toggle.html --skip-analysis
+/plan-agent:review-plan docs/plans/add-dark-mode-toggle.html --triage-top 3
 ```
 
 **Background mode (`--background`):** When the flag is present, the skill requires an explicit plan path, skips all interactive prompts, and defaults to update-in-place. Safe for unattended execution. Typically invoked via the `/plan-agent:review-plan-bg` command rather than directly.
+
+**Findings walkthrough:** By default, after the team synthesizes findings, the skill presents an ask-first gate with three options: `Walk through findings` / `Apply all` / `Review only`. Walking through triages each finding individually — Accept / Modify / Reject — batched at most 4 per prompt, with each finding shown alongside its source reviewer and rationale. Choosing Modify defers revisions to a single post-walkthrough edit pass where you revise the kept edits directly in the plan.
+
+- `--skip-analysis` — bypasses the gate and walkthrough entirely, preserving the previous auto-apply behavior
+- `--triage-top <N>` — individually triages only the N highest-risk findings and batch-accepts the rest
+- `--background` — implies `--skip-analysis`, so unattended runs never block on a prompt
 
 #### `review-plan-bg` — Background command
 

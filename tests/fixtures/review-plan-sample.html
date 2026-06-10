@@ -1,0 +1,136 @@
+<!--
+  Fixture for the review-plan findings-walkthrough smoke test
+  (docs/plans/add-review-findings-walkthrough.html).
+
+  A deliberately small, fully static HTML implementation plan with two
+  seeded findings (marked inline with "SEEDED FINDING" comments) that the
+  review team must catch. No JavaScript.
+
+  Run A — interactive walkthrough:
+    /plan-agent:review-plan tests/fixtures/review-plan-sample.html
+    At the gate choose "Walk through findings", then reject exactly one
+    finding. Confirm the rejected edit stays out of the plan body but
+    appears in the appended Team Review triage record.
+
+  Run B — analysis skipped:
+    /plan-agent:review-plan tests/fixtures/review-plan-sample.html --skip-analysis
+    Confirm no gate is shown and every proposed edit is applied.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plan: Add CSV export to the report dashboard</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      color: #1f2933;
+      background: #f8fafc;
+      line-height: 1.55;
+    }
+    header h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      background: #fde68a;
+      color: #713f12;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .meta { color: #64748b; font-size: 0.85rem; }
+    h2 {
+      font-size: 1.15rem;
+      margin-top: 2rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.3rem;
+    }
+    .step {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .step h3 {
+      font-size: 1rem;
+      margin: 0 0 0.5rem;
+    }
+    .verify {
+      color: #475569;
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+    code {
+      background: #eef2f7;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    ul { padding-left: 1.4rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Plan: Add CSV export to the report dashboard</h1>
+    <p><span class="badge">todo</span></p>
+    <p class="meta">Type: feature &middot; Created: 2026-06-10 &middot; Repo: agentics (fixture)</p>
+  </header>
+
+  <section id="objective">
+    <h2>Objective</h2>
+    <p>Add a one-click CSV export to the report dashboard so users can download
+    the currently filtered report rows as a spreadsheet-ready file.</p>
+  </section>
+
+  <section id="steps">
+    <h2>Steps</h2>
+
+    <article class="step">
+      <h3>Step 1 — Add the export endpoint</h3>
+      <p class="action">Create <code>GET /api/reports/:id/export.csv</code> in
+      <code>server/routes/reports.js</code> that streams the filtered report rows
+      as CSV with a <code>Content-Disposition: attachment</code> header.</p>
+      <p class="verify"><strong>Verify:</strong> <code>curl</code> the endpoint for a known
+      report and confirm the response has a <code>text/csv</code> content type and
+      one line per record.</p>
+    </article>
+
+    <!-- SEEDED FINDING 1: the verify line below is uselessly vague ("check it
+         works") — a reviewer must flag it and propose a concrete verification. -->
+    <article class="step">
+      <h3>Step 2 — Escape CSV field values</h3>
+      <p class="action">In <code>server/lib/csv.js</code>, quote fields containing
+      commas, quotes, or newlines, and double embedded quotes per RFC 4180 so
+      values like <code>Acme, Inc.</code> round-trip correctly.</p>
+      <p class="verify"><strong>Verify:</strong> check it works.</p>
+    </article>
+
+    <article class="step">
+      <h3>Step 3 — Add the Export button to the dashboard</h3>
+      <p class="action">Add an "Export CSV" button to
+      <code>src/components/ReportToolbar.jsx</code> that links to the export
+      endpoint with the current filter query string.</p>
+      <p class="verify"><strong>Verify:</strong> click the button on a filtered dashboard and
+      confirm the downloaded file contains only the filtered rows.</p>
+    </article>
+  </section>
+
+  <section id="acceptance-criteria">
+    <h2>Acceptance Criteria</h2>
+    <!-- SEEDED FINDING 2: no criterion covers Step 2 — the list omits any
+         check for CSV escaping of special characters, despite Step 2 being
+         entirely about it. A reviewer must flag the missing criterion. -->
+    <ul>
+      <li>The export endpoint returns a CSV download for any saved report.</li>
+      <li>The Export CSV button is visible on the report dashboard toolbar.</li>
+      <li>The downloaded file reflects the dashboard's active filters.</li>
+    </ul>
+  </section>
+</body>
+</html>

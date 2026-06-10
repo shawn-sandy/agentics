@@ -54,15 +54,15 @@ This template is used to structure the team's synthesis of reviewer findings and
 
 ## Inline Edits to Apply
 
-| Target Element | Action | New Content / Notes |
-|---|---|---|
-| `.objective-card` | edit | <New or revised objective statement if needed.> |
-| `#criteria-list li#ac1` | edit | <Revised acceptance criterion if needed.> |
-| `.step-card #step-N .step-why` | edit | <Clarified "why" for step N if needed.> |
-| `.step-card #step-N .verify-body` | edit | <More specific verification instructions for step N if needed.> |
-| `#criteria-list` | append | `<li id="ac-new">New acceptance criterion</li>` |
-| `.step-card:nth-child(N)` | insert after | `<div class="step-card">... new step ...</div>` |
-| `.verification-section` | edit | <Revised end-to-end verification if needed.> |
+| Target Element | Action | New Content / Notes | Source / Rationale |
+|---|---|---|---|
+| `.objective-card` | edit | <New or revised objective statement if needed.> | Architecture — objective conflates two separate deliverables |
+| `#criteria-list li#ac1` | edit | <Revised acceptance criterion if needed.> | Testability — criterion ac1 is not falsifiable as written |
+| `.step-card #step-N .step-why` | edit | <Clarified "why" for step N if needed.> | Completeness — step N states what but not why |
+| `.step-card #step-N .verify-body` | edit | <More specific verification instructions for step N if needed.> | Completeness — step N's verification is too vague to confirm success |
+| `#criteria-list` | append | `<li id="ac-new">New acceptance criterion</li>` | Risk — no criterion covers the rollback path |
+| `.step-card:nth-child(N)` | insert after | `<div class="step-card">... new step ...</div>` | Completeness — a required step is missing between steps N and N+1 |
+| `.verification-section` | edit | <Revised end-to-end verification if needed.> | Testability — end-to-end verification never exercises the new flow |
 
 **Notes:**
 - Each row is applied as a separate `Edit` operation in order.
@@ -72,6 +72,25 @@ This template is used to structure the team's synthesis of reviewer findings and
 - All inserted content must be HTML-escaped (e.g., `<` becomes `&lt;`).
 - Never modify `<style>` or `<script>` blocks.
 - Skip rows whose target element cannot be matched in the source plan.
+- The `Source / Rationale` column names the originating reviewer plus a one-line why for each edit; it feeds the per-finding triage in Step 6b — Walkthrough & Analysis.
+
+### Triage Outcome
+
+<Filled by Step 7 Pass 2 after the Step 6b walkthrough. Records the developer's decision for every proposed edit.>
+
+**Accepted** (applied as-is):
+
+- <Target element and finding for each edit the developer accepted unchanged.>
+
+**Modified** (applied with the developer's revised content):
+
+- <Target element, finding, and the revised content that was applied in place of the proposed content.>
+
+**Rejected** (recorded only, never applied):
+
+- <Target element, finding, and the developer's reason for declining the edit.>
+
+<If the walkthrough was skipped, state which bypass applied — `--skip-analysis`, background mode, "Apply all", or review-only mode — and that all proposed edits were applied (or none, for review-only).>
 
 ---
 
