@@ -106,7 +106,18 @@ The skill enforces the full Steps 1–8 workflow:
 5b. **Interview** — structured interview to stress-test the plan (skipped with `--quick` or `--no-interview`)
 6. **Commit** — commits the plan alongside related changes
 7. **Status** — tracks `todo` → `in-progress` → `completed` via `<html data-status>` and `<meta name="plan-status">`
-8. **Open** — opens the plan in a browser to confirm it renders correctly
+8. **Open** — opens the plan in a browser and presents a next-action menu: **Implement now**, **Run as workflow** (complex plans), **Review the plan**, **Edit the plan**, or **Exit**
+
+**Step 8 exit menu — Review the plan option:**
+
+The exit menu always offers `Review the plan` as a one-click path to critique the freshly-generated plan before implementing it. Selecting it triggers a foreground-or-background sub-choice:
+
+- **Run now (foreground):** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, runs the seven-reviewer Agent Team in-session, then re-renders the updated plan and loops back to the menu.
+- **Background:** invokes `Skill(skill: "plan-agent:review-plan-bg", args: "<plan path>")`, dispatches the review team detached via `agent-review-plan`, and returns to the menu immediately; reopen the plan after completion to view applied updates.
+
+**Adaptive menu swap:** The `AskUserQuestion` tool is capped at 4 options. When a workflow prompt is present the menu would otherwise have 5 slots, so `Edit the plan` is dropped from that variant — the full ordering becomes: `Implement now` / `Run as workflow` / `Review the plan` / `Exit`. Without a workflow prompt all four options appear: `Implement now` / `Review the plan` / `Edit the plan` / `Exit`.
+
+If Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset), selecting `Review the plan` surfaces `review-plan`'s guidance and returns to the menu without crashing the planning flow. Plan status stays `todo` throughout — reviewing is not implementing.
 
 ### HTML plan output
 

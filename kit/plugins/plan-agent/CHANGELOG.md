@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.11.0 — Review option in the plan exit step (2026-06-09)
+
+### Added
+
+- **`Review the plan` option in Step 8 exit menu** — every freshly-generated plan now offers a one-click path to the `review-plan` Agent Team. Selecting it presents a foreground-or-background sub-choice: foreground runs `Skill(skill: "plan-agent:review-plan", args: "<path>")` in-session and loops back to the menu after the review completes; background dispatches `Skill(skill: "plan-agent:review-plan", args: "<path> --background")` and returns to the menu immediately. Agent-Teams-unavailable hard-stop is handled gracefully — guidance is relayed and the menu is restored without crashing the flow. Plan status stays `todo` throughout reviewing.
+- **`--background` flag for `review-plan` skill** — when present, the skill requires an explicit plan path, skips all `AskUserQuestion` prompts, defaults to update-in-place mode, and is safe for unattended execution.
+- **`/plan-agent:review-plan-bg <path>` command** — thin background dispatcher that validates the plan path argument, spawns `agent-review-plan` with `run_in_background: true`, and returns an ack immediately.
+- **`agent-review-plan` background agent** — fire-and-forget agent that confirms the plan file exists, invokes the `review-plan` skill with `--background`, and reports the updated path on completion. Runs on Sonnet with a 30-turn cap.
+
+### Changed
+
+- **Adaptive menu swap in Step 8** — the `AskUserQuestion` tool is capped at 4 options. When a workflow prompt is present, `Edit the plan` yields its slot to `Review the plan`: `Implement now` / `Run as workflow` / `Review the plan` / `Exit`. Without a workflow prompt all four options are present: `Implement now` / `Review the plan` / `Edit the plan` / `Exit`.
+
+---
+
 ## 1.10.1 — Stable plan-created sort in auto-rebuild hook (2026-06-08)
 
 ### Fixed
@@ -15,16 +30,6 @@
 ### Changed
 
 - Consolidated unreleased changelog entries.
-
----
-
-## Unreleased — Add background mode to review-plan
-
-### Added
-
-- **`--background` flag for `review-plan` skill** — when present, the skill requires an explicit plan path, skips all `AskUserQuestion` prompts, defaults to update-in-place mode, and is safe for unattended execution.
-- **`/plan-agent:review-plan-bg <path>` command** — thin background dispatcher that validates the plan path argument, spawns `agent-review-plan` with `run_in_background: true`, and returns an ack immediately.
-- **`agent-review-plan` background agent** — fire-and-forget agent that confirms the plan file exists, invokes the `review-plan` skill with `--background`, and reports the updated path on completion. Runs on Sonnet with a 30-turn cap.
 
 ---
 

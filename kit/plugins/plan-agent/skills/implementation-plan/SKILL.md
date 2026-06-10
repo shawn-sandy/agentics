@@ -175,10 +175,11 @@ Follow these steps exactly.
    - Options (when workflow prompt exists):
      - `Implement now` — Begin implementing the plan steps in the current session.
      - `Run as workflow` — Launch a dynamic workflow (`/workflows`) to implement steps in parallel with subagents.
-     - `Edit the plan` — Revise or extend the plan before implementing.
+     - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
    - Options (when no workflow prompt):
      - `Implement now` — Begin implementing the plan steps in the current session.
+     - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
 
@@ -229,6 +230,16 @@ Follow these steps exactly.
    Commit the source file changes together with the updated plan file after implementation finishes.
 
    **If the user chooses `Run as workflow`:** Output the workflow prompt (stored as `{workflow-prompt}` in Step 2) so the user can paste it to launch a dynamic workflow. The workflow prompt includes the word "workflow" which triggers Claude Code's workflow runtime. Update `<html data-status>`, `<meta name="plan-status">`, and badge text to `in-progress`. Do not implement the steps directly — the workflow runtime orchestrates subagents to do the work.
+
+   **If the user chooses `Review the plan`:** Ask whether to run the review in the foreground or background using `AskUserQuestion` with a single question:
+   - Question: "Run the plan review now, or dispatch it in the background?"
+   - Options:
+     - `Run now (foreground)` — Review runs in this session; you will see progress as it works.
+     - `Background` — Dispatch the review to a detached Agent Team; you will be notified on completion.
+
+   **If the user chooses `Run now (foreground)`:** Invoke `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, passing the current plan's relative path (resolved in Step 2) so the review targets this plan. Handle `review-plan`'s hard-stop gracefully if Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset): relay the guidance it surfaces and return to the Step 8 menu without error. After a successful foreground review completes, re-render the now-updated plan in the browser via the Step 7 sub-steps, then loop back to this step and ask again (mirroring the `Edit the plan` loop). Leave plan `status` at `todo` — reviewing is not implementing.
+
+   **If the user chooses `Background`:** Invoke `Skill(skill: "plan-agent:review-plan-bg", args: "<plan path>")`, passing the current plan's relative path. `review-plan-bg` dispatches the `agent-review-plan` background agent with `run_in_background: true`, so it returns an ack immediately and the current session is not blocked. Return to the Step 8 menu immediately and note that the user can reopen the plan to see changes once the detached run finishes. Leave plan `status` at `todo`.
 
    **If the user chooses `Edit the plan`:** Ask what changes to make via `AskUserQuestion` ("What would you like to change or add to the plan?"), apply the edits to the HTML plan file, re-render it in the browser (repeat the sub-steps from Step 7), then loop back to this step and ask again.
 
