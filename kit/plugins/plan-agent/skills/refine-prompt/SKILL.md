@@ -1,16 +1,16 @@
 ---
-name: craft-prompt
+name: refine-prompt
 description:
-  "Craft-prompt: interviews users and assembles a structured AI prompt using
+  "Refine-prompt: interviews users and assembles a structured AI prompt using
   Anthropic best-practice techniques. Use when the user runs
-  /plan-agent:craft-prompt or asks to craft a prompt."
+  /plan-agent:refine-prompt or asks to refine a prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
 allowed-tools:
   AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *)
 ---
 
-# craft-prompt
+# refine-prompt
 
 Interview the user about their prompting need, classify the prompt type, apply
 the applicable Anthropic best-practice techniques, and deliver a copy-pasteable,
@@ -20,7 +20,7 @@ well-structured AI prompt.
 
 ## Entry — Read $ARGUMENTS
 
-On invocation via `/plan-agent:craft-prompt`, `$ARGUMENTS` contains the user's
+On invocation via `/plan-agent:refine-prompt`, `$ARGUMENTS` contains the user's
 initial intent or topic. If `$ARGUMENTS` is non-empty, use it to seed Phase 1
 (Classify) and skip the "what do you need?" opener. If empty, ask: "What kind of
 prompt do you need help crafting?"
@@ -149,18 +149,18 @@ template placeholders.
 Template selection by type:
 
 - system →
-  `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/system-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/refine-prompt/references/system-prompt-template.md`
 - task →
-  `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/task-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/refine-prompt/references/task-prompt-template.md`
 - creative →
-  `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/creative-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/refine-prompt/references/creative-prompt-template.md`
 - analytical →
-  `${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/analytical-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/refine-prompt/references/analytical-prompt-template.md`
 
 Read the template with the Read tool, resolving the path as
-`${CLAUDE_PLUGIN_ROOT}/skills/craft-prompt/references/<type>-prompt-template.md`.
+`${CLAUDE_PLUGIN_ROOT}/skills/refine-prompt/references/<type>-prompt-template.md`.
 If `${CLAUDE_PLUGIN_ROOT}` is unavailable, fall back to a Glob search:
-`Glob("**/plan-agent/skills/craft-prompt/references/<type>-prompt-template.md")`.
+`Glob("**/plan-agent/skills/refine-prompt/references/<type>-prompt-template.md")`.
 
 Substitute all {{PLACEHOLDER}} values in the template with the structured
 content from Phase 3, the interview answers from Phase 2, and the user's intent

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-04">
 <meta name="plan-repo" content="agentics">
@@ -969,7 +969,7 @@
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Create refine-prompt skill</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1051,12 +1051,12 @@
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span id="progress-label">9 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1079,12 +1079,12 @@
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the <code>refine-prompt</code> skill directory inside the existing <code>plan-agent</code> plugin</span>
               </div>
               <div class="step-why">The plan-agent plugin already exists with its own <code>plugin.json</code>, skills, and marketplace entry. Adding a new skill directory under <code>kit/plugins/plan-agent/skills/refine-prompt/</code> (with <code>references/</code> for templates) is all that&rsquo;s needed &mdash; no new plugin scaffold, no new <code>plugin.json</code>, no marketplace registration.</div>
@@ -1096,12 +1096,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write the core <code>SKILL.md</code> with the six-phase best-practices pipeline</span>
               </div>
               <div class="step-why">The SKILL.md is the runtime artifact &mdash; its frontmatter controls activation and its body defines the entire workflow. The pipeline maps directly to Anthropic&rsquo;s best practices guide: <strong>Classify</strong> (identify prompt type and select applicable techniques) &rarr; <strong>Interview</strong> (gather context per &ldquo;Add context to improve performance&rdquo;) &rarr; <strong>Structure</strong> (apply XML tags, role, examples per &ldquo;Structure prompts with XML tags&rdquo; and &ldquo;Give Claude a role&rdquo;) &rarr; <strong>Draft</strong> (assemble the prompt with CoT scaffolding per &ldquo;Leverage thinking capabilities&rdquo;) &rarr; <strong>Recommend</strong> (surface matching skills/agents) &rarr; <strong>Deliver</strong> (present in a copy-pasteable fenced block).</div>
@@ -1113,12 +1113,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Build the prompt-type classifier with a best-practices layer matrix</span>
               </div>
               <div class="step-why">The Anthropic guide documents seven core techniques (clarity, context/motivation, XML tags, role assignment, few-shot examples, thinking/CoT, output formatting). Different prompt types need different subsets. The classifier maps each type to its applicable layers so the Draft phase assembles only the relevant techniques. For example: a system prompt applies role + XML structure + guardrails + output formatting; a task prompt applies clarity + CoT + examples + output formatting; a creative prompt applies role + tone + context; an analytical/research prompt applies long-context patterns + quote grounding + CoT + self-check.</div>
@@ -1130,12 +1130,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Build the clarifying-questions engine grounded in &ldquo;Add context to improve performance&rdquo;</span>
               </div>
               <div class="step-why">The Anthropic guide&rsquo;s &ldquo;Add context to improve performance&rdquo; principle states that providing motivation behind instructions helps Claude deliver more targeted responses. The interview phase implements this by extracting the user&rsquo;s <em>why</em>, not just their <em>what</em>. Questions are derived from the classified type and its technique matrix: a system prompt interview asks about persona, tone, boundaries, and safety constraints (feeding the Role and XML layers); a task prompt asks about input/output formats, edge cases, and success criteria (feeding the Clarity, CoT, and Output Format layers). Progressive depth means: ask the critical 2&ndash;3 questions first, then offer to go deeper if the user wants a more refined prompt.</div>
@@ -1147,12 +1147,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write the prompt-generation templates in <code>references/</code> implementing specific best-practices techniques</span>
               </div>
               <div class="step-why">The Anthropic guide&rsquo;s techniques must be baked directly into each template as structural scaffolding &mdash; not left to the Draft phase to improvise. Each template implements the techniques from its row in the Step 3 matrix: the system-prompt template uses <code>&lt;role&gt;</code> tags (&ldquo;Give Claude a role&rdquo;), <code>&lt;instructions&gt;</code> and <code>&lt;constraints&gt;</code> XML wrappers (&ldquo;Structure prompts with XML tags&rdquo;), and output-format indicators (&ldquo;Be direct about the desired output&rdquo;). The task-prompt template adds <code>&lt;thinking&gt;</code> scaffolding (&ldquo;Leverage thinking capabilities&rdquo;), <code>&lt;example&gt;</code> tag slots (&ldquo;Provide examples&rdquo;), and step-by-step instruction blocks (&ldquo;Be clear and direct&rdquo;). The analytical template includes document-grounding patterns with <code>&lt;document&gt;</code> tags and quote-extraction (&ldquo;Long-context prompting&rdquo;) plus self-check instructions. The creative template uses tone-setting role assignments and positive-instruction framing. A separate <code>references/best-practices-reference.md</code> file provides a distilled summary of all seven techniques for the SKILL.md to cite.</div>
@@ -1164,12 +1164,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Implement the skill/agent/workflow recommendation engine grounded in &ldquo;Tool use and agentic patterns&rdquo;</span>
               </div>
               <div class="step-why">The Anthropic guide&rsquo;s &ldquo;Tool use&rdquo; and &ldquo;Agentic coding&rdquo; sections describe how Claude works best when given concrete tools with clear descriptions. The recommendation engine applies this principle in reverse: it queries the session&rsquo;s live tool registry via <code>ToolSearch</code> with keyword queries derived from the user&rsquo;s intent, and surfaces the most relevant tools. <code>ToolSearch</code> is session-scoped (only returns tools actually loaded), includes MCP tools, and requires no filesystem path assumptions. This turns a generated prompt into an actionable recommendation &mdash; &ldquo;you could also run <code>/code-review</code> for this&rdquo; &mdash; and when the recommended tool is itself the better path, prevents the user from needing a prompt at all.</div>
@@ -1181,12 +1181,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump <code>plan-agent</code> version in <code>.claude-plugin/marketplace.json</code> and update <code>CHANGELOG.md</code></span>
               </div>
               <div class="step-why">Adding a new skill is a minor version bump per the marketplace versioning convention. The plan-agent plugin is already registered &mdash; no new entry is needed, just a version increment and a changelog entry documenting the new <code>refine-prompt</code> skill.</div>
@@ -1198,12 +1198,12 @@
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a <code>refine-prompt</code> section to <code>plan-agent</code>&rsquo;s existing README</span>
               </div>
               <div class="step-why">The plan-agent README already documents existing skills. Adding a section for the new refine-prompt skill keeps all plugin documentation in one place. The section must explain that prompts are generated using <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s Claude Prompting Best Practices</a> as the foundation, list the seven techniques, and show a concrete before/after example.</div>
@@ -1226,39 +1226,39 @@
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>kit/plugins/plan-agent/skills/refine-prompt/</code> directory exists with <code>SKILL.md</code> and <code>references/</code> subdirectory inside the existing plan-agent plugin</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2"><code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> has valid frontmatter (<code>name</code>, <code>description</code>, <code>allowed-tools</code>, <code>disable-model-invocation: true</code>) and body under 500 lines</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">The skill classifies prompts into at least four types (system, task, creative, analytical) with a technique matrix mapping each type to applicable best-practices layers from the <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic guide</a></label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The interview phase uses <code>AskUserQuestion</code> with type-specific questions derived from the technique matrix, asks the user&rsquo;s <em>why</em> (per &ldquo;Add context to improve performance&rdquo;), and offers progressive depth</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Generated prompts use XML tags (<code>&lt;instructions&gt;</code>, <code>&lt;context&gt;</code>, <code>&lt;example&gt;</code>) per &ldquo;Structure prompts with XML tags&rdquo;, role assignment per &ldquo;Give Claude a role&rdquo;, <code>&lt;thinking&gt;</code> scaffolding per &ldquo;Leverage thinking capabilities&rdquo;, and output format indicators per &ldquo;Be direct about the desired output&rdquo; &mdash; each applied only when the technique matrix selects it for the classified prompt type</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">The recommendation engine uses <code>ToolSearch</code> to query the session&rsquo;s live tool registry and surfaces 1&ndash;3 matching tools with invocation syntax</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>.claude-plugin/marketplace.json</code> has the <code>plan-agent</code> version bumped (minor increment) and <code>kit/plugins/plan-agent/CHANGELOG.md</code> documents the new skill</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">The final prompt output is presented in a fenced code block the user can copy-paste directly into any AI agent, and uses positive instructions (per &ldquo;Be direct about the desired output&rdquo;) rather than telling Claude what <em>not</em> to do</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">A <code>references/best-practices-reference.md</code> file exists containing a distilled summary of all seven core techniques from the <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic guide</a>, organized by technique name with actionable implementation notes</label>
         </li>
       </ul>
@@ -1287,27 +1287,47 @@
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report &mdash; all requirements met.</p>
+          <p>Implemented as the <code>craft-prompt</code> skill (PR #248, commit <code>2672be2</code>; Phase 7 &ldquo;Save&rdquo; added in PR #249), then renamed to <code>refine-prompt</code> &mdash; the plan&rsquo;s original name &mdash; in v2.0.0 on 2026-06-10. The skill now lives at <code>kit/plugins/plan-agent/skills/refine-prompt/</code>, invoked as <code>/plan-agent:refine-prompt</code>. All functional requirements met. Verification evidence per check (recorded pre-rename; <code>craft-prompt</code> paths below now correspond to <code>skills/refine-prompt/</code>):</p>
+          <dl class="report-list">
+            <dt>step-1-directory</dt>
+            <dd>kit/plugins/plan-agent/skills/craft-prompt/ exists with SKILL.md and a references/ subdirectory containing 5 files (system-prompt-template.md, task-prompt-template.md, creative-prompt-template.md, analytical-prompt-template.md, best-practices-reference.md) — naming delta only: plan says refine-prompt, implemented as craft-prompt per PR #248 mapping. kit/plugins/plan-agent/.claude-plugin/plugin.json:2 has "name": "plan-agent", parses as valid JSON, and grep confirms no "version" key anywhere in the file; version is correctly held only in .claude-plugin/marketplace.json:253 ("version": "1.11.0").</dd>
+            <dt>step-2-skill-md-pipeline</dt>
+            <dd>kit/plugins/plan-agent/skills/craft-prompt/SKILL.md satisfies all three requirements: (1) frontmatter has name (line 2), description (lines 3-6), disable-model-invocation: true (line 7), and allowed-tools listing ToolSearch (lines 9-10); (2) all six phases are present as headings — Classify (line 30), Interview (line 64), Structure (line 115), Draft (line 143), Recommend (line 180), Deliver (line 201) — with explicit Anthropic best-practice references: the Classify technique matrix is labeled "Anthropic best-practice layers" naming role assignment/XML structure/thinking-CoT/output format (lines 42-50), Interview cites "Add context to improve performance" verbatim (line 67), Structure applies the matrix's XML/role/examples/CoT layers (lines 117-139), and Draft cites "Be direct about the desired output" verbatim under "writing rules from Anthropic's best practices" (lines 170-173); (3) the Interview phase uses AskUserQuestion "with a batched set of 2-3 essential questions" per type (line 70) plus an optional second batch (lines 109-111). Naming delta only: the skill ships as craft-prompt rather than the plan's refine-prompt path, which passes per the naming-mapping rule; the extra Phase 7 — Save (line 228) is the explicitly-acceptable addition.</dd>
+            <dt>step-3-classifier-matrix</dt>
+            <dd>Phase 1 — Classify in kit/plugins/plan-agent/skills/craft-prompt/SKILL.md lists the four required types (lines 35-40) and defines a "technique matrix" table (lines 42-50) with four distinct layer sets: system = role assignment + XML structure (instructions/constraints) + output format + guardrails (line 47); task = clarity/directness + XML structure (context/example) + thinking/CoT + output format (line 48); creative = role assignment + tone/voice + context/motivation + output format + positive framing (line 49); analytical = long-context patterns (document/quote) + thinking/CoT + self-check + output format (line 50). No two sets are identical, and they match the plan's own exemplar mapping in Step 3 (docs/plans/create-prompt-refiner-skill.html:1124), covering the best-practice pool (clarity, XML structure, role, examples via the &lt;example&gt; tag, CoT, output format, self-check). Naming delta only: the skill ships as craft-prompt instead of the plan's refine-prompt path — substance fully present.</dd>
+            <dt>step-4-interview-engine</dt>
+            <dd>Phase 2 of kit/plugins/plan-agent/skills/craft-prompt/SKILL.md uses AskUserQuestion with "a batched set of 2-3 essential questions determined by the classified type" (line 70) and offers a follow-up batch only on user confirmation ("Only run a second AskUserQuestion batch if the user confirms", lines 109-111). All four types have their own question set — system (lines 73-79), task (81-88), creative (90-98), analytical (100-107) — each question annotated "(feeds Role/Clarity/CoT/Output Format/Long-context...)" mapping directly to the Phase 1 technique matrix (lines 45-50), and each set contains an explicit why question (lines 78, 87, 98, 106) per "Add context to improve performance" (cited at line 67). Naming delta only: the skill is craft-prompt rather than the plan's refine-prompt path — substance matches plan Step 4 (plan HTML lines 1141-1144); minor non-blocking note: the creative set lists 4 candidate questions while line 70 caps the first batch at 2-3.</dd>
+            <dt>step-5-templates</dt>
+            <dd>All five required files exist in kit/plugins/plan-agent/skills/craft-prompt/references/ (system-prompt-template.md, task-prompt-template.md, creative-prompt-template.md, analytical-prompt-template.md, best-practices-reference.md). Substance verified per template: system-prompt-template.md has &lt;role&gt;/&lt;instructions&gt;/&lt;constraints&gt; (lines 12/16/25); task-prompt-template.md has &lt;example&gt; input/output slots (lines 16-19) and &lt;thinking&gt; scaffolding (lines 21-26); analytical-prompt-template.md has &lt;document&gt;&lt;content&gt; grounding (lines 12-15) and a "Self-check before responding:" block (lines 29-32); creative-prompt-template.md sets tone via &lt;role&gt;You are {{CREATIVE_ROLE}}. Your voice is {{VOICE_DESCRIPTION}}.&lt;/role&gt; (lines 12-14) with style/tone requirements (lines 24-28); best-practices-reference.md covers all seven core techniques as sections 1-7 (Clarity and Directness line 7, Context and Motivation line 21, XML Tags line 35, Role Assignment line 52, Few-Shot Examples line 66, Thinking/CoT line 80, Output Formatting line 94). Naming delta only: templates say "Used by `craft-prompt`" (e.g., system-prompt-template.md line 3) instead of the plan's "refine-prompt" — naming difference, not a substance gap.</dd>
+            <dt>step-6-recommend-engine</dt>
+            <dd>Phase 5 — Recommend in /Users/shawnsandy/devbox/agentics/.claude/worktrees/trusting-grothendieck-b678fe/kit/plugins/plan-agent/skills/craft-prompt/SKILL.md satisfies every requirement: lines 186-191 require "ToolSearch with 2–3 keyword queries derived from the user's intent" run "for each keyword phrase" (keyword search mode); lines 192-193 require "Deduplicate results, filter to skills/commands/agents only (not filesystem tools)"; lines 194-195 require "Present the top 1–3 matches with: the invocation command, a one-sentence description, and a note on when it supersedes a custom prompt" (concrete invocation-syntax example "/code-review — Reviews code for bugs and quality..." at lines 219-220); lines 182-184 state matches "may supersede the need for a custom prompt entirely"; and ToolSearch is listed in allowed-tools at lines 9-10. The literal `max_results: 5` parameter from the plan is not written out, but the phase gives explicit result-count guidance ("top 1–3 matches", line 194), so per the check rule this is a noted delta, not a defect. Naming delta only: the skill ships as craft-prompt (kit/plugins/plan-agent/skills/craft-prompt/) instead of the plan's refine-prompt — substance is fully present, so this passes.</dd>
+            <dt>step-7-version-changelog</dt>
+            <dd>Commit 2672be2 bumped the plan-agent entry in .claude-plugin/marketplace.json from 1.3.2 to 1.4.0 (minor) in the same commit that added skills/craft-prompt/ (SKILL.md + 5 references), and kit/plugins/plan-agent/CHANGELOG.md:147 contains "## v1.4.0 — 2026-06-04 — Add craft-prompt skill" with an Added section (lines 151-162) documenting all six phases and five reference files. `python3 -m json.tool .claude-plugin/marketplace.json` printed VALID, and the current plan-agent version is 1.11.0 (.claude-plugin/marketplace.json:253), which is &gt;= the 1.4.0 that shipped the skill. Naming delta only: the plan's "refine-prompt" shipped as "craft-prompt" — version/changelog substance is fully present under the shipped name.</dd>
+            <dt>step-8-readme</dt>
+            <dd>kit/plugins/plan-agent/README.md documents the skill under "#### craft-prompt — Manual invoke only" (line 210) with all three required elements: (1) line 212 overview mentions and links Anthropic's guide via [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices); (2) lines 220-249 give a "Before / after" usage example transforming the vague "write me a prompt to summarize stuff" into a structured task prompt with &lt;context&gt;/&lt;thinking&gt;/&lt;example&gt; and an output-format rule; (3) lines 260-267 provide a "Technique matrix" table mapping all four prompt types (system, task, creative, analytical) to their applied best-practices techniques. Naming delta only: the plan's "refine-prompt" is documented as "craft-prompt", which passes per the naming mapping.</dd>
+            <dt>acceptance-criteria-sweep</dt>
+            <dd>All nine criteria hold in substance under the naming delta (plan's refine-prompt shipped as craft-prompt at kit/plugins/plan-agent/skills/craft-prompt/ — name/path-only mismatch, passes per mapping). (1) `ls` shows skills/craft-prompt/ with SKILL.md and references/ holding all five files. (2) Frontmatter parses as valid YAML (Ruby YAML.safe_load) with name, description, allowed-tools, disable-model-invocation: true (SKILL.md:1-11); wc -l = 289 lines &lt; 500. (3) SKILL.md:35-40 classifies four types (system/task/creative/analytical) and SKILL.md:45-50 is the technique matrix mapping each type to best-practices layers. (4) SKILL.md:70-71 "Use **AskUserQuestion** with a batched set of 2–3 essential questions determined by the classified type"; type-specific questions at 73-107 each annotated with the matrix technique they feed; a "_Why_" question per type (lines 79, 87, 98, 106) per "Add context to improve performance" (66-68); progressive depth opt-in at 109-111. (5) SKILL.md:115-139 maps &lt;role&gt;, &lt;instructions&gt;/&lt;constraints&gt;, &lt;context&gt;, &lt;example&gt;, &lt;thinking&gt;, &lt;document&gt;, self-check to matrix types with "Skip any layer whose type is not in the technique matrix" (139) and placeholder removal for unselected techniques (168); templates carry matching tags — system-prompt-template.md:12/16/25, task-prompt-template.md:12/16/21/30, creative-prompt-template.md:12/18/24, analytical-prompt-template.md:12/18/29/34. (6) SKILL.md:180-197 Phase 5 searches "the session's live tool registry" via ToolSearch (allowed-tools, line 10) and presents "the top 1–3 matches with: the invocation command" (194-195). (7) git show 2672be2 (PR #248, the commit adding the skill) bumps marketplace.json plan-agent "1.3.2" -&gt; "1.4.0" (minor), and kit/plugins/plan-agent/CHANGELOG.md:147-161 ("v1.4.0 — Add craft-prompt skill") documents the skill and references. (8) SKILL.md:203-204 "Present the assembled prompt in a fenced code block the user can copy-paste directly" with ```text format example at 212-221; positive framing instructed at SKILL.md:172 ('Use positive framing ("Do X" not "Don't do Y")'). (9) references/best-practices-reference.md exists (119 lines) with technique-name sections 1-7 (Clarity, Context/Motivation, XML Tags, Role Assignment, Few-Shot Examples, Thinking/CoT, Output Formatting — exactly the seven the plan enumerates at HTML line 1124) plus a bonus eighth (Long-Context), each with actionable "Implementation:" bullets.</dd>
+          </dl>
         </div>
       </div>
     </section>

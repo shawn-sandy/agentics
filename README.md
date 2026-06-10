@@ -497,7 +497,7 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 #### `plan-agent` v1.10.1
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, or generate Anthropic-best-practice AI prompts with `/plan-agent:craft-prompt`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, or generate Anthropic-best-practice AI prompts with `/plan-agent:refine-prompt`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -512,7 +512,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — also auto-activates on plan-document intent |
 | `review-plan` | Spawn a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, + UI-conditional UX and accessibility) to review a plan, synthesize findings, and apply improvements in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
-| `craft-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
+| `refine-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
 | `plans-open` | Reopen the plans gallery without rebuilding |
 
@@ -540,7 +540,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:review-plan docs/plans/add-dark-mode-toggle.html
 # /plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
 # /plan-agent:finalize-plan add-dark-mode-toggle.html
-# /plan-agent:craft-prompt
+# /plan-agent:refine-prompt
 # "Browse my plans"
 ```
 
