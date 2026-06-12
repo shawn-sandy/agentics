@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="todo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="completed">
-<meta name="plan-type" content="feature">
-<meta name="plan-created" content="2026-06-10">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="fix">
+<meta name="plan-created" content="2026-06-12">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-file" content="embed-markdown-digest-in-html-plans.html">
-<meta name="plan-path" content="docs/plans/embed-markdown-digest-in-html-plans.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/embed-markdown-digest-in-html-plans.html — Embed a markdown digest in every HTML plan for cheap reads">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/embed-markdown-digest-in-html-plans.html — Embed a markdown digest in every HTML plan for cheap downstream reads">
-<title>Plan: Embed a machine-readable markdown digest in every HTML plan</title>
+<meta name="plan-file" content="retrofit-responsive-plan-css.html">
+<meta name="plan-path" content="docs/plans/retrofit-responsive-plan-css.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/retrofit-responsive-plan-css.html — Retrofit responsive CSS into every HTML plan and harden the skeleton">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/retrofit-responsive-plan-css.html — Retrofit responsive CSS into every HTML plan and harden the skeleton">
+<title>Plan: Retrofit responsive CSS into every HTML plan</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -985,6 +985,10 @@
 
   /* ═════════════════════════════════════════════════════════════════
      OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
      ═════════════════════════════════════════════════════════════════ */
 
   /* ── Files file-tree ────────────────────────────────────────────── */
@@ -1083,134 +1087,106 @@
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST  (the artifact this plan introduces)
-     First child of <body>. type="text/markdown" never renders or runs.
-     Spec only — no status/checkbox/progress state. Guard the closing
-     script sequence with a backslash so it cannot terminate the block.
-     Extract (flag-and-exit; does not re-trigger on later id mentions):
-       awk '/<script[^>]*id="plan-digest"/{f=1;next} f&&/<\/script>/{exit} f' <file>
+     MACHINE-READABLE DIGEST
+     First element child of <body> — this comment is not an element, so
+     the script below stays firstElementChild. type="text/markdown"
+     never renders or runs. Spec only: objective, context, files, steps
+     (action/why/verify), tests, acceptance criteria, verification.
+     Never put status, checkbox, or progress state in this block.
+     Guard any literal closing-script sequence in the content as
+     <\/script so it cannot terminate this block early.
+     Extract (first-match flag-and-exit; the !f guard keeps digest body
+     lines that quote the opening tag from being swallowed, and the
+     anchored flag never re-triggers on later mentions of the id):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
      ══════════════════════════════════════════════════════════════════ -->
 <script type="text/markdown" id="plan-digest">
-# Plan: Embed a machine-readable markdown digest in every HTML plan
+# Plan: Retrofit responsive CSS into every HTML plan
 
-> Authored spec only. Status and progress live in the <head> meta tags and
-> the live DOM, never in this block.
-
-## Objective
-Embed a `<script type="text/markdown" id="plan-digest">` block as the first
-element child of `<body>` in every generated HTML plan, holding a spec-only markdown
-rendition (objective, context, files, steps with why/verify, tests, criteria,
-verification). Consumers — the implementer, the workflow author, and the 5–7
-review-team agents — read ~3.7k tokens of spec instead of ~21k tokens of
-styled HTML.
+**Objective:** Eliminate horizontal overflow in every HTML plan — retrofit all 55 shipped files in docs/plans/ with a versioned 8-line CSS block via an idempotent script, and bake the same block into the plan skeleton so every future plan is born responsive.
 
 ## Context
-A generated plan is ~86–97 KB / ~21.5k tokens, but only ~17% is plan content;
-the rest is the fixed skeleton CSS/JS, identical in every file. That cost is
-paid by every consumer and multiplied across a review cycle (lead + up to 7
-reviewers each re-reading the same CSS). Embedding a spec-only digest avoids a
-second source-of-truth file while making the spec cheap to read.
+
+A 390px-viewport browser audit of docs/plans/ found 16 of 54 HTML files overflow horizontally (worst case +294px of sideways scroll), including current-generation plans. Root causes:
+
+1. Long unbreakable tokens (file paths, slash commands) inside inline code and prose have no overflow-wrap rule anywhere in the template.
+2. Grid min-content propagation: grid items default to min-width:auto, so one unwrappable token in main inflates the shared single-column track and stretches the sidebar too. overflow-wrap:break-word wraps visually but does not reduce min-content size — only overflow-wrap:anywhere does.
+3. Component stragglers: .compare-grid does not collapse below 600px in some template generations; table cells have no wrap rule.
+
+The fix was proven empirically: injecting the block below into all 54 rendered files in a width-controlled iframe harness took the overflow count from 16 to 0 with no effect on already-clean files. Plans are self-contained single-file HTML (embedded CSS, no external assets), so skeleton improvements never reach shipped plans — a retroactive injector is required, mirroring the scripts/backfill-plan-digests.mjs (2.3.0) and scripts/backfill-save-pdf.mjs (2.4.0) precedents.
+
+## The v1 block (canonical — single source of truth is a constant in the script)
+
+```css
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+```
+
+Injection contract: the block is wrapped as <style id="plan-responsive-fix" data-version="1"> and inserted immediately before </head>. Idempotency key = id + data-version: current version → skip; older version → replace the whole block; missing → inject. docs/plans/index.html is always excluded (generated by docs/plans/build-index.sh via the rebuild hook). Files with no </head> are reported and skipped — never half-written.
 
 ## Files
-- kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html (modified) — add the #plan-digest block as first element child of <body>
-- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — digest contract, generation, content-edit refresh, prompt clause
-- kit/plugins/plan-agent/skills/review-plan/SKILL.md (modified) — digest-only reviewers + Step 7 refresh pass
-- kit/plugins/plan-agent/skills/review-plan/references/role-prompts.md (modified) — 7 reviewer briefs read the digest
-- kit/plugins/plan-agent/agents/plan-reviewer-*.md (modified) — 7 reviewer defs read the digest
-- scripts/backfill-plan-digests.mjs (new) — idempotent, state-preserving injector over docs/plans/*.html
-- .claude-plugin/marketplace.json (modified) — bump plan-agent 2.1.0 -> 2.2.0
-- kit/plugins/plan-agent/CHANGELOG.md (modified) — 2.2.0 entry
-- kit/plugins/plan-agent/README.md (modified) — document the digest + extraction
-- tests/plugins/test-plan-digest.sh (new) — objective smoke test
-- tests/plugins/test-backfill-digest.mjs (new) — backfill unit + integration test
+
+- scripts/retrofit-responsive-plans.mjs — new — idempotent injector; flags: --check, --dry-run, --dir <path>, --include-archive
+- docs/plans/*.html — modified — 55 files (all except index.html, including this plan document) get the v1 block
+- kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html — modified — same block embedded before </head>
+- kit/plugins/plan-agent/CHANGELOG.md — modified — 2.4.1 entry
+- .claude-plugin/marketplace.json — modified — plan-agent 2.4.0 → 2.4.1
+- tests/plugins/test-responsive-retrofit.sh — new — corpus check, fixture cases, skeleton-sync guard
 
 ## Steps
-1. Add the #plan-digest block to SKELETON.html as the first element child of
-   <body>. A guiding HTML comment above it is allowed — comments are not
-   elements, so the script stays the first element child (firstElementChild
-   semantics, which is what the smoke test asserts). Why: every plan inherits
-   it from the skeleton; type="text/markdown" never renders or runs,
-   preserving the single self-contained file. Verify: grep shows the block as
-   the first tag after <body> (skipping comments); the browser renders
-   nothing for it.
-2. Define the digest content + escaping contract in implementation-plan
-   SKILL.md (spec-only fields; exclude status/checkbox/progress; guard the
-   closing-script sequence with a backslash). Why: one stable contract every
-   consumer and the backfill script agree on. Canonical extraction is the
-   flag-and-exit awk (anchored on the opening tag) — a simple awk range
-   re-triggers on any later line mentioning the id. Verify: SKILL.md lists
-   included vs excluded fields, the backslash guard, and the extractor.
-3. Wire digest generation + content-edit refresh into the workflow (Step 2 +
-   HTML Output Requirements). Why: the digest must reflect the final spec and
-   stay in sync through in-session edits without coupling to status/progress.
-   The digest carries no checksum or timestamp — staleness is prevented by the
-   refresh rule and a CI guard (Next Steps), not an integrity field. Verify:
-   Step 2 fills it; the refresh-on-content-edit rule is named; status and
-   criteria gates explicitly do not touch it.
-4. Add the digest-extraction clause to the implement & workflow prompts.
-   Why: the implementer/workflow author is the primary beneficiary — spec at
-   ~3.7k not ~21k tokens. Verify: both generated prompts carry the awk
-   extraction one-liner.
-5. Switch the 7 review-plan reviewers to digest-only reads (role-prompts.md +
-   agent defs); the lead still reads full HTML for Step 7 selector edits.
-   Why: biggest token win (~120k per review cycle); reviewers emit only prose
-   findings. When a plan has no digest yet (not backfilled), reviewers fall
-   back to the full HTML for that run. Verify: every reviewer brief and def
-   references the digest and the no-digest fallback; SKILL.md Step 4 states
-   the lead-vs-reviewer split.
-6. Add a digest-refresh pass to review-plan Step 7. Why: Step 7 mutates spec
-   content by CSS selector, staling the digest. Verify: Step 7 lists the
-   refresh pass; it runs only in update-in-place mode, not review-only.
-7. Create scripts/backfill-plan-digests.mjs (idempotent, state-preserving,
-   --dry-run). Only inject when all expected sections parse; skip and report
-   any plan it cannot fully parse (no partial digests). Why: backfill the ~50
-   existing plans safely without emitting half-specs. Verify: --dry-run reports
-   injected/skipped/failed with 0 failures; skipped plans are listed; a second
-   real run injects 0.
-8. Bump version, changelog, README (plan-agent 2.1.0 -> 2.2.0; 2.1.0 was
-   taken on main by the findings-walkthrough feature). Why: new behavior is a
-   minor bump; docs/changelog are required with plugin changes; the new value
-   must be higher than main's. Verify: marketplace.json shows 2.2.0; CHANGELOG
-   top entry is 2.2.0; README documents the digest + extraction.
+
+1. **Create scripts/retrofit-responsive-plans.mjs — the idempotent injector.**
+   Why: a deterministic, re-runnable script is the only fix that reaches already-shipped self-contained plans without an LLM pass; mirrors the backfill-plan-digests.mjs / backfill-save-pdf.mjs conventions (Node >= 18, zero dependencies).
+   Verify: --check exits 1 listing 55 files; --dry-run prints the same 55 as would-inject with a clean git status; a fixture without </head> is reported as a skip.
+
+2. **Run the injector once over docs/plans/.**
+   Why: this is the retroactive payload — 55 plan files (including this plan document, built from the pre-fix skeleton) pick up the v1 block in one reviewable diff.
+   Verify: grep -L 'id="plan-responsive-fix"' docs/plans/*.html returns only index.html; an immediate second run reports 55 skipped and adds nothing to git diff.
+
+3. **Embed the identical v1 block in kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html.**
+   Why: new plans must be born responsive and pass --check natively, or every future plan reintroduces the defect the retrofit just cleared.
+   Verify: the block sits before </head> in the skeleton and its CSS is byte-identical to the script constant.
+
+4. **Add tests/plugins/test-responsive-retrofit.sh.**
+   Why: turns the one-time migration into a standing invariant — corpus check plus skeleton/script sync guard.
+   Verify: the test exits 0 on the repo; stripping the block from a tmp corpus copy makes the --check assert fail naming the file.
+
+5. **Bump plan-agent to 2.4.1 in .claude-plugin/marketplace.json and add the CHANGELOG entry.**
+   Why: the skeleton is plugin-shipped behaviour; marketplace.md mandates a manual patch bump and CHANGELOG entry with every plugin change.
+   Verify: marketplace.json validates (settings hook) and shows 2.4.1, higher than main's 2.4.0; CHANGELOG.md opens with the 2.4.1 entry dated 2026-06-12.
+
+6. **Re-audit all 55 plans at 390px and 320px in a real browser.**
+   Why: measured scrollWidth is the ground truth the investigation used — done means zero overflow, not merely markers present. The 320px pass grounds the result in WCAG 2.1 AA reflow (1.4.10).
+   Verify: serve docs/ (bash scripts/serve-docs.sh) and assert documentElement.scrollWidth <= iframe width for every plan in a 390px and a 320px iframe; spot-check add-multi-host-deploy-targets.html (previously +294px).
 
 ## Tests
-Tier 1 (touches SKELETON.html, marketplace.json, and a new .mjs script).
-- Objective smoke + review-path integration — tests/plugins/test-plan-digest.sh:
-  asserts SKELETON.html wraps the digest placeholder in a non-rendering
-  text/markdown script as the first element child of <body> (comment nodes
-  before it allowed); the awk extraction on a
-  fixture plan returns spec markdown containing the objective and step
-  actions; role-prompts.md and the 7 agent defs reference the digest and the
-  no-digest full-HTML fallback; review-plan Step 7 inline edits regenerate the
-  digest (update-in-place mode only). Run: bash tests/plugins/test-plan-digest.sh
-- Backfill unit + integration — tests/plugins/test-backfill-digest.mjs: unit
-  cases for buildDigest()/hasDigest()/extractSections(); integration injects
-  into a temp copy of docs/plans and asserts every file gains a digest, a
-  pre-seeded file is skipped, an unparseable plan is skipped and listed (no
-  partial digest), a spec containing a literal closing-script sequence is
-  guarded on injection, and status/checkbox bytes are unchanged. Run:
-  node tests/plugins/test-backfill-digest.mjs
 
-## Acceptance Criteria
-- SKELETON.html has the text/markdown #plan-digest block as the first element child of <body> (a guiding comment node above it is allowed).
-- A generated plan's digest carries objective + every step (action/why/verify) + criteria text + verification, and excludes status/checkbox/completion state.
-- The awk extractor returns the spec as readable markdown.
-- Generated implement & workflow prompts tell the consumer to start from the digest.
-- All 7 reviewer briefs and agent defs read the digest; the lead reads full HTML.
-- review-plan Step 7 regenerates the digest after applying inline edits.
-- The backfill injects a digest into every existing docs/plans/*.html without altering status/progress and is idempotent.
-- plan-agent is 2.2.0 in marketplace.json with a matching CHANGELOG entry; README documents the digest.
-- The digest block does not render in a browser and adds no CDN or external script.
-- A plan whose spec contains a literal closing-script sequence (written here in guarded form: `<\/script`) is injected correctly — the guard fires and the sequence cannot terminate the digest block early.
+Tier 1 — code-touching (new .mjs script, edited .html template).
+
+- Objective-verification (smoke, real corpus): tests/plugins/test-responsive-retrofit.sh — asserts every docs/plans/*.html except index.html carries the v1 block and the skeleton block matches the script constant. Run: bash tests/plugins/test-responsive-retrofit.sh
+- Unit (synthetic fixtures, same file): marker detection, version comparison, insertion point, exclusions — missing block injected exactly once before </head>; data-version="0" replaced without duplication; current version skipped byte-identical; index.html and no-</head> files untouched and reported; head-only guarantee — output byte-identical from <body onward, so the injector can never alter markup, ARIA, or semantics.
+- Integration (CLI over a tmp corpus copy): first run injects every non-index file (55 at the time of writing); second run no-ops; --check exits 0 after the run and 1 when one file is stripped; --dry-run writes nothing.
+
+## Acceptance criteria
+
+1. node scripts/retrofit-responsive-plans.mjs --check exits 0 on the committed tree.
+2. Every docs/plans/*.html except index.html contains <style id="plan-responsive-fix" data-version="1">.
+3. Running the injector a second time produces an empty git diff (idempotent).
+4. The skeleton's embedded block CSS is byte-identical to the script's CSS constant.
+5. At 390px and 320px viewports none of the 55 plan files report documentElement.scrollWidth greater than the viewport width — 16 did at 390px before (WCAG 1.4.10 reflow).
+6. docs/plans/archive/ is untouched by the default run; --include-archive remains opt-in.
+7. .claude-plugin/marketplace.json lists plan-agent 2.4.1 and kit/plugins/plan-agent/CHANGELOG.md carries the matching entry.
+8. bash tests/plugins/test-responsive-retrofit.sh exits 0.
 
 ## Verification
-Generate a fresh plan; confirm the digest is present, accurate, non-rendering,
-and extractable, and that both prompts carry the extraction clause. Run the
-backfill over docs/plans/ and spot-check a completed, an in-progress, and a
-todo plan (status/checkbox bytes unchanged; digest present). Run review-plan
-on a sample plan; confirm reviewers were briefed with the digest and Step 7
-refreshed it. bash tests/plugins/test-plan-digest.sh and node
-tests/plugins/test-backfill-digest.mjs both pass.
+
+Run bash tests/plugins/test-responsive-retrofit.sh (exit 0). Serve docs/ locally and re-run the width-controlled iframe audit at 390px and 320px across all 55 plan files — expect overflow count 0 at both widths (was 16 at 390px). Visually open add-multi-host-deploy-targets.html and persist-checkbox-state-in-html-attributes-review.html at phone width: no horizontal scrollbar, paths wrap, tables fit. Re-run the injector: a second pass changes nothing. Confirm plan-agent 2.4.1 in marketplace.json with a matching CHANGELOG entry.
 </script>
 
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
@@ -1276,15 +1252,15 @@ tests/plugins/test-backfill-digest.mjs both pass.
     </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Embed a machine-readable markdown digest in every HTML plan</h1>
+      <h1 class="plan-title">Retrofit responsive CSS into every HTML plan</h1>
       <button class="save-pdf-btn" type="button" onclick="savePDF()"
               aria-label="Save this plan as PDF">Save as PDF</button>
-      <span class="status-badge">completed</span>
+      <span class="status-badge">todo</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-10
+        2026-06-12
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
@@ -1292,7 +1268,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
+        fix
       </span>
     </div>
   </div>
@@ -1325,22 +1301,22 @@ tests/plugins/test-backfill-digest.mjs both pass.
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a machine-readable markdown digest inside every HTML plan — a non-rendering <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first element child of <code>&lt;body&gt;</code> — so the implementer, the workflow author, and the 5–7 review-team agents read ~3.7k tokens of spec instead of re-reading ~21k tokens of styled HTML, with zero second source-of-truth file.</p>
+      <p>Eliminate horizontal overflow in every HTML plan — retrofit all 55 shipped files in <code>docs/plans/</code> with a versioned 8-line CSS block via an idempotent script, and bake the same block into the plan skeleton so every future plan is born responsive.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/embed-markdown-digest-in-html-plans.html — Embed a markdown digest in every HTML plan for cheap reads</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/retrofit-responsive-plan-css.html — Retrofit responsive CSS into every HTML plan and harden the skeleton</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt ──────────────────────────────────────── -->
+    <!-- ── Workflow prompt ── -->
     <details class="plan-workflow">
       <summary>Run as workflow — launch parallel subagents</summary>
       <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/embed-markdown-digest-in-html-plans.html — Embed a markdown digest in every HTML plan for cheap downstream reads</code>
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/retrofit-responsive-plan-css.html — Retrofit responsive CSS into every HTML plan and harden the skeleton</code>
         <button class="copy-workflow-btn" type="button"
                 onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
@@ -1350,13 +1326,13 @@ tests/plugins/test-backfill-digest.mjs both pass.
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">embed-markdown-digest-in-html-plans.html</code>
+        <code id="plan-file" aria-label="Plan file name">retrofit-responsive-plan-css.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/embed-markdown-digest-in-html-plans.html</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/retrofit-responsive-plan-css.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
@@ -1366,7 +1342,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 10 done</span>
+        <span id="progress-label">0 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1381,13 +1357,26 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>A generated HTML plan is a single self-contained file of ~86–97 KB (~21.5k tokens), but only about <strong>17%</strong> of that is plan content — the other ~83% is the fixed skeleton CSS and JS, byte-for-byte identical in every plan. The <code>Read</code> tool cannot skip <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code> blocks, so every consumer that opens a plan pays for the whole file.</p>
-      <p>That cost is paid repeatedly. The implementer reads it; a <code>Run a workflow…</code> author reads it; and a single <code>review-plan</code> cycle has the lead plus up to <strong>7 reviewer agents</strong> each instructed to read the plan — roughly ~170k tokens per review, of which ~140k is the same CSS read eight times. <code>review-plan</code> already says "exclude <code>&lt;style&gt;</code> and <code>&lt;script&gt;</code>" but the Read tool can't honor that — it's aspiration, not mechanism.</p>
-      <p>This plan embeds a spec-only markdown digest <em>inside</em> the plan rather than writing a sibling <code>.md</code> file. A sibling file is a second source of truth that drifts the moment implementation flips checkboxes or <code>review-plan</code> edits content, and it collides with the <code>plan-interview</code> <code>.md</code> tooling. An embedded <code>&lt;script type="text/markdown"&gt;</code> block keeps the single-file guarantee, never renders, and is extractable in any session — no plugin install required — via a flag-and-exit <code>awk</code>: <code>awk '/&lt;script[^&gt;]*id="plan-digest"/{f=1;next} f&amp;&amp;/&lt;\/script&gt;/{exit} f' &lt;file&gt;</code> (a simple <code>awk</code> range would re-trigger on later mentions of the id, as this very plan demonstrates).</p>
-      <p><strong>Resolved decisions (from clarification):</strong> the block is the <strong>first element child of <code>&lt;body&gt;</code></strong> (extracted with <code>awk</code>); the digest is <strong>spec-only</strong> so status flips and checkbox ticks never invalidate it; this plan <strong>backfills</strong> the ~50 existing plans via an idempotent script; and the <strong>7 reviewers read the digest only</strong> while the lead keeps full HTML for its selector-based edits.</p>
+      <p>A 390px-viewport browser audit found <strong>16 of the 54 HTML files in <code>docs/plans/</code> overflow horizontally</strong> — the worst (<code>add-multi-host-deploy-targets.html</code>) by 294px of sideways scroll. Current-generation, digest-era plans are affected too: the defect is content-dependent, not template-generation-dependent.</p>
+      <p>Three root causes combine:</p>
+      <ul>
+        <li><strong>Unbreakable tokens with no wrap rule.</strong> File paths and commands like <code>kit/plugins/docs-publisher/reference/.gitlab-ci.yml</code> inside inline <code>&lt;code&gt;</code>, list items, and bare divs have no <code>overflow-wrap</code> anywhere in the template — a token wider than a phone screen simply cannot break.</li>
+        <li><strong>Grid min-content propagation.</strong> Grid items default to <code>min-width: auto</code>, so one unwrappable token in <code>main</code> inflates the shared single-column track and stretches the sidebar with it. <code>overflow-wrap: break-word</code> wraps visually but does not reduce min-content size — only <code>anywhere</code> does, which is why both <code>min-width: 0</code> and inherited <code>overflow-wrap: anywhere</code> are needed.</li>
+        <li><strong>Component stragglers.</strong> The three-column <code>.compare-grid</code> does not collapse below 600px in some template generations, and table cells have no wrap rule.</li>
+      </ul>
+      <p>The fix is proven: injecting the block below into all 54 rendered files in a width-controlled iframe harness took the overflow count from 16 to 0, with no effect on already-clean files (<code>anywhere</code> only activates when a single word exceeds the line, so normal prose is untouched).</p>
+      <pre>/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout &gt; *, .wrap &gt; *, .compare-grid &gt; * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }</pre>
+      <p>Because every plan is a <strong>self-contained single-file HTML document</strong> (embedded CSS, no external assets — by design, so plans survive <code>file://</code> opens, copies, and email), skeleton improvements never reach already-shipped plans. The retroactive mechanism is a versioned injector script, mirroring the <code>scripts/backfill-plan-digests.mjs</code> (2.3.0) and <code>scripts/backfill-save-pdf.mjs</code> (2.4.0) precedents — this is the third injector in that family. The block is wrapped as <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code> and inserted immediately before <code>&lt;/head&gt;</code>; the id + version pair is the idempotency key (current → skip, older → replace, missing → inject). <code>docs/plans/index.html</code> is always excluded — it is regenerated from scratch by <code>docs/plans/build-index.sh</code> via the rebuild hook and already renders clean at phone width.</p>
     </section>
 
-    <!-- ── Files ────────────────────────────────────────────────── -->
+    <!-- ── Files ───────────────────────────────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
@@ -1396,68 +1385,70 @@ tests/plugins/test-backfill-digest.mjs both pass.
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .claude-plugin/</li>
-          <ul class="file-list">
-            <li><code>marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent 2.1.0 → 2.2.0</span></li>
-          </ul>
-
+          <li><code>scripts/retrofit-responsive-plans.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">idempotent injector with --check gate</span></li>
+          <li><code>docs/plans/*.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">55 files (incl. this plan) — v1 block injected before &lt;/head&gt;</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
           <ul class="file-list">
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.2.0 entry</span></li>
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the digest + extraction</span></li>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agents/</li>
-            <ul class="file-list">
-              <li><code>plan-reviewer-*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">7 defs read the digest, not full HTML</span></li>
-            </ul>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> skills/implementation-plan/</li>
-            <ul class="file-list">
-              <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">contract, generation, refresh, prompts; includes <code>buildImplementPrompt()</code> instruction update</span></li>
-              <li><code>reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add #plan-digest block (first element child of body)</span></li>
-            </ul>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> skills/review-plan/</li>
-            <ul class="file-list">
-              <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">digest-only reviewers, Step 7 refresh</span></li>
-              <li><code>references/role-prompts.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">7 briefs read the digest</span></li>
-            </ul>
+            <li><code>skills/implementation-plan/reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same v1 block embedded natively</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.4.1 entry</span></li>
           </ul>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> scripts/</li>
-          <ul class="file-list">
-            <li><code>backfill-plan-digests.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">idempotent injector over existing plans</span></li>
-          </ul>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/</li>
-          <ul class="file-list">
-            <li><code>test-plan-digest.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test</span></li>
-            <li><code>test-backfill-digest.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">backfill unit + integration</span></li>
-          </ul>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 2.4.0 → 2.4.1</span></li>
+          <li><code>tests/plugins/test-responsive-retrofit.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">corpus + fixtures + skeleton-sync guard</span></li>
         </ul>
       </div>
     </section>
 
-    <!-- ── Diagram ──────────────────────────────────────────────── -->
+    <!-- ── Diagram / Chart / Table ─────────────────────────────── -->
     <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
       <h2 id="h-diagram">
         <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
         Diagram
       </h2>
 
-      <div class="diagram-subheading">Digest lifecycle</div>
+      <!-- Flow / pipeline -->
+      <div class="diagram-subheading">Injector flow — scripts/retrofit-responsive-plans.mjs</div>
       <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Generate</div><code>plan-agent drafts the spec</code><div class="pipeline-sub">objective, steps, tests, criteria</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">Scan</div><code>docs/plans/*.html</code><div class="pipeline-sub">non-recursive; index.html always excluded; archive only with --include-archive</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Embed</div><code>fill #plan-digest</code><div class="pipeline-sub">first element child of &lt;body&gt;, never renders</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">Detect</div><code>id="plan-responsive-fix" + data-version</code><div class="pipeline-sub">parse the existing block's version, if any</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Extract</div><code>awk on the consumer side</code><div class="pipeline-sub">~3.7k tokens of spec, any session</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">Apply</div><code>skip · replace · inject</code><div class="pipeline-sub">current version → skip; older → replace whole block; missing → insert before &lt;/head&gt;</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Refresh</div><code>on any spec edit</code><div class="pipeline-sub">Step 8 edit loop · review-plan Step 7</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">Report</div><code>injected / updated / skipped</code><div class="pipeline-sub">--dry-run and --check never write; files with no &lt;/head&gt; reported as skips</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓</div>
+        <div class="pipeline-node"><div class="pipeline-label">Guard</div><code>--check → exit 1</code><div class="pipeline-sub">tests/plugins/test-responsive-retrofit.sh runs it over the corpus on every test run</div></div>
       </div>
 
-      <div class="diagram-subheading">Tokens to read one plan</div>
-      <div class="bar-chart" role="img" aria-label="Tokens to read one plan: full HTML plan about 21,500 tokens (100 percent); markdown digest about 3,700 tokens (about 17 percent).">
-        <div class="bar-row"><span class="bar-label">Full HTML plan</span><span class="bar-track"><span class="bar-fill" style="--val:100%"></span></span><span class="bar-value">~21.5k</span></div>
-        <div class="bar-row"><span class="bar-label">Markdown digest</span><span class="bar-track"><span class="bar-fill full" style="--val:17%"></span></span><span class="bar-value">~3.7k</span></div>
+      <!-- Comparison grid -->
+      <div class="diagram-subheading">Retroactive delivery — approaches weighed</div>
+      <div class="compare-grid">
+        <div class="compare-col-add"><div class="compare-header">Inject versioned block — chosen</div><ul class="compare-list"><li>plans stay single-file, file:// portable</li><li>deterministic — no LLM pass</li><li>re-runnable: bump data-version for v2</li><li>mirrors the backfill-*.mjs precedents</li></ul></div>
+        <div class="compare-col-remove"><div class="compare-header">Shared &lt;link&gt; stylesheet</div><ul class="compare-list"><li>breaks self-contained guarantee</li><li>copied/emailed plans lose styling</li><li>extra asset to deploy</li></ul></div>
+        <div class="compare-col-remove"><div class="compare-header">Regenerate from digest</div><ul class="compare-list"><li>only 42/54 plans carry a digest</li><li>loses visuals + checkbox state</li><li>LLM cost, non-deterministic</li></ul></div>
       </div>
+
+      <!-- Bar chart -->
+      <div class="diagram-subheading">Audit at 390px — plan files with horizontal overflow</div>
+      <div class="bar-chart" role="img" aria-label="Plans overflowing at 390 pixels: before the fix, 16 of 54 files (30 percent); after injecting the fix, 0 of 54 files (0 percent).">
+        <div class="bar-row"><span class="bar-label">Before — v1 block absent</span><span class="bar-track"><span class="bar-fill" style="--val:30%"></span></span><span class="bar-value">16 / 54</span></div>
+        <div class="bar-row"><span class="bar-label">After — v1 block injected</span><span class="bar-track"><span class="bar-fill zero" style="--val:0%"></span></span><span class="bar-value">0 / 54</span></div>
+      </div>
+
+      <!-- Data table -->
+      <div class="diagram-subheading">CLI contract</div>
+      <table class="plan-table">
+        <caption>Flags for scripts/retrofit-responsive-plans.mjs — the default invocation injects or replaces the block across docs/plans/.</caption>
+        <thead>
+          <tr><th scope="col">Flag</th><th scope="col">Default</th><th scope="col">Behavior</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><em>(none)</em></td><td>—</td><td>Inject or replace the v1 block in <code>docs/plans/*.html</code>; skips <code>index.html</code> and files already at v1</td></tr>
+          <tr><td><code>--check</code></td><td>off</td><td>No writes; exit 1 listing files missing or outdated, exit 0 when the corpus is current</td></tr>
+          <tr><td><code>--dry-run</code></td><td>off</td><td>Print would-inject / would-replace actions without writing</td></tr>
+          <tr><td><code>--dir &lt;path&gt;</code></td><td><code>docs/plans</code></td><td>Operate on a different plans directory</td></tr>
+          <tr><td><code>--include-archive</code></td><td>off</td><td>Also process <code>docs/plans/archive/</code> recursively — explicitly opt-in</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -1468,137 +1459,103 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </h2>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the <code>#plan-digest</code> block to <code>SKELETON.html</code> as the first element child of <code>&lt;body&gt;</code></span>
+                <span class="step-chip-text">Create <code>scripts/retrofit-responsive-plans.mjs</code> — the idempotent injector</span>
               </div>
-              <div class="step-why">Every generated plan inherits structure from the skeleton, so the block must live there once. Place it immediately after <code>&lt;body&gt;</code> (before the icon sprite) as <code>&lt;script type="text/markdown" id="plan-digest"&gt;{plan-digest}&lt;/script&gt;</code> — a non-executable script type the browser never renders or fetches, preserving the no-CDN, single-file guarantee. Add a guiding HTML comment above it documenting the spec-only rule and the flag-and-exit <code>awk</code> extraction — the comment is a comment node, not an element, so the script remains the first <em>element</em> child of <code>&lt;body&gt;</code> (the property the smoke test asserts, mirroring DOM <code>firstElementChild</code> semantics).</div>
+              <div class="step-why">A deterministic, re-runnable script is the only fix that reaches already-shipped self-contained plans without an LLM pass. Mirror the <code>backfill-plan-digests.mjs</code> / <code>backfill-save-pdf.mjs</code> conventions: Node ≥ 18, zero dependencies, summary output. Contract: wrap the canonical CSS constant as <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code>; insert immediately before <code>&lt;/head&gt;</code> (case-insensitive); skip files already at the current version; replace the whole block when an older version is found; always exclude <code>index.html</code>; report and skip files with no <code>&lt;/head&gt;</code> rather than half-writing them. Flags: <code>--check</code>, <code>--dry-run</code>, <code>--dir &lt;path&gt;</code>, <code>--include-archive</code>.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>grep -n 'id="plan-digest"' SKELETON.html</code> shows the block within the first lines after <code>&lt;body&gt;</code>; open the skeleton in a browser and confirm the block produces no visible output and no console error. Also confirm the placeholder token used (e.g. <code>{plan-digest}</code>) is documented in a comment or in <code>implementation-plan/SKILL.md</code> Step 2 so the generator knows exactly what string to replace when filling the block.</div>
+                <div class="verify-body"><code>node scripts/retrofit-responsive-plans.mjs --check</code> exits 1 listing 55 files; <code>--dry-run</code> prints the same 55 as would-inject while <code>git status</code> stays clean; a synthetic fixture without <code>&lt;/head&gt;</code> is reported as a skip, never modified.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Define the digest content + escaping contract in <code>implementation-plan/SKILL.md</code></span>
+                <span class="step-chip-text">Run the injector once over <code>docs/plans/</code></span>
               </div>
-              <div class="step-why">A precise, stable contract is what lets the generator, every consumer, and the backfill script agree on shape. Specify the digest as the <em>authored spec only</em> — title, objective, context, file list, steps (action/why/verify), tests, acceptance-criteria text, verification — and explicitly <em>exclude</em> live state (status, checkbox states, completion report, copy buttons, CSS/JS). Insert markdown <em>raw</em> (not HTML-escaped); the only guard is to replace any literal closing-script sequence with a backslashed form (<code>&lt;\/script</code>) so it cannot terminate the block early. Define the <strong>canonical extractor</strong> as the flag-and-exit <code>awk '/&lt;script[^&gt;]*id="plan-digest"/{f=1;next} f&amp;&amp;/&lt;\/script&gt;/{exit} f'</code> — a simple <code>awk</code> range re-triggers on any later line that mentions the id, so it must not be the documented form.</div>
+              <div class="step-why">This is the retroactive payload — all 55 plan files (every file except the hook-generated <code>index.html</code>, including this plan document itself, which was built from the pre-fix skeleton) pick up the v1 block in a single reviewable diff.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Re-read <code>SKILL.md</code>; the new subsection enumerates the included fields, the excluded live-state fields, the "raw markdown, not HTML-escaped" rule, and the <code>&lt;\/script</code> guard.</div>
+                <div class="verify-body"><code>grep -L 'id="plan-responsive-fix"' docs/plans/*.html</code> returns only <code>index.html</code>; an immediate second run reports 55 skipped and adds nothing to <code>git diff</code> (idempotency proven on the real corpus).</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Wire digest generation + content-edit refresh into the generation workflow</span>
+                <span class="step-chip-text">Embed the identical v1 block in <code>SKELETON.html</code></span>
               </div>
-              <div class="step-why">In <code>SKILL.md</code> Step 2, after the sections are drafted, build <code>{plan-digest}</code> from the final content and fill the skeleton placeholder. Add a rule to <strong>HTML Output Requirements</strong>: any later <code>Edit</code> that changes spec content (Step 5b interview findings, the Step 8 "Edit the plan" loop) must regenerate the block in the same pass; status flips (Step 6) and acceptance-criteria checks must <em>not</em> touch it. This keeps the digest authoritative without coupling it to progress churn. The digest carries <em>no</em> checksum or timestamp — staleness is prevented by this refresh rule plus the CI guard in Next Steps, not by an integrity field.</div>
+              <div class="step-why">New plans must be born responsive and pass <code>--check</code> natively — otherwise every freshly generated plan reintroduces the defect the retrofit just cleared. Insert the same <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code> block immediately before <code>&lt;/head&gt;</code> in <code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code>, byte-identical to the script's CSS constant (the script is the single source of truth; the skeleton carries a copy).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>SKILL.md</code> Step 2 and HTML Output Requirements name the digest fill and the refresh-on-content-edit rule; Step 6 and the acceptance-criteria gate explicitly state they do not regenerate the digest. Generate a throwaway plan and confirm the digest matches the visible spec.</div>
+                <div class="verify-body"><code>grep 'plan-responsive-fix' kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> finds the block before <code>&lt;/head&gt;</code>; the CSS extracted from the skeleton block diffs empty against the script constant.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the digest-extraction clause to the implement &amp; workflow prompts</span>
+                <span class="step-chip-text">Add <code>tests/plugins/test-responsive-retrofit.sh</code> — corpus, fixtures, and sync guard</span>
               </div>
-              <div class="step-why">The implementer and the workflow author are the primary beneficiaries — they start in a fresh session with no context. Update the <code>{implement-prompt}</code>/<code>{workflow-prompt}</code> templates and the <code>buildImplementPrompt()</code> instruction list to direct the consumer to start from the digest, e.g. append: "Start from the markdown spec in the <code>#plan-digest</code> block (extract: <code>awk '/&lt;script[^&gt;]*id="plan-digest"/{f=1;next} f&amp;&amp;/&lt;\/script&gt;/{exit} f' &lt;file&gt;</code>) before opening the full HTML."</div>
+              <div class="step-why">Turns the one-time migration into a standing invariant: the corpus check fails the moment a plan ships without the current block, and the sync assert stops the skeleton and the script from drifting apart. Cases: (a) <code>--check</code> exits 0 over the repo's <code>docs/plans/</code>; (b) fixture injection — missing block injected exactly once before <code>&lt;/head&gt;</code>, second run byte-identical; (c) <code>data-version="0"</code> fixture replaced with v1, no duplicate block; (d) <code>index.html</code> and no-<code>&lt;/head&gt;</code> fixtures untouched; (e) skeleton block CSS byte-identical to the script constant; (f) head-only guarantee — the injector's output is byte-identical to its input from <code>&lt;body</code> onward, so the retrofit can never alter markup, ARIA, or semantics.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Generate a sample plan; both the implement <code>&lt;code&gt;</code> row and the workflow prompt carry the extraction one-liner, and the copied prompt from <code>buildImplementPrompt()</code> includes the "start from the digest" instruction.</div>
+                <div class="verify-body"><code>bash tests/plugins/test-responsive-retrofit.sh</code> exits 0; stripping the block from a tmp corpus copy makes the <code>--check</code> assert exit 1 naming the stripped file.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Switch the 7 <code>review-plan</code> reviewers to digest-only reads</span>
+                <span class="step-chip-text">Bump plan-agent to 2.4.1 and write the CHANGELOG entry</span>
               </div>
-              <div class="step-why">This is the largest token win (~120k per review cycle) and reviewers only emit prose findings, so they never need the DOM. In <code>references/role-prompts.md</code>, change every "Read the implementation plan at <code>&lt;ABSOLUTE_PATH&gt;</code>" to extract and read the <code>#plan-digest</code> block; mirror the change in all 7 individual <code>agents/plan-reviewer-*.md</code> defs (<code>plan-reviewer-architecture.md</code>, <code>plan-reviewer-completeness.md</code>, <code>plan-reviewer-testability.md</code>, <code>plan-reviewer-risk.md</code>, <code>plan-reviewer-conventions.md</code>, <code>plan-reviewer-ux.md</code>, <code>plan-reviewer-accessibility.md</code>) that say "Read the plan's full content." In <code>review-plan/SKILL.md</code> Step 4, state the split: reviewers get the digest, the lead reads full HTML for Step 7 selector edits. When a plan has <em>no</em> digest yet (e.g. an old plan not backfilled), reviewers fall back to reading the full HTML for that run so reviews never break.</div>
+              <div class="step-why">The skeleton is plugin-shipped behaviour — <code>.claude/rules/marketplace.md</code> mandates a manual semver bump (patch for a fix) in <code>.claude-plugin/marketplace.json</code> plus a <code>kit/plugins/plan-agent/CHANGELOG.md</code> entry with every plugin change.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>grep -L plan-digest kit/plugins/plan-agent/agents/plan-reviewer-*.md</code> returns nothing (all 7 defs updated); <code>role-prompts.md</code> references the digest for all 7 roles plus the no-digest full-HTML fallback; <code>SKILL.md</code> Step 4 documents the lead-vs-reviewer read split.</div>
+                <div class="verify-body"><code>marketplace.json</code> shows plan-agent <code>2.4.1</code> (higher than main's <code>2.4.0</code>) and passes the settings-hook JSON validation; <code>CHANGELOG.md</code> opens with a <code>## 2.4.1</code> entry dated 2026-06-12 describing the responsive block and the injector.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a digest-refresh pass to <code>review-plan</code> Step 7</span>
+                <span class="step-chip-text">Re-audit all 55 plans at 390px and 320px in a real browser</span>
               </div>
-              <div class="step-why">Step 7 mutates spec content by CSS selector (Pass 1 inline edits), which makes the embedded digest stale for the next consumer. Add a "Pass 3 — refresh the digest": after the inline edits and the review-append, regenerate the <code>#plan-digest</code> block from the now-updated plan content. Skip it when output mode is "review only" (no content was changed).</div>
+              <div class="step-why">Measured <code>scrollWidth</code> in a width-controlled harness is the ground truth the investigation used — the retrofit is done when the overflow count is zero, not merely when markers are present. The 320px pass grounds the result in WCAG 2.1 AA reflow (1.4.10), which requires no horizontal scrolling at 320px CSS width.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>review-plan/SKILL.md</code> Step 7 lists Pass 3; a dry walk-through confirms it runs only after Pass 1 applied edits in "update plan in place" mode and is skipped in "review only".</div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-card completed">
-          <div class="step-card-header">
-            <div class="step-number">7</div>
-            <div class="step-body">
-              <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Create the backfill injector <code>scripts/backfill-plan-digests.mjs</code></span>
-              </div>
-              <div class="step-why">The chosen scope backfills the ~50 existing plans. Write an idempotent Node script (matching the repo's existing <code>scripts/*.mjs</code> convention) that scans <code>docs/plans/*.html</code> (skipping <code>index.html</code> and any file already containing <code>#plan-digest</code>), parses title/objective/files/steps/tests/criteria/verification from the stable skeleton structure (IDs/classes: <code>#objective</code>, <code>.step-card</code>, <code>#tests</code>, <code>#criteria-list</code>, <code>#verification</code>, <code>.file-tree</code>), builds the digest (with the <code>&lt;\/script</code> guard), and inserts it as the first element child of <code>&lt;body&gt;</code>. It must never touch status, checkboxes, or progress state, must <strong>only inject when all expected sections parse</strong> — skipping and reporting any plan it cannot fully parse rather than writing a partial digest — and must support <code>--dry-run</code>, printing injected / skipped / failed counts.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>node scripts/backfill-plan-digests.mjs --dry-run</code> reports counts with zero failures; a real run injects digests; a second real run injects 0 (all skipped). Plans that cannot be fully parsed are listed as skipped, not partially injected; <code>git diff</code> on a completed plan shows only the added digest block, no status/checkbox changes.</div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-card completed">
-          <div class="step-card-header">
-            <div class="step-number">8</div>
-            <div class="step-body">
-              <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump version, changelog, and README (plan-agent 2.1.0 → 2.2.0)</span>
-              </div>
-              <div class="step-why">Adding new behavior is a minor bump per the project versioning rules, and <code>CLAUDE.md</code> requires docs/changelog updates with any plugin change — the new value must be higher than main's, and <code>2.1.0</code> was taken on main by the findings-walkthrough feature. Set <code>plan-agent</code> <code>version</code> to <code>2.2.0</code> in <code>marketplace.json</code>, add a <code>2.2.0</code> <code>CHANGELOG.md</code> entry describing the digest + backfill, and add a "Machine-readable digest" subsection to the plugin <code>README.md</code> showing the <code>awk</code> extraction one-liner.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>marketplace.json</code> shows <code>plan-agent</code> at <code>2.2.0</code> (and the <code>.claude/settings.json</code> JSON-validation hook passes); <code>CHANGELOG.md</code> top entry is <code>2.2.0</code>; the README has the digest subsection with the extraction command.</div>
+                <div class="verify-body">Serve <code>docs/</code> locally (<code>bash scripts/serve-docs.sh</code> or <code>python3 -m http.server --directory docs</code>), load every plan in a 390px-wide and then a 320px-wide iframe, and assert <code>documentElement.scrollWidth ≤ iframe width</code> for all 55 files at both widths; spot-open <code>add-multi-host-deploy-targets.html</code> (previously +294px) and confirm no horizontal scrollbar.</div>
               </details>
             </div>
           </div>
@@ -1619,13 +1576,13 @@ tests/plugins/test-backfill-digest.mjs both pass.
       <div class="objective-test-card">
         <div class="test-card-header">
           <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">Every generated plan carries an extractable, accurate digest</span>
+          <span class="test-card-title">No plan ships without the v1 responsive block</span>
         </div>
         <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/plugins/test-plan-digest.sh</code></p>
-          <p><strong>Type:</strong> smoke test (shell, matching the repo's <code>tests/&lt;area&gt;/*.sh</code> convention)</p>
-          <p><strong>Asserts:</strong> (1) <code>SKELETON.html</code> wraps the <code>{plan-digest}</code> placeholder in a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> that is the first element child of <code>&lt;body&gt;</code> (comment nodes before it are allowed — match the first tag after <code>&lt;body&gt;</code>, skipping comments); (2) running the <code>awk</code> extractor against a committed fixture plan returns non-empty markdown containing the fixture's objective and at least one step action; (3) <code>review-plan</code> <code>role-prompts.md</code> and all 7 <code>agents/plan-reviewer-*.md</code> files reference <code>plan-digest</code> and the no-digest full-HTML fallback.</p>
-          <p><strong>Run:</strong> <code>bash tests/plugins/test-plan-digest.sh</code></p>
+          <p><strong>File:</strong> <code>tests/plugins/test-responsive-retrofit.sh</code></p>
+          <p><strong>Type:</strong> smoke test (runs against the real corpus)</p>
+          <p><strong>Asserts:</strong> every <code>docs/plans/*.html</code> except <code>index.html</code> carries <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code>, and the skeleton's embedded block is byte-identical to the script's CSS constant — i.e. every shipped plan and every future plan is responsive-hardened, which is this plan's stated objective.</p>
+          <p><strong>Run:</strong> <code>bash tests/plugins/test-responsive-retrofit.sh</code></p>
         </div>
       </div>
 
@@ -1633,45 +1590,23 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <div class="test-card">
           <div class="test-card-header">
             <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Backfill pure functions</span>
+            <span class="test-card-title">Injector behaviour on synthetic fixtures</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plugins/test-backfill-digest.mjs</code></p>
-            <p><strong>Targets:</strong> <code>buildDigest()</code>, <code>hasDigest()</code>, <code>extractSections()</code> exported from <code>scripts/backfill-plan-digests.mjs</code></p>
-            <p><strong>Key cases:</strong> <code>extractSections()</code> pulls objective/steps/criteria from a sample plan string; <code>buildDigest()</code> emits the spec fields and applies the <code>&lt;\/script</code> guard; <code>hasDigest()</code> is true for a plan already containing the block and false otherwise.</p>
+            <p><strong>File:</strong> <code>tests/plugins/test-responsive-retrofit.sh</code> (fixture section)</p>
+            <p><strong>Targets:</strong> marker detection, version comparison, insertion point, and exclusions in <code>scripts/retrofit-responsive-plans.mjs</code></p>
+            <p><strong>Key cases:</strong> missing block → injected exactly once, immediately before <code>&lt;/head&gt;</code>; <code>data-version="0"</code> → replaced with v1 without duplicating the block; current v1 → skipped byte-identical; <code>index.html</code> and a fixture with no <code>&lt;/head&gt;</code> → untouched and reported; head-only guarantee → output byte-identical from <code>&lt;body</code> onward (no markup, ARIA, or semantics changes ever).</p>
           </div>
         </div>
         <div class="test-card">
           <div class="test-card-header">
             <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">Backfill over a temp copy of docs/plans</span>
+            <span class="test-card-title">CLI end-to-end over a corpus copy</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plugins/test-backfill-digest.mjs</code></p>
-            <p><strong>Targets:</strong> the <code>backfill-plan-digests.mjs</code> CLI end-to-end against a throwaway temp directory</p>
-            <p><strong>Key cases:</strong> a todo, an in-progress, and a completed fixture plan each gain a digest; a pre-seeded plan is skipped (idempotency); a plan missing a parseable section is skipped and listed (no partial digest); the bytes of <code>data-status</code>, <code>&lt;meta name="plan-status"&gt;</code>, and every acceptance-criteria checkbox are byte-identical before and after; a fixture plan whose content contains the literal string <code>&lt;/script</code> in a code block is injected and the guard fires correctly (closing tag does not terminate the digest block early).</p>
-          </div>
-        </div>
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">Digest refresh after review-plan Step 7 edits</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plugins/test-plan-digest.sh</code></p>
-            <p><strong>Targets:</strong> the digest-refresh pass (Pass 3) in <code>review-plan/SKILL.md</code> Step 7</p>
-            <p><strong>Key cases:</strong> after a spec-content edit is applied to a fixture plan via <code>review-plan</code> update-in-place mode, the <code>#plan-digest</code> block reflects the updated content; in "review only" mode, the digest is unchanged; status/checkbox bytes are unaffected by either mode.</p>
-          </div>
-        </div>
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">No-digest fallback in review-plan</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plugins/test-plan-digest.sh</code></p>
-            <p><strong>Targets:</strong> reviewer fallback path in <code>review-plan/SKILL.md</code> Step 4 and each <code>agents/plan-reviewer-*.md</code></p>
-            <p><strong>Key cases:</strong> when a plan has no <code>#plan-digest</code> block, the reviewer defs and role-prompts instruct fallback to full HTML; the smoke test asserts that every <code>agents/plan-reviewer-*.md</code> file contains both the digest-extraction clause and the fallback clause.</p>
+            <p><strong>File:</strong> <code>tests/plugins/test-responsive-retrofit.sh</code> (corpus section)</p>
+            <p><strong>Targets:</strong> the full CLI — default run, <code>--check</code>, and <code>--dry-run</code> — against a tmp copy of <code>docs/plans/</code></p>
+            <p><strong>Key cases:</strong> first run injects every non-index file (55 at the time of writing); second run no-ops (tree byte-identical); <code>--check</code> exits 0 after the run and 1 when one file is stripped; <code>--dry-run</code> writes nothing.</p>
           </div>
         </div>
       </div>
@@ -1685,44 +1620,36 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1" checked>
-          <label for="ac1"><code>SKELETON.html</code> has a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first element child of <code>&lt;body&gt;</code> (a guiding comment node above it is allowed).</label>
+          <input type="checkbox" id="ac1">
+          <label for="ac1"><code>node scripts/retrofit-responsive-plans.mjs --check</code> exits 0 on the committed tree.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2" checked>
-          <label for="ac2">A freshly generated plan's digest contains the objective, every step's action/why/verify, the acceptance-criteria text, and the verification — and excludes status, checkbox, and completion state.</label>
+          <input type="checkbox" id="ac2">
+          <label for="ac2">Every <code>docs/plans/*.html</code> except <code>index.html</code> contains <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3" checked>
-          <label for="ac3">The canonical flag-and-exit <code>awk</code> extractor returns the spec as readable markdown for a generated plan, even when the plan's body mentions the id.</label>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">Running the injector a second time produces an empty <code>git diff</code> (idempotent).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4" checked>
-          <label for="ac4">The generated implement and workflow prompts instruct the consumer to start from the digest.</label>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">The skeleton's embedded block CSS is byte-identical to the script's CSS constant (sync assert passes).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5" checked>
-          <label for="ac5">All 7 <code>review-plan</code> reviewer briefs (<code>role-prompts.md</code>) and the 7 agent defs read the digest (falling back to full HTML when a plan has none); the lead always reads full HTML.</label>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">At 390px and 320px viewports, none of the 55 plan files report <code>documentElement.scrollWidth</code> greater than the viewport width — 16 did at 390px before (WCAG 1.4.10 reflow).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6" checked>
-          <label for="ac6"><code>review-plan</code> Step 7 regenerates the digest after applying inline edits (and skips it in "review only" mode).</label>
+          <input type="checkbox" id="ac6">
+          <label for="ac6"><code>docs/plans/archive/</code> is untouched by the default run; <code>--include-archive</code> remains opt-in.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7" checked>
-          <label for="ac7"><code>node scripts/backfill-plan-digests.mjs</code> injects a digest into every existing <code>docs/plans/*.html</code> without altering status/progress, and a re-run injects 0.</label>
+          <input type="checkbox" id="ac7">
+          <label for="ac7"><code>.claude-plugin/marketplace.json</code> lists plan-agent <code>2.4.1</code> and <code>kit/plugins/plan-agent/CHANGELOG.md</code> carries the matching entry.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8" checked>
-          <label for="ac8"><code>plan-agent</code> is <code>2.2.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry, and the README documents the digest.</label>
-        </li>
-        <li>
-          <input type="checkbox" id="ac9" checked>
-          <label for="ac9">The digest block does not render in a browser and adds no CDN or external script; <code>bash tests/plugins/test-plan-digest.sh</code> passes.</label>
-        </li>
-        <li>
-          <input type="checkbox" id="ac10" checked>
-          <label for="ac10">A plan whose spec content contains the literal string <code>&lt;/script</code> (e.g. in a code block) is injected correctly — the <code>&lt;\/script</code> guard fires and the closing tag does not terminate the digest block early.</label>
+          <input type="checkbox" id="ac8">
+          <label for="ac8"><code>bash tests/plugins/test-responsive-retrofit.sh</code> exits 0.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1735,10 +1662,14 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p><strong>Generation path:</strong> run <code>/plan-agent:implementation-plan</code> on a throwaway objective and confirm the resulting plan has a <code>#plan-digest</code> block as the first element child of <code>&lt;body&gt;</code>, that its markdown matches the visible objective/steps/criteria/verification, that the block renders nothing in a browser, and that the canonical flag-and-exit <code>awk</code> extractor returns the spec. Confirm both the implement and workflow prompts carry the extraction clause.</p>
-      <p><strong>Backfill path:</strong> run <code>node scripts/backfill-plan-digests.mjs --dry-run</code> then a real run over <code>docs/plans/</code>; spot-check one completed, one in-progress, and one todo plan — each must gain a digest while <code>git diff</code> shows no change to <code>data-status</code>, <code>&lt;meta name="plan-status"&gt;</code>, or any criteria checkbox. Re-run and confirm 0 injected.</p>
-      <p><strong>Review path:</strong> run <code>review-plan</code> on a sample plan; confirm each reviewer was briefed with the digest (not full HTML), that a digest-less plan falls back to full HTML, and that Step 7 regenerated the digest after applying inline edits.</p>
-      <p><strong>Tests:</strong> <code>bash tests/plugins/test-plan-digest.sh</code> and <code>node tests/plugins/test-backfill-digest.mjs</code> both exit 0.</p>
+      <p>Confirm the whole change end-to-end, in this order:</p>
+      <ol>
+        <li>Run <code>bash tests/plugins/test-responsive-retrofit.sh</code> — exit 0 covers the corpus check, fixture cases, and the skeleton/script sync assert.</li>
+        <li>Serve <code>docs/</code> locally and re-run the width-controlled iframe audit at 390px <em>and</em> 320px across all 55 plan files: load each file in an iframe of each width and compare <code>documentElement.scrollWidth</code> against the iframe width. Expected overflow count: 0 at both widths (it was 16 at 390px before the retrofit; 320px grounds WCAG 1.4.10 reflow).</li>
+        <li>Visually open <code>add-multi-host-deploy-targets.html</code> (worst offender, previously +294px) and <code>persist-checkbox-state-in-html-attributes-review.html</code> (table-heavy review file) at phone width — no horizontal scrollbar, long paths wrap, tables fit.</li>
+        <li>Run the injector a second time — it reports all files skipped and <code>git diff</code> gains nothing.</li>
+        <li>Confirm <code>.claude-plugin/marketplace.json</code> shows plan-agent <code>2.4.1</code> with a matching <code>CHANGELOG.md</code> entry, and that the JSON passed the settings-hook validation on save.</li>
+      </ol>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1747,32 +1678,32 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist all-complete" id="completion-checklist">
+      <div class="completion-checklist" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled checked>
+            <input type="checkbox" id="cc1" disabled>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled checked>
+            <input type="checkbox" id="cc2" disabled>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled checked>
+            <input type="checkbox" id="cc3" disabled>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <dl class="report-list"><dt>Version criterion — planned 2.2.0, shipped 2.3.0</dt><dd>PR #317 (markdown plan conversion) took 2.2.0 on main while this plan was in flight. The criterion's intent — bump plan-agent above the value on main with a matching CHANGELOG entry — is met at 2.3.0.</dd></dl>
+          <p class="report-empty">No items to report — all requirements met.</p>
         </div>
       </div>
     </section>
 
-    <!-- ── Next Steps ───────────────────────────────────────────── -->
+    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1780,37 +1711,38 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </h2>
       <div class="next-steps-list">
 
+        <!-- Actionable next steps -->
         <details class="next-step-item">
-          <summary>Add a CI guard so new plans must ship a digest</summary>
+          <summary>Patch the review-card templates at their source</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Add a CI check to the agentics repo that fails a PR when any added or modified file under docs/plans/ ending in .html (excluding index.html) does not contain a `&lt;script type="text/markdown" id="plan-digest"&gt;` block as the first element child of &lt;body&gt; (skip comment nodes when checking). Implement it as a small Node script under scripts/ plus a step in the existing GitHub Actions workflow, mirroring the style of scripts/merge-marketplace.mjs and the tests/ shell smoke tests. Skip plans whose frontmatter meta plan-status is "completed" only if they predate the digest feature; otherwise require the block. Report the files you changed.</pre>
+            <pre>In the agentics repo: the *-review.html files in docs/plans/ are generated from review-output templates and currently ship without the responsive block. Locate the HTML templates that produce review documents (search kit/plugins/plan-agent and kit/plugins/product-plans for review skeleton/template HTML), insert the same &lt;style id="plan-responsive-fix" data-version="1"&gt; block used by scripts/retrofit-responsive-plans.mjs immediately before &lt;/head&gt; in each template, bump each owning plugin's version (patch) in .claude-plugin/marketplace.json with CHANGELOG entries, and verify a freshly generated review file passes node scripts/retrofit-responsive-plans.mjs --check.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
         <details class="next-step-item">
-          <summary>Slice the digest per-step for workflow subagents</summary>
+          <summary>Retrofit the archived plans</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In kit/plugins/plan-agent/skills/implementation-plan/SKILL.md, update the generated workflow prompt so that when a plan is implemented via /workflows, the orchestrator passes each subagent only its relevant slice of the #plan-digest markdown (the specific step plus shared objective/verification context) instead of having every workflow agent re-read the whole plan file. Define how the workflow script extracts and partitions the digest by step heading, and document the token rationale. Do not change the single-session implement path. Report the SKILL.md sections you edited.</pre>
+            <pre>In the agentics repo, run node scripts/retrofit-responsive-plans.mjs --include-archive to inject the v1 responsive block into docs/plans/archive/**/*.html as well. Review the diff, run the command a second time to confirm idempotency (no further changes), and commit as a docs-only change.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
         <details class="next-step-item">
-          <summary>Teach the <code>plan-interview</code> markdown tooling about the digest</summary>
+          <summary>Audit the remaining docs surfaces at phone width</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>The plan-interview plugin's markdown-to-html and plan-status skills operate on .md plan files. Update them to be digest-aware: when markdown-to-html converts a plan to HTML, emit a #plan-digest block as the first element child of &lt;body&gt; using the same spec-only contract defined in plan-agent's implementation-plan SKILL.md; and when plan-status reads a plan, prefer the digest for status-independent spec inspection. Keep the two contracts in sync by referencing plan-agent's definition rather than duplicating it. Report which skills you changed and any contract divergences you had to resolve.</pre>
+            <pre>In the agentics repo, serve docs/ locally (bash scripts/serve-docs.sh) and audit docs/index.html, docs/guides/*.html, and docs/media/social/index.html at 390px and 320px for horizontal overflow using a width-controlled iframe harness: load each page in an iframe of that width and compare documentElement.scrollWidth to the iframe width. Report each offender with the leaf element causing the overflow, and propose minimal CSS fixes per file.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List -->
+        <!-- Wish List (blue-sky / visionary items) -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1818,12 +1750,25 @@ tests/plugins/test-backfill-digest.mjs both pass.
 
         <details class="next-step-item wish-item">
           <summary>
-            A <code>/plan-agent:plan-digest</code> utility command
+            CI guard on every plan-touching PR
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Design a command-only skill /plan-agent:plan-digest &lt;file&gt; that prints the #plan-digest markdown for any HTML plan to stdout (extracting it with the canonical awk one-liner), and, when the block is missing, falls back to generating an ephemeral digest from the plan's live DOM structure without writing to the file. Cover path-safety (basename resolution under the plans roots), a --raw flag to keep the script wrapper, and a clear error when the file is not a plan. Provide the SKILL.md and an allowed-tools line.</pre>
+            <pre>In the agentics repo, add a GitHub Actions workflow (or extend an existing one) that runs node scripts/retrofit-responsive-plans.mjs --check and bash tests/plugins/test-responsive-retrofit.sh on pull requests touching docs/plans/** or kit/plugins/plan-agent/**, so a plan can never merge without the current responsive block.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Auto-retrofit hook on plan writes
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>In the agentics repo, add a PostToolUse hook to kit/plugins/plan-agent/hooks/ (mirroring the existing plans-index rebuild hook) that runs node scripts/retrofit-responsive-plans.mjs --dir docs/plans whenever a Write or Edit touches an .html file under docs/plans/, so manually added plans receive the responsive block immediately. Bump plan-agent (minor — new hook) and document it in the CHANGELOG.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1832,61 +1777,9 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </div>
     </section>
 
-    <!-- ── Unresolved Questions ─────────────────────────────────── -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>Do digest-only reviewers lose the ability to flag rendering / DOM-structure defects?</summary>
-              <div class="unresolved-prompt">
-                <pre>In the agentics plan-agent review-plan skill, the 7 reviewer teammates now read only the #plan-digest markdown, not the full HTML. Assess whether any reviewer role (especially architecture, conventions, or accessibility/UX) needs full-HTML access to catch defects the spec-only digest cannot express — e.g. malformed markup, broken copy buttons, missing nav links, or contrast issues. Recommend either (a) keep all 7 digest-only, (b) give a named subset on-demand full-HTML access, or (c) add a single lead-side structural lint pass. Justify with concrete examples of defects each option would catch or miss.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
-    <details id="team-review-20260610225434" class="team-review" style="margin-top:2rem;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
-      <summary style="padding:.875rem 1.25rem;font-weight:600;font-size:.9rem;cursor:pointer;list-style:none;display:flex;align-items:center;gap:.6rem;user-select:none;min-height:44px;background:var(--surface);">
-        <svg class="icon" aria-hidden="true" style="width:1rem;height:1rem;flex-shrink:0;opacity:.6"><use href="#ic-sparkles"/></svg>
-        Team Review (2026-06-10 22:54:34 UTC)
-      </summary>
-      <div class="review-body" style="padding:1rem 1.25rem;border-top:1px solid var(--border);font-size:.875rem;line-height:1.7;">
-        <p><strong>Executive Summary:</strong> The plan is well-scoped, technically sound, and addresses a genuine token-cost problem with a clean embedded-digest approach. The architecture is defensible — single-file guarantee, no sibling drift, awk-extractable without plugins. The main gaps are: (1) the 7 reviewer agent defs are listed as a glob rather than enumerated names, risking one being missed; (2) three test paths are absent — digest-refresh after Step 7 edits, no-digest fallback behavior, and the <code>&lt;/script</code> escape edge case; (3) the <code>{plan-digest}</code> placeholder substitution contract is not fully specified in Step 1; (4) <code>buildImplementPrompt()</code> has no explicit file path in the Files section. All have been addressed inline.</p>
-
-        <p><strong>Architecture:</strong> Fit is strong. The single-file embedding via <code>&lt;script type=&quot;text/markdown&quot;&gt;</code> is the correct pattern — no CDN, no second source-of-truth, browser-silent. The lead/reviewer read split is well-reasoned. One medium concern: the digest contract is partially duplicated across <code>implementation-plan/SKILL.md</code>, <code>review-plan/SKILL.md</code>, <code>role-prompts.md</code>, 7 agent defs, and the backfill script. A future contract change requires coordinated edits in all five locations — worth noting in an Unresolved Question or a Next Step for contract centralization.</p>
-
-        <p><strong>Completeness:</strong> Steps are specific with action/why/verify triples. Key gap addressed: Step 5 now enumerates all 7 reviewer filenames rather than using a glob. The Files section now notes <code>buildImplementPrompt()</code> is inside <code>implementation-plan/SKILL.md</code>. Step 1 verify now references the placeholder substitution contract.</p>
-
-        <p><strong>Testability:</strong> The existing smoke + unit + integration tests are solid for the generation and backfill paths. Three missing test cases added: (a) digest refresh after <code>review-plan</code> Step 7 inline edits; (b) no-digest fallback path; (c) <code>&lt;/script</code> escape edge case in the backfill integration test.</p>
-
-        <p><strong>Risk:</strong> Highest risk is the backfill over ~50 existing plans. The &quot;only inject when all sections parse&quot; + dry-run + skip-and-report design is sound mitigation. The <code>&lt;/script</code> guard is documented but was untested — now covered. The prose-only enforcement of &quot;status flips must not touch the digest&quot; is a medium-term drift risk; the deferred CI guard (Next Steps) is the correct long-term fix.</p>
-
-        <p><strong>Conventions:</strong> File naming and script placement follow project conventions. One medium issue: the <code>{plan-digest}</code> placeholder was not explicitly documented as the replacement token — Step 1 verify now calls this out. The 7 reviewer files listed as <code>plan-reviewer-*.md</code> glob is now enumerated explicitly in Step 5.</p>
-
-        <p><strong>Highest-Risk Issues (resolved inline):</strong></p>
-        <ol style="padding-left:1.4rem;display:flex;flex-direction:column;gap:.4rem;">
-          <li>(High) 7 agent defs listed as glob — now enumerated in Step 5 with all 7 filenames.</li>
-          <li>(High) No test for <code>&lt;/script</code> escape edge case — added to backfill integration test.</li>
-          <li>(Medium) No test for digest-refresh path after Step 7 edits — added as new integration test card.</li>
-          <li>(Medium) No test for no-digest fallback — added as new integration test card.</li>
-          <li>(Medium) <code>buildImplementPrompt()</code> missing from Files section — noted in SKILL.md file entry.</li>
-          <li>(Medium) <code>{plan-digest}</code> placeholder contract not specified in Step 1 verify — added.</li>
-        </ol>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · 2026-06-10 · agentics
+      Generated by plan-agent · 2026-06-12 · agentics
     </footer>
 
   </main>
@@ -1908,16 +1801,18 @@ function buildImplementPrompt() {
     return cb && cb.checked;
   }).length;
 
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var digestCmd = "awk '!f && /<script[^>]*id=\"plan-digest\"/{f=1;next} f && /<\\/script>/{exit} f' " + planPath;
+
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
-  lines.push('');
-  lines.push('Start from the markdown spec in the #plan-digest block (the first text/markdown script in the file) before opening the full HTML.');
   lines.push('');
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
+  lines.push('1. Read the spec from the embedded digest: ' + digestCmd + ' (fall back to reading the full HTML only if the digest block is missing).');
+  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
   lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
   lines.push('4. Complete the completion checklist to update the plan status to completed.');
 
