@@ -4,7 +4,7 @@ Plan creation and completion as a Claude Code plugin — invoke `/plan-agent:imp
 
 ## Overview
 
-This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into the `implementation-plan` skill. The skill is both **command-invocable** (`/plan-agent:implementation-plan <objective>`) and **model-invocable** — it auto-activates when you ask to create a plan document, generate an HTML plan, or write a plan file. It does not activate on generic planning questions (those route to built-in Plan Mode). Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans from backlog items.
+This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into the `implementation-plan` skill. The skill is both **command-invocable** (`/plan-agent:implementation-plan <objective>`) and **model-invocable** — it auto-activates when you ask to create a plan document, generate an HTML plan, or write a plan file. It does not activate on generic planning questions (those route to built-in Plan Mode). Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans from backlog items, and `.md` plan paths to convert existing markdown plans into the HTML format.
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
@@ -56,18 +56,21 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 Creates implementation plans from a free-text objective. Enforces verb-target filenames, structure, and HTML metadata.
 
-Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it auto-activate when you ask to create a plan document, generate an HTML plan, or write a plan file. Generic planning questions ("plan how to do X") route to built-in Plan Mode, not this skill.
+Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it auto-activate when you ask to create a plan document, generate an HTML plan, convert a markdown plan to an HTML implementation plan, or write a plan file. Generic planning questions ("plan how to do X") route to built-in Plan Mode, not this skill.
 
 ```
 /plan-agent:implementation-plan create a todo app for ravens
 /plan-agent:implementation-plan fix the login redirect bug in auth middleware
 /plan-agent:implementation-plan refactor the user settings module into smaller services
+/plan-agent:implementation-plan docs/plans/distribute-skills-via-skill-box-catalog.md
 ```
+
+Passing a `.md` plan path enters **conversion mode**: the markdown is treated as authoritative, pre-validated content — Clarify/Align/Interview are skipped, sections map 1:1 to the HTML structure, frontmatter (`created`, `status`) carries over, the output filename swaps the extension to `.html`, and Step 8 asks whether to keep or remove the source `.md`. If the path is missing locally, the skill checks the plan roots and the default branch before asking for direction.
 
 **Full invocation syntax:**
 
 ```
-/plan-agent:implementation-plan <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**

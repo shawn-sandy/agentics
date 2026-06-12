@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.2.0 — Markdown plan conversion for implementation-plan (2026-06-12)
+
+### Added
+
+- **`$MD_SOURCE` detection** — `/plan-agent:implementation-plan <plan.md>` now recognizes a `.md` first token as a markdown plan source and enters conversion mode: the markdown file is the authoritative content for a new HTML implementation plan. Resolution tries the path as given, then the plan roots by basename, then the default branch (`git fetch` + fast-forward or `git show`) before falling back to an `AskUserQuestion` — the skill never invents content and presents it as a conversion.
+- **Conversion mode defaults** — conversion implies `--no-clarify --no-align --no-interview` (a committed markdown plan is pre-validated content); sections map 1:1 to the HTML plan structure, frontmatter carries over (`created` preserved; `planned`/`todo` → `todo`, `in-progress` → `in-progress`, `completed`/`done` → `completed`), the output filename swaps the source extension to `.html` (still subject to the verb-target check), and Step 8 batches a keep-or-remove question for the source `.md`.
+- **Docs** — README documents the `<plan.md>` argument and conversion semantics; the skill `description` and `argument-hint` advertise the conversion trigger so "convert docs/plans/foo.md into an HTML implementation plan" activates on the model path.
+
+---
+
 ## 2.1.0 — Findings walkthrough and --skip-analysis flag for review-plan (2026-06-10)
 
 ### Added
