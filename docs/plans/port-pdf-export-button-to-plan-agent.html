@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
-<meta name="plan-type" content="fix">
-<meta name="plan-created" content="2026-06-10">
+<meta name="plan-status" content="completed">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-12">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-file" content="add-plans-index-merge-driver.html">
-<meta name="plan-path" content="docs/plans/add-plans-index-merge-driver.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-plans-index-merge-driver.html — Auto-resolve plans-index merge conflicts via a git merge driver">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-plans-index-merge-driver.html — Auto-resolve plans-index merge conflicts via a git merge driver">
-<title>Plan: Add merge driver for docs/plans/index.html</title>
+<meta name="plan-file" content="port-pdf-export-button-to-plan-agent.html">
+<meta name="plan-path" content="docs/plans/port-pdf-export-button-to-plan-agent.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/port-pdf-export-button-to-plan-agent.html — Port the Save as PDF button into plan-agent generated HTML plans. Start from the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/port-pdf-export-button-to-plan-agent.html">
+<title>Plan: Port the PDF Export Button to plan-agent Plans</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -172,6 +171,31 @@
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: .15rem;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
   /* Meta row */
   .plan-meta {
@@ -976,7 +1000,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -985,6 +1009,10 @@
 
   /* ═════════════════════════════════════════════════════════════════
      OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
      ═════════════════════════════════════════════════════════════════ */
 
   /* ── Files file-tree ────────────────────────────────────────────── */
@@ -1008,6 +1036,35 @@
   .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
   .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
 
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--text); }
+  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--green); }
+  .bar-fill.zero { background: var(--subtle); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
+  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table code { font-size: .8em; }
+
   /* Shared sub-heading used inside visual sections */
   .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
 
@@ -1023,102 +1080,73 @@
   }
   .plan-back-link:hover { color: var(--accent); }
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-  /* ── Save as PDF button (backfilled) ──────────────────────────── */
-  .save-pdf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem 1rem;
-    font-size: .8rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--accent, #2563eb);
-    border: 1px solid var(--accent, #2563eb);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin-top: .15rem;
-    transition: filter .15s, box-shadow .15s;
-  }
-  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .save-pdf-btn:active { filter: brightness(.75); }
-  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
-  @media print { .save-pdf-btn { display: none !important; } }
 </style>
 </head>
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST (backfilled)
-     First element child of <body>. type="text/markdown" never renders
-     or runs. Spec only — no status/checkbox/progress state. Literal
-     closing-script sequences in the content are guarded as <\/script.
-     Extract (first-match flag-and-exit):
+     MACHINE-READABLE DIGEST
+     First element child of <body> — this comment is not an element, so
+     the script below stays firstElementChild. type="text/markdown"
+     never renders or runs. Spec only: objective, context, files, steps
+     (action/why/verify), tests, acceptance criteria, verification.
+     Never put status, checkbox, or progress state in this block.
+     Guard any literal closing-script sequence in the content as
+     <\/script so it cannot terminate this block early.
+     Extract (first-match flag-and-exit; the !f guard keeps digest body
+     lines that quote the opening tag from being swallowed, and the
+     anchored flag never re-triggers on later mentions of the id):
        awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
      ══════════════════════════════════════════════════════════════════ -->
 <script type="text/markdown" id="plan-digest">
-# Plan: Add merge driver for docs/plans/index.html
+# Plan: Port the PDF Export Button to plan-agent Plans
 
-> Authored spec only. Status and progress live in the <head> meta tags and
-> the live DOM, never in this block.
+> Authored spec only. Status and progress live in the <head> meta tags and the live DOM, never in this block.
 
 ## Objective
-Kill the recurring docs/plans/index.html merge conflict for good: add a git merge driver that auto-resolves the generated gallery index by unioning the plan cards from both sides whenever two plan branches collide — so every merge keeps all plans and no contributor ever hand-resolves the index again. Mirror the proven marketplace.json driver wiring already in the repo.
+
+Ship the Save as PDF button in every plan-agent generated HTML plan — port the window.print() export that landed in plan-interview (PR #272) into plan-agent's skeleton and SKILL.md output contract, so each new plan exposes one-click PDF export with zero external dependencies.
 
 ## Context
-docs/plans/index.html is a fully generated file. docs/plans/build-index.sh rebuilds it from every non-index plan .html file, and the kit/plugins/plan-agent/hooks/rebuild-plans-index.py PostToolUse hook re-runs that script on every plan write. Because every plan-adding PR regenerates the index, any two concurrent plan PRs produce a textual merge conflict in this one file — PR #308 hit it twice in a single day.
 
-The repo already solves the identical problem for .claude-plugin/marketplace.json with a custom git merge driver: scripts/merge-marketplace.mjs , mapped in .gitattributes via merge=mkt-version , with the per-clone git config merge.<name>.driver registered idempotently by scripts/setup-merge-driver.sh (auto-run from a SessionStart hook in .claude/settings.json ). This plan reuses that exact split: a committed .gitattributes mapping plus a per-clone driver registration.
-
-Resolution strategy (per .claude/rules/plan-hygiene.md ): the driver unions the gallery cards from both sides rather than regenerating from disk. Sandbox-verified on git 2.50 (the default ort strategy): a merge driver runs during the in-memory merge, before the incoming branch's new plan files are checked out — so regenerating the index from disk inside the driver would silently drop every incoming plan. But both index versions already contain their side's cards as blobs ( %A ours, %B theirs, %O base), so unioning those cards yields a complete index with no disk access, and bakes the resolution straight into the merge commit — exactly how scripts/merge-marketplace.mjs unions plugins[] . Ours' cards keep their order, new cards from theirs are appended, and a card deleted on either side relative to the base stays deleted.
-
-Why no post-merge regeneration: the union already produces a correct, complete index at merge time, so no git hook is needed. Any ordering or timestamp drift versus a clean rebuild is purely cosmetic and self-heals on the very next plan write (which re-runs build-index.sh over the full set on disk). Merge drivers live in local .git/config and never travel with the repo, so this pays off in the repo's standard local rebase-on-main-before-push workflow — the driver fires for git merge , each replayed git rebase commit, and git cherry-pick alike, leaving a branch conflict-free before it reaches GitHub.
+PR #272 (2026-06-07) added a Save as PDF button to HTML plans — but only inside the plan-interview plugin's markdown-to-html assets. Plans are actually generated by plan-agent's implementation-plan skill, which keeps its own independent reference/SKELETON.html, and that pipeline never received the button: 53 of 54 plans in docs/plans/ lacked it, including every plan generated since. Markdown plan conversion also moved into plan-agent (2.2.0), so no current generation path produced the export button. This plan ports the button markup, CSS, savePDF() function, and print-hide rule into the skeleton, and pins the requirement in the SKILL.md HTML output contract plus a smoke test so the two pipelines cannot silently diverge again.
 
 ## Files
-- scripts/merge-plans-index.mjs (new) — driver: union gallery cards from both sides
-- scripts/setup-merge-driver.sh (modified) — register the plans-index node driver
-- .claude/rules/marketplace.md (modified) — cross-reference the plans-index driver
-- .claude/rules/plan-hygiene.md (modified) — canonical union-strategy doc (added this session)
-- tests/merge-plans-index.test.sh (new) — union + two-branch merge smoke test
-- fixtures/merge-plans-index/base.html (new) — union test fixtures
-- fixtures/merge-plans-index/.gitattributes (modified) — map index.html to merge=plans-index
-- fixtures/merge-plans-index/CONTRIBUTING.md (modified) — first-time setup note
-- docs/GITHUB_SETUP.md (modified) — add driver to file inventory
+
+- kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html (modified) — button markup, CSS, savePDF(), print hide
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — Save as PDF bullet in HTML Output Requirements
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — 2.4.0 release entry
+- .claude-plugin/marketplace.json (modified) — plan-agent 2.4.0 plus description mention
+- tests/plugins/test-save-pdf.sh (new) — six-assertion smoke test
+- docs/plans/index.html (generated) — gallery index rebuild
 
 ## Steps
-1. Write the union merge driver scripts/merge-plans-index.mjs Why: Git invokes it as node merge-plans-index.mjs %O %A %B (base, ours, theirs). Parse all three index.html versions, extract the <a class="gallery-card" href="…"> entries keyed by href (unique per plan), and union them: ours' cards keep their order, theirs' new cards are appended, and a card present in base but dropped on either side stays dropped. Reassemble ours' document with the unioned card list, write it to %A , and exit 0 . On any parse failure, exit 1 so git keeps conflict markers for a human. Mirror the structure and robustness of scripts/merge-marketplace.mjs . chmod +x the file. Verify: Run on three fixtures — base, ours (adds card X), theirs (adds card Y): node scripts/merge-plans-index.mjs base.html ours.html theirs.html; echo $? prints 0 , and ours.html now holds both card X and card Y with no <<<<<<< markers. A card in base+theirs but removed from ours stays absent.
-2. Map the index path in .gitattributes Why: Append docs/plans/index.html merge=plans-index to .gitattributes (which already maps marketplace.json to mkt-version ). This is the only committed half of the wiring — it tells every clone which named driver handles this path; the driver definition is per-clone (Step 3). Verify: git check-attr merge -- docs/plans/index.html prints docs/plans/index.html: merge: plans-index , and the existing git check-attr merge -- .claude-plugin/marketplace.json still prints mkt-version .
-3. Register the driver in scripts/setup-merge-driver.sh Why: Leaving the existing mkt-version block untouched, add git config merge.plans-index.name "plans index gallery-card union" and git config merge.plans-index.driver pointing at node "$TOPLEVEL/scripts/merge-plans-index.mjs" %O %A %B . No git hooks are installed — the union driver resolves fully at merge time, so post-merge regeneration is unnecessary (cosmetic drift self-heals on the next plan write). Reusing this script means the existing SessionStart hook activates the driver per session with no settings.json change ; non-Claude contributors run it once. Verify: Run bash scripts/setup-merge-driver.sh twice — it must not error or duplicate config. Then git config --get merge.plans-index.driver prints the node "…/merge-plans-index.mjs" %O %A %B command, and git config --get merge.mkt-version.driver is still set (untouched).
-4. Add union fixtures and the smoke test tests/merge-plans-index.test.sh Why: Add tests/fixtures/merge-plans-index/{base,ours,theirs,expected}.html (minimal index files differing only in their gallery cards) for a deterministic unit check of the union, and write an executable tests/merge-plans-index.test.sh that (a) runs the driver against the fixtures and diffs the result against expected.html , and (b) in a throwaway mktemp repo wires up the driver + .gitattributes , branches a and b that each add a distinct plan and regenerate index.html , merges b into a , and asserts the merge exits 0, leaves no <<<<<<< markers, and the merged index.html holds both plans' cards. Exit non-zero on any failed assertion. The repo's tests/fixtures/merge-marketplace/ establishes exactly this fixture pattern. Verify: bash tests/merge-plans-index.test.sh prints a success line and exits 0 ; corrupting expected.html or removing the .gitattributes mapping in-sandbox makes it exit non-zero (proving it truly tests the driver).
-5. Align the docs with the new driver Why: Mirror the mkt-version driver's documentation footprint: (1) CONTRIBUTING.md "First-time Setup" — note that setup-merge-driver.sh now also registers the plans-index driver; (2) docs/GITHUB_SETUP.md — add scripts/merge-plans-index.mjs beside scripts/merge-marketplace.mjs in the file inventory; (3) .claude/rules/marketplace.md "Merge driver" section — cross-reference the plans-index driver. .claude/rules/plan-hygiene.md already documents the union strategy in full (added this session) and stays the canonical description. Verify: grep -rl "plans-index\|merge-plans-index" CONTRIBUTING.md docs/GITHUB_SETUP.md .claude/rules/marketplace.md .claude/rules/plan-hygiene.md lists all four files.
+
+1. Add the Save as PDF button markup to the skeleton header — *Why:* Place the button between the .plan-title heading and the status badge inside .plan-header-top in reference/SKELETON.html, wired as type="button" onclick="savePDF()" with an explicit aria-label. This matches the placement contract plan-interview's html-spec defined in PR #272, so both pipelines render the control in the same place. *Verify:* Asserts 1–2 of bash tests/plugins/test-save-pdf.sh pass — the button sits between .plan-title and .status-badge with full type/onclick/aria-label wiring.
+2. Style the button and hide it in print output — *Why:* Add the .save-pdf-btn CSS block (accent background, hover/active/focus-visible states, prefers-reduced-motion opt-out) beside the status-badge styles, and append .save-pdf-btn to the main @media print hide list. The control must look native to the plan header and must never appear inside the PDF it produces. *Verify:* Asserts 4–5 of the smoke test pass; opening the browser print preview shows no button.
+3. Define savePDF() in the skeleton's inline script — *Why:* Add function savePDF() { window.print(); } ahead of buildImplementPrompt(). The browser's native print dialog offers a "Save as PDF" destination on Chrome, Edge, Firefox, and Safari — zero dependencies keeps every plan a single self-contained file. *Verify:* Assert 3 passes — the function exists in the inline script and calls window.print().
+4. Pin the requirement in the SKILL.md output contract — *Why:* Add a Save as PDF bullet to the HTML Output Requirements section of the implementation-plan SKILL.md covering placement, behaviour, print hiding, and the do-not-remove rule for both drafted plans and markdown conversions. The skeleton alone is not a contract — the spec bullet is what keeps future skeleton refactors and conversion mode honest. *Verify:* Assert 6 passes — save-pdf-btn is documented in the SKILL.md.
+5. Release plan-agent 2.4.0 — *Why:* Bump the plugin version in .claude-plugin/marketplace.json, mention the export button in the marketplace description, and add the 2.4.0 CHANGELOG entry. A new user-visible capability is a minor bump per the marketplace versioning rules. *Verify:* marketplace.json shows plan-agent 2.4.0 and the CHANGELOG head reads "2.4.0 — Save as PDF button".
 
 ## Tests
+
 Tier 1 — Code-touching plan
-- Objective Concurrent plan branches auto-resolve docs/plans/index.html File: tests/merge-plans-index.test.sh Type: smoke test (self-contained mktemp git sandbox) Asserts: two branches that each add a distinct plan file and both edit the index merge with no manual conflict resolution (exit 0, no conflict markers), and the merged docs/plans/index.html holds both plans' gallery cards — directly proving the plan's objective. Run: bash tests/merge-plans-index.test.sh
-- Unit Gallery-card union logic File: tests/merge-plans-index.test.sh driving tests/fixtures/merge-plans-index/*.html Targets: scripts/merge-plans-index.mjs Key cases: ours' card order preserved and theirs' new card appended (output equals expected.html ); a card in base+theirs but removed from ours stays absent (no resurrection); malformed input makes the driver exit 1 so git keeps conflict markers.
-- Integration Full local merge + rebase File: tests/merge-plans-index.test.sh Targets: driver + .gitattributes mapping + docs/plans/build-index.sh working together in a sandbox repo. Key cases: the merge path unions both plans' cards into index.html with no markers; the rebase path replays the union per commit; the existing mkt-version driver remains registered after setup runs (no clobber).
+
+- Objective-verification (smoke): tests/plugins/test-save-pdf.sh — asserts the skeleton every plan is generated from renders a Save as PDF button between the title and the status badge, wired to savePDF() -> window.print(), hidden in @media print, and required by the SKILL.md output contract. Run: bash tests/plugins/test-save-pdf.sh
+- Integration: tests/plugins/test-save-pdf.sh — targets reference/SKELETON.html header markup, inline script, and print styles plus the SKILL.md HTML Output Requirements; key cases: placement order, onclick/aria-label wiring, window.print() body, @media print hide list, CSS class definition, spec bullet presence.
 
 ## Acceptance Criteria
-- git check-attr merge -- docs/plans/index.html reports plans-index .
-- scripts/merge-plans-index.mjs exists, unions both sides' gallery cards and exits 0 on success, and exits 1 (conflict markers kept) on malformed input.
-- After scripts/setup-merge-driver.sh (or a fresh Claude Code session), git config --get merge.plans-index.driver is set (no git hooks required).
-- Merging two branches that each add a different plan file resolves docs/plans/index.html with no manual intervention (no conflict markers).
-- After that merge, docs/plans/index.html holds gallery cards for both new plans (union), baked into the merge result.
-- The existing mkt-version ( marketplace.json ) driver still registers and works — the setup script only adds, never replaces.
-- bash tests/merge-plans-index.test.sh passes.
-- CONTRIBUTING.md , docs/GITHUB_SETUP.md , .claude/rules/marketplace.md , and .claude/rules/plan-hygiene.md document the plans-index driver and its union strategy.
+
+- reference/SKELETON.html renders a Save as PDF button in the plan header between the title and the status badge.
+- Clicking the button calls savePDF(), which invokes window.print() — no external dependencies are added.
+- The button never appears in print/PDF output — the @media print block hides it.
+- The implementation-plan SKILL.md lists the button as a required header element for drafted plans and markdown conversions.
+- bash tests/plugins/test-save-pdf.sh passes all six assertions, and bash tests/plugins/test-plan-digest.sh stays green.
+- marketplace.json shows plan-agent 2.4.0, the CHANGELOG documents the port, and this plan file — generated from the updated skeleton — itself carries the button.
 
 ## Verification
-Automated: run bash scripts/setup-merge-driver.sh then bash tests/merge-plans-index.test.sh — the smoke test must pass (exit 0).
 
-Manual end-to-end: from a clean clone, create two branches off main that each add a distinct plan file under docs/plans/ and commit (each commit regenerates index.html via the existing PostToolUse hook). Then git checkout branch-a && git merge --no-edit branch-b : the merge must complete with no conflict prompt, and docs/plans/index.html must contain gallery cards for both new plans. Repeat with git rebase in place of merge to confirm the driver also resolves on the replay path.
-
-Non-regression: confirm git config --get merge.mkt-version.driver is still set and git check-attr merge -- .claude-plugin/marketplace.json still reports mkt-version , proving the marketplace driver is untouched.
+Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this plan file in a browser: the header shows the Save as PDF button between the title and the completed badge; clicking it opens the native print dialog with a Save as PDF destination, and the button itself is absent from the print preview. Existing suites stay green: bash tests/plugins/test-plan-digest.sh.
 </script>
 
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
@@ -1184,15 +1212,15 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
     </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Add merge driver for docs/plans/index.html</h1>
+      <h1 class="plan-title">Port the PDF Export Button to plan-agent Plans</h1>
       <button class="save-pdf-btn" type="button" onclick="savePDF()"
               aria-label="Save this plan as PDF">Save as PDF</button>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-10
+        2026-06-12
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
@@ -1200,7 +1228,7 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        fix
+        feature
       </span>
     </div>
   </div>
@@ -1217,7 +1245,6 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
@@ -1233,38 +1260,29 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Kill the recurring <code>docs/plans/index.html</code> merge conflict for good: add a git merge driver that auto-resolves the generated gallery index by <strong>unioning the plan cards from both sides</strong> whenever two plan branches collide — so every merge keeps all plans and no contributor ever hand-resolves the index again. Mirror the proven <code>marketplace.json</code> driver wiring already in the repo.</p>
+      <p>Ship the Save as PDF button in every plan-agent generated HTML plan — port the window.print() export that landed in plan-interview (PR #272) into plan-agent&#39;s skeleton and SKILL.md output contract, so each new plan exposes one-click PDF export with zero external dependencies.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-plans-index-merge-driver.html — Auto-resolve plans-index merge conflicts via a git merge driver</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/port-pdf-export-button-to-plan-agent.html — Port the Save as PDF button into plan-agent generated HTML plans. Start from the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/port-pdf-export-button-to-plan-agent.html</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt ──────────────────────────────────────── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-plans-index-merge-driver.html — Auto-resolve plans-index merge conflicts via a git merge driver</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-      </div>
-    </details>
 
     <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">add-plans-index-merge-driver.html</code>
+        <code id="plan-file" aria-label="Plan file name">port-pdf-export-button-to-plan-agent.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-plans-index-merge-driver.html</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/port-pdf-export-button-to-plan-agent.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
@@ -1274,12 +1292,12 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">6 / 6 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1289,10 +1307,7 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p><code>docs/plans/index.html</code> is a fully generated file. <code>docs/plans/build-index.sh</code> rebuilds it from every non-index plan <code>.html</code> file, and the <code>kit/plugins/plan-agent/hooks/rebuild-plans-index.py</code> PostToolUse hook re-runs that script on every plan write. Because <em>every</em> plan-adding PR regenerates the index, any two concurrent plan PRs produce a textual merge conflict in this one file — PR #308 hit it twice in a single day.</p>
-      <p>The repo already solves the identical problem for <code>.claude-plugin/marketplace.json</code> with a custom git merge driver: <code>scripts/merge-marketplace.mjs</code>, mapped in <code>.gitattributes</code> via <code>merge=mkt-version</code>, with the per-clone <code>git config merge.&lt;name&gt;.driver</code> registered idempotently by <code>scripts/setup-merge-driver.sh</code> (auto-run from a <code>SessionStart</code> hook in <code>.claude/settings.json</code>). This plan reuses that exact split: a committed <code>.gitattributes</code> mapping plus a per-clone driver registration.</p>
-      <p><strong>Resolution strategy (per <code>.claude/rules/plan-hygiene.md</code>):</strong> the driver <em>unions the gallery cards</em> from both sides rather than regenerating from disk. Sandbox-verified on git 2.50 (the default <code>ort</code> strategy): a merge driver runs <em>during</em> the in-memory merge, <em>before</em> the incoming branch's new plan files are checked out — so regenerating the index from disk inside the driver would silently drop every incoming plan. But both index versions already <em>contain</em> their side's cards as blobs (<code>%A</code> ours, <code>%B</code> theirs, <code>%O</code> base), so unioning those cards yields a complete index with no disk access, and bakes the resolution straight into the merge commit — exactly how <code>scripts/merge-marketplace.mjs</code> unions <code>plugins[]</code>. Ours' cards keep their order, new cards from theirs are appended, and a card deleted on either side relative to the base stays deleted.</p>
-      <p><strong>Why no post-merge regeneration:</strong> the union already produces a correct, complete index at merge time, so no git hook is needed. Any ordering or timestamp drift versus a clean rebuild is purely cosmetic and self-heals on the very next plan write (which re-runs <code>build-index.sh</code> over the full set on disk). Merge drivers live in local <code>.git/config</code> and never travel with the repo, so this pays off in the repo's standard <em>local</em> rebase-on-main-before-push workflow — the driver fires for <code>git merge</code>, each replayed <code>git rebase</code> commit, and <code>git cherry-pick</code> alike, leaving a branch conflict-free before it reaches GitHub.</p>
+      <p>PR #272 (2026-06-07) added a Save as PDF button to HTML plans — but only inside the plan-interview plugin&#39;s markdown-to-html assets. Plans are actually generated by plan-agent&#39;s implementation-plan skill, which keeps its own independent reference/SKELETON.html, and that pipeline never received the button: 53 of 54 plans in docs/plans/ lacked it, including every plan generated since. Markdown plan conversion also moved into plan-agent (2.2.0), so no current generation path produced the export button. This plan ports the button markup, CSS, savePDF() function, and print-hide rule into the skeleton, and pins the requirement in the SKILL.md HTML output contract plus a smoke test so the two pipelines cannot silently diverge again.</p>
     </section>
 
     <!-- ── Files ────────────────────────────────────────────────── -->
@@ -1304,49 +1319,13 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> scripts/</li>
-          <ul class="file-list">
-            <li><code>merge-plans-index.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">driver: union gallery cards from both sides</span></li>
-            <li><code>setup-merge-driver.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register the plans-index node driver</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .claude/rules/</li>
-          <ul class="file-list">
-            <li><code>marketplace.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">cross-reference the plans-index driver</span></li>
-            <li><code>plan-hygiene.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">canonical union-strategy doc (added this session)</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/</li>
-          <ul class="file-list">
-            <li><code>merge-plans-index.test.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">union + two-branch merge smoke test</span></li>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> fixtures/merge-plans-index/</li>
-            <ul class="file-list">
-              <li><code>base.html</code>, <code>ours.html</code>, <code>theirs.html</code>, <code>expected.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">union test fixtures</span></li>
-            </ul>
-          </ul>
-          <li><code>.gitattributes</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">map index.html to merge=plans-index</span></li>
-          <li><code>CONTRIBUTING.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">first-time setup note</span></li>
-          <li><code>docs/GITHUB_SETUP.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add driver to file inventory</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">button markup, CSS, savePDF(), print hide</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Save as PDF bullet in HTML Output Requirements</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.4.0 release entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 2.4.0 plus description mention</span></li>
+          <li><code>tests/plugins/test-save-pdf.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">six-assertion smoke test</span></li>
+          <li><code>docs/plans/index.html</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">gallery index rebuild</span></li>
         </ul>
-      </div>
-    </section>
-
-    <!-- ── Diagram ──────────────────────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">Conflict resolution flow</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Trigger</div><code>git merge / rebase</code><div class="pipeline-sub">two concurrent plan branches both regenerated docs/plans/index.html</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Conflict</div><code>docs/plans/index.html</code><div class="pipeline-sub">the generated index differs on both sides</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Resolve</div><code>merge-plans-index.mjs</code><div class="pipeline-sub">union cards from %A + %B, respect base deletions, exit 0</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Merged</div><code>docs/plans/index.html</code><div class="pipeline-sub">holds every plan card — baked into the merge commit, no markers</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Self-heal</div><code>next plan write → build-index.sh</code><div class="pipeline-sub">re-sorts / refreshes; ordering &amp; timestamp drift is cosmetic</div></div>
       </div>
     </section>
 
@@ -1358,86 +1337,86 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write the union merge driver <code>scripts/merge-plans-index.mjs</code></span>
+                <span class="step-chip-text">Add the Save as PDF button markup to the skeleton header</span>
               </div>
-              <div class="step-why">Git invokes it as <code>node merge-plans-index.mjs %O %A %B</code> (base, ours, theirs). Parse all three <code>index.html</code> versions, extract the <code>&lt;a class="gallery-card" href="…"&gt;</code> entries keyed by <code>href</code> (unique per plan), and union them: ours' cards keep their order, theirs' new cards are appended, and a card present in base but dropped on either side stays dropped. Reassemble ours' document with the unioned card list, write it to <code>%A</code>, and <code>exit 0</code>. On any parse failure, <code>exit 1</code> so git keeps conflict markers for a human. Mirror the structure and robustness of <code>scripts/merge-marketplace.mjs</code>. <code>chmod +x</code> the file.</div>
+              <div class="step-why">Place the button between the <code>.plan-title</code> heading and the status badge inside <code>.plan-header-top</code> in <code>reference/SKELETON.html</code>, wired as <code>type=&quot;button&quot; onclick=&quot;savePDF()&quot;</code> with an explicit <code>aria-label</code>. This matches the placement contract plan-interview's html-spec defined in PR #272, so both pipelines render the control in the same place.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Run on three fixtures — base, ours (adds card X), theirs (adds card Y): <code>node scripts/merge-plans-index.mjs base.html ours.html theirs.html; echo $?</code> prints <code>0</code>, and <code>ours.html</code> now holds both card X and card Y with no <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> markers. A card in base+theirs but removed from ours stays absent.</div>
+                <div class="verify-body">Asserts 1–2 of <code>bash tests/plugins/test-save-pdf.sh</code> pass — the button sits between <code>.plan-title</code> and <code>.status-badge</code> with full type/onclick/aria-label wiring.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Map the index path in <code>.gitattributes</code></span>
+                <span class="step-chip-text">Style the button and hide it in print output</span>
               </div>
-              <div class="step-why">Append <code>docs/plans/index.html merge=plans-index</code> to <code>.gitattributes</code> (which already maps <code>marketplace.json</code> to <code>mkt-version</code>). This is the only committed half of the wiring — it tells every clone which named driver handles this path; the driver <em>definition</em> is per-clone (Step 3).</div>
+              <div class="step-why">Add the <code>.save-pdf-btn</code> CSS block (accent background, hover/active/focus-visible states, prefers-reduced-motion opt-out) beside the status-badge styles, and append <code>.save-pdf-btn</code> to the main <code>@media print</code> hide list. The control must look native to the plan header and must never appear inside the PDF it produces.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>git check-attr merge -- docs/plans/index.html</code> prints <code>docs/plans/index.html: merge: plans-index</code>, and the existing <code>git check-attr merge -- .claude-plugin/marketplace.json</code> still prints <code>mkt-version</code>.</div>
+                <div class="verify-body">Asserts 4–5 of the smoke test pass; opening the browser print preview shows no button.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Register the driver in <code>scripts/setup-merge-driver.sh</code></span>
+                <span class="step-chip-text">Define savePDF() in the skeleton&#39;s inline script</span>
               </div>
-              <div class="step-why">Leaving the existing <code>mkt-version</code> block untouched, add <code>git config merge.plans-index.name "plans index gallery-card union"</code> and <code>git config merge.plans-index.driver</code> pointing at <code>node "$TOPLEVEL/scripts/merge-plans-index.mjs" %O %A %B</code>. No git hooks are installed — the union driver resolves fully at merge time, so post-merge regeneration is unnecessary (cosmetic drift self-heals on the next plan write). Reusing this script means the existing <code>SessionStart</code> hook activates the driver per session with <strong>no <code>settings.json</code> change</strong>; non-Claude contributors run it once.</div>
+              <div class="step-why">Add <code>function savePDF() { window.print(); }</code> ahead of <code>buildImplementPrompt()</code>. The browser's native print dialog offers a &quot;Save as PDF&quot; destination on Chrome, Edge, Firefox, and Safari — zero dependencies keeps every plan a single self-contained file.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Run <code>bash scripts/setup-merge-driver.sh</code> twice — it must not error or duplicate config. Then <code>git config --get merge.plans-index.driver</code> prints the <code>node "…/merge-plans-index.mjs" %O %A %B</code> command, and <code>git config --get merge.mkt-version.driver</code> is still set (untouched).</div>
+                <div class="verify-body">Assert 3 passes — the function exists in the inline script and calls <code>window.print()</code>.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add union fixtures and the smoke test <code>tests/merge-plans-index.test.sh</code></span>
+                <span class="step-chip-text">Pin the requirement in the SKILL.md output contract</span>
               </div>
-              <div class="step-why">Add <code>tests/fixtures/merge-plans-index/{base,ours,theirs,expected}.html</code> (minimal index files differing only in their gallery cards) for a deterministic unit check of the union, and write an executable <code>tests/merge-plans-index.test.sh</code> that (a) runs the driver against the fixtures and diffs the result against <code>expected.html</code>, and (b) in a throwaway <code>mktemp</code> repo wires up the driver + <code>.gitattributes</code>, branches <code>a</code> and <code>b</code> that each add a distinct plan and regenerate <code>index.html</code>, merges <code>b</code> into <code>a</code>, and asserts the merge exits 0, leaves no <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> markers, and the merged <code>index.html</code> holds both plans' cards. Exit non-zero on any failed assertion. The repo's <code>tests/fixtures/merge-marketplace/</code> establishes exactly this fixture pattern.</div>
+              <div class="step-why">Add a Save as PDF bullet to the <em>HTML Output Requirements</em> section of the implementation-plan SKILL.md covering placement, behaviour, print hiding, and the do-not-remove rule for both drafted plans and markdown conversions. The skeleton alone is not a contract — the spec bullet is what keeps future skeleton refactors and conversion mode honest.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>bash tests/merge-plans-index.test.sh</code> prints a success line and exits <code>0</code>; corrupting <code>expected.html</code> or removing the <code>.gitattributes</code> mapping in-sandbox makes it exit non-zero (proving it truly tests the driver).</div>
+                <div class="verify-body">Assert 6 passes — <code>save-pdf-btn</code> is documented in the SKILL.md.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Align the docs with the new driver</span>
+                <span class="step-chip-text">Release plan-agent 2.4.0</span>
               </div>
-              <div class="step-why">Mirror the <code>mkt-version</code> driver's documentation footprint: (1) <code>CONTRIBUTING.md</code> "First-time Setup" — note that <code>setup-merge-driver.sh</code> now also registers the plans-index driver; (2) <code>docs/GITHUB_SETUP.md</code> — add <code>scripts/merge-plans-index.mjs</code> beside <code>scripts/merge-marketplace.mjs</code> in the file inventory; (3) <code>.claude/rules/marketplace.md</code> "Merge driver" section — cross-reference the plans-index driver. <code>.claude/rules/plan-hygiene.md</code> already documents the union strategy in full (added this session) and stays the canonical description.</div>
+              <div class="step-why">Bump the plugin version in <code>.claude-plugin/marketplace.json</code>, mention the export button in the marketplace description, and add the 2.4.0 CHANGELOG entry. A new user-visible capability is a minor bump per the marketplace versioning rules.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>grep -rl "plans-index\|merge-plans-index" CONTRIBUTING.md docs/GITHUB_SETUP.md .claude/rules/marketplace.md .claude/rules/plan-hygiene.md</code> lists all four files.</div>
+                <div class="verify-body"><code>marketplace.json</code> shows plan-agent <code>2.4.0</code> and the CHANGELOG head reads &quot;2.4.0 — Save as PDF button&quot;.</div>
               </details>
             </div>
           </div>
@@ -1458,43 +1437,29 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       <div class="objective-test-card">
         <div class="test-card-header">
           <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">Concurrent plan branches auto-resolve docs/plans/index.html</span>
+          <span class="test-card-title">Generated plans ship a working Save as PDF control</span>
         </div>
         <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/merge-plans-index.test.sh</code></p>
-          <p><strong>Type:</strong> smoke test (self-contained <code>mktemp</code> git sandbox)</p>
-          <p><strong>Asserts:</strong> two branches that each add a distinct plan file and both edit the index merge with <em>no</em> manual conflict resolution (exit 0, no conflict markers), and the merged <code>docs/plans/index.html</code> holds <em>both</em> plans' gallery cards — directly proving the plan's objective.</p>
-          <p><strong>Run:</strong> <code>bash tests/merge-plans-index.test.sh</code></p>
+          <p><strong>File:</strong> <code>tests/plugins/test-save-pdf.sh</code></p>
+          <p><strong>Type:</strong> smoke test</p>
+          <p><strong>Asserts:</strong> the skeleton every plan is generated from renders a Save as PDF button between the title and the status badge, wired to <code>savePDF()</code> → <code>window.print()</code>, hidden in <code>@media print</code>, and required by the SKILL.md output contract.</p>
+          <p><strong>Run:</strong> <code>bash tests/plugins/test-save-pdf.sh</code></p>
         </div>
       </div>
 
-      <!-- Tier 1 test sub-sections -->
+      <!-- Tier 1 test sub-sections — omit entirely for Tier 2 plans -->
       <div class="test-list">
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Gallery-card union logic</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/merge-plans-index.test.sh</code> driving <code>tests/fixtures/merge-plans-index/*.html</code></p>
-            <p><strong>Targets:</strong> <code>scripts/merge-plans-index.mjs</code></p>
-            <p><strong>Key cases:</strong> ours' card order preserved and theirs' new card appended (output equals <code>expected.html</code>); a card in base+theirs but removed from ours stays absent (no resurrection); malformed input makes the driver <code>exit 1</code> so git keeps conflict markers.</p>
-          </div>
-        </div>
-
         <div class="test-card">
           <div class="test-card-header">
             <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">Full local merge + rebase</span>
+            <span class="test-card-title">Skeleton and SKILL.md contract stay in sync</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/merge-plans-index.test.sh</code></p>
-            <p><strong>Targets:</strong> driver + <code>.gitattributes</code> mapping + <code>docs/plans/build-index.sh</code> working together in a sandbox repo.</p>
-            <p><strong>Key cases:</strong> the merge path unions both plans' cards into <code>index.html</code> with no markers; the rebase path replays the union per commit; the existing <code>mkt-version</code> driver remains registered after setup runs (no clobber).</p>
+            <p><strong>File:</strong> <code>tests/plugins/test-save-pdf.sh</code></p>
+            <p><strong>Targets:</strong> <code>reference/SKELETON.html</code> header markup, inline script, and print styles; the SKILL.md <em>HTML Output Requirements</em>.</p>
+            <p><strong>Key cases:</strong> button placement order, onclick and aria-label wiring, <code>window.print()</code> body, <code>@media print</code> hide list, CSS class definition, spec bullet presence.</p>
           </div>
         </div>
-
       </div>
     </section>
 
@@ -1506,36 +1471,28 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
-          <label for="ac1"><code>git check-attr merge -- docs/plans/index.html</code> reports <code>plans-index</code>.</label>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1">reference/SKELETON.html renders a Save as PDF button in the plan header between the title and the status badge.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
-          <label for="ac2"><code>scripts/merge-plans-index.mjs</code> exists, unions both sides' gallery cards and exits <code>0</code> on success, and exits <code>1</code> (conflict markers kept) on malformed input.</label>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">Clicking the button calls savePDF(), which invokes window.print() — no external dependencies are added.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
-          <label for="ac3">After <code>scripts/setup-merge-driver.sh</code> (or a fresh Claude Code session), <code>git config --get merge.plans-index.driver</code> is set (no git hooks required).</label>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">The button never appears in print/PDF output — the @media print block hides it.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
-          <label for="ac4">Merging two branches that each add a different plan file resolves <code>docs/plans/index.html</code> with no manual intervention (no conflict markers).</label>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4">The implementation-plan SKILL.md lists the button as a required header element for drafted plans and markdown conversions.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
-          <label for="ac5">After that merge, <code>docs/plans/index.html</code> holds gallery cards for <em>both</em> new plans (union), baked into the merge result.</label>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5">bash tests/plugins/test-save-pdf.sh passes all six assertions, and bash tests/plugins/test-plan-digest.sh stays green.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
-          <label for="ac6">The existing <code>mkt-version</code> (<code>marketplace.json</code>) driver still registers and works — the setup script only adds, never replaces.</label>
-        </li>
-        <li>
-          <input type="checkbox" id="ac7">
-          <label for="ac7"><code>bash tests/merge-plans-index.test.sh</code> passes.</label>
-        </li>
-        <li>
-          <input type="checkbox" id="ac8">
-          <label for="ac8"><code>CONTRIBUTING.md</code>, <code>docs/GITHUB_SETUP.md</code>, <code>.claude/rules/marketplace.md</code>, and <code>.claude/rules/plan-hygiene.md</code> document the plans-index driver and its union strategy.</label>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6">marketplace.json shows plan-agent 2.4.0, the CHANGELOG documents the port, and this plan file — generated from the updated skeleton — itself carries the button.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1548,9 +1505,7 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p><strong>Automated:</strong> run <code>bash scripts/setup-merge-driver.sh</code> then <code>bash tests/merge-plans-index.test.sh</code> — the smoke test must pass (exit 0).</p>
-      <p><strong>Manual end-to-end:</strong> from a clean clone, create two branches off <code>main</code> that each add a distinct plan file under <code>docs/plans/</code> and commit (each commit regenerates <code>index.html</code> via the existing PostToolUse hook). Then <code>git checkout branch-a &amp;&amp; git merge --no-edit branch-b</code>: the merge must complete with <em>no</em> conflict prompt, and <code>docs/plans/index.html</code> must contain gallery cards for <em>both</em> new plans. Repeat with <code>git rebase</code> in place of merge to confirm the driver also resolves on the replay path.</p>
-      <p><strong>Non-regression:</strong> confirm <code>git config --get merge.mkt-version.driver</code> is still set and <code>git check-attr merge -- .claude-plugin/marketplace.json</code> still reports <code>mkt-version</code>, proving the marketplace driver is untouched.</p>
+      <p>Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this plan file in a browser: the header shows the Save as PDF button between the title and the completed badge; clicking it opens the native print dialog with a Save as PDF destination, and the button itself is absent from the print preview. Existing suites stay green: bash tests/plugins/test-plan-digest.sh.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1559,21 +1514,21 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1584,7 +1539,7 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       </div>
     </section>
 
-    <!-- ── Next Steps ───────────────────────────────────────────── -->
+    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1592,27 +1547,18 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       </h2>
       <div class="next-steps-list">
 
+        <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>Add a CI guard that the driver wiring stays intact</summary>
+          <summary>Backfill the Save as PDF button into existing plans</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the agentics repo, add a lightweight CI check (a new job or a step in an existing workflow) that asserts the plans-index merge-driver wiring is present: (1) .gitattributes maps docs/plans/index.html to merge=plans-index, (2) scripts/merge-plans-index.mjs exists, and (3) scripts/setup-merge-driver.sh registers merge.plans-index. Run tests/merge-plans-index.test.sh in CI and fail the build if it does not pass. Mirror the style of any existing CI guard for the marketplace driver.</pre>
+            <pre>Add the Save as PDF button to every existing HTML plan in docs/plans/ that lacks one. Follow the pattern of scripts/backfill-plan-digests.mjs: write scripts/backfill-save-pdf.mjs that inserts the .save-pdf-btn markup between the plan title and the status badge, the .save-pdf-btn CSS block, the @media print hide rule, and the savePDF() function into each docs/plans/*.html file missing them (idempotent, insertion-only, with --dry-run and --dir flags). Skip files that cannot be parsed confidently and report them. Run it, list the files changed, and commit the script together with the updated plans.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <details class="next-step-item">
-          <summary>Apply the same driver to the social media gallery index</summary>
-          <div class="next-step-prompt">
-            <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the agentics repo, docs/media/social/index.html is a generated gallery index with the same concurrent-PR merge-conflict shape as docs/plans/index.html. Extend the plans-index merge-driver pattern to cover it: add a .gitattributes mapping for docs/media/social/index.html, generalize scripts/merge-plans-index.mjs so its gallery-card union works for that gallery's card markup too, and register the mapping in scripts/setup-merge-driver.sh. Add a smoke test mirroring tests/merge-plans-index.test.sh and update the docs.</pre>
-            <button class="copy-prompt-btn" type="button"
-                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-          </div>
-        </details>
-
-        <!-- Wish List -->
+        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1620,12 +1566,12 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
 
         <details class="next-step-item wish-item">
           <summary>
-            One generic "generated-index" merge driver shared by every gallery
+            Unify the duplicated HTML plan pipelines
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Design a single generic git merge driver for the agentics repo that auto-resolves ANY generated gallery index (docs/plans/index.html, docs/media/social/index.html, and future ones) by unioning their cards. Drive it from a small config map (glob pattern → card selector) so adding a new generated gallery is a one-line registration rather than a new driver. Propose the config format and the scripts/setup-merge-driver.sh changes, and confirm a single .gitattributes mapping per gallery is all that's needed.</pre>
+            <pre>Investigate consolidating the two duplicated HTML generation pipelines in the agentics repo: plan-interview&#39;s markdown-to-html assets (kit/plugins/plan-interview/skills/markdown-to-html/) and plan-agent&#39;s implementation-plan skeleton (kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html). Features like the Save as PDF button (PR #272) have shipped in one pipeline and silently missed the other. Recommend one approach — a shared asset source, build-time extraction, or one plugin delegating to the other — with tradeoffs, and draft a migration plan. Do not implement until the approach is approved.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1634,37 +1580,20 @@ Non-regression: confirm git config --get merge.mkt-version.driver is still set a
       </div>
     </section>
 
-    <!-- ── Unresolved Questions ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>Do GitHub server-side merges need a CI safety net?</summary>
-              <div class="unresolved-prompt">
-                <pre>For the agentics repo plans-index union merge driver: it fires on local git merge, rebase, and cherry-pick, but merge drivers are local-only, so GitHub's server-side "Merge"/"Squash" buttons never run it — a PR merged on github.com without a prior local rebase could still conflict on docs/plans/index.html. Investigate whether the repo's standard rebase-on-main-before-push workflow makes this a non-issue in practice, or whether a CI safety net is warranted — e.g. a job that regenerates docs/plans/index.html on the default branch after merge and commits the refresh, or a required-status check that blocks merging a branch behind main. Recommend one approach with reasoning, avoiding redundant rebuilds and false positives.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · 2026-06-10 · agentics
+      Generated by plan-agent · 2026-06-12 · agentics
     </footer>
 
   </main>
 </div><!-- /.layout -->
 
 <script>
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
 /* ── Build rich implementation prompt from DOM ──────────────── */
 function buildImplementPrompt() {
   var cmdEl = document.getElementById('implement-cmd');
@@ -1680,14 +1609,18 @@ function buildImplementPrompt() {
     return cb && cb.checked;
   }).length;
 
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var digestCmd = "awk '!f && /<script[^>]*id=\"plan-digest\"/{f=1;next} f && /<\\/script>/{exit} f' " + planPath;
+
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
   lines.push('');
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
+  lines.push('1. Read the spec from the embedded digest: ' + digestCmd + ' (fall back to reading the full HTML only if the digest block is missing).');
+  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
   lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
   lines.push('4. Complete the completion checklist to update the plan status to completed.');
 
@@ -1963,12 +1896,6 @@ function copyPrompt(btn) {
     sections.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>
-<script>
-/* Save as PDF (native browser print dialog) — backfilled */
-function savePDF() {
-  window.print();
-}
 </script>
 </body>
 </html>

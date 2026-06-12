@@ -293,6 +293,7 @@ The file must:
 - Embed the machine-readable digest — a `<script type="text/markdown" id="plan-digest">` block as the **first element child of `<body>`** — filled per the [Machine-Readable Digest](#machine-readable-digest-plan-digest) section (a guiding HTML comment above it is allowed; comments are not elements)
 - Use a clean, modern visual design with a clear typographic hierarchy
 - Include a status badge (colour-coded: grey = todo, amber = in-progress, green = completed) in the page header
+- Include a **Save as PDF button** (`<button class="save-pdf-btn" type="button" onclick="savePDF()" aria-label="Save this plan as PDF">Save as PDF</button>`) in the page header between the `<h1>` title and the status badge. `savePDF()` calls `window.print()` — the browser's native print dialog offers a "Save as PDF" destination on Chrome, Edge, Firefox, and Safari; no external dependencies. The button is hidden in `@media print` so it never appears in the exported PDF. The skeleton ships the button markup, its CSS, and the `savePDF()` function — do not remove them when filling placeholders. Applies to both freshly drafted plans and markdown conversions.
 - Render the step list as numbered cards with an expandable *Verify* disclosure (`<details><summary>Verify</summary>…</details>`)
 - Render acceptance criteria as interactive browser checkboxes with strikethrough on check
 - Group blue-sky / wish-list items under a `🔭 Wish List` collapsible inside Next Steps — use a distinct visual treatment (dashed border, muted colour) so they are clearly non-committal
