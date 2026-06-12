@@ -914,6 +914,64 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Clean up and make docs/plans manageable
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Turn an unmanageable pile of 179 markdown plan and doc files into a clean, navigable library: relocate stray developer docs, archive every shipped plan after checking it for reusable knowledge, convert the keepers to template-styled HTML, normalize statuses, and stand up a repeatable six-month retention process so the mess never comes back. Scope is markdown only — the 18 existing HTML plans are left untouched.
+
+## Context
+The docs/ tree has grown unmanageable. Markdown is the problem; there are two in-scope piles plus excluded sets:
+
+60 loose .md files at docs/ root — these are generated developer docs (they carry <!-- generated:start --> markers from the documenting-plans skill). They are valuable reference material but they clutter the repo root and are not organized.
+
+119 markdown plans inside docs/plans/ — status frontmatter is inconsistent: 49 in-progress , 23 todo , 6 draft , plus stray completed , implemented , superseded , proposed , ready , and planned values.
+
+18 HTML plans inside docs/plans/ — out of scope . This cleanup targets *.md only; existing .html plans are left exactly as they are (other than newly-created twins from Step 4).
+
+82 files in docs/plans/archive/ — already-archived plans, organized under standard/ , artifact/ , fix/ , docs/ , and enhancement/ . Out of scope — left untouched per the repo's archive search-exclusion rule.
+
+Decisions locked in during planning: scope = *.md files only, in docs/plans/ + the loose docs/ root (HTML plans and archive excluded); deliverable = a one-time cleanup pass and a scheduled retention routine; delete rule = retire plans whose status is completed , implemented , or superseded (verified shipped); preservation = convert developer-useful keepers to HTML using the implementation-plan template styles (deleting the .md after the twin verifies), and git-mv the rest to archive/ rather than hard-deleting so nothing is lost.
+
+Note on the six-month rule: today is 2026-06-04 and the oldest plan's created: date is 2026-01-19, so nothing currently qualifies for age-based deletion (the cutoff is 2025-12-04). The six-month retention work is therefore forward-looking — we build the mechanism now and it will start retiring plans once they age past the threshold.
+
+## Steps
+1. Build a triage manifest of every doc and plan Why: You cannot clean what you have not inventoried. A single manifest turns 179 scattered markdown files into a reviewable decision table and becomes the audit trail for every move and deletion. Verify: Write docs/plans/_cleanup-manifest.csv (or .json ) with one row per *.md file under docs/ root and docs/plans/ (excluding archive/ and any .html ), capturing: path, kind (root-doc / md-plan), status frontmatter, created date, age in days, and a decision column ( relocate / keep+convert / archive / normalize ). Confirm row count = 60 root + 119 md plans = 179.
+2. Relocate the 60 loose developer docs out of docs/ root Why: The root-level .md files are generated developer guides, not plans — they are exactly the "info useful to developers" we want to keep, but they belong in their own home so the repo root stays clean. Verify: Create docs/guides/ and git mv all 60 root-level .md files (those with <!-- generated:start --> markers) into it. Run find docs -maxdepth 1 -name '*.md' and confirm it returns zero results. Confirm docs/guides/ contains 60 files and git tracks them as renames.
+3. Flag the developer-useful plans worth keeping Why: Not every active plan deserves a permanent home. Marking the keepers (reusable architecture, design decisions, ongoing initiatives) before converting prevents wasted conversion effort on throwaway plans. Verify: In the manifest, every todo / in-progress / draft markdown plan has an explicit keep+convert or archive decision with a one-line rationale. No active plan is left undecided. Spot-check 5 decisions against the plan's actual content.
+4. Convert kept markdown plans to template-styled HTML Why: HTML plans render in the browser, show status badges, and live in the gallery. Reusing the implementation-plan template guarantees the converted plans look identical to freshly-generated ones — one consistent visual system. Verify: For each keep+convert plan, run the plan-interview:markdown-to-html skill (or fill SKELETON.html directly) so the output references the same design tokens/structure as plan-agent/…/implementation-plan/reference/SKELETON.html . Each produces a .html twin with valid <meta name="plan-*"> tags. Open 2–3 in a browser and confirm they render with the standard header, status badge, and step cards. Remove the original .md once the HTML twin is verified.
+5. Archive shipped plans after a knowledge check Why: Plans marked completed , implemented , or superseded represent work already in the codebase. Moving (not deleting) them to archive/ keeps the active directory lean while preserving history — but only after confirming no unique insight is lost. Verify: For each plan with status completed / implemented / superseded : (1) confirm the work shipped via git log or by inspecting the affected files; (2) scan for any unique decision/insight not already captured in a docs/guides/ doc — if found, extract it into the relevant guide first; (3) git mv the plan into docs/plans/archive/<type>/ . Confirm no completed / implemented / superseded .md remains loose in docs/plans/ .
+6. Normalize status frontmatter on the survivors Why: Seven different status values ( draft , proposed , ready , planned , …) make the gallery filters and any automation unreliable. Collapsing them to the canonical three makes status machine-readable everywhere. Verify: Map every non-canonical status on the remaining active markdown plans to todo | in-progress | completed (e.g. draft / proposed / planned / ready → todo ; implemented → completed ). Run grep -rh '^status:' docs/plans/*.md and confirm only the three canonical values appear. (HTML plans are out of scope and left untouched.)
+7. Stand up a scheduled six-month retention routine + policy doc Why: The whole point is that the cleanup is repeatable. A /schedule routine that runs on a cadence — plus a written policy — means future retirement happens automatically instead of accumulating into another 197-file mess. Verify: Create a /schedule routine (backed by a dry-run-capable script) that lists plans whose created date is > 6 months old AND status ∈ { completed , implemented , superseded }, posts a dry-run report, and archives on approval. Run the underlying check today and confirm it reports zero eligible plans and explains the 2025-12-04 cutoff. Confirm the routine is registered (e.g. visible via the schedule/routine list). Write docs/plans/README.md documenting the keep/convert/archive rules, the six-month policy, the canonical status vocabulary, and the directory layout.
+8. Rebuild the plans gallery to reflect the clean state Why: After moves, conversions, and archival, the gallery index is stale. Regenerating it gives an immediate visual confirmation that the directory is now manageable and every surviving plan is accounted for. Verify: Run /plan-agent:plans-library to regenerate docs/plans/index.html . Confirm the card count equals the number of surviving (non-archived) plans, that no archived or deleted plan appears, and that the gallery opens cleanly in a browser with working status/type filters.
+
+## Acceptance Criteria
+- A triage manifest exists listing all 179 in-scope *.md files (60 root + 119 plans) with a decision and rationale per row; no .html plan is included.
+- find docs -maxdepth 1 -name '*.md' returns zero results — no stray plan/doc files at docs/ root.
+- The 60 relocated developer docs live under docs/guides/ and are tracked by git as renames (history preserved).
+- Every kept plan has an HTML twin built from the implementation-plan template styles and renders correctly in a browser.
+- No completed / implemented / superseded markdown plan remains loose in docs/plans/ ; each was knowledge-checked before being git mv 'd to archive/ .
+- Every surviving active plan uses only the canonical status vocabulary: todo , in-progress , or completed .
+- A scheduled six-month retention routine is registered, its dry-run reports zero eligible plans today, and a docs/plans/README.md documents the lifecycle policy.
+- The regenerated docs/plans/index.html gallery shows only surviving plans with an accurate count and working filters.
+
+## Verification
+End-to-end, the cleanup is correct when a fresh checkout shows: a clean docs/ root (no loose .md ), a populated docs/guides/ , a lean docs/plans/ containing only active HTML plans plus the gallery and policy README, a grown docs/plans/archive/ holding every retired shipped plan, and a uniform status vocabulary throughout.
+
+Run the full sweep: find docs -maxdepth 1 -name '*.md' | wc -l → 0; grep -rh '^status:' docs/plans/*.md | sort -u → only canonical values; the retention mechanism's dry-run → "0 eligible (cutoff 2025-12-04)"; and the regenerated gallery opens with a card count matching find docs/plans -maxdepth 1 -name '*.html' ! -name 'index.html' | wc -l . Confirm git status shows the moves as renames (not delete+add) so history survives, and that git log can still reach every archived plan.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

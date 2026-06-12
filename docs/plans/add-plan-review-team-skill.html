@@ -948,6 +948,110 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add a plan-review Agent Team skill to plan-agent
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a /plan-agent:review-plan skill that spins up a Claude Code Agent Team — five core reviewers always, plus two UI-conditional reviewers (UX/design and accessibility) spawned only when the plan shows UI signals — to critique an HTML implementation plan in parallel, then has the lead synthesise their findings and apply the improvements directly back into the plan file. Turning every plan into a peer-reviewed, self-improving document, with UX and a11y coverage automatically scaled to whether the plan actually touches a user interface.
+
+## Context
+The plan-agent plugin generates rich, self-contained HTML implementation plans ( implementation-plan ) and marks them complete ( finalize-plan ), but there is no automated way to critique and improve a plan before it is implemented. Today a plan's quality depends entirely on the single session that wrote it.
+
+The Claude Code Agent Teams feature is purpose-built for exactly this: a lead session spawns independent teammates that each work in their own context window, share a task list, and message each other directly. The docs call out "research and review" as the strongest use case — multiple reviewers investigate different angles simultaneously and challenge each other's findings before converging.
+
+The sibling plugin product-plans already proves the pattern with plan-review-agents : a six-role Agent Team that reviews product plans (Markdown) in place using reusable subagent definitions. This plan adapts that proven shape for technical implementation plans — five plan-specific reviewer lenses operating on the plugin's own HTML plan format, applying edits to HTML step cards and acceptance-criteria items rather than Markdown sections.
+
+Because implementation plans are often backend, CLI, or infrastructure work, UX and accessibility lenses would be dead weight on most reviews — but invaluable when a plan describes a UI feature. So instead of permanent UX/a11y teammates, the lead spawns a UX/design reviewer and an accessibility reviewer only when the plan shows UI signals, reusing the exact heuristic the implementation-plan skill already applies in its interview UI override (references to React/Vue/Svelte, .tsx / .jsx / .css / .html , className /Tailwind, or UX terms like button, modal, form, dialog, page, component). Backend plans stay lean at five reviewers; UI plans automatically get all seven.
+
+Agent Teams are experimental and disabled by default (require CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 and Claude Code ≥ 2.1.32), so the skill must hard-gate on availability and never silently fall back to single-session role-play.
+
+## Files
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 1.8.0 → 1.9.0 + description
+- kit/plugins/plan-agent/README.md (modified) — document review-plan skill
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — add 1.9.0 entry
+- .claude-plugin/plugin.json (modified) — mention review-plan in description
+- agents/ (new directory)/plan-reviewer-architecture.md (new) — core: feasibility / ordering lens
+- agents/ (new directory)/plan-reviewer-completeness.md (new) — core: objective coverage / gaps lens
+- agents/ (new directory)/plan-reviewer-testability.md (new) — core: verify lines + Tests section lens
+- agents/ (new directory)/plan-reviewer-risk.md (new) — core: failure modes / regressions lens
+- agents/ (new directory)/plan-reviewer-conventions.md (new) — core: structure / clarity / conventions lens
+- agents/ (new directory)/plan-reviewer-ux.md (new) — conditional: UX / flows / states lens
+- agents/ (new directory)/plan-reviewer-accessibility.md (new) — conditional: WCAG / keyboard / ARIA lens
+- skills/review-plan/ (new directory)/SKILL.md (new) — team orchestration workflow
+- references/role-prompts.md (new) — 7 spawn prompts (5 core + 2 UI-conditional)
+- references/output-template.md (new) — synthesis report + inline-edits table
+
+## Steps
+1. Scaffold the new directories under the plan-agent plugin Why: Write tools require parent paths to exist, and agents/ is brand-new to this plugin — create kit/plugins/plan-agent/agents/ and kit/plugins/plan-agent/skills/review-plan/references/ before authoring any files. Verify: ls kit/plugins/plan-agent/agents kit/plugins/plan-agent/skills/review-plan/references lists both directories without error.
+2. Author the seven reviewer subagent definitions (5 core + 2 UI-conditional) Why: Per the Agent Teams guide, defining each role as a reusable subagent ( agents/*.md ) lets it serve as both a delegated subagent and a team teammate — mirroring product-plans ' six product-reviewer-*.md files. Each file needs frontmatter ( name matching the filename, a third-person description , a restrictive tools allowlist of Read, Glob, Grep, Bash , and an explicit model ) plus a body defining that lens's mandate for implementation plans. The five core lenses always run; the two UI lenses ( ux , accessibility ) are authored the same way but only spawned when UI signals are present (Step 6). Verify: All seven files exist: core — plan-reviewer-architecture.md , -completeness.md , -testability.md , -risk.md , -conventions.md ; conditional — plan-reviewer-ux.md , plan-reviewer-accessibility.md . For each, the name: frontmatter equals the filename stem and the description states what it reviews and when to use it. The two conditional descriptions note they apply to UI-bearing plans.
+3. Write references/role-prompts.md with seven lens-specific spawn prompts Why: The lead briefs each teammate with a tailored spawn prompt carrying task-specific context (teammates do not inherit the lead's conversation). Each template uses a <ABSOLUTE_PATH> placeholder for the resolved plan, tells the reviewer to read the HTML plan, apply its lens, and report findings back via SendMessage with severity ratings — keeping the heavy prose out of SKILL.md (progressive disclosure). Include all seven (five core + the two UI prompts); group the UX and accessibility prompts under a clearly-marked "conditional — UI plans only" heading so the lead knows they are spawned selectively. Verify: grep -c "<ABSOLUTE_PATH>" references/role-prompts.md returns 7, and the file contains one clearly-headed prompt block per reviewer lens, with the UX and accessibility blocks marked conditional.
+4. Write references/output-template.md (synthesis report + inline-edits table) Why: A fixed synthesis template makes the lead's output deterministic. It must include an Executive Summary, Role-by-Role findings, an Agreements/Conflicts section, a Highest-Risk list, and — critically — an Inline Edits to Apply table whose rows map each accepted improvement to a concrete HTML target (e.g. step-card #3 verify-body , #criteria-list append , objective-card ) plus an action ( edit / append / insert ). This table is what drives the in-place update in Step 6. Verify: The file contains an "Inline Edits to Apply" table with columns for target HTML element, action, and new content; section headings match what SKILL.md Step 6 reads.
+5. Write skills/review-plan/SKILL.md — the team orchestration workflow Why: This is the core. Frontmatter: name: review-plan , a three-part description (≤200 chars), and allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, SendUserFile . Body steps mirror plan-review-agents : (0) exit plan mode via ToolSearch select:ExitPlanMode then ExitPlanMode , treating "not in plan mode" as success; (1) resolve the HTML plan ( --dir → plansDirectory → docs/plans/ → newest *.html excluding index.html ); (2) default to update-in-place + artifact; (3) gate on Agent Teams; (3b) detect UI signals; (4) spawn the team (5 core, +2 UI reviewers when signals present); (5) collect; (6) synthesise; (7) integrate; (8) emit artifact; (9) clean up. Verify: head shows valid frontmatter with all listed allowed-tools (including both ToolSearch and ExitPlanMode ); the body is under 500 lines and contains the Step 0 exit-plan-mode bootstrap and a numbered Step 1–9 workflow.
+6. Specify the HTML-aware spawn and integrate logic inside SKILL.md Why: The key adaptation from the Markdown-based sibling. (a) UI-signal detection: before spawning, scan the resolved plan's HTML (excluding <style> / <script> ) for UI signals — references to React/Vue/Svelte/Angular, .tsx / .jsx / .css / .html file extensions, className / style /Tailwind, or UX terms (button, modal, form, dialog, dropdown, page, component) — reusing the implementation-plan interview UI-override heuristic. (b) Spawn step: a directive that creates the team and spawns the five core plan-reviewer-* subagent types in parallel, plus plan-reviewer-ux and plan-reviewer-accessibility when UI signals were detected; brief each with its role-prompts.md template ( <ABSOLUTE_PATH> substituted via realpath ), and wait for all spawned teammates before synthesis. Announce which mode ran (e.g. "UI signals detected — running 7 reviewers" vs "no UI signals — running 5 core reviewers"). (c) Integrate step: walk the synthesis "Inline Edits to Apply" table and apply one Edit per row against the HTML plan — targeting .step-card bodies, .verify-body , #criteria-list <li> items, .objective-card , and the Verification paragraph — HTML-escaping all inserted content, never touching <style> / <script> , and appending a collapsible <details> "Team Review (timestamp)" block before </main> . Verify: SKILL.md defines the UI-signal detection list, the spawn step names the five core plan-reviewer-* agent types plus the two conditional ones with their gating condition and "wait for all spawned", and the integrate step names the specific HTML selectors above, the HTML-escape rule, and the appended Team Review <details> .
+7. Register the skill: bump version and update plugin descriptions Why: A new skill is a MINOR bump per marketplace.md . In .claude-plugin/marketplace.json raise the plan-agent entry from 1.8.0 to 1.9.0 and extend its description to mention review-plan ; update kit/plugins/plan-agent/.claude-plugin/plugin.json description to match. Set version only in marketplace.json , never in plugin.json . Verify: grep -A2 '"plan-agent"' .claude-plugin/marketplace.json shows "version": "1.9.0" ; plugin.json has no version key; the project's settings hook reports marketplace.json as valid JSON.
+8. Document the new skill in CHANGELOG.md and README.md Why: Project convention requires a CHANGELOG entry and README update for any new component. Add a dated 1.9.0 CHANGELOG entry, and a README section documenting /plan-agent:review-plan — the five reviewer roles, the Agent Teams requirement, the enable flag, and the update-in-place default. Verify: CHANGELOG.md has a 1.9.0 heading dated 2026-06-06; README.md lists review-plan with its invocation, roles, and the CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS requirement.
+9. Validate the plugin structure Why: Catch frontmatter, JSON, and registration errors before commit. Run /validate-plugin plan-agent (or the bundled validation skill) and confirm the new skill and all seven agents parse (five core + two UI-conditional), the homepage URL is correct, and marketplace.json registration is intact. Verify: validate-plugin reports no errors for plan-agent ; node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json'))" exits 0.
+
+## Tests
+Tier 1 — the plan creates skill and agent definition files plus a marketplace registration that change the plugin's runtime behavior. There is no unit-test runner for Markdown/JSON plugin definitions in this repo, so "tests" here are the plugin's real validation harness plus a manual team-run smoke test.
+
+Objective-Verification Test (hero)
+
+Smoke test — review-plan updates a plan in place. With Agent Teams enabled, run /plan-agent:review-plan tests/fixtures/sample-plan-backend.html against a copied non-UI fixture. Assert the run (1) spawns exactly five core teammates, (2) finishes with the fixture modified — at least one inline edit applied to a step card or criterion AND a "Team Review" <details> appended before </main> , and (3) writes a sibling sample-plan-backend-review.html artifact. Then run against tests/fixtures/sample-plan-ui.html (a fixture referencing a .tsx component) and assert seven teammates spawn (core + plan-reviewer-ux + plan-reviewer-accessibility ). Finally, with the flag unset, re-run and assert the skill hard-stops with the enable message and makes no edits. This proves the objective: a team that reviews and updates an implementation plan, scaling UX/a11y coverage to the plan's content.
+
+Fixtures: tests/fixtures/sample-plan-backend.html (no UI signals) and tests/fixtures/sample-plan-ui.html (UI signals). These fixture files must be created before the test can run — copy any existing docs/plans/*.html to those scratch paths (backend: no UI terms; UI: include at least one .tsx reference in the body, not inside a <style> / <script> block). Run manually — Agent Team runs are interactive and not yet CI-automatable.
+
+Unit-level (structure validation)
+
+File: existing validate-plugin skill / structural checks.
+
+Targets: review-plan/SKILL.md frontmatter and the seven plan-reviewer-*.md agent definitions (5 core + ux + accessibility).
+
+Key cases: each name: equals its filename stem; descriptions are third-person and non-empty; allowed-tools includes both ToolSearch and ExitPlanMode ; no version key in plugin.json .
+
+Integration-level (registration)
+
+File: .claude-plugin/marketplace.json + scripts/check-version-bump.sh .
+
+Targets: plan-agent marketplace entry and version guard.
+
+Key cases: marketplace.json parses as valid JSON; the plan-agent version is 1.9.0 ; the version-bump guard passes against main .
+
+## Acceptance Criteria
+- skills/review-plan/SKILL.md exists with a valid three-part description and allowed-tools including both ToolSearch and ExitPlanMode .
+- Seven plan-reviewer-*.md agent definitions exist under kit/plugins/plan-agent/agents/ (5 core + ux + accessibility ), each with valid frontmatter whose name matches its filename.
+- references/role-prompts.md contains seven lens-specific spawn prompts, each using the <ABSOLUTE_PATH> placeholder, with the UX and accessibility prompts marked conditional.
+- references/output-template.md includes an "Inline Edits to Apply" table mapping findings to concrete HTML targets and actions.
+- SKILL.md hard-gates on CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 and Claude Code ≥ 2.1.32 and does not fall back to single-session role-play.
+- The spawn step creates the five core plan-reviewer-* teammates in parallel (plus the two UI reviewers when UI signals are detected) and waits for all spawned teammates before synthesising.
+- UI-signal detection gates the UX and accessibility reviewers: a UI-bearing plan spawns 7 teammates, a backend/CLI plan spawns only the 5 core, and the skill announces which mode ran.
+- By default the skill updates the HTML plan in place (inline edits + appended "Team Review" <details> ) and emits a <stem>-review.html artifact.
+- The integrate logic targets HTML structures ( .step-card , .verify-body , #criteria-list , .objective-card ) and never modifies the skeleton's <style> or <script> .
+- marketplace.json bumps plan-agent to 1.9.0 ; CHANGELOG.md and README.md document the new skill.
+- validate-plugin plan-agent passes and marketplace.json is valid JSON.
+- After a completed review run, no orphaned teammates remain — the team is fully cleaned up and a subsequent /plan-agent:review-plan on the same file starts a fresh team with no stale members.
+
+## Verification
+End-to-end, backend plan (teams enabled): set CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 , restart Claude Code (≥ 2.1.32), copy a non-UI plan from docs/plans/*.html to a scratch path, and run /plan-agent:review-plan <scratch>.html . Confirm exactly five core teammates spawn (no UX/a11y), the lead synthesises, the scratch plan is edited in place (visible inline improvements + a "Team Review" collapsible at the bottom), a <stem>-review.html companion is written, and the team is cleaned up with no orphaned teammates.
+
+End-to-end, UI plan: repeat with a plan that references UI (e.g. a .tsx component or terms like modal/form) and confirm seven teammates spawn — the five core plus plan-reviewer-ux and plan-reviewer-accessibility — and that the resulting inline edits include UX/accessibility improvements.
+
+Negative path (teams disabled): unset the flag and re-run — the skill must stop immediately with the enable instructions and leave the plan file byte-identical.
+
+Reusability: confirm each reviewer also works as a plain subagent by asking Claude to "use the plan-reviewer-testability agent to review <plan>.html" without a team.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

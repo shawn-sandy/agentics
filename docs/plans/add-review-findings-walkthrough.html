@@ -1057,6 +1057,66 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Walkthrough & analysis of review-plan findings
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Turn review-plan 's silent auto-apply into a guided conversation: walk the developer through every team finding, let them Accept , Modify , or Reject each one, and gate the whole analysis behind an opt-out --skip-analysis flag so power users and background runs stay fast.
+
+## Context
+The review-plan skill runs a seven-reviewer Agent Team, synthesizes their findings into an &ldquo;Inline Edits to Apply&rdquo; table (Step 6), then writes those edits straight into the plan (Step 7). The developer never sees the findings before they land — the only control today is the coarse &ldquo;review only&rdquo; vs &ldquo;update in place&rdquo; toggle at Step 2.
+
+This plan inserts a developer-in-the-loop walkthrough between synthesis and integration. By default the skill presents an ask-first gate offering to walk through the findings; the developer can decline at the prompt. If they proceed, each finding is triaged individually — Accept, Modify, or Reject — and only the kept edits flow into Step 7. A new --skip-analysis flag bypasses the gate entirely for power users, and because background mode already suppresses every AskUserQuestion , it implies --skip-analysis so unattended runs never block.
+
+The change is contained to the review-plan skill and its synthesis template, plus the usual documentation and version ripple. No other plugin or review pipeline is touched in this plan.
+
+## Files
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 1.11.0 &rarr; 1.12.0
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — add 1.12.0 entry
+- kit/plugins/plan-agent/README.md (modified) — document --skip-analysis + walkthrough
+- kit/plugins/plan-agent/skills/review-plan/SKILL.md (modified) — flag parse, Step 6b, Step 7 wiring
+- kit/plugins/plan-agent/skills/review-plan/references/output-template.md (modified) — Source/Rationale column + Triage Outcome
+
+## Steps
+1. Parse and strip the new --skip-analysis and --triage-top <N> flags in review-plan/SKILL.md . Why: The flag is the developer's explicit opt-out; tying it to background mode guarantees unattended runs never block on an interactive prompt. Verify: Extend the argument-parsing logic beside the existing --background detection: detect a --skip-analysis token (set skip_analysis = true ) and a --triage-top <N> token (capture the integer N; default unset = full per-finding triage), strip both before further parsing, and state that background_mode == true forces skip_analysis = true . Re-read SKILL.md and confirm all of these are present.
+2. Document the flag interaction in the ## Background mode section. Why: Keeps the two flags' relationship explicit where background behavior is already specified, so a future reader can't assume the walkthrough runs detached. Verify: Add a bullet under ## Background mode stating --skip-analysis is implied and the Step 6b walkthrough never runs unattended. Confirm the bullet names --skip-analysis and references Step 6b.
+3. Insert Step 6b — Walkthrough & Analysis between Synthesize (Step 6) and Integrate (Step 7). Why: This is the feature — the synthesis&rarr;integration gap is exactly where developer triage belongs; per-finding Accept/Modify/Reject delivers the granular control requested while the gate keeps it skippable without a flag. Verify: The new ### Step 6b defines: (a) skip when skip_analysis , background_mode , or output_mode == "review only" ; (b) the ask-first gate ( AskUserQuestion : &ldquo;Walk through findings&rdquo; / &ldquo;Apply all&rdquo; / &ldquo;Review only&rdquo;) — choosing &ldquo;Review only&rdquo; sets output_mode = "review only" , so Step 7 appends the Team Review without applying any edits; declining the gate is not equivalent to --skip-analysis ; (c) a per-finding triage loop over the &ldquo;Inline Edits to Apply&rdquo; rows, batched &le;4 findings per AskUserQuestion call, each Accept / Modify / Reject; (d) Modify marks the finding for a single post-walkthrough edit pass (not inline free-text) where the developer revises the kept edits in the plan directly; (e) --triage-top <N> caps individual triage to the N highest-risk findings and batch-accepts the remainder (default unset = full per-finding; ignored when the walkthrough is skipped); (f) it produces an accepted_edits list (accepted as-is + revised-modified) consumed by Step 7. Confirm all of these appear.
+4. Wire Step 7 to consume accepted_edits and record triage outcomes. Why: Closes the loop so only developer-approved edits land, while the appended review preserves a transparent record of what was dropped and why. Verify: Step 7 Pass 1 iterates accepted_edits when the walkthrough ran. The full-table fallback (current behavior) fires only when the walkthrough was bypassed — --skip-analysis , background mode, or the &ldquo;Apply all&rdquo; gate choice. Declining the gate (&ldquo;Review only&rdquo;) is not a fallback case: it sets output_mode = "review only" , so Pass 1 is skipped entirely and Pass 2 still appends the Team Review. Step 7 Pass 2 (the appended Team Review <details> ) gains a triage-outcome summary listing accepted / modified (with revised content) / rejected findings. Confirm the fallback clause, the declined-gate clause, and the triage record are all documented.
+5. Extend output-template.md with a Source / Rationale column and a Triage Outcome subsection. Why: The walkthrough needs each finding's originating reviewer and rationale to present an informed Accept/Modify/Reject choice; the placeholder gives the triage record a defined home. Verify: Open references/output-template.md : the &ldquo;Inline Edits to Apply&rdquo; table has a Source / Rationale column (reviewer + why), and a &ldquo;Triage Outcome&rdquo; subsection placeholder exists beneath it for Step 7 Pass 2 to fill.
+6. Document --skip-analysis and the walkthrough in the plan-agent README. Why: The new flag and interactive behavior must be discoverable in plugin docs, consistent with how --background is already documented. Verify: Add --skip-analysis and --triage-top <N> to the review-plan invocation examples and a short subsection describing the ask-first gate, per-finding triage, the post-walkthrough edit pass, and the background-implies-skip rule. grep -n "skip-analysis" kit/plugins/plan-agent/README.md returns the new example and description.
+7. Bump plan-agent to 1.12.0 and add a CHANGELOG entry. Why: Project convention requires a manual minor bump and changelog entry for any added skill capability — the marketplace.json value is what ships. Verify: In .claude-plugin/marketplace.json change plan-agent version 1.11.0 &rarr; 1.12.0 (minor: new flag + new interactive step). Add a ## 1.12.0 entry to kit/plugins/plan-agent/CHANGELOG.md covering the walkthrough, the gate default, the --skip-analysis and --triage-top flags, per-finding triage with a post-walkthrough edit pass, and the background interaction. Confirm marketplace.json parses as valid JSON and the CHANGELOG's top entry is ## 1.12.0 .
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective review-plan gates findings by default; --skip-analysis bypasses File: tests/fixtures/review-plan-sample.html (small fixture plan with at least two known findings) Type: smoke test (agent-driven — prose-skill behavior has no automated unit runner) Asserts: Run A — /plan-agent:review-plan tests/fixtures/review-plan-sample.html presents the ask-first gate; choosing &ldquo;Walk through findings&rdquo; and rejecting one finding leaves that edit out of the plan body while recording it in the appended Team Review. Run B — the same command with --skip-analysis shows no gate and applies every proposed edit (current behavior preserved). Run: /plan-agent:review-plan tests/fixtures/review-plan-sample.html then /plan-agent:review-plan tests/fixtures/review-plan-sample.html --skip-analysis
+- Unit SKILL.md carries the flag, Step 6b, and the wiring anchors File: tests/review-plan-skill.test.mjs (new) — static assertions over the skill text Targets: kit/plugins/plan-agent/skills/review-plan/SKILL.md Key cases: file contains --skip-analysis ; contains a Step 6b heading; contains accepted_edits ; the ## Background mode section mentions --skip-analysis as implied. (e.g. grep -q -- '--skip-analysis' && grep -q 'Step 6b' && grep -q 'accepted_edits' )
+- Integration marketplace.json stays valid and the version is bumped File: tests/marketplace-version.test.mjs (new) — also enforced by the .claude/settings.json auto-validation hook Targets: .claude-plugin/marketplace.json — JSON validity + the plan-agent version field Key cases: file parses as JSON; plan-agent version === "1.12.0" ; the value is strictly higher than main 's 1.11.0 . (e.g. python3 -c "import json; m=json.load(open('.claude-plugin/marketplace.json')); assert [p['version'] for p in m['plugins'] if p['name']=='plan-agent'][0]=='1.12.0'" )
+
+## Acceptance Criteria
+- review-plan/SKILL.md parses and strips --skip-analysis (sets skip_analysis ) and --triage-top <N> ; background_mode forces skip_analysis true.
+- A Step 6b — Walkthrough & Analysis section exists between Step 6 (Synthesize) and Step 7 (Integrate).
+- By default Step 6b presents an ask-first gate the developer can decline; --skip-analysis bypasses it entirely.
+- The walkthrough triages findings per-finding (Accept / Modify / Reject) batched &le;4 per AskUserQuestion call; Modify defers to a post-walkthrough edit pass; --triage-top N caps individual triage to the N highest-risk findings.
+- Step 7 Pass 1 applies only accepted/modified edits when the walkthrough ran; the full-table fallback fires only for --skip-analysis , background mode, or &ldquo;Apply all&rdquo; — declining the gate (&ldquo;Review only&rdquo;) applies nothing and still appends the Team Review.
+- Step 7 Pass 2 (appended Team Review) records accepted / modified / rejected outcomes; rejected findings are recorded but not applied.
+- output-template.md has a Source / Rationale column and a Triage Outcome subsection; the plan-agent README documents the flag and walkthrough.
+- .claude-plugin/marketplace.json sets plan-agent to 1.12.0 (valid JSON) and the CHANGELOG has a matching 1.12.0 entry.
+
+## Verification
+Drive the updated skill against tests/fixtures/review-plan-sample.html three ways. (1) Default: confirm the ask-first gate appears; decline it and confirm no edits are applied but the Team Review is still appended; re-run, accept the gate, then Reject one finding and confirm it is absent from the plan body yet present in the appended triage record, while an Accepted finding does land. (2) --skip-analysis : confirm no gate appears and every proposed edit is applied (matching today's behavior). (3) --background : confirm zero interactive prompts and update-in-place is used. Finally, run python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))" and assert the plan-agent version reads 1.12.0 , and grep -n "1.12.0" kit/plugins/plan-agent/CHANGELOG.md returns the new entry.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

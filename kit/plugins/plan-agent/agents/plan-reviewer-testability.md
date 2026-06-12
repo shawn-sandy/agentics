@@ -19,7 +19,7 @@ You review **implementation plans** for testability and test coverage. Your scop
 
 ## How to Review
 
-Read the plan's full content. Focus on the **Tests** and **Acceptance Criteria** sections. Look for:
+Read the plan via its embedded digest — extract the spec-only markdown with `awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <plan-path>`. If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file. The digest carries the whole authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Tests** and **Acceptance Criteria** sections. Look for:
 
 1. **Missing test types** — Should there be unit tests but aren't mentioned? Same for integration or E2E?
 2. **Vague test descriptions** — Does "test the new flow" count as a test plan?

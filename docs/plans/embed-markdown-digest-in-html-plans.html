@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-10">
 <meta name="plan-repo" content="agentics">
@@ -1251,7 +1251,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Embed a machine-readable markdown digest in every HTML plan</h1>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1440,7 +1440,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
@@ -1457,7 +1457,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
@@ -1474,7 +1474,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
@@ -1491,7 +1491,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
@@ -1508,7 +1508,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
@@ -1525,7 +1525,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
@@ -1542,7 +1542,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
@@ -1559,7 +1559,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
@@ -1657,43 +1657,43 @@ tests/plugins/test-backfill-digest.mjs both pass.
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>SKELETON.html</code> has a <code>&lt;script type="text/markdown" id="plan-digest"&gt;</code> block as the first element child of <code>&lt;body&gt;</code> (a guiding comment node above it is allowed).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">A freshly generated plan's digest contains the objective, every step's action/why/verify, the acceptance-criteria text, and the verification — and excludes status, checkbox, and completion state.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">The canonical flag-and-exit <code>awk</code> extractor returns the spec as readable markdown for a generated plan, even when the plan's body mentions the id.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The generated implement and workflow prompts instruct the consumer to start from the digest.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">All 7 <code>review-plan</code> reviewer briefs (<code>role-prompts.md</code>) and the 7 agent defs read the digest (falling back to full HTML when a plan has none); the lead always reads full HTML.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>review-plan</code> Step 7 regenerates the digest after applying inline edits (and skips it in "review only" mode).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>node scripts/backfill-plan-digests.mjs</code> injects a digest into every existing <code>docs/plans/*.html</code> without altering status/progress, and a re-run injects 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>plan-agent</code> is <code>2.2.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry, and the README documents the digest.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">The digest block does not render in a browser and adds no CDN or external script; <code>bash tests/plugins/test-plan-digest.sh</code> passes.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">A plan whose spec content contains the literal string <code>&lt;/script</code> (e.g. in a code block) is injected correctly — the <code>&lt;\/script</code> guard fires and the closing tag does not terminate the digest block early.</label>
         </li>
       </ul>
@@ -1719,27 +1719,27 @@ tests/plugins/test-backfill-digest.mjs both pass.
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list"><dt>Version criterion — planned 2.2.0, shipped 2.3.0</dt><dd>PR #317 (markdown plan conversion) took 2.2.0 on main while this plan was in flight. The criterion's intent — bump plan-agent above the value on main with a matching CHANGELOG entry — is met at 2.3.0.</dd></dl>
         </div>
       </div>
     </section>

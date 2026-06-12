@@ -971,6 +971,65 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add a docs landing hub linking the Plans and Social galleries
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Replace the bare root redirect with a polished landing hub that greets every visitor to the agentics GitHub Pages site and routes them in one click to the Plans gallery and the Social Media gallery — styled to match the existing light-theme Plans gallery, with every link relative so it works under the /agentics/ base path.
+
+## Context
+Today docs/index.html is a nine-line <meta http-equiv="refresh"> document that bounces visitors straight to plans/index.html . That makes the Plans gallery the de-facto home page and leaves the Social Media gallery ( docs/media/social/index.html ) completely undiscoverable from the site root — there is no real landing page tying the site together.
+
+The deploy-pages.yml workflow uploads the entire docs/ directory as the Pages artifact, so docs/index.html is served as the site root at /agentics/ . Replacing the redirect with a hub therefore changes nothing about deployment — the same file is simply richer. Because the site lives under the /agentics/ project sub-path, every link must be relative ( plans/index.html , not /plans/ ); a leading-slash href would resolve against the domain root and 404.
+
+The Plans gallery uses a light theme with a specific token set ( --bg #ffffff , --surface #f9fafb , --border #e5e7eb , --text #111827 , --accent #2563eb , --radius 4px , plus a soft card --shadow ), a header with a 3px accent top-rule, and a responsive .gallery-grid of hover-highlighted .gallery-card anchors. The hub reuses those exact tokens and patterns for visual continuity. The Social gallery is dark-themed but remains a perfectly valid link target.
+
+The guides directory ( docs/guides/ ) holds 62 raw .md files and no index.html ; under Pages with .nojekyll , markdown is served as raw text and there is no directory listing, so a guides/ link would 404. Per the decision on this plan, Guides is deferred from the hub for now and tracked in Next Steps — the hub ships with exactly the two galleries that already have working entry points.
+
+## Files
+- docs/index.html (modified) — replace meta-refresh redirect with the landing hub
+- tests/pages/test-docs-hub.sh (new) — objective smoke test for the hub (matches tests/pages/test-* convention)
+- tests/pages/test-root-redirect.sh (modified) — delete or update — currently asserts the meta-refresh redirect this plan removes
+
+## Steps
+1. Replace the redirect with a self-contained hub skeleton carrying the Plans-gallery light-theme tokens. Why: The meta-refresh document has to go before anything can render at the root; seeding the same :root token block as docs/plans/index.html guarantees visual parity from the first byte and keeps the page fully self-contained (inline CSS, no CDN). Verify: Open docs/index.html : there is no <meta http-equiv="refresh"> and no <link rel="canonical"> redirect; the file starts with <!DOCTYPE html> , <html lang="en"> , includes <meta charset="UTF-8"> , <meta name="viewport"> , a <title> , and a <a class="skip-link" href="#main">Skip to content</a> ; the :root block declares --bg:#ffffff , --accent: #2563eb , --radius:4px and the same --surface/--border/--text/--muted values as docs/plans/index.html .
+2. Build the header band — accent top-rule, an <h1> , and a one-line tagline. Why: Mirroring the Plans gallery's .gallery-header (the 3px --accent rule above the title) gives the hub a recognizable masthead that visually belongs to the same family as the pages it links to. Verify: The rendered page shows a single <h1> with the blue 3px rule directly above it and a muted tagline beneath; the header markup matches the .gallery-header / ::before structure used in docs/plans/index.html .
+3. Add the two destination cards — Plans and Social Media — as relative-href anchors in a responsive grid. Why: The cards are the hub's entire reason to exist: one-click routing to each gallery. Using .gallery-grid + .gallery-card reuses the gallery's hover treatment, and relative hrefs ( plans/index.html , media/social/index.html ) are what keep navigation working under /agentics/ . Verify: Exactly two <a class="gallery-card"> elements exist; their href values are plans/index.html and media/social/index.html (no leading / , no protocol); each card shows a title (e.g. "Plans", "Social Media") and a descriptive subtitle that makes the destination unambiguous (e.g. "Browse implementation plans", "View social media cards and posts"). grep -n 'href="/' docs/index.html returns nothing.
+4. Wrap content in semantic landmarks, add a skip-link and footer, with responsive + reduced-motion behavior. Why: A skip-to-content link, a <main> landmark, a single <h1> , and a .gallery-footer complete the page chrome and keep it accessible and gallery-consistent; the grid must collapse cleanly on narrow screens like the gallery does at its 640px breakpoint. Verify: A <a href="#main" class="skip-link"> appears before the <main> element; the cards live inside <main id="main"> ; a .gallery-footer renders at the bottom with the gallery's border-top styling; resizing the viewport below ~640px stacks the two cards into a single column with no horizontal scroll; at tablet widths (640px–1024px) the two-card grid is not awkwardly sparse.
+5. Serve docs/ locally and confirm both relative links resolve from the root, then confirm the deploy workflow is untouched. Why: GitHub Pages serves the site under /agentics/ , so the only trustworthy check is loading the hub as the served root and actually clicking through to each gallery — and the task forbids changing the deploy pipeline. Verify: Run cd docs && python3 -m http.server 8123 , open http://localhost:8123/ : the hub renders in the light theme, and clicking the Plans card loads "Plans Library" while the Social card loads "Media Library". Confirm .github/workflows/deploy-pages.yml exists and is unmodified ( test -f ).
+6. Write tests/pages/test-docs-hub.sh and update or delete tests/pages/test-root-redirect.sh . Why: The smoke test codifies the plan's acceptance criteria as automated assertions, and belongs in tests/pages/ with the test-* naming convention matching its siblings ( test-pages-smoke.sh , test-workflow-config.sh ). The existing test-root-redirect.sh asserts the meta-refresh redirect this plan removes, so it must be deleted or rewritten to assert the hub instead. Verify: Run bash tests/pages/test-docs-hub.sh and confirm it exits 0. Confirm the test asserts: no http-equiv="refresh" , href="plans/index.html" present, href="media/social/index.html" present, no absolute-root link ( href="/" ), and at least one CSS token ( --accent:.*#2563eb ). Confirm tests/pages/test-root-redirect.sh no longer asserts a meta-refresh redirect.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective Root is a hub that links both galleries via relative hrefs File: tests/pages/test-docs-hub.sh Type: smoke test (bash, matches the existing tests/pages/test-* convention) Asserts: docs/index.html contains no http-equiv="refresh" ; contains href="plans/index.html" and href="media/social/index.html" ; contains no absolute-root link ( grep -q 'href="/' must fail); contains at least one CSS token ( --accent:.*#2563eb ); and .github/workflows/deploy-pages.yml exists and was not modified in the current commit (checked via test -f , not git diff ). Directly proves the plan's stated objective. Run: bash tests/pages/test-docs-hub.sh
+- E2E Click-through from the served root reaches each gallery File: tests/e2e/docs-hub.spec.ts (Playwright) Status: Deferred — the repo has no Playwright config, no tests/e2e/ directory, and no TypeScript tooling. This spec is aspirational; implement it when E2E infrastructure is set up. See Next Steps. Targets: the served docs/ root and the two .gallery-card navigation links Key cases: (1) loading / shows an <h1> , a skip-link, and exactly two cards; (2) clicking the Plans card lands on a page whose title is "Plans Library"; (3) clicking the Social card lands on a page whose title is "Media Library"; (4) the page exposes a single main landmark and one h1 .
+
+## Acceptance Criteria
+- docs/index.html no longer contains a meta-refresh redirect; it renders a landing hub.
+- The hub links to the Plans gallery via the relative href plans/index.html .
+- The hub links to the Social Media gallery via the relative href media/social/index.html .
+- The hub reuses the Plans gallery's light-theme tokens ( --bg #ffffff , --accent #2563eb , --radius 4px ) for visual parity.
+- No link in docs/index.html uses an absolute path beginning with / — every link is relative and resolves under /agentics/ .
+- .github/workflows/deploy-pages.yml is unchanged.
+- The page is self-contained (inline CSS, no external stylesheet or CDN) with a single <h1> and a <main> landmark.
+- The hub includes a <a class="skip-link" href="#main">Skip to content</a> before <main> .
+- tests/pages/test-root-redirect.sh no longer asserts a meta-refresh redirect (deleted or rewritten).
+
+## Verification
+Serve the docs directory as the site root — cd docs && python3 -m http.server 8123 — and open http://localhost:8123/ . Confirm the hub renders in the light theme with the accent top-rule header and two cards with descriptive subtitles, then click each card and confirm it loads the Plans Library and the Media Library respectively. Tab-focus the page and confirm the skip-link appears and targets #main . View source on the served root and confirm there is no <meta http-equiv="refresh"> and no href="/" absolute link. Run bash tests/pages/test-docs-hub.sh and confirm it exits 0. Confirm .github/workflows/deploy-pages.yml exists unchanged via test -f . Note: after merging to main, GitHub Pages CDN may serve the old redirect for several minutes — wait before declaring the live deploy verified.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

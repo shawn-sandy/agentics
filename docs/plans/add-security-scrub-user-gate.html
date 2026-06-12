@@ -696,6 +696,54 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add User Gate to security-scrub Skill
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Centralize the user-confirmation gate inside security-scrub so every caller automatically pauses for review after a scan — auto-proceeding only when the result is a clean PASS with zero findings, and hard-stopping (no Continue option) on any BLOCKED result.
+
+## Context
+The security-scrub skill lives in kit/plugins/social-media-tools/skills/security-scrub/SKILL.md . It scans content for secrets and emits a structured SCRUB RESULT block, then stops. Five callers depend on it: share-session , share-github , share-selection , share-project , and share-scan .
+
+In v2.3.2, a user-confirmation prompt was added directly inside share-session (lines 187–188). The other four callers have no gate at all, so a BLOCKED or WARN result silently allows sharing to continue. The fix was partial — every caller must now implement its own gate independently, leading to divergence and future drift.
+
+Moving the gate into security-scrub itself enforces it uniformly for all callers. For the "auto-trigger" use case: when the result is a clean PASS (no findings whatsoever), the skill proceeds without prompting — this is the automatic continuation path. Any findings (LOW, MEDIUM, or HIGH) pause for explicit user input before returning.
+
+## Steps
+1. Add AskUserQuestion to allowed-tools in security-scrub/SKILL.md Why: Declaring every tool the skill calls in allowed-tools prevents a mid-run permission prompt; without it the harness blocks execution until the user manually approves. Verify: Run head -6 kit/plugins/social-media-tools/skills/security-scrub/SKILL.md and confirm AskUserQuestion appears in the allowed-tools: line alongside the existing Bash, Read, Grep entries.
+2. Add Step 6 — User Gate to the security-scrub skill body with four result-driven branches Why: The current five-step skill emits the SCRUB RESULT and exits, leaving callers responsible for gating. Centralizing the gate removes per-caller boilerplate and eliminates the risk that a future caller forgets to implement it. Verify: Read the updated SKILL.md and confirm Step 6 is present with all four branches: BLOCKED (any HIGH finding or ALLOWLIST verdict BLOCKED) — hard stop message, no AskUserQuestion call, skill returns immediately. WARN (MEDIUM finding, no HIGH) — AskUserQuestion with caution language; options: "Continue anyway" / "Cancel — stop here". PASS with LOW findings — AskUserQuestion with informational note; options: "Continue" / "Cancel". PASS with no findings — no prompt; skill states "Clean — auto-proceeding" and returns normally.
+3. Remove the redundant AskUserQuestion gate from share-session/SKILL.md Phase 2 Why: share-session already calls security-scrub via Skill() ; with the gate now inside the skill, leaving it in share-session too would double-prompt the user on every scrub. Verify: Open kit/plugins/social-media-tools/skills/share-session/SKILL.md and confirm lines referencing PASS → use AskUserQuestion (currently lines 187–188) are removed. Both the PASS → use AskUserQuestion instruction and the adjacent "BLOCKED = hard stop" documentation must also be removed — both are now enforced inside security-scrub and are redundant in the caller.
+4. Bump social-media-tools to v2.4.0 in .claude-plugin/marketplace.json and add a CHANGELOG entry Why: Adding behavior that affects all callers (the user gate now fires from inside the skill for every invocation) is a new capability — a MINOR bump per the versioning table in .claude/rules/marketplace.md . Current version is 2.3.2. Verify: Run python3 -c "import json; d=json.load(open('.claude-plugin/marketplace.json')); print(next(p['version'] for p in d['plugins'] if p['name']=='social-media-tools'))" from the repo root and confirm it prints 2.4.0 . Open kit/plugins/social-media-tools/CHANGELOG.md and confirm a v2.4.0 entry exists at the top.
+5. Commit all changes in a single conventional commit referencing this plan Why: Per repo conventions, plan files are committed alongside the plugin changes they describe; leaving them uncommitted requires a second prompt and breaks traceability. Verify: Run git status and confirm a clean working tree. Run git log -1 --oneline and confirm the commit message is a conventional commit of type feat(kit/plugins/social-media-tools) referencing the user gate change.
+
+## Acceptance Criteria
+- AskUserQuestion appears in allowed-tools of security-scrub/SKILL.md .
+- Step 6 in security-scrub/SKILL.md auto-continues (no prompt) when SCRUB RESULT is PASS with no findings.
+- Step 6 presents AskUserQuestion (Continue / Cancel) when SCRUB RESULT is PASS with LOW findings.
+- Step 6 presents AskUserQuestion (Continue anyway / Cancel) with caution language when SCRUB RESULT is WARN.
+- Step 6 hard-stops with no Continue option when SCRUB RESULT or ALLOWLIST verdict is BLOCKED.
+- The redundant AskUserQuestion gate is removed from share-session/SKILL.md Phase 2 (no double-prompt).
+- social-media-tools version in marketplace.json is 2.4.0 and CHANGELOG has a v2.4.0 entry.
+
+## Verification
+Read kit/plugins/social-media-tools/skills/security-scrub/SKILL.md end-to-end and confirm Step 6 is present with all four branches (BLOCKED hard-stop, WARN gate, PASS-with-LOW gate, PASS-clean auto-continue). Confirm AskUserQuestion is in allowed-tools .
+
+Read kit/plugins/social-media-tools/skills/share-session/SKILL.md Phase 2 and confirm the AskUserQuestion post-scrub instruction is removed.
+
+Run the marketplace version check command from Step 4 and confirm it prints 2.4.0 . Check the CHANGELOG for the v2.4.0 entry. Run git log -1 --oneline and confirm a single clean commit contains all four changed files: security-scrub/SKILL.md , share-session/SKILL.md , marketplace.json , CHANGELOG.md , and this plan file.
+</script>
+
 <!-- ── Icon definitions ───────────────────────────────────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

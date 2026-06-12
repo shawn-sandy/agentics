@@ -1,12 +1,18 @@
 # Reviewer Role Prompts
 
-These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PATH>` with the resolved plan path.
+These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PATH>` with the resolved plan path. Every brief instructs the reviewer to read the plan's embedded digest (`script#plan-digest`) rather than the full HTML, with a full-HTML fallback for plans that have no digest yet; the lead keeps reading the full HTML for selector-based edits.
 
 ## Core Reviewers (always spawned)
 
 ### Architecture Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from an **architecture** lens: component boundaries, layer separation, data flow, integration with existing patterns, and system design coherence.
+Review the implementation plan at `<ABSOLUTE_PATH>` from an **architecture** lens: component boundaries, layer separation, data flow, integration with existing patterns, and system design coherence.
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Component structure and boundaries
@@ -36,7 +42,13 @@ Architecture Review complete.
 
 ### Completeness Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from a **completeness** lens: are all necessary steps present? Are they specific enough to execute? Are critical files omitted? Is the path from start to finish unbroken?
+Review the implementation plan at `<ABSOLUTE_PATH>` from a **completeness** lens: are all necessary steps present? Are they specific enough to execute? Are critical files omitted? Is the path from start to finish unbroken?
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Step granularity and specificity
@@ -65,7 +77,13 @@ Completeness Review complete.
 
 ### Testability Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from a **testability** lens: are the changes properly tested? Is there an objective-verification test? Are acceptance criteria verifiable? Are test descriptions specific enough?
+Review the implementation plan at `<ABSOLUTE_PATH>` from a **testability** lens: are the changes properly tested? Is there an objective-verification test? Are acceptance criteria verifiable? Are test descriptions specific enough?
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Test coverage (unit, integration, E2E as appropriate)
@@ -94,7 +112,13 @@ Testability Review complete.
 
 ### Risk Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from a **risk** lens: what could go wrong? Identify breaking changes, data safety issues, concurrency risks, dependency hazards, and rollback challenges.
+Review the implementation plan at `<ABSOLUTE_PATH>` from a **risk** lens: what could go wrong? Identify breaking changes, data safety issues, concurrency risks, dependency hazards, and rollback challenges.
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Breaking API or data contract changes
@@ -124,7 +148,13 @@ Risk Review complete.
 
 ### Conventions Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from a **conventions** lens: do the proposed changes fit the project's patterns, naming style, file organization, and code structure?
+Review the implementation plan at `<ABSOLUTE_PATH>` from a **conventions** lens: do the proposed changes fit the project's patterns, naming style, file organization, and code structure?
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Naming consistency (camelCase, kebab-case, PascalCase)
@@ -156,9 +186,15 @@ Conventions Review complete.
 
 ### UX Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from a **UX** lens: is the user experience clear, coherent, and frictionless? Are user flows, error states, and interactions well-thought-out?
+Review the implementation plan at `<ABSOLUTE_PATH>` from a **UX** lens: is the user experience clear, coherent, and frictionless? Are user flows, error states, and interactions well-thought-out?
 
 **This reviewer runs only on plans that mention React, Vue, Svelte, buttons, modals, forms, or other UI signals.**
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - User flows and happy-path clarity
@@ -188,9 +224,15 @@ UX Review complete.
 
 ### Accessibility Reviewer
 
-Read the implementation plan at `<ABSOLUTE_PATH>` and review it from an **accessibility** lens: does it meet WCAG 2.1 AA standards? Are semantic HTML, keyboard navigation, screen reader support, and assistive technology needs addressed?
+Review the implementation plan at `<ABSOLUTE_PATH>` from an **accessibility** lens: does it meet WCAG 2.1 AA standards? Are semantic HTML, keyboard navigation, screen reader support, and assistive technology needs addressed?
 
 **This reviewer runs only on plans that mention React, Vue, Svelte, buttons, modals, forms, or other UI signals.**
+
+Read the plan via its embedded digest — extract the spec-only markdown with:
+
+    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+
+If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Keyboard navigation and focus management

@@ -699,6 +699,56 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add PostToolUse Hook to Auto-Rebuild the Plans Index
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Wire a PostToolUse hook into kit/plugins/plan-agent so that whenever a .html file (excluding index.html ) is written to docs/plans/ , the plans gallery index regenerates automatically — keeping the library current without user intervention.
+
+## Context
+The plan-agent plugin's /plan-agent:planning skill writes HTML plan files to docs/plans/ . The gallery at docs/plans/index.html is only updated when a user explicitly runs /plan-agent:plans-library . This creates stale-index state: a newly written plan doesn't appear in the gallery until the user manually triggers a rebuild.
+
+A PostToolUse hook that fires on every Write to docs/plans/*.html and calls bash docs/plans/build-index.sh eliminates the manual step. The hook is an observation hook (always exits 0) so index-rebuild failures never block plan writes.
+
+Note on hook registration: The objective referenced plugin.json , but the existing validate-plan-filename hook for this plugin is registered in kit/plugins/plan-agent/hooks.json — a separate file that Claude Code reads alongside plugin.json . This plan follows the established pattern and adds to hooks.json .
+
+## Steps
+1. Create docs/plans/build-index.sh Why: The hook needs a stable, self-contained shell entry point that regenerates the gallery without Claude. The script searches ~/.claude/plugins for plan-agent/*/templates/plans-gallery.html (same strategy as the plans-library skill). If the template is not found, the script falls back to a minimal embedded styled list (plan title, date, status badge, direct link) so the hook always succeeds regardless of plugin installation state. Verify: Run bash docs/plans/build-index.sh from the project root and confirm docs/plans/index.html is rewritten with a fresh GENERATED_AT timestamp and at least one plan card in the gallery HTML. The script must exit 0.
+2. Create kit/plugins/plan-agent/hooks/rebuild-plans-index.py Why: Keeping the filter logic in Python (mirroring validate-plan-filename.py ) enables reuse of the plansDirectory settings-resolution function and keeps both hooks consistent. Always exiting 0 ensures plan writes are never blocked by an index-rebuild failure. The subprocess call uses cwd=os.getcwd() (the project root where Claude Code operates) so the relative path docs/plans/build-index.sh resolves correctly. Verify: Run both cases from the project root: echo '{"tool_input":{"file_path":"docs/plans/add-sample.html"}}' | python3 kit/plugins/plan-agent/hooks/rebuild-plans-index.py — should exit 0 and update index.html . echo '{"tool_input":{"file_path":"docs/plans/index.html"}}' | python3 kit/plugins/plan-agent/hooks/rebuild-plans-index.py — should exit 0 without running build-index.sh .
+3. Register the hook in kit/plugins/plan-agent/hooks.json Why: hooks.json is the canonical hook-registration file for this plugin (the existing validate-plan-filename hook uses this same file, not plugin.json ). Using a Write|Edit|MultiEdit matcher covers new plan creation, in-place status edits (e.g. updating a plan's <meta name="plan-status"> tag from todo to completed ), and batched multi-edit operations. Timeout of 30 s accommodates scanning up to ~50 HTML files. Verify: Open kit/plugins/plan-agent/hooks.json and confirm two PostToolUse entries are present: the existing Write|Edit matcher for validate-plan-filename.py and a new Write|Edit|MultiEdit matcher for rebuild-plans-index.py with timeout: 30 .
+4. Bump plan-agent to v0.14.0 in marketplace.json and update CHANGELOG.md Why: Adding a new hook is a MINOR feature addition per the project's versioning conventions in .claude/rules/marketplace.md . The CHANGELOG entry documents the change for users upgrading the plugin. Verify: grep -A3 '"plan-agent"' .claude-plugin/marketplace.json shows "version": "0.14.0" . head -15 kit/plugins/plan-agent/CHANGELOG.md shows a new entry describing the rebuild-plans-index hook.
+5. End-to-end test: write a minimal plan file and confirm the gallery auto-updates Why: Manual invocation of the hook scripts proves unit-level correctness, but only a live Write in a Claude Code session proves the hook fires through the harness PostToolUse pipeline. Verify: Write any valid docs/plans/add-hook-rebuild-test.html file during the session, then read docs/plans/index.html and confirm the GENERATED_AT timestamp matches the current session time and a card linking to add-hook-rebuild-test.html is present in the gallery HTML.
+
+## Acceptance Criteria
+- docs/plans/build-index.sh exists, is executable, and regenerates docs/plans/index.html when run standalone from the project root.
+- kit/plugins/plan-agent/hooks/rebuild-plans-index.py exits 0 for both matching and non-matching file paths; it calls build-index.sh only when the written file is a non- index.html .html file inside docs/plans/ .
+- kit/plugins/plan-agent/hooks.json contains a new PostToolUse entry with a Write|Edit|MultiEdit matcher pointing to rebuild-plans-index.py with timeout: 30 .
+- plan-agent version is bumped to 0.14.0 in .claude-plugin/marketplace.json and kit/plugins/plan-agent/CHANGELOG.md has a new entry.
+- Writing any .html plan (other than index.html ) to docs/plans/ in a live Claude Code session causes docs/plans/index.html to regenerate automatically within 30 seconds.
+
+## Verification
+Run the full sequence end-to-end:
+
+bash docs/plans/build-index.sh from the project root — confirm index.html is rewritten with a fresh timestamp and valid gallery cards.
+
+Pipe a matching plan path through rebuild-plans-index.py via stdin — confirm exit 0 and index.html updates.
+
+Pipe docs/plans/index.html through rebuild-plans-index.py — confirm exit 0 with no build-index.sh invocation.
+
+Write a test plan file in a live session — confirm the gallery refreshes automatically and the new card is visible in index.html .
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

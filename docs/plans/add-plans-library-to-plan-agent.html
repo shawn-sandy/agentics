@@ -183,6 +183,56 @@
 </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add plans-library Skill to plan-agent
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a plans-library skill in the plan-agent plugin that scans every HTML plan in the plans directory, reads each plan's status, type, title, and created date from its <meta> tags, and renders them into a single self-contained docs/plans/index.html gallery &mdash; filterable by status and type, searchable by title, and openable in the browser &mdash; mirroring the media-library skill from social-media-tools.
+
+## Context
+The plan-agent plugin now emits every plan as a self-contained .html file in docs/plans/ , each carrying machine-readable <meta> tags ( plan-status , plan-type , plan-created , plan-repo ) and a <title> . With 100+ plan files in that directory there is no way to browse or organise them without knowing exact filenames.
+
+The sibling social-media-tools plugin already solves the identical problem for its cards: the media-library skill scans docs/media/social/*.html , parses each file, populates a static templates/gallery.html with one card per entry, writes index.html , and opens it in the browser. This plan ports that proven template-plus-skill pattern to plan-agent, adapting the data source (plan <meta> tags instead of filename parsing) and the filter dimensions (status + type instead of card type).
+
+An existing todo plan, create-plans-index-page.html , describes a one-off bash-script index for this repo only. Per the chosen direction this plan supersedes it: instead of a repo-local script, we deliver a reusable plugin skill any plan-agent user can invoke. The old plan is marked superseded in Step 6.
+
+## Steps
+1. Create the plans-gallery.html template Why: Presentation must live in a static template so the skill only substitutes data &mdash; the same separation media-library uses. Reuse the light-theme design tokens from SKELETON.html so the gallery matches the plans it indexes. Verify: Open the template in a browser with placeholder rows hand-filled; confirm status chips (todo / in-progress / completed), type chips (feature / fix / refactor / docs / chore), a search box, and a card grid all render, and that the embedded JS filters cards by both data-status and data-type plus title search.
+2. Define the gallery card markup & placeholders Why: The card must surface exactly the fields plans carry: title, status badge, type badge, created date, and filename link &mdash; no PNG thumbnail (plans have no screenshots). Placeholders {{GALLERY_ENTRIES}} , {{PLAN_COUNT}} , {{GENERATED_AT}} mirror media-library's contract. Verify: Each card is an <a href="{filename}"> with data-status and data-type attributes; clicking a card opens the underlying plan file via a relative link.
+3. Write SKILL.md with the scan &rarr; parse &rarr; render &rarr; open workflow Why: The skill is the only runtime artefact Claude loads; all imperative logic lives here. Model it on media-library's six-step structure, swapping in plan-specific parsing. Verify: Frontmatter declares name: plans-library , a two-sentence description with a trigger phrase, and allowed-tools: Bash, Read, Write, ToolSearch, ExitPlanMode . Body covers: locate plans dir, scan *.html (exclude index.html and archive/ ), parse meta tags + title per file, build entries, substitute into template, write index.html , open in browser, then STOP.
+4. Resolve the plans directory & exclusions correctly Why: plan-agent already resolves a plans dir ( plansDirectory setting &rarr; docs/plans/ &rarr; default). The library must scan that same directory, and must never include docs/plans/archive/ (global + project search-exclusion rule) or the generated index.html . Verify: Dry-run the scan command: it lists only top-level docs/plans/*.html , omits index.html , and does not descend into archive/ . Plans missing a meta tag fall back gracefully (e.g. plan-type &rarr; untyped , title &rarr; filename).
+5. Register the skill: bump version & update docs Why: A new skill is a MINOR bump per the marketplace versioning table. Version lives only in marketplace.json for relative-path plugins; CHANGELOG, README, and plugin.json description keep the plugin self-documenting. Verify: marketplace.json shows plan-agent 0.11.0 ; plugin.json has no version field; CHANGELOG has a 0.11.0 entry; README lists plans-library under Features, the structure tree, and Components; the .claude/settings.json marketplace-JSON validator passes.
+6. Mark create-plans-index-page.html as superseded Why: The chosen direction supersedes the one-off index plan; leaving it as todo would invite duplicate work on a now-redundant approach. Verify: That plan's status is updated (both <html data-status> and the plan-status meta) with a one-line note pointing to this plan / the plans-library skill.
+
+## Acceptance Criteria
+- kit/plugins/plan-agent/skills/plans-library/SKILL.md exists with valid frontmatter ( name , two-sentence description , allowed-tools ).
+- kit/plugins/plan-agent/templates/plans-gallery.html exists and is fully self-contained (no external CSS/JS/CDN).
+- Running the skill against docs/plans/ writes docs/plans/index.html with one card per HTML plan.
+- Each card shows title, status badge, type badge, and created date, and links to the plan file.
+- Status chips, type chips, and the search box all filter the visible cards in the browser.
+- The scan excludes index.html and never descends into docs/plans/archive/ .
+- plan-agent is bumped to 0.11.0 in marketplace.json only; CHANGELOG and README document the new skill.
+- create-plans-index-page.html is marked superseded so it is not worked separately.
+
+## Verification
+End-to-end: Load the plugin locally with claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent , then trigger the skill (e.g. &ldquo;browse my plans&rdquo;). Confirm it scans docs/plans/ , writes docs/plans/index.html , and opens it in the browser.
+
+In the browser: Verify the card count matches ls docs/plans/*.html | grep -v index.html | wc -l ; click a completed chip and confirm only completed plans remain; click a feature chip and confirm the set narrows further; type a known plan title into the search box and confirm a single card matches; click a card and confirm the underlying plan opens.
+
+Regression: Re-run the skill and confirm index.html is regenerated (not duplicated) and is itself excluded from the next scan. Confirm no archive/ plans appear. Confirm the marketplace-JSON validator passes after the version bump.
+</script>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></symbol>
   <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></symbol>

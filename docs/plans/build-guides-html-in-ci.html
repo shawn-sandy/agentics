@@ -1047,6 +1047,70 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Build browsable HTML for docs/guides in CI
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Make every Markdown guide under docs/guides/ render as a styled, browsable page on the published GitHub Pages site — by converting them to self-contained HTML with a generated index during the deploy workflow, and never committing the generated output.
+
+## Context
+The docs/guides/ directory holds roughly 63 Markdown files. GitHub Pages serves this site with Jekyll disabled ( docs/.nojekyll — its presence is asserted by the deploy workflow), so .md files are delivered as raw text or a download prompt rather than rendered as formatted pages. The guides are effectively un-browsable on the published site.
+
+The Deploy to GitHub Pages workflow ( .github/workflows/deploy-pages.yml ) currently uploads docs/ verbatim via upload-pages-artifact . We will insert a build step that converts every guide to a self-contained HTML page and emits a guides index before the artifact is packed — mirroring the self-contained-HTML philosophy of the plan-interview:markdown-to-html skill. That skill is LLM-driven and cannot run inside GitHub Actions, so we implement a real converter script instead of invoking it.
+
+Repo constraints shape the approach: build scripts live in scripts/ as dependency-light ESM run via node scripts/*.mjs (there is no root package.json ), and node_modules/ is already gitignored. The generated guide HTML must stay out of git — produced only in CI — yet still ship to the site, which works because upload-pages-artifact packs the working-tree docs/ directory after the build step runs.
+
+## Files
+- .github/workflows/deploy-pages.yml (modified) — add build + smoke-test before artifact upload
+- .gitignore (modified) — ignore generated guides HTML
+- docs/index.html (modified) — add Guides card to landing hub
+- docs/guides/index.html (generated) — guides index (CI-only)
+- docs/guides/<guide>.html (generated) — one page per guide (CI-only)
+- scripts/build-guides-html.mjs (new) — render guides + build index
+- tests/publish/test-build-guides-html.mjs (new) — smoke-test generated output
+
+## Steps
+1. Write scripts/build-guides-html.mjs — the guide converter and index builder Why: A dependency-light ESM script (mirroring scripts/build-dist.mjs : shebang, node:fs / node:path / node:url imports, ROOT via import.meta.url ) that imports marked , globs every docs/guides/*.md , renders each to GFM HTML, and wraps it in a shared self-contained template whose inlined CSS reuses the :root design tokens from docs/index.html . It derives each page title from the first # heading (HTML-escaped, filename fallback), writes docs/guides/<name>.html , then emits docs/guides/index.html linking every guide alphabetically. One idiomatic script renders all pages and the index; marked handles real-world GFM (tables, fenced code, nested lists) that a hand-rolled parser would get wrong across 63 varied files. Verify: Run npm install marked@13 --no-save && node scripts/build-guides-html.mjs ; confirm docs/guides/index.html plus one .html per source .md are created. Open the index in a browser, click a guide, and confirm formatted output (headings, code blocks, lists) with no external or CDN asset requests in the network panel.
+2. Add the smoke test tests/publish/test-build-guides-html.mjs Why: Mirror the check(name, cond) pass/fail harness in tests/publish/test-dist-transforms.mjs . The test runs the converter, then asserts: (a) docs/guides/index.html exists and links to a known guide; (b) a representative per-guide page exists, starts with <!DOCTYPE html> , and contains an inlined <style> block plus rendered content (an <h1> ); (c) no external/CDN assets are referenced (no <link rel=stylesheet> or remote <script src> ). It exits non-zero on any failure. This locks the objective — browsable, self-contained, indexed guides — into an executable gate so a converter regression fails the build instead of silently shipping broken pages. Verify: Run node scripts/build-guides-html.mjs then node tests/publish/test-build-guides-html.mjs ; it prints PASS lines and exits 0. Temporarily make the template emit an external stylesheet link and confirm the test fails with exit 1.
+3. Gitignore the generated guide HTML Why: Append a docs/guides/*.html ignore rule to .gitignore under an explanatory comment (e.g. # Generated guides HTML — built in CI, never committed ). Confirm no .html is currently tracked under docs/guides/ so the rule only affects generated output. The objective requires generated HTML stay out of git; node_modules/ is already ignored, and because the Pages artifact is packed from the working tree after the build, CI-generated files still ship despite being ignored. Verify: Run a local build, then git status --porcelain docs/guides/ shows no new tracked files, and git check-ignore docs/guides/index.html docs/guides/add-code-reviewer-agent.html echoes both paths.
+4. Wire the build + smoke test into deploy-pages.yml before artifact upload Why: In .github/workflows/deploy-pages.yml , inside the build job, add (1) actions/setup-node pinned to a commit SHA (matching the repo's action-pinning convention) at Node 20, and (2) a Build guides HTML step running npm install marked@13 --no-save && node scripts/build-guides-html.mjs , followed by node tests/publish/test-build-guides-html.mjs as a guardrail — all placed after Assert .nojekyll exists and strictly before Upload Pages artifact . Extend the on.push.paths filter to also include scripts/build-guides-html.mjs . upload-pages-artifact packs the working-tree docs/ , so the generated guides must exist by the time it runs; the extended paths filter redeploys when the converter or template changes. Verify: Validate the YAML ( actionlint if available, else a YAML parse) and visually confirm the step order is setup-node → build guides → smoke test → upload. Trigger workflow_dispatch (or push to a branch) and confirm the run builds guides and the deployed site serves /guides/ .
+5. Add a Guides card to the docs/index.html landing hub Why: Add a third .gallery-card anchor to the .gallery-grid in docs/index.html with href="guides/index.html" , titled “Guides” with a short card-description , mirroring the existing Plans and Social Media cards. This makes the guides discoverable from the site root, consistent with the existing hub cards; without it the index is only reachable by typing the /guides/ URL. Verify: Open docs/index.html locally after a build (so guides/index.html exists), confirm three cards render and the Guides card navigates to the guides index; keyboard-tab to it and confirm a visible focus ring.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective Guides convert to self-contained, indexed HTML File: tests/publish/test-build-guides-html.mjs Type: smoke test Asserts: running node scripts/build-guides-html.mjs produces docs/guides/index.html (linking the guides) and a per-guide page that is self-contained — starts with <!DOCTYPE html> , carries an inlined <style> block and rendered content (an <h1> ), and references no external or CDN assets. Run: node scripts/build-guides-html.mjs && node tests/publish/test-build-guides-html.mjs
+- Unit Converter helpers — title extraction, escaping, wrapping File: tests/publish/test-build-guides-html.mjs Targets: exported helpers in scripts/build-guides-html.mjs — extractTitle() , escapeHtml() , renderGuide() Key cases: a title containing <script> is HTML-escaped; a fenced code block renders as <pre><code> ; a guide with no # heading falls back to the filename as its title.
+- Integration Full build over the real docs/guides/ tree File: tests/publish/test-build-guides-html.mjs Targets: build-guides-html.mjs + marked + node:fs writing into docs/guides/ Key cases: the generated .html count equals the source .md count plus one (the index); every link in index.html resolves to an emitted file.
+- E2E Browse the published guides from the hub File: tests/pages/ (extend the existing landing-hub smoke tests) Targets: docs/index.html → Guides card → guides/index.html → a guide page, driven in a browser Key cases: the Guides card is visible on the hub and links to the index; a guide page shows rendered headings and code blocks.
+
+## Acceptance Criteria
+- scripts/build-guides-html.mjs converts every docs/guides/*.md into a self-contained .html page (inlined CSS, zero external/CDN assets).
+- docs/guides/index.html is generated and links to every converted guide.
+- Generated guide pages reuse the landing hub's visual tokens, so they look consistent with docs/index.html .
+- .github/workflows/deploy-pages.yml runs the conversion (setup-node → npm install marked → node scripts/build-guides-html.mjs ) after the .nojekyll assert and before Upload Pages artifact .
+- Generated docs/guides/*.html (including index.html ) are gitignored and never committed.
+- docs/index.html shows a Guides card linking to guides/index.html .
+- node tests/publish/test-build-guides-html.mjs passes (exit 0).
+
+## Verification
+Locally: run npm install marked@13 --no-save && node scripts/build-guides-html.mjs , then ls docs/guides/*.html | wc -l should show one page per guide plus index.html . Open docs/guides/index.html in a browser, follow a link to any guide, and confirm it renders with formatted headings, code blocks, and lists — and issues no external or CDN network requests. Open docs/index.html and confirm the Guides card navigates to the guides index.
+
+Guards: run node tests/publish/test-build-guides-html.mjs and confirm it exits 0. Run git status --porcelain docs/guides/ and confirm no generated HTML is staged or tracked. Validate the workflow YAML and confirm the build job's step order is checkout → assert .nojekyll → setup-node → build guides → smoke test → upload.
+
+In CI: push to a branch or run the workflow via workflow_dispatch ; confirm the build job installs marked , runs the converter and smoke test before upload-pages-artifact , and that the deployed Pages site serves /guides/ with every guide reachable as a formatted page from the hub's Guides card.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

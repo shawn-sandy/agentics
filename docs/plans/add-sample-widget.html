@@ -699,6 +699,45 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add Sample Widget to Dashboard
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a reusable SampleWidget component that renders on the main dashboard, supports collapsed/expanded toggle, and persists its state across page refreshes via localStorage .
+
+## Context
+The dashboard currently has no reusable widget pattern. Each panel is hand-rolled, making it hard to add, remove, or reorder sections. A SampleWidget establishes the canonical widget shape — toggle state, localStorage persistence, typed props — that all future dashboard panels will follow.
+
+This plan is also a smoke-test artifact for the plan-agent v0.8.0 optimization: it verifies the skill writes a valid verb-target.html file directly without entering harness plan mode.
+
+## Steps
+1. Create SampleWidget in src/components/widgets/SampleWidget.tsx Why: A standalone file isolates the widget's state and markup from the dashboard layout, making it independently testable and reusable. Verify: ls src/components/widgets/SampleWidget.tsx exits 0; npm run build passes with no new type errors.
+2. Wire SampleWidget into DashboardPage and pass required props Why: The dashboard is the entry point — wiring here ensures the widget renders inside the correct column layout and receives its data contract. Verify: Run npm start , navigate to /dashboard , confirm the widget renders in the expected column with correct default state and no console errors.
+3. Persist collapsed/expanded state to localStorage via a useLocalStorage hook Why: Without persistence, a page refresh resets the widget — a friction point that erodes trust in dashboard customisation. Verify: Expand/collapse the widget, then refresh the page — state survives. Confirm in DevTools: localStorage.getItem('widget-sample-expanded') returns the expected boolean string.
+4. Write unit tests for SampleWidget covering default state, toggle behaviour, and persistence Why: The localStorage side effect is easy to miss in a refactor; tests catch regressions before they reach production. Verify: npm test -- --testPathPattern=SampleWidget passes; coverage report shows &ge;80% for the component file.
+
+## Acceptance Criteria
+- SampleWidget renders on /dashboard without a console error.
+- Expanding and collapsing the widget toggles a visible UI change.
+- localStorage key widget-sample-expanded is written on first toggle.
+- Refreshing the page restores the last collapsed/expanded state.
+- npm run build and npm test both pass with no new failures.
+
+## Verification
+Open a browser at http://localhost:3000/dashboard . Confirm the widget renders. Toggle it twice. Open DevTools &rarr; Application &rarr; Local Storage and confirm the key widget-sample-expanded exists with the correct value. Refresh — confirm state restores. Run npm run build && npm test in the terminal; both must exit 0 with no new failures.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

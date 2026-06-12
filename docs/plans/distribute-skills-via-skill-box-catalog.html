@@ -1056,6 +1056,103 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Distribute skills via a skill-box catalog (Option 3)
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Give Claude Code users one-command, per-skill installs: teach scripts/build-dist.mjs to emit a curated skills/ catalog into dist/ , so npx skills add shawn-sandy/agentics-kit --skill <name> -a claude-code drops a hand-picked, standalone-safe skill into ~/.claude/skills/ without adopting the whole plugin — zero new workflow wiring, source repo layout untouched, and the same catalog remains installable by other skills-CLI agents as a bonus.
+
+## Context
+The repo distributes plugins through the Claude Code plugin marketplace ( .claude-plugin/marketplace.json → scripts/build-dist.mjs → published to agentics-kit by .github/workflows/publish-dist.yml ). The vercel-labs/skills CLI ( npx skills ) is a separate, cross-agent channel that installs individual skills (any directory with a SKILL.md carrying name + description ) into Claude Code ( ./.claude/skills/ or ~/.claude/skills/ ) — and into 70+ other agents, though Claude Code users are the primary audience here. For a Claude user the catalog's value is granularity: install one curated skill without adopting its whole plugin via /plugin install .
+
+That CLI discovers skills under a root skills/ directory (flat skills/<name>/SKILL.md or catalog skills/<category>/<name>/SKILL.md ). This repo nests skills at kit/plugins/<plugin>/skills/<name>/SKILL.md — too deep for a bare repo-level install to find. Option 3 closes that gap by having build-dist.mjs emit a curated skills/ catalog into dist/ , which the existing publish step copies to the agentics-kit root.
+
+Decisions already made (do not re-litigate):
+
+Catalog home: dist/ only → published to agentics-kit . Install surface is npx skills add shawn-sandy/agentics-kit . Source repo stays clean; no new workflow wiring.
+
+Curation: an explicit allowlist in scripts/skill-catalog.json plus a build-time lint guard — not a heuristic.
+
+Layout: catalog form dist/skills/<plugin>/<skill>/… , copying the whole skill directory (skill dirs carry references/ , assets/ , scripts/ ).
+
+Hard constraints discovered during investigation:
+
+The skills CLI copies only the skill directory — no sibling commands/ , agents/ , or hooks/ . Any skill whose SKILL.md body invokes a /<plugin>:<command> , spawns a plugin agent, or relies on a hook is broken when installed standalone. Curation must exclude these.
+
+A heuristic like "plugins with no commands/ dir" is unreliable: kit/plugins/issue-agent/skills/create-issue/SKILL.md references a slash command despite issue-agent being skills-only.
+
+On the user's machine the CLI flattens installs to .claude/skills/<name>/ , so cataloged skill names must be globally unique. They are today (no duplicate SKILL.md directory names across plugins) — the build must enforce this so a future collision fails the build, not the user's install.
+
+Skill dirs carry real payload (58 supporting files across references/ , assets/ , scripts/ , reference/ ). The copy must take the whole dir.
+
+Frontmatter: every SKILL.md already has name + description . The extra allowed-tools key is Claude-specific and ignored by other agents — leave it.
+
+## Files
+- scripts/build-dist.mjs (modified) — buildSkillCatalog() pass + check() extension
+- scripts/skill-catalog.json (new) — curated allowlist of exported skills
+- tests/publish/smoke-clean-dist.sh (modified) — assert catalog presence in dist
+- tests/publish/test-skill-catalog.mjs (new) — catalog validation test
+- .claude/rules/marketplace.md (modified) — name the curation surface
+- .github/workflows/publish-dist.yml (modified) — run the new catalog test
+- CHANGELOG.md (modified) — [Unreleased] entry for the skill-box channel
+- CLAUDE.md (modified) — note the skill-box channel
+- README.md (modified) — npx skills add install instructions
+- docs/plans/distribute-skills-via-skill-box-catalog.html (new) — this plan — commit with the changes
+- tests/fixtures/skill-catalog/ (new) — valid + invalid stub SKILL.md fixtures
+
+## Steps
+1. Create scripts/skill-catalog.json — the curated allowlist Why: Curation must be explicit, not heuristic — a "plugins with no commands/ dir" rule already fails on issue-agent. Each entry is "<plugin>/<skill>" relative to kit/plugins/<plugin>/skills/ ; only standalone-safe skills (no command, agent, or hook dependency) go in. Seed with memory-tools/agentic-memory-doctor , memory-tools/path-rules-advisor , wcag-compliance-reviewer/wcag-compliance-reviewer . Then resolve the "verify, then add" candidates deterministically: run the Step 2 guard against skill-reviewer/* and code-testing-agent/reviewing-tests — passers join the allowlist; exclusions are recorded in an excluded map inside skill-catalog.json with a one-line reason each (JSON carries no comments). Verify: The file parses as JSON and every entry resolves to an existing kit/plugins/<plugin>/skills/<skill>/SKILL.md (all three starter entries do today). The excluded map documents every audited-but-excluded skill with its reason. Starter shortlist confirmed before merge — see Unresolved Questions.
+2. Add parseFrontmatter() and assertNoDanglingRefs() helpers to scripts/build-dist.mjs Why: The build has zero dependencies — keep it that way with a minimal YAML-frontmatter reader that extracts name and description . The dangling-ref guard scans each SKILL.md body line-by-line with the exact pattern /(^|[^\w\/])\/[a-z][a-z0-9-]*:[a-z][a-z0-9-]+\b/ — anchored with (^|[^\w\/]) instead of a leading \b , which would silently fail before the non-word / and miss refs at line start, after whitespace, or inside backticks (the exact forms in the known-bad issue-agent/create-issue fixture) — skipping fenced code blocks and the YAML frontmatter block, and also flags agent-spawn language (lines matching spawn the <name> agent or subagent_type ) — throwing with the offending ref so curation rot fails the build instead of shipping broken standalone skills. Scoping the scan this way prevents false positives on references/ paths, YAML keys, and prose colons, where a single false positive would block the whole build. Verify: Point assertNoDanglingRefs at kit/plugins/issue-agent/skills/create-issue/SKILL.md — it must throw (known slash-command ref). Run it on the three starter skills — all pass. Near-miss check: run it on a skill-reviewer skill whose body contains references/ paths with colons — it must NOT throw (no false positive). parseFrontmatter returns name + description for each starter SKILL.md .
+3. Implement buildSkillCatalog() and call it at the end of build() Why: This is the catalog emitter. Read scripts/skill-catalog.json ; for each ref resolve src = kit/plugins/<plugin>/skills/<skill> (throw if SKILL.md is missing); parse frontmatter (throw if name or description is absent); maintain a Map<name, ref> and throw on duplicate skill names (the CLI flattens installs to .claude/skills/<name>/ ); run the dangling-ref guard; copy the whole src dir to dist/skills/<plugin>/<skill>/ , honoring matchesDrop() and reusing copyFileMaybeTransform() so the agentics → agentics-kit URL rewrite stays consistent. Optionally write dist/skills/README.md — a human index of each cataloged skill, its plugin, and description. Runs after the root-files pass. Verify: node scripts/build-dist.mjs creates dist/skills/<plugin>/<skill>/ for each allowlist entry, with SKILL.md plus all support files ( references/ , assets/ , scripts/ ).
+4. Add a dedicated checkSkillCatalog() to scripts/build-dist.mjs , called from check() Why: Factor catalog validation into its own checkSkillCatalog() function called from check() — keeping plugin and catalog invariants from entangling and making the helper independently testable. It must fail loudly when dist/skills/ is missing, a leaf lacks SKILL.md , a skill name collides, or a DROP pattern leaked in — and it must account for the dist/skills/ path-prefix shape in the existing path-split logic (which currently assumes kit/plugins/<name>/ ). CI's automated gate is tests/publish/test-skill-catalog.mjs (Step 6); --check remains the local/dev gate and is not wired into the workflow. Verify: node scripts/build-dist.mjs --check passes on a fresh build; deleting a SKILL.md from dist/skills/ (or planting a file matching a DROP pattern) makes it fail. Rebuild to restore.
+5. Extend tests/publish/smoke-clean-dist.sh with catalog assertions Why: The smoke test is the end-to-end guard over a clean dist build; after the existing plugin-dir checks it should also assert dist/skills/ exists and each expected <plugin>/<skill>/SKILL.md is present. Verify: bash tests/publish/smoke-clean-dist.sh passes; temporarily removing a cataloged skill's output dir makes it fail.
+6. Create tests/publish/test-skill-catalog.mjs and wire it into publish-dist.yml Why: Mirrors the tests/publish/test-dist-transforms.mjs style (pass/fail counter, zero deps) and validates the publish artifact on every run: cataloged dir count matches scripts/skill-catalog.json ; every SKILL.md carries name + description ; names are globally unique; no body contains a dangling /<plugin>:<command> ref. Runs in .github/workflows/publish-dist.yml after the existing "Test dist transforms" step, against the freshly built dist/ . Verify: node tests/publish/test-skill-catalog.mjs exits 0 locally against a fresh build; the new workflow step appears after "Test dist transforms" and the YAML parses.
+7. Add an "Install skills with the skills CLI" section to README.md Why: The install surface is the published repo, and Claude Code users are the audience: lead with the targeted form npx skills add shawn-sandy/agentics-kit --skill <name> -a claude-code -y as the primary example, keeping the bare interactive npx skills add shawn-sandy/agentics-kit (agent picker, cross-agent) as the secondary form. Note when to prefer /plugin install instead — wanting a plugin's commands, agents, and hooks rather than a single skill. Author the lines with the dist URL — transformReadmeForDist() already rewrites agentics → agentics-kit , and dist-URL authoring reads correctly in both repos. Verify: The section renders correctly in the dev README.md ; run node scripts/build-dist.mjs and confirm dist/README.md still shows the agentics-kit URLs.
+8. Document the skill-box channel in CLAUDE.md , .claude/rules/marketplace.md , and CHANGELOG.md Why: Future contributors need to know the skill-box channel — per-skill installs for Claude Code users, cross-agent compatible — exists alongside the plugin marketplace, and that scripts/skill-catalog.json is the curation surface to edit when adding or removing an exported skill. Add a CHANGELOG.md entry under [Unreleased] describing the new channel and its curation surface (Keep-a-Changelog format, matching existing entries). In .claude/rules/marketplace.md , also document the de-publish runbook for a bad publish: remove the entry from scripts/skill-catalog.json , trigger workflow_dispatch on publish-dist.yml , and note the removal in CHANGELOG.md . Verify: Both docs mention the channel and point to scripts/skill-catalog.json ; grep skill-catalog.json CLAUDE.md .claude/rules/marketplace.md returns hits in both. CHANGELOG.md carries an [Unreleased] entry for the skill-box channel, and the marketplace rule documents the de-publish runbook.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective Curated catalog lands in dist/skills/ and passes validation File: tests/publish/test-skill-catalog.mjs Type: smoke test Asserts: after a fresh build, dist/skills/ holds exactly as many <plugin>/<skill> leaf directories as scripts/skill-catalog.json lists — none missing, none extra — each SKILL.md carries name + description , skill names are globally unique, and no body contains a dangling /<plugin>:<command> ref — i.e. the catalog npx skills will consume is real, complete, and standalone-installable. Run: node scripts/build-dist.mjs && node tests/publish/test-skill-catalog.mjs
+- Unit Frontmatter parser and dangling-ref guard File: tests/publish/test-skill-catalog.mjs Targets: parseFrontmatter() and assertNoDanglingRefs() in scripts/build-dist.mjs , exercised directly against committed fixtures — not the live dist/ output Key cases: fixture-driven — two stub SKILL.md files under tests/fixtures/skill-catalog/ (one valid with name + description and no slash refs, one invalid containing /plugin:command ); the valid fixture parses cleanly; missing keys throw; the invalid fixture throws with the offending ref; committed negative assertion: kit/plugins/issue-agent/skills/create-issue/SKILL.md (known bad) throws — making guard regressions CI-observable; near-miss fixture with references/ colon paths does not throw.
+- Integration Clean dist build emits the full catalog File: tests/publish/smoke-clean-dist.sh Targets: build() + buildSkillCatalog() + check() over a clean dist/ build Key cases: dist/skills/ present alongside the plugin dirs; every expected <plugin>/<skill>/SKILL.md present with its support files; whole-dir copy verified — dist/skills/memory-tools/agentic-memory-doctor/references/ exists and is non-empty; no DROP patterns leaked into dist/skills/ ; failure smoke — delete one dist/skills/.../SKILL.md , run node scripts/build-dist.mjs --check , assert non-zero exit, then rebuild.
+- E2E Real install via the skills CLI (manual, post-publish) File: manual check — no committed file (runs against the published agentics-kit repo) Targets: published catalog → npx skills CLI → Claude Code install Key cases: in a scratch dir, npx skills add shawn-sandy/agentics-kit --skill agentic-memory-doctor -a claude-code -y lands the skill in .claude/skills/ with its supporting files intact, and the skill auto-activates in a fresh Claude Code session.
+
+## Acceptance Criteria
+- node scripts/build-dist.mjs emits dist/skills/<plugin>/<skill>/ for every scripts/skill-catalog.json entry, copying the whole skill directory ( references/ , assets/ , scripts/ ).
+- The build throws on each of: a non-existent allowlist ref, missing name / description frontmatter, a duplicate skill name, and a dangling /<plugin>:<command> reference.
+- node scripts/build-dist.mjs --check validates the catalog: dist/skills/ exists, every leaf has a SKILL.md , names are unique, and no DROP patterns leaked in.
+- bash tests/publish/smoke-clean-dist.sh and node tests/publish/test-skill-catalog.mjs both pass, and the latter runs in publish-dist.yml after the "Test dist transforms" step.
+- README.md leads with the Claude Code install ( npx skills add shawn-sandy/agentics-kit --skill <name> -a claude-code -y ), keeps the bare cross-agent form as secondary, and the lines read correctly in both the source and dist repos.
+- CLAUDE.md and .claude/rules/marketplace.md document the skill-box channel and name scripts/skill-catalog.json as the curation surface.
+- The two-level dist/skills/<plugin>/<skill>/ layout (or its flat fallback) is confirmed against actual npx skills CLI discovery behavior before the catalog ships.
+
+## Verification
+Before implementation: confirm the npx skills CLI discovers the two-level skills/<plugin>/<skill>/ catalog layout — read the CLI source or run npx skills add against a scratch repo carrying both layouts. If only flat skills/<name>/ is supported, flatten the catalog to dist/skills/<skill-name>/ and adjust Steps 3–6 before coding.
+
+node scripts/build-dist.mjs — confirm dist/skills/<plugin>/<skill>/ is created for each allowlist entry, with SKILL.md and all support files.
+
+node scripts/build-dist.mjs --check — passes (catalog present, names unique, no DROP leaks).
+
+bash tests/publish/smoke-clean-dist.sh — passes with the new catalog assertions.
+
+node tests/publish/test-skill-catalog.mjs — passes.
+
+Negative checks: temporarily add a non-existent skill, a duplicate name, and a skill with a /plugin:command ref to skill-catalog.json ; confirm the build throws on each, then revert.
+
+Manual end-to-end (optional, post-publish): in a scratch dir, npx skills add shawn-sandy/agentics-kit --skill agentic-memory-doctor -a claude-code -y ; confirm it lands in .claude/skills/ and that the skill auto-activates in a fresh Claude Code session when a matching request is made.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

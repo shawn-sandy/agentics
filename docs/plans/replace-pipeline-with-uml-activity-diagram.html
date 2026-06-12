@@ -1061,6 +1061,76 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Replace the Pipeline Flow with a UML Activity Diagram
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Swap the stacked pipeline flow for a hand-authored, fully self-contained UML activity diagram — initial node, action steps, decision branches, final node — across every plan-output template, so a developer reads a plan's flow at a glance in familiar notation instead of parsing a column of look-alike boxes.
+
+## Context
+Two plan-output templates ship a generic flow diagram today. plan-agent 's SKELETON.html renders a stacked .pipeline (one box per stage) inside its opt-in #diagram section, and plan-interview 's markdown-to-html auto-generates a .section-diagram SVG that maps the document's sections as a row of nodes. Neither uses a recognised modelling notation, so the visual carries no more meaning than an indented list.
+
+The Nulab UML diagrams guide identifies the activity diagram as the standard behavioural notation for workflows — start/end markers, action nodes, decision diamonds, and directed control flow. A plan is fundamentally an ordered set of steps with the occasional branch, so the activity diagram is the natural fit: developers already read it, and it makes a plan's flow scannable.
+
+Hard constraint: every plan is a single self-contained .html file — no CDN, no external scripts, no <canvas> . That rules out Mermaid and PlantUML; the diagram must be hand-authored inline SVG styled with the skeleton's existing CSS theme tokens so it inherits light/dark and prints cleanly. Only the flow representation changes — the comparison grid, bar chart, and data table in the #diagram section stay exactly as they are.
+
+## Files
+- .claude-plugin/marketplace.json (modified) — minor version bump for both plugins
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — log the activity-diagram swap
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — rewrite diagram guidance + SVG recipe
+- kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html (modified) — replace .pipeline with inline-SVG activity diagram
+- kit/plugins/plan-interview/CHANGELOG.md (modified) — log section-map &rarr; activity diagram
+- kit/plugins/plan-interview/skills/markdown-to-html/reference/html-spec.md (modified) — convert section diagram to UML activity
+- tests/pages/test-uml-activity-diagram.sh (new) — objective smoke test for the swap
+
+## Steps
+1. Add the .uml-activity style block to SKELETON.html , replacing the .pipeline rules. Why: The activity diagram needs a themed figure wrapper, a caption, and SVG node/edge styling driven by CSS vars ( --surface , --border , --accent , --text ) so it inherits light/dark and prints cleanly; the old .pipeline flex-stack rules no longer apply. Leave the .compare-grid , .bar-chart , and .plan-table CSS untouched. Verify: grep -n 'uml-activity' …/SKELETON.html shows the new rules and grep -c 'pipeline-node' … returns 0, while the .compare-grid / .bar-chart / .plan-table selectors remain. No hard-coded hex appears inside the .uml-activity rules.
+2. Replace the Flow / pipeline sub-block in the #diagram section with an inline-SVG activity diagram. Why: This is the core swap. Wrap an inline <svg> in <figure class="uml-activity" role="img" aria-label="…"> with a reusable <defs><marker> arrowhead, an initial node (filled circle), the {activity-diagram-svg} action and decision nodes, and a final node (ringed circle) — while the comparison-grid, bar-chart, and data-table sub-blocks survive. role="img" plus a full-text aria-label hands screen readers the whole flow as one sentence, mirroring the existing .bar-chart aria pattern. Verify: grep -n 'figure class="uml-activity"' and grep -n '<marker' both match in SKELETON.html ; the {diagram-nodes} / .pipeline markup is gone; the {compare-columns} , {chart-rows} , and {table-rows} blocks remain. A sample render shows the initial node, action nodes, a decision diamond, directed arrows, and the final node.
+3. Rewrite the diagram guidance in SKILL.md and add a deterministic vertical-stack SVG recipe. Why: Update four spots — the diagram bullet under Visual sections , the Visual components note, the Flow / pipeline row of the Visual Components table (rename to Activity diagram (UML) ), and the skeleton-blocks note. Then document a fixed-geometry recipe: fixed viewBox width, fixed node height and vertical gap, a single trunk column, decision diamonds with a documented horizontal branch offset, and the rule that the model fills node text only — never free-form coordinates. SKILL.md is the runtime instruction set; without it the model keeps emitting .pipeline , and a fixed recipe removes the biggest failure mode (an LLM hand-computing overlapping coordinates). Verify: grep -ni 'activity diagram' …/SKILL.md matches in all four locations; grep -ni 'pipeline' …/SKILL.md shows no remaining authoring guidance; the recipe names a fixed node height, a fixed gap, the role="img" + aria-label rule, and the "text only, no free-form coordinates" constraint.
+4. Convert plan-interview 's section diagram in html-spec.md into a true UML activity diagram. Why: Scope includes plan-interview , so its document-flow diagram must match plan-agent 's notation. Rewrite the SVG Section Diagram block: prepend an initial node (filled circle), render each section as an action node connected by directed arrows via a <defs><marker> arrowhead, and append a final node (ringed circle) — keeping the navigation behaviour developers rely on. Verify: grep -ni 'activity' …/html-spec.md matches in the diagram section and the intro; the block now contains an initial node, a <marker> arrowhead, and a final node; the geometry formulae ( nodeWidth , gap , W ) and the role="img" / aria-labelledby / <title> lines are still present; the .svg-node click listener is unchanged.
+5. Create the objective smoke test tests/pages/test-uml-activity-diagram.sh . Why: Make it executable with set -euo pipefail and a FAILURES counter like test-pages-smoke.sh . Assert that SKELETON.html contains class="uml-activity" , <marker , and role="img" ; contains no pipeline-node ; still contains compare-grid , bar-chart , and plan-table ; that html-spec.md contains the activity initial/final nodes; and that none of the three templates contain mermaid , a CDN URL, <script src , or <canvas> . This locks the change against silent regression and matches the repo's bash smoke-test convention. Verify: bash tests/pages/test-uml-activity-diagram.sh exits 0 and prints PASS lines after the templates are updated; temporarily reverting SKELETON.html to .pipeline makes it exit non-zero (negative check).
+6. Bump both plugin versions and update changelogs. Why: Bump the plan-agent and plan-interview version (minor) in .claude-plugin/marketplace.json and add a dated entry to each plugin's CHANGELOG.md describing the swap, using conventional wording ( feat(plan-agent): … , feat(plan-interview): … ). Repo convention requires a manual minor bump + changelog on any plugin change, and the new versions must exceed main ; .claude/settings.json auto-validates marketplace.json on save. Verify: node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8'))" succeeds; both plugins' versions are higher than on main (compare with git show main:.claude-plugin/marketplace.json ); both CHANGELOG.md files have a new top entry dated 2026-06-10.
+
+## Tests
+Tier 1 &mdash; Code-touching plan
+- Objective Every plan template emits a self-contained UML activity diagram, not a pipeline File: tests/pages/test-uml-activity-diagram.sh Type: smoke test Asserts: SKELETON.html and html-spec.md contain the activity-diagram markup ( uml-activity / initial & final nodes, <marker> arrowhead, role="img" ); the old .pipeline / pipeline-node markup is gone; the kept visuals ( compare-grid , bar-chart , plan-table ) remain; and no template references a CDN, Mermaid, <canvas> , or external <script src> (the self-contained invariant). Run: bash tests/pages/test-uml-activity-diagram.sh
+- Integration A generated plan page serves the activity diagram over HTTP File: tests/pages/test-pages-smoke.sh (extended) Targets: a docs/plans/*.html generated from the updated skeleton, served through the GitHub Pages path. Key cases: a sample plan returns HTTP 200 and its served body contains class="uml-activity" and role="img" ; the plans gallery still lists the file. Exercises template &rarr; generated artifact &rarr; serving layer together.
+- E2E A developer sees the activity diagram render in the browser File: tests/pages/uml-activity.e2e.mjs (new; driven by the playwright-cli skill, no committed runner required) Targets: a served plan and a rendered markdown-to-html document opened in a headless browser. Key cases: the initial node, action nodes, a decision diamond, directed arrowheads, and the final node are visible; the diagram stays legible under prefers-color-scheme: dark ; the figure's aria-label reads the full flow as text.
+
+## Acceptance Criteria
+- SKELETON.html renders a UML activity diagram (initial node, action nodes, decision diamond, directed arrows, final node) as hand-authored inline SVG in place of the .pipeline flow.
+- The .pipeline , .pipeline-node , and .pipeline-arrow markup and classes are removed from SKELETON.html , while .compare-grid , .bar-chart , and .plan-table remain.
+- The activity diagram is fully self-contained: no CDN, no <script src> , no <canvas> , no Mermaid; SVG colours use CSS theme tokens and stay legible in print and dark mode.
+- SKILL.md documents the deterministic vertical-stack SVG recipe (fixed node height/gap, text-only fills, no free-form coordinates) and the role="img" + full-text aria-label accessibility rule.
+- plan-interview 's section diagram renders as a true UML activity diagram (initial + final nodes, directed arrowheads) while preserving the auto-compact geometry and click-to-scroll behaviour.
+- bash tests/pages/test-uml-activity-diagram.sh exits 0 against the updated templates.
+- marketplace.json carries minor version bumps for both plan-agent and plan-interview , each with a matching dated CHANGELOG.md entry.
+
+## Verification
+Confirm the swap end-to-end in five passes:
+
+Smoke test: run bash tests/pages/test-uml-activity-diagram.sh — it exits 0 with PASS lines for the new markup, the absent .pipeline , the retained visuals, and the no-CDN invariant.
+
+plan-agent output: generate a fresh plan with /plan-agent:implementation-plan on a multi-step objective and confirm the produced .html contains a figure.uml-activity inline-SVG activity diagram and no .pipeline markup.
+
+plan-interview output: render a multi-section markdown plan through markdown-to-html and confirm the section diagram now shows an initial node, directed arrowheads, and a final node, and that clicking a node still scrolls to its section.
+
+Browser + a11y: serve both outputs ( /serve-docs ), open them, and confirm the diagram is legible in light, dark, and print; the arrowheads point downstream; and the figure's aria-label announces the full flow as a sentence.
+
+Packaging: JSON.parse marketplace.json succeeds, both plugin versions exceed main , and each CHANGELOG.md has a dated entry.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

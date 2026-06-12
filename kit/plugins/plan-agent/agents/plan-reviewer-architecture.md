@@ -19,7 +19,7 @@ You review **implementation plans** for architectural fitness and system design.
 
 ## How to Review
 
-Read the plan's full content. Focus on the **Objective**, **Steps**, and **Files to Create/Modify**. Look for:
+Read the plan via its embedded digest — extract the spec-only markdown with `awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <plan-path>`. If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file. The digest carries the whole authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Objective**, **Steps**, and **Files to Create/Modify**. Look for:
 
 1. **Structural fitness** — Does the proposed architecture match the existing codebase patterns?
 2. **Dependency clarity** — Can you trace data and control flow through the steps?

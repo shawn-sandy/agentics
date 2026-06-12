@@ -751,6 +751,61 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add PDF Export to HTML Plans
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Add a "Save as PDF" button to every HTML plan so users can download a clean, print-optimized PDF of any plan with a single click -- no external dependencies, no server-side rendering, pure browser-native window.print() with PDF-tuned @media print styles.
+
+## Context
+HTML plans are self-contained documents that users open in a browser. The existing @media print rules already hide the sidebar, progress bar, and interactive controls, but there is no visible affordance inviting the user to print or save. Users who want a PDF must know to use Ctrl+P / Cmd+P and select "Save as PDF" in the print dialog.
+
+Adding a dedicated button makes the export discoverable, ensures the print stylesheet is invoked correctly, and sets the document title (which browsers use as the default PDF filename) to a clean slug derived from the plan title.
+
+The approach is zero-dependency: window.print() triggers the browser's native print dialog, which on every modern browser (Chrome, Edge, Firefox, Safari) offers a "Save as PDF" destination. No third-party libraries, no server round-trips, no CORS headaches.
+
+## Steps
+1. Add a download icon ( ic-arrow-down-tray ) to the SVG symbol sprite Why: The button needs a recognizable download icon; adding it to the existing sprite keeps the file self-contained with no external asset requests. Verify: Search for id="ic-arrow-down-tray" in the HTML; confirm it renders at 1rem in the button.
+2. Add the "Save as PDF" button in the header next to the status badge Why: Placing it in the header makes it immediately visible without scrolling; co-locating with the status badge keeps the action bar compact. Verify: Open the plan in a browser; confirm the button appears to the left of the status badge with a download icon and the label "Save as PDF".
+3. Style the button with .save-pdf-btn and hide it in @media print Why: The button must be visible on screen but absent from the printed/PDF output; a dedicated class makes the print rule explicit and prevents it from appearing in the exported document. Verify: Open DevTools, toggle print media emulation; confirm the button disappears. Confirm it has hover/focus/active states on screen.
+4. Implement the savePDF() function using window.print() Why: The browser's native print dialog is the most reliable cross-browser path to PDF; wrapping it in a named function lets the onclick handler remain a clean one-liner. Verify: Click the button; confirm the print dialog opens. In Chrome/Edge, select "Save as PDF" destination; confirm the downloaded PDF looks correct with no sidebar, no buttons, and clean page breaks.
+5. Enhance @media print styles for PDF-quality output Why: The existing print rules are minimal; PDF output needs explicit @page margins, break-inside: avoid on cards, preserved background colors for status badges and chips, and suppressed link URL suffixes for internal anchors. Verify: Generate a PDF from a plan with 6+ steps; confirm no step card is split across pages, the objective card retains its blue accent, and the status badge color is preserved.
+6. Update the markdown-to-html skill template and assets to include the button and styles Why: The plan-to-html alias delegates immediately to markdown-to-html , which is the active HTML generator with the template, assets, and spec. Updating the alias alone would leave the actual generator unchanged and future plans would still lack the button. Verify: Run /markdown-to-html on any markdown plan; confirm the generated HTML includes the .save-pdf-btn button and the savePDF() function. Also verify kit/plugins/plan-interview/skills/markdown-to-html/reference/html-spec.md documents the button.
+
+## Acceptance Criteria
+- A "Save as PDF" button with a download icon is visible in the plan header on screen.
+- Clicking the button opens the browser's print dialog (which offers "Save as PDF" on Chrome, Edge, Firefox, and Safari).
+- The exported PDF hides the sidebar, progress bar, all buttons (Save as PDF, Copy, Copy prompt), and interactive controls.
+- Step cards and criteria items do not split across page boundaries in the PDF output.
+- Status badge, objective card accent, and step chips retain their background colors in the PDF via print-color-adjust: exact .
+
+## Verification
+Open this plan file in Chrome. Click the "Save as PDF" button. In the print dialog, select "Save as PDF" as the destination and click Save. Open the resulting PDF and confirm:
+
+The sidebar and all buttons are absent.
+
+The objective card has a blue left border.
+
+Step cards are not split across pages.
+
+The status badge retains its gray background.
+
+The document title in the PDF metadata matches the plan title.
+
+Repeat in Firefox and Safari. Firefox uses its own print engine — confirm the layout is acceptable (minor differences in page breaks are tolerable).
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

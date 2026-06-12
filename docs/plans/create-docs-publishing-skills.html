@@ -1020,6 +1020,96 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Create Docs Publishing Skills for Plugin Users
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a docs-publisher plugin with portable, project-agnostic skills that let any developer using the agentics marketplace publish their own plan galleries and social media card libraries to GitHub Pages &mdash; replicating the same docs/ , build-index.sh , deploy-pages.yml , and serve-docs.sh workflow this project uses, but as installable marketplace skills that adapt to any repo.
+
+## Context
+The agentics project publishes two browsable galleries to GitHub Pages: a Plans gallery (filterable index of all HTML implementation plans) and a Social cards library (dark-mode card images generated from code changes). These are built by docs/plans/build-index.sh , social-media-tools templates, a PostToolUse auto-rebuild hook, a local preview server ( scripts/serve-docs.sh ), and a GitHub Actions deploy workflow ( .github/workflows/deploy-pages.yml ).
+
+Developers who install the agentics plugins ( plan-agent , social-media-tools ) in their own projects get the plan-writing and social-card-generation skills but have no turnkey way to publish those artifacts to GitHub Pages . They would need to manually replicate the docs infrastructure: scaffold the directory, copy templates, create the workflow, and wire up the build scripts. This plan creates a dedicated docs-publisher plugin that packages the entire pipeline as installable skills.
+
+Key decisions (resolved): The plugin is standalone with no peer dependencies on plan-agent or social-media-tools &mdash; it detects which content exists and gracefully skips empty galleries. Build scripts are copied into the user&apos;s project by docs-init so they are version-controlled, editable, and survive plugin uninstall.
+
+## Files
+- kit/plugins/docs-publisher/.claude-plugin/plugin.json (new) — plugin manifest
+- kit/plugins/docs-publisher/commands/docs-init.md (new) — one-shot project scaffolding command
+- kit/plugins/docs-publisher/commands/docs-publish.md (new) — build + commit + push orchestration
+- docs-build/SKILL.md (new) — gallery index regeneration skill
+- docs-serve/SKILL.md (new) — local HTTP preview server
+- kit/plugins/docs-publisher/hooks/auto-rebuild-gallery.py (new) — PostToolUse hook for auto gallery rebuild
+- kit/plugins/docs-publisher/templates/landing-hub.html (new) — docs/ root index with card grid
+- kit/plugins/docs-publisher/templates/plans-gallery.html (new) — filterable plan gallery with status/type badges
+- kit/plugins/docs-publisher/templates/social-gallery.html (new) — dark-mode social card gallery
+- kit/plugins/docs-publisher/scripts/build-plans-index.sh (new) — portable plans gallery builder
+- kit/plugins/docs-publisher/scripts/build-social-index.sh (new) — portable social cards gallery builder
+- kit/plugins/docs-publisher/scripts/serve-docs.sh (new) — portable local HTTP server
+- kit/plugins/docs-publisher/reference/deploy-pages.yml (new) — GitHub Actions workflow template
+- kit/plugins/docs-publisher/README.md (new) — plugin documentation
+- kit/plugins/docs-publisher/CHANGELOG.md (new) — initial changelog
+- .claude-plugin/marketplace.json (modified) — register docs-publisher plugin
+
+## Steps
+1. Scaffold the docs-publisher plugin skeleton Why: The plugin needs a manifest and directory structure before any skills can be added. Creating the skeleton first establishes the canonical layout that all subsequent steps write into. Verify: Run ls kit/plugins/docs-publisher/.claude-plugin/plugin.json and confirm it exists with name: "docs-publisher" . Confirm README.md and CHANGELOG.md exist in the plugin root.
+2. Create the docs-init command for one-shot project scaffolding Why: This is the entry point for any developer adopting the docs publishing workflow. A single /docs-publisher:docs-init invocation should set up the complete directory tree, deploy workflow, and landing hub, and copy build scripts into the user&apos;s project so they are version-controlled, editable, and survive plugin uninstall. Verify: Read kit/plugins/docs-publisher/commands/docs-init.md . Confirm the frontmatter has description and the body includes steps to: (1) create docs/ , docs/.nojekyll , docs/plans/ , docs/media/social/ ; (2) write docs/index.html from the landing-hub template; (3) copy deploy-pages.yml into .github/workflows/ ; (4) copy build-plans-index.sh and build-social-index.sh into the project&apos;s scripts/ directory; (5) copy serve-docs.sh into scripts/ . Confirm idempotency: existing files should not be overwritten without user confirmation. Confirm the command detects which content types exist (plans, social cards) and only creates gallery directories for present content, skipping gracefully for the rest.
+3. Ship portable gallery templates: landing hub, plans gallery, and social gallery Why: The templates are the visual layer of the published site. They must be self-contained HTML with no CDN dependencies, use the same {{VARIABLE}} substitution pattern as the existing agentics templates, and adapt to any project name &mdash; not hard-code "Agentics". Verify: Open each template in a browser. Confirm: (1) landing-hub.html has {{PROJECT_NAME}} and {{PROJECT_DESCRIPTION}} placeholders and renders a 2-card grid linking to plans/index.html and media/social/index.html ; (2) plans-gallery.html has {{GALLERY_ENTRIES}} , {{PLAN_COUNT}} , {{GENERATED_AT}} placeholders and includes status/type filter chips; (3) social-gallery.html has equivalent placeholders and uses the dark-mode GitHub-style theme. None reference external CSS or JS.
+4. Create portable build scripts for plans and social gallery indexes Why: The build scripts are the engine that scans plan files and social card images, extracts metadata, and writes index.html gallery pages. Since they are copied into the user&apos;s project by docs-init , they must be self-contained and project-agnostic: resolve the plans directory from .claude/settings.json > docs/plans/ fallback, locate gallery templates from the plugin cache (for substitution) or fall back to an embedded minimal gallery, and work on both macOS and Linux. Verify: Read scripts/build-plans-index.sh . Confirm it: (1) resolves the plans directory using the same resolve_plans_dir() pattern as the existing build-index.sh ; (2) locates templates from the docs-publisher plugin cache path; (3) outputs index.html to the plans directory. Read scripts/build-social-index.sh and confirm the same pattern for social cards under docs/media/social/ .
+5. Create the docs-build skill for gallery index regeneration Why: A skill (auto-activated) rather than a command because gallery rebuilds should trigger naturally when the user says "rebuild the docs gallery" or "regenerate the plan index." The skill invokes the project-local copies of the build scripts (placed by docs-init ) and reports what changed. Gracefully skips a gallery if its script or content directory is absent. Verify: Read skills/docs-build/SKILL.md . Confirm frontmatter has name: docs-build , a description that triggers on "rebuild gallery"/"regenerate index" intent, and allowed-tools: Bash, Read, Glob . The body should: (1) locate project-local scripts/build-plans-index.sh and scripts/build-social-index.sh ; (2) run each only if the corresponding script and content directory exist; (3) report the count of entries generated per gallery.
+6. Create the docs-serve skill for local HTTP preview Why: Developers need to preview galleries locally before pushing to GitHub Pages. A skill is better than a command here because "serve my docs" or "preview the docs site" should auto-activate without requiring the plugin name prefix. Verify: Read skills/docs-serve/SKILL.md . Confirm it: (1) finds a free port via Python socket; (2) starts python3 -m http.server from the docs/ directory; (3) prints URLs for both galleries; (4) triggers a gallery rebuild before serving if any index is stale or missing.
+7. Create the docs-publish command for build + commit + push orchestration Why: Publishing is a destructive action (pushes to remote) that should be explicit, not auto-activated. The command orchestrates: rebuild galleries &rarr; git add docs/ &rarr; commit &rarr; push &rarr; report the Pages URL. Includes a --dry-run flag to preview what would be committed without pushing. Verify: Read commands/docs-publish.md . Confirm it: (1) runs both build scripts; (2) stages only docs/ files; (3) creates a conventional commit ( docs: rebuild galleries ); (4) pushes to the current branch; (5) reports the GitHub Pages URL derived from the remote. Confirm --dry-run flag is documented and respected.
+8. Create the auto-rebuild PostToolUse hook Why: The hook automatically regenerates the plans gallery when a plan HTML file is written, matching the behavior of plan-agent &apos;s existing rebuild-plans-index.py . It invokes the project-local scripts/build-plans-index.sh (placed by docs-init ), so it works even if the plugin is later uninstalled. Verify: Read hooks/auto-rebuild-gallery.py . Confirm it: (1) fires on PostToolUse for Write/Edit; (2) checks if the written file is under docs/plans/ and ends in .html ; (3) debounces rapid writes (2-second window); (4) invokes the project-local scripts/build-plans-index.sh (not a plugin-cache path); (5) silently skips if the script is not found (project hasn&apos;t run docs-init yet); (6) always exits 0 (never blocks the write).
+9. Register docs-publisher in the marketplace and create the reference deploy workflow Why: The plugin must be discoverable via the marketplace for users to install it. The reference deploy-pages.yml is a GitHub Actions template that docs-init copies into the user&apos;s repo &mdash; it triggers on docs/** changes and handles the standard GitHub Pages artifact upload. Verify: Run cat .claude-plugin/marketplace.json | python3 -c "import sys,json; d=json.load(sys.stdin); print([p['name'] for p in d['plugins']])" and confirm docs-publisher appears. Read reference/deploy-pages.yml and confirm it has the same structure as .github/workflows/deploy-pages.yml but with a {{DOCS_PATH}} placeholder for the docs directory.
+
+## Tests
+Tier 1 &mdash; Code-touching plan
+- Objective docs-publisher scaffolds a working GitHub Pages site from scratch File: tests/docs-publisher/docs-publisher-e2e.test.sh Type: smoke test Asserts: Running docs-init in a fresh git repo creates the full directory tree ( docs/ , docs/.nojekyll , docs/index.html , docs/plans/ , docs/media/social/ , .github/workflows/deploy-pages.yml ), then running docs-build generates valid index.html gallery files that contain no unfilled {{PLACEHOLDER}} tokens. Run: bash tests/docs-publisher/docs-publisher-e2e.test.sh
+- Unit Build script metadata extraction File: tests/docs-publisher/build-script-unit.test.sh Targets: build-plans-index.sh Python metadata parser ( get_meta() , get_title() ) Key cases: Extracts <meta name="plan-status"> from valid plan HTML; returns fallback values for missing meta tags; handles HTML entities in titles without double-encoding; skips archive/ subdirectory
+- Integration Template resolution across installation methods File: tests/docs-publisher/template-resolution.test.sh Targets: find_templates_dir() in build-plans-index.sh and build-social-index.sh Key cases: Finds templates when plugin is installed via marketplace cache ( ~/.claude/plugins/cache/ ); finds templates when plugin is loaded locally ( --plugin-dir ); selects highest-versioned template when multiple versions exist; falls back to embedded minimal gallery when no template found
+- Integration Auto-rebuild hook debounce and trigger File: tests/docs-publisher/hook-rebuild.test.sh Targets: hooks/auto-rebuild-gallery.py Key cases: Triggers rebuild when a .html file is written under docs/plans/ ; does not trigger for non-HTML files; debounces rapid writes within 2-second window; always exits 0 even if the build script fails
+
+## Acceptance Criteria
+- kit/plugins/docs-publisher/.claude-plugin/plugin.json exists with name: "docs-publisher" and no version field (version lives in marketplace.json only)
+- /docs-publisher:docs-init creates a complete docs directory tree ( docs/ , .nojekyll , index.html , plans/ , media/social/ , deploy-pages.yml ) in a fresh project without errors and is idempotent when re-run
+- The three gallery templates ( landing-hub.html , plans-gallery.html , social-gallery.html ) are self-contained HTML with no CDN or external dependencies, use {{VARIABLE}} placeholders, and render correctly in a browser
+- build-plans-index.sh generates a valid docs/plans/index.html with correct metadata extraction from plan HTML files, and build-social-index.sh generates docs/media/social/index.html from card images
+- The docs-build skill auto-activates on "rebuild docs gallery" intent and invokes both build scripts, reporting entry counts
+- The docs-serve skill starts a local HTTP server on a free port from the docs/ directory and prints URLs for both galleries
+- /docs-publisher:docs-publish orchestrates build &rarr; git add &rarr; commit &rarr; push and supports --dry-run to preview without pushing
+- docs-publisher is registered in .claude-plugin/marketplace.json with correct source , version , category , and tags
+
+## Verification
+End-to-end verification in a clean environment:
+
+Create a fresh git repo: mkdir /tmp/test-docs && cd /tmp/test-docs && git init
+
+Load the plugin: claude --plugin-dir ~/devbox/agentics/kit/plugins/docs-publisher
+
+Run /docs-publisher:docs-init and confirm the full directory tree is created with no errors
+
+Copy a sample plan HTML file into docs/plans/
+
+Say "rebuild the docs gallery" and confirm the docs-build skill activates and generates docs/plans/index.html
+
+Say "serve my docs" and confirm the docs-serve skill starts a server; open both gallery URLs in a browser
+
+Run /docs-publisher:docs-publish --dry-run and confirm it lists the files that would be committed without actually pushing
+
+Confirm the auto-rebuild hook fires when a new plan HTML is written to docs/plans/
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

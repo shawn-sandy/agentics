@@ -699,6 +699,50 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Create Plans Index Page
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a self-contained docs/plans/index.html that renders every .html plan file in docs/plans/ as a status-badged card with title, type, created date, and a direct link — plus client-side filters by status and type — all regenerated from a single bash script.
+
+## Context
+Superseded 2026-05-30 — the plans-library skill added in plan-agent v0.11.0 implements this as a reusable plugin skill. Use plans-library instead. See plan add-plans-library-to-plan-agent.html .
+
+The plan-agent plugin generates .html plan files in docs/plans/ . With over 100 plan files now in that directory, there is no way to browse or navigate them without knowing exact filenames. An index page that reads each plan's <meta> tags (plan-status, plan-type, plan-created, plan-repo) and renders them as filterable, sortable cards would make the plan archive discoverable without requiring a server or build toolchain.
+
+The page will be pre-rendered at build time by a bash script that greps meta tags from each .html file and inlines the data, keeping it openable directly from the filesystem at a file:// URL.
+
+## Steps
+1. Audit existing docs/plans/*.html files to verify the meta-tag schema Why: The card renderer reads five fields from each plan file ( plan-status , plan-type , plan-created , plan-repo , <title> ); gaps cause blank or broken cards. Knowing actual coverage first lets the build script apply correct fallback values. Verify: Read at least five existing .html plan files; confirm all five meta fields are present in each. Note any missing fields so the build script can handle them.
+2. Write docs/plans/build-index.sh — the bash script that extracts meta tags and emits the embedded JSON block Why: The build script is the data layer; defining it before the HTML template locks the data shape so the template can reference stable field names. Writing it first also makes the output testable in isolation. Verify: Run the script against three existing plan files and confirm the output JSON block contains correct title , status , type , created , and repo values for each. The script must skip index.html itself.
+3. Build docs/plans/index.html — a single self-contained file with pre-rendered plan cards, status badges, and filter controls Why: A pre-rendered, no-dependency static file opens at a file:// URL without a server and stays consistent with plan-agent's single-file philosophy. Embedding JSON rather than hard-coding card HTML makes the build script output trivially diffable and the template reusable. Verify: Open docs/plans/index.html directly in a browser (no server). Confirm: all current .html plan cards render with correct title, status badge, type chip, and created date; filter by status shows/hides cards correctly; each card's "Open plan" link navigates to the correct file.
+4. Surface the rebuild command visibly on the index page itself Why: The pre-rendered approach only stays current if the rebuild command is discoverable; burying it in a README means it will be forgotten. Showing it directly on the page ensures anyone viewing the index can regenerate it without hunting for documentation. Verify: Open docs/plans/index.html in a browser; confirm a visible "Regenerate" instruction block showing bash docs/plans/build-index.sh is present on the page (not hidden in HTML comments or source only).
+
+## Acceptance Criteria
+- docs/plans/index.html exists and opens in a browser at a file:// URL without a server.
+- Every .html plan file in docs/plans/ (except index.html itself) appears as a card.
+- Each card displays: plan title, status badge, type chip, created date, and an "Open plan" link to the file.
+- Status badge colours match plan-agent design tokens: grey = todo, amber = in-progress, green = completed.
+- Filter by status (todo / in-progress / completed) is functional and hides non-matching cards.
+- Sort by created date (newest-first default, toggleable) is functional.
+- docs/plans/build-index.sh exists and regenerates the index from scratch when run.
+- The rebuild command ( bash docs/plans/build-index.sh ) is visibly displayed on the index page.
+
+## Verification
+Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo root, then open the output in a browser. Confirm: all current .html plan cards render with correct metadata; status filter controls show/hide cards correctly; "Open plan" links navigate to the correct files. Add one new .html plan file, re-run the script, and confirm the new card appears.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

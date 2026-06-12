@@ -857,6 +857,63 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Make implementation-plan model-invocable without colliding with Plan Mode
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Drop disable-model-invocation: true from the implementation-plan skill so Claude can auto-activate it on intent — then re-scope its trigger so it fires on "make me a plan document" requests but stays out of the way of Claude Code's built-in Plan Mode.
+
+## Context
+The implementation-plan skill (in the plan-agent plugin, currently v1.1.1 ) carries disable-model-invocation: true in its frontmatter. That flag makes the skill manual-only — it activates solely via /plan-agent:implementation-plan <objective> and never auto-triggers on ambient intent. The user wants it model-invocable so Claude can reach for it automatically when someone asks for a plan.
+
+Two non-trivial constraints make this more than a one-line deletion:
+
+The body assumes command-only invocation. Line 14 reads " $ARGUMENTS substitution is valid here because this skill is command-invoked only." On the model-invocation path, $ARGUMENTS is empty — so the skill needs a defined way to source the objective (decision: read it from the triggering message / recent conversation, falling back to AskUserQuestion only when nothing can be inferred).
+
+Trigger collision with built-in Plan Mode. Claude Code already enters its native Plan Mode on generic "plan how to do X" intent. If this skill's description triggers on the same phrasing, the two compete. The trigger must be scoped narrowly to HTML plan artifact requests ("create an implementation-plan document", "generate an HTML plan", "write a plan file") and deliberately avoid generic planning language.
+
+Per marketplace.md , this is treated as a MINOR bump (1.1.1 → 1.2.0): command invocation is unchanged and a new activation path is added on top — nothing is removed or renamed. The sibling finalize-plan skill keeps its disable-model-invocation: true for now (handled separately in Next Steps).
+
+## Steps
+1. Delete the disable-model-invocation: true line from the skill frontmatter Why: Remove line 6 of kit/plugins/plan-agent/skills/implementation-plan/SKILL.md . This single flag is the only thing gating model activation — once gone, the skill becomes eligible to auto-trigger on matching intent. Verify: sed -n '1,9p' kit/plugins/plan-agent/skills/implementation-plan/SKILL.md shows the frontmatter block no longer contains disable-model-invocation (the only remaining mention will be the body prose reworded in Step 3).
+2. Rewrite the description: into a narrow, artifact-scoped three-part trigger Why: Once the skill is model-invocable, the description field is the activation trigger. Scope it to explicit plan-artifact intent — "create an HTML plan / plan file / implementation-plan document" — and deliberately omit generic "plan how to do X" phrasing so it does not compete with built-in Plan Mode. Keep the /plan-agent:implementation-plan command hint. Follow the three-part format from plugin-patterns.md (short description + capability + "Use when…"), aiming for the ≤200-char budget. Verify: head -5 SKILL.md shows a description that (a) contains explicit artifact nouns ("HTML plan", "plan file", or "implementation-plan document"), (b) contains a "Use when" clause, (c) does not contain generic "plan how to" / "plan this feature" wording, and (d) is within the ≤1024-char hard limit (target ≤200). Re-read it aloud: an ambient "create a plan document for X" should match; a bare "plan how to add auth" should not.
+3. Make the Invocation & Arguments section dual-mode (command + model) Why: The body hardcodes "command-invoked only" (line 14) and "continue with $ARGUMENTS treated as a plain objective" (line ~96). Add an "Invocation modes" note: if $ARGUMENTS is non-empty, parse it exactly as today (issue ref → plan file → flags → objective); if empty (model-invocation), derive the objective from the user's triggering message / recent conversation context, falling back to AskUserQuestion("What is the objective for this plan?") only when nothing can be inferred. Reword the two "command-invoked only" claims so they no longer assert the skill is command-exclusive. Ambient default: since command-only flags ( --quick , --no-align , etc.) can't be passed on the model path, document that ambient activation runs the full workflow (Clarify + Align + Interview) by default — users who want a fast run use the /command form with flags. Verify: Re-read the Invocation & Arguments section: it documents both paths, the "command-invoked only" assertions are gone or reworded, and the "Objective (required)" rule explicitly covers the empty- $ARGUMENTS model case (conversation-sourced, then ask). grep -n 'command-invoked only' SKILL.md returns nothing.
+4. Update plan-agent/README.md to describe dual-mode activation Why: README lines 7, 21, 50, and 54 describe the skill as "manual-invoke only", " disable-model-invocation: true ", and "will not auto-activate on ambient intent" — now stale and self-contradictory. Update those to state the skill is both command-invocable and model-invocable (with the narrow artifact-scoped trigger), and remove the "Manual only" labels for implementation-plan . Leave finalize-plan 's manual-only description untouched. Verify: grep -n 'Manual only\|disable-model-invocation\|will not auto-activate' kit/plugins/plan-agent/README.md returns no matches in the implementation-plan rows/sections; the README now documents both the /command form and ambient activation. The finalize-plan manual-only line is still present.
+5. Bump plan-agent to 1.2.0 and add a CHANGELOG entry Why: Adding a new activation path is an additive MINOR change. Update "version" for the plan-agent entry in .claude-plugin/marketplace.json from 1.1.1 to 1.2.0 , prepend a ## v1.2.0 section to kit/plugins/plan-agent/CHANGELOG.md describing the model-invocation enablement and trigger scoping, and refresh the marketplace description if it asserts "explicit" invocation. The .claude/settings.json hook auto-validates the JSON on save. Verify: python3 -c "import json; d=json.load(open('.claude-plugin/marketplace.json')); print([p['version'] for p in d['plugins'] if p['name']=='plan-agent'])" prints ['1.2.0'] ; head -5 kit/plugins/plan-agent/CHANGELOG.md shows the new ## v1.2.0 entry; bash scripts/check-version-bump.sh (if present) passes.
+
+## Acceptance Criteria
+- disable-model-invocation is no longer present in the implementation-plan SKILL.md frontmatter.
+- The skill description includes a narrow, artifact-scoped "Use when" trigger and omits generic planning phrasing that would collide with built-in Plan Mode.
+- The Invocation & Arguments section documents how the objective is sourced when $ARGUMENTS is empty (conversation context, then AskUserQuestion ).
+- Command invocation /plan-agent:implementation-plan <objective> still works unchanged (issue refs, plan-file refs, and all flags still parse).
+- The plan-agent README no longer claims the implementation-plan skill is manual-only / non-auto-activating.
+- marketplace.json lists plan-agent at 1.2.0 and CHANGELOG.md has a matching v1.2.0 entry.
+
+## Verification
+1. Static checks. Run the Step verify commands: confirm the frontmatter no longer has the flag, the description is artifact-scoped, no "command-invoked only" prose remains, the README is updated, and marketplace.json shows 1.2.0 with a matching CHANGELOG entry.
+
+2. Trigger precision (the key risk). Reload the plugin ( claude --plugin-dir ./kit/plugins/plan-agent or reinstall the marketplace). Then exercise three phrases in a fresh session:
+
+Ambient artifact request — "create an implementation-plan document for adding a dark-mode toggle" → should auto-activate implementation-plan and produce an HTML plan.
+
+Generic planning request — "plan how I should add a dark-mode toggle" → should route to built-in Plan Mode, not this skill.
+
+Explicit command — /plan-agent:implementation-plan add a dark-mode toggle → still works exactly as before.
+
+3. Objective sourcing. On the ambient-activation path, confirm the skill picks up the objective from the triggering message (no empty-objective abort) and only asks via AskUserQuestion when the request is genuinely vague.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

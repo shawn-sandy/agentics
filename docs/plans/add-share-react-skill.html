@@ -1056,6 +1056,96 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add a share-react skill to social-media-tools
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a share-react skill for social-media-tools that turns any React component into one dark-mode social card — a rendered static preview (up to three states), the implementation code, and a full typed props table — then wire it into the router, templates, reference docs, README, tests, and release metadata so it ships as a first-class share-* skill.
+
+## Context
+social-media-tools ships eleven share-* skills built on one skeleton: locate plugin assets, load SOCIAL.md , capture input, reuse-check, run the security-scrub gate , draft platform-aware copy, populate a {{VARIABLE}} card template, persistent-save to docs/media/social/ , Playwright-screenshot the card, and deliver. The closest siblings — share-github and share-selection — render code into snippet-card.html . None of them shows a component's rendered appearance or its API.
+
+React developers want to share a component as three things at once: what it looks like, how it is built, and how to use it (its props). share-react fills that gap by combining a visual preview, the implementation, and a typed props table in a single card.
+
+Design decisions locked during clarify and the alignment stress-test:
+
+Preview = static mockup. Claude reads the component and hand-builds an HTML/CSS approximation of its rendered output (up to three states). There is no React or Babel runtime, so the existing static screenshot pipeline works unchanged. The two live-render approaches become Wish List flags.
+
+Input = path or selection, equal footing. Accept a .tsx / .jsx file path argument or an IDE selection / pasted code block (mirroring share-selection 's capture).
+
+Props = full API, types first. Parse the component's TypeScript Props interface / type alias or propTypes for name · type · required · default · description, falling back to inference from JSX usage when no explicit types exist.
+
+Router = any React file. The social-share router sends any .tsx / .jsx selection to share-react . This intentionally makes share-react the default for React files, intercepting the generic snippet path; a plain non-React snippet still falls through to share-selection .
+
+A new skill is not a single file: it touches the SKILL.md , a new card template, a props reference, the social-share router, references/variables.md , the README, the repo-root CLAUDE.md row, the CHANGELOG.md , plugin.json keywords, the marketplace.json version, and committed tests.
+
+## Files
+- kit/plugins/social-media-tools/skills/share-react/SKILL.md (new) — share-react skill workflow
+- references/props-extraction.md (new) — props parsing + row rendering
+- kit/plugins/social-media-tools/templates/react-card.html (new) — preview + code + props card
+- kit/plugins/social-media-tools/skills/social-share/SKILL.md (modified) — add .tsx/.jsx router rule
+- kit/plugins/social-media-tools/references/variables.md (modified) — document react-card variables
+- kit/plugins/social-media-tools/README.md (modified) — skill + card-type tables, tree
+- kit/plugins/social-media-tools/CHANGELOG.md (modified) — v2.11.0 entry
+- kit/plugins/social-media-tools/.claude-plugin/plugin.json (modified) — add react keywords
+- .claude-plugin/marketplace.json (modified) — bump to 2.11.0 + tags
+- CLAUDE.md (modified) — update plugin table row
+- tests/social-media-tools/test-react-card-smoke.sh (new) — objective smoke test
+- tests/social-media-tools/test-share-react-registration.sh (new) — wiring / registration test
+- tests/social-media-tools/README.md (new) — manual E2E run instructions
+
+## Steps
+1. Scaffold skills/share-react/SKILL.md with the full phase workflow Why: SKILL.md is the only runtime artifact Claude loads; mirroring the shared share-* skeleton makes share-react behave like its siblings and keeps the scrub gate non-bypassable. Verify: Create kit/plugins/social-media-tools/skills/share-react/SKILL.md with three-part frontmatter and the phases: Locate assets, load SOCIAL.md , capture (a .tsx / .jsx path or IDE selection/paste), reuse-check, security-scrub, extract props, build static preview (up to 3 states), draft takeaway-first copy, populate react-card.html , persistent-save, screenshot, deliver. Verify: head -6 SKILL.md shows valid frontmatter; the description is the three-part format ≤200 chars; allowed-tools lists AskUserQuestion, Read, Write, Bash, Glob, Grep, ToolSearch, ExitPlanMode, Skill, SendUserFile ; the body names every phase and the GATE RESULT scrub check.
+2. Create the templates/react-card.html card template Why: The card is the visual deliverable; reusing snippet-card's proven CSS and CDN means the unchanged Playwright pipeline screenshots it correctly, and a four-zone layout delivers preview + implementation + props in one image. {{COPY_PANELS}} keeps its standard plugin semantics: the social post copy panel(s) rendered below the card — platform post text plus a copy button — populated per references/copy-panels.md , exactly as in snippet-card.html. Verify: Build kit/plugins/social-media-tools/templates/react-card.html with four zones — header ( {{COMPONENT_NAME}} + {{FRAMEWORK_BADGE}} ), a preview pane that injects {{PREVIEW_MARKUP}} as raw skill-authored HTML, an implementation block ( {{COMPONENT_CODE}} , highlight.js language-tsx ), and a semantic props table ( {{PROPS_ROWS}} : name · type · required · default · description) — plus {{REPO_SLUG}} , {{SOURCE_PATH}} , and {{COPY_PANELS}} . Reuse snippet-card's dark-mode tokens, --card-width , and highlight.js CDN. Verify: open the file; all {{…}} variables present; the --card-width CSS custom property is declared in the template's :root ; the props table uses <th scope="col"> ; a header comment states that {{PREVIEW_MARKUP}} is injected raw while {{COMPONENT_CODE}} / {{PROPS_ROWS}} /name/path are HTML-escaped by the skill.
+3. Write the references/props-extraction.md reference Why: Progressive disclosure keeps SKILL.md lean and gives the props-table logic one authoritative source the skill links to one level deep — matching how share-github offloads variable rules to references. Verify: Write kit/plugins/social-media-tools/skills/share-react/references/props-extraction.md describing how to build the full-API props table: parse a TS interface / type Props or propTypes for name · type · required · default · description; fall back to inferring the list from JSX destructuring/usage when no types exist; emit HTML-escaped <tr> rows for {{PROPS_ROWS}} . Verify: file exists; documents both the typed path and the inference fallback; shows the <tr> row template and the mandatory ampersand-first &amp; &lt; &gt; &quot; escaping order; SKILL.md links to it by relative path.
+4. Register the skill in the social-share router Why: The router is how passive "share this" intent reaches a skill; without a rule, share-react never auto-dispatches. Per the locked decision, React files default to share-react. Verify: Modify kit/plugins/social-media-tools/skills/social-share/SKILL.md Phase 1 classification table: add a rule that routes any selected/open/path .tsx / .jsx React file to share-react , placed above the existing selection rule (#4) so React files prefer the component card. Verify: re-read the table; a .tsx / .jsx row targets share-react and sits above the share-selection row; renumber the rules and confirm first-match-wins still falls through to share-selection for non-React code.
+5. Document react-card.html in references/variables.md Why: variables.md is the shared contract every card template documents; an undocumented template drifts and breaks future edits. Verify: Add a react-card.html section to kit/plugins/social-media-tools/references/variables.md — a Contents link plus a variable table for {{COMPONENT_NAME}} , {{FRAMEWORK_BADGE}} , {{PREVIEW_MARKUP}} , {{COMPONENT_CODE}} , {{PROPS_ROWS}} , {{REPO_SLUG}} , {{SOURCE_PATH}} , {{COPY_PANELS}} , with an explicit escaped-vs-raw note. Verify: open variables.md; the Contents list links #react-cardhtml ; the table lists all eight variables and flags {{PREVIEW_MARKUP}} as raw and everything else as HTML-escaped.
+6. Update the human-facing docs (README + root CLAUDE.md ) Why: README and the root CLAUDE.md are how humans and Claude discover the plugin's surface; the marketplace conventions require docs to stay in sync with plugin changes. Verify: Add share-react to the README's Features table, Skills activation table, and Card Types table, and add the new files to the Plugin Structure tree in kit/plugins/social-media-tools/README.md ; update the social-media-tools row in the repo-root CLAUDE.md plugin table to mention share-react. Verify: grep -n share-react kit/plugins/social-media-tools/README.md returns hits in all three tables and the tree; the CLAUDE.md social-media-tools row names share-react.
+7. Cut the release — bump version, tags, keywords, and changelog Why: A new skill is a MINOR bump per the marketplace rules; the version, tags, and changelog are what actually ship, and the post-write hook validates marketplace.json JSON syntax. Verify: Bump the social-media-tools version in .claude-plugin/marketplace.json from 2.10.1 to 2.11.0 and add react / component / jsx tags; add matching react , component , jsx keywords to kit/plugins/social-media-tools/.claude-plugin/plugin.json ; add a ## v2.11.0 — 2026-06-09 entry to kit/plugins/social-media-tools/CHANGELOG.md under an ### Added heading. Verify: a python3 -c read of marketplace.json prints version 2.11.0 ; the CHANGELOG top entry is v2.11.0 ; plugin.json keywords include react ; marketplace.json still parses.
+8. Add smoke + registration tests under tests/social-media-tools/ Why: The repo's tests are bash smoke scripts under tests/<area>/ ; committing these makes the objective and the wiring re-checkable on every change. Verify: Add tests/social-media-tools/test-react-card-smoke.sh (populate react-card.html with a sample component + a 3-row props table + a preview block, serve it, assert the preview pane, highlighted code block, and props rows render and no {{…}} placeholders remain) and tests/social-media-tools/test-share-react-registration.sh (assert marketplace version 2.11.0 , a share-react router rule, valid skill frontmatter, and README listing). Also add tests/social-media-tools/README.md documenting the manual E2E run procedure (load the plugin, invoke share-react on a sample component, confirm the saved HTML + PNG). Verify: bash tests/social-media-tools/test-react-card-smoke.sh and bash tests/social-media-tools/test-share-react-registration.sh both exit 0, and tests/social-media-tools/README.md exists with the E2E procedure.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective share-react card shows preview + implementation + props File: tests/social-media-tools/test-react-card-smoke.sh Type: smoke test Asserts: populating react-card.html with a sample Button.tsx (implementation code + a 3-row props table + a static preview block) yields rendered HTML containing a preview pane, a language-tsx code block, and ≥1 props <tr> row — and zero {{…}} placeholders remain — directly proving the card "shares a React component with a preview of the component and its implementation with props". Run: bash tests/social-media-tools/test-react-card-smoke.sh
+- Integration Skill registration + version wiring File: tests/social-media-tools/test-share-react-registration.sh Targets: marketplace.json version, the social-share router table, share-react/SKILL.md frontmatter, the README listing. Key cases: social-media-tools version equals 2.11.0 ; the router table contains a .tsx / .jsx → share-react rule above rule #4; SKILL.md frontmatter has name + description + allowed-tools ; the README Skills table lists share-react.
+- E2E Live skill run produces a saved card + PNG File: manual / agent E2E against the loaded plugin (run instructions documented in tests/social-media-tools/README.md , created in Step 8; uses the existing shared references/rendering-pipeline.md plugin reference). Targets: the full Locate → Capture → Scrub → Extract → Preview → Populate → Screenshot → Deliver path on a real component. Key cases: invoking share-react on a sample Button.tsx saves both react-<slug>-<date>.html and a matching .png to docs/media/social/ ; the saved filename follows the react-<slug>-<date> convention matching other share-* outputs; the scrub gate fired; the local HTTP server is killed afterward (no dangling process).
+
+## Acceptance Criteria
+- skills/share-react/SKILL.md exists; its description uses the three-part format ≤200 chars; allowed-tools lists every tool it uses, including ToolSearch and ExitPlanMode .
+- templates/react-card.html renders a preview pane, a language-tsx syntax-highlighted implementation block, and a semantic props table; user-sourced values are HTML-escaped and {{PREVIEW_MARKUP}} is injected raw.
+- Running share-react on a .tsx path saves a dark-mode card HTML + PNG to docs/media/social/ with no dangling HTTP server.
+- The props table is populated from the component's TS Props interface / PropTypes, falling back to JSX inference when no types exist; columns are name · type · required · default · description.
+- The preview pane shows up to three rendered states, falling back to a single state when the component has no meaningful variants.
+- The social-share router dispatches a .tsx / .jsx component share to share-react (above the share-selection rule).
+- The security-scrub gate runs before any card is produced; a BLOCKED / CANCELLED result halts the skill.
+- marketplace.json lists social-media-tools at 2.11.0 (> 2.10.1); CHANGELOG.md has a matching v2.11.0 entry; react-card.html is documented in references/variables.md and listed in the README.
+- Both tests/social-media-tools/*.sh smoke tests pass (exit 0).
+
+## Verification
+Load the plugin with claude --plugin-dir ./kit/plugins/social-media-tools , then confirm end-to-end:
+
+Typed component. Run share-react against a sample Button.tsx with a TS Props interface and confirm one card shows a rendered preview (up to 3 states), the implementation code, and a full props table; a matching react-*.html + .png land in docs/media/social/ ; copy panels are present; and the security-scrub gate fired in the transcript.
+
+Inference fallback. Run it against an untyped .jsx component and confirm the props table is inference-populated without crashing.
+
+Router. Ask "share this component" with a .tsx selected and confirm the router dispatches to share-react , not share-selection .
+
+Tests. Run bash tests/social-media-tools/test-react-card-smoke.sh and bash tests/social-media-tools/test-share-react-registration.sh — both exit 0.
+
+Release metadata. Run /validate-plugin social-media-tools and confirm marketplace.json parses and the version reads 2.11.0 .
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

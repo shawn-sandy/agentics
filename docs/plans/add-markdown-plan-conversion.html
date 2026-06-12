@@ -980,6 +980,55 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add markdown-source conversion to the implementation-plan skill
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Teach the existing implementation-plan skill to convert an existing markdown plan into a full, interactive HTML implementation plan — auto-detecting a .md source token, transcribing every section into the rich skeleton, and enriching thin areas through the built-in interview — so one skill both generates and converts plans without a second skill.
+
+## Context
+The plan-agent plugin already turns an objective into a rich interactive HTML plan via the implementation-plan skill, and it already accepts alternate input sources — GitHub/GitLab issue refs ( #n ) and .html revision files ( $PLAN_FILE ). What it cannot do is take an existing markdown plan (the SKELETON.md shape: Context, Objective, Steps with Why / Verify , Acceptance Criteria, Verification, Next Steps, Unresolved Questions) and produce the same full HTML plan. The repo holds many such markdown plans under docs/plans/*.md .
+
+The conversion maps almost 1:1: every SKELETON.md section has a matching placeholder in SKELETON.html ( {context} , {objective} , {step-N-action} / {step-N-why} / {step-N-verify} , {criterion-N} , {end-to-end-verification} , {next-step-N-*} , {question-N-*} ). The existing plan-interview:markdown-to-html skill only emits a generic render — it does not produce the interactive plan-agent format (step chips, acceptance checkboxes, implement prompt, completion checklist), so a real gap remains. Per the decision to keep one skill, this work adds a markdown-source input mode to implementation-plan rather than creating a second skill, reusing the entire downstream pipeline (frontmatter, browser render, implement/edit/exit). Fidelity is transcribe + enrich : faithfully map the markdown, then run the built-in interview to deepen thin steps and criteria.
+
+## Files
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 1.7.0 → 1.8.0; update description
+- .claude-plugin/plugin.json (modified) — update description to mention markdown-source conversion
+- skills/implementation-plan/SKILL.md (modified) — .md detection, Step 0.6 ingestion, mapping table, conversion branch, argument-hint
+- skills/implementation-plan/CHANGELOG.md (modified) — add v1.8.0 entry
+- skills/implementation-plan/README.md (modified) — document the markdown-source input mode
+
+## Steps
+1. Detect a .md source token in argument parsing. Extend the "Plan file reference detection" block in SKILL.md so a first non-flag token ending in .md is captured as $MD_SOURCE , mirroring the existing .html → $PLAN_FILE rule: reduce to basename, resolve only against the plan roots ( --dir / plansDirectory / docs/plans/ ), and fall back to AskUserQuestion when the file can't be read. Why: Adds a third input source consistent with issue refs and .html revision files, so /plan-agent:implementation-plan some-plan.md parses cleanly without the filename polluting the objective. Verify: Re-read SKILL.md : the detection paragraph names .md → $MD_SOURCE with basename path-safety and graceful fallback, evaluated before objective extraction and after issue-ref detection.
+2. Add a new Step 0.6 — Markdown Source Ingestion to the Workflow (immediately after Step 0.5 Issue Ingestion). When $MD_SOURCE is set, read the file and parse each SKELETON.md section into planning-input variables (title, context, objective, steps[] with action/why/verify, criteria[], verification, next-steps[], questions[], and frontmatter status/type/created), HTML-escaping every captured value at capture time. Why: Turns the file's existing prose into the structured inputs the skeleton-fill consumes; escaping at capture ( & < > " ' ) prevents injection from arbitrary markdown content. Verify: Convert a conforming sample plan (e.g. docs/plans/harden-plan-documenter-completion-guard.md , which uses Context/Objective/Steps/Verification headings matching SKELETON.md) and confirm each parsed section appears in the resolved inputs with special characters escaped.
+3. Document the conversion-mapping table in SKILL.md near the new Step 0.6 — markdown section → HTML placeholder/meta-tag, covering frontmatter, title, Context, Objective, Steps (action/why/verify), Acceptance Criteria, Verification, Next Steps, and Unresolved Questions. Why: Makes the parse target unambiguous and prevents drift between SKELETON.md and SKELETON.html as either evolves. Verify: The table lists every SKELETON.md section mapped to its {placeholder} / <meta> target with no section left unmapped (matches the Conversion Mapping table in this plan).
+4. Branch Steps 0b (Explore), 1 (Clarify), and 2 (Create) for the conversion path. On the $MD_SOURCE path: the objective and section content come from the parsed file (not generated); Explore/Clarify act as enrichment only (confirm files/symbols the plan references still exist); the output filename derives from the source basename ( foo.md → foo.html ), re-validated against the verb-target convention and renamed if non-descriptive. Why: Reuses the entire downstream pipeline (frontmatter, browser render, implement/edit/exit) while sourcing content from the file rather than generating it from an objective. Verify: Reading the branched steps shows the conversion path reuses Step 7 render and Step 8 menu unchanged and derives the output filename from the source basename.
+5. Wire the enrich phase and provenance. Specify that on the conversion path Step 5b Interview still runs (transcribe + enrich) to deepen thin steps and acceptance criteria; carry source frontmatter (status / type / created) into the HTML meta unless a flag overrides; and add <meta name="plan-source" content="<basename>.md"> to Step 3 frontmatter for provenance. Why: Implements the chosen transcribe + enrich fidelity and records where the converted plan originated, so a reader can trace it back to the source markdown. Verify: Converted HTML carries the plan-source meta, reflects interview-added detail, and flags ( --type , --priority , --no-interview ) still override the source frontmatter.
+6. Bump the version and update docs. Bump marketplace.json plan-agent 1.7.0 → 1.8.0 (a MINOR — new capability), update its description and plugin.json description to mention markdown-source conversion, add a v1.8.0 CHANGELOG.md entry, and update README.md plus the SKILL argument-hint to show the <plan.md> source form. Why: Marketplace versioning rules require a MINOR bump for a new input mode, and user-facing docs must reflect it; version stays in marketplace.json only, never plugin.json . Verify: marketplace.json shows 1.8.0 (and no version in plugin.json ); CHANGELOG.md has the v1.8.0 entry; argument-hint and README.md mention the .md source.
+
+## Acceptance Criteria
+- /plan-agent:implementation-plan some-plan.md converts that markdown plan into a full HTML implementation plan (step chips, acceptance checkboxes, implement prompt, completion checklist).
+- The .md token is auto-detected with the same basename path-safety and graceful fallback as the existing .html detection.
+- Every SKELETON.md section maps to its HTML placeholder/meta-tag with all captured content HTML-escaped.
+- Converted plans carry source frontmatter (status/type/created) into meta unless a flag overrides, plus a plan-source provenance meta tag.
+- The enrich phase (Step 5b interview) runs on the transcribed content, and no separate skill was created — the capability lives in implementation-plan .
+- marketplace.json plan-agent version is bumped one MINOR (1.7.0 → 1.8.0) with a matching CHANGELOG entry, and descriptions + argument-hint mention the markdown source.
+
+## Verification
+End-to-end: run /plan-agent:implementation-plan harden-plan-documenter-completion-guard.md against an existing conforming markdown plan in docs/plans/ (this file uses Context/Objective/Steps/Verification headings matching SKELETON.md). Confirm the skill (1) auto-detects the .md token as the source, (2) parses every section into the skeleton, (3) renders the result in the browser via Step 7 with all sections populated and HTML-escaped, (4) names the output harden-plan-documenter-completion-guard.html (source basename), (5) carries the source frontmatter plus a plan-source meta tag, and (6) presents the Step 8 implement/edit/exit menu unchanged. Then re-read SKILL.md end-to-end to confirm no second skill was introduced and the conversion path is a branch of the existing workflow. Finally verify marketplace.json shows 1.8.0 , plugin.json has no version , and the CHANGELOG/README/argument-hint all mention the markdown source.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -691,6 +691,55 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add "View image" link to media-library gallery cards
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a direct "View image" link on every media library gallery card so users can open the generated PNG in the browser without navigating through the HTML card page.
+
+## Context
+The media-library skill scans docs/media/social/ and builds a filterable HTML gallery ( index.html ). Each card-generating skill saves both an HTML card and a PNG screenshot side-by-side in that directory. The gallery currently links each card to its HTML file so users can read the post copy — but there is no way to open the PNG image directly from the gallery UI.
+
+The fix is a plain HTML <a> link placed below each gallery card, outside the existing <a class="gallery-card"> wrapper. Siblings can't nest, so this avoids the HTML spec violation entirely and requires no JS card-click refactoring. Each card + link pair lives inside a thin <div class="gallery-card-wrap"> container so the existing filter JS can show/hide both elements together.
+
+Two files need updating: templates/gallery.html (CSS for the wrap and link, JS filter update) and skills/media-library/SKILL.md (the gallery entry block that the skill generates per card).
+
+## Steps
+1. Update gallery.html — add .gallery-card-wrap and .open-img-link CSS; update applyFilters() JS to target .gallery-card-wrap Why: Each gallery card entry needs a thin wrapper div so the filter JS can show/hide both the card and the "View image" link together. Without a wrapper, hiding .gallery-card would leave orphaned links visible. Adding .open-img-link CSS gives the plain link a consistent visual treatment matching the dark-mode gallery theme. Verify: Open kit/plugins/social-media-tools/templates/gallery.html . Confirm: A .gallery-card-wrap CSS rule exists (at minimum display: contents or a block wrapper with no gap impact). A .open-img-link CSS rule exists with at least font-size , color , and display declared. The applyFilters() JS function targets .gallery-card-wrap for style.display toggle, reading data-type and data-topic from the inner .gallery-card child. The var cards = grid.querySelectorAll(…) line selects .gallery-card-wrap (not .gallery-card ).
+2. Update SKILL.md Step 3 — wrap each card entry in <div class="gallery-card-wrap"> and add a plain <a class="open-img-link"> below the card Why: The SKILL.md Step 3 block is the exact HTML template the skill generates per card when it builds docs/media/social/index.html . Wrapping in .gallery-card-wrap and placing the image link as a sibling after </a> (not inside it) keeps the HTML valid — no nested anchors — and no JS click handler is needed. Verify: Open kit/plugins/social-media-tools/skills/media-library/SKILL.md and read Step 3. Confirm: The gallery entry block starts with <div class="gallery-card-wrap"> . The existing <a class="gallery-card" href="{BASENAME}" …> card is unchanged inside the wrap. After the closing </a> , a <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener">View image</a> appears as a sibling (not a child of the card <a> ). The entry block closes with </div> (closing the wrap).
+
+## Acceptance Criteria
+- gallery.html has a .gallery-card-wrap CSS rule and a .open-img-link CSS rule.
+- The applyFilters() JS in gallery.html targets .gallery-card-wrap for show/hide, reading data-type and data-topic from the inner .gallery-card .
+- SKILL.md Step 3 wraps each entry in <div class="gallery-card-wrap"> and places <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener">View image</a> as a sibling after the card </a> .
+- No nested <a> elements exist in the generated entry — the image link is a sibling of the card anchor, not a child.
+- After running /social-media-tools:media-library to rebuild the gallery, each card shows a "View image" link below it; clicking it opens the .png in a new browser tab, and the card filter (type chips + search) still hides both the card and its link together.
+
+## Verification
+Rebuild the gallery by running /social-media-tools:media-library and open docs/media/social/index.html in a browser. Confirm:
+
+Each card has a "View image" link rendered visibly below it (not inside the card).
+
+Clicking the card body opens the HTML card file in the same tab.
+
+Clicking "View image" opens the .png in a new tab — the gallery page does not navigate away.
+
+Using the type filter chips or search box hides both the card and its "View image" link together — no orphaned links remain visible.
+
+Switching between grid and list view still shows the link below each card in both layouts.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

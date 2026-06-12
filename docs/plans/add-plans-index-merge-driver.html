@@ -1027,6 +1027,74 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add merge driver for docs/plans/index.html
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Kill the recurring docs/plans/index.html merge conflict for good: add a git merge driver that auto-resolves the generated gallery index by unioning the plan cards from both sides whenever two plan branches collide — so every merge keeps all plans and no contributor ever hand-resolves the index again. Mirror the proven marketplace.json driver wiring already in the repo.
+
+## Context
+docs/plans/index.html is a fully generated file. docs/plans/build-index.sh rebuilds it from every non-index plan .html file, and the kit/plugins/plan-agent/hooks/rebuild-plans-index.py PostToolUse hook re-runs that script on every plan write. Because every plan-adding PR regenerates the index, any two concurrent plan PRs produce a textual merge conflict in this one file — PR #308 hit it twice in a single day.
+
+The repo already solves the identical problem for .claude-plugin/marketplace.json with a custom git merge driver: scripts/merge-marketplace.mjs , mapped in .gitattributes via merge=mkt-version , with the per-clone git config merge.<name>.driver registered idempotently by scripts/setup-merge-driver.sh (auto-run from a SessionStart hook in .claude/settings.json ). This plan reuses that exact split: a committed .gitattributes mapping plus a per-clone driver registration.
+
+Resolution strategy (per .claude/rules/plan-hygiene.md ): the driver unions the gallery cards from both sides rather than regenerating from disk. Sandbox-verified on git 2.50 (the default ort strategy): a merge driver runs during the in-memory merge, before the incoming branch's new plan files are checked out — so regenerating the index from disk inside the driver would silently drop every incoming plan. But both index versions already contain their side's cards as blobs ( %A ours, %B theirs, %O base), so unioning those cards yields a complete index with no disk access, and bakes the resolution straight into the merge commit — exactly how scripts/merge-marketplace.mjs unions plugins[] . Ours' cards keep their order, new cards from theirs are appended, and a card deleted on either side relative to the base stays deleted.
+
+Why no post-merge regeneration: the union already produces a correct, complete index at merge time, so no git hook is needed. Any ordering or timestamp drift versus a clean rebuild is purely cosmetic and self-heals on the very next plan write (which re-runs build-index.sh over the full set on disk). Merge drivers live in local .git/config and never travel with the repo, so this pays off in the repo's standard local rebase-on-main-before-push workflow — the driver fires for git merge , each replayed git rebase commit, and git cherry-pick alike, leaving a branch conflict-free before it reaches GitHub.
+
+## Files
+- scripts/merge-plans-index.mjs (new) — driver: union gallery cards from both sides
+- scripts/setup-merge-driver.sh (modified) — register the plans-index node driver
+- .claude/rules/marketplace.md (modified) — cross-reference the plans-index driver
+- .claude/rules/plan-hygiene.md (modified) — canonical union-strategy doc (added this session)
+- tests/merge-plans-index.test.sh (new) — union + two-branch merge smoke test
+- fixtures/merge-plans-index/base.html (new) — union test fixtures
+- fixtures/merge-plans-index/.gitattributes (modified) — map index.html to merge=plans-index
+- fixtures/merge-plans-index/CONTRIBUTING.md (modified) — first-time setup note
+- docs/GITHUB_SETUP.md (modified) — add driver to file inventory
+
+## Steps
+1. Write the union merge driver scripts/merge-plans-index.mjs Why: Git invokes it as node merge-plans-index.mjs %O %A %B (base, ours, theirs). Parse all three index.html versions, extract the <a class="gallery-card" href="…"> entries keyed by href (unique per plan), and union them: ours' cards keep their order, theirs' new cards are appended, and a card present in base but dropped on either side stays dropped. Reassemble ours' document with the unioned card list, write it to %A , and exit 0 . On any parse failure, exit 1 so git keeps conflict markers for a human. Mirror the structure and robustness of scripts/merge-marketplace.mjs . chmod +x the file. Verify: Run on three fixtures — base, ours (adds card X), theirs (adds card Y): node scripts/merge-plans-index.mjs base.html ours.html theirs.html; echo $? prints 0 , and ours.html now holds both card X and card Y with no <<<<<<< markers. A card in base+theirs but removed from ours stays absent.
+2. Map the index path in .gitattributes Why: Append docs/plans/index.html merge=plans-index to .gitattributes (which already maps marketplace.json to mkt-version ). This is the only committed half of the wiring — it tells every clone which named driver handles this path; the driver definition is per-clone (Step 3). Verify: git check-attr merge -- docs/plans/index.html prints docs/plans/index.html: merge: plans-index , and the existing git check-attr merge -- .claude-plugin/marketplace.json still prints mkt-version .
+3. Register the driver in scripts/setup-merge-driver.sh Why: Leaving the existing mkt-version block untouched, add git config merge.plans-index.name "plans index gallery-card union" and git config merge.plans-index.driver pointing at node "$TOPLEVEL/scripts/merge-plans-index.mjs" %O %A %B . No git hooks are installed — the union driver resolves fully at merge time, so post-merge regeneration is unnecessary (cosmetic drift self-heals on the next plan write). Reusing this script means the existing SessionStart hook activates the driver per session with no settings.json change ; non-Claude contributors run it once. Verify: Run bash scripts/setup-merge-driver.sh twice — it must not error or duplicate config. Then git config --get merge.plans-index.driver prints the node "…/merge-plans-index.mjs" %O %A %B command, and git config --get merge.mkt-version.driver is still set (untouched).
+4. Add union fixtures and the smoke test tests/merge-plans-index.test.sh Why: Add tests/fixtures/merge-plans-index/{base,ours,theirs,expected}.html (minimal index files differing only in their gallery cards) for a deterministic unit check of the union, and write an executable tests/merge-plans-index.test.sh that (a) runs the driver against the fixtures and diffs the result against expected.html , and (b) in a throwaway mktemp repo wires up the driver + .gitattributes , branches a and b that each add a distinct plan and regenerate index.html , merges b into a , and asserts the merge exits 0, leaves no <<<<<<< markers, and the merged index.html holds both plans' cards. Exit non-zero on any failed assertion. The repo's tests/fixtures/merge-marketplace/ establishes exactly this fixture pattern. Verify: bash tests/merge-plans-index.test.sh prints a success line and exits 0 ; corrupting expected.html or removing the .gitattributes mapping in-sandbox makes it exit non-zero (proving it truly tests the driver).
+5. Align the docs with the new driver Why: Mirror the mkt-version driver's documentation footprint: (1) CONTRIBUTING.md "First-time Setup" — note that setup-merge-driver.sh now also registers the plans-index driver; (2) docs/GITHUB_SETUP.md — add scripts/merge-plans-index.mjs beside scripts/merge-marketplace.mjs in the file inventory; (3) .claude/rules/marketplace.md "Merge driver" section — cross-reference the plans-index driver. .claude/rules/plan-hygiene.md already documents the union strategy in full (added this session) and stays the canonical description. Verify: grep -rl "plans-index\|merge-plans-index" CONTRIBUTING.md docs/GITHUB_SETUP.md .claude/rules/marketplace.md .claude/rules/plan-hygiene.md lists all four files.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective Concurrent plan branches auto-resolve docs/plans/index.html File: tests/merge-plans-index.test.sh Type: smoke test (self-contained mktemp git sandbox) Asserts: two branches that each add a distinct plan file and both edit the index merge with no manual conflict resolution (exit 0, no conflict markers), and the merged docs/plans/index.html holds both plans' gallery cards — directly proving the plan's objective. Run: bash tests/merge-plans-index.test.sh
+- Unit Gallery-card union logic File: tests/merge-plans-index.test.sh driving tests/fixtures/merge-plans-index/*.html Targets: scripts/merge-plans-index.mjs Key cases: ours' card order preserved and theirs' new card appended (output equals expected.html ); a card in base+theirs but removed from ours stays absent (no resurrection); malformed input makes the driver exit 1 so git keeps conflict markers.
+- Integration Full local merge + rebase File: tests/merge-plans-index.test.sh Targets: driver + .gitattributes mapping + docs/plans/build-index.sh working together in a sandbox repo. Key cases: the merge path unions both plans' cards into index.html with no markers; the rebase path replays the union per commit; the existing mkt-version driver remains registered after setup runs (no clobber).
+
+## Acceptance Criteria
+- git check-attr merge -- docs/plans/index.html reports plans-index .
+- scripts/merge-plans-index.mjs exists, unions both sides' gallery cards and exits 0 on success, and exits 1 (conflict markers kept) on malformed input.
+- After scripts/setup-merge-driver.sh (or a fresh Claude Code session), git config --get merge.plans-index.driver is set (no git hooks required).
+- Merging two branches that each add a different plan file resolves docs/plans/index.html with no manual intervention (no conflict markers).
+- After that merge, docs/plans/index.html holds gallery cards for both new plans (union), baked into the merge result.
+- The existing mkt-version ( marketplace.json ) driver still registers and works — the setup script only adds, never replaces.
+- bash tests/merge-plans-index.test.sh passes.
+- CONTRIBUTING.md , docs/GITHUB_SETUP.md , .claude/rules/marketplace.md , and .claude/rules/plan-hygiene.md document the plans-index driver and its union strategy.
+
+## Verification
+Automated: run bash scripts/setup-merge-driver.sh then bash tests/merge-plans-index.test.sh — the smoke test must pass (exit 0).
+
+Manual end-to-end: from a clean clone, create two branches off main that each add a distinct plan file under docs/plans/ and commit (each commit regenerates index.html via the existing PostToolUse hook). Then git checkout branch-a && git merge --no-edit branch-b : the merge must complete with no conflict prompt, and docs/plans/index.html must contain gallery cards for both new plans. Repeat with git rebase in place of merge to confirm the driver also resolves on the replay path.
+
+Non-regression: confirm git config --get merge.mkt-version.driver is still set and git check-attr merge -- .claude-plugin/marketplace.json still reports mkt-version , proving the marketplace driver is untouched.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

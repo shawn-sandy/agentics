@@ -379,6 +379,64 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Open gallery images in a native dialog modal
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Make the media library's "View image" control open each card's PNG in a native <dialog> modal overlay instead of navigating to a new browser tab — keeping the user in the gallery for fast, distraction-free previewing.
+
+## Context
+The media-library skill ( kit/plugins/social-media-tools/skills/media-library/SKILL.md ) builds an HTML gallery of saved social cards from the gallery.html template ( kit/plugins/social-media-tools/templates/gallery.html ). v2.7.0 added a "View image" link below each card that opens the card's .png screenshot.
+
+Today that link is an anchor — <a class="open-img-link" href="…png" target="_blank" rel="noopener"> — so clicking it leaves the gallery and opens the image in a new tab. The goal is to preview the image inline via a modal overlay without losing gallery context.
+
+Confirmed decisions: the modal shows the image only (no caption); the feature is JavaScript-only with no new-tab fallback (the trigger becomes a <button> with no href ); released as a minor bump, 2.8.0 → 2.9.0.
+
+Both the template's static markup AND the skill's generation step reference .open-img-link , so converting the anchor to a button requires editing SKILL.md Step 3 as well as the template. The browser's native <dialog> element with showModal() provides focus trapping, background inertness, and Escape-to-close for free — no library needed.
+
+## Steps
+1. Add the shared <dialog id="imgDialog"> element and its CSS to the gallery template Why: A single reusable dialog (image + close button) shared by every card is lighter than one per card. CSS styles the backdrop, centers and scales the image to fit the viewport, and styles an accessible close button. Gate any fade/scale transition behind prefers-reduced-motion . Verify: In templates/gallery.html , confirm one <dialog id="imgDialog"> exists before </body> containing an <img id="imgDialogImg"> and a close <button> with aria-label="Close" ; confirm dialog::backdrop and #imgDialog img rules exist with a max-width / max-height cap.
+2. Wire up open/close behavior via event delegation in the template's existing <script> Why: Delegate click on the gallery for .open-img-link buttons: read data-img + data-topic , set #imgDialogImg src / alt , call imgDialog.showModal() . Close on the close button, on backdrop click ( e.target === dialog ), and natively on Escape. Native <dialog> restores focus to the trigger on close. Verify: Reading the script, confirm a delegated listener opens the dialog from a clicked .open-img-link and that close handlers exist for the close button and a backdrop click. Confirm alt is set from data-topic so the image is labelled for screen readers.
+3. Change the "View image" generation in media-library/SKILL.md from an anchor to a button Why: Step 3 of the skill currently emits <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" …> . Replace with <button type="button" class="open-img-link" data-img="{BASENAME_PNG}" data-topic="{TOPIC}" aria-label="View image: {TOPIC}">View image</button> . Keep the existing rule that the element is only emitted when a matching .png exists. Verify: In SKILL.md Step 3, confirm the documented markup is a <button> carrying data-img and data-topic (no href , no target="_blank" ), and that the "only include when PNG exists" condition is retained.
+4. Update .open-img-link CSS to style the button like the old link, and bump version + changelog Why: The existing .open-img-link CSS targets an anchor; reset button defaults ( background:none; border:0; cursor:pointer; font:inherit; width:100% ) so the button keeps the same centered blue "View image" look. Then bump social-media-tools 2.8.0 → 2.9.0 in .claude-plugin/marketplace.json and add a v2.9.0 entry to the plugin CHANGELOG.md . Verify: Confirm .open-img-link renders identically to before (centered, blue, hover underline) as a button. Confirm marketplace.json shows "version": "2.9.0" for social-media-tools and CHANGELOG.md has a dated v2.9.0 entry describing the dialog change.
+
+## Acceptance Criteria
+- Clicking "View image" opens a native <dialog> modal showing the card's PNG; it does NOT open a new tab or navigate away.
+- The modal closes via the close button, a click on the backdrop, and the Escape key.
+- On close, keyboard focus returns to the "View image" button that opened the modal.
+- The dialog image has meaningful alt text derived from the card topic.
+- A regenerated gallery emits <button class="open-img-link" data-img=… data-topic=…> markup — no <a … target="_blank"> for image viewing.
+- The "View image" button visually matches the previous link (centered, blue, hover underline).
+- Any open/close animation is suppressed under prefers-reduced-motion: reduce .
+- social-media-tools is bumped to 2.9.0 in marketplace.json with a matching CHANGELOG.md entry.
+
+## Verification
+After editing the template and skill, regenerate the gallery to exercise the real output path:
+
+1. Run /social-media-tools:media-library — it rewrites docs/media/social/index.html from the updated template and opens it in the browser.
+
+2. Click "View image" on a card that has a PNG (e.g. diff-rendering-pipeline-snapshot-fix-2026-06-02 ). Confirm the image opens in a centered modal over a dimmed backdrop, and the page does NOT navigate to a new tab.
+
+3. Close it three ways: click the close button, click the dark backdrop outside the image, and press Escape. All must dismiss the modal.
+
+4. Keyboard pass: Tab to a "View image" button, press Enter to open, confirm focus is inside the dialog and Tab stays trapped, press Escape, and confirm focus returns to the same button.
+
+5. View source of the regenerated index.html and confirm the image triggers are <button class="open-img-link" …> elements, not anchors.
+
+6. Confirm a card with no PNG ( session-merge-driver-2026-05-30 ) still renders with no "View image" control and no console errors.
+</script>
+
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></symbol>
   <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></symbol>

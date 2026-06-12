@@ -1060,6 +1060,75 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Fix ship-autonomous skill chaining (claude-code#43809)
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Make /git-agent:ship-autonomous immune to claude-code#43809 — chain branch-agent, commit-agent, and pr-agent by Reading their SKILL.md files instead of gated Skill-tool calls, keeping disable-model-invocation: true (the guard against unsolicited git mutations) fully intact.
+
+## Context
+claude-code#43809 reports that disable-model-invocation: true blocks every model-driven Skill-tool invocation — not just unsolicited auto-triggering. Any nested call fails with Error: Skill <name> cannot be used with Skill tool due to disable-model-invocation , even when the user explicitly requested the parent workflow. The issue was filed against Claude Code 2.1.92 and auto-closed as inactive — the behavior was never fixed.
+
+The flag is deliberate in git-agent: commit-agent , pr-agent , branch-agent , and ship stage all changes and mutate git state, so they are command-only — explicit /git-agent:<name> invocation, never fuzzy intent matching. Keeping that guard is a hard requirement of this plan.
+
+The exposure: ship-autonomous chains its pipeline by instructing Skill-tool invocations of three flagged skills at five sites — Step 2 branch-agent (line 89), Step 3 commit-agent (line 99), Step 4 pr-agent (line 109), and the autofix loop's commit references (lines 229 and 238). The user typed /git-agent:ship-autonomous , not the child commands, so every nested call is model-driven and refusable. The plain ship skill and the agent-commit background agent are immune only because they inline duplicate copies of the same workflows — a maintenance tax this plan avoids.
+
+The fix: Read-based chaining. The flag gates only the Skill tool — SKILL.md files are plain markdown on disk, and ${CLAUDE_PLUGIN_ROOT} expands inside skill content at load time (verified empirically this session). Reading keeps a single source of truth. One behavioral consequence: under Skill-tool chaining each child ran under its own allowed-tools ; under Read-chaining the parent's list governs — so ship-autonomous must absorb Bash(date *) for branch-agent's auto-naming. (Branch-agent's model: Haiku pin likewise no longer applies — inlined steps run on the session model.)
+
+## Files
+- kit/plugins/git-agent/skills/ship-autonomous/SKILL.md (modified) — swap 5 Skill-tool calls to Read chaining; update allowed-tools
+- kit/plugins/git-agent/CHANGELOG.md (modified) — add v3.10.7 entry
+- .claude-plugin/marketplace.json (modified) — bump git-agent 3.10.6 → 3.10.7
+- tests/plugins/test-ship-autonomous-read-chaining.sh (new) — chaining-contract smoke test
+
+## Steps
+1. Swap the three pipeline invocations (Steps 2–4) in kit/plugins/git-agent/skills/ship-autonomous/SKILL.md to Read-based chaining — at the branch-agent (~line 89), commit-agent (~line 99), and pr-agent (~line 109) sites, replace "Invoke the existing git-agent:<name> skill" with: "Read ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md and execute its steps inline — do not use the Skill tool. Treat every STOP in the child's content — including its terminal "do not take further action" clause — as ending that sub-workflow only, then continue this pipeline; skip its Step 0 (plan-mode exit is already handled here). If ${CLAUDE_PLUGIN_ROOT} is unexpanded, locate the file with Glob **/git-agent/skills/<name>/SKILL.md (on multiple matches prefer the running plugin's own root; if still ambiguous, STOP and report). If the file cannot be Read at all, STOP the pipeline and report — never improvise the child workflow from memory." Also tighten the PR URL capture (lines ~117–118): take the URL from the gh pr create output, with gh pr view --json url as fallback, instead of "pr-agent's final output". Special-case re-runs: when pr-agent's inlined steps find an existing OPEN PR, capture that PR's URL and continue to Step 5 (CI watch) — its "STOP, do not create a duplicate" is not a pipeline halt. Why: The Skill tool refuses every model-driven invocation of a disable-model-invocation: true skill (claude-code#43809); the Read tool is ungated and preserves a single source of truth instead of inlining duplicate copies of the child workflows. Verify: grep -ci "invoke the existing" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md returns 0 — case-insensitive, because line 89's lowercase "invoke" would slip past a capital-I grep; a Read instruction referencing ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md exists for each of branch-agent, commit-agent, and pr-agent (three explicit checks, not an aggregate count); the failed-Read STOP rule is present; the PR URL capture references the gh pr create output rather than "pr-agent's final output"; the existing-OPEN-PR continue-to-CI-watch rule is present.
+2. Swap the two autofix commit references (Steps 6c and 6d, lines ~229 and ~238) to the same pattern — "commit by re-applying the commit-agent workflow (Read ${CLAUDE_PLUGIN_ROOT}/skills/commit-agent/SKILL.md again if its steps are no longer in context)". Why: Autofix commits hit the same Skill-tool gate on every CI-failure event; pointing back to the already-loaded workflow stays gate-free without a redundant re-read per event. Verify: grep -n "commit-agent" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md shows only Read-phrased references — no git-agent:commit-agent mention on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} (lines 229/238's "commit via git-agent:commit-agent" phrasing would slip past the Step 1 grep alone); the file-wide case-insensitive count of "invoke the existing" is 0.
+3. Update the frontmatter and add a regression-guard note — on line 4 remove Skill from allowed-tools and add Bash(date *) ; below the intro add one note: child skills are command-only ( disable-model-invocation: true ) — chain them by Reading their SKILL.md, never via the Skill tool (claude-code#43809). The note also records three standing facts: the Bash(glab *) exclusion is intentional (GitHub-only pipeline); branch-agent's model: Haiku pin does not apply under Read-chaining; and any future addition to a child's allowed-tools must be mirrored here. Why: Under Skill-tool chaining each child ran under its own allowed-tools ; under Read-chaining the parent's list governs, and branch-agent's auto-naming runs date . Dropping Skill enforces least privilege; the note stops future edits from regressing. Bash(glab *) is deliberately not added — ship-autonomous is GitHub-only (Step 1 hard-requires gh auth ), so pr-agent's GitLab path is unreachable here. Verify: head -5 kit/plugins/git-agent/skills/ship-autonomous/SKILL.md shows allowed-tools containing Bash(date *) and no Skill token, with all previously listed tools otherwise intact; the guard note appears in the body and names the glab exclusion, the Haiku-pin loss, and the mirror obligation.
+4. Add the chaining-contract smoke test tests/plugins/test-ship-autonomous-read-chaining.sh , modeled on tests/plugins/test-step8-review-option.sh (bash, set -euo pipefail , numbered PASS/FAIL checks, FAILURES counter, non-zero exit on failure). Assertions: (1) case-insensitive count of "invoke the existing" is 0; (2) no git-agent:(branch|commit|pr)-agent reference on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} ; (3) a literal ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md Read reference per child — three explicit checks, not an aggregate count; (4) allowed-tools has Bash(date *) and no Skill token; (5) each child still declares disable-model-invocation: true and is unchanged from main ( git diff --quiet origin/main -- <child paths> ); (6) the failed-Read STOP rule is present; (7) the parent's allowed-tools is a superset of each child's, excluding the intentional Bash(glab *) . Note: tests/plugins/ is manual-run by repo convention — not wired into CI. Why: This is the objective-verification test — it pins the Read-chaining contract so a future edit cannot silently reintroduce gated Skill-tool calls or drop the children's command-only flag. Verify: bash tests/plugins/test-ship-autonomous-read-chaining.sh prints PASS for all seven assertion groups and exits 0; spot-check the guard by deliberately breaking one contract line (e.g. rewording a Read reference) and confirming the test fails before reverting.
+5. Bump git-agent from 3.10.6 to 3.10.7 in .claude-plugin/marketplace.json . Why: Internal fix = PATCH per .claude/rules/marketplace.md ; the new value must be higher than main's, and the settings hook auto-validates JSON syntax on save. Verify: jq -r '.plugins[] | select(.name=="git-agent").version' .claude-plugin/marketplace.json prints 3.10.7 ; the same query against git show origin/main:.claude-plugin/marketplace.json prints 3.10.6 .
+6. Prepend the CHANGELOG entry — ## v3.10.7 — 2026-06-10 — Read-based skill chaining in ship-autonomous with a ### Fixed list covering the five swapped sites, the allowed-tools change, the guard note, the new smoke test, and a link to claude-code#43809 — to kit/plugins/git-agent/CHANGELOG.md . Include a one-line note that 3.10.6 shipped without a CHANGELOG entry — the v3.10.7 → v3.10.5 lineage gap predates this fix and is acknowledged, not introduced, here. Why: marketplace.md requires a CHANGELOG entry with every version bump; this entry preserves the rationale for abandoning Skill-tool chaining beyond this session. Verify: head -15 kit/plugins/git-agent/CHANGELOG.md shows the v3.10.7 entry above v3.10.5, dated 2026-06-10, containing the issue link and the one-line v3.10.6 gap acknowledgement.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective ship-autonomous chains child skills via Read, not the gated Skill tool File: tests/plugins/test-ship-autonomous-read-chaining.sh Type: smoke test — static contract assertions, run with bash like the rest of tests/plugins/ Asserts: case-insensitive zero count of "invoke the existing"; no gated git-agent:<child> reference outside a Read line; a literal ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md reference per child (three explicit checks); allowed-tools drops Skill , gains Bash(date *) , and is a superset of each child's tools (minus the intentional Bash(glab *) exclusion); all three children unchanged from main and still disable-model-invocation: true ; the failed-Read STOP rule is present. Run: bash tests/plugins/test-ship-autonomous-read-chaining.sh
+
+## Acceptance Criteria
+- grep -ci "invoke the existing" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md returns 0 (case-insensitive), and no git-agent:<child> skill reference appears on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} .
+- ship-autonomous Read-chains all three child skills via ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md — branch-agent, commit-agent, and pr-agent each referenced.
+- The allowed-tools line contains Bash(date *) , contains no Skill token, and loses no other tool.
+- branch-agent , commit-agent , and pr-agent SKILL.md files are unchanged from main and still declare disable-model-invocation: true — verified by git diff --quiet origin/main -- kit/plugins/git-agent/skills/{branch-agent,commit-agent,pr-agent}/SKILL.md .
+- tests/plugins/test-ship-autonomous-read-chaining.sh exists and exits 0 when run with bash.
+- git-agent's version in .claude-plugin/marketplace.json is 3.10.7 — one patch above main's 3.10.6 — and the file parses with jq .
+- kit/plugins/git-agent/CHANGELOG.md opens with a v3.10.7 entry dated 2026-06-10 linking claude-code#43809.
+- git diff --name-only origin/main shows only the four files in Files to Modify, this plan file, and the auto-rebuilt docs/plans/index.html .
+- ship-autonomous's inlined pr-agent flow handles an existing OPEN PR by capturing its URL and continuing to CI watch — re-running the pipeline never halts on "PR already exists".
+
+## Verification
+Run the smoke test and the metadata checks, then (optionally) exercise the live pipeline:
+
+bash tests/plugins/test-ship-autonomous-read-chaining.sh — every check prints PASS, exit code 0.
+
+jq -r '.plugins[] | select(.name=="git-agent").version' .claude-plugin/marketplace.json prints 3.10.7 ; the same query against git show origin/main:.claude-plugin/marketplace.json prints 3.10.6 .
+
+git diff --name-only origin/main lists exactly: the ship-autonomous SKILL.md, the git-agent CHANGELOG, .claude-plugin/marketplace.json , the new test script, this plan file, and the auto-rebuilt docs/plans/index.html .
+
+Live smoke (required — the static test cannot catch runtime failure modes like a STOP-halt mid-pipeline or an unexpanded ${CLAUDE_PLUGIN_ROOT} ): run claude --plugin-dir ./kit/plugins/git-agent on a scratch branch with a trivial change, invoke /git-agent:ship-autonomous , and confirm Steps 2–4 Read the child SKILL.md files — no "cannot be used with Skill tool due to disable-model-invocation" error — and the pipeline reaches PR creation without halting at any inlined child STOP. Re-run once on a branch that already has an OPEN PR and confirm the pipeline continues to CI watch instead of halting.
+
+Commit all changed files together — repo convention ships the plan file with the plugin change.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
