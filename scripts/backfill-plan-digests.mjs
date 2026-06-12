@@ -35,9 +35,13 @@ export function hasDigest(html) {
 }
 
 export function decodeEntities(s) {
+  // Out-of-range numeric entities (e.g. &#x110000;) must not throw — a
+  // RangeError here is not a ParseError, so it would abort the whole
+  // backfill batch instead of skipping one file. Keep the raw entity text.
+  const codePoint = (raw, n) => (Number.isInteger(n) && n >= 0 && n <= 0x10ffff ? String.fromCodePoint(n) : raw);
   return s
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (m, h) => codePoint(m, parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (m, d) => codePoint(m, parseInt(d, 10)))
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')

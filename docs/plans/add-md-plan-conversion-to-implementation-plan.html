@@ -365,6 +365,64 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add markdown plan conversion to implementation-plan
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Teach /plan-agent:implementation-plan to accept a markdown plan path and convert it natively into the HTML implementation-plan format — the exact pipeline proven manually in the skill-box plan conversion session, promoted to a first-class skill capability (plan-agent 2.2.0).
+
+## Context
+The implementation-plan skill's argument parser recognized only issue references ( #n , GitHub/GitLab URLs) and .html plan-file tokens. When a user passed a markdown plan path — "convert docs/plans/distribute-skills-via-skill-box-catalog.md into an HTML implementation plan" — the path fell through to plain objective text, and the conversion semantics had to be improvised in-session: treating the source as authoritative, skipping Clarify/Align/Interview on pre-validated content, preserving frontmatter, swapping the extension, and asking whether to keep or remove the source.
+
+That improvised run also surfaced a recovery path worth encoding: the markdown had landed on origin/main (via a merged PR) after the working tree last updated, so the file looked missing until a fetch + fast-forward recovered it. This change formalizes the whole flow as conversion mode — $MD_SOURCE detection, resolution order (cwd → plan roots → default branch), implied --no-clarify --no-align --no-interview , 1:1 section mapping, frontmatter carry-over, and the Step 8 keep-or-remove source question — so the next markdown conversion needs zero improvisation.
+
+## Files
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — 2.2.0 entry for conversion mode
+- kit/plugins/plan-agent/README.md (modified) — document the plan.md argument and conversion semantics
+- skills/implementation-plan/SKILL.md (modified) — $MD_SOURCE detection + conversion mode defaults
+- .claude-plugin/marketplace.json (modified) — plan-agent 2.1.0 → 2.2.0 + description
+- CLAUDE.md (modified) — plugin table row notes .md conversion
+- docs/plans/add-md-plan-conversion-to-implementation-plan.html (new) — this plan — committed with the change
+
+## Steps
+1. Add markdown conversion detection and conversion-mode defaults to SKILL.md Why: The parser needs a third token type: a first non-flag token ending in .md sets $MD_SOURCE and enters conversion mode. The block defines resolution order (cwd → plan roots by basename → default branch via fetch/fast-forward or git show ), a graceful AskUserQuestion fallback that never invents content under a conversion label, implied --no-clarify --no-align --no-interview , 1:1 section mapping, frontmatter carry-over ( created preserved; planned → todo ), extension-swap output naming, the conversion-mode echo, and the Step 8 keep-or-remove source question. Verify: grep -c 'MD_SOURCE' kit/plugins/plan-agent/skills/implementation-plan/SKILL.md returns ≥ 3; the file stays under the 500-line skill-authoring cap ( wc -l ).
+2. Advertise the trigger in frontmatter and parsing rules Why: Model-path activation depends on the description ("convert a markdown plan into an HTML implementation plan"); command-path discoverability depends on argument-hint ( <plan.md> ). The model-invocation paragraph and the Objective bullet must also name the new token type so derived text routes through the same detection. Verify: grep 'plan.md' …/SKILL.md hits the argument-hint ; grep 'convert a markdown plan' …/SKILL.md hits the description; the Objective bullet lists the .md conversion source token.
+3. Bump plan-agent to 2.2.0 in .claude-plugin/marketplace.json Why: New capability on an existing skill = MINOR per the marketplace versioning rules; the value must be higher than 2.1.0 on main . The plugin description also gains a clause so the marketplace listing advertises conversion mode. Verify: python3 -c "import json; print([p['version'] for p in json.load(open('.claude-plugin/marketplace.json'))['plugins'] if p['name']=='plan-agent'][0])" prints 2.2.0 ; the settings hook validates the JSON on write.
+4. Add the 2.2.0 entry to kit/plugins/plan-agent/CHANGELOG.md Why: Project convention: every plugin change ships a changelog entry. The entry documents $MD_SOURCE detection, conversion-mode defaults, and the docs updates, matching the existing Keep-a-Changelog-style format. Verify: head -5 kit/plugins/plan-agent/CHANGELOG.md shows the 2.2.0 — Markdown plan conversion heading above 2.1.0 .
+5. Document usage in the plugin README.md and the repo CLAUDE.md plugin table Why: The README's invocation syntax, examples, and overview must show the <plan.md> form and explain conversion-mode behavior (PR checklist requires README coverage); the CLAUDE.md plugin table row keeps repo-level guidance accurate. Verify: grep 'conversion mode' kit/plugins/plan-agent/README.md and grep 'conversion to HTML' CLAUDE.md both return hits; the README example block includes a .md invocation.
+
+## Tests
+Tier 2 — Non-code plan (markdown skill instructions + manifest metadata)
+- Objective Conversion contract is declared and versioned File: none committed — spec smoke run from the repo root (skills have no executable test harness; behavior is exercised by the manual smoke in Verification) Type: smoke test Asserts: the skill declares $MD_SOURCE detection and conversion-mode defaults, advertises the trigger in argument-hint , and ships as plan-agent 2.2.0 with a matching changelog entry. Run: grep -q 'MD_SOURCE' kit/plugins/plan-agent/skills/implementation-plan/SKILL.md && grep -q 'plan.md' kit/plugins/plan-agent/skills/implementation-plan/SKILL.md && grep -q '2.2.0' kit/plugins/plan-agent/CHANGELOG.md && python3 -c "import json; assert [p['version'] for p in json.load(open('.claude-plugin/marketplace.json'))['plugins'] if p['name']=='plan-agent'][0]=='2.2.0'" && echo PASS
+
+## Acceptance Criteria
+- SKILL.md detects a .md first token as $MD_SOURCE , with resolution order cwd → plan roots → default branch and an AskUserQuestion fallback that never fabricates a conversion.
+- Conversion mode implies --no-clarify --no-align --no-interview , maps sections 1:1, carries created / status frontmatter over, swaps the source extension to .html , and batches a keep-or-remove source question into Step 8.
+- The skill description and argument-hint advertise markdown conversion so both model-path and command-path invocations route to conversion mode.
+- marketplace.json ships plan-agent 2.2.0 (higher than main 's 2.1.0 ) and CHANGELOG.md documents the release.
+- The plugin README.md and repo CLAUDE.md document the <plan.md> argument and conversion behavior.
+
+## Verification
+Run the objective spec smoke from the Tests section — it prints PASS .
+
+wc -l kit/plugins/plan-agent/skills/implementation-plan/SKILL.md — under the 500-line skill-authoring cap.
+
+Manual smoke (fresh session, plugin loaded): /plan-agent:implementation-plan docs/plans/<any>.md — the run echoes Conversion mode: <md path> → <html path> , skips Clarify/Align/Interview, writes the .html beside the source with frontmatter carried over, and Step 8 offers the keep-or-remove source question.
+
+Model-path smoke: ask "convert docs/plans/<any>.md into an HTML implementation plan" without the slash command — the skill auto-activates into conversion mode.
+</script>
+
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>

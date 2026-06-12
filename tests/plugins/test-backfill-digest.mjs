@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   buildDigest,
+  decodeEntities,
   extractSections,
   guardScriptClose,
   hasDigest,
@@ -143,6 +144,20 @@ ok('guards literal closing-script sequences, case-insensitively', () => {
 
 ok('leaves already-guarded sequences intact', () => {
   assert.equal(guardScriptClose('safe <\\/script> text'), 'safe <\\/script> text');
+});
+
+console.log('-- unit: decodeEntities --');
+
+ok('decodes named and numeric entities', () => {
+  assert.equal(decodeEntities('&lt;a&gt; &amp; &#65;&#x42;'), '<a> & AB');
+});
+
+ok('keeps malformed numeric entities as raw text instead of throwing', () => {
+  // A RangeError here is not a ParseError, so it would abort the whole batch.
+  assert.equal(
+    decodeEntities('keep &#x110000; and &#99999999999; intact'),
+    'keep &#x110000; and &#99999999999; intact',
+  );
 });
 
 console.log('-- unit: extractSections / buildDigest --');
@@ -273,17 +288,31 @@ console.log('-- integration: real docs/plans corpus (temp copy) --');
 
 const tmpReal = mkdtempSync(join(tmpdir(), 'backfill-digest-real-'));
 try {
+  ok('every checked-in parseable plan already carries a digest (contract)', () => {
+    // Guards the "every HTML plan" contract on the committed tree itself: a
+    // parseable plan landing without a digest (new plan, merge race) must
+    // fail CI, not hide behind the stripped-corpus injection counts below.
+    const r = runBackfill(REAL_PLANS_DIR, { dryRun: true });
+    assert.deepEqual(
+      r.injected,
+      [],
+      `checked-in plans missing a digest: ${r.injected.join(', ')} — run: node scripts/backfill-plan-digests.mjs`,
+    );
+  });
+
   // The working tree's plans are already backfilled. Strip backfilled blocks
   // from the temp copies so the test always exercises injection from the
   // pre-digest state; hand-authored digests (different comment) stay put and
   // are counted as hasDigest skips. Splice by index rather than regex-replace
   // so no sanitization-style rewrite is involved.
   const BACKFILLED_BLOCK_RE = /\n\n<!-- ═+\n     MACHINE-READABLE DIGEST \(backfilled\)[\s\S]*?\n<\/script>/;
+  const strippedFiles = [];
   for (const e of readdirSync(REAL_PLANS_DIR, { withFileTypes: true })) {
     if (e.isFile() && e.name.endsWith('.html')) {
       const content = readFileSync(join(REAL_PLANS_DIR, e.name), 'utf8');
       const m = BACKFILLED_BLOCK_RE.exec(content);
       const stripped = m === null ? content : content.slice(0, m.index) + content.slice(m.index + m[0].length);
+      if (m !== null && e.name !== 'index.html') strippedFiles.push(e.name);
       writeFileSync(join(tmpReal, e.name), stripped);
     }
   }
@@ -294,7 +323,21 @@ try {
   ok('backfills the real corpus with no I/O failures', () => {
     const r = runBackfill(tmpReal, { dryRun: false });
     assert.equal(r.failed.length, 0);
-    assert.ok(r.injected.length >= 30, `expected >=30 injected, got ${r.injected.length}`);
+    // Every candidate file lands in exactly one bucket, and every stripped
+    // backfilled block is re-derived — no fixed corpus-size threshold.
+    const candidates = readdirSync(tmpReal, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith('.html') && e.name !== 'index.html').length;
+    assert.equal(
+      r.injected.length + r.hasDigest.length + r.unparseable.length + r.failed.length,
+      candidates,
+      'each candidate file should be accounted for exactly once',
+    );
+    assert.deepEqual(
+      [...r.injected].sort(),
+      [...strippedFiles].sort(),
+      'the set of re-injected plans must equal the set of stripped backfilled plans',
+    );
+    assert.ok(r.injected.length > 0, 'corpus should contain at least one backfilled plan to exercise');
     for (const { file, reason } of r.unparseable) {
       assert.ok(reason.length > 0, `${file} skipped without a reason`);
       assert.equal(readFileSync(join(tmpReal, file), 'utf8'), originals[file], `${file} skipped but modified`);
