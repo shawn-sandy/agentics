@@ -23,12 +23,19 @@ Two distinct purposes:
 ```plaintext
 .claude-plugin/       → Marketplace metadata (marketplace.json) — must be at repo root
 kit/plugins/          → Plugin source code (what users install)
+.claude/rules/        → Detailed authoring patterns (scoped rules)
+scripts/              → Build + git merge-driver helpers (build-dist, merge-marketplace, merge-plans-index)
+examples/             → Standalone demo scripts (e.g. demo-tdd-loop.sh)
 tests/fixtures/       → Test data for validation logic
 tests/pages/          → Smoke tests for docs landing hub and GitHub Pages
-.claude/rules/        → Detailed authoring patterns (scoped rules)
+tests/plugins/        → Plugin behavior smoke tests
+tests/publish/        → Dist build + publish-pipeline tests
+tests/demo/           → Sample project used by test-driven demos
 docs/                 → GitHub Pages site root (deployed via deploy-pages.yml)
-docs/index.html       → Landing hub — links to Plans gallery and Social cards
+docs/index.html       → Landing hub — links to Plans gallery and Media library
 docs/guides/          → Reference guides (auto-load setup, etc.)
+docs/media/social/    → Generated social cards gallery (Media library)
+docs/prompts/         → Saved refined prompts (from plan-agent:refine-prompt)
 docs/plans/           → Plan files (commit with plugin changes)
 docs/plans/archive/   → Archived completed plans — IGNORE in all searches and exploration
 dist/                 → Local build output, gitignored; populated by node scripts/build-dist.mjs
@@ -69,7 +76,7 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
-| `social-media-tools` | Skills + Commands | Discover shareable code from git history or codebase path, scrub for secrets, generate social cards for LinkedIn/Twitter/Bluesky with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `share-init` generates a `SOCIAL.md` project config for default platform, tone, and content preferences; `share-react` shares a React component with a static rendered preview and a typed props table on one card; `/social-media-tools:digest` for interactive digest scanning |
+| `social-media-tools` | Skills + Commands | Discover teachable content (git history, codebase path, blog posts, videos, GitHub snippets, selected code), scrub for secrets, generate dark-mode social cards for LinkedIn/Twitter/Bluesky/Substack with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `share-init` generates a `SOCIAL.md` project config for default platform, tone, and content preferences; `share-react` shares a React component with a static rendered preview and a typed props table on one card; `/social-media-tools:digest` for interactive digest scanning |
 | `plan-agent` | Skills + Agents + Hooks + Commands | `/plan-agent:implementation-plan <objective>` runs Steps 0–8 plan workflow with built-in interview; `/plan-agent:review-plan` spawns a seven-reviewer Agent Team; `/plan-agent:review-plan-bg <path>` runs the review team in the background; `/plan-agent:finalize-plan` reviews and marks plans completed with per-criterion verification; `/plan-agent:refine-prompt` generates AI prompts from Anthropic best practices (command-only); accepts issue URLs/`#n` to seed plans; `plans-library` builds filterable gallery; `plans-open` reopens gallery; automatic filename hook + gallery index auto-rebuild hook |
 | `issue-agent` | Skills | Create GitHub and GitLab issues from any context — selection, session, bug, or feature; host auto-detected from git remote; auto-opens created issue in browser (`--no-open` to suppress); manual-invoke only (`disable-model-invocation`); always confirms before creating |
 
@@ -81,6 +88,7 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 Detailed patterns in `.claude/rules/`:
 
 - `plugin-patterns.md` — command/skill patterns, progressive disclosure, pitfalls (scoped to `kit/plugins/**`)
+- `skill-authoring.md` — verify `SKILL.md` changes against Anthropic's effective-skills checklist (scoped to `kit/plugins/**/skills/**`)
 - `marketplace.md` — categories, tagging, versioning, registration
 - `testing.md` — test fixture guidelines (scoped to `tests/**`)
 - `plan-hygiene.md` — pre-commit plan file rename checks (scoped to `**/plans/**`)
@@ -99,6 +107,7 @@ Detailed patterns in `.claude/rules/`:
 - For relative-path plugins, set `version` only in `marketplace.json` — never add a `version` field to `plugin.json` (it silently overrides the marketplace value).
 - Component types: **Commands** (`/plugin:name`), **Skills** (auto-activated), **Agents** (subprocesses), **Hooks** (event-driven).
 - Skill `SKILL.md` can use `allowed-tools` frontmatter to restrict tool access if necessary
+- Two git merge drivers (registered in `.gitattributes`) auto-resolve conflicts: `merge-marketplace.mjs` keeps the higher semver in `marketplace.json`; `merge-plans-index.mjs` unions plan cards in `docs/plans/index.html`. Run `scripts/setup-merge-driver.sh` once per clone to enable them.
 
 ## Official Documentation
 
