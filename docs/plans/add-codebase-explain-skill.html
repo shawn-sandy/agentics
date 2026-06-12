@@ -469,6 +469,48 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add explain-codebase skill to social-media-tools
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship an explain-codebase skill that answers natural-language questions like "how does the share-session skill work" by reading source files, synthesizing a structured developer-friendly explanation of fundamental principles, and delivering it with platform-aware social copy and a dark-mode card image — following the same pipeline as all other share-* skills.
+
+## Context
+The social-media-tools plugin ships twelve skills across share-*, social-share, and media-library workflows. When a developer wants to understand how a specific skill operates — its phases, patterns, invocation syntax, and file layout — they have to read raw SKILL.md files directly. There is no conversational entry point that reads those files and explains the underlying principles.
+
+An explain-codebase skill fills that gap: parse the question, locate the relevant files (SKILL.md, reference docs, scripts), read them, synthesize a structured developer-friendly answer, and then deliver the output the same way every other share-* skill does — security scrub the content, draft platform-aware social copy, populate a card template ( feature-card.html for skill/component explanations, quote-card.html for concept/pattern explanations), screenshot via the rendering pipeline, save persistently to docs/media/social/ , and deliver copy + image in the same turn.
+
+This also closes a routing gap in social-share : "how does X work" queries currently fall through to the share-code fallback, which is wrong. A new classification rule fixes the routing.
+
+## Steps
+1. Create skills/explain-codebase/SKILL.md with the full workflow Why: This is the core deliverable. The SKILL.md must cover nine phases that mirror the share-* pipeline exactly: (a) Phase 0 — silently locate PLUGIN_DIR using the same find-chain all other skills use; (b) Phase 0b — load SOCIAL.md config for platform/tone defaults; (c) Phase 1 — parse $ARGUMENTS for target name/concept and optional --platform / --tone flags; (d) Phase 1c — reuse check against docs/media/social/ (read references/reuse-check.md ); (e) Phase 2 — map target to files: skill name → skills/<name>/SKILL.md + referenced files; concept keyword → grep references/ and skill bodies; (f) Phase 3 — Read all located files and synthesize explanation with sections: Core Purpose, Activation Conditions, Workflow Phases, Key Patterns, Important Files, Invocation; (g) Phase 4 — security scrub the full synthesis (write to ~/.claude/tmp/scrub-input.txt , invoke security-scrub skill, check GATE RESULT — BLOCKED is a hard stop); (h) Phase 5 — draft platform-aware social copy from the synthesis following references/platforms.md rules — lead with the core principle, not process; (i) Phase 6 — populate card template: skill/component target → feature-card.html (TITLE=skill name, SUBTITLE=one-line purpose, BULLETS=key workflow phases), concept/pattern target → quote-card.html (QUOTE=core principle, ATTRIBUTION=skill/file name, CONTEXT=pattern category); (j) Phase 6b — persistent save to docs/media/social/ (read references/saving-and-delivery.md ); (k) Phase 7 — screenshot via Playwright (read references/rendering-pipeline.md ); (l) Phase 8 — deliver: present explanation in a fenced block, copy in a fenced block, attach PNG (read references/saving-and-delivery.md Deliver section). allowed-tools must include Bash, Read, Glob, Grep, Write, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, SendUserFile . Verify: File exists at kit/plugins/social-media-tools/skills/explain-codebase/SKILL.md . Frontmatter has name: explain-codebase , description ≤200 chars (three-part format), and allowed-tools listing all required tools. Body covers all nine phases including security scrub gate (Phase 4), copy drafting (Phase 5), template population logic (Phase 6), persistent save (Phase 6b), screenshot (Phase 7), and deliver (Phase 8).
+2. Add routing rule to social-share/SKILL.md classification table Why: Without a rule, natural-language questions like "how does share-session work" fall through to Fallback A (share-code) or Fallback B (share-project) — both wrong. The new rule must fire before the fallbacks. Insert it as rule 8 in the first-match-wins table (before the current session rule and fallbacks), matching on tokens: explain , how does , how do , how it works , what is , what does , describe → target explain-codebase , no extra flags. Renumber subsequent rules accordingly. Verify: Read kit/plugins/social-media-tools/skills/social-share/SKILL.md and confirm: (1) a new row exists in the classification table targeting explain-codebase with the listed trigger tokens; (2) it appears before Fallback A and B; (3) existing rules for share-session and share-code/share-project are unchanged.
+3. Bump version in .claude-plugin/marketplace.json from 2.5.2 → 2.6.0 Why: Adding a new skill is a MINOR change per the versioning conventions in .claude/rules/marketplace.md . The version lives only in marketplace.json — not in plugin.json — for relative-path plugins. Verify: Run grep -A3 "social-media-tools" .claude-plugin/marketplace.json and confirm "version": "2.6.0" . Confirm kit/plugins/social-media-tools/.claude-plugin/plugin.json does NOT contain a version field.
+4. Add CHANGELOG entry at kit/plugins/social-media-tools/CHANGELOG.md Why: All version bumps require a CHANGELOG entry. The entry must follow the existing format: a ## [2.6.0] header with today's date, an ### Added subsection listing the new skill, and a brief description of its purpose and trigger. Verify: Run head -30 kit/plugins/social-media-tools/CHANGELOG.md and confirm a ## [2.6.0] - 2026-06-03 block appears at the top with an ### Added entry for explain-codebase .
+
+## Acceptance Criteria
+- skills/explain-codebase/SKILL.md exists with valid frontmatter ( name: explain-codebase , description ≤200 chars, allowed-tools ) and a body covering all five workflow phases.
+- Invoking the skill with "how does the share-session skill work" reads skills/share-session/SKILL.md , passes the security scrub gate, returns a structured explanation (Core Purpose, Workflow Phases, Key Patterns, Important Files, Invocation), drafts platform-aware copy, and delivers a populated feature-card.html screenshot PNG saved to docs/media/social/ .
+- social-share/SKILL.md classification table routes "explain" / "how does X work" queries to explain-codebase before reaching any fallback rule.
+- marketplace.json version is 2.6.0 and CHANGELOG.md has a matching ## [2.6.0] entry with an ### Added bullet for the new skill.
+
+## Verification
+Invoke /social-media-tools:explain-codebase how does the share-session skill work and confirm: (1) locates and reads skills/share-session/SKILL.md plus referenced files; (2) returns structured explanation with Core Purpose, Workflow Phases (Phase 0–6), Key Patterns (ExitPlanMode bootstrap, session_usage.py, security scrub gate, reuse check), Important Files, and Invocation; (3) passes the security scrub gate without blocking; (4) produces platform-aware social copy; (5) populates feature-card.html with skill name, one-line purpose, and key phases as bullets; (6) saves a PNG to docs/media/social/ ; (7) delivers explanation + copy + image in the same response turn.
+
+Then verify routing: send "how does share-scan work" via social-share and confirm dispatch to explain-codebase rather than share-code or share-project .
+</script>
+
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>

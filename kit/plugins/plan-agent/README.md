@@ -126,6 +126,7 @@ If Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTA
 
 Every plan is a single self-contained `.html` file (no CDN links, no external assets):
 
+- **Machine-readable digest** — a `<script type="text/markdown" id="plan-digest">` block embedded as the first element child of `<body>`, holding a spec-only markdown rendition of the plan (objective, context, files, steps with why/verify, tests, acceptance criteria, verification). It never renders or runs; agents read it instead of the full styled HTML — a few thousand tokens of spec instead of ~21k. Status, checkbox, and progress state are deliberately excluded, so the digest only changes when plan content changes
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed
 - **Objective card** — prominent highlighted block at the top
 - **Implement prompt** — Copy button produces a concise action-oriented prompt with plan status, step/criteria progress counts, and numbered instructions to implement directly from the plan file
@@ -137,9 +138,21 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 
 Open the `.html` file directly in any browser. No server required.
 
+#### Extracting the digest
+
+Read a plan's spec without paying for the styled HTML:
+
+```bash
+awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' docs/plans/<plan>.html
+```
+
+The one-liner is first-match-only (`!f`) and flag-and-exit, so digest bodies that quote the opening tag or mention the id are extracted intact, and guarded `<\/script` sequences in the content cannot end the block early. The generated implement and workflow prompts carry this extraction clause automatically. Plans created before the digest existed can be backfilled with `node scripts/backfill-plan-digests.mjs [--dry-run]` (idempotent; skips plans it cannot fully parse rather than emitting partial digests).
+
 #### `review-plan` — Manual invoke or auto-activate
 
 Reviews implementation plans using a seven-reviewer Agent Team (five core reviewers plus two UI-conditional reviewers). Detects UI signals and conditionally spawns UX and accessibility reviewers when present. Synthesizes findings and applies improvements directly to the source plan in place.
+
+Reviewers read the plan's embedded digest (`script#plan-digest`) rather than the full HTML — roughly an order of magnitude fewer tokens per reviewer per cycle — falling back to the full HTML for plans that have no digest yet. The lead keeps reading the full HTML for selector-based edits, and refreshes the digest after applying inline edits in update-in-place mode.
 
 **Requires:** Agent Teams enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `~/.claude/settings.json`) and Claude Code ≥ 2.1.32.
 

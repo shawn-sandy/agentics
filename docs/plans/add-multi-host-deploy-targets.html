@@ -1051,6 +1051,74 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add Multi-Host Deploy Targets to docs-publisher
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Extend docs-publisher to publish to GitLab Pages and Cloudflare Pages alongside GitHub Pages &mdash; one docs-init run detects the git host and drops in the right deploy pipeline, while the host-agnostic build scripts stay completely untouched.
+
+## Context
+The docs-publisher plugin (planned in docs/plans/create-docs-publishing-skills.html , still status: todo ) packages the agentics docs pipeline as installable skills: a docs-init command scaffolds docs/ , copies build scripts into the user's project, and drops a GitHub Actions deploy workflow into .github/workflows/ . Today that deploy stage is GitHub-only.
+
+This plan is the verbatim "GitLab Pages and Cloudflare Pages support" Wish List item from that parent plan, promoted to a real feature. It adds two more deploy targets without touching the build scripts &mdash; those already emit static HTML into docs/ and are host-agnostic. Only the deploy wrapper changes per host: GitHub Pages uploads a docs/ artifact via Actions, GitLab Pages publishes a public/ artifact from a pages CI job, and Cloudflare Pages either connects the repo through the dashboard or runs wrangler pages deploy in CI.
+
+Dependency: this plan layers onto the docs-publisher plugin skeleton, docs-init , and docs-publish . If the parent plan has not been implemented yet, implement it first &mdash; the steps below modify files that parent plan creates.
+
+Resolved decisions: (1) Cloudflare ships both mechanisms &mdash; a wrangler.toml for dashboard Git-integration and an optional deploy-cloudflare.yml CI workflow &mdash; and docs-init asks the user which to use. (2) docs-publish becomes host-aware so it reports the correct published URL ( github.io / gitlab.io / pages.dev ) per target.
+
+## Files
+- kit/plugins/docs-publisher/reference/.gitlab-ci.yml (new) — GitLab Pages deploy job
+- kit/plugins/docs-publisher/reference/deploy-cloudflare.yml (new) — Cloudflare CI deploy workflow
+- kit/plugins/docs-publisher/reference/wrangler.toml (new) — Cloudflare Pages config
+- kit/plugins/docs-publisher/commands/docs-init.md (modified) — host detection + template copy
+- kit/plugins/docs-publisher/commands/docs-publish.md (modified) — host-aware published URL
+- kit/plugins/docs-publisher/README.md (modified) — document three deploy targets
+- kit/plugins/docs-publisher/CHANGELOG.md (modified) — multi-host feature entry
+- kit/plugins/docs-publisher/scripts/detect-host.sh (new) — shared git-host classifier
+- .claude-plugin/marketplace.json (modified) — minor version bump
+- tests/pages/deploy-templates.test.sh (new) — template validity smoke test
+- tests/pages/detect-host.test.sh (new) — host-detection unit test
+- tests/pages/docs-init-host-copy.test.sh (new) — copy-mapping integration test
+
+## Steps
+1. Author the GitLab Pages reference workflow at reference/.gitlab-ci.yml Why: GitLab Pages publishes whatever a pages CI job leaves in public/ . The build scripts already emit static HTML into docs/ , so the template only needs a pages job that copies docs/ → public/ and declares public as its artifact path, scoped to the default branch. Verify: Open kit/plugins/docs-publisher/reference/.gitlab-ci.yml . Confirm it (1) defines a pages job, (2) runs cp -r docs public (or rsync ) in its script , (3) sets artifacts: paths: [public] , and (4) restricts to the default branch via rules or only . Validate it parses: python3 -c "import yaml,sys; yaml.safe_load(open('kit/plugins/docs-publisher/reference/.gitlab-ci.yml'))" exits 0.
+2. Author the Cloudflare config and CI workflow at reference/wrangler.toml and reference/deploy-cloudflare.yml Why: A wrangler.toml alone only configures a Pages project &mdash; it does not deploy. Shipping both a wrangler.toml (with pages_build_output_dir = "docs" , for the dashboard Git-integration path) and a deploy-cloudflare.yml workflow (running wrangler pages deploy docs , for the fully-automated path) lets docs-init offer the user either route. Verify: Confirm reference/wrangler.toml contains pages_build_output_dir = "docs" and a name placeholder. Confirm reference/deploy-cloudflare.yml runs wrangler pages deploy docs (e.g. via cloudflare/wrangler-action ) and references ${{ secrets.CLOUDFLARE_API_TOKEN }} and ${{ secrets.CLOUDFLARE_ACCOUNT_ID }} &mdash; never hard-coded credentials. Parse checks: python3 -c "import tomllib;tomllib.load(open('.../wrangler.toml','rb'))" and a yaml.safe_load on the workflow both exit 0.
+3. Create the shared host classifier at scripts/detect-host.sh Why: Both docs-init and docs-publish need the same github/gitlab/other decision. Extracting one small, testable shell helper avoids duplicating fragile URL-parsing prose across two markdown command files and gives the unit test a real target. It is copied into the user's project by docs-init alongside the other build scripts. Verify: Read kit/plugins/docs-publisher/scripts/detect-host.sh . Confirm it defines a detect_host() function (or accepts a remote URL arg) that prints github for a URL containing github.com , gitlab for gitlab.com , and other for anything else (including an empty/missing remote). Confirm it handles both https:// and git@ SSH forms and is POSIX-sh / bash compatible (runs on macOS and Linux).
+4. Wire host detection and template copying into docs-init Why: This is the entry point that adapts the deploy pipeline to the user's host. A single invocation must detect the host via detect-host.sh , copy the matching template to the right location, and &mdash; for the non-github/gitlab case &mdash; ask via AskUserQuestion whether the user wants the Cloudflare CI workflow or the dashboard route, copying deploy-cloudflare.yml only for the CI choice. All copies must be idempotent. Verify: Read kit/plugins/docs-publisher/commands/docs-init.md . Confirm the body: (1) calls detect-host.sh on origin ; (2) for github copies deploy-pages.yml → .github/workflows/ ; (3) for gitlab copies .gitlab-ci.yml → repo root; (4) for other uses AskUserQuestion to choose Cloudflare CI vs dashboard, copying wrangler.toml → root in both cases and deploy-cloudflare.yml → .github/workflows/ only for CI; (5) never overwrites an existing deploy file without explicit user confirmation. Confirm detect-host.sh is added to the list of scripts docs-init copies into the project.
+5. Make docs-publish host-aware when reporting the published URL Why: After a push, docs-publish currently reports a GitHub Pages URL. Publishing to GitLab or Cloudflare should report the correct destination, not a misleading github.io link. Reusing detect-host.sh keeps the classification identical to what docs-init used. Verify: Read kit/plugins/docs-publisher/commands/docs-publish.md . Confirm it derives the published URL per host: github → https://<owner>.github.io/<repo>/ , gitlab → https://<owner>.gitlab.io/<repo>/ , Cloudflare → https://<project>.pages.dev (project name read from wrangler.toml when present, else noted as dashboard-defined). Confirm the existing --dry-run behaviour is preserved.
+6. Document the targets and bump the marketplace version Why: Marketplace convention requires a manual version bump plus a CHANGELOG entry for any plugin change, and users need docs explaining the three deploy targets and how docs-init picks one. Adding deploy targets is a new feature → a MINOR bump. Verify: Confirm kit/plugins/docs-publisher/README.md has a "Deploy targets" section listing GitHub / GitLab / Cloudflare and describing host auto-detection. Confirm kit/plugins/docs-publisher/CHANGELOG.md has a new entry. Confirm the docs-publisher version in .claude-plugin/marketplace.json is bumped one MINOR above its main value, and that python3 -m json.tool .claude-plugin/marketplace.json exits 0.
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective All three deploy templates ship valid and host-correct File: tests/pages/deploy-templates.test.sh Type: smoke test Asserts: the plan's objective &mdash; that docs-publisher gained GitLab + Cloudflare deploy support. Validates that reference/.gitlab-ci.yml and reference/deploy-cloudflare.yml parse as YAML and reference/wrangler.toml parses as TOML; that .gitlab-ci.yml contains a pages job publishing public ; that deploy-cloudflare.yml invokes wrangler pages deploy and references the two secrets (never literal tokens); and that wrangler.toml sets pages_build_output_dir = "docs" . Run: bash tests/pages/deploy-templates.test.sh
+- Unit detect-host.sh maps remote URLs to the right host File: tests/pages/detect-host.test.sh Targets: detect_host() in kit/plugins/docs-publisher/scripts/detect-host.sh Key cases: https://github.com/o/r.git → github ; git@github.com:o/r.git → github ; https://gitlab.com/o/r → gitlab ; a self-hosted/unknown host → other ; empty/missing remote → other .
+- Integration docs-init copies the correct template per host, idempotently File: tests/pages/docs-init-host-copy.test.sh Targets: the docs-init host-detection + copy logic exercised against temp git repos Key cases: a temp repo with a github.com remote yields .github/workflows/deploy-pages.yml ; a gitlab.com remote yields a root .gitlab-ci.yml ; the Cloudflare-CI path yields both wrangler.toml and deploy-cloudflare.yml while the dashboard path yields only wrangler.toml ; a second run does not overwrite an edited deploy file.
+
+## Acceptance Criteria
+- reference/.gitlab-ci.yml exists with a pages job that copies docs/ to public/ and publishes public as its artifact on the default branch.
+- reference/wrangler.toml exists with pages_build_output_dir = "docs" .
+- reference/deploy-cloudflare.yml exists, runs wrangler pages deploy docs , and references CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID as secrets (no hard-coded credentials).
+- scripts/detect-host.sh classifies a github.com remote as github , gitlab.com as gitlab , and anything else (or no remote) as other , for both HTTPS and SSH URLs.
+- docs-init copies the host-matched template to the correct location and, for the other case, asks whether to use the Cloudflare CI workflow or dashboard route.
+- docs-init never overwrites an existing deploy file without explicit user confirmation.
+- docs-publish reports the correct published URL per host ( github.io / gitlab.io / pages.dev ) and preserves --dry-run .
+- The docs-publisher version in marketplace.json is bumped one MINOR, with matching CHANGELOG and README "Deploy targets" updates.
+
+## Verification
+Run bash tests/pages/deploy-templates.test.sh and bash tests/pages/detect-host.test.sh &mdash; both exit 0. Then create three throwaway git repos and set their origin remotes to a github.com , a gitlab.com , and a self-hosted URL respectively; run the docs-init copy logic (via tests/pages/docs-init-host-copy.test.sh ) and confirm each repo receives only its host's template in the right place, that the Cloudflare prompt branches correctly between the CI and dashboard file sets, and that a second run leaves an edited deploy file untouched. Finally, run docs-publish --dry-run in each repo and confirm the reported published URL matches the host ( github.io / gitlab.io / pages.dev ). Confirm python3 -m json.tool .claude-plugin/marketplace.json succeeds and the docs-publisher version is higher than on main .
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

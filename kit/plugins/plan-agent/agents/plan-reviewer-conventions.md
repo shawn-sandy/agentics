@@ -20,7 +20,7 @@ You review **implementation plans** for consistency with project patterns and co
 
 ## How to Review
 
-Read the plan's full content. Examine the **Files to Create/Modify** and **Steps** sections. Look for:
+Read the plan via its embedded digest — extract the spec-only markdown with `awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <plan-path>`. If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file. The digest carries the whole authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Examine the **Files to Create/Modify** and **Steps** sections. Look for:
 
 1. **Naming mismatches** — Do proposed names fit the project style?
 2. **Structural inconsistencies** — Are new files placed where similar files live?

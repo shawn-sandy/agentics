@@ -1059,6 +1059,94 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add Research Agent Team to implementation-plan skill
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a Research Agent Team phase (Step 0c) that spawns 4&ndash;6 specialized researcher teammates to investigate the plan objective from multiple angles in parallel, synthesizes findings into a Research Brief that feeds Steps 1&ndash;2, and gracefully degrades to single-session Explore when Agent Teams are unavailable
+
+## Context
+The implementation-plan skill currently runs a single-session sequential pipeline &mdash; one Claude instance explores the codebase (Step 0b), clarifies requirements (Step 1), and writes the plan (Step 2). For complex plans spanning multiple subsystems, research breadth is limited by what one context window can hold, and there is no adversarial tension: the same agent that researches also writes the plan.
+
+The review-plan skill already demonstrates a proven Agent Team pattern in this plugin: it spawns 5&ndash;7 parallel reviewers with structured output, collects findings via SendMessage , and synthesizes results. The same pattern can be applied earlier in the pipeline &mdash; during research, before plan creation &mdash; to produce richer, more thoroughly investigated plans. Agent Teams (experimental, v2.1.32+) are the right tool because researchers need to communicate with each other: a codebase analyst discovering an API constraint can message the dependency researcher directly to adjust the investigation.
+
+When Agent Teams are unavailable (flag unset, old version), the skill must degrade gracefully to the existing single-session Explore &mdash; not hard-stop like review-plan does. Plan creation is too critical to block on an experimental feature.
+
+## Files
+- kit/plugins/plan-agent/agents/plan-researcher-codebase.md (new) — codebase architecture researcher agent
+- kit/plugins/plan-agent/agents/plan-researcher-dependencies.md (new) — library and API dependency researcher
+- kit/plugins/plan-agent/agents/plan-researcher-devils-advocate.md (new) — adversarial assumption challenger (conditional)
+- kit/plugins/plan-agent/agents/plan-researcher-prior-art.md (new) — web best-practices researcher
+- kit/plugins/plan-agent/agents/plan-researcher-test-strategy.md (new) — test infrastructure analyst
+- kit/plugins/plan-agent/agents/plan-researcher-ux.md (new) — UI pattern researcher (conditional)
+- kit/plugins/plan-agent/skills/implementation-plan/references/research-prompts.md (new) — role-prompt templates for 6 researchers
+- kit/plugins/plan-agent/skills/implementation-plan/references/research-brief-template.md (new) — synthesis template for Research Brief
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — add Step 0c, --research flag, allowed-tools
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — add version entry for research team
+- kit/plugins/plan-agent/README.md (modified) — document research team feature
+- kit/plugins/plan-agent/.claude-plugin/plugin.json (modified) — mention research team in description
+- .claude-plugin/marketplace.json (modified) — bump plan-agent minor version
+
+## Steps
+1. Create references/research-prompts.md with role-prompt templates for all 6 researcher types Why: Externalizing prompts into a reference file follows the proven pattern from review-plan/references/role-prompts.md and keeps the main SKILL.md focused on orchestration logic. Each prompt needs <OBJECTIVE> and <CODEBASE_CONTEXT> placeholders plus a structured [Role Report] output format with SendMessage . Panel recommendation: the agent definition files (Step 3&ndash;4) should carry the full role prompt, making this reference file the canonical template source that agents are generated from &mdash; not a parallel source of truth. The orchestrator reads prompts from agent definitions at spawn time, matching the review-plan pattern exactly. Verify: Pre-check: confirm kit/plugins/plan-agent/skills/implementation-plan/references/ directory exists (create it if not). Then read the file; confirm 6 distinct role sections (codebase-analyst, dependency-researcher, prior-art-researcher, test-strategist, ux-researcher, devils-advocate) with <OBJECTIVE> and <CODEBASE_CONTEXT> placeholders and SendMessage reporting format in each.
+2. Create references/research-brief-template.md with the synthesis template Why: A structured template ensures synthesis is consistent regardless of which researchers were spawned, and bridges directly into the Clarify and Create steps. Sections: Executive Summary, Per-Role Findings (6 slots), Key Constraints Discovered, Recommended Approach, Open Questions for Clarify Step. Verify: Read the file; confirm it has all 6 role-finding sections, an Executive Summary section, Key Constraints, Recommended Approach, and Open Questions sections.
+3. Create 4 core agent definitions: plan-researcher-codebase.md , plan-researcher-dependencies.md , plan-researcher-prior-art.md , plan-researcher-test-strategy.md Why: Agent definitions let the Agent Team system use these as subagent types when spawning teammates, giving each researcher a scoped tool allowlist and a focused system prompt. Follow the existing plan-reviewer-*.md pattern: frontmatter with name , description , allowed-tools , model: sonnet ; body with mandate, how-to-research instructions, and SendMessage reporting format. Codebase-analyst gets Read, Glob, Grep, Bash ; dependency-researcher gets Read, Glob, Grep, Bash, WebSearch, WebFetch ; prior-art gets WebSearch, WebFetch, Read ; test-strategist gets Read, Glob, Grep, Bash . Verify: Pre-check: confirm kit/plugins/plan-agent/agents/ directory exists (create it if not &mdash; existing plan-reviewer-*.md agent files already live here, so the directory should exist, but verify). Then read each of the 4 files; confirm valid frontmatter with model: sonnet and the correct allowed-tools per role. Confirm each has a mandate section and a SendMessage output format block.
+4. Create 2 conditional agent definitions: plan-researcher-ux.md and plan-researcher-devils-advocate.md Why: Conditional agents avoid wasting tokens on UI research for backend-only plans or adversarial challenge for simple plans. Mirrors the review-plan pattern where UX and accessibility reviewers are conditional on UI signals. UX researcher gets Read, Glob, Grep, WebSearch, WebFetch ; devil&rsquo;s advocate gets Read, Glob, Grep, Bash . Verify: Read both files; confirm frontmatter and body structure match the core agents from Step 3. Confirm the UX researcher mentions UI signal activation and the devil&rsquo;s advocate mentions complex-plan activation.
+5. Add --research and --no-research flags to SKILL.md argument parsing Why: Explicit opt-in/opt-out keeps the feature controllable and avoids surprise token consumption from Agent Teams. --research forces the Research Agent Team phase. --no-research skips it. --quick shorthand expands to include --no-research . Panel recommendation: document the conflict resolution rule explicitly in the SKILL.md flags section: when both --research and --no-research are present, last-wins (consistent with standard CLI flag conventions). This must be visible in the flags documentation, not just tested. Verify: Read the SKILL.md Invocation & Arguments section; confirm both flags are documented with the same structure as existing flags. Confirm the --quick description now includes --no-research in its shorthand expansion.
+6. Add Step 0c (Research Agent Team) to SKILL.md Workflow between Step 0b and Step 1 Why: This is the core feature. The step must: (a) check if --research is set or auto-detect complexity &mdash; concrete heuristic: spawn when any of: objective mentions 3+ distinct subsystem keywords (e.g. frontend+backend+database, or auth+API+UI), file-tree from Step 0b spans 3+ top-level directories, or objective contains cross-layer verbs (migrate, integrate, bridge, sync); default to skip otherwise (conservative, opt-in bias); (b) check Agent Teams availability (version >= 2.1.32 + CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ); (c) if unavailable and --research was explicitly passed, emit a visible warning (not just a log note): &ldquo;Research Agent Team requested but Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo;; if auto-detected, log silently and fall through; (d) detect UI signals (same heuristic as review-plan Step 3b); (e) read agent definitions from agents/plan-researcher-*.md , substitute placeholders; (f) spawn 4 core + up to 2 conditional researchers; (g) wait for all via SendMessage &mdash; partial-failure rule: if fewer than 3 of 4 core researchers report within the turn limit, proceed with available findings and note missing roles in the Research Brief (e.g. &ldquo;dependency-researcher: no findings received&rdquo;); (h) read references/research-brief-template.md and synthesize; (i) inject Research Brief into context for Steps 1&ndash;2. Progress reporting: as each researcher completes, emit a status line (e.g. &ldquo;Research: codebase-analyst done (2/4 complete)&rdquo;). Verify: Read SKILL.md; confirm Step 0c exists between 0b and 1 with all 9 sub-steps. Confirm the Agent Teams check is soft (logs and falls through) not hard (stops). Confirm --no-research and --quick skip the step entirely.
+7. Update SKILL.md Step 2 (Create) to inject the Research Brief into the plan&rsquo;s Context section Why: Preserving the research findings in the plan makes it self-documenting &mdash; readers can see what investigation informed the plan&rsquo;s decisions. When a Research Brief was generated, render it as a collapsible <details open> block (open by default for discoverability) titled &ldquo;Research Brief&rdquo; inside the Context section; omit entirely when no brief was generated. Panel recommendation: default to open so users don&rsquo;t miss the research findings; they can collapse it after reading. Verify: Read SKILL.md Step 2; confirm it references Research Brief injection with the collapsible <details> pattern and the omit-when-empty rule.
+8. Update SKILL.md allowed-tools frontmatter to include Agent Team tools Why: Without Agent Team tools in allowed-tools , the skill will trigger permission prompts when orchestrating the research team. Panel recommendation: before adding tool names, verify the exact spellings against the current Agent Teams API (check the review-plan skill&rsquo;s allowed-tools as the authoritative reference). The plan assumes TeamCreate and TeamDelete but these must be confirmed &mdash; wrong names cause silent permission failures, not clear errors. Verify: Read the SKILL.md frontmatter allowed-tools line; confirm it includes SendMessage , TeamCreate , and TeamDelete .
+9. Update plugin.json description to mention the Research Agent Team capability Why: The plugin description is shown in marketplace listings and skill discovery; it should reflect the new capability so users know the feature exists. Verify: Read .claude-plugin/plugin.json ; confirm the description mentions &ldquo;Research Agent Team&rdquo; or &ldquo;research team&rdquo;.
+10. Update README.md with Research Agent Team documentation Why: The README is the primary user-facing documentation. Add a section covering: when the research phase activates, what researchers are spawned, how to force ( --research ) or skip ( --no-research ) it, and the graceful degradation behavior. Verify: Read README.md ; confirm a new section documents the research team feature with flag documentation and degradation behavior.
+11. Add a new version entry to CHANGELOG.md Why: The CHANGELOG tracks all plugin changes per the project&rsquo;s versioning conventions. This is a minor-bump feature addition. Verify: Read CHANGELOG.md ; confirm the new version entry exists and describes the Research Agent Team feature under an &ldquo;Added&rdquo; heading.
+12. Bump plan-agent minor version in .claude-plugin/marketplace.json Why: The project convention requires a manual version bump in marketplace.json for every plugin change. New feature = minor bump. Verify: Read .claude-plugin/marketplace.json ; confirm the plan-agent version is higher than the current value on main and follows semver minor-bump convention.
+
+## Tests
+Tier 1 &mdash; Code-touching plan
+- Objective Research Agent Team spawns, collects, and synthesizes a Research Brief File: tests/plan-agent/research-team-smoke.test.ts Type: Smoke test Asserts: Invoking /plan-agent:implementation-plan --research on a multi-subsystem objective spawns at least 4 researcher teammates, collects structured findings via SendMessage , and produces a Research Brief block in the plan&rsquo;s Context section. Also verifies that --no-research skips the team entirely and produces no Research Brief. Run: claude --plugin-dir kit/plugins/plan-agent -p "/plan-agent:implementation-plan add auth middleware --research --no-clarify --no-align --no-interview"
+- Unit Argument parsing: --research and --no-research flags File: tests/plan-agent/research-flags.test.ts Targets: SKILL.md argument parsing logic for new flags Key cases: --research sets research mode; --no-research disables it; --quick implies --no-research ; both flags absent triggers auto-detection; conflicting --research --no-research uses last-wins
+- Unit Agent definition files have valid frontmatter File: tests/plan-agent/researcher-agents-valid.test.ts Targets: All 6 plan-researcher-*.md agent definition files Key cases: Each file has valid YAML frontmatter with required fields ( name , description , allowed-tools , model ); model is sonnet ; allowed-tools matches the role&rsquo;s expected tool set; body contains SendMessage reporting instructions
+- Integration Graceful degradation when Agent Teams are unavailable File: tests/plan-agent/research-team-degradation.test.ts Targets: Step 0c Agent Teams availability check and fallback path Key cases: When CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS is unset, Step 0c logs a note and falls through to Step 1 (not hard-stop); when Claude Code version < 2.1.32, same behavior; plan is still produced successfully without the Research Brief
+- Integration Research Brief injection into plan Context section File: tests/plan-agent/research-brief-injection.test.ts Targets: Step 2 (Create) Research Brief handling Key cases: When Research Brief exists, a collapsible <details> block appears in Context; when no brief was generated, the block is absent; the brief content is HTML-escaped
+
+## Acceptance Criteria
+- 6 agent definition files exist at kit/plugins/plan-agent/agents/plan-researcher-*.md with valid frontmatter
+- references/research-prompts.md exists with 6 role-prompt sections containing <OBJECTIVE> and <CODEBASE_CONTEXT> placeholders
+- references/research-brief-template.md exists with Executive Summary, Per-Role Findings, Key Constraints, Recommended Approach, and Open Questions sections
+- SKILL.md documents --research and --no-research flags; --quick shorthand includes --no-research
+- SKILL.md Step 0c exists between Step 0b (Explore) and Step 1 (Clarify) with the full 9-sub-step orchestration logic
+- Step 0c gracefully degrades (logs and falls through) when Agent Teams are unavailable &mdash; never hard-stops
+- SKILL.md allowed-tools includes SendMessage , TeamCreate , and TeamDelete
+- Step 2 (Create) injects the Research Brief as a collapsible <details> in the plan Context section when available; omits it when not
+- plugin.json , README.md , and CHANGELOG.md are updated to reflect the new feature
+- marketplace.json plan-agent version is bumped (minor) above the current value on main
+- (Panel-added) Step 0c includes partial-failure handling: if fewer than 3 core researchers report, synthesis proceeds with available findings and notes missing roles in the Research Brief
+- (Panel-added) Step 0c emits progress status lines as each researcher completes (e.g. &ldquo;Research: codebase-analyst done (2/4 complete)&rdquo;)
+- (Panel-added) --research / --no-research conflict resolution (last-wins) is documented in the SKILL.md flags section, not just tested
+
+## Verification
+Full-feature path: Set CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 , run /plan-agent:implementation-plan "Add WebSocket real-time notifications across frontend, backend, and database layers" --research --no-clarify --no-align --no-interview . Confirm: Step 0c spawns at least 4 researchers, collects findings, produces a Research Brief in the plan&rsquo;s Context section as a collapsible <details> block. The plan itself is well-formed HTML with all required sections.
+
+Graceful degradation path: Unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS , run the same command with --research . Confirm: Step 0c logs &ldquo;Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo; (or similar) and proceeds to Step 1 without error. The plan is produced successfully without a Research Brief block.
+
+Skip path: Run /plan-agent:implementation-plan "Fix typo in README" --no-research --quick . Confirm: Step 0c is skipped entirely. No Agent Team is created. Plan is produced as normal.
+
+Conditional researchers: Run a plan with UI signals (e.g. &ldquo;Add React dashboard with charts and filters&rdquo;) using --research . Confirm: UX researcher is spawned (6 total researchers). Run a complex non-UI plan. Confirm: devil&rsquo;s advocate is spawned but UX researcher is not (5 total).
+
+Agent definitions: Run ls kit/plugins/plan-agent/agents/plan-researcher-*.md | wc -l and confirm output is 6. Grep each for model: sonnet and SendMessage .
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

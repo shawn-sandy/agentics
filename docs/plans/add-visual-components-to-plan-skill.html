@@ -418,6 +418,72 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Promote four reusable, pure-CSS visual components — a file-tree, a flow/pipeline diagram, a comparison/bar chart, and a data table — into the implementation-plan SKELETON template as opt-in sections, and document in SKILL.md when the skill should reach for each, so generated plans can show file changes, flows, comparisons, and tabular data at a glance.
+
+## Context
+The plan-agent:implementation-plan skill generates self-contained HTML plan documents from a template. Today those plans are text-only : numbered step cards, acceptance-criteria checkboxes, a progress bar, and collapsible disclosures. There is no first-class way to show which files a plan touches , the flow/architecture it introduces, comparisons/trade-offs , or tabular data — exactly the visuals that make a plan scannable and concrete.
+
+Two facts make this low-risk, high-value:
+
+A gold reference already exists in-repo. docs/plans/build-clean-plugin-dist.html was hand-authored with a .file-tree (lines 848–890), a .pipeline flow diagram (893–937), and a 3-column comparison diagram (940–981) — all pure CSS, token-driven, on-brand. They were one-offs, never promoted into the template.
+
+The gallery scanner is insulated. Both plans-library/SKILL.md and the auto-rebuild hook hooks/build-index.sh only regex-match <meta name="plan-*"> tags and <title> . New <body> sections are invisible to them — no scanner changes needed.
+
+Hard constraint: plans are single self-contained .html files — no CDN, no external scripts. Every visual must be pure CSS / inline SVG. Mermaid and Chart.js are out; the reference components already honor this.
+
+Decision (confirmed): add all four components, all opt-in — the skill renders a visual only when the plan content warrants it; no mandatory placeholders that would clutter a small plan. This very plan dogfoods the proposal: the sections below are live instances of all four components.
+
+## Files
+- reference/SKELETON.html (modified) — component CSS + 4 opt-in sections + nav
+- SKILL.md (modified) — document the components & triggers
+- CHANGELOG.md (modified) — v1.5.0 entry
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 1.4.1 → 1.5.0
+- docs/plans/add-visual-components-to-plan-skill.html (generated)
+
+## Steps
+1. Port the three proven components into the SKELETON <style> block. Why: Reuses already-validated, on-brand CSS instead of reinventing it — guarantees visual fidelity. Generic class names let the comparison block serve any 2–3-way comparison. Verify: Copy .file-tree / .file-list / .file-badge (ref 848–890), .pipeline / .pipeline-node / .pipeline-arrow (893–937), and the comparison rules (940–981) from build-clean-plugin-dist.html into SKELETON.html before </style> ; rename .allowlist-* / .allow-keep|drop|generated to generic .compare-grid / .compare-col-add|neutral|remove . grep -n "\.file-tree\|\.pipeline\|\.compare-grid" SKELETON.html returns the rules; browser console shows no CSS errors.
+2. Tokenize the new colors in :root and add net-new CSS for the bar chart and data table. Why: Eliminates one-off hex so all visuals theme consistently; the bar chart and table are the two requested components the reference lacks. Inline --val keeps the bar chart script-free. Verify: Add --amber-bg , --red , --red-bg (and reuse --green / --accent ) to :root and repoint the ported rules. Author .bar-chart (label + .bar-track / .bar-fill sized by style="--val:NN%" + visible value) and .plan-table ( <caption> , <th scope="col"> , zebra rows). Render a scratch snippet: bars fill to width; table exposes caption + scoped headers in the DevTools a11y pane.
+3. Add the four opt-in section blocks to the SKELETON <body> . Why: Opt-in means the markup ships ready-to-fill but is removed when unused; the removal-comment convention is already used by .plan-workflow and unresolved-questions, so no new mechanism is introduced. Verify: Insert a Files section ( card-files#files , after Context), a Diagram section ( card-diagram#diagram ) hosting .pipeline / .compare-grid / .bar-chart , and a .plan-table usage — each wrapped in <!-- OPTIONAL … delete this block otherwise --> with {placeholder} tokens. Open SKELETON.html: all render with placeholders; delete one block and the page still renders cleanly with no orphaned styling.
+4. Wire the new sections into the sidebar nav and confirm scroll-spy tolerates removal. Why: A nav link to a removed section is a dead anchor; the TOC must stay in sync. The existing IntersectionObserver already iterates only existing sections, so missing ones are a no-op. Verify: Add Files/Diagram <li> entries to .plan-nav ul , documented as add-only-when-section-kept. Scroll a plan with the sections: the matching nav link gains .active / aria-current . Remove a section + its <li> : no console errors; remaining links still highlight.
+5. Document the components in SKILL.md. Why: The template markup is inert without skill-side guidance on when to instantiate each visual and how to keep it accessible and self-contained. Content-anchored triggers prevent gratuitous visuals. Verify: In Required Structure add optional files / diagram / chart / table sections with one-line "include when…" triggers. In HTML Output Requirements add bullets for each component's classes, the keep/remove rule, the no-CDN/pure-CSS constraint, and a11y (table scope / caption , bar-chart visible numeric labels, badges not color-only). Add a Visual Components subsection naming each trigger (Files → multi-file; Diagram → flow/architecture; Chart → distribution/before-after; Table → mappings/matrices). Re-read SKILL.md to confirm.
+6. Bump version and update the changelog. Why: A new skill capability is a MINOR bump per marketplace.md ; the changelog keeps the marketplace discoverable and honest. Verify: Add ## v1.5.0 — 2026-06-05 — Add visual components … under ### Added in CHANGELOG.md; change plan-agent version in marketplace.json from 1.4.1 to 1.5.0 ; leave plugin.json without a version. grep '"version"' .claude-plugin/marketplace.json shows 1.5.0; the settings auto-validator reports valid JSON.
+
+## Acceptance Criteria
+- SKELETON.html <style> contains pure-CSS rules for .file-tree , .pipeline , the renamed comparison grid, .bar-chart , and .plan-table , all using :root tokens (no stray hardcoded hex in the new rules).
+- All four visual components are present in SKELETON.html as opt-in <body> blocks with explicit keep/remove comments and {placeholder} tokens.
+- Removing any one optional visual block (and its nav <li> ) leaves the plan rendering cleanly with no console errors and a consistent TOC.
+- The gallery scanner is untouched and still lists the plan (meta tags + <title> unchanged).
+- SKILL.md documents all four components: classes, opt-in trigger conditions, accessibility requirements, and the no-CDN constraint.
+- plan-agent version is 1.5.0 in marketplace.json with a matching v1.5.0 CHANGELOG entry; plugin.json has no version field.
+- A test plan rendered in a browser displays a file-tree, a flow diagram, a bar chart, and a data table correctly and on-brand.
+
+## Verification
+1. Visual render check. Serve the updated SKELETON.html (or a test plan exercising all four components) via python3 -m http.server and confirm each renders correctly, themed by the design tokens, with the existing progress bar / step cards / completion checklist unaffected.
+
+2. Opt-in / removal check. Produce a second minimal test plan with all optional visual blocks removed; confirm it renders identically to a pre-change plan — no orphaned CSS, no dead nav anchors, clean console.
+
+3. Accessibility spot-check. In DevTools, confirm the data table exposes a caption + column headers, the bar chart shows visible numeric values (not color-only), and file badges pair color with a text label.
+
+4. Gallery integrity. Trigger the rebuild hook (write a plan into docs/plans/ ) and confirm docs/plans/index.html still lists plans with correct status/type/title — proving the new sections didn't disturb the scanner.
+
+5. Manifest validity. Confirm the marketplace.json auto-validator passes and the version guard ( scripts/check-version-bump.sh ) is satisfied at 1.5.0.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></symbol>

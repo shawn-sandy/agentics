@@ -969,6 +969,67 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Publish HTML plans to GitHub Pages
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a GitHub Actions pipeline that publishes the entire docs/ tree to GitHub Pages, so every developer can browse all 32 HTML plans from one public URL — landing straight on the filterable plans gallery — instead of cloning the repo and opening files by hand.
+
+## Context
+The repo already generates rich, self-contained HTML plans into docs/plans/ (32 of them today), and a PostToolUse hook ( rebuild-plans-index.py ) keeps docs/plans/index.html — a filterable gallery — current after every plan write. The one missing piece is reach: those files only exist on disk, so a developer has to clone the repo and open them in a local browser to read them.
+
+GitHub Pages closes that gap. The repo ( shawn-sandy/agentics ) already runs GitHub Actions, so the cleanest fit is a dedicated Pages deploy workflow using the official actions/upload-pages-artifact + actions/deploy-pages pair, publishing the whole docs/ directory on every push to main . Two known footguns shape the approach: GitHub Pages runs Jekyll by default (which can mangle hand-built HTML and ignores _ -prefixed paths) — neutralised with a .nojekyll marker; and a project Pages site is served under a base path ( /agentics/ ), so the landing page must use a relative redirect. The gallery's own links are already relative, so they survive the base path unchanged.
+
+Per the decisions taken while drafting: deploy via a GitHub Actions workflow (not branch/folder), and make the existing plans gallery the site's landing page via a root redirect, keeping docs/plans/index.html as the single hook-maintained source of truth.
+
+## Files
+- .github/workflows/deploy-pages.yml (new) — Actions workflow that deploys docs/ to Pages
+- docs/.nojekyll (new) — disable Jekyll processing of hand-built HTML
+- docs/index.html (new) — root redirect to the plans gallery
+- docs/README.md (modified) — add a link/badge to the published site
+
+## Steps
+1. Add the docs/.nojekyll marker file Why: GitHub Pages runs the Jekyll static-site processor by default, which strips files and folders whose names start with an underscore and can rewrite hand-authored HTML. The plans are fully self-contained HTML — an empty .nojekyll file at the published root tells Pages to serve every byte verbatim. Verify: test -f docs/.nojekyll && echo present prints present . The file is empty (zero bytes is fine).
+2. Create docs/index.html as a relative redirect to the plans gallery Why: Publishing all of docs/ means the site root resolves to docs/index.html , which does not yet exist — visitors would hit a 404. A tiny redirect page forwards the root to plans/index.html so visitors land directly on the filterable gallery (the chosen landing page), while docs/plans/index.html stays the single hook-maintained source of truth. Use a relative target ( plans/index.html , not a leading slash) so it works under the /agentics/ Pages base path, plus a <meta http-equiv="refresh"> , a canonical <link> , and a visible fallback anchor for no-JS/no-refresh clients. Verify: Open docs/index.html in a browser from a local server — it immediately navigates to the plans gallery. grep -q 'plans/index.html' docs/index.html succeeds, and the href does not start with / (no absolute path that would break the base-path).
+3. Add the .github/workflows/deploy-pages.yml deploy workflow Why: This is the engine. The workflow triggers on push to main filtered to paths: ['docs/**', '.github/workflows/deploy-pages.yml'] (plus workflow_dispatch for manual re-runs), so changes to the workflow itself also trigger a redeploy. It declares the required permissions ( pages: write , id-token: write , contents: read ) and a concurrency group of pages with cancel-in-progress: false . A build job checks out, asserts docs/.nojekyll exists (fail fast if accidentally deleted), runs actions/configure-pages , and uploads docs via actions/upload-pages-artifact ; a deploy job with environment: github-pages runs actions/deploy-pages . Pin every action to a commit SHA with a version comment, matching the convention in auto-version-bump.yml . Look up current SHAs from each action's releases page or the existing pinned versions in auto-version-bump.yml . Verify: The file parses as YAML (e.g. python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/deploy-pages.yml'))" ). It declares both pages: write and id-token: write , a build and a deploy job, uploads artifact path docs , every uses: is pinned to a 40-char SHA, the path filter includes both docs/** and .github/workflows/deploy-pages.yml , and the build job asserts docs/.nojekyll exists before uploading the artifact.
+4. Enable GitHub Pages with source set to "GitHub Actions" Why: A deploy workflow cannot publish until Pages is enabled on the repo with the build type set to workflow (Pages is currently disabled — the API returns 404). This is a one-time repo setting that must be completed before the PR is merged , since the workflow will fail on first trigger if Pages is not enabled. Enable it with gh api -X POST repos/shawn-sandy/agentics/pages -f build_type=workflow , or via Settings → Pages → "Build and deployment" → Source: GitHub Actions . Requires admin on the repo. If admin access is unavailable, coordinate with a repo admin to complete this step before merging. Verify: gh api repos/shawn-sandy/agentics/pages --jq .build_type returns workflow (no longer 404), and the response html_url shows https://shawn-sandy.github.io/agentics/ .
+5. Add a "Browse the plans" link to README.md Why: The published site is only useful if people can find it. Add a short link (or shields.io badge) near the top of README.md pointing at https://shawn-sandy.github.io/agentics/ so the gallery is discoverable from the repo's front door. Keep it one line — this is a pointer, not a section. Verify: grep -q 'shawn-sandy.github.io/agentics' README.md succeeds, and the link renders correctly in the GitHub README preview.
+6. Create test files in tests/pages/ Why: The Tests section specifies three test scripts ( test-pages-smoke.sh , test-root-redirect.sh , test-workflow-config.sh ) but no earlier step creates them. Create mkdir -p tests/pages and write all three scripts with the assertions described in the Tests section. The unit and integration tests should be runnable locally as pre-merge validation; the smoke test runs post-deploy against the live URL with a retry loop (up to 5 attempts, 15s apart) to handle Pages propagation delay. Verify: ls tests/pages/test-*.sh | wc -l returns 3 . Each script is executable ( chmod +x ) and exits 0 when run against the expected inputs (local files for unit/integration, live URL for smoke).
+7. Merge to main , then confirm the first deploy serves the live gallery Why: The pipeline only proves itself end-to-end once it has actually run. After the change merges to main , the docs/** path filter fires the workflow; watch the run complete, then load the public URL and confirm the gallery and a sample plan render. This is the real acceptance gate — a green Actions run plus a reachable site. Verify: gh run list --workflow=deploy-pages.yml --limit 1 shows a completed/success run. curl -sI https://shawn-sandy.github.io/agentics/ returns 200 , and curl -s https://shawn-sandy.github.io/agentics/plans/ contains the gallery title Plans Library . A sample plan such as .../plans/add-tests-section-to-plans.html also returns 200 .
+
+## Tests
+Tier 1 — Code-touching plan
+- Objective Published Pages site serves the plans gallery and every plan File: tests/pages/test-pages-smoke.sh Type: smoke test (run post-deploy, e.g. a final step of deploy-pages.yml or manually against the live URL) Asserts: the objective is actually met — GET https://shawn-sandy.github.io/agentics/ returns 200 and redirects to the gallery; /agentics/plans/ contains Plans Library ; and a loop over every docs/plans/*.html filename confirms each returns 200 at /agentics/plans/<name> (all plans browsable — count derived dynamically from find docs/plans -name '*.html' , not hardcoded). Includes a retry loop (up to 5 attempts, 15s apart) per URL to handle GitHub Pages propagation delay. Run: bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics
+- Unit Root redirect points at the gallery with a base-path-safe relative href File: tests/pages/test-root-redirect.sh Targets: docs/index.html Key cases: file exists; contains a refresh/redirect to plans/index.html ; the redirect target is relative (does not begin with / or http ); a visible fallback anchor to the gallery is present for no-refresh clients.
+- Integration Deploy workflow is valid and correctly wired for Pages File: tests/pages/test-workflow-config.sh Targets: .github/workflows/deploy-pages.yml + docs/.nojekyll Key cases: YAML parses; triggers on push to main with paths: docs/** ; declares pages: write and id-token: write ; has a build job uploading artifact path docs and a deploy job using actions/deploy-pages with environment: github-pages ; all uses: pinned to SHAs; docs/.nojekyll exists so the artifact disables Jekyll.
+
+## Acceptance Criteria
+- A workflow at .github/workflows/deploy-pages.yml deploys docs/ to GitHub Pages on every push to main that touches docs/** or the workflow file itself, with SHA-pinned actions and a .nojekyll existence assertion in the build job.
+- docs/.nojekyll exists, so the published site serves hand-built HTML without Jekyll processing.
+- docs/index.html redirects the site root to the plans gallery using a relative, base-path-safe href.
+- GitHub Pages is enabled for the repo with source set to "GitHub Actions" ( build_type=workflow ).
+- Visiting https://shawn-sandy.github.io/agentics/ lands on the filterable plans gallery.
+- All plan files present in docs/plans/ at deploy time are reachable at https://shawn-sandy.github.io/agentics/plans/<name>.html and render correctly.
+- README.md links to the published Pages site.
+- Three test scripts exist in tests/pages/ ( test-pages-smoke.sh , test-root-redirect.sh , test-workflow-config.sh ) and the unit/integration tests pass locally before merge.
+
+## Verification
+End-to-end: after the change merges to main , confirm the deploy-pages.yml run completes successfully ( gh run list --workflow=deploy-pages.yml shows success ). Then load https://shawn-sandy.github.io/agentics/ in a browser — it should redirect to and display the plans gallery with all plan cards and working filter chips. Click into at least two plans (e.g. a normal plan and one ending in -review.html ) and confirm they render with full styling, working checkboxes, and the sidebar table of contents. Spot-check that deep links work directly (paste a .../plans/<name>.html URL fresh). Finally, run the smoke test ( bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics ) and confirm it passes for the root, the gallery, and all plan files; and verify the README link resolves to the live site.
+
+Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled with build_type=workflow (Step 4), (2) the workflow has correct permissions ( pages: write , id-token: write ), (3) the artifact path is docs , not ./docs . If the site returns 404 after a green deploy, wait 60–90 seconds for Pages propagation. If the smoke test times out, verify the URL base path ( /agentics/ ) matches the repo name.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

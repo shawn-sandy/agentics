@@ -1050,6 +1050,66 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Publish a clean plugin distribution repo
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a build pipeline that mirrors the agentics-kit marketplace into a single clean distribution repo — keeping only each plugin's manifest, components, README, and CHANGELOG — so users who install pull plugin-required files instead of docs/ , scratch markdown, and repo configs.
+
+## Context
+The agentics repo is both the development workspace and the install source. Its .claude-plugin/marketplace.json registers 12 active plugins via git-subdir sources whose url points at https://github.com/shawn-sandy/agentics.git . When a user installs, Claude Code pulls the plugin's path subtree — but the working repo carries a lot that has no business in an install: a 35 KB root README.md , docs/ , examples/ , scripts/ , .playwright-mcp/ , a session .png , CLAUDE.local.md , .DS_Store files, and assorted top-level markdown ( ROADMAP.md , SECURITY.md , SOCIAL.md ). Inside individual plugin dirs there can also be scratch notes that ship unintentionally.
+
+The fix is a dedicated, clean distribution repo — one repo shaped exactly like the marketplace (not per-plugin repos) — generated from this source repo by a build script. The build reads marketplace.json plugins[] as the source of truth (so the six entries in removed[] and any reference-only directories never ship), copies only an allowlisted set of files per plugin, rewrites each source.url to point at the distribution repo, and publishes the result. A GitHub Action reruns the build and publishes on every release so the clean repo never drifts from source.
+
+Decisions locked in clarification: keep rules = manifest + component dirs + README + CHANGELOG; shape = one marketplace-style repo like agentics-kit ; automation = a build script plus a GitHub Action that publishes on release.
+
+Superseded by publish-plugins-to-dist-repo-daily.html — the --publish implementation, GitHub Action, and dist repo setup described here were completed under that plan with a daily cron trigger instead of release-triggered.
+
+## Files
+- scripts/build-dist.mjs (new)
+- .github/workflows/publish-dist.yml (new)
+- .github/workflows/README.md (modified) — add Distribution section: build command, strip rules, new install path
+- .github/workflows/CLAUDE.md (modified) — add Distribution section
+- .claude/rules/marketplace.md (modified) — note that source.url rewriting is handled by the build script, not hand-edited
+- dist/ (generated) — build output — not committed to source repo
+- .claude-plugin/marketplace.json (generated)
+- README.md (generated)
+- LICENSE (generated)
+- kit/plugins/<name>/ × 12 (generated)
+
+## Steps
+1. Scaffold scripts/build-dist.mjs with config and a manifest-driven plugin list Why: A single ESM script (matching the existing merge-marketplace.mjs convention; no package.json , run via bare node ) becomes the one entry point. Define an OUT_DIR ( dist/ ), a DIST_REPO URL constant overridable via the DIST_REPO_URL env var, a KEEP allowlist ( .claude-plugin , commands , skills , agents , hooks , hooks.json , templates , README.md , CHANGELOG.md , LICENSE ), and a DROP denylist ( docs , *.local.md , .DS_Store , *.png , .playwright-mcp ). Enumerate plugins by reading marketplace.json plugins[] — never by globbing kit/plugins/* . Verify: node scripts/build-dist.mjs --list prints exactly the 12 active plugin names ( memory-tools … issue-agent ) and omits the 6 in removed[] ( agent-creator , agent-reviewer , marketplace-builder , react-perf-analyzer , agentic-plugin-dev , code-simplifier ).
+2. Implement the per-plugin clean copy into dist/ Why: For each active plugin, resolve its source.path (e.g. kit/plugins/plan-agent ) and recursively copy only the KEEP top-level entries into dist/<path>/ , pruning any .DS_Store encountered inside kept directories. Component dirs are copied wholesale so nested support files (e.g. skills/*/reference/ , templates/ ) come along automatically. Start from a clean dist/ each run (delete and recreate) so stale files never linger. Verify: After node scripts/build-dist.mjs , find dist/kit/plugins/plan-agent -type f lists the manifest, skills/ , hooks/ , hooks.json , templates/ , README.md , and CHANGELOG.md — and shows no docs/ , no *.local.md , no .DS_Store .
+3. Emit a rewritten marketplace.json plus slim root files Why: Write dist/.claude-plugin/marketplace.json derived from the source manifest: keep name ( agentics-kit ), version , owner , and every plugins[] entry, but rewrite each source.url to DIST_REPO (leaving source.path unchanged) and drop the removed[] array entirely. Generate a concise dist/README.md with the new install instructions and copy LICENSE to the dist root. Keep the JSON pretty-printed so the published manifest stays diffable. Verify: jq -r '.plugins[].source.url' dist/.claude-plugin/marketplace.json | sort -u returns only the distribution repo URL; jq '.removed' dist/.claude-plugin/marketplace.json is null ; dist/README.md and dist/LICENSE exist.
+4. Add --check and --publish modes Why: --check walks the built dist/ tree and exits non-zero if any DROP pattern leaked through (a CI tripwire against accidental bloat). --publish syncs dist/ into a checkout of the distribution repo, commits with a message referencing the source commit SHA, and pushes — authenticating via a GITHUB_TOKEN env var first, falling back to a PAT ( DIST_REPO_TOKEN ) when set. Caveat: the default Actions GITHUB_TOKEN is scoped to the source repo and usually cannot push to a separate repo like agentics-kit ; if the cross-repo push is denied, a fine-grained PAT with write on the dist repo is required (see Unresolved Questions). Publishing must clear the target working tree first so deleted plugins disappear downstream. Verify: On a clean build, node scripts/build-dist.mjs --check; echo $? prints 0 . Temporarily drop a docs/ folder into the KEEP list, rebuild, rerun --check , and confirm it exits non-zero with a message naming the offending path; then revert.
+5. Add the .github/workflows/publish-dist.yml Action Why: Trigger on release: { types: [published] } plus workflow_dispatch for manual reruns. Steps: checkout, actions/setup-node , node scripts/build-dist.mjs --check (fail fast on leakage), then node scripts/build-dist.mjs --publish with GITHUB_TOKEN wired in (and DIST_REPO_TOKEN as an optional override secret) and DIST_REPO_URL from a repo variable. Because the dist repo is separate, verify the token actually has cross-repo write during the first workflow_dispatch run — if the default GITHUB_TOKEN is rejected, switch the secret to a PAT. This keeps the clean repo in lockstep with releases without manual steps, mirroring the existing version-guard.yml / update-readme.yml patterns. Verify: YAML parses ( actionlint .github/workflows/publish-dist.yml or a YAML lint) with no errors; a workflow_dispatch run from a test branch completes green and pushes a commit to the distribution repo.
+6. Create the distribution repo, wire secrets, and document the flow Why: Create the clean GitHub repo shawn-sandy/agentics-kit , set the DIST_REPO_URL variable on the source repo (and add a DIST_REPO_TOKEN PAT secret only if the default GITHUB_TOKEN can't push cross-repo), run the first publish manually, and document the build + install flow in README.md and CLAUDE.md (new "Distribution" section: how to run the build, what gets stripped, and the new /plugin marketplace add path). Note in .claude/rules/marketplace.md that source.url rewriting is handled by the build, not hand-edited. Verify: In a fresh session, /plugin marketplace add shawn-sandy/agentics-kit then /plugin install plan-agent@agentics-kit installs successfully, and the installed tree contains no docs/ , *.local.md , or other cruft.
+
+## Acceptance Criteria
+- scripts/build-dist.mjs enumerates plugins from marketplace.json plugins[] ; the 6 removed[] plugins never appear in dist/ .
+- Each plugin in dist/ contains only allowlisted files (manifest, component dirs, hooks.json , templates/ , README.md , CHANGELOG.md ) — no docs/ , *.local.md , .DS_Store , or session PNGs.
+- dist/.claude-plugin/marketplace.json rewrites every source.url to the distribution repo and omits the removed[] array.
+- dist/ root has a slim generated README.md with install instructions and a copied LICENSE .
+- node scripts/build-dist.mjs --check exits 0 on a clean build and non-zero when a denylisted path leaks into dist/ .
+- .github/workflows/publish-dist.yml rebuilds and publishes dist/ to the distribution repo on release: published (and via workflow_dispatch ).
+- Installing a plugin from the distribution repo ( /plugin install <name>@agentics-kit ) yields a working plugin with no repo cruft.
+- README.md and CLAUDE.md document the build command, the strip rules, and the new install path.
+
+## Verification
+Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f | sort should show 12 plugin directories, each carrying only allowlisted files, plus a rewritten root marketplace.json , slim README.md , and LICENSE . Confirm jq reports a single distribution-repo source.url and a null removed . Run node scripts/build-dist.mjs --check and confirm exit code 0, then verify the leak tripwire by temporarily allowlisting docs and confirming a non-zero exit. Trigger the Action via workflow_dispatch and confirm it publishes a commit to the distribution repo. Finally, in a clean session, register shawn-sandy/agentics-kit and install plan-agent , then list the installed files to confirm zero cruft. The source agentics repo and its existing marketplace.json must remain unchanged except for the new script, workflow, and docs.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

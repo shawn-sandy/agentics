@@ -974,6 +974,65 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add a "Review the plan" option to the plan exit step
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Give every freshly-generated plan a one-click path to a full critique: add a "Review the plan" option to the implementation-plan skill's Step 8 exit menu that invokes the review-plan Agent Team on the current plan, then returns to the menu so the user can review-then-implement without leaving the flow.
+
+## Context
+The implementation-plan skill ends its workflow at Step 8 ("Implement, Edit, or Exit"), where an AskUserQuestion offers the user what to do next with the plan it just generated. Today the choices are Implement now , Run as workflow (only when a workflow prompt was generated), Edit the plan , and Exit . There is no way to send the plan straight into review.
+
+The sibling review-plan skill already exists: it orchestrates a seven-reviewer Agent Team (five core + two UI-conditional), synthesizes findings, and applies improvements in place . It is invoked via the Skill tool — already declared in implementation-plan 's allowed-tools — and accepts an explicit plan path ( /plan-agent:review-plan <file.html> ). Wiring the two together is low-risk: the exit step already knows the plan's resolved path, so it can hand that path to review-plan directly.
+
+One hard constraint shapes the design: AskUserQuestion allows a maximum of four options. The "workflow prompt present" menu is already at four , so a fifth slot is impossible there. The chosen resolution (an adaptive swap ) keeps the new Review the plan option always available and drops Edit the plan from the top menu only in the workflow-present case. The review-plan skill hard-stops when Agent Teams are unavailable (Claude Code < 2.1.32 or the CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS flag unset); the new handler must degrade gracefully when that happens.
+
+## Files
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 1.10.0 → 1.11.0
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — add 1.11.0 entry
+- kit/plugins/plan-agent/README.md (modified) — document the Review option
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — add Review option + handler to Step 8
+- tests/plugins/test-step8-review-option.sh (new) — smoke test for the option + handler
+
+## Steps
+1. Add Review the plan to both Step 8 option lists in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md . Why: In the "no workflow prompt" list (currently 3 options) insert Review the plan between Implement now and Edit the plan → 4 options. In the "workflow prompt exists" list (already at the 4-option AskUserQuestion ceiling) replace Edit the plan with Review the plan → Implement now / Run as workflow / Review the plan / Exit . This is the adaptive-swap decision: the cap forbids a 5th option, so Edit yields its slot only when a workflow prompt is present. Verify: Re-read Step 8. The no-workflow list shows exactly 4 options including Review the plan and still containing Edit the plan ; the workflow list shows exactly 4 options including Run as workflow and Review the plan but not Edit the plan . Each option keeps a one-line description.
+2. Add the "If the user chooses Review the plan " handler block to Step 8. Why: Place it alongside the other choice handlers (after Run as workflow , before where Edit the plan would be). The handler must: (1) first ask a one-question AskUserQuestion sub-prompt — "Run the review now, or dispatch it in the background?" — with two options: (a) Run now (foreground) invokes the review-plan skill via the Skill tool — Skill(skill: "review-plan", args: "<plan path>") — passing the current plan's relative path (resolved when the plan was created) so review targets this plan instead of globbing; (b) Background invokes Skill(skill: "plan-agent:review-plan", args: "<plan path> --background") — the --background flag puts review-plan in detached mode so the team runs without blocking the session; (2) handle review-plan 's hard-stop when Agent Teams are unavailable (Claude Code < 2.1.32 or CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS unset) — relay its guidance and return to the menu without error; (3) after a foreground run completes, re-render the now-updated plan in the browser via the Step 7 sub-steps, then loop back to Step 8 and ask again (mirroring the Edit the plan loop); after a background dispatch, return to the menu immediately and note the user can reopen the plan to see changes once the detached run finishes; (4) leave the plan status at todo across all three representations, because reviewing is not implementing. Verify: Re-read Step 8. A Review the plan handler exists that (a) offers a foreground-vs-background sub-choice; (b) foreground invokes Skill(skill: "plan-agent:review-plan", args: "<path>") , background invokes Skill(skill: "plan-agent:review-plan", args: "<path> --background") ; (c) handles the Agent-Teams hard-stop gracefully; (d) re-renders and loops back to the menu after a foreground run (returns immediately after a background dispatch); and (e) leaves status at todo . Confirm Skill is present in the skill's allowed-tools line (it already is — no change needed).
+3. Document the new option in kit/plugins/plan-agent/README.md . Why: Update the implementation-plan skill section (near the Step 8 / next-action and "Workflow prompt" descriptions) to list the Review the plan exit option, state that it runs the review-plan team on the current plan (with a foreground-or-background choice), and note the adaptive-swap behavior ( Edit the plan drops off the top menu when a workflow prompt is present). Project CLAUDE.md requires docs to be updated alongside plugin changes. Verify: grep -n "Review the plan" kit/plugins/plan-agent/README.md returns a sentence describing the new Step 8 option and its review-plan behavior, including the adaptive-swap note.
+4. Add a ## 1.11.0 entry to kit/plugins/plan-agent/CHANGELOG.md . Why: Insert a new ## 1.11.0 — Review option in the plan exit step (2026-06-08) section below the # Changelog heading with an ### Added bullet (the Step 8 Review the plan option that runs review-plan on the current plan, foreground or background) and a ### Changed bullet (workflow-variant menu swaps out Edit the plan for Review the plan to stay within the 4-option limit). If the pending "Unreleased — Add background mode to review-plan" item ships in the same release, fold its bullet into 1.11.0; otherwise leave it untouched. marketplace.md requires a CHANGELOG entry for every plugin change. Verify: head -20 kit/plugins/plan-agent/CHANGELOG.md shows a ## 1.11.0 section dated 2026-06-08 with an Added bullet (Review option) and a Changed bullet (adaptive swap).
+5. Bump the plan-agent version in .claude-plugin/marketplace.json from 1.10.0 to 1.11.0 . Why: A new skill option is a MINOR change per .claude/rules/marketplace.md . Set version only in marketplace.json — never add it to plugin.json . There is no CI auto-bump, so the value committed here is what ships. The .claude/settings.json post-edit hook validates marketplace.json JSON syntax automatically. Verify: python3 -c "import json; m=json.load(open('.claude-plugin/marketplace.json')); print([p['version'] for p in m['plugins'] if p['name']=='plan-agent'])" prints ['1.11.0'] and the file parses without a JSON error.
+
+## Tests
+Tier 2 — skill-instruction + docs/metadata change; objective smoke test only
+- Objective Step 8 offers "Review the plan" and targets the current plan File: tests/plugins/test-step8-review-option.sh Type: smoke test — grep-based, matching the repo's tests/pages/*.sh PASS/FAIL convention (no JS/TS runner exists for skill markdown). Asserts: in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md Step 8 — (1) Review the plan appears in the option lists; (2) the no-workflow variant still contains Edit the plan while the workflow variant's option set is Implement now / Run as workflow / Review the plan / Exit (no Edit the plan ); (3) a Review the plan handler block offers a foreground/background sub-choice and invokes Skill(skill: "plan-agent:review-plan", args: "<path>") for foreground and Skill(skill: "plan-agent:review-plan", args: "<path> --background") for background — no separate review-plan-bg command dispatch. Exits non-zero on any failed assertion. Run: bash tests/plugins/test-step8-review-option.sh Why this is the objective test: it directly proves the plan's goal — that the exit step now offers a Review option wired to review-plan on the current plan — and is the same shell-smoke style the repo already uses to validate non-runtime spec files.
+
+## Acceptance Criteria
+- Step 8's no-workflow menu lists exactly 4 options — Implement now, Review the plan, Edit the plan, Exit — with Review the plan present.
+- Step 8's workflow-prompt menu lists exactly 4 options — Implement now, Run as workflow, Review the plan, Exit — with Edit the plan dropped.
+- Selecting Review the plan offers a foreground-vs-background sub-choice: foreground invokes Skill(skill: "plan-agent:review-plan", args: "<path>") ; background invokes Skill(skill: "plan-agent:review-plan", args: "<path> --background") — both paths use the Skill tool, the --background flag triggers detached mode.
+- After review-plan finishes, control returns to the Step 8 menu and the plan status remains todo; the Agent-Teams-unavailable case is handled gracefully.
+- README.md documents the new option, and CHANGELOG.md has a ## 1.11.0 entry covering the addition and the adaptive menu swap.
+- plan-agent version in .claude-plugin/marketplace.json is 1.11.0 and the file parses as valid JSON.
+- tests/plugins/test-step8-review-option.sh passes (exit 0).
+
+## Verification
+Automated: run bash tests/plugins/test-step8-review-option.sh — every assertion prints PASS and the script exits 0. Run python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))" to confirm valid JSON, and confirm the printed plan-agent version is 1.11.0 .
+
+End-to-end (manual): invoke /plan-agent:implementation-plan <any objective> and reach Step 8. For a simple plan (no workflow prompt) confirm the menu shows Implement now / Review the plan / Edit the plan / Exit. For a complex plan (workflow prompt generated) confirm the menu shows Implement now / Run as workflow / Review the plan / Exit with Edit the plan absent. Choose Review the plan and confirm the review-plan skill announces "Reviewing plan: <this plan's path>", runs against the current plan, then control returns to the Step 8 menu with status still todo .
+
+Graceful degradation: with Agent Teams disabled (unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ), choosing Review the plan surfaces review-plan 's "Agent Teams are disabled" guidance and returns to the menu without crashing the planning flow.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

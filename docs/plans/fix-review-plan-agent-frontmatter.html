@@ -870,6 +870,74 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Fix review-plan agent frontmatter and descriptions to match product-plans pattern
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Align the seven plan-reviewer-*.md agent definitions in the plan-agent plugin with the proven product-plans sibling pattern: change the frontmatter key from allowed-tools: to tools: , narrow Bash to Bash(git *) , and append the "Teammate-only" clause to every agent description. Bump plan-agent to 1.10.0 as a PATCH fix for functional correctness.
+
+## Context
+The review-plan Agent Team skill (v1.9.0) shipped with seven plan-reviewer-*.md agent definitions under kit/plugins/plan-agent/agents/ . A post-ship team review ( add-plan-review-team-skill-review.html ) identified two functional correctness issues and one convention gap by comparing the shipped files against the established product-plans sibling agents:
+
+Wrong frontmatter key: All seven agents use allowed-tools: in their YAML frontmatter. The agent runtime reads tools: &mdash; allowed-tools: is the correct key for skills ( SKILL.md ), not agents. Every product-plans agent uses tools: . The restriction is likely silently ignored as-is.
+
+Unrestricted Bash: The agents grant bare Bash access, which gives reviewers latent write capability. The product-plans agents use Bash(git *) to restrict Bash to read-only git commands.
+
+Missing "Teammate-only" clause: The product-plans agents all end their descriptions with "Teammate-only &mdash; designed to run inside an Agent Team led by the plan-review-agents skill; not for standalone invocation." The plan-agent reviewer agents omit this, meaning they may auto-activate on broader intent matches than intended.
+
+This is a PATCH fix (correctness of existing metadata, no new behavior) per marketplace.md versioning rules. The version bump is 1.9.0 &rarr; 1.10.0 since the frontmatter key change affects runtime behavior.
+
+## Files
+- .claude-plugin/marketplace.json (modified) — bump plan-agent 1.9.0 &rarr; 1.10.0
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — add 1.10.0 entry
+- agents/plan-reviewer-architecture.md (modified) — frontmatter key + Bash restriction + teammate clause
+- agents/plan-reviewer-completeness.md (modified) — frontmatter key + Bash restriction + teammate clause
+- agents/plan-reviewer-testability.md (modified) — frontmatter key + Bash restriction + teammate clause
+- agents/plan-reviewer-risk.md (modified) — frontmatter key + Bash restriction + teammate clause
+- agents/plan-reviewer-conventions.md (modified) — frontmatter key + Bash restriction + teammate clause
+- agents/plan-reviewer-ux.md (modified) — frontmatter key + Bash restriction + teammate clause
+- agents/plan-reviewer-accessibility.md (modified) — frontmatter key + Bash restriction + teammate clause
+
+## Steps
+1. Change allowed-tools: to tools: and narrow Bash to Bash(git *) in all 7 agent files Why: The agent runtime reads tools: , not allowed-tools: (which is the skill-only key). Bare Bash grants write access to reviewers who should only read; Bash(git *) restricts them to git commands, matching the product-plans pattern. Verify: grep -c &apos;^tools:&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md returns 7 (one per file). grep &apos;allowed-tools&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md returns nothing. grep &apos;Bash(git \*)&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md returns 7.
+2. Append the "Teammate-only" clause to all 7 agent descriptions Why: Without this clause, the agents may auto-activate on broad intent matches (e.g. "review my architecture"). The clause signals they are designed for team use only, matching the product-plans convention. The clause format is: Teammate-only &mdash; designed to run inside an Agent Team led by the review-plan skill; not for standalone invocation. Verify: grep -c &apos;Teammate-only&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md returns 7. Each description still starts with its original lens-specific text and ends with the teammate clause.
+3. Bump plan-agent to 1.10.0 in .claude-plugin/marketplace.json Why: The frontmatter key change affects runtime behavior (tool restrictions may now be enforced). Per marketplace.md , this is a MINOR bump (1.9.0 &rarr; 1.10.0) since it changes agent activation behavior via the description clause. Set version only in marketplace.json , never in plugin.json . Verify: grep -A3 &apos;"plan-agent"&apos; .claude-plugin/marketplace.json | grep version shows "1.10.0" . grep version kit/plugins/plan-agent/.claude-plugin/plugin.json returns nothing. node -e "JSON.parse(require(&apos;fs&apos;).readFileSync(&apos;.claude-plugin/marketplace.json&apos;))" exits 0.
+4. Add a v1.10.0 CHANGELOG entry Why: Project convention requires a CHANGELOG entry for every version bump. Document the three fixes: frontmatter key correction, Bash narrowing, and teammate-only clause addition. Verify: grep &apos;1.10.0&apos; kit/plugins/plan-agent/CHANGELOG.md returns a heading line. The entry lists all three changes (frontmatter key, Bash restriction, teammate clause).
+5. Validate the plugin structure Why: Catch frontmatter, JSON, and registration errors before commit. Run /validate-plugin plan-agent and confirm all agent definitions parse correctly with the new tools: key. Verify: validate-plugin reports no errors for plan-agent ; node -e "JSON.parse(require(&apos;fs&apos;).readFileSync(&apos;.claude-plugin/marketplace.json&apos;))" exits 0.
+
+## Tests
+Tier 1 &mdash; Code-touching plan (agent definition files affect runtime behavior)
+- Objective Agent frontmatter matches product-plans pattern Type: Structural validation (smoke test) Asserts: All 7 plan-reviewer-*.md files use tools: (not allowed-tools: ), grant Bash(git *) (not bare Bash ), and include the "Teammate-only" description clause &mdash; matching the established product-plans agent convention. Run: grep -cP &apos;^tools:&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md (expect all 7 return 1 ); grep -l &apos;allowed-tools&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md (expect no output); grep -c &apos;Teammate-only&apos; kit/plugins/plan-agent/agents/plan-reviewer-*.md (expect all 7 return 1 ).
+- Unit marketplace.json version and structure File: .claude-plugin/marketplace.json Targets: plan-agent entry version and JSON validity Key cases: version is 1.10.0 ; JSON parses without error; plugin.json has no version key
+
+## Acceptance Criteria
+- All 7 plan-reviewer-*.md files use tools: in frontmatter, not allowed-tools: .
+- All 7 agent files grant Bash(git *) , not bare Bash .
+- All 7 agent descriptions end with the "Teammate-only" clause matching the product-plans wording.
+- marketplace.json shows plan-agent at version 1.10.0 and is valid JSON.
+- plugin.json has no version key.
+- CHANGELOG.md has a v1.10.0 entry documenting the three fixes.
+- validate-plugin plan-agent passes without errors.
+
+## Verification
+Structural parity check: Run head -6 kit/plugins/plan-agent/agents/plan-reviewer-*.md and head -6 kit/plugins/product-plans/agents/product-reviewer-*.md side by side. The frontmatter shape should now match: both use tools: , both grant Bash(git *) , both have a model: field, and both have descriptions ending with a "Teammate-only" clause.
+
+No regressions: The agent body content (mandate, how-to-review, report-back sections) must be byte-identical to the v1.9.0 versions &mdash; only the frontmatter block changes.
+
+JSON validity: node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json'))" exits 0.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

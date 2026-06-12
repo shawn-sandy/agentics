@@ -894,6 +894,81 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add Tests section to implementation plans
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a mandatory Tests section in every implementation plan that specifies real-world application tests &mdash; actual unit, integration, E2E, and other test files written for the application or feature, run by the project's test runner, and committed to the codebase. Every plan must also include an objective-verification mock/smoke test: a real test file that runs against the application and confirms the plan's stated goal is actually accomplished. The section uses a two-tier system : Tier 1 (code-touching plans) requires all applicable test sub-sections; Tier 2 (non-code plans like docs or file-move chores) requires only the mandatory objective-verification test. The author selects the tier based on what the steps actually do, not the type: field.
+
+## Context
+The current implementation plan template ( plan-mode.md , reference/SKELETON.md , and the HTML SKELETON.html ) defines a robust verification chain: per-step verification confirms each step ran correctly, acceptance criteria confirm the plan meets the definition of done, and end-to-end verification confirms the whole plan executed correctly. However, none of these layers require real application tests &mdash; they are all prose-based assertions written inside the plan document itself.
+
+This gap means a plan can be marked "completed" without any automated proof that the changes actually work in the running application. A developer could implement all steps, check all criteria boxes, and ship code that has zero test coverage. The missing layer is a Tests section that specifies real-world tests &mdash; actual test files (unit, integration, E2E) that are written for the application or feature, run by the project's test runner, and ship with the codebase. These are not plan-level prose checks; they are the same tests a developer would write and commit alongside feature code.
+
+Additionally, every plan must include a mandatory objective-verification test &mdash; a real mock or smoke test that runs against the actual application and directly asserts the plan's stated objective is accomplished. Like all tests in this section, the objective-verification test is a real executable test file, not a prose assertion in the plan document. This closes the loop between "what we said we'd do" and "what the application actually does."
+
+Tier decision (resolved): Investigation of 22 existing plans (17 feature, 4 chore, 1 fix, 1 refactor, 0 docs) showed that chore plans span a wide spectrum &mdash; from pure file moves ( clean-up-docs ) to code-mutating changes ( enable-model-invocation ). A conditionally-present rule (skip Tests for docs/chore) would either under-test code-touching chores or force a fuzzy "is this code-touching?" classification on every author. Instead, the Tests section is always present with a two-tier depth model: Tier 1 (code-touching plans) includes all applicable sub-sections (unit, integration, E2E) plus the mandatory objective-verification test; Tier 2 (non-code plans: docs, file-move chores) requires only the objective-verification test, with other sub-sections omitted entirely rather than left as empty stubs. The author selects the tier based on what the steps actually do, not the type: frontmatter field &mdash; a type: chore plan that changes import paths is Tier 1, while a type: chore plan that moves directories is Tier 2.
+
+## Files
+- ~/.claude/rules/plan-mode.md (modified) — add tests to Required Structure
+- ~/.claude/rules/reference/SKELETON.md (modified) — add Tests section template
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — add Tests to Required Structure and HTML Output
+- reference/SKELETON.html (modified) — add Tests section HTML, CSS, and nav link
+
+## Steps
+1. Add tests to the Required Structure in plan-mode.md Why: This is the authoritative rule file that all plans must follow. Adding the Tests section here makes it a first-class structural requirement alongside context, objective, steps, acceptance-criteria, and verification. The bullet must introduce the two-tier model so all downstream templates and skills inherit it. Verify: Re-read ~/.claude/rules/plan-mode.md &sect; Required Structure. Confirm a new tests bullet exists between steps and acceptance-criteria , and that it mentions the two-tier depth model (Tier 1 for code-touching plans, Tier 2 for non-code plans). At this point it only needs to name the section, its purpose, and the tier distinction &mdash; the detailed specification (sub-categories, mandatory vs. conditional rules) is Step 2's deliverable. No other sections should be altered.
+2. Define the Tests section specification in plan-mode.md Why: The bullet alone names the section; this step specifies the rules for how to populate it &mdash; the two-tier depth model, which test types are conditional vs. mandatory, what qualifies as an objective-verification test, and how these real application tests relate to the existing prose-based verification chain. Verify: Read the new tests bullet and confirm it specifies: (1) the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E "when applicable" plus mandatory objective-verification; Tier 2 (non-code) includes only the mandatory objective-verification test with other sub-sections omitted entirely; (2) the author selects the tier based on what the steps do, not the type: field; (3) the objective-verification test is a mandatory real mock/smoke test that runs against the application and asserts the plan's stated objective; (4) the objective-verification test always appears first in the Tests section as a highlighted hero card, before any unit/integration/E2E sub-sections; (5) the Tests section is explicitly distinct from per-step verification (prose) and end-to-end verification (prose) &mdash; Tests are real test files that ship with the code.
+3. Add the Tests template to reference/SKELETON.md Why: The skeleton is copied as the starter for every new markdown plan. Without the Tests section in the skeleton, authors will produce plans missing the new required section despite the rule. Verify: Open ~/.claude/rules/reference/SKELETON.md and confirm a ## Tests section exists between ## Steps and ## Acceptance Criteria . The objective-verification test placeholder must appear first (before unit/integration/E2E sub-headings), reflecting the hero-card-first layout. Confirm no existing sections were removed or reordered.
+4. Add Tests section CSS to the HTML SKELETON.html Why: The HTML plan skeleton needs dedicated styling for the Tests section &mdash; test-type badges (unit/integration/E2E/objective), a test list layout consistent with step cards, and a visually distinct objective-verification hero card that appears first in the section. Verify: Open kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html <style> block and confirm new CSS rules exist for: .test-list , .test-card , .test-badge (with variants .test-badge-unit , .test-badge-integration , .test-badge-e2e , .test-badge-objective ), and .objective-test-card . Confirm the objective test card has a visually distinct treatment (e.g. accent border, highlighted background).
+5. Add Tests section HTML markup to SKELETON.html Why: The HTML body needs the actual section element with placeholders for test items, positioned between the Steps section and Acceptance Criteria. This includes the nav sidebar link and the beaker icon reference. Verify: Open kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html and confirm: (1) a <section class="section-card card-tests" id="tests"> element exists between the Steps and Acceptance Criteria sections; (2) the .objective-test-card appears first inside the section as a highlighted hero card, before the .test-list container with unit/integration/E2E placeholder .test-card items; (3) a nav sidebar <li> with href="#tests" and a beaker icon is present between Steps and Criteria links.
+6. Update the SKILL.md Required Structure and HTML Output Requirements Why: The implementation-plan skill file is the authoritative spec for HTML plan generation. It must document the Tests section alongside the other required sections, specify the two-tier model, describe which real application test types to auto-generate from step analysis, and describe the mandatory objective-verification mock/smoke test &mdash; all of which are real test files for the application, not plan-level prose. Verify: Read kit/plugins/plan-agent/skills/implementation-plan/SKILL.md Required Structure and HTML Output Requirements sections. Confirm: (1) tests is listed as a required section between steps and acceptance-criteria ; (2) the description specifies the two-tier model &mdash; Tier 1 (code-touching) includes unit/integration/E2E as conditional plus objective-verification as mandatory; Tier 2 (non-code) includes only objective-verification with other sub-sections omitted; (3) the tier is selected by step content analysis, not the type: field; (4) the HTML Output Requirements mention the new CSS classes and the section's placement.
+7. Add test-generation guidance to the SKILL.md workflow Why: The plan-agent skill needs a workflow instruction telling it when and how to populate the Tests section during plan creation &mdash; analyzing the plan's steps to determine the tier (Tier 1 if any step creates/modifies/deletes application source files; Tier 2 otherwise), selecting which real application test types apply, and auto-drafting the objective-verification mock/smoke test from the objective statement. All generated test entries must describe real test files to be written and committed, not prose assertions. Verify: Read the Workflow section in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md and confirm a test-generation instruction exists (either as a sub-step of an existing step or as a new step). It should describe: (1) scanning step content to classify the tier &mdash; Tier 1 if any step touches application source files, Tier 2 otherwise; (2) for Tier 1, selecting applicable test types (unit/integration/E2E) based on what the steps modify; (3) for Tier 2, omitting unit/integration/E2E sub-sections entirely; (4) always generating an objective-verification test entry regardless of tier; (5) populating the {test-items} and {objective-test} placeholders in the skeleton.
+
+## Acceptance Criteria
+- plan-mode.md Required Structure lists tests as a required section between steps and acceptance-criteria
+- The tests specification names four sub-categories of real application tests: unit, integration, E2E, and objective-verification &mdash; with only objective-verification marked as mandatory; all are real test files for the application, not plan-level prose
+- reference/SKELETON.md includes a ## Tests section template with placeholders for all four test categories
+- SKELETON.html includes new CSS classes for test-type badges ( .test-badge-unit , .test-badge-integration , .test-badge-e2e , .test-badge-objective ) and a visually distinct objective-test card
+- SKELETON.html includes a <section id="tests"> between Steps and Acceptance Criteria with placeholder test cards and a sidebar nav entry
+- SKILL.md Required Structure includes tests with the same specification as plan-mode.md
+- SKILL.md workflow includes test-generation guidance that auto-classifies needed real application test types from step content and makes clear all tests are real test files, not prose
+- No existing required sections (context, objective, steps, acceptance-criteria, verification, completion-checklist, next-steps, unresolved-questions) are removed, reordered, or modified in meaning
+- The two-tier model is documented in plan-mode.md , SKILL.md , and SKELETON.html &mdash; Tier 1 (code-touching) requires all applicable test sub-sections; Tier 2 (non-code) requires only the objective-verification test
+- Tier selection is based on step content analysis (do the steps touch application source files?), not the type: frontmatter field
+- Tier 2 plans omit unit/integration/E2E sub-sections entirely rather than rendering them as empty stubs
+- The objective-verification test always renders first in the Tests section as a visually distinct hero card, before any unit/integration/E2E sub-sections
+
+## Verification
+After implementing all steps, generate a new plan using /plan-agent:implementation-plan for any feature objective (e.g. "Add a search bar to the dashboard"). Open the resulting HTML plan and confirm:
+
+A Tests section appears between Steps and Acceptance Criteria in the rendered page.
+
+The section contains at least one test card for the applicable test types &mdash; each describing a real test file to be written for the application (the search-bar plan should include unit tests for the search logic, integration tests for the API, and E2E tests for the user flow).
+
+An objective-verification test hero card is always present, visually distinct, positioned first in the Tests section (before any unit/integration/E2E sub-sections), and describes a real mock/smoke test file that runs against the application and asserts the plan's objective statement is accomplished.
+
+The sidebar navigation includes a "Tests" link that scrolls to the correct section.
+
+Tier 1 verification: Generating a plan for a feature or fix (e.g. "Add a search bar") produces a Tier 1 Tests section with unit/integration/E2E sub-sections populated based on step analysis, plus the mandatory objective-verification test.
+
+Tier 2 verification: Generating a plan for a non-code change (e.g. a docs-only plan or a file-move chore) produces a Tier 2 Tests section with only the mandatory objective-verification test &mdash; unit/integration/E2E sub-sections are omitted entirely, not rendered as empty stubs.
+
+Tier boundary test: Generating a type: chore plan whose steps modify application source files (e.g. "Bump dependency and update import paths") correctly selects Tier 1, not Tier 2 &mdash; confirming tier is driven by step content, not the type: field.
+
+Separately, create a markdown plan using the updated SKELETON.md and confirm the ## Tests section template renders with all four test-type placeholders.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

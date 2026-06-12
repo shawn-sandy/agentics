@@ -998,6 +998,57 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Fix auto-version-bump via ruleset bypass
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Restore the direct-push version bump workflow by reverting PR #284's PR-based changes, removing the version guard bot exemption, and documenting the required GitHub ruleset bypass so github-actions[bot] can push directly to main.
+
+## Context
+The auto-version-bump.yml workflow runs after merges to main that touch kit/plugins/** . It computes the correct semver bump and updates marketplace.json , but cannot land the change because the repo's branch ruleset requires all changes go through a pull request. PR #284 changed the workflow to create PRs instead, but github-actions[bot] lacks permission to create PRs. The simplest fix is to add github-actions[bot] as a bypass actor in the branch ruleset and revert to the original direct-push workflow. The [skip ci] commit prefix and ci(versions): guard already prevent infinite loops.
+
+## Files
+- .github/workflows/auto-version-bump.yml (modified) — revert to direct-push approach
+- .github/workflows/version-guard.yml (modified) — remove bot exemption condition
+- docs/GITHUB_SETUP.md (new) — document ruleset bypass configuration
+
+## Steps
+1. Revert auto-version-bump.yml to direct-push approach Why: The PR-based approach fails without additional repo/token configuration; direct push with a ruleset bypass is simpler and has fewer moving parts. Verify: Diff against the pre-PR#284 version; the only differences should be the original "Commit and push" step and contents: write permission (no pull-requests: write ).
+2. Revert version-guard.yml to remove the bot exemption Why: With direct push (no bot-authored PRs), the version guard never sees a bot PR, so the exemption is dead code. Removing it keeps the guard unconditional. Verify: The job block has no if: condition; it runs for every PR that changes the guarded paths.
+3. Add docs/GITHUB_SETUP.md documenting the required ruleset bypass Why: This is a manual repo configuration step that can't be automated via code; documenting it prevents the next maintainer from hitting the same wall. Verify: The file exists at docs/GITHUB_SETUP.md , names the exact Settings path, and references both the workflow file and the loop guards.
+4. Test the workflow end-to-end after ruleset bypass is configured Why: The workflow has failed on every run since the branch ruleset was added; this confirms the fix actually works. Verify: gh run list --workflow auto-version-bump.yml --limit 1 shows conclusion: success ; git log --oneline -1 origin/main shows a ci(versions): commit.
+
+## Tests
+Tier 2 &mdash; Non-code plan
+- Objective Version bump workflow runs to completion File: N/A (manual verification via CI run) Type: smoke test Asserts: The auto-version-bump workflow runs to completion with conclusion: success after a plugin change is merged to main , and marketplace.json on main reflects the bumped version. Run: Merge a trivial plugin change, then: gh run list --repo shawn-sandy/agentics --workflow auto-version-bump.yml --limit 1 --json conclusion
+
+## Acceptance Criteria
+- auto-version-bump.yml pushes directly to main (no PR creation, no pull-requests: write permission)
+- version-guard.yml has no bot-exemption if: condition &mdash; it runs unconditionally for all PRs
+- docs/GITHUB_SETUP.md documents the ruleset bypass requirement with the exact Settings navigation path
+- After the ruleset bypass is configured, the next plugin merge triggers a successful version bump workflow run
+
+## Verification
+Read auto-version-bump.yml &mdash; confirm it has a "Commit and push" step that runs git push directly, no gh pr create , and permissions list only contents: write .
+
+Read version-guard.yml &mdash; confirm the job has no if: condition.
+
+Read docs/GITHUB_SETUP.md &mdash; confirm it documents the bypass actor configuration.
+
+After the repo owner adds github-actions[bot] to the ruleset bypass list, merge any feat(kit/plugins/*) or fix(kit/plugins/*) change and confirm the workflow run succeeds.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

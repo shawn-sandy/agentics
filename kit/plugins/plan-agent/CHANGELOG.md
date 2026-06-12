@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.0 — Machine-readable digest embedded in every HTML plan (2026-06-12)
+
+### Added
+
+- **`#plan-digest` block** — every generated plan now embeds a `<script type="text/markdown" id="plan-digest">` block as the first element child of `<body>`, holding a spec-only markdown rendition of the plan (objective, context, files, steps with why/verify, tests, acceptance criteria, verification). `type="text/markdown"` never renders or runs, so plans stay single self-contained files. Consumers read ~1–4k tokens of spec instead of ~21k tokens of styled HTML.
+- **Digest contract** — new *Machine-Readable Digest* section in the `implementation-plan` SKILL.md: spec-only field list, explicit exclusions (status, checkbox, and progress state never enter the digest), an escaping contract (plain markdown, entities decoded, literal closing-script sequences guarded as `<\/script`), and the canonical flag-and-exit awk extractor. The extractor's opening rule is first-match-only (`!f`) so digest bodies that quote the opening tag are extracted intact — the failure mode was discovered by extracting this feature's own plan, whose objective quotes the tag.
+- **Digest-first prompts** — the generated implement and workflow prompts now carry the extraction one-liner (`Start from the embedded digest: …` / `Brief subagents with the embedded digest: …`), and the skeleton's `buildImplementPrompt()` instruction list opens with the digest read plus a full-HTML fallback.
+- **Digest-only reviewers** — all 7 `review-plan` reviewer briefs (`references/role-prompts.md`) and agent definitions now read the digest instead of the full HTML, with an explicit full-HTML fallback for plans that have no digest yet. The lead still reads the full HTML for Step 3b UI-signal scanning and Step 7 selector edits, and Step 7 gains a *Pass 1b — Refresh the digest* that regenerates the block after inline edits (update-in-place mode only).
+- **Backfill script** — `scripts/backfill-plan-digests.mjs` injects digests into existing `docs/plans/*.html` (idempotent, insertion-only, `--dry-run`, `--dir`). Plans that cannot be fully parsed are skipped and reported — no partial digests. Backfilled 41 of 53 plans (including the markdown-conversion plan that landed via the 2.2.0 merge); the 11 reported skips are 8 `*-review.html` artifacts and 3 pre-skeleton-era plans, plus 1 plan that already carried a digest. A real-corpus test asserts the checked-in tree never ships a parseable plan without a digest.
+- **Tests** — `tests/plugins/test-plan-digest.sh` (skeleton first-element-child assert, extraction edge cases including self-quoting digests, prompt clauses, reviewer briefs/defs, Step 7 refresh) and `tests/plugins/test-backfill-digest.mjs` (unit coverage for `hasDigest`/`guardScriptClose`/`extractSections`/`buildDigest` plus synthetic- and real-corpus integration with byte-preservation and idempotency asserts).
+
+---
+
 ## 2.2.0 — Markdown plan conversion for implementation-plan (2026-06-12)
 
 ### Added

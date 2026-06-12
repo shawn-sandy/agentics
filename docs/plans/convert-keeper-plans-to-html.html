@@ -914,6 +914,52 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Convert 24 keeper markdown plans to HTML and set up retention routine
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Convert all 24 remaining keeper .md plans in docs/plans/ to HTML format using the implementation-plan SKELETON.html template, delete the .md originals, rebuild the plans gallery to show all 43 active plans, and register a scheduled retention check for the six-month archival rule.
+
+## Context
+The docs cleanup workflow (PR #242) triaged 179 files across docs/: 60 developer guides relocated to docs/guides/, 95 shipped/stale plans archived to docs/plans/archive/, and statuses normalized to three canonical values. Two items from the parent plan ( docs/plans/clean-up-docs-and-plans.html ) remain incomplete:
+
+Step 4 &mdash; Convert 24 keeper .md plans to HTML using the implementation-plan template styles. Each conversion requires populating the 1,420-line SKELETON.html template with content extracted from the markdown source.
+
+AC7 &mdash; Set up a scheduled retention routine for the six-month archival rule defined in docs/plans/README.md . The policy is written but has no automated enforcement.
+
+The 24 .md plans are active keepers that need HTML twins so they appear in the plans gallery ( docs/plans/index.html ) and follow the project&rsquo;s HTML-first plan convention. Currently the gallery shows only 19 of the 43 active plans.
+
+## Steps
+1. Build a conversion manifest from the 24 keeper .md plans Why: Need structured metadata (title, status, type, created, objective, steps) from each .md file to populate HTML template placeholders accurately. A manifest prevents re-parsing and gives the workflow a deterministic work list. Verify: Manifest JSON contains 24 entries. Each entry has: source .md path, target .html filename (verb-target kebab-case), extracted title, status, type, and created date. No entry has empty required fields.
+2. Convert each .md plan to HTML using SKELETON.html Why: HTML format is the project convention for active plans; the plans gallery only indexes .html files. Using the same SKELETON.html template as /plan-agent:implementation-plan ensures visual and structural consistency. Verify: find docs/plans -maxdepth 1 -name "*.html" ! -name "index.html" | wc -l returns at least 43 (19 existing + 24 new). Each new .html has valid <meta name="plan-status"> , <meta name="plan-type"> , <meta name="plan-created"> , and <meta name="plan-repo"> tags.
+3. Delete the 24 original .md plan files Why: Keeping both .md and .html creates confusion about which is canonical. The .html is now the source of truth; the .md originals are redundant. Verify: find docs/plans -maxdepth 1 -name "*.md" ! -name "README.md" | wc -l returns 0. Only README.md remains as a non-HTML file in docs/plans/.
+4. Rebuild the plans gallery with all 43 active plans Why: The gallery at docs/plans/index.html only indexes .html files and currently shows 19 cards. After conversion it must reflect the full set of 43 active plans. Verify: Open docs/plans/index.html in a browser. The header shows &ldquo;43 plans&rdquo;. All 43 cards render with correct title, status chip, type chip, and created date. Search and filter controls work.
+5. Register a scheduled retention check for the six-month archival rule Why: The retention policy in docs/plans/README.md defines a six-month archival window for completed plans, but has no automated enforcement. A scheduled check prevents stale plans from accumulating again. Verify: A scheduled task or cron entry exists that scans docs/plans/ for plans with status: completed and created date older than 6 months, then reports eligible plans for archival.
+6. Mark parent plan steps and criteria as complete Why: Completing these items closes the remaining gaps from the docs cleanup workflow and brings the parent plan to fully done. Verify: Read docs/plans/clean-up-docs-and-plans.html . Step 4 has class completed and chip shows &ldquo;done&rdquo;. AC7 checkbox is checked. If all other ACs are also checked, the plan status is updated to completed .
+
+## Acceptance Criteria
+- All 24 keeper .md plans have corresponding .html files in docs/plans/ built from SKELETON.html
+- No non-README .md plan files remain in docs/plans/ (only .html + README.md)
+- Each new .html plan has valid meta tags: plan-status, plan-type, plan-created, plan-repo
+- The plans gallery (index.html) shows all 43 active plans with correct metadata
+- A scheduled retention check is registered and targets the six-month archival rule
+- Parent plan (clean-up-docs-and-plans.html) Step 4 is marked done and AC7 is checked
+
+## Verification
+Run find docs/plans -maxdepth 1 -name "*.html" ! -name "index.html" | wc -l to confirm 43 HTML plans. Run find docs/plans -maxdepth 1 -name "*.md" ! -name "README.md" | wc -l to confirm 0 remaining .md plans. Open docs/plans/index.html in a browser and verify 43 cards render with correct status/type badges. Spot-check 3 converted plans for correct meta tags and content fidelity against the original .md. Verify the parent plan&rsquo;s Step 4 and AC7 are marked done.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

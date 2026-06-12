@@ -914,6 +914,55 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Refine social-media-tools copy to teach, not just promote
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Rewire the social-media-tools voice so every generated post leads with a concrete, teachable takeaway about agentic development — turning the plugin's output from "look what I shipped" into a running, shareable curriculum that readers can learn from and apply.
+
+## Context
+The social-media-tools plugin (currently v2.9.1) ships nine card-generating skills — share-code, share-selection, share-github, share-session, share-project, share-explanation, share-blog, share-video, plus the social-share router. They all draft copy from one shared doctrine in references/platforms.md , which today optimizes for reach and followers: a mandatory promotional "Follow CTA", a "thought leadership" framing on quote cards, and per-platform formats whose arc is hook → insight → CTA.
+
+The owner wants the plugin to do double duty: its posts should still travel well, but they should primarily teach . Each post should leave the reader with a concrete principle or technique about agentic development they can apply — so the body of work becomes a learning resource, not a highlight reel. Because every skill reads the shared doctrine at runtime, the leverage point is centralized: change the doctrine and the per-skill Draft phases that echo it, and all skills inherit the instructional voice at once.
+
+Confirmed decisions: keep a closing follow line but reframe it as a learn-more invitation (never a hard sell, always secondary to the takeaway); apply the refactor across the full plugin and the SOCIAL.md config (a new "Instructional" tone); ship as a MINOR bump to 2.10.0. Two interview rulings sharpen the doctrine: (1) the teaching-first voice is the unconditional default for every skill — the SOCIAL.md tone only nudges register (professional / conversational / technical) and can never switch the takeaway off; (2) on length-tight platforms (Twitter/X 280, Bluesky 300) the takeaway wins and the learn-more line is dropped , extending the existing "content wins" budget rule.
+
+## Steps
+1. Add an "Instructional Voice" doctrine to the shared references/platforms.md and reframe its CTA and per-platform formats Why: This file is read at runtime by every card-generating skill — adding the teaching-first doctrine here propagates the new voice to all nine skills in one edit, rather than nine divergent copies. Verify: In kit/plugins/social-media-tools/references/platforms.md : a new "Instructional Voice" (teach, don't just promote) section exists and states the teaching-first arc is the unconditional default for every skill (tone only nudges register, never disables the takeaway); the "Follow CTA" section's examples are learn-more framed (e.g. "more agentic-dev breakdowns like this") with explicit "secondary to the takeaway, never a hard sell" guidance and a rule that on Twitter/X and Bluesky the takeaway wins and the learn-more line is dropped when budget is tight; each entry under "Default Per-Platform Copy Formats" names a concrete takeaway/lesson element. The post arc reads hook → takeaway/lesson → learn-more.
+2. Update each skill's Draft phase to require a concrete, applicable takeaway and point at the new doctrine Why: Each SKILL.md layers content-specific copy guidance on top of the shared file; without updating these, individual skills (e.g. share-code's diff angle, share-session's recap) keep their old promotional/accomplishment-first arc. Verify: The Draft phases of share-code , share-selection , share-github , share-session , share-project , and share-explanation SKILL.md each instruct the model to surface a teachable takeaway ("what the reader can learn or apply") and reference the Instructional Voice doctrine. No Draft phase frames the post as accomplishment-first or "thought leadership"-first.
+3. Rewrite the two skill-local copy-format references (share-blog, share-video) to lead with a lesson and use learn-more CTAs Why: share-blog and share-video keep their own references/platforms.md with concrete LinkedIn/Substack templates; these must lead with a takeaway and reframe their subscribe/follow CTAs, or they will contradict the shared doctrine. Verify: In skills/share-blog/references/platforms.md and skills/share-video/references/platforms.md : the LinkedIn and Substack structure lines name a takeaway/lesson as the lead element; example CTAs are learn-more / subscribe-to-learn framed, not hard-sell. Twitter/Bluesky examples still lead with the insight.
+4. Update the discovery heuristics so "shareable" is judged by teaching value Why: share-scan and share-project decide what is worth posting; if their selection criteria still favor "impressive" changes over "instructive" ones, the upstream content choice undercuts the downstream instructional voice. Verify: In skills/share-scan/references/interesting-patterns.md : shareability is scored by teaching/learning value (does this illustrate an agentic-dev lesson?) as a primary criterion. In skills/share-project/references/topics.md : the CTA note aligns with the learn-more framing from the shared doctrine.
+5. Add an "Instructional / Educational" tone to share-init and write it into the generated SOCIAL.md Why: SOCIAL.md persists per-project register defaults that every skill reads. The teaching-first voice is always on (Step 1), so this tone only sets the register the lesson is delivered in — adding "Instructional / Educational" makes the educational register the recommended starting point without ever gating the takeaway. Verify: In skills/share-init/SKILL.md : the Tone AskUserQuestion lists "Instructional / Educational" (recommended); the generated SOCIAL.md ## Defaults template documents the instructional register and notes the teaching-first voice applies regardless of tone. references/social-config.md mentions the new tone option so the config schema stays in sync.
+6. Reword the README, add a CHANGELOG entry, and bump marketplace.json to 2.10.0 Why: The README's "share/promote" language and the version metadata must reflect the new cross-cutting behavior; per repo convention the marketplace.json version is authoritative and a CHANGELOG entry is required for every bump. Verify: .claude-plugin/marketplace.json shows social-media-tools at 2.10.0 ; kit/plugins/social-media-tools/CHANGELOG.md has a 2.10.0 entry describing the instructional refactor; the README describes the teaching-first voice and the new tone. The .claude/settings.json JSON-validation hook passes after the marketplace.json edit.
+
+## Acceptance Criteria
+- references/platforms.md contains an Instructional Voice doctrine declared as the unconditional default, with a short-form "takeaway wins, drop the learn-more line" rule, and the Follow CTA reframed as a learn-more invitation (no "hard sell" or "thought leadership"-first language remains).
+- Every card-generating skill's Draft phase requires a concrete, applicable takeaway and references the shared doctrine.
+- share-blog and share-video copy-format references lead with a lesson/takeaway and use learn-more CTAs.
+- share-scan and share-project discovery heuristics judge shareability primarily by teaching value.
+- share-init offers an Instructional / Educational tone and writes it to the generated SOCIAL.md defaults; social-config.md documents it.
+- marketplace.json shows social-media-tools at 2.10.0 with a matching CHANGELOG entry and updated README framing.
+- A dry-run of one skill (e.g. share-explanation) produces copy whose lead is a teachable principle, with any follow line clearly secondary.
+
+## Verification
+End-to-end: from the plugin root, run grep -rniE "thought leadership|hard sell|promote" kit/plugins/social-media-tools/{references,skills} --include="*.md" and confirm the only remaining hits are intentional (e.g. README descriptive text), with no copy-doctrine instruction still framing posts as promotion-first. Then grep for the new vocabulary — grep -rni "instructional\|takeaway\|learn-more\|teach" kit/plugins/social-media-tools/references kit/plugins/social-media-tools/skills — and confirm the doctrine, the per-skill Draft phases, and the two skill-local references all reference it.
+
+Behavioral check: invoke /social-media-tools:share-explanation "how does the security-scrub skill work" and confirm the drafted LinkedIn copy opens with a teachable principle (not "Here's how X works" or a follow plug), names 2–3 applicable patterns, and ends with a learn-more line that could be deleted without breaking the post. Repeat once with share-code on a recent diff to confirm the diff angle leads with the lesson, not the accomplishment.
+
+Metadata check: confirm .claude-plugin/marketplace.json reports 2.10.0 for social-media-tools, the CHANGELOG has the matching dated entry, and the settings.json marketplace-validation hook reports no JSON errors.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

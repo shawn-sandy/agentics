@@ -720,6 +720,68 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Widen Social Card Templates to 1024px
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Bump every social media card template and its matching copy panel from their current pixel widths (600–760px) to 1024px — the next standard browser breakpoint above 780px — so generated social images fill more screen real estate on modern displays.
+
+## Context
+All seven HTML card templates in kit/plugins/social-media-tools/templates/ use hardcoded pixel widths for the .card and .copy-panel selectors. The widths were set conservatively to fit within 768px (tablet md) viewports — the largest, diff-card.html , is 760px wide. Modern desktop browsers default to viewports of 1280px or wider, and the Playwright screenshot pipeline captures the .card element directly (not the full page), so there is no screenshot-overflow risk at larger sizes.
+
+The standard CSS breakpoint sequence above 780px is 1024px (the Tailwind/Bootstrap lg breakpoint). Moving to 1024px gives cards ~35% more horizontal canvas without crossing into the 1280px ( xl ) range that would cause overflow on smaller desktop windows.
+
+Current widths by template:
+
+Template Current .card Current .copy-panel Target
+
+diff-card.html 760px 760px 1024px
+snippet-card.html 720px 720px 1024px
+blog-card.html 680px 680px 1024px
+feature-card.html 680px 680px 1024px
+video-card.html 640px 640px 1024px
+quote-card.html 600px 600px 1024px
+session-card.html min(720px,100%) min(720px,100%) min(1024px,100%)
+
+## Steps
+1. Update diff-card.html — change both width: 760px occurrences to width: 1024px Why: The diff card is the widest existing template (760px); updating it first establishes the 1024px baseline for all others. Verify: Run grep -n "width: " kit/plugins/social-media-tools/templates/diff-card.html and confirm both .card and .copy-panel show width: 1024px . No 760px should remain.
+2. Update snippet-card.html — change both width: 720px occurrences to width: 1024px Why: Keeps the snippet card visually consistent with the diff card at the same breakpoint width. Verify: Run grep -n "width: 720\|width: 1024" kit/plugins/social-media-tools/templates/snippet-card.html — must show two 1024px hits, zero 720px hits for the card/panel selectors (the max-width: 260px language-badge line is unaffected).
+3. Update blog-card.html — change both width: 680px occurrences to width: 1024px Why: Blog cards share the same 680px width as feature cards; updating together keeps the template family at a uniform breakpoint. Verify: Run grep -n "width: " kit/plugins/social-media-tools/templates/blog-card.html — confirm two 1024px lines, no 680px lines.
+4. Update feature-card.html — change both width: 680px occurrences to width: 1024px Why: Feature card is the same 680px as blog card; updating in the same pass avoids divergence. Verify: Run grep -n "width: " kit/plugins/social-media-tools/templates/feature-card.html — confirm two 1024px lines, no 680px lines.
+5. Update video-card.html — change both width: 640px occurrences to width: 1024px Why: Video cards were the narrowest (640px); aligning to 1024px gives the thumbnail and metadata area proportionally more space. Verify: Run grep -n "width: " kit/plugins/social-media-tools/templates/video-card.html — confirm two 1024px lines, no 640px lines for the card/panel selectors.
+6. Update quote-card.html — change both width: 600px occurrences to width: 1024px (card and copy-panel; leave the decorative width: 40px quote-mark element untouched) Why: Quote card was the narrowest at 600px; the extra width lets the pull-quote breathe with wider line measure. Verify: Run grep -n "width:" kit/plugins/social-media-tools/templates/quote-card.html — confirm two 1024px lines for .card and .copy-panel , and that width: 40px on the quote-mark element is unchanged.
+7. Update session-card.html — change both width: min(720px, 100%) occurrences to width: min(1024px, 100%) (preserve the min() wrapper) Why: Session card already uses the responsive min() pattern so it can flex below 1024px on narrow viewports; preserving that wrapper maintains its fluid behaviour while raising the cap. Verify: Run grep -n "min(" kit/plugins/social-media-tools/templates/session-card.html — confirm two hits with min(1024px, 100%) and no 720px remaining in that pattern.
+
+## Acceptance Criteria
+- diff-card.html — both .card and .copy-panel declare width: 1024px ; no 760px remains.
+- snippet-card.html — both card/panel selectors declare width: 1024px ; the inner language-badge max-width: 260px is unchanged.
+- blog-card.html and feature-card.html — both updated to width: 1024px with no 680px remaining on card/panel selectors.
+- video-card.html — card and copy-panel updated to width: 1024px ; no 640px remaining.
+- quote-card.html — card and copy-panel updated to width: 1024px ; decorative quote-mark width: 40px is unchanged.
+- session-card.html — both selectors updated to width: min(1024px, 100%) ; the min() wrapper is preserved.
+- All 7 templates open in a browser at 1024px wide without horizontal overflow or broken layout.
+
+## Verification
+Run the following grep across all templates and confirm zero old-width values remain on card/panel selectors:
+
+grep -rn "width: 600\|width: 640\|width: 680\|width: 720\|width: 760\|min(720" \
+kit/plugins/social-media-tools/templates/
+Expected output: no matches (the command returns empty). Then open any one template in a browser at 1024px viewport width — the card and copy panel should each measure exactly 1024px with no horizontal scrollbar on the page body.
+
+Optionally trigger a /social-media-tools:share-code run and confirm the Playwright screenshot captures a 1024px-wide card.
+</script>
+
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
