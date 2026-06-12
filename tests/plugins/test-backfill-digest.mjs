@@ -54,6 +54,32 @@ function awkExtract(file) {
   );
 }
 
+// First element tag in an HTML fragment, skipping leading whitespace and
+// comment nodes — index-walking firstElementChild semantics, no regex
+// stripping (a single-pass comment-removal replace can leave residual
+// markers on crafted input, and CodeQL rightly objects).
+function firstElementTag(fragment) {
+  let i = 0;
+  for (;;) {
+    while (i < fragment.length && /\s/.test(fragment[i])) i += 1;
+    if (fragment.startsWith('<!--', i)) {
+      const end = fragment.indexOf('-->', i + 4);
+      if (end === -1) return null;
+      i = end + 3;
+      continue;
+    }
+    const m = fragment.slice(i).match(/^<[a-zA-Z][^>]*>/);
+    return m ? m[0] : null;
+  }
+}
+
+// What runBackfill must produce for a given pre-digest plan. Comparing whole
+// files against this reconstruction proves injection is insertion-only and
+// deterministic without regex-removing the block afterwards.
+function expectedBackfill(originalHtml) {
+  return injectDigest(originalHtml, buildDigest(extractSections(originalHtml)));
+}
+
 /** Minimal synthetic plan using the real generated selectors. */
 function makePlan({ title = 'Test fixture plan', status = 'todo', stepWhy = 'WHY ONE', checked = '' } = {}) {
   return `<!DOCTYPE html>
@@ -162,9 +188,7 @@ ok('buildDigest renders the spec and applies the closing-script guard', () => {
 ok('injectDigest places the block as first element child of <body>', () => {
   const html = injectDigest(makePlan({}), 'DIGEST BODY');
   const body = html.split(/<\/head>\s*<body[^>]*>/)[1];
-  const noComment = body.replace(/<!--[\s\S]*?-->/g, '');
-  const firstTag = noComment.match(/<[a-zA-Z][^>]*>/)[0];
-  assert.equal(firstTag, '<script type="text/markdown" id="plan-digest">');
+  assert.equal(firstElementTag(body), '<script type="text/markdown" id="plan-digest">');
 });
 
 console.log('-- integration: synthetic corpus --');
@@ -212,14 +236,11 @@ try {
     }
   });
 
-  const INJECTED_BLOCK_RE = /\n\n<!-- ═+\n     MACHINE-READABLE DIGEST \(backfilled\)[\s\S]*?\n<\/script>/;
-
   ok('injection is insertion-only: status and checkbox bytes unchanged', () => {
     for (const name of ['normal-plan.html', 'completed-plan.html', 'guarded-plan.html']) {
       const now = readFileSync(join(tmp, name), 'utf8');
       assert.ok(hasDigest(now), `${name} did not gain a digest`);
-      const withoutBlock = now.replace(INJECTED_BLOCK_RE, '');
-      assert.equal(withoutBlock, originals[name], `${name} has byte changes beyond the inserted block`);
+      assert.equal(now, expectedBackfill(originals[name]), `${name} differs from original + deterministic digest block`);
     }
     const completed = readFileSync(join(tmp, 'completed-plan.html'), 'utf8');
     assert.match(completed, /data-status="completed"/);
@@ -255,12 +276,15 @@ try {
   // The working tree's plans are already backfilled. Strip backfilled blocks
   // from the temp copies so the test always exercises injection from the
   // pre-digest state; hand-authored digests (different comment) stay put and
-  // are counted as hasDigest skips.
+  // are counted as hasDigest skips. Splice by index rather than regex-replace
+  // so no sanitization-style rewrite is involved.
   const BACKFILLED_BLOCK_RE = /\n\n<!-- ═+\n     MACHINE-READABLE DIGEST \(backfilled\)[\s\S]*?\n<\/script>/;
   for (const e of readdirSync(REAL_PLANS_DIR, { withFileTypes: true })) {
     if (e.isFile() && e.name.endsWith('.html')) {
       const content = readFileSync(join(REAL_PLANS_DIR, e.name), 'utf8');
-      writeFileSync(join(tmpReal, e.name), content.replace(BACKFILLED_BLOCK_RE, ''));
+      const m = BACKFILLED_BLOCK_RE.exec(content);
+      const stripped = m === null ? content : content.slice(0, m.index) + content.slice(m.index + m[0].length);
+      writeFileSync(join(tmpReal, e.name), stripped);
     }
   }
   const originals = Object.fromEntries(
@@ -275,10 +299,9 @@ try {
       assert.ok(reason.length > 0, `${file} skipped without a reason`);
       assert.equal(readFileSync(join(tmpReal, file), 'utf8'), originals[file], `${file} skipped but modified`);
     }
-    const INJECTED_BLOCK_RE = /\n\n<!-- ═+\n     MACHINE-READABLE DIGEST \(backfilled\)[\s\S]*?\n<\/script>/;
     for (const file of r.injected) {
       const now = readFileSync(join(tmpReal, file), 'utf8');
-      assert.equal(now.replace(INJECTED_BLOCK_RE, ''), originals[file], `${file} changed beyond the inserted block`);
+      assert.equal(now, expectedBackfill(originals[file]), `${file} differs from original + deterministic digest block`);
       const extracted = awkExtract(join(tmpReal, file));
       assert.match(extracted, /## Objective/, `${file}: extracted digest lacks an Objective`);
       assert.match(extracted, /## Verification/, `${file}: extracted digest lacks a Verification`);
