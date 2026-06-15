@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="fix">
 <meta name="plan-created" content="2026-06-12">
 <meta name="plan-repo" content="agentics">
@@ -1083,6 +1083,16 @@
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
   @media print { .save-pdf-btn { display: none !important; } }
 </style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 
@@ -1255,7 +1265,7 @@ Run bash tests/plugins/test-responsive-retrofit.sh (exit 0). Serve docs/ locally
       <h1 class="plan-title">Retrofit responsive CSS into every HTML plan</h1>
       <button class="save-pdf-btn" type="button" onclick="savePDF()"
               aria-label="Save this plan as PDF">Save as PDF</button>
-      <span class="status-badge">todo</span>
+      <span class="status-badge">completed</span>
     </div>
     <div class="plan-meta">
       <span>
@@ -1342,12 +1352,12 @@ Run bash tests/plugins/test-responsive-retrofit.sh (exit 0). Serve docs/ locally
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1459,7 +1469,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
@@ -1476,7 +1486,7 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
@@ -1493,7 +1503,7 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
@@ -1510,7 +1520,7 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
@@ -1527,7 +1537,7 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
@@ -1544,7 +1554,7 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
@@ -1620,35 +1630,35 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>node scripts/retrofit-responsive-plans.mjs --check</code> exits 0 on the committed tree.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Every <code>docs/plans/*.html</code> except <code>index.html</code> contains <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Running the injector a second time produces an empty <code>git diff</code> (idempotent).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The skeleton's embedded block CSS is byte-identical to the script's CSS constant (sync assert passes).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">At 390px and 320px viewports, none of the 55 plan files report <code>documentElement.scrollWidth</code> greater than the viewport width — 16 did at 390px before (WCAG 1.4.10 reflow).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>docs/plans/archive/</code> is untouched by the default run; <code>--include-archive</code> remains opt-in.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>.claude-plugin/marketplace.json</code> lists plan-agent <code>2.4.1</code> and <code>kit/plugins/plan-agent/CHANGELOG.md</code> carries the matching entry.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>bash tests/plugins/test-responsive-retrofit.sh</code> exits 0.</label>
         </li>
       </ul>
@@ -1684,15 +1694,15 @@ img, video { max-width: 100%; height: auto; }
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

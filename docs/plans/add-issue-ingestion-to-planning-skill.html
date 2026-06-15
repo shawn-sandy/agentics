@@ -604,6 +604,16 @@
   .plan-back-link:hover { color: var(--accent); }
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
 </style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 <div class="scroll-rail" aria-hidden="true"></div>

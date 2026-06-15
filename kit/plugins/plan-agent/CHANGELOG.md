@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.4.1 — Responsive CSS retrofit for every HTML plan (2026-06-12)
+
+### Added
+
+- **`retrofit-responsive-plans.mjs`** — new idempotent injector (third in the `backfill-*.mjs` family alongside `backfill-plan-digests.mjs` and `backfill-save-pdf.mjs`) that wraps an 8-line responsive block as `<style id="plan-responsive-fix" data-version="1">` and inserts it immediately before `</head>` in existing `docs/plans/*.html`. Re-running is a no-op: plans already carrying the marked block are detected by id and skipped, so the script is safe to run repeatedly across the corpus. Supports `--dry-run` and `--dir` like its siblings.
+- **`reference/SKELETON.html`** — the same responsive block is now embedded in the skeleton, so freshly generated plans are born responsive and never need a retrofit pass.
+- **Tests** — `tests/plugins/test-responsive-retrofit.sh` stands guard over both halves: the injector's marked-block insertion and idempotency, and the skeleton shipping the block by default.
+
+---
+
 ## 2.4.0 — Save as PDF button in every generated HTML plan (2026-06-12)
 
 ### Added
