@@ -120,11 +120,7 @@
     margin-bottom: .6rem;
   }
   .plan-header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    display: block;
   }
   .plan-title {
     font-size: 1.75rem;
@@ -132,7 +128,6 @@
     letter-spacing: -.025em;
     line-height: 1.2;
     color: var(--text);
-    flex: 1;
   }
 
   /* Status badge */
@@ -149,7 +144,6 @@
     white-space: nowrap;
     flex-shrink: 0;
     color: #fff;
-    margin-top: .35rem;
   }
   .status-badge::before {
     content: "";
@@ -410,7 +404,7 @@
     margin-top: .1rem;
   }
   .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-body { flex: 1; min-width: 0; }
+  .step-body { min-width: 0; }
   .step-action {
     font-weight: 600;
     margin-bottom: .3rem;
@@ -440,7 +434,7 @@
     color: var(--green);
     border-color: #bbf7d0;
   }
-  .step-chip-text { flex: 1; }
+  .step-chip-text { }
   .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
   .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
   .step-verify-toggle {
@@ -668,7 +662,6 @@
   }
   .wish-list-header::after {
     content: "";
-    flex: 1;
     height: 1px;
     background: var(--wish-border);
     opacity: .5;
@@ -741,7 +734,6 @@
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
     color: var(--text);
-    flex: 1;
     word-break: break-all;
   }
   .copy-cmd-btn {
@@ -795,7 +787,6 @@
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
     color: var(--text);
-    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {
@@ -908,13 +899,19 @@
     line-height: 1.4;
     white-space: nowrap;
     flex-shrink: 0;
-    margin-top: .15rem;
     transition: filter .15s, box-shadow .15s;
   }
   .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
   .save-pdf-btn:active { filter: brightness(.75); }
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
   @media print { .save-pdf-btn { display: none !important; } }
 </style>
 <style id="plan-responsive-fix" data-version="1">
@@ -1069,9 +1066,11 @@ Separately, create a markdown plan using the updated SKELETON.md and confirm the
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Add Tests section to implementation plans</h1>
-      <button class="save-pdf-btn" type="button" onclick="savePDF()"
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
               aria-label="Save this plan as PDF">Save as PDF</button>
-      <span class="status-badge">completed</span>
+        <span class="status-badge">completed</span>
+      </div>
     </div>
     <div class="plan-meta">
       <span>

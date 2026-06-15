@@ -125,11 +125,7 @@
     margin-bottom: .6rem;
   }
   .plan-header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    display: block;
   }
   .plan-title {
     font-size: 1.75rem;
@@ -137,7 +133,13 @@
     letter-spacing: -.025em;
     line-height: 1.2;
     color: var(--text);
-    flex: 1;
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
   }
 
   /* Status badge */
@@ -154,7 +156,6 @@
     white-space: nowrap;
     flex-shrink: 0;
     color: #fff;
-    margin-top: .35rem;
   }
   .status-badge::before {
     content: "";
@@ -191,7 +192,6 @@
     line-height: 1.4;
     white-space: nowrap;
     flex-shrink: 0;
-    margin-top: .15rem;
     transition: filter .15s, box-shadow .15s;
   }
   .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
@@ -1178,9 +1178,11 @@ img, video { max-width: 100%; height: auto; }
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">{title}</h1>
-      <button class="save-pdf-btn" type="button" onclick="savePDF()"
-              aria-label="Save this plan as PDF">Save as PDF</button>
-      <span class="status-badge">{status}</span>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="status-badge">{status}</span>
+      </div>
     </div>
     <div class="plan-meta">
       <span>
