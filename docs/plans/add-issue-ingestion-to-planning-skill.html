@@ -105,11 +105,7 @@
     margin-bottom: .6rem;
   }
   .plan-header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    display: block;
   }
   .plan-title {
     font-size: 1.5rem;
@@ -282,7 +278,7 @@
     font-size: .75rem;
     font-weight: 700;
   }
-  .step-content { flex: 1; min-width: 0; }
+  .step-content { min-width: 0; }
   .step-action {
     font-weight: 600;
     color: var(--text);
@@ -565,7 +561,6 @@
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
     color: var(--text);
-    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {

@@ -56,12 +56,14 @@
     font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
     color: var(--accent); margin-bottom: .6rem;
   }
-  .plan-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-  .plan-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; color: var(--text); flex: 1; }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; color: var(--text); }
   .status-badge {
     display: inline-flex; align-items: center; gap: .4rem; font-size: .7rem; font-weight: 700;
     letter-spacing: .06em; text-transform: uppercase; padding: .25rem .75rem; border-radius: 999px;
-    white-space: nowrap; flex-shrink: 0; color: #fff; margin-top: .35rem;
+    white-space: nowrap; flex-shrink: 0; color: #fff;
   }
   .status-badge::before {
     content: ""; display: inline-block; width: .45em; height: .45em; border-radius: 50%;
@@ -175,7 +177,7 @@
     font-weight: 700; margin-top: .1rem;
   }
   .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-body { flex: 1; min-width: 0; }
+  .step-body { min-width: 0; }
   .step-action {
     font-weight: 600; margin-bottom: .3rem; display: flex; align-items: baseline; gap: .45rem;
     flex-wrap: wrap; color: var(--text);
@@ -187,7 +189,7 @@
     vertical-align: middle; user-select: none; flex-shrink: 0;
   }
   .step-card.completed .step-chip { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-chip-text { flex: 1; }
+  .step-chip-text { }
   .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
   .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
   .step-verify-toggle { margin-top: .5rem; border: 0; border-top: 1px solid var(--border); padding-top: .4rem; }
@@ -244,7 +246,7 @@
     display: flex; align-items: center; gap: .5rem; font-size: .68rem; font-weight: 700;
     letter-spacing: .1em; text-transform: uppercase; color: #7c3aed; margin: 1.5rem 0 .75rem;
   }
-  .wish-list-header::after { content: ""; flex: 1; height: 1px; background: var(--wish-border); opacity: .5; }
+  .wish-list-header::after { content: ""; height: 1px; background: var(--wish-border); opacity: .5; }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
   .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
   .wish-badge {
@@ -314,7 +316,6 @@
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
     color: var(--text);
-    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {
@@ -370,13 +371,19 @@
     line-height: 1.4;
     white-space: nowrap;
     flex-shrink: 0;
-    margin-top: .15rem;
     transition: filter .15s, box-shadow .15s;
   }
   .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
   .save-pdf-btn:active { filter: brightness(.75); }
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
   @media print { .save-pdf-btn { display: none !important; } }
 </style>
 <style id="plan-responsive-fix" data-version="1">
@@ -462,9 +469,11 @@ End-to-end: log in as a test user, navigate to /settings/profile , update displa
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">Ship a user profile page with drag-and-drop avatar upload that persists across sessions</h1>
-      <button class="save-pdf-btn" type="button" onclick="savePDF()"
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
               aria-label="Save this plan as PDF">Save as PDF</button>
-      <span class="status-badge">todo</span>
+        <span class="status-badge">todo</span>
+      </div>
     </div>
     <div class="plan-meta">
       <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-05-30</span>
