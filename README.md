@@ -128,7 +128,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 12 plugins in marketplace (6 archived directories retained)
+│   └── plugins/                  # 11 plugins in marketplace (6 archived directories retained)
 │       ├── agent-creator/
 │       ├── agent-reviewer/
 │       ├── agentic-plugin-dev/
@@ -136,7 +136,6 @@ agentics/
 │       ├── code-simplifier/
 │       ├── code-testing-agent/
 │       ├── git-agent/
-│       ├── issue-agent/
 │       ├── marketplace-builder/
 │       ├── memory-tools/
 │       ├── plan-agent/
@@ -188,7 +187,6 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install plan-agent@agentics-kit
 /plugin install settings-sync@agentics-kit
 /plugin install social-media-tools@agentics-kit
-/plugin install issue-agent@agentics-kit
 ```
 
 **Or install all at once** — paste the full block above into your Claude Code session.
@@ -217,8 +215,7 @@ This repo ships these keys in **project scope** (`.claude/settings.json`). On fi
     "product-plans@agentics-kit": true,
     "settings-sync@agentics-kit": true,
     "social-media-tools@agentics-kit": true,
-    "plan-agent@agentics-kit": true,
-    "issue-agent@agentics-kit": true
+    "plan-agent@agentics-kit": true
   }
 }
 ```
@@ -735,27 +732,6 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 ---
 
-#### `issue-agent` v0.2.4
-
-Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection, a confirmation gate before writing, and automatic browser open on creation.
-
-**Skills** (activate explicitly):
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `create-issue` | File, open, or create an issue or ticket — manual invoke only |
-
-```bash
-claude --plugin-dir ./kit/plugins/issue-agent
-# /issue-agent:create-issue bug "Login button throws 500 on mobile"
-# /issue-agent:create-issue feature "Add dark mode toggle to settings page"
-# /issue-agent:create-issue session
-```
-
-[View Documentation](./kit/plugins/issue-agent/README.md)
-
----
-
 ## Plugin Reference Table
 
 | Plugin | Version | Category | Components |
@@ -765,13 +741,12 @@ claude --plugin-dir ./kit/plugins/issue-agent
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.7 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.9 | productivity | 1 command, 1 skill, 7 agents |
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 1.10.1 | productivity | 1 command, 6 skills, 8 agents, 2 hooks |
-| [git-agent](./kit/plugins/git-agent/README.md) | 3.10.6 | development | 3 commands, 5 skills, 3 agents |
+| [git-agent](./kit/plugins/git-agent/README.md) | 3.11.0 | development | 3 commands, 6 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.6 | development | 1 command, 4 skills, 1 hook |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.3 | development | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.10.1 | productivity | 1 command, 13 skills |
-| [issue-agent](./kit/plugins/issue-agent/README.md) | 0.2.4 | development | 1 skill |
 
 ---
 
@@ -789,6 +764,7 @@ claude --plugin-dir ./kit/plugins/<plugin-name>
 
 | Plugin | Last Version | Removed | Reason | Replacement |
 |--------|-------------|---------|--------|-------------|
+| `issue-agent` | 0.2.4 | 2026-06-16 | Absorbed into `git-agent` v3.11.0 to reduce plugin count | `/plugin install git-agent@agentics-kit` then `/git-agent:create-issue` |
 | [`agent-creator`](./kit/plugins/agent-creator) | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | Use `agentic-plugin-dev` (also archived; see below) |
 | [`agent-reviewer`](./kit/plugins/agent-reviewer) | 1.0.2 | 2026-05-29 | Overlaps with `skill-reviewer` | `/plugin install skill-reviewer@agentics-kit` |
 | [`marketplace-builder`](./kit/plugins/marketplace-builder) | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | Use `agentic-plugin-dev` (also archived; see below) |

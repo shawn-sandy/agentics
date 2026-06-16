@@ -1,5 +1,15 @@
 # Changelog — git-agent
 
+## v3.11.0 — 2026-06-16 — Absorb create-issue skill from issue-agent plugin
+
+### Added
+
+- `create-issue` skill: drafts and creates GitHub/GitLab issues from four context sources (`bug`, `feature`, `selection`, `session`) with host auto-detection, a confirmation gate, and automatic browser open (`--no-open` to suppress). Moved from the now-retired `issue-agent` plugin.
+
+### Changed
+
+- **Breaking:** invocation namespace changed from `/issue-agent:create-issue …` to `/git-agent:create-issue …`. Update any scripts, docs, or muscle memory accordingly.
+
 ## v3.10.5 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed

@@ -63,7 +63,7 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 
 ## Reference Implementations
 
-12 plugins in the marketplace (`agentics-kit` v4.0.0):
+11 plugins in the marketplace (`agentics-kit` v4.0.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -72,13 +72,12 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 | `plan-interview` | Commands + Skills | Stress-test plans with deep-grill interview; auto-routes product plans to panel review (Step 1.5 router); `--quick` flag bypasses routing |
 | `skill-reviewer` | Skills | Audit and optimize skill files — enforces three-part description format (short label + capability + trigger phrase, ≤200 chars) |
 | `code-testing-agent` | Skills + Agents | Test suggestion, review, tdd-fix (bug), tdd-loop (feature); tdd-fix and tdd-loop are manual-invoke only (`disable-model-invocation`) |
-| `git-agent` | Skills + Agents + Commands | Branch creation, commit, PR, and ship workflows; background commands: `commit-bg`, `pr-bg`, `ship-bg`; `ship-autonomous` for supervised full pipeline |
+| `git-agent` | Skills + Agents + Commands | Branch creation, commit, PR, and ship workflows; background commands: `commit-bg`, `pr-bg`, `ship-bg`; `ship-autonomous` for supervised full pipeline; `create-issue` skill files GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate |
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
 | `social-media-tools` | Skills + Commands | Discover teachable content (git history, codebase path, blog posts, videos, GitHub snippets, selected code), scrub for secrets, generate dark-mode social cards for LinkedIn/Twitter/Bluesky/Substack with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `share-init` generates a `SOCIAL.md` project config for default platform, tone, and content preferences; `share-react` shares a React component with a static rendered preview and a typed props table on one card; `/social-media-tools:digest` for interactive digest scanning |
 | `plan-agent` | Skills + Agents + Hooks + Commands | `/plan-agent:implementation-plan <objective>` runs Steps 0–8 plan workflow with built-in interview; `/plan-agent:review-plan` spawns a seven-reviewer Agent Team; `/plan-agent:review-plan-bg <path>` runs the review team in the background; `/plan-agent:finalize-plan` reviews and marks plans completed with per-criterion verification; `/plan-agent:refine-prompt` generates AI prompts from Anthropic best practices (command-only); accepts issue URLs/`#n` to seed plans and `.md` plan paths for conversion to HTML; `plans-library` builds filterable gallery; `plans-open` reopens gallery; automatic filename hook + gallery index auto-rebuild hook |
-| `issue-agent` | Skills | Create GitHub and GitLab issues from any context — selection, session, bug, or feature; host auto-detected from git remote; auto-opens created issue in browser (`--no-open` to suppress); manual-invoke only (`disable-model-invocation`); always confirms before creating |
 
 - **Marketplace config:** `.claude-plugin/marketplace.json`
 - **Test fixture:** `tests/fixtures/valid-plugin/` — validation reference

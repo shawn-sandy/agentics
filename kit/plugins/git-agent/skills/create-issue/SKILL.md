@@ -46,8 +46,8 @@ glab repo view
 ```
 
 If the CLI is missing or unauthenticated, **stop** with a helpful message:
-- "Run `! gh auth login` to authenticate with GitHub, then retry `/issue-agent:create-issue`."
-- "Run `! glab auth login` to authenticate with GitLab, then retry `/issue-agent:create-issue`."
+- "Run `! gh auth login` to authenticate with GitHub, then retry `/git-agent:create-issue`."
+- "Run `! glab auth login` to authenticate with GitLab, then retry `/git-agent:create-issue`."
 
 Do not proceed past pre-flight if either check fails.
 

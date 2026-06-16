@@ -28,8 +28,7 @@
         "product-plans@agentics-kit": true,
         "settings-sync@agentics-kit": true,
         "social-media-tools@agentics-kit": true,
-        "plan-agent@agentics-kit": true,
-        "issue-agent@agentics-kit": true
+        "plan-agent@agentics-kit": true
     },
     "hooks": {
         "SessionStart": [
