@@ -138,8 +138,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.10.6",
-      "description": "Automated git workflow — create branches, commit with conventional messages, and create PRs (with background subagents, slash commands for fire-and-forget commit/PR/ship, and auto-linking plan issue references in PR descriptions)",
+      "version": "3.11.0",
+      "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
         "git",
@@ -150,7 +150,16 @@
         "pull-request",
         "conventional-commits",
         "automation",
-        "ship"
+        "ship",
+        "issue",
+        "ticket",
+        "bug",
+        "feature",
+        "github",
+        "gitlab",
+        "gh",
+        "glab",
+        "issue-tracker"
       ]
     },
     {
@@ -264,31 +273,15 @@
         "verb-target",
         "kebab-case"
       ]
-    },
-    {
-      "name": "issue-agent",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/issue-agent"
-      },
-      "version": "0.2.4",
-      "description": "Create GitHub and GitLab issues from any context — selection, session, bug, or feature — with host auto-detection, a confirmation gate before writing, and automatic browser open on creation (--no-open to suppress)",
-      "category": "development",
-      "tags": [
-        "issue",
-        "ticket",
-        "bug",
-        "feature",
-        "github",
-        "gitlab",
-        "gh",
-        "glab",
-        "issue-tracker"
-      ]
     }
   ],
   "removed": [
+    {
+      "name": "issue-agent",
+      "version": "0.2.4",
+      "removedDate": "2026-06-16",
+      "reason": "Absorbed into git-agent v3.11.0 — create-issue skill now lives at /git-agent:create-issue. Reduces plugin count without losing functionality."
+    },
     {
       "name": "agent-creator",
       "version": "1.1.2",

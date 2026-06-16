@@ -24,7 +24,6 @@ PLUGINS=(
   settings-sync
   social-media-tools
   plan-agent
-  issue-agent
 )
 
 for plugin in "${PLUGINS[@]}"; do
