@@ -30,6 +30,7 @@ No path in this plugin auto-posts — human review is always required before any
 | `media-library` | Skill | Browse saved posts interactively and retrieve copy for reposting |
 | `share-init` | Skill | Analyze the project and generate a `SOCIAL.md` config with default platform, tone (including Instructional / Educational), hashtags, focus areas, and audience |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
+| `write-guide` | Skill | Write a long-form internal developer guide (system, rule, concept, or saved memory) to `docs/` on a 12-section skeleton, verifying every URL and on-disk fact before it lands |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 
 ## Installation
@@ -71,6 +72,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | `media-library` | Automatic | Browse the media library, find a prior post, view saved posts |
 | `share-init` | Automatic | Set up social sharing preferences, create a SOCIAL.md, configure sharing defaults |
 | `security-scrub` | Automatic | Check for secrets, review a diff for leaks, scrub this file for sensitive data |
+| `write-guide` | Automatic | Write a guide on X, document this rule, deep-dive X, explain X as a guide, capture this session's lessons as a guide |
 
 ### Discover what's worth sharing
 

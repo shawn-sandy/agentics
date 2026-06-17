@@ -1,5 +1,26 @@
 # Changelog — social-media-tools
 
+## v2.12.0 — 2026-06-17 — write-guide: long-form internal explainer guides
+
+### Added
+
+- `write-guide` skill: writes a long-form internal developer guide (system, rule, concept, or
+  saved memory) to `docs/` following a fixed 12-section skeleton, modeled on two canonical exemplars
+  — a broad system explainer and a narrow single-rule deep-dive. Output is a `verb-target`
+  kebab-case Markdown file with verified facts throughout.
+- Six enforced discipline rules in the skill: WebFetch-verify every external URL before pasting,
+  Read/Grep-verify every on-disk fact, treat memory contents as frozen-in-time, quote primary
+  sources verbatim, mark uncertainty rather than fabricate, and attach a "per-user, not in this
+  repo" disclaimer to `~/.claude/...` paths and `[[memory wikilinks]]`.
+- `skills/write-guide/references/skeleton.md`: the 12-section template, verbatim, with a
+  section-by-section intent table.
+- `skills/write-guide/references/tone-rules.md`: nine tone rules and the six discipline rules,
+  each expanded with a worked example drawn from the exemplars.
+- `skills/write-guide/references/exemplars.md`: synopsis of the two exemplar archetypes (broad
+  explainer vs. single-rule deep-dive) and a picker for which to model.
+
+---
+
 ## v2.11.0 — 2026-06-09 — share-react: component preview, implementation, and props card
 
 ### Added
