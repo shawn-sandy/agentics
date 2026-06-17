@@ -121,6 +121,9 @@ props:
   size:
     values: [xs, sm, md, lg, xl, 2xl]
     maps-to: "data-btn"
+  color:
+    values: [primary, secondary, danger, success, warning]
+    maps-to: "data-color"
 slots: [children]
 variants:
   outline: { maps-to: "data-style=outline" }
@@ -152,14 +155,14 @@ targets: [react, html, astro, angular, vue, svelte, web-component]
   type="{type}"
   data-btn="{size}"
   data-color="{color}"
-  data-style="{variant}"
+  data-style="outline"
   aria-disabled="{disabled}"
 >
   <!-- slot: children -->
 </button>
 ```
 
-The agent treats `{size}`, `{color}`, and `{disabled}` as prop-driven attributes. Anywhere `data-*` appears in the structure, a matching CSS selector lives in `## Styles`.
+The agent treats `{type}`, `{size}`, `{color}`, and `{disabled}` as prop-driven attributes — every `{...}` placeholder must resolve to a `props:` entry above. Variants surface differently: each named variant's `maps-to` value (here `data-style=outline`) is written into the DOM as a literal when that variant is active, which is why `data-style="outline"` is hard-coded rather than placeholdered. Anywhere `data-*` appears in the structure, a matching CSS selector lives in `## Styles`.
 
 ### How abstract props become real code
 
