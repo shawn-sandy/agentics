@@ -2,7 +2,7 @@
 
 A guide to `.claude/rules/skill-authoring.md`: what it checks, when it fires, and how to satisfy it before saving any change under `skills/`.
 
-> **Origin.** Written 2026-06-17 as the self-verification artifact for the `dev-explainer-doc` skill (in the `social-media-tools` plugin). The skill's smoke test calls for a guide about a rule in `.claude/rules/`; the originally-named `imports.md` does not exist in this repo, so this guide documents the real, present rule `skill-authoring.md` instead. It exists both to verify the skill produces a compliant 12-section doc and to be a genuinely useful reference for anyone editing a skill here.
+> **Origin.** Written 2026-06-17 as the self-verification artifact for the `write-guide` skill (in the `social-media-tools` plugin). The skill's smoke test calls for a guide about a rule in `.claude/rules/`; the originally-named `imports.md` does not exist in this repo, so this guide documents the real, present rule `skill-authoring.md` instead. It exists both to verify the skill produces a compliant 12-section doc and to be a genuinely useful reference for anyone editing a skill here.
 
 ---
 

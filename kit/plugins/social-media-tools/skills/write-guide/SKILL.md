@@ -1,11 +1,11 @@
 ---
-name: dev-explainer-doc
+name: write-guide
 description: Writes a developer explainer guide for an internal system, rule, or concept. Use when asked to write, document, or deep-dive an internal topic as a guide. Not for READMEs, API docs, or blog posts.
 version: 0.1.0
 allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, Write, Edit, AskUserQuestion, TodoWrite
 ---
 
-# dev-explainer-doc
+# write-guide
 
 Write a long-form internal developer guide that explains one system, rule, concept, or saved
 memory in depth — the kind a teammate reads once to understand a thing completely. The output is a
@@ -21,7 +21,7 @@ claim is a defect, not a draft.
 - One Markdown file saved to `docs/` (or a user-named sub-folder), named in `verb-target`
   kebab-case — e.g. `explain-memory-recall.md`, `review-bot-loop-discipline.md`, never `guide.md`.
 - The file follows the 12-section skeleton in
-  `${CLAUDE_PLUGIN_ROOT}/skills/dev-explainer-doc/references/skeleton.md`.
+  `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md`.
 - Concrete throughout: real file paths, verbatim frontmatter/configs/verdicts, cited numbers,
   ASCII diagrams for flows, tables for comparisons.
 
@@ -55,9 +55,9 @@ If the request is ambiguous between a guide and one of the above, ask before dra
 Read all three before drafting. They are the authoritative spec for structure, voice, and the
 style models — do not reconstruct them from memory:
 
-1. `${CLAUDE_PLUGIN_ROOT}/skills/dev-explainer-doc/references/skeleton.md` — the 12-section template, verbatim. Every guide follows it.
-2. `${CLAUDE_PLUGIN_ROOT}/skills/dev-explainer-doc/references/tone-rules.md` — tone rules and the mandatory discipline rules, each expanded with a worked example.
-3. `${CLAUDE_PLUGIN_ROOT}/skills/dev-explainer-doc/references/exemplars.md` — synopsis of the two exemplar docs (broad explainer vs. single-rule deep-dive) and which to model for a given topic.
+1. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md` — the 12-section template, verbatim. Every guide follows it.
+2. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/tone-rules.md` — tone rules and the mandatory discipline rules, each expanded with a worked example.
+3. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/exemplars.md` — synopsis of the two exemplar docs (broad explainer vs. single-rule deep-dive) and which to model for a given topic.
 
 ## Workflow
 
