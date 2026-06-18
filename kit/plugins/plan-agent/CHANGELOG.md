@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.5.1 — Backfill version + changelog for the #328 description optimization (2026-06-18)
+
+### Changed
+
+- **Skill descriptions optimized to the three-part ≤200-char format** — backfills the version bump and changelog entry that should have accompanied PR #328, which rewrote the `implementation-plan` and `refine-prompt` skill frontmatter `description:` fields to the canonical `[short ≤80 chars] [capability] Use when…` shape. No behavior change; metadata/discovery only.
+
+---
+
 ## 2.5.0 — build-proposal skill: turn a vague idea into a decision-complete proposal (2026-06-18)
 
 ### Added
