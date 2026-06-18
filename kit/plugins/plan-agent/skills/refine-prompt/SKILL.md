@@ -1,9 +1,6 @@
 ---
 name: refine-prompt
-description:
-  "Refine-prompt: interviews users and assembles a structured AI prompt using
-  Anthropic best-practice techniques. Use when the user runs
-  /plan-agent:refine-prompt or asks to refine a prompt."
+description: "Builds structured AI prompts using Anthropic techniques. Interviews users, classifies prompt type, and delivers a copy-pasteable prompt. Use when the user asks to refine or build a prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
 allowed-tools:

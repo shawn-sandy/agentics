@@ -1,16 +1,17 @@
 ---
 name: write-guide
-description: Writes a developer explainer guide for an internal system, rule, or concept. Use when asked to write, document, or deep-dive an internal topic as a guide. Not for READMEs, API docs, or blog posts.
+description: Writes developer guides on any project topic. Covers rules, tools, resources, plans, and changes for any reader. Use when the user asks to write, explain, or deep-dive a project topic as a guide.
 version: 0.1.0
 allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, Write, Edit, AskUserQuestion, TodoWrite
 ---
 
 # write-guide
 
-Write a long-form internal developer guide that explains one system, rule, concept, or saved
-memory in depth — the kind a teammate reads once to understand a thing completely. The output is a
-single Markdown file in `docs/`, built to a fixed 12-section skeleton and a strict tone, modeled on
-two canonical exemplars (a broad system explainer and a narrow single-rule deep-dive).
+Write a long-form developer guide that explains any project topic in depth — systems, rules,
+concepts, tools, resources, plans, changes, or saved memories — for internal teammates or external
+contributors alike. The output is a single Markdown file in `<plansDirectory>/guides/`, built to a fixed 12-section
+skeleton and a strict tone, modeled on two canonical exemplars (a broad system explainer and a
+narrow single-rule deep-dive).
 
 This is a writing skill with a verification spine: every external URL, file path, and quoted
 fact is checked against its source before it lands in the doc. A guide that ships an unverified
@@ -18,8 +19,9 @@ claim is a defect, not a draft.
 
 ## What this skill produces
 
-- One Markdown file saved to `docs/` (or a user-named sub-folder), named in `verb-target`
-  kebab-case — e.g. `explain-memory-recall.md`, `review-bot-loop-discipline.md`, never `guide.md`.
+- One Markdown file saved to a `guides/` subfolder inside the configured `plansDirectory` (e.g.
+  `docs/plans/guides/`), named in `verb-target` kebab-case — e.g. `explain-memory-recall.md`,
+  `review-bot-loop-discipline.md`, never `guide.md`.
 - The file follows the 12-section skeleton in
   `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md`.
 - Concrete throughout: real file paths, verbatim frontmatter/configs/verdicts, cited numbers,
@@ -43,7 +45,7 @@ Do not invoke for these — redirect instead:
 
 - **README updates** — suggest editing the existing `README.md` directly; do not produce a `docs/` guide.
 - **API reference docs** — these need a reference format (signatures, params, return types), not this narrative skeleton. Decline and say so.
-- **Marketing copy or external announcements** — out of scope; this skill writes internal docs only.
+- **Marketing copy or press releases** — out of scope; this skill writes developer-facing guides, not promotional content.
 - **Blog posts** — use the `share-blog` skill instead.
 - **Status reports, leadership updates, incident comms** — use the `internal-comms` skill instead.
 - **Single-paragraph notes or commit messages** — too small for a guide; write the note inline.
@@ -98,8 +100,10 @@ Follow these steps in order.
 8. **Name.** Choose a `verb-target` kebab-case filename that names the topic. Reject generic names
    like `guide.md`, `doc.md`, `notes.md`.
 
-9. **Save.** Default to `docs/` at the repo root. If `docs/` already uses sub-folders (e.g.
-   `docs/guides/`), match the closest existing convention. Honor an explicit user-specified path.
+9. **Save.** Resolve the target directory in order: (1) `<plansDirectory>/guides/` if
+   `plansDirectory` is configured, (2) `docs/guides/` if that directory exists, (3) `docs/` at
+   the repo root as a last fallback. Create the `guides/` subfolder if it does not exist. Honor
+   an explicit user-specified path above all other resolution rules.
 
 10. **Confirm.** Return the saved file as a clickable Markdown link plus a one-paragraph summary of
     what the doc covers and which exemplar archetype it follows.
@@ -118,9 +122,10 @@ These are enforced, not advisory. A guide that breaks one is incomplete.
    configs. Do not paraphrase a thing you can quote.
 5. **Mark uncertainty explicitly.** Never invent a fact to fill a gap. Writing "unverified" is
    acceptable; fabrication is not.
-6. **Match the doc's audience to its location.** A committed `docs/` file is read by teammates who
-   clone the repo and have no access to your `~/.claude/`. Linking to per-user paths or `[[memory
-   wikilinks]]` without that disclaimer is a defect.
+6. **Match the doc's audience to its location.** A committed `docs/` file may be read by external
+   contributors who clone the repo and have no access to your `~/.claude/`. Linking to per-user
+   paths or `[[memory wikilinks]]` without the "per-user, not in this repo" disclaimer is a defect.
+   When the guide is explicitly for an external audience, omit per-user paths entirely.
 
 ## Before delivering: self-check
 

@@ -1,6 +1,6 @@
 ---
 name: share-explanation
-description: "Explains how any project file, component, or concept works. Reads source files and synthesizes developer-friendly principles, social copy, and a dark-mode card. Use when asked 'how does X work' or 'explain X'."
+description: "Explains how any project file, component, or concept works. Reads source files, synthesizes principles, and generates a social card. Use when the user asks how something works or to explain it."
 allowed-tools: Bash, Read, Glob, Grep, Write, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, SendUserFile
 model: opus
 ---
