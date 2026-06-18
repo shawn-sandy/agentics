@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.5.0 — build-proposal skill: turn a vague idea into a decision-complete proposal (2026-06-18)
+
+### Added
+
+- **`build-proposal` skill** — `/plan-agent:build-proposal <idea>` (command **or** model-invocable) turns a half-formed idea into a decision-complete proposal. It codifies an 8-step research→decide→author loop (Frame → Fan out research → Synthesize core finding → Separate facts from decisions → Resolve decisions → Author artifact → Deepen → Converge & hand off), a **Tier 0/1/2 right-sizing gate** so small ideas never get a 10-section doc, and the canonical proposal-artifact shape. It writes a living `docs/proposals/<slug>.md` and stops at the planning handoff — the seam is "should-we + what" (build-proposal) vs. "how" (`implementation-plan`).
+- **Artifact-dir resolver** — resolves the proposals directory `--dir` → `planAgent.proposalsDirectory` → `docs/proposals/` → default Claude user folder (mirroring how `implementation-plan` resolves `plansDirectory`) and `mkdir -p`s it at runtime. A committed `docs/proposals/.gitkeep` seeds the default root.
+- **Ambient-activation discipline** — the three-part ≤200-char description triggers on idea / "should-we" / compare-and-align intent and shares **no trigger phrase** with `implementation-plan` (which owns "plan document / write a plan file"), so the two never collide on the model-invocation path.
+- **References (progressive disclosure)** — `references/artifact-shape.md` (canonical section order + skeleton) and `references/operating-principles.md` (the ten operating principles + the relationship-to-existing-capabilities map, with `deep-research` wired as an **optional** delegate behind a WebSearch/WebFetch + Explore fallback — never a hard dependency).
+- **Worked-example corpus** — two trimmed, real proposals ship flat under `references/` (`example-design-md-spec-alignment.md` — Tier 2; `example-proposal-builder-skill.md` — the recursive case), each stamped with its source URL + commit SHA/date as a built-in regression corpus.
+- **Tests** — `tests/plugins/test-build-proposal.sh` guards the frontmatter contract, the three-part ≤200-char description, the no-trigger-overlap-with-implementation-plan rule, body line count < 500, reference + exemplar resolution, and a **dynamic** marketplace version check (plan-agent > `origin/main`, not a hardcoded 2.4.1).
+
+---
+
 ## 2.4.1 — Responsive CSS retrofit for every HTML plan (2026-06-12)
 
 ### Added

@@ -21,6 +21,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
+| `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
@@ -377,6 +378,13 @@ plan-agent/
       reference/
         SKELETON.html       — Default full-plan HTML template
         SKELETON.md         — Markdown skeleton reference
+    build-proposal/
+      SKILL.md              — Idea→proposal loop (Tier gate, 8 steps, artifact resolver)
+      references/
+        artifact-shape.md             — Canonical proposal-artifact template
+        operating-principles.md       — Ten principles + capability map
+        example-design-md-spec-alignment.md   — Trimmed Tier 2 worked exemplar
+        example-proposal-builder-skill.md     — Trimmed recursive worked exemplar
     review-plan/
       SKILL.md              — Agent Team review workflow (supports --background)
       references/
@@ -416,6 +424,25 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 - **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
 - **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
 - **Skeleton reference** — points to `reference/SKELETON.html` (only supported template; `minimal`, `adr`, and `spike` are planned)
+
+### `build-proposal` Skill
+
+Command-invocable via `/plan-agent:build-proposal <idea>` and model-invocable on idea / "should-we" / compare-and-align intent. It is the **upstream** layer to `implementation-plan`: it decides *should-we + what* and hands off the *how*. Its three-part description shares no trigger phrase with `implementation-plan`, so the two never collide on the model-invocation path.
+
+- **Right-sizing triage** — Step 1 picks a **Tier**: Tier 0 (answer directly, no loop), Tier 1 (one research pass, short proposal), Tier 2 (full 8-step loop + canonical artifact). The tier escalates or de-escalates as research reveals scope.
+- **8-step loop** — Frame → Fan out research (parallel) → Synthesize the core finding → Separate facts from decisions → Resolve decisions (recommendation-first) → Author the artifact → Deepen on request → Converge & hand off. Step 0 self-bootstraps out of plan mode.
+- **Artifact-dir resolution** — `--dir` → `planAgent.proposalsDirectory` (project then global settings) → `docs/proposals/` → default Claude user folder; `mkdir -p`s the resolved dir and writes `<slug>.md`. A committed `docs/proposals/.gitkeep` seeds the default.
+- **`deep-research` is optional** — the web-research phase can delegate to the `deep-research` skill when available, falling back to `WebSearch`/`WebFetch` + `Agent` (`Explore`) breadth otherwise. No hard dependency.
+- **References (one level deep)** — `references/artifact-shape.md` (canonical section order + skeleton), `references/operating-principles.md` (ten principles + capability map), and two trimmed worked exemplars (`example-design-md-spec-alignment.md`, `example-proposal-builder-skill.md`) stamped with source URL + commit SHA/date.
+- **Handoff** — at convergence it stops and points to `/plan-agent:implementation-plan author an execution plan from the proposal at docs/proposals/<slug>.md`. It leads with an objective rather than a bare `.md` token: a bare token triggers `implementation-plan`'s 1:1 conversion mode (which maps `Changes/Steps` → step cards), and a proposal has only `Workstreams`/`Roadmap` — so leading with the objective keeps the full planning pass that drafts real, actionable steps.
+
+Usage:
+
+```text
+/plan-agent:build-proposal should we adopt DESIGN.md for our component tokens
+/plan-agent:build-proposal compare our state management to Zustand and align
+/plan-agent:build-proposal --dir docs/rfcs how would we add offline support
+```
 
 ### `finalize-plan` Skill
 
