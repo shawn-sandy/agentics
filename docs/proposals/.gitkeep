@@ -1,0 +1,3 @@
+# This file keeps the docs/proposals/ artifact root under version control.
+# build-proposal (/plan-agent:build-proposal) writes <slug>.md proposals here
+# by default. Safe to delete once real proposals live alongside it.

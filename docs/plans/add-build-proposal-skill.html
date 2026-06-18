@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-15">
 <meta name="plan-repo" content="agentics">
@@ -1259,7 +1259,7 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1446,12 +1446,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Scaffold the skill (and the <code>docs/proposals/</code> artifact root, via a committed <code>.gitkeep</code>) and author <code>SKILL.md</code>. Frontmatter: <code>name: build-proposal</code>; <code>model: opus</code> (matching implementation-plan's research-heavy profile); <strong>omit</strong> <code>disable-model-invocation</code> so the skill stays model-invocable (peers omit the field); a drafted three-part <code>description</code> ≤200 chars whose trigger clause uses “idea / should-we / compare-and-align” wording and explicitly avoids implementation-plan's “plan document / HTML plan / write a plan file” phrasing; full <code>allowed-tools</code> (Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent); <code>argument-hint</code>. Body under 500 lines — each of the 8 loop steps carrying its key imperative (e.g. “Frame: restate the idea in one line, name the domains, ask 2–3 clarifying questions if underspecified, then proceed”) — plus a runtime artifact-dir resolver — <code>--dir</code> flag → <code>planAgent.proposalsDirectory</code> setting → <code>docs/proposals/</code> → default, mirroring how implementation-plan resolves <code>plansDirectory</code> — that <code>mkdir -p</code>s the resolved dir, and one-level pointers to the two references.</span>
               </div>
               <div class="step-why"><strong>Why:</strong> SKILL.md is the sole runtime artifact Claude loads; its description governs ambient activation and must not collide with <code>implementation-plan</code> (idea / “should-we” vs. plan-document intent). The skill delegates research to <code>deep-research</code> via <code>Skill</code> and fans out via <code>Agent</code>/<code>WebSearch</code>/<code>WebFetch</code>, so all must be declared in <code>allowed-tools</code>.</div>
@@ -1463,12 +1463,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Author the artifact-shape reference. Write <code>references/artifact-shape.md</code> capturing the canonical proposal artifact: front-matter (<code>status: proposal→plan</code>, <code>type</code>, <code>created</code>), Context, Core finding (block quote), Side-by-side comparison table, Locked &amp; resolved decisions (dated), Workstreams/options, Risks &amp; tensions, Open questions (decisions-only), Roadmap (phased, S/M/L), Appendices.</span>
               </div>
               <div class="step-why"><strong>Why:</strong> progressive disclosure keeps SKILL.md lean; the template is reference material, so it lives one level deep instead of bloating the body.</div>
@@ -1480,12 +1480,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Author the operating-principles reference. Write <code>references/operating-principles.md</code> with (a) the ten operating principles (ground every claim, quantify, separate facts from decisions, recommendation-first questions, record &amp; propagate, iterative deepening, parallel fan-out, surface incidental findings, commit each round, signal convergence) and (b) the relationship-to-existing-capabilities map.</span>
               </div>
               <div class="step-why"><strong>Why:</strong> these are the guardrails that make the loop converge instead of gathering forever; the <code>deep-research</code> framing must match the chosen optional-with-fallback wiring.</div>
@@ -1497,12 +1497,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bundle the worked-example corpus (flat, one level deep). Fetch the two source docs from the external branch — e.g. <code>gh api &quot;repos/shawn-sandy/agentic-acss-plugins/contents/docs/proposals/proposal-builder-skill.md?ref=claude/design-md-spec-alignment-sitq7t&quot; -H &quot;Accept: application/vnd.github.raw&quot;</code> (and the <code>docs/plans/design-md-spec-alignment.md</code> path) — then write trimmed copies directly under <code>references/</code> as <code>example-design-md-spec-alignment.md</code> and <code>example-proposal-builder-skill.md</code> (no <code>examples/</code> subdir, so references stay one level deep). Trim each to front-matter + core finding + locked decisions + one appendix; stamp a header with the source URL + commit SHA/date; audit the trimmed content for inadvertent internal URLs or credentials.</span>
               </div>
               <div class="step-why"><strong>Why:</strong> a built-in regression corpus — authoring the skill must reproduce shapes like these; if it can't, the body is underspecified. Flat placement honors the “file references one level deep” rule from <code>skill-authoring.md</code>; the SHA/date stamp makes future drift from the external source detectable.</div>
@@ -1514,12 +1514,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Register the skill in the marketplace. In <code>.claude-plugin/marketplace.json</code> bump <code>plan-agent</code> <code>version</code> 2.4.1 → 2.5.0 (MINOR — new skill), extend its <code>description</code> to name <code>/plan-agent:build-proposal</code>, and add tags <code>proposal</code> and <code>research</code> (singular only — drop the redundant <code>proposals</code> plural).</span>
               </div>
               <div class="step-why"><strong>Why:</strong> marketplace.json is the canonical registry and the only version home for relative-path plugins; the new value must exceed <code>main</code>.</div>
@@ -1531,12 +1531,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Sync the manifest, changelog, and docs. Update <code>plugin.json</code> <code>description</code> (no <code>version</code> field), add a <code>## 2.5.0</code> CHANGELOG entry dated today, add a <code>build-proposal</code> row + component section to the README Features table, and update the <code>plan-agent</code> row in the root <code>CLAUDE.md</code> plugin table.</span>
               </div>
               <div class="step-why"><strong>Why:</strong> README-first + changelog conventions keep the manifest, changelog, and capability catalog in lockstep with the registry.</div>
@@ -1548,12 +1548,12 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a structural smoke test. Create <code>tests/plugins/test-build-proposal.sh</code> with numbered PASS/FAIL assertions and a failure counter (matching <code>test-plan-digest.sh</code>): the SKILL.md frontmatter contract; description ≤200 chars with the three-part structure (regex on the “ — ” separators) and no trigger-phrase overlap with implementation-plan; body <code>wc -l</code> &lt; 500; both references and both <code>example-*.md</code> resolve; <code>marketplace.json</code> plan-agent version <em>dynamically</em> greater than <code>git show origin/main:.claude-plugin/marketplace.json</code> (not a hardcoded 2.4.1); <code>plugin.json</code> carries no <code>version</code> key; and an optional fixture slice asserting a generated <code>docs/proposals/&lt;slug&gt;.md</code> matches the canonical sections.</span>
               </div>
               <div class="step-why"><strong>Why:</strong> locks the objective (skill installed, structurally complete, registered) into a re-runnable guard alongside the existing <code>tests/plugins/*.sh</code> family.</div>
@@ -1638,39 +1638,39 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A new <code>build-proposal</code> skill exists at <code>kit/plugins/plan-agent/skills/build-proposal/SKILL.md</code> with valid frontmatter (name, three-part description ≤200 chars, <code>model: opus</code>, model-invocation enabled by <em>omitting</em> <code>disable-model-invocation</code>) and a body under 500 lines.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The SKILL.md body codifies the Tier 0/1/2 right-sizing gate and all eight workflow steps (Frame → Converge &amp; hand off).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>references/artifact-shape.md</code> and <code>references/operating-principles.md</code> exist one level deep and are referenced from SKILL.md.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Two trimmed worked exemplars are bundled flat under <code>references/</code> as <code>example-*.md</code>, each stamped with its source URL + commit SHA/date.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5"><code>deep-research</code> is wired as optional with a WebSearch/WebFetch + Explore fallback (<code>Skill</code> declared in <code>allowed-tools</code>) — no hard dependency.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>.claude-plugin/marketplace.json</code> registers plan-agent at <code>2.5.0</code> (&gt; main's 2.4.1) with a description naming <code>/plan-agent:build-proposal</code> and tags <code>proposal</code> + <code>research</code>; JSON is valid; no <code>version</code> added to <code>plugin.json</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">CHANGELOG, README, and root <code>CLAUDE.md</code> document the new skill; <code>tests/plugins/test-build-proposal.sh</code> passes (line-count, three-part-description, activation-collision, and dynamic-version checks).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>build-proposal</code> activates on idea / “should-we” / compare-and-align intent, shares no trigger phrase with <code>implementation-plan</code>, and a test asserts the two descriptions are disjoint.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">The SKILL.md body resolves the artifact dir via <code>--dir</code> → <code>planAgent.proposalsDirectory</code> → <code>docs/proposals/</code> (mirroring <code>plansDirectory</code>) and <code>mkdir -p</code>s it at runtime; <code>docs/proposals/.gitkeep</code> seeds the default.</label>
         </li>
       </ul>
@@ -1693,21 +1693,21 @@ Run `bash tests/plugins/test-build-proposal.sh` and confirm exit 0 (skill presen
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
