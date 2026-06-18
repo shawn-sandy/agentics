@@ -1,5 +1,20 @@
 # Changelog — social-media-tools
 
+## v2.12.1 — 2026-06-18 — Surface write-guide in discovery; backfill #328 description optimization
+
+### Changed
+
+- **`write-guide` surfaced in discovery surfaces** — the skill shipped in v2.12.0 but was missing
+  from the marketplace `description` and the root `CLAUDE.md` plugin table. Both now mention it, so
+  it is discoverable from the marketplace listing and the session-loaded capability index, matching
+  how every other skill in this plugin is documented.
+- **Skill descriptions optimized to the three-part ≤200-char format** — backfills the version bump
+  and changelog entry that should have accompanied PR #328, which rewrote the `share-explanation`
+  and `write-guide` skill frontmatter `description:` fields to the canonical
+  `[short ≤80 chars] [capability] Use when…` shape. No behavior change; metadata/discovery only.
+
+---
+
 ## v2.12.0 — 2026-06-17 — write-guide: long-form internal explainer guides
 
 ### Added
