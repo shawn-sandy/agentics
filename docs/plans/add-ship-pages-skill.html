@@ -1060,7 +1060,7 @@ Publishing today is a three-stage pipeline split across plugins: plan-agent + so
    Why: Closes the core gap — a user's repo lacks the workflow, .nojekyll, and a root index; scaffold + API enablement makes first-run publishing turnkey, and the fallback guarantees publish is never blocked.
    Verify: assets/deploy-pages.yml is valid YAML containing `path: docs` + the .nojekyll assertion; Step 4 covers all four artifacts plus the fallback.
 
-5. Write the scoped publish step (skill Step 5) reusing branch-agent + pr-agent. Stage ONLY publish paths with explicit `git add docs/ .github/workflows/deploy-pages.yml`; warn about and leave unrelated changes uncommitted; if on main/master create a branch via `Skill(git-agent:branch-agent)`; make a scoped conventional commit; push + open a PR via `Skill(git-agent:pr-agent)`. Do NOT call the ship skill (its `git add -A` defeats scoped staging).
+5. Write the scoped publish step (skill Step 5) reusing branch-agent + pr-agent. Stage ONLY publish paths — always `git add docs/`, and stage `.github/workflows/deploy-pages.yml` only in Pages mode when it exists (in --static mode no workflow is scaffolded, so adding that pathspec would abort git add); warn about and leave unrelated changes uncommitted; if on main/master create a branch via `Skill(git-agent:branch-agent)`; make a scoped conventional commit; push + open a PR via `Skill(git-agent:pr-agent)`. Do NOT call the ship skill (its `git add -A` defeats scoped staging).
    Why: Honors "scope to publish paths" + "branch + PR" while reusing git-agent's branch/PR skills; Pages deploys when the PR merges.
    Verify: Step 5 stages only docs/ + the workflow file, calls branch-agent and pr-agent, and notes why ship is bypassed.
 
@@ -1091,7 +1091,7 @@ Tier 1 — Code-touching plan (creates a SKILL.md, a .yml asset, a .sh test; mod
 - With no args it auto-detects whichever of the plans/media galleries exist and rebuilds a gallery only when its index is missing or stale.
 - It resolves the plans gallery via the plansDirectory pattern (project → global settings, fallback docs/plans); when that falls outside the Pages deploy source (docs/), it warns rather than silently skipping.
 - In a repo lacking Pages setup it scaffolds deploy-pages.yml, docs/.nojekyll, and a docs/index.html landing page (without overwriting an existing index), then enables Pages via gh api or prints fallback instructions.
-- It publishes by staging only docs/ + the workflow file via branch-agent/pr-agent — never sweeping unrelated changes and never pushing from main.
+- It publishes by staging only docs/ (plus the workflow file in Pages mode) via branch-agent/pr-agent — never sweeping unrelated changes and never pushing from main.
 - On success it reports https://<owner>.github.io/<repo>/ (Pages) or copy-paste deploy commands pointing at docs/ (--static).
 - git-agent is bumped to 3.12.0 in marketplace.json, with matching CHANGELOG, README, and root CLAUDE.md updates.
 - `bash tests/plugins/test-ship-pages.sh` passes.
@@ -1307,7 +1307,7 @@ Load git-agent locally and run /git-agent:ship-pages in a checkout that has plan
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
         <div class="pipeline-node"><div class="pipeline-label">4 · Enable</div><code>gh api …/pages</code><div class="pipeline-sub">fallback to printed Settings steps</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">5 · Publish</div><code>branch-agent · pr-agent</code><div class="pipeline-sub">scoped commit (docs/ + workflow) → PR</div></div>
+        <div class="pipeline-node"><div class="pipeline-label">5 · Publish</div><code>branch-agent · pr-agent</code><div class="pipeline-sub">scoped commit (docs/ [+ workflow]) → PR</div></div>
         <div class="pipeline-arrow" aria-hidden="true">↓</div>
         <div class="pipeline-node"><div class="pipeline-label">6 · Live</div><code>owner.github.io/repo</code><div class="pipeline-sub">deploys on merge + Actions run</div></div>
       </div>
@@ -1423,10 +1423,10 @@ Load git-agent locally and run /git-agent:ship-pages in a checkout that has plan
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Write the scoped publish step reusing branch-agent + pr-agent</span>
               </div>
-              <div class="step-why">Honors the "scope to publish paths" + "branch + PR" decisions while still reusing git-agent's branch/PR skills. Stage ONLY publish paths with explicit <code>git add docs/ .github/workflows/deploy-pages.yml</code>; warn about and leave unrelated changes uncommitted; if on <code>main</code>/<code>master</code> create a branch via <code>Skill(git-agent:branch-agent)</code>; make a scoped conventional commit (<code>docs(pages): publish plans/media galleries</code>); push + open a PR via <code>Skill(git-agent:pr-agent)</code>. Explicitly do NOT call <code>ship</code> — its <code>git add -A</code> would defeat scoped staging.</div>
+              <div class="step-why">Honors the "scope to publish paths" + "branch + PR" decisions while still reusing git-agent's branch/PR skills. Stage ONLY publish paths — always <code>git add docs/</code>, and stage <code>.github/workflows/deploy-pages.yml</code> only in Pages mode when it exists (in <code>--static</code> mode no workflow is scaffolded, so adding that pathspec would abort <code>git add</code> with a pathspec error before the docs bundle is staged); warn about and leave unrelated changes uncommitted; if on <code>main</code>/<code>master</code> create a branch via <code>Skill(git-agent:branch-agent)</code>; make a scoped conventional commit (<code>docs(pages): publish plans/media galleries</code>); push + open a PR via <code>Skill(git-agent:pr-agent)</code>. Explicitly do NOT call <code>ship</code> — its <code>git add -A</code> would defeat scoped staging.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">Step 5 stages only <code>docs/</code> + the workflow file, calls <code>branch-agent</code> and <code>pr-agent</code>, and carries a note explaining why <code>ship</code> is bypassed.</div>
+                <div class="verify-body">Step 5 stages <code>docs/</code> (plus the workflow file only in Pages mode, when present), calls <code>branch-agent</code> and <code>pr-agent</code>, and carries a note explaining why <code>ship</code> is bypassed.</div>
               </details>
             </div>
           </div>
@@ -1570,7 +1570,7 @@ Load git-agent locally and run /git-agent:ship-pages in a checkout that has plan
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">It publishes by staging only <code>docs/</code> + the workflow file via branch-agent/pr-agent — never sweeping unrelated changes and never pushing from <code>main</code>.</label>
+          <label for="ac4">It publishes by staging only <code>docs/</code> (plus the workflow file in Pages mode) via branch-agent/pr-agent — never sweeping unrelated changes and never pushing from <code>main</code>.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
@@ -1707,7 +1707,7 @@ Load git-agent locally and run /git-agent:ship-pages in a checkout that has plan
             <details class="unresolved-item">
               <summary>Scoped-commit reuse vs. extending ship with a --paths flag</summary>
               <div class="unresolved-prompt">
-                <pre>In the git-agent ship-pages skill, decide whether to keep the scoped-commit approach (branch-agent + pr-agent + explicit `git add docs/ .github/workflows/deploy-pages.yml`) or instead add a `--paths <globs>` scoping flag to the existing ship skill and have ship-pages call ship with it. Compare maintainability and the risk of ship's `git add -A` capturing unrelated changes, recommend one, and implement the chosen approach.</pre>
+                <pre>In the git-agent ship-pages skill, decide whether to keep the scoped-commit approach (branch-agent + pr-agent + a scoped `git add` of docs/, plus the deploy-pages.yml workflow only in Pages mode) or instead add a `--paths <globs>` scoping flag to the existing ship skill and have ship-pages call ship with it. Compare maintainability and the risk of ship's `git add -A` capturing unrelated changes, recommend one, and implement the chosen approach.</pre>
                 <button class="copy-prompt-btn" type="button"
                         onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
               </div>
