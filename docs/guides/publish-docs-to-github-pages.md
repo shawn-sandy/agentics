@@ -102,7 +102,7 @@ GENERATION (local, on demand)
   plan-agent  ──────────────►  docs/plans/<verb-target>.html
        └─ PostToolUse hook (rebuild-plans-index.py) ──► regenerates docs/plans/index.html
   social-media-tools ───────►  docs/media/social/<card>.html  + <card>.png
-       └─ media-library skill ───────────────────────► regenerates docs/media/social/index.html
+       └─ (NO hook) run media-library skill MANUALLY ─► regenerates docs/media/social/index.html
 
   Result on disk:
      docs/
@@ -125,6 +125,8 @@ DEPLOYMENT (CI, automatic)
             ▼
   https://shawn-sandy.github.io/agentics/   (live)
 ```
+
+**The two galleries refresh differently — this asymmetry matters.** The *Plans* gallery (`docs/plans/index.html`) regenerates **automatically** via a `plan-agent` PostToolUse hook on every plan write (§9). The *Social Media* gallery (`docs/media/social/index.html`) has **no hook** — the card save flow stops after writing the card and delivering it ([`saving-and-delivery.md`](../../kit/plugins/social-media-tools/references/saving-and-delivery.md): "STOP. Do not run further git commands..."). To refresh the social gallery you must run the `media-library` skill yourself before committing, or Pages deploys a stale gallery that does not link the new card.
 
 The whole `build` → `deploy` chain uses GitHub's official, SHA-pinned actions:
 
@@ -185,15 +187,17 @@ Local preview never publishes; merging to `main` always (eventually) does. There
 
 **To publish a new plan or social card:**
 
-1. Generate it with the owning plugin — `plan-agent` for plans, `social-media-tools` for cards. The artifact lands in `docs/plans/` or `docs/media/social/`, and the gallery index regenerates itself.
-2. Preview locally: `bash scripts/serve-docs.sh` → open the printed `http://localhost:<port>/plans/` (or `/media/social/`).
-3. Commit the `docs/` changes on a feature branch, open a PR, merge to `main`.
-4. The push to `main` fires `deploy-pages.yml`; the artifact is live at `https://shawn-sandy.github.io/agentics/` within a minute or two.
+1. Generate it with the owning plugin — `plan-agent` for plans, `social-media-tools` for cards. The artifact lands in `docs/plans/` or `docs/media/social/`.
+2. **Refresh the gallery index.** For a **plan**, this happens automatically (the `rebuild-plans-index.py` hook fires on the write). For a **social card**, there is no hook — **run the `media-library` skill** so `docs/media/social/index.html` links the new card. Skip this and the deployed Social Media gallery will be stale.
+3. Preview locally: `bash scripts/serve-docs.sh` → open the printed `http://localhost:<port>/plans/` (or `/media/social/`).
+4. Commit the `docs/` changes on a feature branch, open a PR, merge to `main`.
+5. The push to `main` fires `deploy-pages.yml`; the artifact is live at `https://shawn-sandy.github.io/agentics/` within a minute or two.
 
 **What NOT to do:**
 
 - **Do NOT delete `docs/.nojekyll`.** Jekyll will mangle filenames with underscores and skip files it considers "special" — the build job fails on purpose if the marker is gone.
 - **Do NOT hand-edit `docs/plans/index.html`.** The `rebuild-plans-index.py` hook regenerates it on the next plan write and will overwrite your edits. Change the generator, not the output.
+- **Do NOT commit a new social card without running `media-library`.** Unlike plans, the social gallery has no rebuild hook — commit the card alone and Pages publishes a `docs/media/social/index.html` that omits it. Run the skill, confirm the card appears, then commit both.
 - **Do NOT add absolute-root links (`href="/..."`) to the hub or galleries.** The site is served under the `/agentics/` path prefix, so `/` resolves to the wrong place. Use relative hrefs — `test-docs-hub.sh` fails if it finds an absolute-root link.
 - **Do NOT expect a feature branch to deploy.** Only `main` triggers Pages. Preview locally instead.
 - **Do NOT unpin an action to a tag.** `test-workflow-config.sh` asserts every `uses:` is pinned to a 40-char SHA.
@@ -213,7 +217,7 @@ Local preview never publishes; merging to `main` always (eventually) does. There
 ## 9. Interactions with related systems
 
 - **`plan-agent` rebuild hook** — [`kit/plugins/plan-agent/hooks/rebuild-plans-index.py`](../../kit/plugins/plan-agent/hooks/rebuild-plans-index.py), registered as a `PostToolUse` hook on `Write|Edit|MultiEdit` in [`kit/plugins/plan-agent/hooks.json`](../../kit/plugins/plan-agent/hooks.json). It regenerates `docs/plans/index.html` after any plan HTML write (2-second debounce; always exits 0 so an index-rebuild failure never blocks the write). This is what keeps the *Plans* gallery current without manual steps.
-- **`social-media-tools` media library** — the `media-library` skill builds and refreshes `docs/media/social/index.html` from the cards in that folder. This keeps the *Social Media* gallery current.
+- **`social-media-tools` media library** — the `media-library` skill builds and refreshes `docs/media/social/index.html` from the cards in that folder. Unlike the plan gallery, this is **manual**: `social-media-tools` ships no hook, and the card save flow stops after delivery without rebuilding the index ([`saving-and-delivery.md`](../../kit/plugins/social-media-tools/references/saving-and-delivery.md)). You must run `media-library` yourself to keep the *Social Media* gallery current.
 - **Local preview tooling** — `scripts/serve-docs.sh` plus the fixed-port VS Code configs in `.claude/launch.json`: `plans-gallery` (`:8901`), `media-library` (`:8902`), `docs-all` (`:8900`). Documented in the repo `README.md` under "Browsing Docs Locally".
 - **Sibling publish pipeline** — `publish-dist.yml` (§8). Easy to confuse with Pages because both are "publish"; they are unrelated.
 - **One-time repo config** — `docs/GITHUB_SETUP.md` documents workflow-permission expectations for this repo's CI.
@@ -284,11 +288,11 @@ bash scripts/serve-docs.sh
 ```text
 PUBLISH A PLAN OR CARD TO PAGES
   1. Generate ── plan-agent → docs/plans/      | social-media-tools → docs/media/social/
-                 (gallery index.html auto-rebuilds)
-  2. Preview  ── bash scripts/serve-docs.sh    → http://localhost:<port>/plans/
-  3. Commit   ── docs/** changes on a branch → PR → merge to main
-  4. Deploy   ── push to main fires deploy-pages.yml  (automatic)
-  5. Live     ── https://shawn-sandy.github.io/agentics/
+  2. Index    ── plan: auto (rebuild hook)     | card: run media-library skill MANUALLY
+  3. Preview  ── bash scripts/serve-docs.sh    → http://localhost:<port>/plans/
+  4. Commit   ── docs/** changes on a branch → PR → merge to main
+  5. Deploy   ── push to main fires deploy-pages.yml  (automatic)
+  6. Live     ── https://shawn-sandy.github.io/agentics/
 
 DEPLOY FIRES WHEN…            DEPLOY DOES NOT FIRE WHEN…
   • push to main, docs/**       • push to a feature branch
