@@ -247,6 +247,21 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "15. Step 8 handoff leads with an objective, not a bare .md (no conversion-mode hollow plan)..."
+# A bare `.md` first token would put implementation-plan into conversion mode,
+# which maps Changes/Steps -> step cards; proposals have only Workstreams/Roadmap,
+# so the handoff must lead with an objective to keep the full step-drafting pass.
+if grep -qE 'implementation-plan +[^ ]+\.md' "$SKILL"; then
+  echo "  FAIL: SKILL.md advertises a bare '.md' handoff token (triggers conversion mode)"
+  FAILURES=$((FAILURES + 1))
+elif grep -q "author an execution plan from the proposal at" "$SKILL" \
+  && grep -qi "conversion" "$SKILL"; then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 8 handoff missing the objective-led command or the conversion-mode caveat"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All build-proposal checks passed."

@@ -191,15 +191,21 @@ execution-plan input?* If not, it is volume, not depth.
 
 When the proposal is **decision-complete** (open items are decisions the human
 has now made, facts are grounded, the roadmap is sized), **stop**. Do not author
-the execution plan. Hand the proposal to the planning layer:
+the execution plan. Hand the proposal to the planning layer for a **full
+planning pass** — not a 1:1 conversion:
 
 > The proposal is decision-complete at `<resolved-dir>/<slug>.md`. To turn it
 > into an execution plan, run:
-> `/plan-agent:implementation-plan <resolved-dir>/<slug>.md`
+> `/plan-agent:implementation-plan author an execution plan from the proposal at <resolved-dir>/<slug>.md`
 
-`implementation-plan` already accepts a `.md` path as a conversion source, so
-the proposal feeds straight in. Reaffirm the seam: this skill decided
-*should-we + what*; planning owns *how*.
+**Lead with the objective, not a bare `.md` path.** A proposal carries
+Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing
+`implementation-plan` a bare `.md` first token would trigger its **conversion
+mode** (which skips clarify/align/interview and maps sections 1:1) and produce a
+plan with no actionable steps. Leading with objective text keeps it in its
+**full workflow** — it explores the proposal, drafts real steps (the *how*), and
+authors tests. Reaffirm the seam: this skill decided *should-we + what*;
+planning owns *how*.
 
 ## Operating principles & relationship to existing capabilities
 

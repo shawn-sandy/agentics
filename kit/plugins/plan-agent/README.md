@@ -434,7 +434,7 @@ Command-invocable via `/plan-agent:build-proposal <idea>` and model-invocable on
 - **Artifact-dir resolution** — `--dir` → `planAgent.proposalsDirectory` (project then global settings) → `docs/proposals/` → default Claude user folder; `mkdir -p`s the resolved dir and writes `<slug>.md`. A committed `docs/proposals/.gitkeep` seeds the default.
 - **`deep-research` is optional** — the web-research phase can delegate to the `deep-research` skill when available, falling back to `WebSearch`/`WebFetch` + `Agent` (`Explore`) breadth otherwise. No hard dependency.
 - **References (one level deep)** — `references/artifact-shape.md` (canonical section order + skeleton), `references/operating-principles.md` (ten principles + capability map), and two trimmed worked exemplars (`example-design-md-spec-alignment.md`, `example-proposal-builder-skill.md`) stamped with source URL + commit SHA/date.
-- **Handoff** — at convergence it stops and points to `/plan-agent:implementation-plan docs/proposals/<slug>.md`, which ingests the proposal via its `.md` conversion path.
+- **Handoff** — at convergence it stops and points to `/plan-agent:implementation-plan author an execution plan from the proposal at docs/proposals/<slug>.md`. It leads with an objective rather than a bare `.md` token: a bare token triggers `implementation-plan`'s 1:1 conversion mode (which maps `Changes/Steps` → step cards), and a proposal has only `Workstreams`/`Roadmap` — so leading with the objective keeps the full planning pass that drafts real, actionable steps.
 
 Usage:
 
