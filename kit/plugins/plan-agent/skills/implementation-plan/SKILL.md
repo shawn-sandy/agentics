@@ -1,7 +1,7 @@
 ---
 name: implementation-plan
 model: opus
-description: "Generate an HTML implementation-plan document. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create a plan document, generate an HTML plan, convert a markdown plan into an HTML implementation plan, or write a plan file — not for general planning questions."
+description: "Generates HTML implementation-plan documents. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create or generate an HTML plan file."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
 ---
@@ -65,6 +65,7 @@ Echo the resolved objective and effective flags after completing the Step 0 self
 
 - Do not edit source files, configs, or any file outside the configured `plansDirectory` (or `docs/plans/` when no setting exists).
 - Do not apply fixes, refactors, or any change described in the plan's steps.
+- Not for general planning questions or discussions — this skill creates plan documents, not advice.
 - Use `Read`, `Glob`, `Grep`, and `Bash` for read-only exploration only — never to edit source files or run codebase-mutating commands. This does not restrict §7 (local HTTP server for browser preview).
 - The plan is the deliverable. Implementation is a separate, user-initiated step.
 
