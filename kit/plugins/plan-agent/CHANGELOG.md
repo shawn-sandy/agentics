@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.6.0 — Outcome-driven goal prompt on every HTML plan (2026-06-18)
+
+### Added
+
+- **Goal prompt** — every generated plan now carries a third copy-paste prompt alongside the implement and workflow prompts: an *outcome-driven* prompt that frames the work as a goal to achieve (`Achieve this goal: … — use the plan as reference, but optimize for the outcome`) rather than steps to execute, giving the implementer latitude to deviate when a better path to the same outcome exists. Rendered as a collapsible `.plan-goal` `<details>` (purple accent) immediately below the implement row, mirrored in an always-present `<meta name="plan-goal">` tag, and computed in Step 2 from the same condensed objective + plan path + digest-extraction one-liner as the implement prompt. Unlike the workflow prompt it is **always present** — no flag, no complexity heuristic. Carries the same digest-extraction clause so the pursuing agent reads the spec digest, not the full ~21k styled HTML.
+
+### Changed
+
+- **`reference/SKELETON.html`** — adds the `.plan-goal` markup block, its CSS (reusing the existing `--purple` design tokens), the `copyGoal()` clipboard helper, and the `<meta name="plan-goal">` head tag. Hidden when `data-status="completed"` and suppressed in print, exactly like the implement and workflow rows.
+- **`implementation-plan` SKILL.md** — Step 2 computes `{goal-prompt}`; Step 3 always emits the `plan-goal` meta tag; HTML Output Requirements list `plan-goal` among the always-present meta tags and document the always-present `.plan-goal` element.
+- **Tests** — `tests/plugins/test-goal-prompt.sh` pins the goal prompt to the skeleton (meta tag, markup, `copyGoal()`, CSS, completed/print hiding) and the SKILL.md contract so the feature cannot silently regress.
+
+---
+
 ## 2.5.1 — Backfill version + changelog for the #328 description optimization (2026-06-18)
 
 ### Changed
