@@ -28,6 +28,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `refine-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:refine-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
+| `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
 | `rebuild-plans-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to non-index `.html` plans — auto-regenerates gallery |
 
@@ -302,6 +303,17 @@ open the plans gallery
 show the plans page
 ```
 
+#### `setup-sites` — Command or auto-activate
+
+Scaffolds the GitHub Pages deploy pipeline into the **current repo** so anything generated under `docs/` (plan galleries, social cards, any static HTML) publishes to a public URL. Drops four idempotent artifacts — `.github/workflows/deploy-pages.yml`, `docs/.nojekyll`, a parameterized landing hub `docs/index.html`, and `scripts/serve-docs.sh` — without clobbering files that already exist. Computes the live `https://<owner>.github.io/<repo>/` URL from the `origin` remote, warns when `plansDirectory` points outside `docs/`, and guides the one-time **Settings → Pages → Source → GitHub Actions** step. It scaffolds and verifies only — you commit and push when ready.
+
+Invoke explicitly via `/plan-agent:setup-sites`, or let it auto-activate:
+
+```
+set up GitHub Pages for this repo
+publish my plans to GitHub Pages
+```
+
 ### Hooks
 
 #### Filename validation (automatic)
@@ -396,6 +408,8 @@ plan-agent/
       SKILL.md              — Gallery scan/parse/render workflow
     plans-open/
       SKILL.md              — Open existing gallery without rebuild
+    setup-sites/
+      SKILL.md              — Scaffold the GitHub Pages deploy pipeline into any repo
   agents/
     plan-reviewer-*.md      — Seven reviewer agent definitions (5 core + 2 UI-conditional)
     agent-review-plan.md    — Background agent for fire-and-forget review
@@ -403,6 +417,10 @@ plan-agent/
     review-plan-bg.md       — Background review dispatcher command
   templates/
     plans-gallery.html      — Static gallery template (substituted by plans-library)
+    pages/
+      deploy-pages.yml      — GitHub Pages deploy workflow (SHA-pinned)
+      hub.html              — Parameterized landing-hub template (setup-sites)
+      serve-docs.sh         — Local docs/ preview server (setup-sites)
   hooks/
     validate-plan-filename.py  — PostToolUse filename enforcement script
     rebuild-plans-index.py     — PostToolUse gallery index auto-rebuild

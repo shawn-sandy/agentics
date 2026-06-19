@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.6.0 — setup-sites skill: scaffold GitHub Pages publishing into any repo (2026-06-18)
+
+### Added
+
+- **`setup-sites` skill** — `/plan-agent:setup-sites` (command **or** model-invocable) scaffolds the GitHub Pages deploy pipeline into the current repo so anything generated under `docs/` (plan galleries, social cards, any static HTML) reaches a public URL. It drops four idempotent artifacts — `.github/workflows/deploy-pages.yml` (SHA-pinned, path-filtered to `docs/**`), `docs/.nojekyll`, a parameterized landing hub `docs/index.html`, and `scripts/serve-docs.sh` for local preview — never clobbering files that already exist. The skill computes the live `https://<owner>.github.io/<repo>/` URL from the `origin` remote (handling user/org root sites), warns when `plansDirectory` points outside `docs/` (where Pages can't see it), prunes hub cards for galleries the repo doesn't use, and guides the one-time **Settings → Pages → Source → GitHub Actions** step (optionally via `gh` after confirmation). Closes the gap where the deploy pipeline existed only as hand-wired infrastructure in the agentics repo and could not be reused elsewhere.
+- **Scaffold templates** — `templates/pages/{deploy-pages.yml,hub.html,serve-docs.sh}` ship the three file templates the skill copies; the hub carries `{{SITE_TITLE}}`/`{{SITE_TAGLINE}}`/`{{SITE_FOOTER}}` placeholders and `<!-- CARD:plans -->` / `<!-- CARD:social -->` prune markers.
+- **Tests** — `tests/plugins/test-setup-sites.sh` guards the frontmatter contract, the three-part ≤200-char description, `allowed-tools`, body line count < 500, the seven-step workflow, all three templates (SHA-pinning + `.nojekyll` assertion + `docs/` upload in the workflow; card markers + placeholders + no absolute-root links in the hub), and a **dynamic** marketplace version check (plan-agent > `origin/main`).
+
+---
+
 ## 2.5.1 — Backfill version + changelog for the #328 description optimization (2026-06-18)
 
 ### Changed
