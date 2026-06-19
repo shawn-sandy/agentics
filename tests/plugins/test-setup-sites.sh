@@ -164,6 +164,15 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "12. Step 2 seeds docs/plans/ when plansDirectory is unset (so the first plan deploys)..."
+if grep -q 'os.makedirs(os.path.join("docs", "plans")' "$SKILL" \
+  && grep -q '"docs", "plans", ".gitkeep"' "$SKILL"; then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 2 does not seed docs/plans/ for the unset-plansDirectory case"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All setup-sites checks passed."
