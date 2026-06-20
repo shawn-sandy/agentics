@@ -2,17 +2,45 @@
 
 All notable changes to this project are documented here.
 
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individual plugin changelogs live in `plugins/<name>/CHANGELOG.md`.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individual plugin changelogs live in `kit/plugins/<name>/CHANGELOG.md`.
 
 ---
 
 ## [Unreleased]
 
+> Marketplace (`agentics-kit`) remains at v4.0.0; the changes below are unreleased plugin and infrastructure work since that release. Current plugin versions: memory-tools 3.1.3, code-review 3.3.2, plan-interview 2.2.7, wcag-compliance-reviewer 1.2.3, skill-reviewer 2.2.6, code-testing-agent 3.4.4, git-agent 3.11.0, product-plans 3.4.9, settings-sync 1.0.2, social-media-tools 2.12.1, plan-agent 2.7.0.
+
+### Added
+
+- **Distribution pipeline** — Daily publish pipeline that mirrors plugins to the `agentics-kit` distribution repo, including URL transformation (`agentics` → `agentics-kit`), root-file copying, and CI hardening (#293, #294, #295)
+- **plan-agent `setup-sites`** — Scaffolds the GitHub Pages deploy pipeline (workflow, `.nojekyll`, hub, preview script) into any repo so `docs/` HTML publishes to a public URL (2.7.0, #333)
+- **plan-agent `build-proposal`** — Turns a vague idea into a decision-complete `docs/proposals/<slug>.md` via an 8-step research→decide loop and right-sizing gate, then hands off to implementation-plan (2.5.0, #329)
+- **plan-agent markdown plan conversion** — `implementation-plan` accepts `.md` plan paths and converts them to HTML (2.2.0, #317)
+- **plan-agent HTML plan enhancements** — Outcome-driven goal prompt (2.6.0, #332), Save as PDF button (2.4.0, #319), embedded machine-readable markdown digest (2.3.0, #318), and back-to-gallery navigation on every plan page (#300)
+- **plan-agent review flow** — `review-plan` findings walkthrough with `--skip-analysis` flag (2.1.0, #311); end-to-end self-verification gate (#287); "Review the plan" option in the Step 8 exit menu (1.11.0, #304)
+- **social-media-tools `write-guide`** — Writes a long-form internal developer explainer guide to `docs/` following a fixed 12-section skeleton (2.12.0, #326)
+- **social-media-tools `share-react`** — Shares a React component with a static rendered preview and a typed props table on one card (2.11.0, #305)
+- **git-agent `create-issue`** — Absorbed from the `issue-agent` plugin; files GitHub/GitLab issues from any context with host auto-detection and a confirmation gate (3.11.0, #324)
+- **Plans index merge driver** — `scripts/merge-plans-index.mjs` unions plan cards in `docs/plans/index.html` to auto-resolve merge conflicts (#309)
+- **Guides** — GitHub Pages publishing guide (#331); DESIGN.md and COMPONENT.md tutorial (#325)
+- **Docs landing hub** — Replaced the root `docs/index.html` meta-refresh redirect with a card-based landing hub linking to the Plans gallery and Social Media gallery (#280)
+
 ### Changed
 
-- **Docs landing hub** — Replaced the root `docs/index.html` meta-refresh redirect with a proper landing hub page featuring card-based navigation to the Plans gallery and Social Media gallery (#280)
-- **Plan checkbox persistence** — Plan gallery checkboxes now persist state via HTML `data-checked` attributes, making checked state portable across browsers without JavaScript storage (#281)
-- **Tests** — Added `tests/pages/test-docs-hub.sh` smoke test for the new landing hub; updated `tests/pages/test-root-redirect.sh` to validate hub structure instead of redirect behavior
+- **plan-agent `refine-prompt`** — BREAKING: renamed `craft-prompt` to `refine-prompt` (2.0.0, #306)
+- **social-media-tools card templates** — Added a `--card-width` CSS token to all card templates (#303)
+- **Skill frontmatter** — Optimized descriptions to the three-part format (short label + capability + trigger phrase, ≤200 chars) across plugins (#328); surfaced `write-guide` in discovery and backfilled version + changelog (#330)
+- **Plan gallery** — Checkbox state persists via HTML `data-checked` attributes for portability without JavaScript storage (#281); stable `plan-created` meta and gallery sorted by date descending (#297)
+- **Docs** — Refreshed `CLAUDE.md` with current repo structure and rules (#315); synced `README.md` with latest plugin versions and features (#299)
+
+### Fixed
+
+- **HTML plans responsive layout** — Retrofit responsive CSS into every HTML plan and hardened the skeleton (plan-agent 2.4.1, #321); moved the PDF button and status badge below the title for responsiveness (#322); set pipeline-node padding to 1rem (#298)
+- **CI version bump** — Reverted to direct-push version bump with ruleset bypass (#286)
+
+### Tests
+
+- Added `tests/pages/test-docs-hub.sh` smoke test for the landing hub; updated `tests/pages/test-root-redirect.sh` to validate hub structure instead of redirect behavior
 
 ---
 
