@@ -30,24 +30,25 @@ else
   fail "skeleton still contains a #plan-digest / text/markdown block"
 fi
 
-echo "2. Skeleton buildImplementPrompt() emits the extractor, not awk..."
-if grep -q 'extract-plan-spec.mjs' "$SKELETON" \
-  && grep -q 'specCmd' "$SKELETON" \
+echo "2. Skeleton buildImplementPrompt() is self-contained (reads the plan by path, no repo-local script)..."
+if grep -qF "Read the plan at ' + planPath" "$SKELETON" \
+  && ! grep -q 'extract-plan-spec.mjs' "$SKELETON" \
   && ! grep -qF "$AWK_ONELINER" "$SKELETON"; then
   pass
 else
-  fail "Copy-button JS does not emit the extractor command (or still uses awk)"
+  fail "Copy-button JS is not self-contained (references a repo-local script or still uses awk)"
 fi
 
-echo "3. implementation-plan SKILL.md: prompts use the extractor, digest section gone..."
-if grep -q 'Start from the plan spec: node scripts/extract-plan-spec.mjs' "$PLAN_SKILL" \
-  && grep -q 'Brief subagents with the plan spec: node scripts/extract-plan-spec.mjs' "$PLAN_SKILL" \
+echo "3. implementation-plan SKILL.md: generated prompts are self-contained, digest section gone..."
+if grep -q 'Read and implement all steps in the plan at <filepath>' "$PLAN_SKILL" \
+  && grep -q 'Brief subagents with the plan file at <filepath>' "$PLAN_SKILL" \
+  && ! grep -q 'extract-plan-spec.mjs' "$PLAN_SKILL" \
   && ! grep -q 'Machine-Readable Digest' "$PLAN_SKILL" \
   && ! grep -q '{plan-digest}' "$PLAN_SKILL" \
   && ! grep -qF "$AWK_ONELINER" "$PLAN_SKILL"; then
   pass
 else
-  fail "SKILL.md still references the digest section / {plan-digest} / awk, or a prompt lacks the extractor"
+  fail "SKILL.md generated prompts still reference a repo-local script, or the digest section/awk remains"
 fi
 
 echo "4. review-plan SKILL.md: no digest-refresh pass, reads via the extractor..."

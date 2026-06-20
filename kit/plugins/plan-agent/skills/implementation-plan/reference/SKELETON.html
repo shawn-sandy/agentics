@@ -1640,7 +1640,6 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
-  var specCmd = 'node scripts/extract-plan-spec.mjs ' + planPath;
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1648,7 +1647,7 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan spec: ' + specCmd + ' (or read the full HTML plan directly).');
+  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
   lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
   lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
   lines.push('4. Complete the completion checklist to update the plan status to completed.');
