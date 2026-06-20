@@ -128,11 +128,11 @@ If Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTA
 
 Every plan is a single self-contained `.html` file (no CDN links, no external assets):
 
-- **Machine-readable digest** — a `<script type="text/markdown" id="plan-digest">` block embedded as the first element child of `<body>`, holding a spec-only markdown rendition of the plan (objective, context, files, steps with why/verify, tests, acceptance criteria, verification). It never renders or runs; agents read it instead of the full styled HTML — a few thousand tokens of spec instead of ~21k. Status, checkbox, and progress state are deliberately excluded, so the digest only changes when plan content changes
+- **Compute-on-read spec** — the visible plan DOM is the single source of truth; `node scripts/extract-plan-spec.mjs <plan>` derives a spec-only markdown rendition on demand (objective, context, files, steps with why/verify, tests, acceptance criteria, verification) — a few thousand tokens of spec instead of the full ~21k styled HTML. New plans embed nothing; legacy plans that still carry a `<script type="text/markdown" id="plan-digest">` block are read from it verbatim (un-guarded). Status, checkbox, and progress state are never part of the spec
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed
 - **Objective card** — prominent highlighted block at the top
 - **Implement prompt** — Copy button produces a concise action-oriented prompt with plan status, step/criteria progress counts, and numbered instructions to implement directly from the plan file
-- **Goal prompt** *(expandable)* — collapsible "Pursue as goal" section that reveals an outcome-driven prompt ("Achieve this goal: … — use the plan as reference, but optimize for the outcome"), giving the implementer latitude to deviate from the steps when a better path to the same outcome exists. **Always present** — every plan gets one, no flag required. Carries the same digest-extraction clause as the implement prompt
+- **Goal prompt** *(expandable)* — collapsible "Pursue as goal" section that reveals an outcome-driven prompt ("Achieve this goal: … — use the plan as reference, but optimize for the outcome"), giving the implementer latitude to deviate from the steps when a better path to the same outcome exists. **Always present** — every plan gets one, no flag required. References the plan by path like the implement prompt — self-contained, no repo-local script required
 - **Workflow prompt** *(expandable)* — collapsible "Run as workflow" section that reveals a copy-paste prompt for parallel subagent orchestration via `/workflows`. Generated automatically for complex plans (5+ files across 3+ directories, repetitive per-file changes, parallelizable steps, or adversarial review needs) or explicitly with `--workflow`
 - **Step cards** — numbered, each with an expandable *Verify* disclosure
 - **Interactive checkboxes** — acceptance criteria the user can tick in the browser, with a live progress bar
@@ -141,21 +141,21 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 
 Open the `.html` file directly in any browser. No server required.
 
-#### Extracting the digest
+#### Extracting the spec
 
 Read a plan's spec without paying for the styled HTML:
 
 ```bash
-awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' docs/plans/<plan>.html
+node scripts/extract-plan-spec.mjs docs/plans/<plan>.html
 ```
 
-The one-liner is first-match-only (`!f`) and flag-and-exit, so digest bodies that quote the opening tag or mention the id are extracted intact, and guarded `<\/script` sequences in the content cannot end the block early. The generated implement and workflow prompts carry this extraction clause automatically. Plans created before the digest existed can be backfilled with `node scripts/backfill-plan-digests.mjs [--dry-run]` (idempotent; skips plans it cannot fully parse rather than emitting partial digests).
+The extractor reads an embedded `#plan-digest` block when one is present (legacy plans, un-guarded to clean markdown) and otherwise derives the spec from the visible DOM — so every plan resolves the same way, old or new. Each plan is a single self-contained HTML file, so the implement, goal, and workflow prompts it ships reference the plan **by path** — Claude reads the HTML directly, with no dependency on this script in the target repo. The extractor is a token-efficiency tool for callers that have it on hand (the review team, or manual inspection): roughly an order of magnitude fewer tokens than the full styled HTML, with a full-HTML fallback when it isn't available. **Caveat:** new plans embed no digest, so the old `awk '…id="plan-digest"…'` one-liner returns empty on them — use the extractor (or read the HTML) instead. Legacy embedded plans can still be re-seeded with `node scripts/backfill-plan-digests.mjs [--dry-run]` (idempotent; skips plans it cannot fully parse rather than emitting partial digests).
 
 #### `review-plan` — Manual invoke or auto-activate
 
 Reviews implementation plans using a seven-reviewer Agent Team (five core reviewers plus two UI-conditional reviewers). Detects UI signals and conditionally spawns UX and accessibility reviewers when present. Synthesizes findings and applies improvements directly to the source plan in place.
 
-Reviewers read the plan's embedded digest (`script#plan-digest`) rather than the full HTML — roughly an order of magnitude fewer tokens per reviewer per cycle — falling back to the full HTML for plans that have no digest yet. The lead keeps reading the full HTML for selector-based edits, and refreshes the digest after applying inline edits in update-in-place mode.
+Reviewers read the plan's spec via `node scripts/extract-plan-spec.mjs` rather than the full HTML — roughly an order of magnitude fewer tokens per reviewer per cycle — falling back to the full HTML if the extractor can't run. The lead keeps reading the full HTML for selector-based edits.
 
 **Requires:** Agent Teams enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `~/.claude/settings.json`) and Claude Code ≥ 2.1.32.
 

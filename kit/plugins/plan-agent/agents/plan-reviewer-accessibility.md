@@ -23,7 +23,7 @@ Your scope is WCAG 2.1 AA compliance, semantic HTML, keyboard navigation, and as
 
 ## How to Review
 
-Read the plan via its embedded digest — extract the spec-only markdown with `awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <plan-path>`. If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file. The digest carries the whole authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Look for UI context in the **Objective**, **Steps**, and **Files to Modify**. Focus on:
+Read the plan's spec with the extractor — `node scripts/extract-plan-spec.mjs <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Look for UI context in the **Objective**, **Steps**, and **Files to Modify**. Focus on:
 
 1. **Missing semantic elements** — Custom `<div>` buttons without proper roles?
 2. **Unlabeled inputs** — Form fields without associated `<label>` elements or ARIA labels?

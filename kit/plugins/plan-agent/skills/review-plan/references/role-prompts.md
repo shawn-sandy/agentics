@@ -1,6 +1,6 @@
 # Reviewer Role Prompts
 
-These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PATH>` with the resolved plan path. Every brief instructs the reviewer to read the plan's embedded digest (`script#plan-digest`) rather than the full HTML, with a full-HTML fallback for plans that have no digest yet; the lead keeps reading the full HTML for selector-based edits.
+These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PATH>` with the resolved plan path. Every brief instructs the reviewer to read the plan's spec via the extractor (`node scripts/extract-plan-spec.mjs`) rather than the full HTML, with a full-HTML fallback; the lead keeps reading the full HTML for selector-based edits.
 
 ## Core Reviewers (always spawned)
 
@@ -8,11 +8,11 @@ These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PA
 
 Review the implementation plan at `<ABSOLUTE_PATH>` from an **architecture** lens: component boundaries, layer separation, data flow, integration with existing patterns, and system design coherence.
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Component structure and boundaries
@@ -44,11 +44,11 @@ Architecture Review complete.
 
 Review the implementation plan at `<ABSOLUTE_PATH>` from a **completeness** lens: are all necessary steps present? Are they specific enough to execute? Are critical files omitted? Is the path from start to finish unbroken?
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Step granularity and specificity
@@ -79,11 +79,11 @@ Completeness Review complete.
 
 Review the implementation plan at `<ABSOLUTE_PATH>` from a **testability** lens: are the changes properly tested? Is there an objective-verification test? Are acceptance criteria verifiable? Are test descriptions specific enough?
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Test coverage (unit, integration, E2E as appropriate)
@@ -114,11 +114,11 @@ Testability Review complete.
 
 Review the implementation plan at `<ABSOLUTE_PATH>` from a **risk** lens: what could go wrong? Identify breaking changes, data safety issues, concurrency risks, dependency hazards, and rollback challenges.
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Breaking API or data contract changes
@@ -150,11 +150,11 @@ Risk Review complete.
 
 Review the implementation plan at `<ABSOLUTE_PATH>` from a **conventions** lens: do the proposed changes fit the project's patterns, naming style, file organization, and code structure?
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Naming consistency (camelCase, kebab-case, PascalCase)
@@ -190,11 +190,11 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from a **UX** lens: is the u
 
 **This reviewer runs only on plans that mention React, Vue, Svelte, buttons, modals, forms, or other UI signals.**
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - User flows and happy-path clarity
@@ -228,11 +228,11 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from an **accessibility** le
 
 **This reviewer runs only on plans that mention React, Vue, Svelte, buttons, modals, forms, or other UI signals.**
 
-Read the plan via its embedded digest — extract the spec-only markdown with:
+Read the plan's spec with the extractor:
 
-    awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' '<ABSOLUTE_PATH>'
+    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
 
-If the digest block is missing (an older plan not yet backfilled), fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The digest carries the complete authored spec — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
+This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
 Focus on:
 - Keyboard navigation and focus management

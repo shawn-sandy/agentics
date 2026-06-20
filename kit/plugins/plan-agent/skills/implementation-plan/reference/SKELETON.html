@@ -1153,24 +1153,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST
-     First element child of <body> — this comment is not an element, so
-     the script below stays firstElementChild. type="text/markdown"
-     never renders or runs. Spec only: objective, context, files, steps
-     (action/why/verify), tests, acceptance criteria, verification.
-     Never put status, checkbox, or progress state in this block.
-     Guard any literal closing-script sequence in the content as
-     <\/script so it cannot terminate this block early.
-     Extract (first-match flag-and-exit; the !f guard keeps digest body
-     lines that quote the opening tag from being swallowed, and the
-     anchored flag never re-triggers on later mentions of the id):
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-{plan-digest}
-</script>
-
 <!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1658,7 +1640,6 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
-  var digestCmd = "awk '!f && /<script[^>]*id=\"plan-digest\"/{f=1;next} f && /<\\/script>/{exit} f' " + planPath;
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1666,7 +1647,7 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the spec from the embedded digest: ' + digestCmd + ' (fall back to reading the full HTML only if the digest block is missing).');
+  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
   lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
   lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
   lines.push('4. Complete the completion checklist to update the plan status to completed.');

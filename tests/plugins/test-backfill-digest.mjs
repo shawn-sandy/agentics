@@ -288,16 +288,22 @@ console.log('-- integration: real docs/plans corpus (temp copy) --');
 
 const tmpReal = mkdtempSync(join(tmpdir(), 'backfill-digest-real-'));
 try {
-  ok('every checked-in parseable plan already carries a digest (contract)', () => {
-    // Guards the "every HTML plan" contract on the committed tree itself: a
-    // parseable plan landing without a digest (new plan, merge race) must
-    // fail CI, not hide behind the stripped-corpus injection counts below.
+  ok('the retained injector stays idempotent on legacy embedded plans', () => {
+    // Post compute-on-read switch, new plans ship digest-free by design — the
+    // extractor derives their spec from the DOM. So the backfill may now report
+    // some committed plans as injectable; that is expected, not a failure.
+    // Scope the contract to what the retained injector still owns: it must skip
+    // every plan that already carries an embedded digest, and never hit an I/O
+    // error on the real corpus.
     const r = runBackfill(REAL_PLANS_DIR, { dryRun: true });
-    assert.deepEqual(
-      r.injected,
-      [],
-      `checked-in plans missing a digest: ${r.injected.join(', ')} — run: node scripts/backfill-plan-digests.mjs`,
-    );
+    assert.equal(r.failed.length, 0, `backfill I/O failures: ${JSON.stringify(r.failed)}`);
+    const embedded = readdirSync(REAL_PLANS_DIR)
+      .filter((n) => n.endsWith('.html') && n !== 'index.html')
+      .filter((n) => hasDigest(readFileSync(join(REAL_PLANS_DIR, n), 'utf8')));
+    for (const name of embedded) {
+      assert.ok(r.hasDigest.includes(name), `${name} carries a digest but the injector did not skip it`);
+    }
+    assert.ok(r.injected.every((n) => !embedded.includes(n)), 'an embedded plan was re-injected');
   });
 
   // The working tree's plans are already backfilled. Strip backfilled blocks
@@ -310,6 +316,10 @@ try {
   for (const e of readdirSync(REAL_PLANS_DIR, { withFileTypes: true })) {
     if (e.isFile() && e.name.endsWith('.html')) {
       const content = readFileSync(join(REAL_PLANS_DIR, e.name), 'utf8');
+      // Compute-on-read plans ship without a digest by design; they are not
+      // part of the retained injector's contract, so exclude them from the
+      // temp corpus rather than letting them inflate the injected set.
+      if (e.name !== 'index.html' && !hasDigest(content)) continue;
       const m = BACKFILLED_BLOCK_RE.exec(content);
       const stripped = m === null ? content : content.slice(0, m.index) + content.slice(m.index + m[0].length);
       if (m !== null && e.name !== 'index.html') strippedFiles.push(e.name);
