@@ -87,7 +87,7 @@ Create an agent team and spawn:
 
 Brief each with its matching prompt from `role-prompts.md`. Wait for all spawned teammates.
 
-**Lead-vs-reviewer read split:** Reviewers read only the plan's embedded digest (`script#plan-digest`) — their briefs in `role-prompts.md` carry the extraction one-liner and a full-HTML fallback for plans that have no digest yet (not backfilled). The lead (this skill) still reads the **full HTML**: Step 3b keyword scanning and Step 7's CSS-selector edits both need the real markup, not the spec digest.
+**Lead-vs-reviewer read split:** Reviewers read only the plan's spec — their briefs in `role-prompts.md` run the extractor (`node scripts/extract-plan-spec.mjs <plan>`), which derives the spec from the visible DOM (or an embedded digest on legacy plans) in a few thousand tokens instead of the full styled HTML. The lead (this skill) still reads the **full HTML**: Step 3b keyword scanning and Step 7's CSS-selector edits both need the real markup, not the spec.
 
 Announce progress: "`Spawned 5 core reviewers`" or "`Spawned 7 reviewers (5 core + 2 UI)`".
 
@@ -141,11 +141,9 @@ Pass 1 is skipped when `output_mode = "review only"`; Pass 2 always runs. (When 
 - `append` — add to the end of the element.
 - `insert after "[anchor]"` — insert new sibling after anchor.
 
-HTML-escape all inserted content. Never modify `<style>` or `<script>` — with one exception: the dedicated digest refresh in Pass 1b below, which rewrites only the `script#plan-digest` block.
+HTML-escape all inserted content. Never modify `<style>` or `<script>`.
 
 Skip rows whose target cannot be matched (log warning, continue).
-
-**Pass 1b — Refresh the digest:** Runs only in update-in-place mode and only when Pass 1 applied at least one inline edit; skipped entirely in review-only mode (no spec content changed). Pass 1's selector edits mutate spec content (objective, context, files, steps, tests, criteria, verification), which stales the embedded digest. Regenerate the `script#plan-digest` block's content from the now-current spec sections, following the digest contract in the `implementation-plan` skill (spec-only fields, no status/checkbox/progress state, guard any literal closing-script sequence as `<\/script`). If the plan has no digest block (older plan, not backfilled), skip this pass — do not inject one during review.
 
 **Pass 2 — Append team review:** Use `Edit` to append a new `<details>` section before `</main>`:
 ```html
