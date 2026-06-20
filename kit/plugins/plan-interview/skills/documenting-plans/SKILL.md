@@ -62,11 +62,12 @@ Use the first match from this priority order:
    currently open in the IDE. If it looks like a plan (contains headings like
    `## Implementation`, `## Plan`, `## Steps`, `## Context`, or `## Summary`),
    use it.
-3. **Project-level config**: Read `.claude/settings.json`. If a
-   `"plansDirectory"` key exists, glob `*.md` files from that path and use the
-   most recently modified file.
-4. **Global config**: Read `~/.claude/settings.json`. Same logic as above.
-5. **Default fallback**: Glob `~/.claude/plans/*.md`, sort by modification time,
+3. **Settings `plansDirectory`**: Read the `"plansDirectory"` key following
+   Claude Code's settings precedence — project-local `.claude/settings.local.json`,
+   then project `.claude/settings.json`, then global `~/.claude/settings.json`. Use
+   the first that sets it; glob `*.md` files from that path and use the most
+   recently modified file.
+4. **Default fallback**: Glob `${PWD}/docs/plans/*.md`, sort by modification time,
    use the most recently modified file.
 
 If no file is found via any method, tell the user and stop.

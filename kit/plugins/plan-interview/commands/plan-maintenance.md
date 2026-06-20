@@ -27,10 +27,11 @@ If no flag is provided, default to `--all`.
 
 Resolve the plans directory using the same priority as `update-plan-status`:
 
-1. **Project-level config**: Read `.claude/settings.json`. If a
-   `"plansDirectory"` key exists, use that path.
-2. **Global config**: Read `~/.claude/settings.json`. Same logic.
-3. **Default fallback**: Use `docs/plans/` relative to `$PWD`.
+1. **Settings `plansDirectory`**: Read the `"plansDirectory"` key following
+   Claude Code's settings precedence — project-local `.claude/settings.local.json`,
+   then project `.claude/settings.json`, then global `~/.claude/settings.json`.
+   Use the first that sets it.
+2. **Default fallback**: Use `${PWD}/docs/plans/`.
 
 Use `TodoWrite` to create a todo for each active sub-workflow. Mark each
 `status: "completed"` as you finish it.

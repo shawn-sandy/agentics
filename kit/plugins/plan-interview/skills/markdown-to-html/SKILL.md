@@ -73,10 +73,10 @@ If any check fails, stop with a descriptive error.
 1. **Argument**: file path in `$ARGUMENTS` (after passing the checks above)
 2. **Currently open file**: `.md` file open in IDE that contains `## Steps`,
    `## Context`, `## Objective`, `## Implementation`, or `## Plan`
-3. **Project config**: `plansDirectory` in `.claude/settings.json` → most recently
-   modified `.md` file
-4. **Global config**: `plansDirectory` in `~/.claude/settings.json` → same logic
-5. **Fallback**: glob `~/.claude/plans/*.md`, most recently modified
+3. **Settings `plansDirectory`**: project-local `.claude/settings.local.json` →
+   project `.claude/settings.json` → global `~/.claude/settings.json` (first that
+   sets it) → most recently modified `.md` file
+4. **Fallback**: glob `${PWD}/docs/plans/*.md`, most recently modified
 
 If no file found via any method, tell the user and stop.
 

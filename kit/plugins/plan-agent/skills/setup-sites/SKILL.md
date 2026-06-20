@@ -60,7 +60,7 @@ Keep `owner`, `repo`, and the computed `LIVE_URL` for Steps 4, 5, and 7. If ther
 The deploy workflow uploads `docs/` and nothing else, so generated HTML must live under `docs/`. Two failure modes to close here:
 
 1. **`plansDirectory` set but outside `docs/`** — plans would generate where Pages never looks. Warn and ask before proceeding.
-2. **`plansDirectory` unset and `docs/plans/` missing** — `implementation-plan` resolves its output dir as `--dir` → `plansDirectory` → **`docs/plans/` only if it already exists** → otherwise the Claude *user* plans folder (outside the repo). So the very first plan after scaffolding would land outside `docs/` and never deploy. Seed `docs/plans/` now (with a committed `.gitkeep`) so that resolution rule lands inside `docs/`.
+2. **`plansDirectory` unset and `docs/plans/` missing** — `implementation-plan` resolves its output dir as `--dir` → `plansDirectory` (project-local → project → global) → **`${PWD}/docs/plans`** as the final fallback, so the first plan always lands inside the repo. Seed `docs/plans/` now (with a committed `.gitkeep`) anyway, so the directory is tracked and Pages serves it from the first deploy.
 
 ```bash
 mkdir -p docs
@@ -69,7 +69,8 @@ import json, os
 def read(p):
     try: return json.load(open(p)).get("plansDirectory", "").strip()
     except Exception: return ""
-val = read(os.path.join(".claude", "settings.json")) or \
+val = read(os.path.join(".claude", "settings.local.json")) or \
+      read(os.path.join(".claude", "settings.json")) or \
       read(os.path.join(os.path.expanduser("~"), ".claude", "settings.json"))
 if val:
     norm = val[2:] if val.startswith("./") else val
@@ -80,12 +81,12 @@ if val:
         print("         Move plans under docs/ (e.g. docs/plans) or edit the")
         print("         workflow's upload `path:` to match, or plans won't publish.")
 else:
-    # Unset: implementation-plan resolves docs/plans/ only if it EXISTS, else the
-    # Claude user plans folder (outside the repo). Seed it so the first plan deploys.
+    # Unset: implementation-plan falls back to ${PWD}/docs/plans. Seed it (tracked
+    # via .gitkeep) so the directory exists and Pages serves it from the first deploy.
     os.makedirs(os.path.join("docs", "plans"), exist_ok=True)
     open(os.path.join("docs", "plans", ".gitkeep"), "a").close()
     print("plansDirectory unset — seeded docs/plans/ (with .gitkeep) so generated")
-    print("plans land inside docs/ and deploy, not in the Claude user plans folder.")
+    print("plans are tracked and deploy from the first commit.")
 EOF
 ```
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.4.10 — 2026-06-20 — Standardize plans-directory resolution (Claude settings precedence)
+
+### Fixed
+
+- **`plan-review-agents` plans-directory resolution** — now follows Claude Code's settings precedence (project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`) and defaults to `${PWD}/docs/plans` instead of the global `~/.claude/plans/` user folder, matching where plan-agent writes plans.
+
 ## v3.4.8 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed

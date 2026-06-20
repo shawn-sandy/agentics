@@ -72,10 +72,11 @@ When `mode = interactive`: use the first match from this priority order:
 2. **Open IDE file** — a `.md` file currently open in the editor whose
    content contains plan-style headings (`## Steps`, `## Context`,
    `## Implementation`, `## Plan`).
-3. **Project settings** — `plansDirectory` key in `.claude/settings.json`;
-   glob `*.md` from that path and use the most recently modified.
-4. **Global settings** — same key in `~/.claude/settings.json`.
-5. **Default** — glob `~/.claude/plans/*.md`; use the most recently modified.
+3. **Settings `plansDirectory`** — read the key following Claude Code's settings
+   precedence: project-local `.claude/settings.local.json`, then project
+   `.claude/settings.json`, then global `~/.claude/settings.json` (first that sets
+   it); glob `*.md` from that path and use the most recently modified.
+4. **Default** — glob `${PWD}/docs/plans/*.md`; use the most recently modified.
 
 If no file is found, tell the user and stop.
 

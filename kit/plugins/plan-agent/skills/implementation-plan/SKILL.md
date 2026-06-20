@@ -110,7 +110,30 @@ Follow these steps exactly.
 0b. **Explore** — Read the codebase to build context before planning. Use `Glob` to locate relevant files, `Grep` to find symbol definitions and usage patterns, and `Read` to understand the current architecture in areas the plan will touch. Focus on: entry points the plan modifies, existing tests or patterns to follow, and configuration that constrains the approach. Keep exploration proportional to plan scope — a one-file fix needs a quick look; an architecture change warrants broader reading. *(Skip entirely when `--quick`.)*
 
 1. **Clarify** — If the request's objectives are ambiguous or have open requirements, use `AskUserQuestion` to resolve them before drafting; if the objectives are already clear, skip this step. Do not add friction to well-specified requests. When research would strengthen the plan (e.g. verifying an API surface, checking a library's current version, or confirming a best-practice pattern), use `WebSearch` and `WebFetch` — load them first via `ToolSearch` with `select:WebSearch,WebFetch` since they are deferred tools. *(Skip entirely when `--quick` or `--no-clarify`.)*
-2. **Create** — Resolve the target directory in order: (1) `--dir` if provided, (2) the configured `plansDirectory` if set, (3) `docs/plans/` if it exists, (4) the default Claude user plans folder. Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.** After resolving the filename, compute the implement prompt: `Read and implement all steps in the plan at <filepath> — <objective>`, where `<filepath>` is the relative path to the plan file and `<objective>` is the resolved objective text (condensed to ≤80 characters, trimmed at a word boundary). The plan is a self-contained HTML file, so the prompt references it by path with no dependency on any repo-local script. Example: `Read and implement all steps in the plan at docs/plans/add-dark-mode-toggle.html — Ship a dark-mode toggle that persists across all three themes`. Store this as `{implement-prompt}` and fill the skeleton placeholder (HTML-escape it wherever it is inserted, per the escaping rule in HTML Output Requirements).
+2. **Create** — Resolve the target directory **deterministically and identically to how `plans-library`/`plans-open` resolve it**, so the writer and the gallery never disagree: (1) `--dir` if provided; otherwise (2) run the snippet below — `plansDirectory` resolved through Claude Code's settings precedence: project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`, falling back to `${PWD}/docs/plans` when none set it. A more specific layer must win every time — do not read only the global setting, and do not substitute a separate "user plans folder" fallback.
+
+```bash
+PLANS_DIR=$(python3 - <<'EOF'
+import json, os, sys
+# Claude settings precedence: project-local → project → user-global
+candidates = (
+    os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+    os.path.join(os.getcwd(), '.claude', 'settings.json'),
+    os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+)
+for path in candidates:
+    try:
+        v = json.load(open(path)).get('plansDirectory', '').strip()
+        if v:
+            print(v); sys.exit(0)
+    except Exception:
+        pass
+print(os.path.join(os.getcwd(), 'docs', 'plans'))
+EOF
+)
+```
+
+   Place the plan there using a `verb-target` kebab-case filename with a `.html` extension. Examples: `add-dark-mode-toggle.html`, `fix-login-redirect.html`, `refactor-auth-module.html`. **Always write HTML — never write markdown for plan output.** After resolving the filename, compute the implement prompt: `Read and implement all steps in the plan at <filepath> — <objective>`, where `<filepath>` is the relative path to the plan file and `<objective>` is the resolved objective text (condensed to ≤80 characters, trimmed at a word boundary). The plan is a self-contained HTML file, so the prompt references it by path with no dependency on any repo-local script. Example: `Read and implement all steps in the plan at docs/plans/add-dark-mode-toggle.html — Ship a dark-mode toggle that persists across all three themes`. Store this as `{implement-prompt}` and fill the skeleton placeholder (HTML-escape it wherever it is inserted, per the escaping rule in HTML Output Requirements).
 
    **Plan source placeholders:** Also fill two copyable reference placeholders from the resolved location so the user can paste the plan's location into docs and prompts: `{plan-path}` is the relative path to the plan file (the same `<filepath>` used in the implement prompt, e.g. `docs/plans/add-dark-mode-toggle.html`), and `{plan-filename}` is its basename (e.g. `add-dark-mode-toggle.html`). HTML-escape both before inserting them into the skeleton. These render in the `.plan-source` block below the implement prompt and in the `<meta name="plan-path">` / `<meta name="plan-file">` tags.
 

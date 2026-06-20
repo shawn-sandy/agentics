@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-interview"
       },
-      "version": "2.2.7",
+      "version": "2.2.8",
       "description": "Stress-test implementation plans with structured multi-round interviews before coding begins — auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
       "category": "development",
       "tags": [
@@ -169,7 +169,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/product-plans"
       },
-      "version": "3.4.9",
+      "version": "3.4.10",
       "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
       "category": "productivity",
       "tags": [
@@ -214,7 +214,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.12.1",
+      "version": "2.12.2",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -259,7 +259,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "2.8.0",
+      "version": "2.8.1",
       "description": "Plan creation and review on demand or via ambient activation — /plan-agent:implementation-plan skill (command or model-invocable) produces self-contained interactive HTML plans with a rich copy-paste implement prompt (includes status, steps, acceptance criteria, and completion instructions), an always-present outcome-driven goal prompt (achieve the objective using the plan as reference but optimizing for the outcome), a one-click Save as PDF export button, and optional workflow prompt for complex plans; auto-activates on plan-document intent without colliding with built-in Plan Mode; /plan-agent:review-plan skill spawns a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, UX, accessibility) to review implementation plans, synthesize findings, apply improvements in place, and emit shareable HTML review artifacts; /plan-agent:finalize-plan skill reviews a plan for completion evidence with per-criterion verification, checks acceptance-criteria boxes (all or only verified, per user choice), and sets status to completed or in-progress accordingly; accepts GitHub/GitLab issue URLs and #n references to auto-seed plans from backlog; accepts .md plan paths for conversion mode that turns an existing markdown plan into the HTML format with frontmatter carry-over and a keep-or-remove source prompt; built-in structured interview; mandatory acceptance criteria gate during implementation; Step 8 exit menu offers Review the plan option that runs the review-plan Agent Team on the current plan (foreground or background) before implementing; adaptive menu swap keeps all options within the 4-option limit; /plan-agent:refine-prompt skill interviews users and generates copy-pasteable AI prompts grounded in Anthropic best practices (role, XML structure, CoT, examples, output format); plans-open skill reopens the gallery without rebuilding; PostToolUse hook auto-regenerates the gallery index; filename hook enforces verb-target kebab-case; /plan-agent:build-proposal skill turns a vague idea into a decision-complete proposal under docs/proposals/ via an 8-step research-then-decide loop with a Tier 0/1/2 right-sizing gate, grounding claims in web + codebase research and separating facts from decisions, then hands the proposal to implementation-plan for execution planning; /plan-agent:setup-sites skill scaffolds the GitHub Pages deploy pipeline into any repo (deploy-pages.yml workflow, docs/.nojekyll, landing hub, serve-docs.sh preview), computes the live URL from the git remote, and guides the one-time Settings → Pages → GitHub Actions step so generated docs/ HTML publishes to a public URL",
       "category": "productivity",
       "tags": [

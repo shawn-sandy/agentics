@@ -24,8 +24,8 @@ Determine what to review based on `$ARGUMENTS`:
 
 1. **Specific file**: If `$ARGUMENTS` points to a `.md` file, review that single file.
 2. **Specific directory**: If `$ARGUMENTS` points to a directory, glob `*.md` files from it.
-3. **No argument — project settings**: Read `.claude/settings.json` in the current project directory. If a `"plansDirectory"` key exists, glob `*.md` files from that path.
-4. **No argument — fallback**: Glob `*.md` files from `docs/plans/` relative to `$PWD`.
+3. **No argument — settings `plansDirectory`**: Read the `"plansDirectory"` key following Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`. If set, glob `*.md` files from that path.
+4. **No argument — fallback**: Glob `*.md` files from `${PWD}/docs/plans/`.
 
 If no plan files are found via any method, tell the user and stop.
 
