@@ -1,6 +1,6 @@
 ---
 description: Walk each decision branch in an implementation plan with focused questions and codebase exploration
-argument-hint: "[plan-file-path] - omit to auto-detect from IDE or ~/.claude/plans/"
+argument-hint: "[plan-file-path] - omit to auto-detect from IDE or docs/plans/"
 allowed-tools: Read, Glob, Grep, AskUserQuestion, TodoWrite
 ---
 
@@ -35,11 +35,12 @@ Use the first match from this priority order:
    is currently open in the IDE. If it looks like a plan (contains headings like
    `## Implementation`, `## Plan`, `## Steps`, `## Context`, or `## Summary`),
    use it.
-3. **Project-level config**: Read `.claude/settings.json`. If a
-   `"plansDirectory"` key exists, glob `*.md` files from that path and use the
-   most recently modified file.
-4. **Global config**: Read `~/.claude/settings.json`. Same logic as above.
-5. **Default fallback**: Glob `~/.claude/plans/*.md`, sort by modification
+3. **Settings `plansDirectory`**: Read the `"plansDirectory"` key following
+   Claude Code's settings precedence — project-local `.claude/settings.local.json`,
+   then project `.claude/settings.json`, then global `~/.claude/settings.json`. Use
+   the first that sets it; glob `*.md` files from that path and use the most
+   recently modified file.
+4. **Default fallback**: Glob `${PWD}/docs/plans/*.md`, sort by modification
    time, use the most recently modified file.
 
 If no file can be found via any method, tell the user and stop.

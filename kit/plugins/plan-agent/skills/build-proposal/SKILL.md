@@ -79,24 +79,30 @@ Resolve the proposals directory in this order, then `mkdir -p` it before the
 first write — mirroring how `implementation-plan` resolves `plansDirectory`:
 
 1. `--dir <path>` if provided.
-2. `planAgent.proposalsDirectory` from `.claude/settings.json` (project first,
-   then global `~/.claude/settings.json`).
-3. `docs/proposals/` if the repo has a `docs/` directory.
-4. The default Claude user proposals folder otherwise.
+2. `planAgent.proposalsDirectory` via Claude Code's settings precedence —
+   project-local `.claude/settings.local.json`, then project `.claude/settings.json`,
+   then global `~/.claude/settings.json`.
+3. `${PWD}/docs/proposals/` otherwise.
 
 ```bash
-# Resolve proposalsDirectory (project settings first, then global), else docs/proposals
+# Resolve proposalsDirectory via Claude settings precedence
+# (project-local → project → user-global), else ${PWD}/docs/proposals
 python3 - <<'PY'
 import json, os
-for p in (".claude/settings.json", os.path.expanduser("~/.claude/settings.json")):
+candidates = (
+    os.path.join(".claude", "settings.local.json"),
+    os.path.join(".claude", "settings.json"),
+    os.path.expanduser("~/.claude/settings.json"),
+)
+for p in candidates:
     try:
         v = (json.load(open(p)).get("planAgent", {}).get("proposalsDirectory") or "").strip()
         if v:
             print(v); break
-    except FileNotFoundError:
+    except Exception:
         continue
 else:
-    print("docs/proposals")
+    print(os.path.join(os.getcwd(), "docs", "proposals"))
 PY
 ```
 

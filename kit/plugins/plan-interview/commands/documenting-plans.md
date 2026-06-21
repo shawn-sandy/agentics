@@ -20,8 +20,9 @@ Use `TodoWrite` to create todos for Steps 1–9 before doing any other work.
 ### Step 1 — Resolve plan file
 
 Priority order: `$ARGUMENTS` path → IDE open `.md` file with plan headings →
-`.claude/settings.json` `plansDirectory` → `~/.claude/settings.json`
-`plansDirectory` → latest `~/.claude/plans/*.md`.
+settings `plansDirectory` (project-local `.claude/settings.local.json` → project
+`.claude/settings.json` → global `~/.claude/settings.json`) → latest
+`${PWD}/docs/plans/*.md`.
 
 Announce: `"Documenting plan: path/to/plan.md"`
 

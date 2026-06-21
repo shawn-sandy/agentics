@@ -24,13 +24,31 @@ Parse `$ARGUMENTS`:
 
 1. If `$ARGUMENTS` contains a token ending in `.html`, use that as the plan filename. Reduce to basename only (strip any leading path components). Resolve against these roots in order until the file is found:
    a. `--dir` value (if passed)
-   b. `plansDirectory` from `.claude/settings.json` (project then global `~/.claude/settings.json`)
+   b. `plansDirectory` via Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`
    c. `docs/plans/` under `$PWD`
-2. If `$ARGUMENTS` is empty, find the most recently modified `.html` file (excluding `index.html`) under the resolved plans directory:
-   ```bash
-   find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 \
-     | xargs -0 ls -t 2>/dev/null | head -1
-   ```
+2. If `$ARGUMENTS` is empty, resolve the plans directory (honor `--dir` if passed; otherwise the same precedence as root b), then find the most recently modified `.html` file (excluding `index.html`) under it:
+```bash
+PLANS_DIR=$(python3 - <<'EOF'
+import json, os, sys
+# Claude settings precedence: project-local → project → user-global
+candidates = (
+    os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+    os.path.join(os.getcwd(), '.claude', 'settings.json'),
+    os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+)
+for path in candidates:
+    try:
+        v = json.load(open(path)).get('plansDirectory', '').strip()
+        if v:
+            print(v); sys.exit(0)
+    except Exception:
+        pass
+print(os.path.join(os.getcwd(), 'docs', 'plans'))
+EOF
+)
+find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 \
+  | xargs -0 ls -t 2>/dev/null | head -1
+```
 3. If no file is found, tell the user: `"No HTML plan found. Pass a filename: /plan-agent:finalize-plan my-plan.html"` and **STOP**.
 
 Announce: `"Reviewing plan for completion: <resolved-path>"`

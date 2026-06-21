@@ -15,7 +15,7 @@ Scan plan directories for files with random non-descriptive names and rename the
 
 ## Directories to Scan
 
-1. **Primary**: Read `plansDirectory` from `.claude/settings.json` (e.g., `docs/planning`)
+1. **Primary**: Read `plansDirectory` following Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`; fall back to `${PWD}/docs/plans/` if unset
 2. **Additional**: Also scan `openspec/plans/` and `project-docs/06-implementation-plans/`
 3. **Override**: If `$ARGUMENTS` is provided, scan only that directory instead
 

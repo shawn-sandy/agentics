@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.8 — 2026-06-20 — Standardize plans-directory resolution (Claude settings precedence)
+
+### Fixed
+
+- **Consistent plans-directory resolution** — every skill, command, and agent that resolves `plansDirectory` now follows Claude Code's settings precedence: project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`. Previously the local override layer was skipped and the **default fallback was the global `~/.claude/plans/` user folder**, which diverged from where plan-agent writes plans; the default is now `${PWD}/docs/plans`, so readers and writers agree. Touched: `plan-status`, `documenting-plans`, `markdown-to-html`, `deep-grill`, `plan-interview` skills; the `plan-status`, `update-plan-status`, `deep-grill`, `plan-interview`, `markdown-to-html`, `documenting-plans`, `review-rename-plans`, `plan-hygiene`, `plan-maintenance` commands; and the `plan-documenter` agent.
+
 ## v2.2.7 — 2026-06-07 — Add Save as PDF button to HTML plans
 
 ### Added

@@ -45,8 +45,8 @@ section diagram. Works at any plan lifecycle stage (todo, in-progress, or comple
 ## Arguments
 
 `[file-path]` — path to a `.md` or `.markdown` file. Omit to auto-detect using the
-same priority order as other plan-interview commands (IDE open file → project settings
-→ global settings → `~/.claude/plans/`).
+same priority order as other plan-interview commands (IDE open file → settings
+`plansDirectory` (project-local → project → global) → `${PWD}/docs/plans/`).
 
 **Flags:**
 

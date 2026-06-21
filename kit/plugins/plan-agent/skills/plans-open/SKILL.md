@@ -12,14 +12,18 @@ Open the existing `index.html` gallery directly — no file scanning, no templat
 
 ## Step 1 — Resolve the plans directory
 
-Read `plansDirectory` from `.claude/settings.json` (project first, then global `~/.claude/settings.json`). Fall back to `${PWD}/docs/plans` if neither file sets it.
+Read `plansDirectory` following Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`; the first that sets it wins. Fall back to `${PWD}/docs/plans` if none do.
 
 ```bash
 PLANS_DIR=$(python3 - <<'EOF'
 import json, os, sys
-project = os.path.join(os.getcwd(), '.claude', 'settings.json')
-global_ = os.path.join(os.path.expanduser('~'), '.claude', 'settings.json')
-for path in (project, global_):
+# Claude settings precedence: project-local → project → user-global
+candidates = (
+    os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+    os.path.join(os.getcwd(), '.claude', 'settings.json'),
+    os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+)
+for path in candidates:
     try:
         v = json.load(open(path)).get('plansDirectory', '').strip()
         if v:

@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.12.2 — 2026-06-20 — write-guide reads plansDirectory via Claude settings precedence
+
+### Fixed
+
+- **`write-guide` directory resolution** — the `<plansDirectory>/guides/` target now reads `plansDirectory` following Claude Code's settings precedence (project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`); the `docs/guides/` → `docs/` fallbacks are unchanged.
+
 ## v2.12.1 — 2026-06-18 — Surface write-guide in discovery; backfill #328 description optimization
 
 ### Changed

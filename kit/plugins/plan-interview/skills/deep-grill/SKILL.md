@@ -46,14 +46,13 @@ Use the first match from this priority order:
    and its content looks like a plan (contains headings like
    `## Implementation`, `## Plan`, `## Steps`, `## Context`, or `## Summary`),
    use it.
-3. **Project-level config override**: Read `.claude/settings.json` in the
-   current project directory. If a `"plansDirectory"` key exists, glob `*.md`
-   files from that path and use the most recently modified file. This takes
-   precedence over the global config.
-4. **Global config**: Read `~/.claude/settings.json`. If a `"plansDirectory"`
-   key exists, glob `*.md` files from that path and use the most recently
-   modified file.
-5. **Default fallback**: Use `Glob` on `~/.claude/plans/*.md`, sort by
+3. **Settings `plansDirectory` override**: Read the `"plansDirectory"` key
+   following Claude Code's settings precedence — project-local
+   `.claude/settings.local.json`, then project `.claude/settings.json`, then
+   global `~/.claude/settings.json`. The first that sets it wins (a more specific
+   layer takes precedence). Glob `*.md` files from that path and use the most
+   recently modified file.
+4. **Default fallback**: Use `Glob` on `${PWD}/docs/plans/*.md`, sort by
    modification time, and select the most recently modified file.
 
 If no file can be found via any of these methods, tell the user and stop.

@@ -1,6 +1,6 @@
 ---
 description: Stress-test a plan with a structured interview across technical, UX, edge case, and out-of-scope domains
-argument-hint: [plan-file-path] - omit to auto-detect from IDE or ~/.claude/plans/
+argument-hint: [plan-file-path] - omit to auto-detect from IDE or docs/plans/
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Write, Edit, TodoWrite, Skill, ToolSearch
 ---
 
@@ -12,7 +12,7 @@ Stress-test a plan through a structured conversational interview before implemen
 ## Usage
 
 ```
-/plan-interview:plan-interview                                        # auto-detects from IDE or latest in ~/.claude/plans/
+/plan-interview:plan-interview                                        # auto-detects from IDE or latest in docs/plans/
 /plan-interview:plan-interview ~/.claude/plans/my-feature.md          # use a specific plan file
 /plan-interview:plan-interview --quick docs/plans/my-plan.md          # skip routing, always run the technical interview
 ```
@@ -49,8 +49,8 @@ Use the first match from this priority order:
 
 1. **Explicit argument**: If `$ARGUMENTS` is provided, treat it as the file path and read it directly.
 2. **Currently open file**: If no argument is given, check whether a file is currently open or selected in the IDE (provided via context). If it exists, is a `.md` file, and its content looks like a plan (contains headings like `## Implementation`, `## Plan`, `## Steps`, `## Instructions`, or similar structural markers), use it.
-3. **Project-level settings**: Read `.claude/settings.json` in the current project directory. If a `"plansDirectory"` key exists, glob `*.md` files from that path and use the most recently modified file. This takes precedence over the global config in step 4.
-4. **Latest plan in `~/.claude/plans/`**: If none of the above applies, use `Glob` on `~/.claude/plans/*.md`, sort by modification time, and select the most recently modified file.
+3. **Settings `plansDirectory`**: Read the `"plansDirectory"` key following Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json` (first that sets it). Glob `*.md` files from that path and use the most recently modified file.
+4. **Default fallback**: If none of the above applies, use `Glob` on `${PWD}/docs/plans/*.md`, sort by modification time, and select the most recently modified file.
 
 Once resolved, detect the review mode before proceeding:
 

@@ -1,5 +1,5 @@
 ---
-# Place in: (1) configured plansDirectory  (2) docs/plans/  (3) default Claude user plans folder
+# Place in: configured plansDirectory (settings.local.json → settings.json → ~/.claude/settings.json), else ${PWD}/docs/plans/
 status: todo
 type: <feature|fix|refactor|docs|chore>
 created: YYYY-MM-DD

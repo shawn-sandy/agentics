@@ -101,9 +101,11 @@ Follow these steps in order.
    like `guide.md`, `doc.md`, `notes.md`.
 
 9. **Save.** Resolve the target directory in order: (1) `<plansDirectory>/guides/` if
-   `plansDirectory` is configured, (2) `docs/guides/` if that directory exists, (3) `docs/` at
-   the repo root as a last fallback. Create the `guides/` subfolder if it does not exist. Honor
-   an explicit user-specified path above all other resolution rules.
+   `plansDirectory` is configured — read it via Claude Code's settings precedence (project-local
+   `.claude/settings.local.json` → project `.claude/settings.json` → global
+   `~/.claude/settings.json`); (2) `docs/guides/` if that directory exists; (3) `docs/` at the
+   repo root as a last fallback. Create the `guides/` subfolder if it does not exist. Honor an
+   explicit user-specified path above all other resolution rules.
 
 10. **Confirm.** Return the saved file as a clickable Markdown link plus a one-paragraph summary of
     what the doc covers and which exemplar archetype it follows.

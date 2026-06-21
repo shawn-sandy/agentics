@@ -32,10 +32,11 @@ Resolve which directory to scan using this priority order:
 
 1. **Argument**: If `$ARGUMENTS` contains a directory path (not `--force`),
    use it.
-2. **Project-level config**: Read `.claude/settings.json`. If a
-   `"plansDirectory"` key exists, use that path.
-3. **Global config**: Read `~/.claude/settings.json`. Same logic as above.
-4. **Default fallback**: Use `docs/plans/` relative to `$PWD`.
+2. **Settings `plansDirectory`**: Read the `"plansDirectory"` key following
+   Claude Code's settings precedence — project-local `.claude/settings.local.json`,
+   then project `.claude/settings.json`, then global `~/.claude/settings.json`.
+   Use the first that sets it.
+3. **Default fallback**: Use `${PWD}/docs/plans/`.
 
 Also check `$ARGUMENTS` for the `--force` flag. When present, re-analyze all
 files including those with existing `status` fields.

@@ -20,9 +20,11 @@ You are a batch documentation agent that processes all completed plan files and 
 
 ### Step 0 — Resolve plan directory
 
-1. Read `.claude/settings.json` in the current project directory
-2. If a `"plansDirectory"` key exists, use that path
-3. Otherwise, fall back to `docs/plans/`
+1. Read `plansDirectory` following Claude Code's settings precedence —
+   project-local `.claude/settings.local.json`, then project `.claude/settings.json`,
+   then global `~/.claude/settings.json`
+2. Use the first that sets it
+3. Otherwise, fall back to `${PWD}/docs/plans/`
 4. Announce: `"Scanning plan directory: <resolved-path>"`
 
 ### Step 1 — Collect all plan files
@@ -111,7 +113,7 @@ If any plans failed, list them with error details. If the turn limit was reached
 - **Zero undocumented plans:** Report "All completed plans are already documented" and stop
 - **Turn limit approaching:** If you estimate fewer than 5 turns remain, stop processing new plans, output the summary with remaining plans listed, and exit gracefully
 - **Skill invocation failure:** Log the error, skip the plan, and continue with the next one
-- **Missing `.claude/settings.json`:** Fall back to `docs/plans/` without error
+- **`plansDirectory` unset in all settings files:** Fall back to `${PWD}/docs/plans/` without error
 
 ## Scope Boundaries
 
