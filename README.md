@@ -507,9 +507,11 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — also auto-activates on plan-document intent |
+| `build-proposal` | Turn a vague idea into a decision-complete proposal (`docs/proposals/<slug>.md`) — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Spawn a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, + UI-conditional UX and accessibility) to review a plan, synthesize findings, and apply improvements in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
 | `refine-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
+| `setup-sites` | Scaffold the GitHub Pages deploy pipeline (workflow, `.nojekyll`, landing hub, preview script) into any repo so `docs/` HTML publishes to a public URL — command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
 | `plans-open` | Reopen the plans gallery without rebuilding |
 
@@ -567,6 +569,7 @@ Automated git workflow — create branches, commit with conventional messages, a
 |-------|------------------------------|
 | `branch-agent` | Create or start a new branch — manual invoke only |
 | `commit-agent` | Commit or save work to git — manual invoke only |
+| `create-issue` | File, open, or create a GitHub or GitLab issue from any context — detects the host from the git remote and confirms before creating |
 | `pr-agent` | Create a PR or open a pull request — manual invoke only |
 | `ship` | Ship changes or commit and create a PR — manual invoke only |
 | `ship-autonomous` | Autonomously ship or watch CI — runs the full ship pipeline with CI polling and bounded autofix |
@@ -716,7 +719,9 @@ Discover teachable code, blog posts, videos, GitHub snippets, and selected/paste
 | `share-scan` | Find commits worth sharing or create a digest |
 | `share-blog` | Share a blog post or article on social media |
 | `share-code` | Post or share a code change |
+| `share-react` | Share a React component as a social card with a static rendered preview, code, and a typed props table |
 | `share-explanation` | Explain how a project file, component, or concept works — "how does X work" or "explain X" |
+| `write-guide` | Write a long-form internal developer guide (rule, tool, system, concept, or change) to `docs/` |
 | `share-video` | Share or promote a video on social media |
 | `share-project` | Announce features, bugs, changes, or releases on social media — manual invoke only |
 | `share-init` | Set up social sharing preferences and generate a `SOCIAL.md` project config |
@@ -740,13 +745,13 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.7 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.9 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 1.10.1 | productivity | 1 command, 6 skills, 8 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 1.10.1 | productivity | 1 command, 8 skills, 8 agents, 2 hooks |
 | [git-agent](./kit/plugins/git-agent/README.md) | 3.11.0 | development | 3 commands, 6 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.6 | development | 1 command, 4 skills, 1 hook |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.3 | development | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.10.1 | productivity | 1 command, 13 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.10.1 | productivity | 1 command, 15 skills |
 
 ---
 
