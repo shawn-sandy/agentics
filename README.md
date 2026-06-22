@@ -8,6 +8,8 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories are retained in the repository but are no longer installable via the marketplace. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
+> **Built for Claude, with Claude Code:** These plugins depend on the underlying Claude Code runtime, its agents, and its API — they are not standalone tools and will not work outside the Claude Code environment.
+
 ---
 
 ## Table of Contents
