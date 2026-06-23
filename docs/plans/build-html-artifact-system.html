@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-23">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="build-html-artifact-system.html">
+<meta name="plan-path" content="docs/plans/build-html-artifact-system.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator">
+<meta name="plan-goal" content="Achieve this goal: Ship artifact-forge: an independent self-contained HTML artifact generator. The plan at docs/plans/build-html-artifact-system.html describes one approach — use it as reference, but optimize for the outcome">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator. Brief subagents with the plan file at docs/plans/build-html-artifact-system.html">
+<title>Plan: Build artifact-forge — an independent HTML artifact system</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --green-border:#bbf7d0;
+    --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --amber-border:#fde68a;
+    --red:        #dc2626;
+    --red-bg:     #fef2f2;
+    --red-border: #fecaca;
+    --purple:     #a21caf;
+    --purple-bg:  #fdf4ff;
+    --purple-border:#f0abfc;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: .8; }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .objective-card .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { flex: 1; min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--text);
+  }
+  .step-chip {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .1em .5em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--subtle);
+    border: 1px solid var(--border);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-chip-text { flex: 1; }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle {
+    margin-top: .5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    padding-top: .4rem;
+  }
+  .step-verify-toggle summary {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem;
+    color: var(--text);
+    margin-top: .4rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--surface);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem;
+    background: #f3e8ff;
+    color: #6d28d9;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid #ddd6fe;
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-implement code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  .plan-workflow {
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+  }
+  .plan-workflow summary {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    padding: .25rem 0;
+    user-select: none;
+  }
+  .plan-workflow summary:hover { text-decoration: underline; }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt (outcome-driven — always present) ────────────── */
+  .plan-goal {
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+  }
+  .plan-goal summary {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    cursor: pointer;
+    padding: .25rem 0;
+    user-select: none;
+  }
+  .plan-goal summary:hover { text-decoration: underline; }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    flex: 1;
+  }
+  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .objective-test-card {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: #14532d; }
+  .objective-test-card .test-card-body { color: #166534; }
+  .objective-test-card .test-card-body strong { color: #14532d; }
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--subtle);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ── Header — document cover ─────────────────────────────────── -->
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Build artifact-forge — an independent HTML artifact system</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="status-badge">todo</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
+        2026-06-23
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
+        agentics
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
+        feature
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar — table of contents ─────────────────────────── -->
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── Objective ────────────────────────────────────────────── -->
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Ship a standalone <code>artifact-forge</code> plugin that forges self-contained, accessible HTML artifacts on demand from any source — conversation context, markdown, code files, or session logs — and prove it end-to-end by migrating one real skill off its hand-rolled HTML.</p>
+    </div>
+
+    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <!-- ── Goal prompt (outcome-driven — always present) ─────────── -->
+    <details class="plan-goal">
+      <summary>Pursue as goal — optimize for the outcome</summary>
+      <div class="plan-goal-inner">
+        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Ship artifact-forge: an independent self-contained HTML artifact generator. The plan at docs/plans/build-html-artifact-system.html describes one approach — use it as reference, but optimize for the outcome</code>
+        <button class="copy-goal-btn" type="button"
+                onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+      </div>
+    </details>
+
+    <!-- ── Workflow prompt ── -->
+    <details class="plan-workflow">
+      <summary>Run as workflow — launch parallel subagents</summary>
+      <div class="plan-workflow-inner">
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator. Brief subagents with the plan file at docs/plans/build-html-artifact-system.html</code>
+        <button class="copy-workflow-btn" type="button"
+                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+      </div>
+    </details>
+
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">build-html-artifact-system.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/build-html-artifact-system.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+    <!-- ── Progress ─────────────────────────────────────────────── -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">0 / 11 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p>HTML generation is scattered across the marketplace with heavy duplication. Two mature patterns already exist — <code>plan-agent</code>'s inlined <code>SKELETON.html</code> (the model fills placeholders) and <code>plan-interview:markdown-to-html</code>'s spec-driven <code>html-spec.md</code> + <code>build-assets.sh</code> extraction — alongside <code>social-media-tools</code>, where 9+ card templates each re-inline the same <code>~1.5KB</code> of CSS tokens and 8+ <code>share-*</code> skills each re-implement the identical &ldquo;find free port → <code>http.server</code> → Playwright screenshot → kill&rdquo; pipeline with no shared code.</p>
+      <p>The goal is one independent system that any skill can call on demand to turn a source — conversation context, markdown content, a code file, or a session log — into a single self-contained <code>.html</code> artifact (optionally screenshotted to PNG). Built and tested first, it later replaces the hand-rolled HTML across all skills. This plan builds and tests that system as a new standalone plugin and proves it with one live pilot migration; the remaining migrations are Next Steps.</p>
+      <p><strong>Decided up front (Clarify):</strong> a new standalone plugin (<code>artifact-forge</code>); a greenfield engine (a deterministic Python core, not a model-filled skeleton — so it is genuinely unit-testable); scope is build + test + one pilot migration; and the engine owns a thin shared render-to-PNG wrapper. Greenfield reuses the <em>rules</em> already proven in <code>html-spec.md</code> (per-sink escaping, URL and theme allow-lists, a11y landmarks, reduced-motion and print styles) — it does not re-derive them.</p>
+    </section>
+
+    <!-- ── Files ──────────────────────────────────────────────── -->
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files to Modify
+      </h2>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register artifact-forge @ v0.1.0</span></li>
+          <li><code>kit/plugins/artifact-forge/.claude-plugin/plugin.json</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">name only, no version field</span></li>
+
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/</li>
+          <ul class="file-list">
+            <li><code>README.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">overview, usage, delegation contract</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">0.1.0 initial release</span></li>
+            <li><code>requirements.txt</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">pytest + playwright</span></li>
+            <li><code>pytest.ini</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">testpaths = tests</span></li>
+          </ul>
+
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/</li>
+          <ul class="file-list">
+            <li><code>forge.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">CLI entry: source → shape → html (+ png)</span></li>
+            <li><code>ir.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">IR schema + validate()</span></li>
+            <li><code>render.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">IR → self-contained HTML</span></li>
+            <li><code>screenshot.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">shared serve → shoot → kill wrapper</span></li>
+            <li><code>find_free_port.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">OS-assigned free port</span></li>
+          </ul>
+
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/adapters/</li>
+          <ul class="file-list">
+            <li><code>context.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">conversation/text → IR</span></li>
+            <li><code>markdown.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">markdown → IR sections</span></li>
+            <li><code>code.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">code file → IR with language</span></li>
+            <li><code>session.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">session JSONL → recap IR</span></li>
+          </ul>
+
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/shapes/</li>
+          <ul class="file-list">
+            <li><code>document.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">doc/explainer layout</span></li>
+            <li><code>card.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">fixed-width social card</span></li>
+            <li><code>plan.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">mirrors SKELETON.html</span></li>
+            <li><code>gallery.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">filterable index grid</span></li>
+          </ul>
+
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/assets/</li>
+          <ul class="file-list">
+            <li><code>tokens.css</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">single source of design tokens</span></li>
+            <li><code>base.css</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">layout + a11y + print</span></li>
+            <li><code>enhance.js</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">savePDF, scroll-spy, copy buttons</span></li>
+          </ul>
+
+          <li><code>kit/plugins/artifact-forge/skills/forge-artifact/SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">model-invocable front door</span></li>
+
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/tests/</li>
+          <ul class="file-list">
+            <li><code>conftest.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">shared tmp_path fixture</span></li>
+            <li><code>test_objective_smoke.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">hero: all 4 sources + pilot</span></li>
+            <li><code>test_adapters.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">unit: source → IR</span></li>
+            <li><code>test_render.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">unit: structure + escaping</span></li>
+            <li><code>test_self_contained.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">unit: no external refs</span></li>
+            <li><code>test_a11y.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">unit: landmarks + contrast per shape</span></li>
+            <li><code>test_forge_cli.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">integration: CLI per source/shape</span></li>
+            <li><code>test_screenshot.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">e2e: render → png → teardown</span></li>
+          </ul>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/tests/fixtures/</li>
+          <ul class="file-list">
+            <li><code>sample.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">markdown adapter input</span></li>
+            <li><code>sample_code.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">code adapter input</span></li>
+            <li><code>sample-session.jsonl</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">session adapter input</span></li>
+            <li><code>sample_context.txt</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">context adapter input</span></li>
+          </ul>
+
+          <li><code>kit/plugins/social-media-tools/skills/share-code/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">pilot: migrate to forge.py</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── Diagram ──────────────────────────────────────────────── -->
+    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
+      <h2 id="h-diagram">
+        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
+        Diagram
+      </h2>
+
+      <div class="diagram-subheading">Forge pipeline — source to artifact</div>
+      <div class="pipeline">
+        <div class="pipeline-node"><div class="pipeline-label">Input</div><code>context · markdown · code · session</code><div class="pipeline-sub">any source, on demand</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓</div>
+        <div class="pipeline-node"><div class="pipeline-label">Adapter</div><code>adapters/*.py → to_ir()</code><div class="pipeline-sub">normalize to one shape</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓</div>
+        <div class="pipeline-node"><div class="pipeline-label">IR</div><code>{title, meta, theme, sections[]}</code><div class="pipeline-sub">plain dict, validated</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓</div>
+        <div class="pipeline-node"><div class="pipeline-label">Renderer</div><code>render.py + assets/*</code><div class="pipeline-sub">inline tokens.css · base.css · enhance.js</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓</div>
+        <div class="pipeline-node"><div class="pipeline-label">Artifact</div><code>self-contained .html</code><div class="pipeline-sub">zero external refs</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">↓</div>
+        <div class="pipeline-node"><div class="pipeline-label">Optional</div><code>screenshot.py → .png</code><div class="pipeline-sub">shared serve → shoot → kill</div></div>
+      </div>
+
+      <div class="diagram-subheading">Before → after for the pilot</div>
+      <div class="compare-grid">
+        <div class="compare-col-add">
+          <div class="compare-header">New (shared)</div>
+          <ul class="compare-list">
+            <li>tokens.css — one token source</li>
+            <li>render.py — IR → HTML</li>
+            <li>forge.py — CLI front door</li>
+            <li>screenshot.py — PNG wrapper</li>
+            <li>forge-artifact skill</li>
+          </ul>
+        </div>
+        <div class="compare-col-neutral">
+          <div class="compare-header">Reused rules</div>
+          <ul class="compare-list">
+            <li>per-sink escaping</li>
+            <li>URL allow-list</li>
+            <li>theme allow-list</li>
+            <li>a11y landmarks + focus</li>
+            <li>reduced-motion + print</li>
+          </ul>
+        </div>
+        <div class="compare-col-remove">
+          <div class="compare-header">Retired (pilot)</div>
+          <ul class="compare-list">
+            <li>diff-card inlined &lt;style&gt;</li>
+            <li>share-code screenshot steps</li>
+            <li>duplicate find-port copy</li>
+            <li>manual token re-declare</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Steps ────────────────────────────────────────────────── -->
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <div class="steps-list">
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Scaffold the <code>artifact-forge</code> plugin and register it</span>
+              </div>
+              <div class="step-why">Establishes the standalone-plugin boundary the whole system lives in, so every later file has a home and the marketplace can serve it.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Create <code>kit/plugins/artifact-forge/.claude-plugin/plugin.json</code> with the full standard manifest (<code>name</code>, <code>description</code>, <code>author</code>, <code>license</code>, <code>keywords</code>, <code>repository</code>, and <code>homepage: https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/artifact-forge</code>) but <strong>no</strong> <code>version</code> field; add <code>README.md</code>, <code>CHANGELOG.md</code>, and the pytest infrastructure (<code>requirements.txt</code> pinning <code>pytest</code> + <code>playwright</code>, <code>pytest.ini</code> with <code>testpaths = tests</code>, <code>tests/conftest.py</code> for the shared <code>tmp_path</code>); register a relative <code>git-subdir</code> entry in <code>.claude-plugin/marketplace.json</code> at <code>version: 0.1.0</code>, <code>category: development</code>, with specific searchable <code>tags</code>. <strong>Verify:</strong> <code>python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))"</code> parses, the new entry (with tags) appears, <code>claude --plugin-dir kit/plugins/artifact-forge</code> loads with no manifest error, and <code>pytest --collect-only kit/plugins/artifact-forge/tests/</code> succeeds on a clean checkout.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Define the IR schema and the single design-token core</span>
+              </div>
+              <div class="step-why">One IR and one token file are the whole point — a single <code>tokens.css</code> kills the ~11× CSS duplication, and a <em>versioned, fully-specified</em> IR is the contract every adapter, shape, and downstream skill migration depends on; getting it wrong breaks every future caller at once (four reviewers flagged this as the linchpin).</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Write <code>scripts/ir.py</code> defining the IR as a documented <code>TypedDict</code> — <code>{schema_version, title, meta, theme, shape, sections[]}</code> — with a per-section-type schema (<code>type</code> ∈ <code>prose|code|steps|criteria|cards</code> plus type-specific keys: <code>steps[].{action,why,verify}</code>, <code>criteria[].text</code>, and <code>cards[].{title,href,tags,date,status}</code> for the gallery variant) and a <code>validate(ir)</code> guard. Write <code>scripts/assets/tokens.css</code> (one canonical token set + the four named themes ported from the existing palettes, with the status-badge gray darkened to meet 4.5:1 contrast). <strong>Verify:</strong> <code>validate()</code> rejects an IR missing <code>title</code>/<code>sections</code>, rejects an unknown <code>schema_version</code> or section <code>type</code>, rejects a theme outside the allow-list, and accepts a minimal valid one; grep confirms every token referenced by <code>base.css</code> is declared once in <code>tokens.css</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Write the four input adapters</span>
+              </div>
+              <div class="step-why">These are exactly the &ldquo;context, content, code files, sessions&rdquo; inputs the objective names — each must normalize its source into one common IR so the renderer never sees source-specific shapes.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Add <code>scripts/adapters/{context,markdown,code,session}.py</code>, each a pure <code>to_ir(raw, opts) -&gt; ir</code> function: context → prose sections, markdown → parsed sections, code → a code section with language, session JSONL → a recap (title + highlights); empty or malformed input yields a minimal valid IR rather than raising. Create the fixtures they consume: <code>tests/fixtures/{sample.md,sample_code.py,sample-session.jsonl,sample_context.txt}</code>. <strong>Verify:</strong> <code>pytest tests/test_adapters.py</code> — each adapter turns its fixture into an IR that passes <code>validate()</code> with the expected section types, and an empty input still validates.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Build the renderer and the self-contained guarantee</span>
+              </div>
+              <div class="step-why">Deterministic IR → HTML assembly is what makes the system testable and the output truly standalone — and since the engine becomes the single HTML sink for every skill, a missed escaping context has cross-skill blast radius, so escaping and allow-lists must live here where no caller can bypass them.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Write <code>scripts/render.py</code> <code>render(ir) -&gt; html</code>: inline <code>tokens.css</code> + <code>base.css</code> + shape CSS + <code>enhance.js</code>; escape user content at <strong>every</strong> sink per the <code>html-spec.md</code> rules — element text, attribute values, and CSS custom-property values — and enforce the URL and theme allow-lists <em>in the renderer</em> (not only in adapters), so a hand-supplied <code>--source ir</code> JSON cannot bypass sanitization. Emit <code>&lt;main id="main-content"&gt;</code> as the skip-link target per the spec. Add <code>assets/base.css</code> (skip-link, landmarks, focus, reduced-motion, print) and <code>assets/enhance.js</code> (savePDF, scroll-spy, copy buttons). <strong>Verify:</strong> <code>pytest tests/test_render.py tests/test_self_contained.py</code> — output has no <code>&lt;link&gt;</code>, no <code>http(s)://</code> asset ref, no <code>@import</code>; and a title carrying <code>&lt;script&gt;</code>, an attribute payload <code>" onclick="</code>, and a <code>javascript:</code> URL are each neutralized in the text, attribute, and href sinks.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Implement the four v1 shapes: <code>document</code>, <code>card</code>, <code>plan</code>, <code>gallery</code></span>
+              </div>
+              <div class="step-why"><code>document</code> covers context/markdown/code/session artifacts and <code>card</code> covers the social-card pilot; <code>plan</code> reproduces the plan-agent <code>SKELETON.html</code> structure and <code>gallery</code> the index grid, so implementation-plan and the galleries can later adopt the engine without a second shape-building pass. Reproducing two already-shipped designs is the proof the engine can absorb the existing systems.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Add <code>scripts/shapes/{document,card,plan,gallery}.py</code>, each consuming the same IR: <code>document</code> (header + sticky nav + sections), <code>card</code> (a fixed-width card — define a canonical width, e.g. 800px, in <code>tokens.css</code> so PNG output is deterministic — wrapped in an <code>&lt;article&gt;</code> landmark with a single heading), <code>plan</code> (steps + acceptance criteria + completion checklist + meta tags, mirroring <code>SKELETON.html</code>), <code>gallery</code> (filterable index grid mirroring plans-library/media-library; filter triggers are <code>&lt;button&gt;</code>s inside <code>&lt;div role="group" aria-label="Filter"&gt;</code>, the result region carries <code>aria-live="polite"</code> with a visible empty-state, filtering is keyboard-operable). Every shape emits the spec landmarks (skip-link, <code>&lt;main id="main-content"&gt;</code>, heading hierarchy). <strong>Verify:</strong> <code>pytest tests/test_render.py</code> renders all four shapes from IR fixtures and asserts shape-specific structure via concrete selectors — nav for <code>document</code>, a <code>.card</code> wrapper + fixed width for <code>card</code>, a step list + completion checklist for <code>plan</code>, and <code>role="group"</code> filter buttons + an <code>aria-live</code> result region for <code>gallery</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Wire the <code>forge.py</code> CLI front door</span>
+              </div>
+              <div class="step-why">A single entry point is how every skill invokes the system on demand — adapter dispatch, render, write, optional screenshot, all behind one command.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Write <code>scripts/forge.py</code> accepting <code>--source context|markdown|code|session|ir</code>, <code>--in &lt;path|-&gt;</code>, <code>--shape document|card|plan|gallery</code>, <code>--theme &lt;name&gt;</code>, <code>--out &lt;path&gt;</code>, and optional <code>--png &lt;path&gt;</code>; the <code>ir</code> source reads a ready-made IR JSON for skill delegation. Define an explicit error contract: a missing <code>--in</code> file, malformed input, empty stdin, or invalid IR exits non-zero with a clear stderr message; an unknown <code>--theme</code> degrades to <code>default</code>. <strong>Verify:</strong> <code>pytest tests/test_forge_cli.py</code> — each <code>--source</code> writes a valid <code>.html</code> for every <code>--shape</code>; <code>--in -</code> reads stdin; a missing file and a malformed IR each exit non-zero with a message; an unknown <code>--theme</code> falls back to <code>default</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the shared render-to-PNG wrapper</span>
+              </div>
+              <div class="step-why">This single copy replaces the find-port → serve → screenshot → kill flow duplicated across 8+ <code>share-*</code> skills. It must <strong>always</strong> tear the server down — a leaked <code>http.server</code> accumulates across invocations — and degrade gracefully when Playwright (a heavy, optional dependency) is absent rather than crashing the caller.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Write <code>scripts/screenshot.py</code> <code>to_png(html_path, png_path)</code> + <code>scripts/find_free_port.py</code> using Playwright-as-library (the Python package, documented as a prerequisite with <code>playwright install chromium</code> in the README): free port → background <code>python3 -m http.server</code> → navigate + full-page screenshot → a <code>finally</code> block that kills the whole process group (<code>os.killpg</code>) with a timeout then SIGKILL fallback. A soft preflight emits an advisory and skips the PNG (non-fatal) when Playwright is unavailable. <strong>Verify:</strong> <code>forge.py … --png /tmp/out.png</code> on a fixture writes a non-empty PNG and leaves no server alive (<code>pgrep -f http.server</code> empty afterward) <em>even when the screenshot step raises</em>; with Playwright absent, <code>forge.py</code> still emits HTML and exits zero.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Author the <code>forge-artifact</code> skill</span>
+              </div>
+              <div class="step-why">The skill is the on-demand, model-invocable front door — and its delegation contract is how other skills reach the engine instead of hand-writing HTML, so that contract must be decided and documented now, not deferred.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Write <code>skills/forge-artifact/SKILL.md</code> (three-part description; <code>allowed-tools: Bash, Read, Write, AskUserQuestion, Glob, SendUserFile, ToolSearch</code>): gather the source, build or emit the IR, call <code>forge.py</code>, deliver the HTML (and PNG when asked). Make <code>--source ir --in -</code> (IR JSON on stdin) the <strong>primary, documented</strong> delegation contract in the README, with the Skill tool as the interactive fallback, and specify how a consuming plugin resolves <code>forge.py</code> across plugins (a documented <code>ARTIFACT_FORGE_ROOT</code> / <code>$CLAUDE_PLUGIN_ROOT</code> lookup) rather than hard-coding an absolute path. <strong>Verify:</strong> <code>claude --plugin-dir kit/plugins/artifact-forge</code> lists <code>forge-artifact</code>; running it on a sample produces an artifact via <code>forge.py</code> (not hand-written HTML), and piping an IR JSON to <code>forge.py --source ir --in -</code> round-trips to valid HTML.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">9</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Migrate one pilot skill onto the engine</span>
+              </div>
+              <div class="step-why">A live migration is the only real proof the system can replace hand-rolled HTML — <code>share-code</code> exercises both the <code>card</code> shape and the PNG wrapper, the two riskiest new pieces, while retiring the most duplication.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Convert <code>social-media-tools:share-code</code> to build a <code>card</code> IR and call <code>forge.py --shape card --png …</code> (resolving <code>forge.py</code> via the documented cross-plugin lookup, not a hard-coded path), deleting its inlined <code>&lt;style&gt;</code> and private screenshot steps; leave all other skills untouched. Capture a reference of the current <code>diff-card.html</code> output first and gate the deletion behind a temporary toggle until the new path passes, so rollback is one revert. <strong>Verify:</strong> a structural/dimensional parity check (presence of <code>.card</code>, the copy panel, and matching card width) passes against the captured reference, <code>test_self_contained.py</code> passes on the migrated HTML, the PNG is non-empty, and grep shows no <code>&lt;style&gt;</code> or <code>http.server</code> remaining in the migrated path.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Tests ────────────────────────────────────────────────── -->
+    <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
+      <h2 id="h-tests">
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
+        Tests
+      </h2>
+      <div class="test-tier-label">Tier 1 — Code-touching plan</div>
+
+      <!-- Objective-verification test — mandatory, always first -->
+      <div class="objective-test-card">
+        <div class="test-card-header">
+          <span class="test-badge test-badge-objective">Objective</span>
+          <span class="test-card-title">Forge produces a self-contained HTML artifact from every source</span>
+        </div>
+        <div class="test-card-body">
+          <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_objective_smoke.py</code></p>
+          <p><strong>Type:</strong> smoke test</p>
+          <p><strong>Asserts:</strong> for each of the four sources (<code>context</code>, <code>markdown</code>, <code>code</code>, <code>session</code>), <code>forge.py</code> writes a single <code>.html</code> with zero external refs (no <code>&lt;link&gt;</code>, no <code>http(s)://</code> asset, no CDN) whose title matches the fixture's expected title <em>exactly</em>, whose section count matches, and which parses as well-formed HTML; and the migrated pilot emits a valid <code>card</code> artifact through the engine. Directly proves &ldquo;an independent system generates self-contained HTML artifacts on demand from context, content, code, and sessions.&rdquo;</p>
+          <p><strong>Run:</strong> <code>pytest kit/plugins/artifact-forge/tests/test_objective_smoke.py</code></p>
+        </div>
+      </div>
+
+      <div class="test-list">
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title">Adapters normalize each source to a valid IR</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_adapters.py</code></p>
+            <p><strong>Targets:</strong> <code>adapters/{context,markdown,code,session}.py</code> <code>to_ir()</code></p>
+            <p><strong>Key cases:</strong> each fixture source produces a valid IR with the expected section types; empty input yields a minimal valid IR; escaping-sensitive content (a literal <code>&lt;script&gt;</code>) survives into IR text unmangled, ready for the renderer to escape.</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title">Renderer emits correct structure and escapes content</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_render.py</code></p>
+            <p><strong>Targets:</strong> <code>render.py</code> <code>render()</code> + <code>shapes/{document,card,plan,gallery}.py</code></p>
+            <p><strong>Key cases:</strong> <code>document</code> includes a nav landmark, <code>card</code> a <code>.card</code> wrapper at the canonical width, <code>plan</code> a step list + completion checklist, <code>gallery</code> <code>role="group"</code> filter buttons + an <code>aria-live</code> region; user content in the text (<code>&lt;script&gt;</code>), attribute (<code>" onclick="</code>), and CSS-value sinks is each escaped; a <code>javascript:</code> URL is dropped; an unknown theme falls back to <code>default</code>.</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title">Output is fully self-contained (no external refs)</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_self_contained.py</code></p>
+            <p><strong>Targets:</strong> the rendered HTML invariant (a pure check over the output string)</p>
+            <p><strong>Key cases:</strong> rendered output contains no <code>&lt;link rel&gt;</code>, no <code>src=</code> or <code>href=</code> pointing at <code>http(s)://</code>, no <code>@import url(</code>, and no host from the pinned CDN-host constant — the guarantee that lets artifacts open offline from <code>file://</code>.</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title">Every shape meets the accessibility baseline</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_a11y.py</code></p>
+            <p><strong>Targets:</strong> rendered output of all four shapes (axe-core / pa11y over the static HTML)</p>
+            <p><strong>Key cases:</strong> each shape has a skip-link, a <code>&lt;main id="main-content"&gt;</code> landmark, and correct heading order; <code>gallery</code> filter buttons are keyboard-reachable with an <code>aria-live</code> result count; token/badge contrast meets 4.5:1 — zero WCAG AA violations per shape.</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-integration">Integration</span>
+            <span class="test-card-title">forge.py CLI runs end-to-end per source and shape</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_forge_cli.py</code></p>
+            <p><strong>Targets:</strong> <code>forge.py</code> argument dispatch → adapter → renderer → file write</p>
+            <p><strong>Key cases:</strong> each <code>--source</code> writes a valid <code>.html</code> to disk; <code>--in -</code> reads an IR from stdin (the delegation path); <code>--shape</code> selects the right layout; a bad <code>--theme</code> degrades to <code>default</code> without error.</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-e2e">E2E</span>
+            <span class="test-card-title">Render-to-PNG produces an image and tears down the server</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_screenshot.py</code></p>
+            <p><strong>Targets:</strong> <code>screenshot.py</code> <code>to_png()</code> via <code>forge.py --png</code> (skipped when Playwright is unavailable)</p>
+            <p><strong>Key cases:</strong> a fixture render produces a non-empty PNG; the temporary <code>http.server</code> is killed afterward (no lingering process, port released) even when the screenshot step raises.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Acceptance Criteria
+      </h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1">
+          <label for="ac1"><code>artifact-forge</code> is registered in <code>.claude-plugin/marketplace.json</code> at v0.1.0 and loads via <code>--plugin-dir</code> with no manifest error.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2"><code>forge.py</code> emits a single self-contained <code>.html</code> (zero external <code>&lt;link&gt;</code>, script, or CDN refs) for all four sources: context, markdown, code, and session.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">The core design tokens are declared exactly once in <code>assets/tokens.css</code>; no shape or adapter re-declares them.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4"><code>forge.py --png</code> produces a PNG and leaves no <code>http.server</code> process running afterward.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">The <code>forge-artifact</code> skill generates artifacts by calling <code>forge.py</code>, never by hand-writing HTML.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6">The pilot <code>share-code</code> produces its card through <code>forge.py</code>, and its inlined <code>&lt;style&gt;</code> and private screenshot steps are deleted.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7"><code>pytest kit/plugins/artifact-forge/tests/</code> passes — objective-smoke, unit, integration, and E2E all green.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8">No HTML-emitting skill other than the pilot is modified; migrating the rest is left to Next Steps.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">All four shapes render valid HTML: <code>document</code>, <code>card</code>, <code>plan</code> (mirroring <code>SKELETON.html</code>), and <code>gallery</code> (filterable index).</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">Each rendered shape passes an automated a11y scan (axe-core / pa11y) with zero WCAG 2.1 AA violations, and token/badge contrast meets 4.5:1.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11">The IR is versioned (<code>schema_version</code>) with a documented per-section-type schema; <code>validate()</code> enforces it plus the URL and theme allow-lists, even for hand-supplied <code>--source ir</code> input.</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <!-- ── Verification ──────────────────────────────────────────── -->
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Verification
+      </h2>
+      <p>Run <code>pytest kit/plugins/artifact-forge/tests/</code> — every test passes and the objective-smoke test confirms all four sources plus the pilot. Then spot-check by hand: <code>forge.py --source markdown --in README.md --shape document --out /tmp/d.html</code> opens correctly from <code>file://</code> with the network disabled (proving self-containment); <code>forge.py --source code --in kit/plugins/artifact-forge/scripts/forge.py --shape card --png /tmp/c.png</code> writes a non-empty PNG. Load the plugin and run <code>forge-artifact</code> on a recent session to confirm an artifact is produced through <code>forge.py</code>. Finally, diff the migrated <code>share-code</code> card against the previous <code>diff-card.html</code> output for visual parity, and run <code>git diff --stat</code> to confirm no skill other than the pilot changed.</p>
+    </section>
+
+    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Completion Checklist
+      </h2>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Next Steps ──────── -->
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next Steps
+      </h2>
+      <div class="next-steps-list">
+
+        <details class="next-step-item">
+          <summary>Migrate the remaining HTML-emitting skills onto forge.py</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Run a workflow to migrate every remaining HTML-emitting skill in kit/plugins/ onto the artifact-forge engine (forge.py). In scope: the social-media-tools share-* card skills (share-blog, share-react, share-github, share-selection, share-session, share-video, share-explanation) and the media-library/plans-library gallery builders. For each skill: build the appropriate IR, call forge.py with the right --shape (and --png for cards), delete the skill's inlined &lt;style&gt; and its private screenshot pipeline, and verify the output passes the self-contained test and matches the prior visual output. Brief each subagent with kit/plugins/artifact-forge/README.md and the forge-artifact delegation contract. Leave the implementation-plan plan shape for its own follow-up. Report a table of skill → shape → lines removed.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Adopt the plan and gallery shapes in implementation-plan and the galleries</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Run a workflow to migrate plan-agent:implementation-plan and the plans-library/media-library gallery builders onto the artifact-forge engine, using the plan and gallery shapes already shipped in v1. For implementation-plan: render through forge.py (--shape plan) instead of filling SKELETON.html, confirming feature parity (steps, acceptance criteria, completion checklist, implement/goal/workflow prompts, meta tags) against current output. For the galleries: render through forge.py (--shape gallery), confirming the filter chips and card grid match. Keep SKELETON.html and the current index.html as visual references. Report what changed and any visual diffs.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Retire the duplicated screenshot pipeline copies</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Once all share-* skills render through artifact-forge, remove the now-redundant screenshot infrastructure: the standalone kit/plugins/social-media-tools/scripts/find_free_port.py and the references/rendering-pipeline.md, replacing their usages with kit/plugins/artifact-forge/scripts/screenshot.py. Grep the whole repo for "http.server" and "find_free_port" to confirm no skill still hand-rolls the pipeline. Bump social-media-tools in marketplace.json (minor) and add CHANGELOG entries. Report every file touched.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Live-preview watch mode for forge.py
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Add a "forge.py serve --watch &lt;source&gt;" mode that re-renders the artifact and reloads the browser whenever the source file changes, for fast iterative authoring. Use only the standard library (http.server + a simple mtime poll + an injected dev-only reload snippet that is stripped from the final artifact). Keep the production output path byte-identical to the non-watch path.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            theme-from-image adapter
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Add a fifth theme-generation path to artifact-forge that derives a tokens.css palette from an input image or brand color (reusing the design-token-extractor approach already in the marketplace), so artifacts can match a project's brand without hand-editing tokens. Validate contrast ratios stay WCAG AA before emitting the theme.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ── Unresolved Questions ─ -->
+    <details class="optional-section">
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item">
+              <summary>Validate the IR-on-stdin delegation contract against the pilot before the remaining migrations.</summary>
+              <div class="unresolved-prompt">
+                <pre>Step 8 sets `--source ir --in -` (IR JSON on stdin) as artifact-forge's primary delegation contract, with the forge-artifact Skill as the interactive fallback. Validate this end-to-end against the share-code pilot: confirm a delegating skill can construct the IR, pipe it, and recover from a non-zero exit; confirm the cross-plugin forge.py lookup works when the two plugins load at different paths; then lock the IR schema_version before handing off the remaining skill migrations.</pre>
+                <button class="copy-prompt-btn" type="button"
+                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-06-23 · agentics
+    </footer>
+
+    <details id="team-review-20260623201017" class="team-review" style="margin-top:2.5rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--grey-bg);">
+      <summary style="padding:.875rem 1.25rem;font-weight:700;cursor:pointer;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);">Team Review (2026-06-23 20:10:17 UTC) — 7 reviewers</summary>
+      <div class="review-body" style="padding:0 1.5rem 1.5rem;font-size:.9rem;line-height:1.65;">
+
+        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Executive Summary</h3>
+        <p style="margin-bottom:.75rem;">Verdict: <strong>sound, with revisions</strong>. All seven reviewers agreed the layered pipeline (adapters → validated IR → shapes → inlining renderer → optional PNG wrapper) is architecturally right with correct dependency direction. The dominant, four-reviewer-convergent concern was that the <strong>IR contract is the linchpin and was underspecified</strong> — no section schema, no version, and a flat schema that does not fit the gallery's card-list. Choosing all four shapes for v1 raised the stakes on accessibility (the engine becomes the single a11y sink), test infrastructure, and the plan/gallery shape reproductions. None of these are fatal; all were addressable by tightening existing steps.</p>
+
+        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Role-by-Role</h3>
+        <ul style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem;">
+          <li><strong>Architecture:</strong> sound seam; flagged an unversioned IR/delegation contract (high), parallel-truth drift for the plan/gallery shapes vs the still-authoritative SKELETON/gallery templates (high), ambiguous Playwright-as-library vs MCP (high), narrow <code>allowed-tools</code> (medium), gallery's structurally-different IR (medium), and undefined cross-plugin <code>forge.py</code> resolution (medium).</li>
+          <li><strong>Completeness:</strong> executable through Step 7 but flagged the undefined <code>sections[]</code> element schema (critical), missing pytest config + fixtures so <code>pytest</code> fails on a clean clone (high), and the unspecified mapping of SKELETON's 20+ placeholders to the <code>plan</code> shape (high).</li>
+          <li><strong>Testability:</strong> good breadth; flagged loose objective-smoke assertions (high), no automated pilot visual-parity gate (high), prose-only shape assertions (medium), and AC3/AC5 having no backing test (medium).</li>
+          <li><strong>Risk:</strong> overall <strong>high</strong>; screenshot process-leak without process-group kill (high), unguarded pilot visual regression with no rollback (high), Playwright as an unchecked hard dependency that lets CI go green with zero screenshot coverage (high), and IR blast-radius across all future migrations (high).</li>
+          <li><strong>Conventions:</strong> good fit on naming/registration/CHANGELOG; flagged colocated pytest vs the repo's top-level <code>tests/&lt;area&gt;/</code> shell/Node tests (high), an underspecified <code>plugin.json</code> missing standard fields incl. the tree-scoped <code>homepage</code> (high), and a novel three-level <code>scripts/</code> subtree (medium).</li>
+          <li><strong>UX:</strong> flagged the delegation contract being parked in Unresolved while the pilot needs it (high), unspecified <code>forge.py</code> error messaging (high), the <code>--shape</code> flag listing only two of four shapes (medium), and an undefined canonical card width for deterministic PNGs (low).</li>
+          <li><strong>Accessibility:</strong> solid inherited baseline from <code>html-spec.md</code>, but no a11y tests or criteria (high), the new <code>card</code>/<code>gallery</code> shapes have no a11y contract (high), the status badge is ~3.35:1 (&lt; 4.5:1) (high), and the skip-link target should be <code>id="main-content"</code> (low).</li>
+        </ul>
+
+        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Agreements &amp; Conflicts</h3>
+        <p style="margin-bottom:.5rem;"><strong>Confirmed (multi-reviewer):</strong> the IR schema gap (Architecture + Completeness + Risk + UX); broadening <code>forge-artifact</code> <code>allowed-tools</code> (Architecture + Conventions); the <code>--shape</code> two-of-four inconsistency (Completeness + UX); deciding the delegation contract now (Architecture + UX); pilot visual-parity needing a real gate (Testability + Risk).</p>
+        <p style="margin-bottom:.75rem;"><strong>Conflict:</strong> Conventions wants tests under the repo's top-level <code>tests/&lt;area&gt;/</code> as <code>test-*.sh|.mjs</code>; the user explicitly chose <em>in-plugin pytest</em>. <strong>Resolution:</strong> keep the user's in-plugin pytest choice (it is a deliberate decision and a deterministic engine is far better tested in pytest than shell); add a top-level pointer to the suite rather than relocating it.</p>
+
+        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Highest-Risk Issues (priority order)</h3>
+        <ol style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem;">
+          <li>Underspecified, unversioned IR contract — the linchpin for all downstream migrations.</li>
+          <li><code>pytest</code> cannot run on a clean clone (no config/fixtures).</li>
+          <li>Screenshot teardown + Playwright as an unchecked hard dependency.</li>
+          <li>No a11y tests/criteria; new card/gallery shapes lack an a11y contract; badge contrast &lt; 4.5:1.</li>
+          <li>Quick correctness gaps: <code>--shape</code> list, <code>allowed-tools</code>, parked delegation contract.</li>
+          <li>Manifest fields/tags + undefined cross-plugin <code>forge.py</code> resolution.</li>
+          <li>Pilot visual parity asserted in prose, not by a test; no rollback gate.</li>
+        </ol>
+
+        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Edits Applied</h3>
+        <ul style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.3rem;margin-bottom:.75rem;">
+          <li><strong>Step 1:</strong> full <code>plugin.json</code> manifest (incl. tree-scoped <code>homepage</code>) + marketplace <code>tags</code> + pytest infra (<code>requirements.txt</code>, <code>pytest.ini</code>, <code>conftest.py</code>).</li>
+          <li><strong>Step 2:</strong> IR redefined as a versioned <code>TypedDict</code> with a per-section-type schema (incl. gallery <code>cards[]</code>); <code>validate()</code> enforces version, type, and theme allow-list; badge contrast fixed in tokens.</li>
+          <li><strong>Step 3:</strong> create <code>tests/fixtures/*</code>; empty/malformed input yields a minimal valid IR.</li>
+          <li><strong>Step 4:</strong> escape every sink (text/attribute/CSS-value); enforce URL/theme allow-lists in the renderer so <code>--source ir</code> cannot bypass; emit <code>&lt;main id="main-content"&gt;</code>.</li>
+          <li><strong>Step 5:</strong> a11y contracts for <code>card</code> (article landmark, single heading, canonical width) and <code>gallery</code> (<code>role="group"</code> filter buttons, <code>aria-live</code> results, keyboard ops); selector-based assertions.</li>
+          <li><strong>Step 6:</strong> <code>--shape</code> lists all four; explicit non-zero error contract for missing file / malformed input / empty stdin.</li>
+          <li><strong>Step 7:</strong> process-group kill (<code>os.killpg</code>) + timeout + SIGKILL fallback; Playwright-as-library prerequisite + soft preflight that skips PNG non-fatally.</li>
+          <li><strong>Step 8:</strong> broadened <code>allowed-tools</code>; promoted <code>--source ir --in -</code> to the primary documented contract; documented cross-plugin <code>forge.py</code> lookup.</li>
+          <li><strong>Step 9:</strong> reference capture + structural/dimensional parity check + temporary rollback toggle; cross-plugin path resolution.</li>
+          <li><strong>Tests/Criteria:</strong> added <code>test_a11y.py</code>; tightened objective-smoke (exact title, section count, well-formed parse) and render (injection sinks); added AC10 (a11y scan + contrast) and AC11 (versioned IR + enforced allow-lists).</li>
+          <li><strong>Unresolved:</strong> narrowed from "which interface?" to a validation gate for the now-decided IR-on-stdin contract.</li>
+        </ul>
+
+        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Triage Outcome</h3>
+        <p style="margin-bottom:.4rem;">The Step 6b gate was shown; the developer chose <strong>"Apply the recommended set"</strong>. All recommended edits above were applied as-is. None were modified inline or rejected.</p>
+        <p style="margin-bottom:0;"><strong>Not applied (by design):</strong> relocating tests to the repo's top-level <code>tests/</code> tree — superseded by the user's explicit in-plugin pytest decision (a top-level pointer is the agreed compromise). The "flatten <code>scripts/</code>" convention note was left as reviewer advice, not enforced, since the adapters/shapes/assets subtree is a deliberate structural choice for an engine of this scale.</p>
+
+      </div>
+    </details>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
+  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
+  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
+  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+
+  return lines.join('\n');
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  var text = buildImplementPrompt();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy workflow prompt ──────────────────────────────────── */
+function copyWorkflow(btn) {
+  var code = document.getElementById('workflow-cmd');
+  if (!code) return;
+  var text = code.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  var text = code.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  var text = pre.textContent;
+
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy prompt';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar + localStorage ────────────────────────────── */
+  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  function saveState() {
+    var state = {};
+    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function restoreState() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (!raw) return;
+    var state;
+    try { state = JSON.parse(raw); } catch (e) { return; }
+    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
+    updateProgress();
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      updateProgress();
+      saveState();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  restoreState();
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>
