@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-06-19">
 <meta name="plan-repo" content="agentics">
@@ -1348,7 +1348,7 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1507,12 +1507,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Extract shared parse functions into <code>scripts/lib/plan-spec.mjs</code></span>
               </div>
               <div class="step-why">Gives the dependency graph the right shape — a shared library consumed by both the write-side backfill and the read-side extractor — instead of a read tool importing from an injector. It is also the natural home for the new <code>unguardScriptClose</code> helper the extractor needs. <em>(Architecture + Conventions reviewers; pulled in per your decision.)</em></div>
@@ -1524,12 +1524,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Build <code>scripts/extract-plan-spec.mjs</code> — embedded-first, DOM-derive fallback</span>
               </div>
               <div class="step-why">One read-time tool replaces the awk one-liner across every consumer. Importing from the shared lib keeps the read path decoupled from the injector, and reusing the already-tested parse functions means no new parser.</div>
@@ -1541,12 +1541,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Strip the digest from <code>SKELETON.html</code> and repoint its runtime prompt JS</span>
               </div>
               <div class="step-why">New plans must stop embedding the cache for the single-source-of-truth goal. The skeleton hardcodes the digest in two places: the <code>&lt;script id="plan-digest"&gt;</code> block and the <code>buildImplementPrompt()</code> JS (<code>digestCmd</code> at ~line 1661) that builds the Copy-button prompt at runtime.</div>
@@ -1558,12 +1558,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewire <code>implementation-plan/SKILL.md</code> — remove <em>every</em> digest reference</span>
               </div>
               <div class="step-why">The skill instructs every consumer; it must stop generating and refreshing the digest and point all three prompt formats at the extractor. The digest is referenced in more places than the main section.</div>
@@ -1575,12 +1575,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Repoint the review team (SKILL + 7 briefs + 7 agent defs) to the extractor</span>
               </div>
               <div class="step-why">The 5–7 reviewers were the biggest beneficiaries of the cheap read, so they must use the new path. Removing the "Pass 1b — Refresh the digest" step also deletes the last piece of sync machinery.</div>
@@ -1592,12 +1592,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update tests — add extractor test, repurpose the digest test, fix the corpus assertion</span>
               </div>
               <div class="step-why">Lock the new contract and fix the test that would otherwise fail the instant a digest-free plan is committed. The existing digest smoke test now asserts the opposite of what it used to.</div>
@@ -1609,12 +1609,12 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Docs + version bump (README, CHANGELOG, marketplace.json)</span>
               </div>
               <div class="step-why">Project convention requires a manual semver bump and a CHANGELOG entry on every plugin change; the README currently documents the digest + awk, and the awk-empty break for old consumers must be recorded.</div>
@@ -1688,35 +1688,35 @@ backfill injector + shared lib + tests + historical CHANGELOG entries).
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>node scripts/extract-plan-spec.mjs &lt;plan&gt;</code> prints spec markdown for both an embedded-digest plan (unguarded) and a digest-free plan (DOM-derived).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Shared parse functions live in <code>scripts/lib/plan-spec.mjs</code> (including <code>unguardScriptClose</code>); both <code>backfill-plan-digests.mjs</code> and the extractor import from it.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>SKELETON.html</code> has no <code>&lt;script id="plan-digest"&gt;</code> block and no <code>{plan-digest}</code> placeholder; <code>buildImplementPrompt()</code>'s Copy output names the extractor, not awk; a freshly generated plan carries no embedded digest.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code>implementation-plan/SKILL.md</code> has no "Machine-Readable Digest" section, no <code>{plan-digest}</code> fill, and no digest-refresh or status-note references; implement, goal, and workflow prompts reference the extractor.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5"><code>review-plan/SKILL.md</code> has no "Refresh the digest" pass; all 7 reviewer briefs and all 7 agent defs reference the extractor with a full-HTML fallback.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">Existing <code>docs/plans/*.html</code> files are unmodified and still extract via the embedded path; pre-skeleton / <code>*-review.html</code> plans that lack the DOM structure exit non-zero (documented, expected).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>test-extract-plan-spec.mjs</code> and <code>test-extractor-wiring.sh</code> pass; <code>test-backfill-digest.mjs</code> passes with its corpus assertion scoped so committed digest-free plans don't fail it.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>marketplace.json</code> lists <code>plan-agent</code> at <code>2.8.0</code> with a matching CHANGELOG entry that documents the awk-empty caveat; the <code>backfill-plan-digests.mjs</code> injector is retained.</label>
         </li>
       </ul>

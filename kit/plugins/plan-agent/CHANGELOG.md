@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.8.2 — Persist plan checkbox state in HTML attributes, not localStorage (2026-06-23)
+
+### Changed
+
+- **HTML-attribute persistence** — the generated plan's acceptance-criteria checkboxes now persist their state in the document itself (the `checked` attribute on each `<input>`) instead of `localStorage`. The browser renders `checked` inputs natively on load, so the restore step is gone; toggling a box syncs the attribute, keeping the live DOM and any saved/committed copy of the file the single source of truth. This makes plan progress version-controllable and viewable identically across browsers, rather than living in per-browser `localStorage` invisible to git. Step completion (`.step-card.completed`) and the derived completion checklist were already DOM-backed and are unchanged.
+
 ## 2.8.1 — Standardize plans-directory resolution across all skills (2026-06-20)
 
 ### Fixed
