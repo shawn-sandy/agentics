@@ -24,7 +24,11 @@ Every card-generating skill saves populated HTML to `docs/media/social/`. This s
 
 ```bash
 MEDIA_DIR="${PWD}/docs/media/social"
-MEDIA_FILES=$(ls -t "$MEDIA_DIR"/*.html 2>/dev/null | grep -v '/index\.html$')
+# Newest-first by the trailing -YYYY-MM-DD in each filename, NOT by mtime.
+# (git checkout resets mtimes, so `ls -t` order is meaningless.)
+MEDIA_FILES=$(find "$MEDIA_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" 2>/dev/null \
+  | sed -E 's/.*-([0-9]{4}-[0-9]{2}-[0-9]{2})\.html$/\1\t&/' \
+  | sort -rk1,1 | cut -f2-)
 ```
 
 If `docs/media/social/` does not exist or contains no `.html` files, tell the user:

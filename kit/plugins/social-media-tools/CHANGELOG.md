@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.12.3 — 2026-06-27 — Order media library newest-first by card date, not mtime
+
+### Fixed
+
+- **`media-library` ordering** — the media gallery now sorts cards newest-first by the trailing `-YYYY-MM-DD` in each card filename instead of filesystem modification time (`ls -t`). Because `git checkout` resets every file's mtime to the same checkout time, the mtime sort was unreliable; sorting by the date embedded in the filename is deterministic and matches the visible card date.
+
 ## v2.12.2 — 2026-06-20 — write-guide reads plansDirectory via Claude settings precedence
 
 ### Fixed

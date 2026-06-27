@@ -68,12 +68,13 @@ If `TEMPLATES_DIR` is empty, output:
 
 ## Step 3 — Scan plan files
 
-Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Sort newest-modified first and capture the result in `PLAN_FILES`.
+Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Capture the result in `PLAN_FILES`.
 
 ```bash
-PLAN_FILES=$(find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 2>/dev/null \
-  | xargs -0 ls -t 2>/dev/null)
+PLAN_FILES=$(find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" 2>/dev/null | sort)
 ```
+
+> Do **not** sort by filesystem modification time (`ls -t`). A `git clone`/`checkout` resets every file's mtime to checkout time, so mtime order is meaningless. The gallery's newest-first order is established in Step 4 from each plan's `plan-created` metadata, not from the filesystem.
 
 ---
 
@@ -110,7 +111,7 @@ EOF
 done <<< "$PLAN_FILES"
 ```
 
-Parse the JSON output with `json.loads()`. From each result, generate one `<a>` block:
+Parse the JSON output with `json.loads()` into a list of entries. **Sort the list newest-first by `created` descending** (compare the `YYYY-MM-DD` strings; entries with an empty `created` sort last, then break ties by `title` ascending). Then, from each entry in sorted order, generate one `<a>` block:
 
 ```html
 <a class="gallery-card" href="{BASENAME}"

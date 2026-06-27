@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.8.3 — Order plans gallery newest-first by created date, not mtime (2026-06-27)
+
+### Fixed
+
+- **Gallery ordering** — the plans gallery now sorts cards newest-first by each plan's `plan-created` metadata instead of filesystem modification time. A `git clone`/`checkout` resets every file's mtime to the same checkout time, so the previous `os.path.getmtime` sort in `docs/plans/build-index.sh` (and the `ls -t` step in the `plans-library` skill) produced an effectively random order. Both now sort by the embedded date descending (blank dates last, title ascending as a stable tiebreak).
+
 ## 2.8.2 — Persist plan checkbox state in HTML attributes, not localStorage (2026-06-23)
 
 ### Changed
