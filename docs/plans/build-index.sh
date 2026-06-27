@@ -61,7 +61,10 @@ for dirpath, dirnames, filenames in os.walk(plans_dir):
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
-plan_files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+# Stable base order only; final newest-first order is by plan-created metadata
+# below. Do NOT sort by mtime — git checkout resets every file's mtime to the
+# same checkout time, so mtime order is meaningless.
+plan_files.sort()
 
 if not plan_files:
     print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
@@ -100,7 +103,7 @@ for f in plan_files:
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
 
-    cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
+    cards.append((created, title.lower(), f'''<a class="gallery-card" href="{e(rel_path)}"
    data-status="{e(status)}" data-type="{e(ptype)}" data-title="{e(html.unescape(title).lower())}">
   <div class="card-badges">
     <span class="status-chip status-{e(status)}">{e(status_display)}</span>
@@ -111,9 +114,13 @@ for f in plan_files:
     {date_span}
     <span class="card-file">{e(rel_path)}</span>
   </div>
-</a>''')
+</a>'''))
 
-gallery_entries = '\n'.join(cards)
+# Newest-first: sort by plan-created (YYYY-MM-DD) descending; blank dates last,
+# ties broken by title ascending. Two stable passes: title asc, then date desc.
+cards.sort(key=lambda c: c[1])                       # title asc (tiebreak)
+cards.sort(key=lambda c: c[0] or '', reverse=True)   # created desc; '' sorts last
+gallery_entries = '\n'.join(c[2] for c in cards)
 
 # ── Build index.html ───────────────────────────────────────────────────────────
 template_path = os.path.join(templates_dir, 'plans-gallery.html') if templates_dir else ''
