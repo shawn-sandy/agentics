@@ -1159,7 +1159,7 @@ img, video { max-width: 100%; height: auto; }
 
 ## Objective
 
-Make `setup-sites` a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy `docs/` via each host's CLI.
+Make `setup-sites` a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy `docs/` via each host's CLI. The Vercel target also publishes a Next.js static export (`output: 'export'` → `next build` → upload `out/`) as the one build-requiring variant, still served as prebuilt static files with no host-side build.
 
 ## Context
 
@@ -1195,7 +1195,7 @@ The `setup-sites` skill currently scaffolds only GitHub Pages: an Actions workfl
 
 4. Write references/vercel.md for the Vercel CLI deploy path.
    Why: Vercel is build-oriented, so the reference must pin the no-build / static-directory invocation and first-run project linking to avoid surprising framework detection.
-   Verify: references/vercel.md links/names the project to the repo basename before deploying (e.g. `vercel link --project <repo>`) so it is not named after the docs folder, then runs `cd docs && vercel deploy --prod` (deploys docs/ as site root so framework auto-detection never builds the repo root; framework=Other, no build); warns that a bare --yes infers the name from the docs folder; a `vercel whoami` auth check (no token echo); an `npm i -g vercel` install hint printed not executed; a confirmation gate showing the exact command and resolved project name (default repo basename); plus an unpublish note (`vercel project rm`).
+   Verify: references/vercel.md links/names the project to the repo basename before deploying (e.g. `vercel link --project <repo>`) so it is not named after the docs folder, then runs `cd docs && vercel deploy --prod` (deploys docs/ as site root so framework auto-detection never builds the repo root; framework=Other, no build); warns that a bare --yes infers the name from the docs folder; a `vercel whoami` auth check (no token echo); an `npm i -g vercel` install hint printed not executed; a confirmation gate showing the exact command and resolved project name (default repo basename); plus an unpublish note (`vercel project rm`). It also documents a Next.js static-export path: detect a `next.config.{js,mjs,ts}` with `output: 'export'`, run `next build` locally to produce `out/`, then `cd out && vercel deploy --prod` — the publish dir becomes `out/` instead of `docs/`, framework still Other (Vercel uploads the prebuilt static files, no host-side build), reusing the same auth check and confirmation gate (which shows the resolved publish dir).
 
 5. Write references/cloudflare-pages.md for the Wrangler Pages deploy path.
    Why: Cloudflare Pages deploys via `wrangler pages deploy DIR` and needs a named project, so the reference captures the create-then-deploy sequence and the login / token auth options.
@@ -1207,7 +1207,7 @@ The `setup-sites` skill currently scaffolds only GitHub Pages: an Actions workfl
 
 7. Extend tests/plugins/test-setup-sites.sh to cover multi-host.
    Why: This committed smoke test is the objective-verification — it asserts the skill now offers all four hosts with working per-host references; extending the existing test rather than adding a new file keeps one source of truth.
-   Verify: bash tests/plugins/test-setup-sites.sh exits 0 with explicit grep targets: SKILL.md Step 1 names all four hosts and has a routing line mapping each host token to its file (netlify->references/netlify.md, vercel->references/vercel.md, cloudflare->references/cloudflare-pages.md); each reference greps for its deploy command, auth check (netlify status / vercel whoami / wrangler whoami), and a confirmation marker; SKILL.md stays under 500 lines and at 7 steps; marketplace version >= 2.9.0 names the hosts. The structural grep test cannot exercise the runtime confirmation gate, so "no deploy without confirmation" is covered by the manual per-host trace in Verification.
+   Verify: bash tests/plugins/test-setup-sites.sh exits 0 with explicit grep targets: SKILL.md Step 1 names all four hosts and has a routing line mapping each host token to its file (netlify->references/netlify.md, vercel->references/vercel.md, cloudflare->references/cloudflare-pages.md); each reference greps for its deploy command, auth check (netlify status / vercel whoami / wrangler whoami), and a confirmation marker; references/vercel.md also greps for the Next.js static-export branch (`output: 'export'`, `next build`, and a `cd out && vercel deploy --prod` line); SKILL.md stays under 500 lines and at 7 steps; marketplace version >= 2.9.0 names the hosts. The structural grep test cannot exercise the runtime confirmation gate, so "no deploy without confirmation" is covered by the manual per-host trace in Verification.
 
 ## Tests
 
@@ -1229,6 +1229,7 @@ Objective-verification test:
 - marketplace.json is valid, plan-agent is bumped to at least 2.9.0, its description names the new hosts and still contains setup-sites; plugin.json carries no version key.
 - README, CHANGELOG, and the publishing guide reflect the new hosts.
 - bash tests/plugins/test-setup-sites.sh passes.
+- references/vercel.md documents a Next.js static-export path — detect output: 'export', run next build, then deploy the resulting out/ as prebuilt static files (framework Other, no host-side build) behind the same auth + confirmation gate.
 
 ## Verification
 
@@ -1349,7 +1350,7 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Make <code>setup-sites</code> a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy <code>docs/</code> via each host's CLI.</p>
+      <p>Make <code>setup-sites</code> a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy <code>docs/</code> via each host's CLI. The Vercel target also publishes a <strong>Next.js static export</strong> (<code>output: 'export'</code> → <code>next build</code> → upload <code>out/</code>) as the one build-requiring variant, still served as prebuilt static files with no host-side build.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
@@ -1400,7 +1401,7 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1480,7 +1481,7 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
         <tbody>
           <tr><td>GitHub Pages <span class="file-badge file-badge-modified">inline</span></td><td>Actions (no CLI)</td><td><code>gh auth status</code></td><td>commit → push <code>main</code> (workflow)</td><td><code>&lt;owner&gt;.github.io/&lt;repo&gt;/</code></td></tr>
           <tr><td>Netlify <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g netlify-cli</code></td><td><code>netlify status</code></td><td><code>netlify deploy --dir=docs --prod --no-build</code> <span class="file-note">link/name site first</span></td><td><code>&lt;site&gt;.netlify.app</code></td></tr>
-          <tr><td>Vercel <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g vercel</code></td><td><code>vercel whoami</code></td><td><code>vercel deploy --prod</code> <span class="file-note">docs/, framework Other</span></td><td><code>&lt;project&gt;.vercel.app</code></td></tr>
+          <tr><td>Vercel <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g vercel</code></td><td><code>vercel whoami</code></td><td><code>vercel deploy --prod</code> <span class="file-note">docs/, framework Other — or <code>next build</code> then <code>cd out</code> for a Next.js static export</span></td><td><code>&lt;project&gt;.vercel.app</code></td></tr>
           <tr><td>Cloudflare Pages <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g wrangler</code></td><td><code>wrangler whoami</code></td><td><code>wrangler pages deploy docs --project-name=&lt;name&gt;</code></td><td><code>&lt;project&gt;.pages.dev</code></td></tr>
         </tbody>
       </table>
@@ -1556,7 +1557,7 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
               <div class="step-why">Vercel is build-oriented, so the reference must pin the no-build / static-directory invocation and first-run project linking to avoid surprising framework detection.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>references/vercel.md</code> exists and makes the publish deterministic: link/name the project to the repo basename <strong>before</strong> deploying (e.g. <code>vercel link --project &lt;repo&gt;</code>) so the project is not named after the <code>docs</code> folder, then run <code>cd docs &amp;&amp; vercel deploy --prod</code> (deploys <code>docs/</code> as the site root so framework auto-detection never builds the repo root; framework=Other, no build). It warns that a bare <code>--yes</code> infers the project name from the <code>docs</code> folder, so the link/name step must come first. Includes a <code>vercel whoami</code> auth check (no token echo), an <code>npm i -g vercel</code> install hint that is <strong>printed, never executed</strong>, and a confirmation gate that shows the exact command <strong>and the resolved project name</strong> (default: repo basename, overridable) before deploy; plus an unpublish note (<code>vercel project rm &lt;name&gt;</code>).</div>
+                <div class="verify-body"><code>references/vercel.md</code> exists and makes the publish deterministic: link/name the project to the repo basename <strong>before</strong> deploying (e.g. <code>vercel link --project &lt;repo&gt;</code>) so the project is not named after the <code>docs</code> folder, then run <code>cd docs &amp;&amp; vercel deploy --prod</code> (deploys <code>docs/</code> as the site root so framework auto-detection never builds the repo root; framework=Other, no build). It warns that a bare <code>--yes</code> infers the project name from the <code>docs</code> folder, so the link/name step must come first. Includes a <code>vercel whoami</code> auth check (no token echo), an <code>npm i -g vercel</code> install hint that is <strong>printed, never executed</strong>, and a confirmation gate that shows the exact command <strong>and the resolved project name</strong> (default: repo basename, overridable) before deploy; plus an unpublish note (<code>vercel project rm &lt;name&gt;</code>). It also documents a <strong>Next.js static-export path</strong>: detect a <code>next.config.{js,mjs,ts}</code> declaring <code>output: 'export'</code>, run <code>next build</code> locally (produces <code>out/</code>), then <code>cd out &amp;&amp; vercel deploy --prod</code> — the publish dir is <code>out/</code> instead of <code>docs/</code>, framework still Other (Vercel uploads the prebuilt static files; no host-side build), reusing the same <code>vercel whoami</code> auth check and the confirmation gate (which shows the resolved publish dir).</div>
               </details>
             </div>
           </div>
@@ -1607,7 +1608,7 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
               <div class="step-why">This committed smoke test is the objective-verification — it asserts the skill now offers all four hosts with working per-host references; extending the existing test rather than adding a new file keeps one source of truth.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>bash tests/plugins/test-setup-sites.sh</code> exits 0 with new checks using explicit grep targets: (a) SKILL.md Step 1 names all four hosts <em>and</em> contains a routing line mapping each host token to its reference file (<code>netlify→references/netlify.md</code>, <code>vercel→references/vercel.md</code>, <code>cloudflare→references/cloudflare-pages.md</code>); (b) each reference greps for its deploy command (<code>netlify deploy --dir=docs --prod</code>, <code>vercel deploy --prod</code>, <code>wrangler pages deploy docs --project-name</code>), its auth check (<code>netlify status</code> / <code>vercel whoami</code> / <code>wrangler whoami</code>), and a confirmation marker; (c) SKILL.md stays under 500 lines and at 7 steps; (d) the marketplace version is ≥ 2.9.0 and the description names the hosts. The test is structural (grep over files) — it cannot exercise the runtime confirmation gate, so &quot;no deploy without confirmation&quot; is covered by the manual per-host trace in the Verification section, noted explicitly in the test.</div>
+                <div class="verify-body"><code>bash tests/plugins/test-setup-sites.sh</code> exits 0 with new checks using explicit grep targets: (a) SKILL.md Step 1 names all four hosts <em>and</em> contains a routing line mapping each host token to its reference file (<code>netlify→references/netlify.md</code>, <code>vercel→references/vercel.md</code>, <code>cloudflare→references/cloudflare-pages.md</code>); (b) each reference greps for its deploy command (<code>netlify deploy --dir=docs --prod</code>, <code>vercel deploy --prod</code>, <code>wrangler pages deploy docs --project-name</code>), its auth check (<code>netlify status</code> / <code>vercel whoami</code> / <code>wrangler whoami</code>), and a confirmation marker; <code>references/vercel.md</code> additionally greps for the Next.js static-export branch (<code>output: 'export'</code>, <code>next build</code>, and a <code>cd out &amp;&amp; vercel deploy --prod</code> line); (c) SKILL.md stays under 500 lines and at 7 steps; (d) the marketplace version is ≥ 2.9.0 and the description names the hosts. The test is structural (grep over files) — it cannot exercise the runtime confirmation gate, so &quot;no deploy without confirmation&quot; is covered by the manual per-host trace in the Verification section, noted explicitly in the test.</div>
               </details>
             </div>
           </div>
@@ -1633,7 +1634,7 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
         <div class="test-card-body">
           <p><strong>File:</strong> <code>tests/plugins/test-setup-sites.sh</code> (extended)</p>
           <p><strong>Type:</strong> structural smoke test</p>
-          <p><strong>Asserts (structural greps):</strong> SKILL.md Step 1 names all four hosts and routes each host token to its reference file (including <code>cloudflare → references/cloudflare-pages.md</code>); <code>references/netlify.md</code>, <code>references/vercel.md</code>, and <code>references/cloudflare-pages.md</code> each contain their exact deploy command, auth check, and a confirmation marker; <code>SKILL.md</code> stays under 500 lines and at 7 numbered steps; <code>marketplace.json</code> bumps <code>plan-agent</code> to ≥ 2.9.0 with a description naming the new hosts.</p>
+          <p><strong>Asserts (structural greps):</strong> SKILL.md Step 1 names all four hosts and routes each host token to its reference file (including <code>cloudflare → references/cloudflare-pages.md</code>); <code>references/netlify.md</code>, <code>references/vercel.md</code>, and <code>references/cloudflare-pages.md</code> each contain their exact deploy command, auth check, and a confirmation marker; <code>references/vercel.md</code> also contains the Next.js static-export branch (<code>output: 'export'</code>, <code>next build</code>, <code>cd out &amp;&amp; vercel deploy --prod</code>); <code>SKILL.md</code> stays under 500 lines and at 7 numbered steps; <code>marketplace.json</code> bumps <code>plan-agent</code> to ≥ 2.9.0 with a description naming the new hosts.</p>
           <p><strong>Out of scope:</strong> a grep-over-files smoke test cannot prove the runtime confirmation gate actually pauses before deploying — that behavioral guarantee is covered by the manual per-host trace in the Verification section, not by this test.</p>
           <p><strong>Run:</strong> <code>bash tests/plugins/test-setup-sites.sh</code></p>
         </div>
@@ -1678,6 +1679,10 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
         <li>
           <input type="checkbox" id="ac8">
           <label for="ac8"><code>bash tests/plugins/test-setup-sites.sh</code> passes.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9"><code>references/vercel.md</code> documents a Next.js static-export path — detect <code>output: 'export'</code>, run <code>next build</code>, then deploy the resulting <code>out/</code> as prebuilt static files (framework Other, no host-side build) behind the same auth + confirmation gate.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
