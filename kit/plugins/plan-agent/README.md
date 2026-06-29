@@ -29,8 +29,10 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
+| `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea>`) or auto-activates on "prototype this plan / idea" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
 | `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
 | `rebuild-plans-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to non-index `.html` plans — auto-regenerates gallery |
+| `build-prototypes-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to `docs/prototypes/` — auto-regenerates the prototypes gallery |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
@@ -315,6 +317,18 @@ set up GitHub Pages for this repo
 publish my plans to GitHub Pages
 ```
 
+#### `prototype` — Command or auto-activate
+
+Turns a completed HTML plan, or a one-line idea, into a runnable static-HTML prototype under `docs/prototypes/` so you can click through the real data shapes and core flow before writing production code. The prototype is one self-contained file — inline CSS + vanilla JS, an inline JSON seed, and a per-prototype `localStorage` store — with **no CDN, no framework, no build**, so it opens by double-click on `file://` and publishes to GitHub Pages. Output is HTML-escaped and rendered via `textContent`, and the skeleton bakes in labeled inputs, a semantic table, real buttons, form validation, a confirm-guarded reset, and an `aria-live` status region. A `PostToolUse` hook auto-rebuilds the Prototypes gallery, reachable from the docs hub.
+
+```
+/plan-agent:prototype docs/plans/add-fitness-tracker.html
+/plan-agent:prototype "track gym workouts"
+prototype this plan
+```
+
+Given a plan path it extracts the data model directly; given a raw idea it runs a 3-question interview (entity, action, success signal), echoes the derived model back for confirmation, then writes `docs/prototypes/<verb-target>.html`.
+
 ### Hooks
 
 #### Filename validation (automatic)
@@ -336,6 +350,10 @@ HTML plans with `<meta name="plan-status" content="completed">` are skipped (no 
 #### Gallery index rebuild (automatic)
 
 The `rebuild-plans-index` hook fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. It calls `build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
+
+#### Prototypes gallery rebuild (automatic)
+
+The `build-prototypes-index` hook fires on every `Write`/`Edit`/`MultiEdit` and self-gates on the written path: it only rebuilds when the write targeted `docs/prototypes/`, leaving the plans gallery untouched. It calls `build-prototypes-index.sh` to regenerate `docs/prototypes/index.html` (newest-first, escaped). Always exits 0.
 
 ### Plans directory resolution
 
