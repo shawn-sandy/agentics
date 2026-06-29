@@ -494,9 +494,9 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v1.10.1
+#### `plan-agent` v2.9.0
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, or generate Anthropic-best-practice AI prompts with `/plan-agent:refine-prompt`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. A PostToolUse hook auto-regenerates the plans gallery index; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Turn a vague idea into a decision-complete proposal with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:refine-prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -514,6 +514,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
 | `refine-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
 | `setup-sites` | Scaffold the GitHub Pages deploy pipeline (workflow, `.nojekyll`, landing hub, preview script) into any repo so `docs/` HTML publishes to a public URL — command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent |
+| `prototype` | Turn a completed HTML plan or a one-line idea into a runnable, framework-free static-HTML prototype under `docs/prototypes/` (inline JSON seed + per-prototype `localStorage`, escaped output, a11y baked in) — command (`/plan-agent:prototype <plan.html \| idea>`) or auto-activates on "prototype this plan / idea" intent |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
 | `plans-open` | Reopen the plans gallery without rebuilding |
 
@@ -532,7 +533,8 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | Hook | Trigger | Purpose |
 |------|---------|---------|
 | `validate-plan-filename` | `PostToolUse` (Write/Edit) | Enforces verb-target kebab-case filenames on plan files |
-| `rebuild-plans-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the gallery index when plans change |
+| `rebuild-plans-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the plans gallery index when plans change |
+| `build-prototypes-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the prototypes gallery index when `docs/prototypes/` changes |
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
@@ -747,7 +749,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.7 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.9 | productivity | 1 command, 1 skill, 7 agents |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 1.10.1 | productivity | 1 command, 8 skills, 8 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 2.9.0 | productivity | 1 command, 9 skills, 8 agents, 3 hooks |
 | [git-agent](./kit/plugins/git-agent/README.md) | 3.11.0 | development | 3 commands, 6 skills, 3 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
