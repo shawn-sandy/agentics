@@ -962,13 +962,15 @@ Pass an explicit port as the first argument to pin it:
 bash scripts/serve-docs.sh 8900
 ```
 
-**Launch configs — fixed ports (`.claude/launch.json`):**
+**Launch configs — auto-assigned ports (`.claude/launch.json`):**
 
-| Config | URL | Directory |
-|--------|-----|-----------|
-| `plans-gallery` | http://localhost:8901 | `docs/plans/` |
-| `media-library` | http://localhost:8902 | `docs/media/social/` |
-| `docs-all` | http://localhost:8900 | `docs/` (landing hub at root) |
+Each config uses `autoPort: true`, so the preview harness binds a free port at start time (reported when the server launches) — no fixed port to collide with another running server.
+
+| Config | Directory |
+|--------|-----------|
+| `plans-gallery` | `docs/plans/` |
+| `media-library` | `docs/media/social/` |
+| `docs-all` | `docs/` (landing hub at root) |
 
 ---
 
