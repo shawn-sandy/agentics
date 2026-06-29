@@ -22,10 +22,10 @@ try:
 except Exception:
     print("")' 2>/dev/null || true)"
   case "$FILE_PATH" in
-    "")                              : ;;        # no path → manual/CLI run, proceed
-    */docs/prototypes/index.html)    exit 0 ;;   # our own generated file, skip
-    */docs/prototypes/*)             : ;;        # a prototype write, proceed
-    *)                               exit 0 ;;   # unrelated write, skip
+    "")                                            : ;;      # no path → manual/CLI run, proceed
+    */docs/prototypes/index.html|docs/prototypes/index.html) exit 0 ;;  # our own generated file, skip
+    */docs/prototypes/*|docs/prototypes/*)         : ;;      # a prototype write (abs or relative), proceed
+    *)                                             exit 0 ;; # unrelated write, skip
   esac
 fi
 

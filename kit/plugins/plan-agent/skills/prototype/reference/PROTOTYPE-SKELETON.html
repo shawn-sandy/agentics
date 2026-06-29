@@ -63,7 +63,7 @@
 <script type="application/json" id="seed">{{SEED_JSON}}</script>
 
 <div class="summary-bar">
-  <span class="summary-badge" id="summary">{{SUMMARY}}: 0</span>
+  <span class="summary-badge" id="summary" data-label="{{SUMMARY}}">{{SUMMARY}}: 0</span>
 </div>
 
 <form id="add-form" novalidate>
@@ -123,7 +123,9 @@ function resetStore() {
   var errorEl   = document.getElementById('form-error');
   var form      = document.getElementById('add-form');
   var resetBtn  = document.getElementById('reset-btn');
-  var summaryLabel = "{{SUMMARY}}";
+  // Read the label from the (HTML-escaped) attribute — getAttribute decodes
+  // entities, so the JS string is correct even for &, quotes, or apostrophes.
+  var summaryLabel = summaryEl.getAttribute('data-label') || '';
 
   // Field order + types derived from the table header — text nodes only, no raw HTML.
   var fields = [];
@@ -185,6 +187,10 @@ function resetStore() {
     for (var i = 0; i < fields.length; i++) {
       var input = form.elements[fields[i].key];
       if (!input) continue;
+      if (fields[i].type === 'bool') {
+        rec[fields[i].key] = !!input.checked;  // checkbox: read state, not "on"
+        continue;
+      }
       var val = input.value.trim();
       if (input.hasAttribute('data-required') && !val) {
         if (!firstInvalid) firstInvalid = input;

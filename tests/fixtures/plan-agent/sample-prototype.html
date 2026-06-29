@@ -58,7 +58,7 @@
 <script type="application/json" id="seed">[{"name":"Bench press","reps":10,"day":"2026-06-20"},{"name":"\"><script>alert(1)<\/script>","reps":5,"day":"2026-06-21"}]</script>
 
 <div class="summary-bar">
-  <span class="summary-badge" id="summary">Total workouts: 0</span>
+  <span class="summary-badge" id="summary" data-label="Total workouts">Total workouts: 0</span>
 </div>
 
 <form id="add-form" novalidate>
@@ -127,7 +127,7 @@ function resetStore() {
   var errorEl   = document.getElementById('form-error');
   var form      = document.getElementById('add-form');
   var resetBtn  = document.getElementById('reset-btn');
-  var summaryLabel = "Total workouts";
+  var summaryLabel = summaryEl.getAttribute('data-label') || '';
 
   var fields = [];
   document.querySelectorAll('#grid thead th[data-field]').forEach(function (th) {
@@ -186,6 +186,10 @@ function resetStore() {
     for (var i = 0; i < fields.length; i++) {
       var input = form.elements[fields[i].key];
       if (!input) continue;
+      if (fields[i].type === 'bool') {
+        rec[fields[i].key] = !!input.checked;
+        continue;
+      }
       var val = input.value.trim();
       if (input.hasAttribute('data-required') && !val) {
         if (!firstInvalid) firstInvalid = input;
