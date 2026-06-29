@@ -20,6 +20,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/build-prototypes-index.sh\" \"${CLAUDE_PROJECT_DIR:-$PWD}\"",
+            "timeout": 30
+          }
+        ]
       }
     ]
   }

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-29">
 <meta name="plan-repo" content="agentics">
@@ -1218,7 +1218,7 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1448,12 +1448,12 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text"><strong>Scaffold the <code>prototype</code> skill and its <code>SKILL.md</code> (command + ambient).</strong> Create <code>kit/plugins/plan-agent/skills/prototype/SKILL.md</code> with frontmatter (<code>name: prototype</code>, a three-part description ≤200 chars, and <code>allowed-tools</code> covering <code>ToolSearch, ExitPlanMode, Bash, Read, Write, Glob, Grep, AskUserQuestion</code> plus browser/preview tools) and a numbered workflow: (0) self-bootstrap out of plan mode; (1) resolve input — a first token ending in <code>.html</code> is a plan path, otherwise the args are a raw idea; (2) idea path runs a 3-question <code>AskUserQuestion</code> (core <em>entity</em>, primary <em>action</em>, observable <em>success signal</em> — with example phrasing and a sensible fallback when an answer is blank), plan path reads the file and extracts objective, steps, and domain nouns; (3) <strong>derive a deterministic data model</strong>: the primary domain noun → the entity; its attributes → columns/form fields with inferred types (string/number/date/bool); generate 2–3 seed rows; map the success signal to a visible summary; (4) <strong>echo the derived model back</strong> (entity, fields, action, success signal) for confirmation before writing; (5) fill the skeleton placeholders by <code>{{token}}</code> string replacement, <strong>HTML-escaping every interpolated value — except <code>{{SEED_JSON}}</code></strong>, which is JSON-serialized with script-breakout escaping only (e.g. <code>&lt;/script&gt;</code>): HTML entities are not decoded when <code>load()</code> reads the JSON block as text, so HTML-escaping it would break <code>JSON.parse</code>; (6) derive a <code>verb-target</code> slug and write to <code>docs/prototypes/&lt;slug&gt;.html</code> (<code>mkdir -p</code> first) — note <code>validate-plan-filename.py</code> is plans-dir-scoped and does <em>not</em> enforce prototype names, so the skill owns the convention; (7) before writing a plan-derived prototype, run a quick secret/PII scrub on extracted seed values (it publishes to a public Pages origin); (8) trigger the gallery rebuild, preview + <code>SendUserFile</code>, and report what to validate.</span>
               </div>
               <div class="step-why">One SKILL.md gives both the <code>/plan-agent:prototype</code> command and ambient activation ("prototype this plan") with no separate command file, matching <code>implementation-plan</code>. Specifying the extraction heuristic and an echo-back makes two implementers produce the same prototype and lets the user catch a wrong interpretation before a file is written.</div>
@@ -1466,12 +1466,12 @@ img, video { max-width: 100%; height: auto; }
         </div>
 
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text"><strong>Build the self-contained, accessibility-baked prototype skeleton.</strong> Create <code>kit/plugins/plan-agent/skills/prototype/reference/PROTOTYPE-SKELETON.html</code> — one file, inline CSS + vanilla JS, reusing the plan skeleton's colour tokens. <strong>Data layer:</strong> an inline <code>&lt;script type="application/json" id="seed"&gt;</code> block holding JSON-serialized seed data with script-breakout escaping only (e.g. <code>&lt;/script&gt;</code>) — <strong>never HTML-escaped</strong>, or <code>JSON.parse</code> chokes on <code>&amp;quot;</code> — plus a store keyed by a per-prototype <code>{{STORE_KEY}}</code> (derived from the file slug) — <code>load()</code> reads localStorage and falls back to the seed, <code>save()</code> writes, <code>reset()</code> is guarded by <code>confirm()</code> then clears and reseeds. <strong>Render records via <code>textContent</code>/<code>createTextNode</code>, never <code>innerHTML</code></strong>. <strong>UI &amp; a11y (required):</strong> a semantic <code>&lt;table&gt;</code> with <code>&lt;th scope="col"&gt;</code> (or a true <code>&lt;ul&gt;</code>); an add/edit form whose every input has an associated <code>&lt;label for&gt;</code>, marks required fields, and blocks submit on empty/invalid with an inline error; a per-row delete control and an empty-state message; real <code>&lt;button&gt;</code> elements for the primary action, Reset, and delete; a visible <code>:focus-visible</code> ring; an <code>aria-live="polite"</code> status region announcing added/updated/deleted/reset; focus management (return focus to the form's first field after add, to the status/Reset after reset); and a summary badge bound to the success signal. <strong>Placeholders:</strong> <code>{{TITLE}}</code>, <code>{{SOURCE_PLAN}}</code>, <code>{{STORE_KEY}}</code>, <code>{{SEED_JSON}}</code>, <code>{{COLUMNS}}</code> (header cells + field keys), <code>{{FORM_FIELDS}}</code> (label + typed input per field), <code>{{PRIMARY_ACTION}}</code>, <code>{{SUMMARY}}</code>, plus <code>&lt;meta name="proto-source"&gt;</code> and <code>&lt;meta name="proto-created"&gt;</code> tags.</span>
               </div>
               <div class="step-why">Inline seed + localStorage is the only data layer that survives a double-click on <code>file://</code> (a fetched <code>./data.json</code> is blocked by file:// CORS). Because this one file is reused by every prototype and published to a live origin, escaping, a11y, and storage isolation must live in the skeleton — fixing them here fixes them everywhere.</div>
@@ -1483,12 +1483,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text"><strong>Fork the gallery generator into <code>build-prototypes-index.sh</code>.</strong> Copy <code>kit/plugins/plan-agent/hooks/build-index.sh</code> to <code>kit/plugins/plan-agent/hooks/build-prototypes-index.sh</code>, retargeted to scan <code>docs/prototypes/*.html</code> (excluding <code>index.html</code>), parse each file's <code>&lt;title&gt;</code> and <code>&lt;meta name="proto-*"&gt;</code> tags, and emit <code>docs/prototypes/index.html</code> sorted newest-first by <code>proto-created</code>. <strong>Preserve the <code>html.escape()</code> on every emitted card field</strong> so a hostile title cannot inject into the gallery. Render cards from a new <code>kit/plugins/plan-agent/templates/prototypes-gallery.html</code> that mirrors <code>templates/plans-gallery.html</code> (keep the externalised-template pattern rather than inlining markup).</span>
               </div>
               <div class="step-why">The real generator is <code>hooks/build-index.sh</code> (the plans gallery's card rendering, meta parsing, newest-first sort, and per-field <code>html.escape()</code>); <code>rebuild-plans-index.py</code> is only the debounced hook dispatcher. Forking the correct file — rather than the dispatcher — preserves the proven escaping and keeps the prototypes gallery from re-deriving logic. A fork (not a shared parameterised builder) keeps the live plans gallery out of the blast radius.</div>
@@ -1500,12 +1500,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text"><strong>Wire the auto-rebuild hook and the docs hub (with a committed bootstrap).</strong> Add a second <code>PostToolUse</code> (<code>Write|Edit|MultiEdit</code>) entry to <code>kit/plugins/plan-agent/hooks.json</code> that runs <code>build-prototypes-index.sh</code>, scoped so it only rebuilds for <code>docs/prototypes/</code> writes (mirroring how the existing hooks gate on the plans dir). Add a third card to <code>docs/index.html</code> linking <code>prototypes/index.html</code> alongside Plans and Media ("Prototypes — clickable proofs of plans"). Generate and commit an initial <code>docs/prototypes/index.html</code> (empty-state gallery) so the hub link resolves immediately.</span>
               </div>
               <div class="step-why">The plans gallery auto-rebuilds via a PostToolUse hook; without a parallel entry the prototypes gallery goes stale on any write outside the skill. Committing an initial <code>index.html</code> stops the hub card 404-ing before the first prototype exists.</div>
@@ -1517,12 +1517,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text"><strong>Add the fixture, the three runnable tests, and CI wiring.</strong> Create <code>tests/fixtures/plan-agent/sample-prototype.html</code> (an inline <code>#seed</code> block plus <code>proto-created</code>/<code>proto-source</code> meta). Create three tests under <code>tests/plugins/</code> following the repo's <code>test-*.sh</code> convention: <code>test-prototype-portability.sh</code> (objective smoke — asserts no external <code>http(s)://</code> resource refs, an inline <code>#seed</code> block, <code>textContent</code>-based rendering, that a hostile seed/title value is inert, and that running the builder yields an <code>index.html</code> containing the escaped fixture title, and — by static grep against the skeleton — that every input has a <code>&lt;label for&gt;</code>, Reset/primary are <code>&lt;button&gt;</code>, and an <code>aria-live</code> region exists); <code>test-build-prototypes-index.sh</code> (builder unit — parses <code>&lt;title&gt;</code>/<code>proto-created</code>, sorts newest-first, escapes <code>&lt;</code>/<code>"</code>/<code>&amp;</code>, ignores <code>index.html</code>, empty dir → empty-state + exit 0); and <code>test-prototype-persistence.mjs</code> (<strong>plain Node with a tiny in-memory <code>localStorage</code> shim — no jsdom, no added dependency</strong> — seed parses+loads, adds persist under the namespaced key, two prototypes don't share state, reset restores). Register all three by explicit path in <code>.github/workflows/publish-dist.yml</code> — they need only <code>bash</code> and <code>node</code> builtins, so no install step is required.</span>
               </div>
               <div class="step-why">Playwright is not installed and CI runs tests by explicit path (no glob), so the originally-named tests would never run. A plain-Node check (in-memory localStorage shim) keeps the plan's zero-dependency ethos; an explicit CI entry makes the tests real; the fixture is what both shell tests consume.</div>
@@ -1534,12 +1534,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text"><strong>Bump the version and document the new skill.</strong> In <code>.claude-plugin/marketplace.json</code> bump <code>plan-agent</code> <code>2.8.3</code> → <code>2.9.0</code> and extend its <code>description</code>; mirror <strong>only the description</strong> (never a version field) in <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code>; add a <code>2.9.0</code> entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code>; add a Features bullet + usage example to <code>kit/plugins/plan-agent/README.md</code>; update the plan-agent row in root <code>CLAUDE.md</code>. Before committing, confirm <code>2.9.0</code> exceeds the version in <code>git show origin/main:.claude-plugin/marketplace.json</code>.</span>
               </div>
               <div class="step-why">A new skill is a MINOR bump per the marketplace rules; there is no CI version guard, so the bump must be checked against <code>origin/main</code> by hand. Keeping changelog/README/manifests/CLAUDE.md in sync keeps the catalog and contributor guide accurate; the settings hook validates the marketplace JSON on write.</div>
@@ -1610,35 +1610,35 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>/plan-agent:prototype docs/plans/&lt;plan&gt;.html</code> generates one self-contained <code>.html</code> under <code>docs/prototypes/</code> with no external CSS/JS/CDN references.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2"><code>/plan-agent:prototype "&lt;one-line idea&gt;"</code> runs the 3-question interview, echoes back the derived model, then generates a prototype with no plan file.</label>
         </li>
 <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">The prototype opens by double-click (<code>file://</code>) and persists edits under a per-prototype localStorage key, reseeding on a confirm-guarded reset.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The generated prototype is keyboard-operable and screen-reader-labeled: semantic table/list, labeled inputs, real buttons, visible focus, and an <code>aria-live</code> status region; the add form validates (blocks empty submit) and per-row delete + empty-state work.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Hostile input (e.g. <code>"&gt;&lt;script&gt;</code>) in an idea/seed/field renders inert in both the prototype (via <code>textContent</code>) and the gallery (via <code>html.escape()</code>).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>build-prototypes-index.sh</code> produces <code>docs/prototypes/index.html</code> (newest-first, escaped), auto-rebuilt via the hooks.json entry, reachable from a Prototypes card on <code>docs/index.html</code>; a committed bootstrap <code>index.html</code> makes the link resolve before first use.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">All three tests run by explicit path in <code>publish-dist.yml</code> and pass; the plan-path/idea-path skill invocations are documented as manual-verification-only.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>plan-agent</code> is <code>2.9.0</code> in <code>marketplace.json</code> and exceeds <code>origin/main</code>, with matching CHANGELOG, README, CLAUDE.md, and a description-only <code>plugin.json</code> mirror (no version field); marketplace JSON validates.</label>
         </li>
       </ul>

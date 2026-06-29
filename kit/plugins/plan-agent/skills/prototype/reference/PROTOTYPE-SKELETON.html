@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="proto-source" content="{{SOURCE_PLAN}}">
+<meta name="proto-created" content="{{PROTO_CREATED}}">
+<title>{{TITLE}}</title>
+<style>
+  :root {
+    --bg:#ffffff; --surface:#f9fafb; --border:#e5e7eb; --border-mid:#d1d5db;
+    --text:#111827; --muted:#6b7280; --subtle:#9ca3af; --accent:#2563eb;
+    --accent-bg:#eff6ff; --green:#16a34a; --green-bg:#f0fdf4; --red:#dc2626;
+    --red-bg:#fef2f2; --radius:6px; --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  }
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:15px;
+         line-height:1.6; color:var(--text); background:var(--bg); max-width:880px;
+         margin:0 auto; padding:32px 20px 64px; }
+  header { border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:24px; }
+  header::before { content:""; display:block; height:3px; background:var(--accent);
+                   border-radius:2px; margin-bottom:16px; }
+  h1 { font-size:22px; font-weight:700; letter-spacing:-.02em; margin-bottom:4px; }
+  .source { font-size:12px; color:var(--subtle); font-family:ui-monospace,Consolas,monospace; }
+  .summary-bar { display:flex; align-items:center; gap:10px; margin:20px 0; }
+  .summary-badge { display:inline-flex; align-items:center; gap:6px; font-size:13px;
+                   font-weight:700; padding:6px 14px; border-radius:999px;
+                   background:var(--green-bg); color:var(--green); border:1px solid #bbf7d0; }
+  form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin:16px 0;
+         padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field label { font-size:12px; font-weight:600; color:var(--muted); }
+  .field label .req { color:var(--red); }
+  .field input { padding:7px 10px; border:1px solid var(--border-mid); border-radius:var(--radius);
+                 font-size:14px; font-family:inherit; color:var(--text); background:var(--bg); }
+  button { font-family:inherit; cursor:pointer; }
+  .btn { padding:8px 16px; font-size:14px; font-weight:600; border-radius:var(--radius);
+         border:1px solid var(--accent); background:var(--accent); color:#fff; }
+  .btn:hover { filter:brightness(.92); }
+  .btn-secondary { background:var(--bg); color:var(--muted); border-color:var(--border-mid); }
+  .btn-danger { background:var(--bg); color:var(--red); border:1px solid var(--red); padding:4px 10px; font-size:12px; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .error { color:var(--red); font-size:12px; min-height:16px; width:100%; }
+  table { width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
+  caption { text-align:left; font-size:12px; color:var(--subtle); margin-bottom:6px; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+  thead th { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+             background:var(--surface); }
+  .empty-state { color:var(--subtle); font-style:italic; padding:16px 10px; }
+  .status { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  .toolbar { display:flex; gap:10px; margin-top:16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>{{TITLE}}</h1>
+  <div class="source">Prototype &middot; source: {{SOURCE_PLAN}}</div>
+</header>
+
+<!-- Inline JSON seed. JSON-serialized with script-breakout escaping ONLY
+     (e.g. </script> -> <\/script>) — never HTML-escaped, or JSON.parse breaks. -->
+<script type="application/json" id="seed">{{SEED_JSON}}</script>
+
+<div class="summary-bar">
+  <span class="summary-badge" id="summary" data-label="{{SUMMARY}}">{{SUMMARY}}: 0</span>
+</div>
+
+<form id="add-form" novalidate>
+  <!-- {{FORM_FIELDS}}: one .field block per column, each with <label for> + typed input.
+       Mark required fields with data-required and a visible (*) marker. -->
+  {{FORM_FIELDS}}
+  <button type="submit" class="btn">{{PRIMARY_ACTION}}</button>
+  <p class="error" id="form-error" role="alert"></p>
+</form>
+
+<table id="grid">
+  <caption>{{TITLE}} records — edits persist in this browser only.</caption>
+  <thead>
+    <tr>
+      <!-- {{COLUMNS}}: one <th scope="col" data-field="key" data-type="string|number|date|bool">Label</th>
+           per column. The JS derives the field order from these data-field attributes. -->
+      {{COLUMNS}}
+      <th scope="col">Actions</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<div class="toolbar">
+  <button type="button" class="btn btn-secondary" id="reset-btn">Reset to sample data</button>
+</div>
+
+<p class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></p>
+
+<script>
+/* === STORE (extractable: depends only on STORE_KEY, document#seed, localStorage, confirm) === */
+var STORE_KEY = "{{STORE_KEY}}";
+function readSeed() {
+  try { return JSON.parse(document.getElementById('seed').textContent); }
+  catch (e) { return []; }
+}
+function load() {
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : readSeed();
+  } catch (e) { return readSeed(); }
+}
+function save(records) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(records)); } catch (e) {}
+}
+function resetStore() {
+  if (!confirm('Reset to the sample data? This clears your local changes.')) return null;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  return readSeed();
+}
+/* === END STORE === */
+
+(function () {
+  var rowsEl    = document.getElementById('rows');
+  var summaryEl = document.getElementById('summary');
+  var statusEl  = document.getElementById('status');
+  var errorEl   = document.getElementById('form-error');
+  var form      = document.getElementById('add-form');
+  var resetBtn  = document.getElementById('reset-btn');
+  // Read the label from the (HTML-escaped) attribute — getAttribute decodes
+  // entities, so the JS string is correct even for &, quotes, or apostrophes.
+  var summaryLabel = summaryEl.getAttribute('data-label') || '';
+
+  // Field order + types derived from the table header — text nodes only, no raw HTML.
+  var fields = [];
+  document.querySelectorAll('#grid thead th[data-field]').forEach(function (th) {
+    fields.push({ key: th.getAttribute('data-field'), type: th.getAttribute('data-type') || 'string' });
+  });
+
+  var records = load();
+
+  function announce(msg) { statusEl.textContent = msg; }
+
+  function setText(cell, value) { cell.appendChild(document.createTextNode(value == null ? '' : String(value))); }
+
+  function render() {
+    while (rowsEl.firstChild) rowsEl.removeChild(rowsEl.firstChild);
+
+    if (!records.length) {
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.className = 'empty-state';
+      td.setAttribute('colspan', String(fields.length + 1));
+      setText(td, 'No records yet — add one above.');
+      tr.appendChild(td);
+      rowsEl.appendChild(tr);
+    } else {
+      records.forEach(function (rec, idx) {
+        var tr = document.createElement('tr');
+        fields.forEach(function (f) {
+          var td = document.createElement('td');
+          setText(td, rec[f.key]);          // textContent path — hostile input is inert
+          tr.appendChild(td);
+        });
+        var actions = document.createElement('td');
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn-danger';
+        del.textContent = 'Delete';
+        del.addEventListener('click', function () { remove(idx); });
+        actions.appendChild(del);
+        tr.appendChild(actions);
+        rowsEl.appendChild(tr);
+      });
+    }
+    summaryEl.textContent = summaryLabel + ': ' + records.length;
+  }
+
+  function remove(idx) {
+    records.splice(idx, 1);
+    save(records);
+    render();
+    announce('Record deleted. ' + records.length + ' remaining.');
+  }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    errorEl.textContent = '';
+    var rec = {};
+    var firstInvalid = null;
+    for (var i = 0; i < fields.length; i++) {
+      var input = form.elements[fields[i].key];
+      if (!input) continue;
+      if (fields[i].type === 'bool') {
+        rec[fields[i].key] = !!input.checked;  // checkbox: read state, not "on"
+        continue;
+      }
+      var val = input.value.trim();
+      if (input.hasAttribute('data-required') && !val) {
+        if (!firstInvalid) firstInvalid = input;
+        continue;
+      }
+      rec[fields[i].key] = (fields[i].type === 'number' && val !== '') ? Number(val) : val;
+    }
+    if (firstInvalid) {
+      errorEl.textContent = 'Please fill in the required fields.';
+      firstInvalid.focus();
+      return;
+    }
+    records.push(rec);
+    save(records);
+    render();
+    form.reset();
+    var first = form.querySelector('input');
+    if (first) first.focus();
+    announce('Record added. ' + records.length + ' total.');
+  });
+
+  resetBtn.addEventListener('click', function () {
+    var seeded = resetStore();
+    if (seeded === null) return;          // user cancelled the confirm
+    records = seeded;
+    render();
+    resetBtn.focus();
+    announce('Reset to sample data. ' + records.length + ' records.');
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.9.0 — Static-HTML prototype generator (2026-06-29)
+
+### Added
+
+- **`prototype` skill** — `/plan-agent:prototype <plan.html | one-line idea>` (also model-invocable) turns a completed HTML plan or a raw idea into a runnable, framework-free static-HTML prototype under `docs/prototypes/`. The skill resolves the input (`.html` token → plan path; otherwise a raw idea that triggers a 3-question interview), derives a deterministic data model, echoes it back for confirmation, then fills a reusable skeleton. One self-contained file — inline CSS + vanilla JS, an inline JSON seed, and a per-prototype localStorage store — opens by double-click on `file://` and publishes to GitHub Pages.
+- **Security & a11y baked into the skeleton** — `reference/PROTOTYPE-SKELETON.html` renders records via `textContent` (never `innerHTML`), HTML-escapes interpolated values at fill time, uses script-breakout-safe seed encoding, isolates storage per prototype via `{{STORE_KEY}}`, and ships labeled inputs, a semantic table, real buttons, visible focus, form validation, a confirm-guarded reset, an empty state, and an `aria-live` status region.
+- **Prototypes gallery** — `hooks/build-prototypes-index.sh` (forked from `build-index.sh`) scans `docs/prototypes/*.html`, parses `proto-*` meta, and emits an escaped, newest-first `docs/prototypes/index.html` from `templates/prototypes-gallery.html`. A new `PostToolUse` hook entry auto-rebuilds it on prototype writes (scoped to `docs/prototypes/`, leaving the plans gallery untouched), and `docs/index.html` gains a Prototypes hub card.
+- **Tests** — `tests/plugins/test-prototype-portability.sh` (objective smoke), `test-build-prototypes-index.sh` (gallery builder unit), and `test-prototype-persistence.mjs` (plain-Node store test with a localStorage shim, no jsdom), wired into `publish-dist.yml` by explicit path.
+
 ## 2.8.3 — Order plans gallery newest-first by created date, not mtime (2026-06-27)
 
 ### Fixed
