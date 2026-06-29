@@ -28,6 +28,12 @@ jobs:
       - name: Assert .nojekyll exists
         run: test -f docs/.nojekyll || { echo "::error::docs/.nojekyll is missing — Jekyll will mangle the site"; exit 1; }
 
+      # Self-heal the plans gallery: regenerate index.html from every plan file
+      # on disk so the published library is complete even when a plan arrived
+      # via a merge the session hook never saw. Idempotent; reads docs/plans/*.html.
+      - name: Rebuild plans index
+        run: bash kit/plugins/plan-agent/hooks/build-index.sh "$GITHUB_WORKSPACE"
+
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
 
