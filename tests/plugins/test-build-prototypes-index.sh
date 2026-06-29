@@ -41,8 +41,8 @@ echo "2. Newest-first ordering (Gamma before Alpha)..."
 if [ "$(grep -n 'Gamma' "$OUT" | head -1 | cut -d: -f1)" -lt "$(grep -n 'Alpha' "$OUT" | head -1 | cut -d: -f1)" ]; then
   pass; else fail "ordering not newest-first"; fi
 
-echo "3. Special chars escaped in card output (& and \")..."
-if grep -q '&amp;' "$OUT" && grep -q '&quot;' "$OUT"; then pass; else fail "card fields not escaped"; fi
+echo "3. Card title itself is escaped (not just any entity present)..."
+if grep -q 'Gamma &amp; &quot;y&quot; plan' "$OUT"; then pass; else fail "card title not escaped"; fi
 
 echo "4. index.html is not listed as a card..."
 if ! grep -q 'SHOULD BE IGNORED' "$OUT"; then pass; else fail "index.html listed as a prototype"; fi

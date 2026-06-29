@@ -28,11 +28,12 @@ jobs:
         run: bash tests/publish/smoke-clean-dist.sh
       - name: Test dist transforms
         run: node tests/publish/test-dist-transforms.mjs
-      - name: Test prototype skill
-        run: |
-          bash tests/plugins/test-prototype-portability.sh
-          bash tests/plugins/test-build-prototypes-index.sh
-          node tests/plugins/test-prototype-persistence.mjs
+      - name: Test prototype portability
+        run: bash tests/plugins/test-prototype-portability.sh
+      - name: Test prototypes gallery builder
+        run: bash tests/plugins/test-build-prototypes-index.sh
+      - name: Test prototype persistence
+        run: node tests/plugins/test-prototype-persistence.mjs
       - name: Publish to agentics-kit
         run: node scripts/build-dist.mjs --publish
         env:

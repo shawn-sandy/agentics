@@ -31,7 +31,9 @@ fi
 
 PROJECT_ROOT="${1:-$(pwd)}"
 
-python3 - "$PROJECT_ROOT" <<'EOF'
+# `|| true` guarantees the hook never exits non-zero (and never blocks a write)
+# even if the embedded Python raises on chdir, template I/O, or output writes.
+python3 - "$PROJECT_ROOT" <<'EOF' || true
 import os, re, sys, html
 from datetime import datetime
 
@@ -45,9 +47,15 @@ if not os.path.isdir(protos_dir):
 
 # ── Locate plugin templates directory (newest version wins) ─────────────────
 def find_templates_dir():
+    # Prefer the checked-out repo's template so local runs/tests reflect THIS
+    # change rather than whatever is installed under ~/.claude/plugins.
+    repo_templates = os.path.join(project_root, 'kit', 'plugins', 'plan-agent', 'templates')
+    if os.path.isfile(os.path.join(repo_templates, 'prototypes-gallery.html')):
+        return repo_templates
+
     plugin_root = os.path.expanduser('~/.claude/plugins')
     candidates = []
-    for base in (plugin_root, project_root):
+    for base in (plugin_root,):
         if not os.path.isdir(base):
             continue
         for dirpath, dirnames, _ in os.walk(base):

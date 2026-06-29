@@ -79,12 +79,19 @@ catch a wrong interpretation before a file exists. Adjust if corrected.
 Read `reference/PROTOTYPE-SKELETON.html` and substitute every `{{token}}` by
 string replacement:
 
-- **HTML-escape every interpolated value** (`&`, `<`, `>`, `"`, `'`) — the
-  prototype is published to a live `*.github.io` origin — **except
-  `{{SEED_JSON}}`**, which is JSON-serialized with **script-breakout escaping
-  only** (e.g. encode `</script>` as `<\/script>`). Do **not** HTML-escape the
-  seed: `load()` reads the JSON block as text and HTML entities are not
-  decoded, so `&quot;` would break `JSON.parse`.
+- **HTML-escape every text and attribute value** (`&`, `<`, `>`, `"`, `'`)
+  before inserting it — the prototype is published to a live `*.github.io`
+  origin. This covers `{{TITLE}}`, `{{SOURCE_PLAN}}`, `{{STORE_KEY}}`,
+  `{{PRIMARY_ACTION}}`, `{{SUMMARY}}`, and the meta-tag values.
+- **Build the structural fragments `{{COLUMNS}}` and `{{FORM_FIELDS}}` from
+  already-escaped text, then inject the final HTML unescaped.** These tokens
+  carry markup (`<th>` / `<input>` elements), so escaping the whole fragment
+  would render raw tags — escape each interpolated label/key *inside* them, not
+  the surrounding tags.
+- **`{{SEED_JSON}}` is JSON-serialized with script-breakout escaping only**
+  (e.g. encode `</script>` as `<\/script>`) — never HTML-escaped: `load()`
+  reads the JSON block as text and HTML entities are not decoded, so `&quot;`
+  would break `JSON.parse`.
 - Placeholders: `{{TITLE}}`, `{{SOURCE_PLAN}}`, `{{STORE_KEY}}`,
   `{{SEED_JSON}}`, `{{COLUMNS}}`, `{{FORM_FIELDS}}`, `{{PRIMARY_ACTION}}`,
   `{{SUMMARY}}`, plus the `proto-source` / `proto-created` meta tags.
@@ -110,7 +117,7 @@ mask anything that looks like a credential, token, key, email, or other PII.
 
 - The `PostToolUse` hook auto-rebuilds `docs/prototypes/index.html` on the
   write. If it did not run (e.g. hook disabled), run
-  `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-prototypes-index.sh" "$(pwd)"`.
+  `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-prototypes-index.sh" "${CLAUDE_PROJECT_DIR:-$PWD}"`.
 - Open the prototype in the browser, screenshot it, and `SendUserFile` the
   prototype path.
 - Report **what to validate**: the data shapes, the core flow, and whether the

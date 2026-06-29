@@ -22,8 +22,9 @@ echo "1. Skeleton and fixture exist..."
 echo "2. No external http(s):// resource references (skeleton + fixture)..."
 if ! grep -Eq 'https?://' "$SKEL" "$FIXTURE"; then pass; else fail "external URL reference found"; fi
 
-echo "3. Inline application/json #seed block present..."
-if grep -q 'type="application/json" id="seed"' "$SKEL" && grep -q 'type="application/json" id="seed"' "$FIXTURE"; then
+echo "3. Inline application/json #seed block present (attribute-order-independent)..."
+seed_block() { grep -Eq '<script[^>]*application/json' "$1" && grep -Eq '<script[^>]*id="seed"' "$1"; }
+if seed_block "$SKEL" && seed_block "$FIXTURE"; then
   pass; else fail "missing inline #seed block"; fi
 
 echo "4. Renders via textContent/createTextNode, never innerHTML..."
@@ -38,8 +39,8 @@ if grep -q '<title>Workout Log &lt;demo&gt;</title>' "$FIXTURE" \
 
 echo "6. Skeleton a11y affordances: aria-live region + real Reset/submit buttons..."
 if grep -q 'aria-live="polite"' "$SKEL" \
-   && grep -q 'type="submit" class="btn"' "$SKEL" \
-   && grep -q 'id="reset-btn"' "$SKEL"; then
+   && grep -Eq '<button[^>]*type="submit"' "$SKEL" \
+   && grep -Eq '<button[^>]*id="reset-btn"' "$SKEL"; then
   pass; else fail "missing aria-live region or real buttons in skeleton"; fi
 
 echo "7. Every fixture input has an associated <label for>..."
