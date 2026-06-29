@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: "Generates a runnable static-HTML prototype from a plan or idea. Produces one self-contained, framework-free clickable file under docs/prototypes/. Use when asked to prototype a plan or idea."
+description: "Generates a runnable static-HTML prototype from a plan, idea, image, or Figma design. Produces one self-contained, framework-free clickable file under docs/prototypes/. Use when asked to prototype a plan, idea, screenshot, mockup, or design file."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 ---
 
@@ -44,6 +44,11 @@ Read `$ARGUMENTS` (or the conversation-derived text on the model path):
 - If the **first token ends in `.html`**, treat it as a **plan path**. Reduce
   it to its basename for safety, then resolve it under the plans directory
   (configured `plansDirectory`, else `docs/plans/`). Read the file.
+- If the **first token ends in an image extension** (`.png`, `.jpg`, `.jpeg`,
+  `.gif`, `.webp`, `.svg`), treat it as an **image path** — a screenshot or
+  mockup of the UI to prototype.
+- If the **first token is a `figma.com` URL** (or the user names a Figma file /
+  pastes a Figma link), treat it as a **design path**.
 - Otherwise the whole argument string is a **raw idea**.
 
 ## Step 2 — Gather the model inputs
@@ -56,6 +61,19 @@ Read `$ARGUMENTS` (or the conversation-derived text on the model path):
   signal → "total count").
 - **Plan path:** read the plan and extract its objective, steps, and domain
   nouns. No interview.
+- **Image path:** `Read` the image directly (the Read tool renders PNG/JPG/etc.
+  visually). Infer the model from what the UI shows — the dominant repeated
+  record becomes the **entity**, its visible labels/columns become **fields**
+  (infer each type from the value shown), the primary button/CTA becomes the
+  **action**, and any visible count/total/badge becomes the **success signal**.
+  No interview unless the image is too ambiguous to read a single entity from —
+  then fall back to the three-question interview above.
+- **Design path (Figma):** load the Figma MCP tools with `ToolSearch`
+  (`get_screenshot` and `get_design_context` / `get_metadata`), passing the
+  Figma URL. Read the returned screenshot + layer metadata and infer the model
+  exactly as for an image path. If no Figma MCP server is connected, say so and
+  ask the user to either connect it or paste a screenshot instead — do not
+  guess a model from the URL alone.
 
 ## Step 3 — Derive a deterministic data model
 
@@ -109,9 +127,11 @@ slug.
 
 ## Step 7 — Scrub before publishing
 
-Before writing a **plan-derived** prototype, run a quick secret/PII scrub on
-the extracted seed values (it publishes to a public Pages origin). Drop or
-mask anything that looks like a credential, token, key, email, or other PII.
+Before writing a prototype whose seed came from an external source — a **plan,
+image, or Figma design** — run a quick secret/PII scrub on the extracted seed
+values (it publishes to a public Pages origin). Mockups and screenshots often
+show real names, emails, or tokens; drop or mask anything that looks like a
+credential, token, key, email, or other PII.
 
 ## Step 8 — Index, preview, report
 

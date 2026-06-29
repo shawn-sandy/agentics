@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.10.0 — Prototype from images and Figma designs (2026-06-29)
+
+### Added
+
+- **Image & Figma inputs for `prototype`** — `/plan-agent:prototype` now accepts an image path (`.png`/`.jpg`/`.jpeg`/`.gif`/`.webp`/`.svg`) or a Figma URL in addition to a plan path or raw idea. For an image, the skill `Read`s the mockup/screenshot and infers the entity, fields (with types), action, and success signal from what the UI shows — no interview unless the image is ambiguous. For Figma, it loads the Figma MCP tools via `ToolSearch` (`get_screenshot` + `get_design_context`/`get_metadata`) and infers the model the same way; if no Figma MCP server is connected it asks the user to connect it or paste a screenshot rather than guessing from the URL. Steps 3–8 (derive model → write → index → preview) are unchanged.
+- **Broader secret/PII scrub** — Step 7 now scrubs seed values from any external source (plan, image, or Figma), since mockups and screenshots frequently show real names, emails, and tokens.
+
 ## 2.9.0 — Static-HTML prototype generator (2026-06-29)
 
 ### Added
