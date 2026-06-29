@@ -684,6 +684,8 @@
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -1655,19 +1657,25 @@ function buildImplementPrompt() {
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1677,7 +1685,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1686,103 +1694,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy goal prompt ──────────────────────────────────────── */
 function copyGoal(btn) {
   var code = document.getElementById('goal-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1792,36 +1727,7 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
@@ -1940,7 +1846,7 @@ function copyPrompt(btn) {
           else          a.removeAttribute('aria-current');
         });
       });
-    }, { threshold: 0.3 });
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
     sections.forEach(function (el) { observer.observe(el); });
   }
 })();
