@@ -1467,12 +1467,12 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Scaffold <code>scripts/build-dist.mjs</code> with config and a manifest-driven plugin list</span>
               </div>
               <div class="step-why">A single ESM script (matching the existing <code>merge-marketplace.mjs</code> convention; no <code>package.json</code>, run via bare <code>node</code>) becomes the one entry point. Define an <code>OUT_DIR</code> (<code>dist/</code>), a <code>DIST_REPO</code> URL constant overridable via the <code>DIST_REPO_URL</code> env var, a <code>KEEP</code> allowlist (<code>.claude-plugin</code>, <code>commands</code>, <code>skills</code>, <code>agents</code>, <code>hooks</code>, <code>hooks.json</code>, <code>templates</code>, <code>README.md</code>, <code>CHANGELOG.md</code>, <code>LICENSE</code>), and a <code>DROP</code> denylist (<code>docs</code>, <code>*.local.md</code>, <code>.DS_Store</code>, <code>*.png</code>, <code>.playwright-mcp</code>). Enumerate plugins by reading <code>marketplace.json</code> <code>plugins[]</code> — never by globbing <code>kit/plugins/*</code>.</div>
@@ -1484,12 +1484,12 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Implement the per-plugin clean copy into <code>dist/</code></span>
               </div>
               <div class="step-why">For each active plugin, resolve its <code>source.path</code> (e.g. <code>kit/plugins/plan-agent</code>) and recursively copy only the <code>KEEP</code> top-level entries into <code>dist/&lt;path&gt;/</code>, pruning any <code>.DS_Store</code> encountered inside kept directories. Component dirs are copied wholesale so nested support files (e.g. <code>skills/*/reference/</code>, <code>templates/</code>) come along automatically. Start from a clean <code>dist/</code> each run (delete and recreate) so stale files never linger.</div>
@@ -1501,12 +1501,12 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Emit a rewritten <code>marketplace.json</code> plus slim root files</span>
               </div>
               <div class="step-why">Write <code>dist/.claude-plugin/marketplace.json</code> derived from the source manifest: keep <code>name</code> (<code>agentics-kit</code>), <code>version</code>, <code>owner</code>, and every <code>plugins[]</code> entry, but rewrite each <code>source.url</code> to <code>DIST_REPO</code> (leaving <code>source.path</code> unchanged) and drop the <code>removed[]</code> array entirely. Generate a concise <code>dist/README.md</code> with the new install instructions and copy <code>LICENSE</code> to the dist root. Keep the JSON pretty-printed so the published manifest stays diffable.</div>
@@ -1518,12 +1518,12 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add <code>--check</code> and <code>--publish</code> modes</span>
               </div>
               <div class="step-why"><code>--check</code> walks the built <code>dist/</code> tree and exits non-zero if any <code>DROP</code> pattern leaked through (a CI tripwire against accidental bloat). <code>--publish</code> syncs <code>dist/</code> into a checkout of the distribution repo, commits with a message referencing the source commit SHA, and pushes — authenticating via a <code>GITHUB_TOKEN</code> env var first, falling back to a PAT (<code>DIST_REPO_TOKEN</code>) when set. <strong>Caveat:</strong> the default Actions <code>GITHUB_TOKEN</code> is scoped to the source repo and usually cannot push to a separate repo like <code>agentics-kit</code>; if the cross-repo push is denied, a fine-grained PAT with write on the dist repo is required (see Unresolved Questions). Publishing must clear the target working tree first so deleted plugins disappear downstream.</div>
@@ -1535,12 +1535,12 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the <code>.github/workflows/publish-dist.yml</code> Action</span>
               </div>
               <div class="step-why">Trigger on <code>release: { types: [published] }</code> plus <code>workflow_dispatch</code> for manual reruns. Steps: checkout, <code>actions/setup-node</code>, <code>node scripts/build-dist.mjs --check</code> (fail fast on leakage), then <code>node scripts/build-dist.mjs --publish</code> with <code>GITHUB_TOKEN</code> wired in (and <code>DIST_REPO_TOKEN</code> as an optional override secret) and <code>DIST_REPO_URL</code> from a repo variable. Because the dist repo is separate, verify the token actually has cross-repo write during the first <code>workflow_dispatch</code> run — if the default <code>GITHUB_TOKEN</code> is rejected, switch the secret to a PAT. This keeps the clean repo in lockstep with releases without manual steps, mirroring the existing <code>version-guard.yml</code>/<code>update-readme.yml</code> patterns.</div>
@@ -1552,12 +1552,12 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Create the distribution repo, wire secrets, and document the flow</span>
               </div>
               <div class="step-why">Create the clean GitHub repo <code>shawn-sandy/agentics-kit</code>, set the <code>DIST_REPO_URL</code> variable on the source repo (and add a <code>DIST_REPO_TOKEN</code> PAT secret only if the default <code>GITHUB_TOKEN</code> can't push cross-repo), run the first publish manually, and document the build + install flow in <code>README.md</code> and <code>CLAUDE.md</code> (new "Distribution" section: how to run the build, what gets stripped, and the new <code>/plugin marketplace add</code> path). Note in <code>.claude/rules/marketplace.md</code> that <code>source.url</code> rewriting is handled by the build, not hand-edited.</div>
@@ -1580,35 +1580,35 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>scripts/build-dist.mjs</code> enumerates plugins from <code>marketplace.json</code> <code>plugins[]</code>; the 6 <code>removed[]</code> plugins never appear in <code>dist/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Each plugin in <code>dist/</code> contains only allowlisted files (manifest, component dirs, <code>hooks.json</code>, <code>templates/</code>, <code>README.md</code>, <code>CHANGELOG.md</code>) — no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, or session PNGs.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>dist/.claude-plugin/marketplace.json</code> rewrites every <code>source.url</code> to the distribution repo and omits the <code>removed[]</code> array.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code>dist/</code> root has a slim generated <code>README.md</code> with install instructions and a copied <code>LICENSE</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5"><code>node scripts/build-dist.mjs --check</code> exits 0 on a clean build and non-zero when a denylisted path leaks into <code>dist/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>.github/workflows/publish-dist.yml</code> rebuilds and publishes <code>dist/</code> to the distribution repo on <code>release: published</code> (and via <code>workflow_dispatch</code>).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">Installing a plugin from the distribution repo (<code>/plugin install &lt;name&gt;@agentics-kit</code>) yields a working plugin with no repo cruft.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>README.md</code> and <code>CLAUDE.md</code> document the build command, the strip rules, and the new install path.</label>
         </li>
       </ul>
@@ -1637,15 +1637,15 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

@@ -1461,7 +1461,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Scaffold <code>skills/share-react/SKILL.md</code> with the full phase workflow</span>
               </div>
               <div class="step-why">SKILL.md is the only runtime artifact Claude loads; mirroring the shared share-* skeleton makes share-react behave like its siblings and keeps the scrub gate non-bypassable.</div>
@@ -1478,7 +1478,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Create the <code>templates/react-card.html</code> card template</span>
               </div>
               <div class="step-why">The card is the visual deliverable; reusing snippet-card's proven CSS and CDN means the unchanged Playwright pipeline screenshots it correctly, and a four-zone layout delivers preview + implementation + props in one image. <code>{{COPY_PANELS}}</code> keeps its standard plugin semantics: the social post copy panel(s) rendered below the card — platform post text plus a copy button — populated per <code>references/copy-panels.md</code>, exactly as in snippet-card.html.</div>
@@ -1495,7 +1495,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Write the <code>references/props-extraction.md</code> reference</span>
               </div>
               <div class="step-why">Progressive disclosure keeps SKILL.md lean and gives the props-table logic one authoritative source the skill links to one level deep — matching how share-github offloads variable rules to references.</div>
@@ -1512,7 +1512,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Register the skill in the <code>social-share</code> router</span>
               </div>
               <div class="step-why">The router is how passive "share this" intent reaches a skill; without a rule, share-react never auto-dispatches. Per the locked decision, React files default to share-react.</div>
@@ -1529,7 +1529,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Document <code>react-card.html</code> in <code>references/variables.md</code></span>
               </div>
               <div class="step-why">variables.md is the shared contract every card template documents; an undocumented template drifts and breaks future edits.</div>
@@ -1546,7 +1546,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Update the human-facing docs (README + root <code>CLAUDE.md</code>)</span>
               </div>
               <div class="step-why">README and the root CLAUDE.md are how humans and Claude discover the plugin's surface; the marketplace conventions require docs to stay in sync with plugin changes.</div>
@@ -1563,7 +1563,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Cut the release — bump version, tags, keywords, and changelog</span>
               </div>
               <div class="step-why">A new skill is a MINOR bump per the marketplace rules; the version, tags, and changelog are what actually ship, and the post-write hook validates marketplace.json JSON syntax.</div>
@@ -1580,7 +1580,7 @@ Release metadata. Run /validate-plugin social-media-tools and confirm marketplac
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add smoke + registration tests under <code>tests/social-media-tools/</code></span>
               </div>
               <div class="step-why">The repo's tests are bash smoke scripts under <code>tests/&lt;area&gt;/</code>; committing these makes the objective and the wiring re-checkable on every change.</div>

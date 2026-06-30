@@ -1348,7 +1348,7 @@ Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this p
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the Save as PDF button markup to the skeleton header</span>
               </div>
               <div class="step-why">Place the button between the <code>.plan-title</code> heading and the status badge inside <code>.plan-header-top</code> in <code>reference/SKELETON.html</code>, wired as <code>type=&quot;button&quot; onclick=&quot;savePDF()&quot;</code> with an explicit <code>aria-label</code>. This matches the placement contract plan-interview's html-spec defined in PR #272, so both pipelines render the control in the same place.</div>
@@ -1365,7 +1365,7 @@ Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this p
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Style the button and hide it in print output</span>
               </div>
               <div class="step-why">Add the <code>.save-pdf-btn</code> CSS block (accent background, hover/active/focus-visible states, prefers-reduced-motion opt-out) beside the status-badge styles, and append <code>.save-pdf-btn</code> to the main <code>@media print</code> hide list. The control must look native to the plan header and must never appear inside the PDF it produces.</div>
@@ -1382,7 +1382,7 @@ Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this p
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Define savePDF() in the skeleton&#39;s inline script</span>
               </div>
               <div class="step-why">Add <code>function savePDF() { window.print(); }</code> ahead of <code>buildImplementPrompt()</code>. The browser's native print dialog offers a &quot;Save as PDF&quot; destination on Chrome, Edge, Firefox, and Safari — zero dependencies keeps every plan a single self-contained file.</div>
@@ -1399,7 +1399,7 @@ Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this p
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Pin the requirement in the SKILL.md output contract</span>
               </div>
               <div class="step-why">Add a Save as PDF bullet to the <em>HTML Output Requirements</em> section of the implementation-plan SKILL.md covering placement, behaviour, print hiding, and the do-not-remove rule for both drafted plans and markdown conversions. The skeleton alone is not a contract — the spec bullet is what keeps future skeleton refactors and conversion mode honest.</div>
@@ -1416,7 +1416,7 @@ Run bash tests/plugins/test-save-pdf.sh — all six assertions pass. Open this p
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Release plan-agent 2.4.0</span>
               </div>
               <div class="step-why">Bump the plugin version in <code>.claude-plugin/marketplace.json</code>, mention the export button in the marketplace description, and add the 2.4.0 CHANGELOG entry. A new user-visible capability is a minor bump per the marketplace versioning rules.</div>

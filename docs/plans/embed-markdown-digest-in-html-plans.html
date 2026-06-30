@@ -1479,7 +1479,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the <code>#plan-digest</code> block to <code>SKELETON.html</code> as the first element child of <code>&lt;body&gt;</code></span>
               </div>
               <div class="step-why">Every generated plan inherits structure from the skeleton, so the block must live there once. Place it immediately after <code>&lt;body&gt;</code> (before the icon sprite) as <code>&lt;script type="text/markdown" id="plan-digest"&gt;{plan-digest}&lt;/script&gt;</code> — a non-executable script type the browser never renders or fetches, preserving the no-CDN, single-file guarantee. Add a guiding HTML comment above it documenting the spec-only rule and the flag-and-exit <code>awk</code> extraction — the comment is a comment node, not an element, so the script remains the first <em>element</em> child of <code>&lt;body&gt;</code> (the property the smoke test asserts, mirroring DOM <code>firstElementChild</code> semantics).</div>
@@ -1496,7 +1496,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Define the digest content + escaping contract in <code>implementation-plan/SKILL.md</code></span>
               </div>
               <div class="step-why">A precise, stable contract is what lets the generator, every consumer, and the backfill script agree on shape. Specify the digest as the <em>authored spec only</em> — title, objective, context, file list, steps (action/why/verify), tests, acceptance-criteria text, verification — and explicitly <em>exclude</em> live state (status, checkbox states, completion report, copy buttons, CSS/JS). Insert markdown <em>raw</em> (not HTML-escaped); the only guard is to replace any literal closing-script sequence with a backslashed form (<code>&lt;\/script</code>) so it cannot terminate the block early. Define the <strong>canonical extractor</strong> as the flag-and-exit <code>awk '/&lt;script[^&gt;]*id="plan-digest"/{f=1;next} f&amp;&amp;/&lt;\/script&gt;/{exit} f'</code> — a simple <code>awk</code> range re-triggers on any later line that mentions the id, so it must not be the documented form.</div>
@@ -1513,7 +1513,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Wire digest generation + content-edit refresh into the generation workflow</span>
               </div>
               <div class="step-why">In <code>SKILL.md</code> Step 2, after the sections are drafted, build <code>{plan-digest}</code> from the final content and fill the skeleton placeholder. Add a rule to <strong>HTML Output Requirements</strong>: any later <code>Edit</code> that changes spec content (Step 5b interview findings, the Step 8 "Edit the plan" loop) must regenerate the block in the same pass; status flips (Step 6) and acceptance-criteria checks must <em>not</em> touch it. This keeps the digest authoritative without coupling it to progress churn. The digest carries <em>no</em> checksum or timestamp — staleness is prevented by this refresh rule plus the CI guard in Next Steps, not by an integrity field.</div>
@@ -1530,7 +1530,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the digest-extraction clause to the implement &amp; workflow prompts</span>
               </div>
               <div class="step-why">The implementer and the workflow author are the primary beneficiaries — they start in a fresh session with no context. Update the <code>{implement-prompt}</code>/<code>{workflow-prompt}</code> templates and the <code>buildImplementPrompt()</code> instruction list to direct the consumer to start from the digest, e.g. append: "Start from the markdown spec in the <code>#plan-digest</code> block (extract: <code>awk '/&lt;script[^&gt;]*id="plan-digest"/{f=1;next} f&amp;&amp;/&lt;\/script&gt;/{exit} f' &lt;file&gt;</code>) before opening the full HTML."</div>
@@ -1547,7 +1547,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Switch the 7 <code>review-plan</code> reviewers to digest-only reads</span>
               </div>
               <div class="step-why">This is the largest token win (~120k per review cycle) and reviewers only emit prose findings, so they never need the DOM. In <code>references/role-prompts.md</code>, change every "Read the implementation plan at <code>&lt;ABSOLUTE_PATH&gt;</code>" to extract and read the <code>#plan-digest</code> block; mirror the change in all 7 individual <code>agents/plan-reviewer-*.md</code> defs (<code>plan-reviewer-architecture.md</code>, <code>plan-reviewer-completeness.md</code>, <code>plan-reviewer-testability.md</code>, <code>plan-reviewer-risk.md</code>, <code>plan-reviewer-conventions.md</code>, <code>plan-reviewer-ux.md</code>, <code>plan-reviewer-accessibility.md</code>) that say "Read the plan's full content." In <code>review-plan/SKILL.md</code> Step 4, state the split: reviewers get the digest, the lead reads full HTML for Step 7 selector edits. When a plan has <em>no</em> digest yet (e.g. an old plan not backfilled), reviewers fall back to reading the full HTML for that run so reviews never break.</div>
@@ -1564,7 +1564,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add a digest-refresh pass to <code>review-plan</code> Step 7</span>
               </div>
               <div class="step-why">Step 7 mutates spec content by CSS selector (Pass 1 inline edits), which makes the embedded digest stale for the next consumer. Add a "Pass 3 — refresh the digest": after the inline edits and the review-append, regenerate the <code>#plan-digest</code> block from the now-updated plan content. Skip it when output mode is "review only" (no content was changed).</div>
@@ -1581,7 +1581,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Create the backfill injector <code>scripts/backfill-plan-digests.mjs</code></span>
               </div>
               <div class="step-why">The chosen scope backfills the ~50 existing plans. Write an idempotent Node script (matching the repo's existing <code>scripts/*.mjs</code> convention) that scans <code>docs/plans/*.html</code> (skipping <code>index.html</code> and any file already containing <code>#plan-digest</code>), parses title/objective/files/steps/tests/criteria/verification from the stable skeleton structure (IDs/classes: <code>#objective</code>, <code>.step-card</code>, <code>#tests</code>, <code>#criteria-list</code>, <code>#verification</code>, <code>.file-tree</code>), builds the digest (with the <code>&lt;\/script</code> guard), and inserts it as the first element child of <code>&lt;body&gt;</code>. It must never touch status, checkboxes, or progress state, must <strong>only inject when all expected sections parse</strong> — skipping and reporting any plan it cannot fully parse rather than writing a partial digest — and must support <code>--dry-run</code>, printing injected / skipped / failed counts.</div>
@@ -1598,7 +1598,7 @@ tests/plugins/test-backfill-digest.mjs both pass.
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Bump version, changelog, and README (plan-agent 2.1.0 → 2.2.0)</span>
               </div>
               <div class="step-why">Adding new behavior is a minor bump per the project versioning rules, and <code>CLAUDE.md</code> requires docs/changelog updates with any plugin change — the new value must be higher than main's, and <code>2.1.0</code> was taken on main by the findings-walkthrough feature. Set <code>plan-agent</code> <code>version</code> to <code>2.2.0</code> in <code>marketplace.json</code>, add a <code>2.2.0</code> <code>CHANGELOG.md</code> entry describing the digest + backfill, and add a "Machine-readable digest" subsection to the plugin <code>README.md</code> showing the <code>awk</code> extraction one-liner.</div>

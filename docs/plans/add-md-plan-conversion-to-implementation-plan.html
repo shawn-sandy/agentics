@@ -651,7 +651,7 @@ Model-path smoke: ask "convert docs/plans/<any>.md into an HTML implementation p
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add markdown conversion detection and conversion-mode defaults to <code>SKILL.md</code></span>
               </div>
               <div class="step-why">The parser needs a third token type: a first non-flag token ending in <code>.md</code> sets <code>$MD_SOURCE</code> and enters conversion mode. The block defines resolution order (cwd → plan roots by basename → default branch via fetch/fast-forward or <code>git show</code>), a graceful AskUserQuestion fallback that never invents content under a conversion label, implied <code>--no-clarify --no-align --no-interview</code>, 1:1 section mapping, frontmatter carry-over (<code>created</code> preserved; <code>planned</code> → <code>todo</code>), extension-swap output naming, the conversion-mode echo, and the Step 8 keep-or-remove source question.</div>
@@ -668,7 +668,7 @@ Model-path smoke: ask "convert docs/plans/<any>.md into an HTML implementation p
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Advertise the trigger in frontmatter and parsing rules</span>
               </div>
               <div class="step-why">Model-path activation depends on the <code>description</code> ("convert a markdown plan into an HTML implementation plan"); command-path discoverability depends on <code>argument-hint</code> (<code>&lt;plan.md&gt;</code>). The model-invocation paragraph and the Objective bullet must also name the new token type so derived text routes through the same detection.</div>
@@ -685,7 +685,7 @@ Model-path smoke: ask "convert docs/plans/<any>.md into an HTML implementation p
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Bump plan-agent to <code>2.2.0</code> in <code>.claude-plugin/marketplace.json</code></span>
               </div>
               <div class="step-why">New capability on an existing skill = MINOR per the marketplace versioning rules; the value must be higher than <code>2.1.0</code> on <code>main</code>. The plugin description also gains a clause so the marketplace listing advertises conversion mode.</div>
@@ -702,7 +702,7 @@ Model-path smoke: ask "convert docs/plans/<any>.md into an HTML implementation p
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the <code>2.2.0</code> entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code></span>
               </div>
               <div class="step-why">Project convention: every plugin change ships a changelog entry. The entry documents <code>$MD_SOURCE</code> detection, conversion-mode defaults, and the docs updates, matching the existing Keep-a-Changelog-style format.</div>
@@ -719,7 +719,7 @@ Model-path smoke: ask "convert docs/plans/<any>.md into an HTML implementation p
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Document usage in the plugin <code>README.md</code> and the repo <code>CLAUDE.md</code> plugin table</span>
               </div>
               <div class="step-why">The README's invocation syntax, examples, and overview must show the <code>&lt;plan.md&gt;</code> form and explain conversion-mode behavior (PR checklist requires README coverage); the CLAUDE.md plugin table row keeps repo-level guidance accurate.</div>

@@ -929,12 +929,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Audit existing <code>docs/plans/*.html</code> files to verify the meta-tag schema</span>
               </div>
               <div class="step-why">The card renderer reads five fields from each plan file (<code>plan-status</code>, <code>plan-type</code>, <code>plan-created</code>, <code>plan-repo</code>, <code>&lt;title&gt;</code>); gaps cause blank or broken cards. Knowing actual coverage first lets the build script apply correct fallback values.</div>
@@ -946,12 +946,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Write <code>docs/plans/build-index.sh</code> — the bash script that extracts meta tags and emits the embedded JSON block</span>
               </div>
               <div class="step-why">The build script is the data layer; defining it before the HTML template locks the data shape so the template can reference stable field names. Writing it first also makes the output testable in isolation.</div>
@@ -963,12 +963,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Build <code>docs/plans/index.html</code> — a single self-contained file with pre-rendered plan cards, status badges, and filter controls</span>
               </div>
               <div class="step-why">A pre-rendered, no-dependency static file opens at a <code>file://</code> URL without a server and stays consistent with plan-agent's single-file philosophy. Embedding JSON rather than hard-coding card HTML makes the build script output trivially diffable and the template reusable.</div>
@@ -980,12 +980,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Surface the rebuild command visibly on the index page itself</span>
               </div>
               <div class="step-why">The pre-rendered approach only stays current if the rebuild command is discoverable; burying it in a README means it will be forgotten. Showing it directly on the page ensures anyone viewing the index can regenerate it without hunting for documentation.</div>
@@ -1008,35 +1008,35 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>docs/plans/index.html</code> exists and opens in a browser at a <code>file://</code> URL without a server.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Every <code>.html</code> plan file in <code>docs/plans/</code> (except <code>index.html</code> itself) appears as a card.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Each card displays: plan title, status badge, type chip, created date, and an "Open plan" link to the file.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Status badge colours match plan-agent design tokens: grey = todo, amber = in-progress, green = completed.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Filter by status (todo / in-progress / completed) is functional and hides non-matching cards.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">Sort by created date (newest-first default, toggleable) is functional.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>docs/plans/build-index.sh</code> exists and regenerates the index from scratch when run.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">The rebuild command (<code>bash docs/plans/build-index.sh</code>) is visibly displayed on the index page.</label>
         </li>
       </ul>

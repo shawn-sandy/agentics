@@ -1470,7 +1470,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Create <code>scripts/retrofit-responsive-plans.mjs</code> — the idempotent injector</span>
               </div>
               <div class="step-why">A deterministic, re-runnable script is the only fix that reaches already-shipped self-contained plans without an LLM pass. Mirror the <code>backfill-plan-digests.mjs</code> / <code>backfill-save-pdf.mjs</code> conventions: Node ≥ 18, zero dependencies, summary output. Contract: wrap the canonical CSS constant as <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code>; insert immediately before <code>&lt;/head&gt;</code> (case-insensitive); skip files already at the current version; replace the whole block when an older version is found; always exclude <code>index.html</code>; report and skip files with no <code>&lt;/head&gt;</code> rather than half-writing them. Flags: <code>--check</code>, <code>--dry-run</code>, <code>--dir &lt;path&gt;</code>, <code>--include-archive</code>.</div>
@@ -1487,7 +1487,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Run the injector once over <code>docs/plans/</code></span>
               </div>
               <div class="step-why">This is the retroactive payload — all 55 plan files (every file except the hook-generated <code>index.html</code>, including this plan document itself, which was built from the pre-fix skeleton) pick up the v1 block in a single reviewable diff.</div>
@@ -1504,7 +1504,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Embed the identical v1 block in <code>SKELETON.html</code></span>
               </div>
               <div class="step-why">New plans must be born responsive and pass <code>--check</code> natively — otherwise every freshly generated plan reintroduces the defect the retrofit just cleared. Insert the same <code>&lt;style id="plan-responsive-fix" data-version="1"&gt;</code> block immediately before <code>&lt;/head&gt;</code> in <code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code>, byte-identical to the script's CSS constant (the script is the single source of truth; the skeleton carries a copy).</div>
@@ -1521,7 +1521,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add <code>tests/plugins/test-responsive-retrofit.sh</code> — corpus, fixtures, and sync guard</span>
               </div>
               <div class="step-why">Turns the one-time migration into a standing invariant: the corpus check fails the moment a plan ships without the current block, and the sync assert stops the skeleton and the script from drifting apart. Cases: (a) <code>--check</code> exits 0 over the repo's <code>docs/plans/</code>; (b) fixture injection — missing block injected exactly once before <code>&lt;/head&gt;</code>, second run byte-identical; (c) <code>data-version="0"</code> fixture replaced with v1, no duplicate block; (d) <code>index.html</code> and no-<code>&lt;/head&gt;</code> fixtures untouched; (e) skeleton block CSS byte-identical to the script constant; (f) head-only guarantee — the injector's output is byte-identical to its input from <code>&lt;body</code> onward, so the retrofit can never alter markup, ARIA, or semantics.</div>
@@ -1538,7 +1538,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Bump plan-agent to 2.4.1 and write the CHANGELOG entry</span>
               </div>
               <div class="step-why">The skeleton is plugin-shipped behaviour — <code>.claude/rules/marketplace.md</code> mandates a manual semver bump (patch for a fix) in <code>.claude-plugin/marketplace.json</code> plus a <code>kit/plugins/plan-agent/CHANGELOG.md</code> entry with every plugin change.</div>
@@ -1555,7 +1555,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Re-audit all 55 plans at 390px and 320px in a real browser</span>
               </div>
               <div class="step-why">Measured <code>scrollWidth</code> in a width-controlled harness is the ground truth the investigation used — the retrofit is done when the overflow count is zero, not merely when markers are present. The 320px pass grounds the result in WCAG 2.1 AA reflow (1.4.10), which requires no horizontal scrolling at 320px CSS width.</div>

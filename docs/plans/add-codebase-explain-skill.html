@@ -702,12 +702,12 @@ Then verify routing: send "how does share-scan work" via social-share and confir
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Create <code>skills/explain-codebase/SKILL.md</code> with the full workflow</span>
               </div>
               <div class="step-why">This is the core deliverable. The SKILL.md must cover nine phases that mirror the share-* pipeline exactly: (a) Phase 0 — silently locate PLUGIN_DIR using the same find-chain all other skills use; (b) Phase 0b — load SOCIAL.md config for platform/tone defaults; (c) Phase 1 — parse <code>$ARGUMENTS</code> for target name/concept and optional <code>--platform</code>/<code>--tone</code> flags; (d) Phase 1c — reuse check against <code>docs/media/social/</code> (read <code>references/reuse-check.md</code>); (e) Phase 2 — map target to files: skill name → <code>skills/&lt;name&gt;/SKILL.md</code> + referenced files; concept keyword → grep <code>references/</code> and skill bodies; (f) Phase 3 — Read all located files and synthesize explanation with sections: Core Purpose, Activation Conditions, Workflow Phases, Key Patterns, Important Files, Invocation; (g) Phase 4 — security scrub the full synthesis (write to <code>~/.claude/tmp/scrub-input.txt</code>, invoke <code>security-scrub</code> skill, check GATE RESULT — BLOCKED is a hard stop); (h) Phase 5 — draft platform-aware social copy from the synthesis following <code>references/platforms.md</code> rules — lead with the core principle, not process; (i) Phase 6 — populate card template: skill/component target → <code>feature-card.html</code> (TITLE=skill name, SUBTITLE=one-line purpose, BULLETS=key workflow phases), concept/pattern target → <code>quote-card.html</code> (QUOTE=core principle, ATTRIBUTION=skill/file name, CONTEXT=pattern category); (j) Phase 6b — persistent save to <code>docs/media/social/</code> (read <code>references/saving-and-delivery.md</code>); (k) Phase 7 — screenshot via Playwright (read <code>references/rendering-pipeline.md</code>); (l) Phase 8 — deliver: present explanation in a fenced block, copy in a fenced block, attach PNG (read <code>references/saving-and-delivery.md</code> Deliver section). <code>allowed-tools</code> must include <code>Bash, Read, Glob, Grep, Write, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, SendUserFile</code>.</div>
@@ -719,12 +719,12 @@ Then verify routing: send "how does share-scan work" via social-share and confir
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add routing rule to <code>social-share/SKILL.md</code> classification table</span>
               </div>
               <div class="step-why">Without a rule, natural-language questions like &#34;how does share-session work&#34; fall through to Fallback A (share-code) or Fallback B (share-project) — both wrong. The new rule must fire before the fallbacks. Insert it as rule 8 in the first-match-wins table (before the current session rule and fallbacks), matching on tokens: <code>explain</code>, <code>how does</code>, <code>how do</code>, <code>how it works</code>, <code>what is</code>, <code>what does</code>, <code>describe</code> → target <code>explain-codebase</code>, no extra flags. Renumber subsequent rules accordingly.</div>
@@ -736,12 +736,12 @@ Then verify routing: send "how does share-scan work" via social-share and confir
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Bump version in <code>.claude-plugin/marketplace.json</code> from 2.5.2 → 2.6.0</span>
               </div>
               <div class="step-why">Adding a new skill is a MINOR change per the versioning conventions in <code>.claude/rules/marketplace.md</code>. The version lives only in <code>marketplace.json</code> — not in <code>plugin.json</code> — for relative-path plugins.</div>
@@ -753,12 +753,12 @@ Then verify routing: send "how does share-scan work" via social-share and confir
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add CHANGELOG entry at <code>kit/plugins/social-media-tools/CHANGELOG.md</code></span>
               </div>
               <div class="step-why">All version bumps require a CHANGELOG entry. The entry must follow the existing format: a <code>## [2.6.0]</code> header with today&#39;s date, an <code>### Added</code> subsection listing the new skill, and a brief description of its purpose and trigger.</div>
@@ -780,19 +780,19 @@ Then verify routing: send "how does share-scan work" via social-share and confir
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>skills/explain-codebase/SKILL.md</code> exists with valid frontmatter (<code>name: explain-codebase</code>, description ≤200 chars, <code>allowed-tools</code>) and a body covering all five workflow phases.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Invoking the skill with &#34;how does the share-session skill work&#34; reads <code>skills/share-session/SKILL.md</code>, passes the security scrub gate, returns a structured explanation (Core Purpose, Workflow Phases, Key Patterns, Important Files, Invocation), drafts platform-aware copy, and delivers a populated <code>feature-card.html</code> screenshot PNG saved to <code>docs/media/social/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>social-share/SKILL.md</code> classification table routes &#34;explain&#34; / &#34;how does X work&#34; queries to <code>explain-codebase</code> before reaching any fallback rule.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code>marketplace.json</code> version is <code>2.6.0</code> and <code>CHANGELOG.md</code> has a matching <code>## [2.6.0]</code> entry with an <code>### Added</code> bullet for the new skill.</label>
         </li>
       </ul>
