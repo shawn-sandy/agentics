@@ -104,7 +104,7 @@ def get_title():
 print(json.dumps({
     'status':  meta('plan-status', 'todo'),
     'type':    meta('plan-type',   'untyped'),
-    'effort':  meta('plan-effort', ''),
+    'effort':  meta('plan-effort', '').lower(),
     'created': meta('plan-created', ''),
     'title':   get_title(),
 }))
