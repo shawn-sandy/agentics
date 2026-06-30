@@ -158,6 +158,10 @@
     .filter-chip[data-type="refactor"].active  { background: #7c3aed; border-color: #7c3aed; color: #fff; }
     .filter-chip[data-type="docs"].active      { background: #ea580c; border-color: #ea580c; color: #fff; }
     .filter-chip[data-type="chore"].active     { background: #0d9488; border-color: #0d9488; color: #fff; }
+    .filter-chip[data-effort="all"].active     { background: var(--text); border-color: var(--text); color: #fff; }
+    .filter-chip[data-effort="low"].active     { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .filter-chip[data-effort="medium"].active  { background: #d97706; border-color: #d97706; color: #fff; }
+    .filter-chip[data-effort="high"].active    { background: #dc2626; border-color: #dc2626; color: #fff; }
 
     /* ── Visible count ───────────────────────────────────────────── */
     .visible-count {
@@ -201,7 +205,7 @@
       gap: 5px;
     }
 
-    .status-chip, .type-chip {
+    .status-chip, .type-chip, .effort-chip {
       display: inline-block;
       font-size: 10px;
       font-weight: 700;
@@ -224,6 +228,12 @@
     .type-docs     { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
     .type-chore    { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
     .type-untyped  { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+
+    /* Effort colours — mirror the plan template's effort badge */
+    .effort-low    { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .effort-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .effort-high   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .effort-chip::before { content: "\2022\00a0"; opacity: .6; }
 
     .card-title {
       font-size: 14px;
@@ -335,6 +345,16 @@
     </div>
   </div>
 
+  <div class="filter-row" id="effortRow">
+    <span class="filter-row-label">Effort</span>
+    <div class="filter-chips" id="effortChips">
+      <button class="filter-chip active" data-effort="all" aria-pressed="true">All</button>
+      <button class="filter-chip" data-effort="low" aria-pressed="false">Low</button>
+      <button class="filter-chip" data-effort="medium" aria-pressed="false">Medium</button>
+      <button class="filter-chip" data-effort="high" aria-pressed="false">High</button>
+    </div>
+  </div>
+
   <div class="visible-count" id="visibleCount"></div>
 
   <div class="gallery-grid" id="galleryGrid">
@@ -351,6 +371,7 @@
   <script>
     var activeStatus = 'all';
     var activeType   = 'all';
+    var activeEffort = 'all';
     var searchText   = '';
     var grid         = document.getElementById('galleryGrid');
     var cards        = grid.querySelectorAll('.gallery-card');
@@ -363,11 +384,14 @@
         var card   = cards[i];
         var status = card.getAttribute('data-status') || '';
         var type   = card.getAttribute('data-type')   || '';
+        var effort = card.getAttribute('data-effort') || '';
         var title  = card.getAttribute('data-title')  || '';
         var matchStatus = activeStatus === 'all' || status === activeStatus;
         var matchType   = activeType   === 'all' || type   === activeType;
+        // Plans with no effort tag pass every effort filter.
+        var matchEffort = activeEffort === 'all' || effort === '' || effort === activeEffort;
         var matchSearch = !searchText  || title.indexOf(searchText) !== -1;
-        if (matchStatus && matchType && matchSearch) {
+        if (matchStatus && matchType && matchEffort && matchSearch) {
           card.style.display = '';
           shown++;
         } else {
@@ -391,8 +415,10 @@
           }
           this.classList.add('active');
           this.setAttribute('aria-pressed', 'true');
-          if (prop === 'status') activeStatus = this.getAttribute('data-status');
-          else                   activeType   = this.getAttribute('data-type');
+          var val = this.getAttribute('data-' + prop);
+          if      (prop === 'status') activeStatus = val;
+          else if (prop === 'type')   activeType   = val;
+          else                        activeEffort = val;
           applyFilters();
         });
       }
@@ -400,6 +426,7 @@
 
     wireChips('statusChips', 'status');
     wireChips('typeChips',   'type');
+    wireChips('effortChips', 'effort');
 
     document.getElementById('searchBox').addEventListener('input', function () {
       searchText = this.value.trim().toLowerCase();

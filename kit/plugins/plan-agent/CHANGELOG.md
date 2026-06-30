@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.0 — Effort badge and filter in the plans gallery (2026-06-30)
+
+### Added
+
+- **Effort badge on plan cards** — the `plans-library` gallery now reads each plan's `<meta name="plan-effort">` tag and renders a colour-coded **Low / Medium / High** chip (green / amber / red) in the card badge row, alongside the existing status and type chips.
+- **Effort filter** — a new **Effort** chip row (All / Low / Medium / High) joins the status and type filters in the toolbar. Plans with no `plan-effort` tag render with no badge and pass every effort filter, so older plans are never hidden. `plans-gallery.html` carries the new chip styles, filter row, and `data-effort` filter logic; `SKILL.md` Step 4 parses `plan-effort` and emits `data-effort` plus the conditional badge.
+
 ## 2.11.0 — Auto-derived effort level on plan HTML (2026-06-30)
 
 ### Added
