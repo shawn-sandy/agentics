@@ -1,20 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-status="{status}" data-effort="{effort}">
+<html lang="en" data-status="completed">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="{status}">
-<meta name="plan-effort" content="{effort}">
-<meta name="plan-type" content="{type}">
-<meta name="plan-created" content="{created}">
-<meta name="plan-repo" content="{repo-name}">
-<meta name="plan-file" content="{plan-filename}">
-<meta name="plan-path" content="{plan-path}">
-<meta name="plan-implement" content="{implement-prompt}">
-<meta name="plan-goal" content="{goal-prompt}">
-<!-- Remove the next line entirely when {workflow-prompt} is empty -->
-<meta name="plan-workflow" content="{workflow-prompt}">
-<title>Plan: {title}</title>
+<meta name="plan-status" content="completed">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-30">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-effort-level-to-plan-html.html">
+<meta name="plan-path" content="docs/plans/add-effort-level-to-plan-html.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-effort-level-to-plan-html.html — Add an auto-derived Low/Medium/High effort level to plan HTML">
+<meta name="plan-goal" content="Achieve this goal: Add an auto-derived Low/Medium/High effort level to plan HTML. The plan at docs/plans/add-effort-level-to-plan-html.html describes one approach — use it as reference, but optimize for the outcome">
+<title>Plan: Add an effort level to implementation-plan HTML output</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -171,26 +168,6 @@
   [data-status="todo"]        .status-badge { background: #6b7280; }
   [data-status="in-progress"] .status-badge { background: #d97706; }
   [data-status="completed"]   .status-badge { background: #16a34a; }
-
-  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
-  .effort-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    padding: .25rem .75rem;
-    border-radius: 999px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    color: #fff;
-  }
-  .effort-badge::before { content: "Effort "; opacity: .7; }
-  [data-effort="low"]    .effort-badge { background: #16a34a; }
-  [data-effort="medium"] .effort-badge { background: #d97706; }
-  [data-effort="high"]   .effort-badge { background: #dc2626; }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -1239,30 +1216,25 @@ img, video { max-width: 100%; height: auto; }
     </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">{title}</h1>
+      <h1 class="plan-title">Add an effort level to implementation-plan HTML output</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="effort-badge" aria-label="Effort level">{effort}</span>
-        <span class="status-badge">{status}</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        {created}
+        2026-06-30
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        {repo-name}
+        agentics
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        {type}
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg>
-        {effort} effort
+        feature
       </span>
     </div>
   </div>
@@ -1280,8 +1252,6 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
       <!-- Keep the next link only if the Files section is kept; delete otherwise -->
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
@@ -1297,13 +1267,13 @@ img, video { max-width: 100%; height: auto; }
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>{objective}</p>
+      <p>Surface a Low/Medium/High effort level — auto-derived from each plan's size — as a color-coded badge, a header meta-row chip, and a <code>plan-effort</code> meta tag on every generated HTML plan, so a reader can gauge implementation cost at a glance before diving in.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-effort-level-to-plan-html.html — Add an auto-derived Low/Medium/High effort level to plan HTML</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1312,19 +1282,9 @@ img, video { max-width: 100%; height: auto; }
     <details class="plan-goal">
       <summary>Pursue as goal — optimize for the outcome</summary>
       <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">{goal-prompt}</code>
+        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Add an auto-derived Low/Medium/High effort level to plan HTML. The plan at docs/plans/add-effort-level-to-plan-html.html describes one approach — use it as reference, but optimize for the outcome</code>
         <button class="copy-goal-btn" type="button"
                 onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
-      </div>
-    </details>
-
-    <!-- ── Workflow prompt (remove entire details when {workflow-prompt} is empty) ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
     </details>
 
@@ -1332,13 +1292,13 @@ img, video { max-width: 100%; height: auto; }
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">{plan-filename}</code>
+        <code id="plan-file" aria-label="Plan file name">add-effort-level-to-plan-html.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">{plan-path}</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-effort-level-to-plan-html.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
@@ -1348,12 +1308,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / {criteria-count} done</span>
+        <span id="progress-label">6 / 6 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1363,7 +1323,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>{context}</p>
+      <p>plan-agent's generated HTML plans already expose <code>status</code>, <code>type</code>, <code>created</code>, and <code>repo</code> as header chips and <code>&lt;meta&gt;</code> tags, but nothing tells a reader how much work the plan represents before they commit to reading it. The skill even computes a complexity tier internally (short / medium / complex) during the Step 5b interview, yet that signal is thrown away. This plan surfaces it as an auto-derived <strong>Low / Medium / High</strong> effort level, reusing the exact pattern the status badge already uses — a <code>data-*</code> attribute on <code>&lt;html&gt;</code> driving a CSS-colored badge, paired with a visible chip and a machine-readable meta tag — so it ships with zero new JavaScript and no extra author input.</p>
     </section>
 
     <!-- ════════════════════════════════════════════════════════════
@@ -1380,68 +1340,18 @@ img, video { max-width: 100%; height: auto; }
         Files to Modify
       </h2>
       <div class="file-tree">
-        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> {repo-name}/</div>
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          {file-tree-rows}
-          <!-- Row template (duplicate as needed):
-          <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
-          Nest a directory with: <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/</li> followed by a child <ul class="file-list">…</ul> -->
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/implementation-plan/</li>
+          <ul class="file-list">
+            <li><code>reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">effort CSS, meta tag, header chip + badge</span></li>
+            <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">derivation rule + output requirements</span></li>
+          </ul>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.11.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version bump 2.10.1 → 2.11.0</span></li>
+          <li><code>tests/test-effort-level.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">smoke test for effort markup</span></li>
         </ul>
       </div>
-    </section>
-
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <!-- Flow / pipeline — remove if unused -->
-      <div class="diagram-subheading">{diagram-heading}</div>
-      <div class="pipeline">
-        {diagram-nodes}
-        <!-- Node + arrow template (duplicate; drop the trailing arrow on the last node):
-        <div class="pipeline-node"><div class="pipeline-label">Stage</div><code>label</code><div class="pipeline-sub">detail</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div> -->
-      </div>
-
-      <!-- Comparison grid — remove if unused -->
-      <div class="diagram-subheading">{compare-heading}</div>
-      <div class="compare-grid">
-        {compare-columns}
-        <!-- Column template (use compare-col-add | compare-col-neutral | compare-col-remove):
-        <div class="compare-col-add"><div class="compare-header">Title</div><ul class="compare-list"><li>item</li></ul></div> -->
-      </div>
-
-      <!-- Bar chart — remove if unused. role="img" + aria-label restates the data for screen readers -->
-      <div class="diagram-subheading">{chart-heading}</div>
-      <div class="bar-chart" role="img" aria-label="{chart-aria-label}">
-        {chart-rows}
-        <!-- Row template (set --val to a percent; show the real value in .bar-value):
-        <div class="bar-row"><span class="bar-label">label</span><span class="bar-track"><span class="bar-fill" style="--val:72%"></span></span><span class="bar-value">72%</span></div> -->
-      </div>
-
-      <!-- Data table — remove if unused. Keep <caption> and scope="col" for accessibility -->
-      <div class="diagram-subheading">{table-heading}</div>
-      <table class="plan-table">
-        <caption>{table-caption}</caption>
-        <thead>
-          <tr>{table-head-cells}<!-- <th scope="col">Column</th> --></tr>
-        </thead>
-        <tbody>
-          {table-rows}
-          <!-- Row template: <tr><td>cell</td><td>cell</td></tr> -->
-        </tbody>
-      </table>
     </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
@@ -1452,24 +1362,90 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">{step-1-action}</span>
+                <span class="step-chip-text">Add the effort badge, header chip, meta tag, and CSS to <code>SKELETON.html</code>.</span>
               </div>
-              <div class="step-why">{step-1-why}</div>
+              <div class="step-why"><strong>Why:</strong> Reuse the proven status-badge mechanism so effort is visually consistent and needs zero new JavaScript. Add a <code>data-effort</code> attribute to <code>&lt;html&gt;</code> (mirroring <code>data-status</code>), a <code>&lt;meta name="plan-effort" content="{effort}"&gt;</code> tag in <code>&lt;head&gt;</code>, an <code>.effort-badge</code> CSS rule with three color variants (<code>[data-effort="low"]</code> green, <code>medium</code> amber, <code>high</code> red), a visible badge in <code>.plan-header-actions</code> beside the status badge, and an effort chip in the <code>.plan-meta</code> row. Hide the badge in <code>@media print</code> only if it clutters the PDF — otherwise keep it.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">{step-1-verify}</div>
+                <div class="verify-body">Open <code>SKELETON.html</code> in a browser with <code>data-effort="high"</code> hard-set: the badge renders red and reads "High", and the meta-row chip shows the effort. Grep the file for <code>plan-effort</code>, <code>effort-badge</code>, and <code>data-effort</code> — all three present.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <!-- Duplicate the block above for each additional step -->
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Define the auto-derivation rule in <code>SKILL.md</code> Step 2 (Create).</span>
+              </div>
+              <div class="step-why"><strong>Why:</strong> Auto-derivation keeps effort objective and free — no author judgement, no new flag. Add a deterministic rule: score from step count, distinct files in the file-tree, and the Step 5b interview complexity tier, then map to <strong>Low</strong> (≤3 steps and ≤2 files), <strong>High</strong> (≥7 steps, or ≥6 files, or the "complex" tier), <strong>Medium</strong> otherwise. Store the result as the <code>{effort}</code> placeholder (capitalized label for display) and the <code>data-effort</code> value (lowercase).</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Re-read <code>SKILL.md</code> Step 2: the rule names all three buckets with explicit thresholds and states that both <code>{effort}</code> and the <code>data-effort</code> value derive from the same score. The interview step is referenced so the tier feeds in even when <code>--quick</code> skips it (fall back to step/file counts alone).</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Document <code>plan-effort</code> in <code>SKILL.md</code> Step 3 (Frontmatter) and HTML Output Requirements.</span>
+              </div>
+              <div class="step-why"><strong>Why:</strong> Keep the spec and the skeleton in lockstep so the agent always fills the new placeholder. List <code>&lt;meta name="plan-effort"&gt;</code> among the required meta tags in Step 3, and add a bullet to HTML Output Requirements describing the <code>data-effort</code> attribute, the badge, and the meta-row chip — modeled on the existing status-badge bullet.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Grep <code>SKILL.md</code> for <code>plan-effort</code> and <code>data-effort</code> — both appear in Step 3 and in HTML Output Requirements. The required-meta-tags sentence now lists effort alongside status/type/created.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Bump <code>plan-agent</code> to 2.11.0 and add a CHANGELOG entry.</span>
+              </div>
+              <div class="step-why"><strong>Why:</strong> A new visible feature is a MINOR bump per the project's semver rule. Edit the <code>plan-agent</code> <code>version</code> in <code>.claude-plugin/marketplace.json</code> from <code>2.10.1</code> to <code>2.11.0</code>, and add a top entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code> under an <code>### Added</code> heading describing the auto-derived effort level.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>grep -A1 '"name": "plan-agent"' .claude-plugin/marketplace.json</code> region shows <code>2.11.0</code>; <code>head</code> of the CHANGELOG shows the new 2.11.0 entry. The <code>.claude/settings.json</code> JSON-validation hook reports no errors after the edit.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add a smoke test at <code>tests/test-effort-level.sh</code>.</span>
+              </div>
+              <div class="step-why"><strong>Why:</strong> Lock the feature so a future skeleton edit can't silently drop it — mirrors the existing <code>tests/test-checkbox-portability.sh</code>. The test greps <code>SKELETON.html</code> and asserts it contains the <code>plan-effort</code> meta tag, the <code>.effort-badge</code> CSS rule, and a <code>data-effort</code> attribute. Make it executable and exit non-zero on any missing marker.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>bash tests/test-effort-level.sh</code> exits <code>0</code> against the updated skeleton. Temporarily remove the meta tag and confirm the test exits non-zero, then restore it.</div>
+              </details>
+            </div>
+          </div>
+        </div>
 
       </div>
     </section>
@@ -1480,36 +1456,35 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
-      <div class="test-tier-label">{test-tier-label}</div>
+      <div class="test-tier-label">Tier 1 — Code-touching plan</div>
 
       <!-- Objective-verification test — mandatory, always first -->
       <div class="objective-test-card">
         <div class="test-card-header">
           <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">{objective-test-title}</span>
+          <span class="test-card-title">A generated plan renders an auto-derived effort level</span>
         </div>
         <div class="test-card-body">
-          {objective-test-body}
+          <p><strong>File:</strong> <code>tests/test-effort-level.sh</code></p>
+          <p><strong>Type:</strong> smoke test (grep-based, no framework — matches the project's existing <code>test-checkbox-portability.sh</code>)</p>
+          <p><strong>Asserts:</strong> <code>SKELETON.html</code> contains a <code>&lt;meta name="plan-effort"&gt;</code> tag, an <code>.effort-badge</code> CSS rule, and a <code>data-effort</code> attribute on <code>&lt;html&gt;</code> — proving every generated plan carries a visible, machine-readable effort level.</p>
+          <p><strong>Run:</strong> <code>bash tests/test-effort-level.sh</code></p>
         </div>
       </div>
 
-      <!-- Tier 1 test sub-sections — omit entirely for Tier 2 plans -->
+      <!-- Tier 1 test sub-sections -->
       <div class="test-list">
-        {test-items}
-        <!-- Each test item uses this pattern:
         <div class="test-card">
           <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">{test-title}</span>
+            <span class="test-badge test-badge-integration">Integration</span>
+            <span class="test-card-title">Effort badge color tracks data-effort</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>{test-file-path}</code></p>
-            <p><strong>Targets:</strong> {test-targets}</p>
-            <p><strong>Key cases:</strong> {test-cases}</p>
+            <p><strong>File:</strong> <code>tests/test-effort-level.sh</code></p>
+            <p><strong>Targets:</strong> the <code>.effort-badge</code> CSS variants in <code>SKELETON.html</code></p>
+            <p><strong>Key cases:</strong> all three selectors (<code>[data-effort="low"]</code>, <code>medium</code>, <code>high</code>) are present so the rendered badge color always matches the derived level; missing any variant fails the test.</p>
           </div>
         </div>
-        Use test-badge-unit, test-badge-integration, or test-badge-e2e as appropriate.
-        For Tier 2, remove this entire .test-list container. -->
       </div>
     </section>
 
@@ -1521,14 +1496,29 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
-          <label for="ac1">{criterion-1}</label>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1">Every generated plan includes a <code>&lt;meta name="plan-effort" content="low|medium|high"&gt;</code> tag.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
-          <label for="ac2">{criterion-2}</label>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">The header shows a color-coded effort badge and an effort chip in the meta row.</label>
         </li>
-        <!-- Add more <li> items as needed -->
+        <li>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">Effort is auto-derived from plan size (steps + files + interview tier) with no new flag and no extra author prompt.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4">The <code>&lt;html data-effort="…"&gt;</code> attribute drives badge color via CSS — no new JavaScript.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5"><code>plan-agent</code> is version <code>2.11.0</code> in <code>marketplace.json</code> with a matching CHANGELOG entry.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6"><code>bash tests/test-effort-level.sh</code> passes against the updated skeleton.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1540,7 +1530,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>{end-to-end-verification}</p>
+      <p>Run <code>/plan-agent:implementation-plan</code> twice: once for a tiny objective (a one-file typo fix → expect <strong>Low</strong>) and once for a broad objective (a multi-domain refactor → expect <strong>High</strong>). Open both generated HTML files and confirm each renders the correct badge color, meta-row chip, and <code>plan-effort</code> meta tag, and that the <code>data-effort</code> attribute matches. Then run <code>bash tests/test-effort-level.sh</code> and confirm it exits <code>0</code>. Finally, confirm the existing test suite (<code>tests/test-checkbox-portability.sh</code> and any skeleton smoke tests) still passes — the effort additions must not regress current rendering.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1549,21 +1539,21 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1584,16 +1574,16 @@ img, video { max-width: 100%; height: auto; }
 
         <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>{next-step-1-label}</summary>
+          <summary>Surface effort in the plans-library gallery</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>{next-step-1-prompt}</pre>
+            <pre>Update the plan-agent plans-library skill and its gallery template so each plan card reads the plan-effort meta tag from the HTML and renders a small effort badge, and add an effort filter (Low/Medium/High) to the gallery toolbar alongside the existing status/type filters. Plans without a plan-effort tag should render with no badge and pass all filters. Bump plan-agent minor and add a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
+        <!-- Wish List (blue-sky / visionary items) -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
@@ -1601,12 +1591,12 @@ img, video { max-width: 100%; height: auto; }
 
         <details class="next-step-item wish-item">
           <summary>
-            {wish-1-label}
+            Show an effort estimate range (hours/days) per level
             <span class="wish-badge">Wish List</span>
           </summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>{wish-1-prompt}</pre>
+            <pre>Explore extending the plan-agent effort level beyond Low/Medium/High to an estimated time range (e.g. Low ≈ under 1h, Medium ≈ half a day, High ≈ multi-day). Investigate whether the derivation signals (step count, files touched, interview tier) are reliable enough to attach a defensible range, and propose how to render it without implying false precision. Recommend whether to ship it or keep the qualitative level only.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1615,31 +1605,9 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>{question-1-label}</summary>
-              <div class="unresolved-prompt">
-                <pre>{question-1-prompt}</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · {created} · {repo-name}
+      Generated by plan-agent · 2026-06-30 · agentics
     </footer>
 
   </main>
