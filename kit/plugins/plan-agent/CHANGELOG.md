@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.10.1 — Portable checkbox state via HTML attributes (2026-06-30)
+
+### Changed
+
+- **Checkbox state now travels with the file** — the `implementation-plan` skeleton no longer persists acceptance-criteria ticks to `localStorage`. The `checked` attribute on each criterion `<input>` (and the `.completed` class on each `.step-card`) is the single portable source of truth, written into the file by the agent. A plan renders its true completion state on first paint on any machine, in any browser, and in git — no per-browser storage layer to diverge from. `SKILL.md` Step 6 and the Step 8 gates now instruct the agent to mark by adding the `checked` attribute and unmark by removing it, and the HTML Output Requirements forbid `localStorage` for checkbox state.
+
+### Added
+
+- **Portability smoke test** — `tests/test-checkbox-portability.sh` plus `tests/fixtures/checkbox-portability/fixture.html` assert the skeleton carries no browser-storage APIs and that the fixture's `checked` attributes and `.completed` class live in the file on disk.
+
 ## 2.10.0 — Prototype from images and Figma designs (2026-06-29)
 
 ### Added

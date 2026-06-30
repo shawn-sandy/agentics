@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-status="in-progress">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="in-progress">
+<title>Fixture: checkbox portability</title>
+<!--
+  Minimal attribute-driven plan fixture for tests/test-checkbox-portability.sh.
+  State is carried entirely by the HTML: two of three criteria below have the
+  `checked` attribute, and one step has the `completed` class. No browser-only
+  storage — opening this file on any machine renders "2 / 3 done" / ~67% on
+  first paint.
+-->
+</head>
+<body>
+
+  <!-- Progress bar -->
+  <div class="progress-wrap" id="progress">
+    <span id="progress-label">0 / 3 done</span>
+    <div class="progress-bar-fill" id="progress-bar"
+         role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+         style="width:0%"></div>
+  </div>
+
+  <!-- One step, pre-marked done via the .completed class -->
+  <div class="steps-list">
+    <div class="step-card completed">
+      <div class="step-number">1</div>
+      <div class="step-action">A step whose completion travels in the file</div>
+    </div>
+  </div>
+
+  <!-- Acceptance criteria: two carry the `checked` attribute -->
+  <ul class="criteria-list" id="criteria-list">
+    <li>
+      <input type="checkbox" id="ac1" checked>
+      <label for="ac1">First criterion (pre-checked in the file)</label>
+    </li>
+    <li>
+      <input type="checkbox" id="ac2" checked>
+      <label for="ac2">Second criterion (pre-checked in the file)</label>
+    </li>
+    <li>
+      <input type="checkbox" id="ac3">
+      <label for="ac3">Third criterion (unchecked)</label>
+    </li>
+  </ul>
+  <span id="criteria-status" aria-live="polite" aria-atomic="true"
+        style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+
+  <!-- Completion checklist (computed-only, disabled) -->
+  <ul class="completion-list" id="completion-list">
+    <li><input type="checkbox" id="cc1" disabled><label for="cc1">All steps done</label></li>
+    <li><input type="checkbox" id="cc2" disabled><label for="cc2">All criteria checked</label></li>
+    <li><input type="checkbox" id="cc3" disabled><label for="cc3">Status completed</label></li>
+  </ul>
+  <div id="completion-checklist"></div>
+
+<script>
+/* Same attribute-driven IIFE as reference/SKELETON.html — no browser storage.
+   The `checked` attributes already in the markup are the single source of
+   truth; updateProgress() reads cb.checked on load so the bar reflects the
+   real count before any click. */
+(function () {
+  'use strict';
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+})();
+</script>
+</body>
+</html>
