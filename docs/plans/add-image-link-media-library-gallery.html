@@ -934,12 +934,12 @@ Switching between grid and list view still shows the link below each card in bot
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Update <code>gallery.html</code> — add <code>.gallery-card-wrap</code> and <code>.open-img-link</code> CSS; update <code>applyFilters()</code> JS to target <code>.gallery-card-wrap</code></span>
               </div>
               <div class="step-why">Each gallery card entry needs a thin wrapper div so the filter JS can show/hide both the card and the &quot;View image&quot; link together. Without a wrapper, hiding <code>.gallery-card</code> would leave orphaned links visible. Adding <code>.open-img-link</code> CSS gives the plain link a consistent visual treatment matching the dark-mode gallery theme.</div>
@@ -959,12 +959,12 @@ Switching between grid and list view still shows the link below each card in bot
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Update <code>SKILL.md</code> Step 3 — wrap each card entry in <code>&lt;div class="gallery-card-wrap"&gt;</code> and add a plain <code>&lt;a class="open-img-link"&gt;</code> below the card</span>
               </div>
               <div class="step-why">The SKILL.md Step 3 block is the exact HTML template the skill generates per card when it builds <code>docs/media/social/index.html</code>. Wrapping in <code>.gallery-card-wrap</code> and placing the image link as a sibling after <code>&lt;/a&gt;</code> (not inside it) keeps the HTML valid — no nested anchors — and no JS click handler is needed.</div>

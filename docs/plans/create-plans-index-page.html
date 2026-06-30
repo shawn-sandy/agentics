@@ -929,12 +929,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Audit existing <code>docs/plans/*.html</code> files to verify the meta-tag schema</span>
               </div>
               <div class="step-why">The card renderer reads five fields from each plan file (<code>plan-status</code>, <code>plan-type</code>, <code>plan-created</code>, <code>plan-repo</code>, <code>&lt;title&gt;</code>); gaps cause blank or broken cards. Knowing actual coverage first lets the build script apply correct fallback values.</div>
@@ -946,12 +946,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Write <code>docs/plans/build-index.sh</code> — the bash script that extracts meta tags and emits the embedded JSON block</span>
               </div>
               <div class="step-why">The build script is the data layer; defining it before the HTML template locks the data shape so the template can reference stable field names. Writing it first also makes the output testable in isolation.</div>
@@ -963,12 +963,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Build <code>docs/plans/index.html</code> — a single self-contained file with pre-rendered plan cards, status badges, and filter controls</span>
               </div>
               <div class="step-why">A pre-rendered, no-dependency static file opens at a <code>file://</code> URL without a server and stays consistent with plan-agent's single-file philosophy. Embedding JSON rather than hard-coding card HTML makes the build script output trivially diffable and the template reusable.</div>
@@ -980,12 +980,12 @@ Delete docs/plans/index.html , run bash docs/plans/build-index.sh from the repo 
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Surface the rebuild command visibly on the index page itself</span>
               </div>
               <div class="step-why">The pre-rendered approach only stays current if the rebuild command is discoverable; burying it in a README means it will be forgotten. Showing it directly on the page ensures anyone viewing the index can regenerate it without hunting for documentation.</div>
