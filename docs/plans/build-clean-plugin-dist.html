@@ -1580,35 +1580,35 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>scripts/build-dist.mjs</code> enumerates plugins from <code>marketplace.json</code> <code>plugins[]</code>; the 6 <code>removed[]</code> plugins never appear in <code>dist/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Each plugin in <code>dist/</code> contains only allowlisted files (manifest, component dirs, <code>hooks.json</code>, <code>templates/</code>, <code>README.md</code>, <code>CHANGELOG.md</code>) — no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, or session PNGs.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>dist/.claude-plugin/marketplace.json</code> rewrites every <code>source.url</code> to the distribution repo and omits the <code>removed[]</code> array.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code>dist/</code> root has a slim generated <code>README.md</code> with install instructions and a copied <code>LICENSE</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5"><code>node scripts/build-dist.mjs --check</code> exits 0 on a clean build and non-zero when a denylisted path leaks into <code>dist/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>.github/workflows/publish-dist.yml</code> rebuilds and publishes <code>dist/</code> to the distribution repo on <code>release: published</code> (and via <code>workflow_dispatch</code>).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">Installing a plugin from the distribution repo (<code>/plugin install &lt;name&gt;@agentics-kit</code>) yields a working plugin with no repo cruft.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>README.md</code> and <code>CLAUDE.md</code> document the build command, the strip rules, and the new install path.</label>
         </li>
       </ul>
@@ -1637,15 +1637,15 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

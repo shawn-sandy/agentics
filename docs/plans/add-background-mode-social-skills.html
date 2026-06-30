@@ -330,13 +330,13 @@ img, video { max-width: 100%; height: auto; }
   <div class="section-card">
     <h2>Acceptance Criteria</h2>
     <ul class="criteria-list" id="criteria-list">
-      <li><input type="checkbox" id="ac1"><label for="ac1">Every social-media-tools skill except <code>security-scrub</code> (intentionally a sub-step utility) can be run in the background.</label></li>
-      <li><input type="checkbox" id="ac2"><label for="ac2"><code>media-library</code> with <code>--background</code> writes a catalog to <code>.claude/digests/media-library-YYYY-MM-DD.md</code> and never calls <code>AskUserQuestion</code>.</label></li>
-      <li><input type="checkbox" id="ac3"><label for="ac3"><code>media-library</code> without <code>--background</code> still works interactively exactly as before.</label></li>
-      <li><input type="checkbox" id="ac4"><label for="ac4">The <code>social-share</code> router routes a "browse my saved posts" request to <code>media-library</code> in the background.</label></li>
-      <li><input type="checkbox" id="ac5"><label for="ac5"><code>references/non-interactive-mode.md</code> defines a generic <code>output=</code> completion line and documents the digest's own flags/line.</label></li>
-      <li><input type="checkbox" id="ac6"><label for="ac6">Plugin version is <code>1.1.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry; JSON validates.</label></li>
-      <li><input type="checkbox" id="ac7"><label for="ac7"><code>README.md</code> documents the full background capability and entry points.</label></li>
+      <li><input type="checkbox" id="ac1" checked><label for="ac1">Every social-media-tools skill except <code>security-scrub</code> (intentionally a sub-step utility) can be run in the background.</label></li>
+      <li><input type="checkbox" id="ac2" checked><label for="ac2"><code>media-library</code> with <code>--background</code> writes a catalog to <code>.claude/digests/media-library-YYYY-MM-DD.md</code> and never calls <code>AskUserQuestion</code>.</label></li>
+      <li><input type="checkbox" id="ac3" checked><label for="ac3"><code>media-library</code> without <code>--background</code> still works interactively exactly as before.</label></li>
+      <li><input type="checkbox" id="ac4" checked><label for="ac4">The <code>social-share</code> router routes a "browse my saved posts" request to <code>media-library</code> in the background.</label></li>
+      <li><input type="checkbox" id="ac5" checked><label for="ac5"><code>references/non-interactive-mode.md</code> defines a generic <code>output=</code> completion line and documents the digest's own flags/line.</label></li>
+      <li><input type="checkbox" id="ac6" checked><label for="ac6">Plugin version is <code>1.1.0</code> in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry; JSON validates.</label></li>
+      <li><input type="checkbox" id="ac7" checked><label for="ac7"><code>README.md</code> documents the full background capability and entry points.</label></li>
     </ul>
   </div>
 

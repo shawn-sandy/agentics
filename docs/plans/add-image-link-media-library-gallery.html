@@ -995,23 +995,23 @@ Switching between grid and list view still shows the link below each card in bot
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>gallery.html</code> has a <code>.gallery-card-wrap</code> CSS rule and a <code>.open-img-link</code> CSS rule.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The <code>applyFilters()</code> JS in <code>gallery.html</code> targets <code>.gallery-card-wrap</code> for show/hide, reading <code>data-type</code> and <code>data-topic</code> from the inner <code>.gallery-card</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>SKILL.md</code> Step 3 wraps each entry in <code>&lt;div class="gallery-card-wrap"&gt;</code> and places <code>&lt;a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener"&gt;View image&lt;/a&gt;</code> as a sibling after the card <code>&lt;/a&gt;</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">No nested <code>&lt;a&gt;</code> elements exist in the generated entry — the image link is a sibling of the card anchor, not a child.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">After running <code>/social-media-tools:media-library</code> to rebuild the gallery, each card shows a &quot;View image&quot; link below it; clicking it opens the <code>.png</code> in a new browser tab, and the card filter (type chips + search) still hides both the card and its link together.</label>
         </li>
       </ul>

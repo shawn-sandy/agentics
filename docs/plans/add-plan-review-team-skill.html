@@ -1529,18 +1529,18 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
         Acceptance Criteria
       </h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1"><code>skills/review-plan/SKILL.md</code> exists with a valid three-part description and <code>allowed-tools</code> including both <code>ToolSearch</code> and <code>ExitPlanMode</code>.</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2">Seven <code>plan-reviewer-*.md</code> agent definitions exist under <code>kit/plugins/plan-agent/agents/</code> (5 core + <code>ux</code> + <code>accessibility</code>), each with valid frontmatter whose <code>name</code> matches its filename.</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3"><code>references/role-prompts.md</code> contains seven lens-specific spawn prompts, each using the <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder, with the UX and accessibility prompts marked conditional.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4"><code>references/output-template.md</code> includes an "Inline Edits to Apply" table mapping findings to concrete HTML targets and actions.</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">SKILL.md hard-gates on <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and Claude Code ≥ 2.1.32 and does <em>not</em> fall back to single-session role-play.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The spawn step creates the five core <code>plan-reviewer-*</code> teammates in parallel (plus the two UI reviewers when UI signals are detected) and waits for all spawned teammates before synthesising.</label></li>
-        <li><input type="checkbox" id="ac11"><label for="ac11">UI-signal detection gates the UX and accessibility reviewers: a UI-bearing plan spawns 7 teammates, a backend/CLI plan spawns only the 5 core, and the skill announces which mode ran.</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">By default the skill updates the HTML plan in place (inline edits + appended "Team Review" <code>&lt;details&gt;</code>) and emits a <code>&lt;stem&gt;-review.html</code> artifact.</label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8">The integrate logic targets HTML structures (<code>.step-card</code>, <code>.verify-body</code>, <code>#criteria-list</code>, <code>.objective-card</code>) and never modifies the skeleton's <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code>.</label></li>
-        <li><input type="checkbox" id="ac9"><label for="ac9"><code>marketplace.json</code> bumps plan-agent to <code>1.9.0</code>; <code>CHANGELOG.md</code> and <code>README.md</code> document the new skill.</label></li>
-        <li><input type="checkbox" id="ac10"><label for="ac10"><code>validate-plugin plan-agent</code> passes and <code>marketplace.json</code> is valid JSON.</label></li>
-        <li><input type="checkbox" id="ac12"><label for="ac12">After a completed review run, no orphaned teammates remain — the team is fully cleaned up and a subsequent <code>/plan-agent:review-plan</code> on the same file starts a fresh team with no stale members.</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1"><code>skills/review-plan/SKILL.md</code> exists with a valid three-part description and <code>allowed-tools</code> including both <code>ToolSearch</code> and <code>ExitPlanMode</code>.</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2">Seven <code>plan-reviewer-*.md</code> agent definitions exist under <code>kit/plugins/plan-agent/agents/</code> (5 core + <code>ux</code> + <code>accessibility</code>), each with valid frontmatter whose <code>name</code> matches its filename.</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3"><code>references/role-prompts.md</code> contains seven lens-specific spawn prompts, each using the <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder, with the UX and accessibility prompts marked conditional.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4"><code>references/output-template.md</code> includes an "Inline Edits to Apply" table mapping findings to concrete HTML targets and actions.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">SKILL.md hard-gates on <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and Claude Code ≥ 2.1.32 and does <em>not</em> fall back to single-session role-play.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The spawn step creates the five core <code>plan-reviewer-*</code> teammates in parallel (plus the two UI reviewers when UI signals are detected) and waits for all spawned teammates before synthesising.</label></li>
+        <li><input type="checkbox" id="ac11" checked><label for="ac11">UI-signal detection gates the UX and accessibility reviewers: a UI-bearing plan spawns 7 teammates, a backend/CLI plan spawns only the 5 core, and the skill announces which mode ran.</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">By default the skill updates the HTML plan in place (inline edits + appended "Team Review" <code>&lt;details&gt;</code>) and emits a <code>&lt;stem&gt;-review.html</code> artifact.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8">The integrate logic targets HTML structures (<code>.step-card</code>, <code>.verify-body</code>, <code>#criteria-list</code>, <code>.objective-card</code>) and never modifies the skeleton's <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code>.</label></li>
+        <li><input type="checkbox" id="ac9" checked><label for="ac9"><code>marketplace.json</code> bumps plan-agent to <code>1.9.0</code>; <code>CHANGELOG.md</code> and <code>README.md</code> document the new skill.</label></li>
+        <li><input type="checkbox" id="ac10" checked><label for="ac10"><code>validate-plugin plan-agent</code> passes and <code>marketplace.json</code> is valid JSON.</label></li>
+        <li><input type="checkbox" id="ac12" checked><label for="ac12">After a completed review run, no orphaned teammates remain — the team is fully cleaned up and a subsequent <code>/plan-agent:review-plan</code> on the same file starts a fresh team with no stale members.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1570,15 +1570,15 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

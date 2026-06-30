@@ -780,19 +780,19 @@ Then verify routing: send "how does share-scan work" via social-share and confir
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>skills/explain-codebase/SKILL.md</code> exists with valid frontmatter (<code>name: explain-codebase</code>, description ≤200 chars, <code>allowed-tools</code>) and a body covering all five workflow phases.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Invoking the skill with &#34;how does the share-session skill work&#34; reads <code>skills/share-session/SKILL.md</code>, passes the security scrub gate, returns a structured explanation (Core Purpose, Workflow Phases, Key Patterns, Important Files, Invocation), drafts platform-aware copy, and delivers a populated <code>feature-card.html</code> screenshot PNG saved to <code>docs/media/social/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>social-share/SKILL.md</code> classification table routes &#34;explain&#34; / &#34;how does X work&#34; queries to <code>explain-codebase</code> before reaching any fallback rule.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code>marketplace.json</code> version is <code>2.6.0</code> and <code>CHANGELOG.md</code> has a matching <code>## [2.6.0]</code> entry with an <code>### Added</code> bullet for the new skill.</label>
         </li>
       </ul>

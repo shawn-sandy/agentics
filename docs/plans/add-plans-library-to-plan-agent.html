@@ -461,14 +461,14 @@ Regression: Re-run the skill and confirm index.html is regenerated (not duplicat
     <section class="section-card" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Acceptance Criteria</h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1"><code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> exists with valid frontmatter (<code>name</code>, two-sentence <code>description</code>, <code>allowed-tools</code>).</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2"><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> exists and is fully self-contained (no external CSS/JS/CDN).</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3">Running the skill against <code>docs/plans/</code> writes <code>docs/plans/index.html</code> with one card per HTML plan.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4">Each card shows title, status badge, type badge, and created date, and links to the plan file.</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">Status chips, type chips, and the search box all filter the visible cards in the browser.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The scan excludes <code>index.html</code> and never descends into <code>docs/plans/archive/</code>.</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">plan-agent is bumped to <code>0.11.0</code> in <code>marketplace.json</code> only; CHANGELOG and README document the new skill.</label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8"><code>create-plans-index-page.html</code> is marked superseded so it is not worked separately.</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1"><code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> exists with valid frontmatter (<code>name</code>, two-sentence <code>description</code>, <code>allowed-tools</code>).</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2"><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> exists and is fully self-contained (no external CSS/JS/CDN).</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3">Running the skill against <code>docs/plans/</code> writes <code>docs/plans/index.html</code> with one card per HTML plan.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4">Each card shows title, status badge, type badge, and created date, and links to the plan file.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">Status chips, type chips, and the search box all filter the visible cards in the browser.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The scan excludes <code>index.html</code> and never descends into <code>docs/plans/archive/</code>.</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">plan-agent is bumped to <code>0.11.0</code> in <code>marketplace.json</code> only; CHANGELOG and README document the new skill.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8"><code>create-plans-index-page.html</code> is marked superseded so it is not worked separately.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
