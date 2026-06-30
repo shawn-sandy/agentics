@@ -104,6 +104,7 @@ def get_title():
 print(json.dumps({
     'status':  meta('plan-status', 'todo'),
     'type':    meta('plan-type',   'untyped'),
+    'effort':  meta('plan-effort', '').lower(),
     'created': meta('plan-created', ''),
     'title':   get_title(),
 }))
@@ -115,10 +116,11 @@ Parse the JSON output with `json.loads()` into a list of entries. **Sort the lis
 
 ```html
 <a class="gallery-card" href="{BASENAME}"
-   data-status="{STATUS}" data-type="{TYPE}" data-title="{TITLE_LOWER}">
+   data-status="{STATUS}" data-type="{TYPE}" data-effort="{EFFORT}" data-title="{TITLE_LOWER}">
   <div class="card-badges">
     <span class="status-chip status-{STATUS}">{STATUS_DISPLAY}</span>
     <span class="type-chip type-{TYPE}">{TYPE}</span>
+    <span class="effort-chip effort-{EFFORT}">{EFFORT}</span>
   </div>
   <div class="card-title">{TITLE}</div>
   <div class="card-meta">
@@ -133,6 +135,7 @@ Where:
 - `{STATUS}` = `plan-status` value, lowercased (e.g. `todo`, `in-progress`, `completed`)
 - `{STATUS_DISPLAY}` = `{STATUS}` with hyphens replaced by spaces (e.g. `in progress`)
 - `{TYPE}` = `plan-type` value, lowercased (e.g. `feature`, `fix`)
+- `{EFFORT}` = `plan-effort` value, lowercased (`low` | `medium` | `high`). When empty (no `plan-effort` tag), set `data-effort=""` **and omit the entire `<span class="effort-chip …">` element** — a no-effort plan shows no badge and passes every effort filter
 - `{TITLE_LOWER}` = title lowercased (used by search filter)
 - `{TITLE}` = title text (strip a leading `"Plan: "` prefix if present)
 - `{CREATED}` = `plan-created` value (e.g. `2026-05-30`); omit the `<span class="card-date">` if empty

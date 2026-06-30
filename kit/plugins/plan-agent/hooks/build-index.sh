@@ -102,18 +102,21 @@ for f in plan_files:
         continue
     status   = get_meta(content, 'plan-status', 'todo')
     ptype    = get_meta(content, 'plan-type',   'untyped')
+    effort   = get_meta(content, 'plan-effort', '').lower()
     created  = get_meta(content, 'plan-created', '')
     title    = get_title(content, f)
     rel_path = os.path.relpath(f, plans_dir)
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
+    # No plan-effort tag → no badge; empty data-effort passes every effort filter.
+    effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-title="{e(html.unescape(title).lower())}">
+   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(html.unescape(title).lower())}">
   <div class="card-badges">
     <span class="status-chip status-{e(status)}">{e(status_display)}</span>
-    <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>
+    <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
   </div>
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
