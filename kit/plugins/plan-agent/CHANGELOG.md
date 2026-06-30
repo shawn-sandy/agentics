@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.11.0 — Auto-derived effort level on plan HTML (2026-06-30)
+
+### Added
+
+- **Effort level on every plan** — the `implementation-plan` skeleton now renders an auto-derived **Low / Medium / High** effort level as a colour-coded header badge (green / amber / red), a chip in the meta row, and a `<meta name="plan-effort">` tag. The level is derived deterministically in Step 2 from the plan's step count, distinct files touched, and the Step 5b interview complexity tier — no flag, no author input. Colour is driven by a `data-effort` attribute on `<html>` (mirroring `data-status`), so it ships with zero new JavaScript. `SKILL.md` Step 2/3 and the HTML Output Requirements document the new field; `tests/test-effort-level.sh` asserts the skeleton carries the meta tag, the `.effort-badge` CSS variants, and the `data-effort` attribute.
+
 ## 2.10.1 — Portable checkbox state via HTML attributes (2026-06-30)
 
 ### Changed
