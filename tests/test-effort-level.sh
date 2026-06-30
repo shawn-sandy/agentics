@@ -43,6 +43,18 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "4. data-effort and plan-effort use the lowercase {effort-value} placeholder..."
+# Guards against reusing the capitalised {effort} display label for the machine
+# value, which would emit data-effort="High" and miss the lowercase CSS selectors.
+if [ -f "$SKELETON" ] \
+  && grep -q 'data-effort="{effort-value}"' "$SKELETON" \
+  && grep -q '<meta name="plan-effort" content="{effort-value}"' "$SKELETON"; then
+  echo "  PASS"
+else
+  echo "  FAIL: data-effort / plan-effort must use {effort-value}, not the {effort} display label"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All checks passed."
