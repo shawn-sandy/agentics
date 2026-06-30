@@ -555,12 +555,12 @@ After editing the template and skill, regenerate the gallery to exercise the rea
       <h2 id="h-steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the shared <code>&lt;dialog id="imgDialog"&gt;</code> element and its CSS to the gallery template</span>
               </div>
               <div class="step-why">A single reusable dialog (image + close button) shared by every card is lighter than one per card. CSS styles the backdrop, centers and scales the image to fit the viewport, and styles an accessible close button. Gate any fade/scale transition behind <code>prefers-reduced-motion</code>.</div>
@@ -572,12 +572,12 @@ After editing the template and skill, regenerate the gallery to exercise the rea
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Wire up open/close behavior via event delegation in the template's existing <code>&lt;script&gt;</code></span>
               </div>
               <div class="step-why">Delegate <code>click</code> on the gallery for <code>.open-img-link</code> buttons: read <code>data-img</code> + <code>data-topic</code>, set <code>#imgDialogImg</code> <code>src</code>/<code>alt</code>, call <code>imgDialog.showModal()</code>. Close on the close button, on backdrop click (<code>e.target === dialog</code>), and natively on Escape. Native <code>&lt;dialog&gt;</code> restores focus to the trigger on close.</div>
@@ -589,12 +589,12 @@ After editing the template and skill, regenerate the gallery to exercise the rea
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Change the "View image" generation in <code>media-library/SKILL.md</code> from an anchor to a button</span>
               </div>
               <div class="step-why">Step 3 of the skill currently emits <code>&lt;a class="open-img-link" href="{BASENAME_PNG}" target="_blank" …&gt;</code>. Replace with <code>&lt;button type="button" class="open-img-link" data-img="{BASENAME_PNG}" data-topic="{TOPIC}" aria-label="View image: {TOPIC}"&gt;View image&lt;/button&gt;</code>. Keep the existing rule that the element is only emitted when a matching <code>.png</code> exists.</div>
@@ -606,12 +606,12 @@ After editing the template and skill, regenerate the gallery to exercise the rea
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Update <code>.open-img-link</code> CSS to style the button like the old link, and bump version + changelog</span>
               </div>
               <div class="step-why">The existing <code>.open-img-link</code> CSS targets an anchor; reset button defaults (<code>background:none; border:0; cursor:pointer; font:inherit; width:100%</code>) so the button keeps the same centered blue "View image" look. Then bump <code>social-media-tools</code> 2.8.0 → 2.9.0 in <code>.claude-plugin/marketplace.json</code> and add a <code>v2.9.0</code> entry to the plugin <code>CHANGELOG.md</code>.</div>
@@ -659,9 +659,9 @@ After editing the template and skill, regenerate the gallery to exercise the rea
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
-          <li><input type="checkbox" id="cc1" disabled><label for="cc1">All step TODOs marked as done</label></li>
-          <li><input type="checkbox" id="cc2" disabled><label for="cc2">All acceptance criteria verified and checked off</label></li>
-          <li><input type="checkbox" id="cc3" disabled><label for="cc3">Plan status updated to completed</label></li>
+          <li><input type="checkbox" id="cc1" disabled checked><label for="cc1">All step TODOs marked as done</label></li>
+          <li><input type="checkbox" id="cc2" disabled checked><label for="cc2">All acceptance criteria verified and checked off</label></li>
+          <li><input type="checkbox" id="cc3" disabled checked><label for="cc3">Plan status updated to completed</label></li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
@@ -790,11 +790,18 @@ function copyPrompt(btn) {
 
 (function () {
   'use strict';
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
-  var checkboxes = Array.prototype.slice.call(document.querySelectorAll('#criteria-list input[type="checkbox"]'));
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
   var total = checkboxes.length;
 
   function updateProgress() {
@@ -803,29 +810,24 @@ function copyPrompt(btn) {
     if (bar) {
       bar.style.width = pct + '%';
       bar.setAttribute('aria-valuenow', pct);
-      if (pct > 0) bar.classList.add('has-progress'); else bar.classList.remove('has-progress');
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
     }
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-  function restoreState() {
-    var raw; try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state; try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
+
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
-      updateProgress(); saveState();
-      if (liveRegion) { liveRegion.textContent = 'Criterion ' + (i + 1) + ' marked as ' + (cb.checked ? 'complete' : 'incomplete'); }
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
     });
   });
-  restoreState(); updateProgress();
+
+  updateProgress();
 
   var ccCheckboxes = Array.prototype.slice.call(document.querySelectorAll('#completion-list input[type="checkbox"]'));
   var completionCard = document.getElementById('completion-checklist');

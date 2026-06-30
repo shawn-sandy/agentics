@@ -389,66 +389,66 @@ Regression: Re-run the skill and confirm index.html is regenerated (not duplicat
       <h2 id="h-steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Create the <code>plans-gallery.html</code> template</span></div>
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Create the <code>plans-gallery.html</code> template</span></div>
               <div class="step-why">Presentation must live in a static template so the skill only substitutes data &mdash; the same separation media-library uses. Reuse the light-theme design tokens from <code>SKELETON.html</code> so the gallery matches the plans it indexes.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Open the template in a browser with placeholder rows hand-filled; confirm status chips (todo / in-progress / completed), type chips (feature / fix / refactor / docs / chore), a search box, and a card grid all render, and that the embedded JS filters cards by both <code>data-status</code> and <code>data-type</code> plus title search.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Define the gallery card markup &amp; placeholders</span></div>
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Define the gallery card markup &amp; placeholders</span></div>
               <div class="step-why">The card must surface exactly the fields plans carry: title, status badge, type badge, created date, and filename link &mdash; no PNG thumbnail (plans have no screenshots). Placeholders <code>{{GALLERY_ENTRIES}}</code>, <code>{{PLAN_COUNT}}</code>, <code>{{GENERATED_AT}}</code> mirror media-library&#39;s contract.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Each card is an <code>&lt;a href="{filename}"&gt;</code> with <code>data-status</code> and <code>data-type</code> attributes; clicking a card opens the underlying plan file via a relative link.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Write <code>SKILL.md</code> with the scan &rarr; parse &rarr; render &rarr; open workflow</span></div>
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Write <code>SKILL.md</code> with the scan &rarr; parse &rarr; render &rarr; open workflow</span></div>
               <div class="step-why">The skill is the only runtime artefact Claude loads; all imperative logic lives here. Model it on media-library&#39;s six-step structure, swapping in plan-specific parsing.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Frontmatter declares <code>name: plans-library</code>, a two-sentence description with a trigger phrase, and <code>allowed-tools: Bash, Read, Write, ToolSearch, ExitPlanMode</code>. Body covers: locate plans dir, scan <code>*.html</code> (exclude <code>index.html</code> and <code>archive/</code>), parse meta tags + title per file, build entries, substitute into template, write <code>index.html</code>, open in browser, then STOP.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Resolve the plans directory &amp; exclusions correctly</span></div>
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Resolve the plans directory &amp; exclusions correctly</span></div>
               <div class="step-why">plan-agent already resolves a plans dir (<code>plansDirectory</code> setting &rarr; <code>docs/plans/</code> &rarr; default). The library must scan that same directory, and must never include <code>docs/plans/archive/</code> (global + project search-exclusion rule) or the generated <code>index.html</code>.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Dry-run the scan command: it lists only top-level <code>docs/plans/*.html</code>, omits <code>index.html</code>, and does not descend into <code>archive/</code>. Plans missing a meta tag fall back gracefully (e.g. <code>plan-type</code> &rarr; <code>untyped</code>, title &rarr; filename).</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Register the skill: bump version &amp; update docs</span></div>
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Register the skill: bump version &amp; update docs</span></div>
               <div class="step-why">A new skill is a MINOR bump per the marketplace versioning table. Version lives only in <code>marketplace.json</code> for relative-path plugins; CHANGELOG, README, and plugin.json description keep the plugin self-documenting.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body"><code>marketplace.json</code> shows plan-agent <code>0.11.0</code>; <code>plugin.json</code> has no <code>version</code> field; CHANGELOG has a <code>0.11.0</code> entry; README lists <code>plans-library</code> under Features, the structure tree, and Components; the <code>.claude/settings.json</code> marketplace-JSON validator passes.</div></details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
-              <div class="step-action"><span class="step-chip">todo</span><span class="step-chip-text">Mark <code>create-plans-index-page.html</code> as superseded</span></div>
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Mark <code>create-plans-index-page.html</code> as superseded</span></div>
               <div class="step-why">The chosen direction supersedes the one-off index plan; leaving it as <code>todo</code> would invite duplicate work on a now-redundant approach.</div>
               <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">That plan&#39;s status is updated (both <code>&lt;html data-status&gt;</code> and the <code>plan-status</code> meta) with a one-line note pointing to this plan / the <code>plans-library</code> skill.</div></details>
             </div>
@@ -461,14 +461,14 @@ Regression: Re-run the skill and confirm index.html is regenerated (not duplicat
     <section class="section-card" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Acceptance Criteria</h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1"><code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> exists with valid frontmatter (<code>name</code>, two-sentence <code>description</code>, <code>allowed-tools</code>).</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2"><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> exists and is fully self-contained (no external CSS/JS/CDN).</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3">Running the skill against <code>docs/plans/</code> writes <code>docs/plans/index.html</code> with one card per HTML plan.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4">Each card shows title, status badge, type badge, and created date, and links to the plan file.</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">Status chips, type chips, and the search box all filter the visible cards in the browser.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The scan excludes <code>index.html</code> and never descends into <code>docs/plans/archive/</code>.</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">plan-agent is bumped to <code>0.11.0</code> in <code>marketplace.json</code> only; CHANGELOG and README document the new skill.</label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8"><code>create-plans-index-page.html</code> is marked superseded so it is not worked separately.</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1"><code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> exists with valid frontmatter (<code>name</code>, two-sentence <code>description</code>, <code>allowed-tools</code>).</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2"><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> exists and is fully self-contained (no external CSS/JS/CDN).</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3">Running the skill against <code>docs/plans/</code> writes <code>docs/plans/index.html</code> with one card per HTML plan.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4">Each card shows title, status badge, type badge, and created date, and links to the plan file.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">Status chips, type chips, and the search box all filter the visible cards in the browser.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The scan excludes <code>index.html</code> and never descends into <code>docs/plans/archive/</code>.</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">plan-agent is bumped to <code>0.11.0</code> in <code>marketplace.json</code> only; CHANGELOG and README document the new skill.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8"><code>create-plans-index-page.html</code> is marked superseded so it is not worked separately.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
@@ -575,26 +575,44 @@ function copyPrompt(btn) {
   var liveRegion = document.getElementById('criteria-status');
   var checkboxes = Array.prototype.slice.call(document.querySelectorAll('#criteria-list input[type="checkbox"]'));
   var total = checkboxes.length;
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
   function updateProgress() {
     var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
-    var pct = total ? Math.round(done / total * 100) : 0;
-    if (bar) { bar.style.width = pct + '%'; bar.setAttribute('aria-valuenow', pct); }
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
-  function saveState() { var s = {}; checkboxes.forEach(function (cb, i) { s[i] = cb.checked; }); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {} }
-  function restoreState() {
-    var raw; try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {} if (!raw) return;
-    var s; try { s = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (s[i]) cb.checked = true; }); updateProgress();
-  }
+
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
-      updateProgress(); saveState();
-      if (liveRegion) liveRegion.textContent = 'Criterion ' + (i + 1) + ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
     });
   });
-  restoreState(); updateProgress();
+
+  updateProgress();
 })();
 </script>
 <script>

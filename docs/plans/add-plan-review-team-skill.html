@@ -1335,12 +1335,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Scaffold the new directories under the plan-agent plugin</span>
               </div>
               <div class="step-why">Write tools require parent paths to exist, and <code>agents/</code> is brand-new to this plugin — create <code>kit/plugins/plan-agent/agents/</code> and <code>kit/plugins/plan-agent/skills/review-plan/references/</code> before authoring any files.</div>
@@ -1352,12 +1352,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Author the seven reviewer subagent definitions (5 core + 2 UI-conditional)</span>
               </div>
               <div class="step-why">Per the Agent Teams guide, defining each role as a reusable subagent (<code>agents/*.md</code>) lets it serve as both a delegated subagent and a team teammate — mirroring <code>product-plans</code>' six <code>product-reviewer-*.md</code> files. Each file needs frontmatter (<code>name</code> matching the filename, a third-person <code>description</code>, a restrictive <code>tools</code> allowlist of <code>Read, Glob, Grep, Bash</code>, and an explicit <code>model</code>) plus a body defining that lens's mandate for implementation plans. The five core lenses always run; the two UI lenses (<code>ux</code>, <code>accessibility</code>) are authored the same way but only spawned when UI signals are present (Step 6).</div>
@@ -1369,12 +1369,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Write references/role-prompts.md with seven lens-specific spawn prompts</span>
               </div>
               <div class="step-why">The lead briefs each teammate with a tailored spawn prompt carrying task-specific context (teammates do not inherit the lead's conversation). Each template uses a <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder for the resolved plan, tells the reviewer to read the HTML plan, apply its lens, and report findings back via <code>SendMessage</code> with severity ratings — keeping the heavy prose out of <code>SKILL.md</code> (progressive disclosure). Include all seven (five core + the two UI prompts); group the UX and accessibility prompts under a clearly-marked "conditional — UI plans only" heading so the lead knows they are spawned selectively.</div>
@@ -1386,12 +1386,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Write references/output-template.md (synthesis report + inline-edits table)</span>
               </div>
               <div class="step-why">A fixed synthesis template makes the lead's output deterministic. It must include an Executive Summary, Role-by-Role findings, an Agreements/Conflicts section, a Highest-Risk list, and — critically — an <strong>Inline Edits to Apply</strong> table whose rows map each accepted improvement to a concrete HTML target (e.g. <code>step-card #3 verify-body</code>, <code>#criteria-list append</code>, <code>objective-card</code>) plus an action (<code>edit</code> / <code>append</code> / <code>insert</code>). This table is what drives the in-place update in Step 6.</div>
@@ -1403,12 +1403,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Write skills/review-plan/SKILL.md — the team orchestration workflow</span>
               </div>
               <div class="step-why">This is the core. Frontmatter: <code>name: review-plan</code>, a three-part <code>description</code> (≤200 chars), and <code>allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, SendUserFile</code>. Body steps mirror <code>plan-review-agents</code>: (0) exit plan mode via <code>ToolSearch select:ExitPlanMode</code> then <code>ExitPlanMode</code>, treating "not in plan mode" as success; (1) resolve the HTML plan (<code>--dir</code> → <code>plansDirectory</code> → <code>docs/plans/</code> → newest <code>*.html</code> excluding <code>index.html</code>); (2) default to update-in-place + artifact; (3) gate on Agent Teams; (3b) detect UI signals; (4) spawn the team (5 core, +2 UI reviewers when signals present); (5) collect; (6) synthesise; (7) integrate; (8) emit artifact; (9) clean up.</div>
@@ -1420,12 +1420,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Specify the HTML-aware spawn and integrate logic inside SKILL.md</span>
               </div>
               <div class="step-why">The key adaptation from the Markdown-based sibling. (a) UI-signal detection: before spawning, scan the resolved plan's HTML (excluding <code>&lt;style&gt;</code>/<code>&lt;script&gt;</code>) for UI signals — references to React/Vue/Svelte/Angular, <code>.tsx</code>/<code>.jsx</code>/<code>.css</code>/<code>.html</code> file extensions, <code>className</code>/<code>style</code>/Tailwind, or UX terms (button, modal, form, dialog, dropdown, page, component) — reusing the <code>implementation-plan</code> interview UI-override heuristic. (b) Spawn step: a directive that creates the team and spawns the five core <code>plan-reviewer-*</code> subagent types in parallel, plus <code>plan-reviewer-ux</code> and <code>plan-reviewer-accessibility</code> when UI signals were detected; brief each with its <code>role-prompts.md</code> template (<code>&lt;ABSOLUTE_PATH&gt;</code> substituted via <code>realpath</code>), and wait for all spawned teammates before synthesis. Announce which mode ran (e.g. "UI signals detected — running 7 reviewers" vs "no UI signals — running 5 core reviewers"). (c) Integrate step: walk the synthesis "Inline Edits to Apply" table and apply one <code>Edit</code> per row against the HTML plan — targeting <code>.step-card</code> bodies, <code>.verify-body</code>, <code>#criteria-list</code> <code>&lt;li&gt;</code> items, <code>.objective-card</code>, and the Verification paragraph — HTML-escaping all inserted content, never touching <code>&lt;style&gt;</code> / <code>&lt;script&gt;</code>, and appending a collapsible <code>&lt;details&gt;</code> "Team Review (timestamp)" block before <code>&lt;/main&gt;</code>.</div>
@@ -1437,12 +1437,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Register the skill: bump version and update plugin descriptions</span>
               </div>
               <div class="step-why">A new skill is a MINOR bump per <code>marketplace.md</code>. In <code>.claude-plugin/marketplace.json</code> raise the <code>plan-agent</code> entry from <code>1.8.0</code> to <code>1.9.0</code> and extend its <code>description</code> to mention <code>review-plan</code>; update <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> description to match. Set <code>version</code> only in <code>marketplace.json</code>, never in <code>plugin.json</code>.</div>
@@ -1454,12 +1454,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Document the new skill in CHANGELOG.md and README.md</span>
               </div>
               <div class="step-why">Project convention requires a CHANGELOG entry and README update for any new component. Add a dated <code>1.9.0</code> CHANGELOG entry, and a README section documenting <code>/plan-agent:review-plan</code> — the five reviewer roles, the Agent Teams requirement, the enable flag, and the update-in-place default.</div>
@@ -1471,12 +1471,12 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Validate the plugin structure</span>
               </div>
               <div class="step-why">Catch frontmatter, JSON, and registration errors before commit. Run <code>/validate-plugin plan-agent</code> (or the bundled validation skill) and confirm the new skill and all seven agents parse (five core + two UI-conditional), the homepage URL is correct, and <code>marketplace.json</code> registration is intact.</div>
@@ -1529,18 +1529,18 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
         Acceptance Criteria
       </h2>
       <ul class="criteria-list" id="criteria-list">
-        <li><input type="checkbox" id="ac1"><label for="ac1"><code>skills/review-plan/SKILL.md</code> exists with a valid three-part description and <code>allowed-tools</code> including both <code>ToolSearch</code> and <code>ExitPlanMode</code>.</label></li>
-        <li><input type="checkbox" id="ac2"><label for="ac2">Seven <code>plan-reviewer-*.md</code> agent definitions exist under <code>kit/plugins/plan-agent/agents/</code> (5 core + <code>ux</code> + <code>accessibility</code>), each with valid frontmatter whose <code>name</code> matches its filename.</label></li>
-        <li><input type="checkbox" id="ac3"><label for="ac3"><code>references/role-prompts.md</code> contains seven lens-specific spawn prompts, each using the <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder, with the UX and accessibility prompts marked conditional.</label></li>
-        <li><input type="checkbox" id="ac4"><label for="ac4"><code>references/output-template.md</code> includes an "Inline Edits to Apply" table mapping findings to concrete HTML targets and actions.</label></li>
-        <li><input type="checkbox" id="ac5"><label for="ac5">SKILL.md hard-gates on <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and Claude Code ≥ 2.1.32 and does <em>not</em> fall back to single-session role-play.</label></li>
-        <li><input type="checkbox" id="ac6"><label for="ac6">The spawn step creates the five core <code>plan-reviewer-*</code> teammates in parallel (plus the two UI reviewers when UI signals are detected) and waits for all spawned teammates before synthesising.</label></li>
-        <li><input type="checkbox" id="ac11"><label for="ac11">UI-signal detection gates the UX and accessibility reviewers: a UI-bearing plan spawns 7 teammates, a backend/CLI plan spawns only the 5 core, and the skill announces which mode ran.</label></li>
-        <li><input type="checkbox" id="ac7"><label for="ac7">By default the skill updates the HTML plan in place (inline edits + appended "Team Review" <code>&lt;details&gt;</code>) and emits a <code>&lt;stem&gt;-review.html</code> artifact.</label></li>
-        <li><input type="checkbox" id="ac8"><label for="ac8">The integrate logic targets HTML structures (<code>.step-card</code>, <code>.verify-body</code>, <code>#criteria-list</code>, <code>.objective-card</code>) and never modifies the skeleton's <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code>.</label></li>
-        <li><input type="checkbox" id="ac9"><label for="ac9"><code>marketplace.json</code> bumps plan-agent to <code>1.9.0</code>; <code>CHANGELOG.md</code> and <code>README.md</code> document the new skill.</label></li>
-        <li><input type="checkbox" id="ac10"><label for="ac10"><code>validate-plugin plan-agent</code> passes and <code>marketplace.json</code> is valid JSON.</label></li>
-        <li><input type="checkbox" id="ac12"><label for="ac12">After a completed review run, no orphaned teammates remain — the team is fully cleaned up and a subsequent <code>/plan-agent:review-plan</code> on the same file starts a fresh team with no stale members.</label></li>
+        <li><input type="checkbox" id="ac1" checked><label for="ac1"><code>skills/review-plan/SKILL.md</code> exists with a valid three-part description and <code>allowed-tools</code> including both <code>ToolSearch</code> and <code>ExitPlanMode</code>.</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2">Seven <code>plan-reviewer-*.md</code> agent definitions exist under <code>kit/plugins/plan-agent/agents/</code> (5 core + <code>ux</code> + <code>accessibility</code>), each with valid frontmatter whose <code>name</code> matches its filename.</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3"><code>references/role-prompts.md</code> contains seven lens-specific spawn prompts, each using the <code>&lt;ABSOLUTE_PATH&gt;</code> placeholder, with the UX and accessibility prompts marked conditional.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4"><code>references/output-template.md</code> includes an "Inline Edits to Apply" table mapping findings to concrete HTML targets and actions.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">SKILL.md hard-gates on <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and Claude Code ≥ 2.1.32 and does <em>not</em> fall back to single-session role-play.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The spawn step creates the five core <code>plan-reviewer-*</code> teammates in parallel (plus the two UI reviewers when UI signals are detected) and waits for all spawned teammates before synthesising.</label></li>
+        <li><input type="checkbox" id="ac11" checked><label for="ac11">UI-signal detection gates the UX and accessibility reviewers: a UI-bearing plan spawns 7 teammates, a backend/CLI plan spawns only the 5 core, and the skill announces which mode ran.</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">By default the skill updates the HTML plan in place (inline edits + appended "Team Review" <code>&lt;details&gt;</code>) and emits a <code>&lt;stem&gt;-review.html</code> artifact.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8">The integrate logic targets HTML structures (<code>.step-card</code>, <code>.verify-body</code>, <code>#criteria-list</code>, <code>.objective-card</code>) and never modifies the skeleton's <code>&lt;style&gt;</code> or <code>&lt;script&gt;</code>.</label></li>
+        <li><input type="checkbox" id="ac9" checked><label for="ac9"><code>marketplace.json</code> bumps plan-agent to <code>1.9.0</code>; <code>CHANGELOG.md</code> and <code>README.md</code> document the new skill.</label></li>
+        <li><input type="checkbox" id="ac10" checked><label for="ac10"><code>validate-plugin plan-agent</code> passes and <code>marketplace.json</code> is valid JSON.</label></li>
+        <li><input type="checkbox" id="ac12" checked><label for="ac12">After a completed review run, no orphaned teammates remain — the team is fully cleaned up and a subsequent <code>/plan-agent:review-plan</code> on the same file starts a fresh team with no stale members.</label></li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1570,15 +1570,15 @@ Reusability: confirm each reviewer also works as a plain subagent by asking Clau
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1893,8 +1893,12 @@ function copyPrompt(btn) {
 (function () {
   'use strict';
 
-  /* ── Progress bar + localStorage ────────────────────────────── */
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1915,26 +1919,10 @@ function copyPrompt(btn) {
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
 
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function restoreState() {
-    var raw;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state;
-    try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
-
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
       updateProgress();
-      saveState();
       if (liveRegion) {
         liveRegion.textContent = 'Criterion ' + (i + 1) +
           ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
@@ -1942,7 +1930,6 @@ function copyPrompt(btn) {
     });
   });
 
-  restoreState();
   updateProgress();
 
   /* ── Completion checklist auto-update ──────────────────────── */

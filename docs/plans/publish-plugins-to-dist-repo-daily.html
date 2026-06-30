@@ -851,9 +851,9 @@ jobs:
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
-          <li><input type="checkbox" id="cc1" disabled><label for="cc1">All step TODOs marked as done</label></li>
-          <li><input type="checkbox" id="cc2" disabled><label for="cc2">All acceptance criteria verified and checked off</label></li>
-          <li><input type="checkbox" id="cc3" disabled><label for="cc3">Plan status updated to completed</label></li>
+          <li><input type="checkbox" id="cc1" disabled checked><label for="cc1">All step TODOs marked as done</label></li>
+          <li><input type="checkbox" id="cc2" disabled checked><label for="cc2">All acceptance criteria verified and checked off</label></li>
+          <li><input type="checkbox" id="cc3" disabled checked><label for="cc3">Plan status updated to completed</label></li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
@@ -976,22 +976,44 @@ function copyPrompt(btn) {
 }
 (function () {
   'use strict';
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
-  var bar = document.getElementById('progress-bar');
-  var label = document.getElementById('progress-label');
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
-  var checkboxes = Array.prototype.slice.call(document.querySelectorAll('#criteria-list input[type="checkbox"]'));
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
   var total = checkboxes.length;
+
   function updateProgress() {
     var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
-    var pct = total ? Math.round(done / total * 100) : 0;
-    if (bar) { bar.style.width = pct + '%'; bar.setAttribute('aria-valuenow', pct); if (pct > 0) bar.classList.add('has-progress'); else bar.classList.remove('has-progress'); }
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
-  function saveState() { var state = {}; checkboxes.forEach(function (cb, i) { state[i] = cb.checked; }); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
-  function restoreState() { var raw; try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {} if (!raw) return; var state; try { state = JSON.parse(raw); } catch (e) { return; } checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; }); updateProgress(); }
-  checkboxes.forEach(function (cb, i) { cb.addEventListener('change', function () { updateProgress(); saveState(); if (liveRegion) { liveRegion.textContent = 'Criterion ' + (i + 1) + ' marked as ' + (cb.checked ? 'complete' : 'incomplete'); } }); });
-  restoreState(); updateProgress();
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
   var ccCheckboxes = Array.prototype.slice.call(document.querySelectorAll('#completion-list input[type="checkbox"]'));
   var completionCard = document.getElementById('completion-checklist');
   function updateCompletion() {

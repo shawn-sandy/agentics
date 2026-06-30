@@ -931,12 +931,12 @@ Run the marketplace version check command from Step 4 and confirm it prints 2.4.
       <div class="steps-list">
 
         <!-- Step 1 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add <code>AskUserQuestion</code> to <code>allowed-tools</code> in <code>security-scrub/SKILL.md</code></span>
               </div>
               <div class="step-why">Declaring every tool the skill calls in <code>allowed-tools</code> prevents a mid-run permission prompt; without it the harness blocks execution until the user manually approves.</div>
@@ -949,12 +949,12 @@ Run the marketplace version check command from Step 4 and confirm it prints 2.4.
         </div>
 
         <!-- Step 2 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add Step 6 — User Gate to the <code>security-scrub</code> skill body with four result-driven branches</span>
               </div>
               <div class="step-why">The current five-step skill emits the SCRUB RESULT and exits, leaving callers responsible for gating. Centralizing the gate removes per-caller boilerplate and eliminates the risk that a future caller forgets to implement it.</div>
@@ -975,12 +975,12 @@ Run the marketplace version check command from Step 4 and confirm it prints 2.4.
         </div>
 
         <!-- Step 3 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Remove the redundant <code>AskUserQuestion</code> gate from <code>share-session/SKILL.md</code> Phase 2</span>
               </div>
               <div class="step-why"><code>share-session</code> already calls <code>security-scrub</code> via <code>Skill()</code>; with the gate now inside the skill, leaving it in <code>share-session</code> too would double-prompt the user on every scrub.</div>
@@ -993,12 +993,12 @@ Run the marketplace version check command from Step 4 and confirm it prints 2.4.
         </div>
 
         <!-- Step 4 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Bump <code>social-media-tools</code> to v2.4.0 in <code>.claude-plugin/marketplace.json</code> and add a CHANGELOG entry</span>
               </div>
               <div class="step-why">Adding behavior that affects all callers (the user gate now fires from inside the skill for every invocation) is a new capability — a MINOR bump per the versioning table in <code>.claude/rules/marketplace.md</code>. Current version is 2.3.2.</div>
@@ -1011,12 +1011,12 @@ Run the marketplace version check command from Step 4 and confirm it prints 2.4.
         </div>
 
         <!-- Step 5 -->
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Commit all changes in a single conventional commit referencing this plan</span>
               </div>
               <div class="step-why">Per repo conventions, plan files are committed alongside the plugin changes they describe; leaving them uncommitted requires a second prompt and breaks traceability.</div>
@@ -1039,31 +1039,31 @@ Run the marketplace version check command from Step 4 and confirm it prints 2.4.
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>AskUserQuestion</code> appears in <code>allowed-tools</code> of <code>security-scrub/SKILL.md</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Step 6 in <code>security-scrub/SKILL.md</code> auto-continues (no prompt) when SCRUB RESULT is PASS with no findings.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Step 6 presents <code>AskUserQuestion</code> (Continue / Cancel) when SCRUB RESULT is PASS with LOW findings.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Step 6 presents <code>AskUserQuestion</code> (Continue anyway / Cancel) with caution language when SCRUB RESULT is WARN.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Step 6 hard-stops with no Continue option when SCRUB RESULT or ALLOWLIST verdict is BLOCKED.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">The redundant <code>AskUserQuestion</code> gate is removed from <code>share-session/SKILL.md</code> Phase 2 (no double-prompt).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>social-media-tools</code> version in <code>marketplace.json</code> is 2.4.0 and CHANGELOG has a v2.4.0 entry.</label>
         </li>
       </ul>
@@ -1216,8 +1216,12 @@ function copyPrompt(btn) {
 (function () {
   'use strict';
 
-  /* ── Progress bar ───────────────────────────────────────────── */
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1238,26 +1242,10 @@ function copyPrompt(btn) {
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
 
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function restoreState() {
-    var raw;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state;
-    try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
-
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
       updateProgress();
-      saveState();
       if (liveRegion) {
         liveRegion.textContent = 'Criterion ' + (i + 1) +
           ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
@@ -1265,7 +1253,6 @@ function copyPrompt(btn) {
     });
   });
 
-  restoreState();
   updateProgress();
 
   /* ── Scroll rail ────────────────────────────────────────────── */

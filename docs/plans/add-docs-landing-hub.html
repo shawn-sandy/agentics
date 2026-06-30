@@ -1441,39 +1441,39 @@ Serve the docs directory as the site root — cd docs && python3 -m http.server 
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>docs/index.html</code> no longer contains a meta-refresh redirect; it renders a landing hub.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The hub links to the Plans gallery via the relative href <code>plans/index.html</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">The hub links to the Social Media gallery via the relative href <code>media/social/index.html</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The hub reuses the Plans gallery's light-theme tokens (<code>--bg #ffffff</code>, <code>--accent #2563eb</code>, <code>--radius 4px</code>) for visual parity.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">No link in <code>docs/index.html</code> uses an absolute path beginning with <code>/</code> — every link is relative and resolves under <code>/agentics/</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>.github/workflows/deploy-pages.yml</code> is unchanged.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">The page is self-contained (inline CSS, no external stylesheet or CDN) with a single <code>&lt;h1&gt;</code> and a <code>&lt;main&gt;</code> landmark.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">The hub includes a <code>&lt;a class="skip-link" href="#main"&gt;Skip to content&lt;/a&gt;</code> before <code>&lt;main&gt;</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9"><code>tests/pages/test-root-redirect.sh</code> no longer asserts a meta-refresh redirect (deleted or rewritten).</label>
         </li>
       </ul>
@@ -1502,15 +1502,15 @@ Serve the docs directory as the site root — cd docs && python3 -m http.server 
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1874,8 +1874,12 @@ function copyPrompt(btn) {
 (function () {
   'use strict';
 
-  /* ── Progress bar + localStorage ────────────────────────────── */
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1896,26 +1900,10 @@ function copyPrompt(btn) {
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
 
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function restoreState() {
-    var raw;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state;
-    try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
-
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
       updateProgress();
-      saveState();
       if (liveRegion) {
         liveRegion.textContent = 'Criterion ' + (i + 1) +
           ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
@@ -1923,7 +1911,6 @@ function copyPrompt(btn) {
     });
   });
 
-  restoreState();
   updateProgress();
 
   /* ── Completion checklist auto-update ──────────────────────── */

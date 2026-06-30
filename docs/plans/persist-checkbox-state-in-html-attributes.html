@@ -1125,7 +1125,7 @@ The decision (confirmed up front): make the HTML checked attribute the single, p
 ## Steps
 1. Strip the localStorage layer out of reference/SKELETON.html Why: Delete STORAGE_KEY , saveState() , restoreState() , the saveState() call inside the criteria change listener, and the restoreState() invocation; relabel the section comment from "Progress bar + localStorage" to "Progress bar — state from HTML attributes". Why: localStorage is per-browser and never written to the file, so it cannot carry state across machines or into git — removing it makes the HTML checked attribute the single source of truth with nothing to diverge from. Verify: grep -c -E 'localStorage|STORAGE_KEY|saveState|restoreState' reference/SKELETON.html returns 0 . The IIFE still defines updateProgress() and a change listener, but no persistence functions remain.
 2. Drive progress and completion from on-load attribute state in SKELETON.html Why: Confirm updateProgress() and updateCompletion() still run once on load, reading cb.checked (the native reflection of the HTML checked attribute) and the .step-card.completed classes; keep the live change listeners for in-browser feedback but with no persistence side effect. Why: with localStorage gone, the file's attributes and classes must be the only inputs to the progress bar and completion checklist so a freshly opened file on any machine renders the true state. Verify: Open tests/fixtures/checkbox-portability/fixture.html with two of three criteria carrying checked attributes: the progress label reads "2 / 3 done" and the bar fills to ~67% on first paint, before any click.
-3. Document HTML attributes as the portable source of truth in SKILL.md Why: Update Step 6 (Status) and the Step 8 acceptance-criteria and completion gates to state explicitly that marking a criterion means adding the checked attribute ( <input type="checkbox"> → <input type="checkbox" checked> ) and unmarking means removing it — an attribute edit, not a JS property toggle. Add a clause to the "readable without JavaScript" bullet under HTML Output Requirements naming the checked attribute as the portable source of truth and forbidding localStorage . Why: the agent is now the sole writer of canonical state, so the skill must instruct it to edit attributes consistently and prevent any future reintroduction of browser-only persistence. Verify: grep -n "checked" SKILL.md shows the add/remove-attribute guidance in Steps 6 and 8; the HTML Output Requirements bullet names the checked attribute as the source of truth and excludes localStorage .
+3. Document HTML attributes as the portable source of truth in SKILL.md Why: Update Step 6 (Status) and the Step 8 acceptance-criteria and completion gates to state explicitly that marking a criterion means adding the checked attribute ( <input type="checkbox" checked> → <input type="checkbox" checked> ) and unmarking means removing it — an attribute edit, not a JS property toggle. Add a clause to the "readable without JavaScript" bullet under HTML Output Requirements naming the checked attribute as the portable source of truth and forbidding localStorage . Why: the agent is now the sole writer of canonical state, so the skill must instruct it to edit attributes consistently and prevent any future reintroduction of browser-only persistence. Verify: grep -n "checked" SKILL.md shows the add/remove-attribute guidance in Steps 6 and 8; the HTML Output Requirements bullet names the checked attribute as the source of truth and excludes localStorage .
 4. Add a portability smoke test and fixture Why: Create tests/fixtures/checkbox-portability/fixture.html (a minimal plan with some criteria pre-marked via checked attributes and a step pre-marked via .completed ) and tests/test-checkbox-portability.sh that asserts (a) reference/SKELETON.html contains no localStorage , and (b) the fixture's checked attributes and .completed class are present in the file on disk. Why: locks in the portability guarantee so a later edit cannot silently reintroduce localStorage or break attribute-driven state. Follows the repo's shell-test convention (e.g. tests/pages/test-pages-smoke.sh ). Verify: bash tests/test-checkbox-portability.sh exits 0 ; temporarily re-adding localStorage to the skeleton makes it exit non-zero.
 5. Record the change in kit/plugins/plan-agent/CHANGELOG.md Why: Add a CHANGELOG entry describing the localStorage removal and the move to attribute-based, portable checkbox state. Why: repo convention requires a CHANGELOG entry plus a conventional-commit message ( refactor(kit/plugins/plan-agent): … ) so CI applies the correct version bump after merge. Verify: The top of CHANGELOG.md shows the new entry above prior entries; no version field in marketplace.json was hand-edited (CI owns bumps).
 
@@ -1350,7 +1350,7 @@ Generate a fresh plan from the updated skeleton, then have the agent mark one st
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Strip the <code>localStorage</code> layer out of <code>reference/SKELETON.html</code></span>
               </div>
               <div class="step-why">Delete <code>STORAGE_KEY</code>, <code>saveState()</code>, <code>restoreState()</code>, the <code>saveState()</code> call inside the criteria <code>change</code> listener, and the <code>restoreState()</code> invocation; relabel the section comment from "Progress bar + localStorage" to "Progress bar — state from HTML attributes". <strong>Why:</strong> <code>localStorage</code> is per-browser and never written to the file, so it cannot carry state across machines or into git — removing it makes the HTML <code>checked</code> attribute the single source of truth with nothing to diverge from.</div>
@@ -1367,7 +1367,7 @@ Generate a fresh plan from the updated skeleton, then have the agent mark one st
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Drive progress and completion from on-load attribute state in <code>SKELETON.html</code></span>
               </div>
               <div class="step-why">Confirm <code>updateProgress()</code> and <code>updateCompletion()</code> still run once on load, reading <code>cb.checked</code> (the native reflection of the HTML <code>checked</code> attribute) and the <code>.step-card.completed</code> classes; keep the live <code>change</code> listeners for in-browser feedback but with no persistence side effect. <strong>Why:</strong> with <code>localStorage</code> gone, the file's attributes and classes must be the only inputs to the progress bar and completion checklist so a freshly opened file on any machine renders the true state.</div>
@@ -1384,7 +1384,7 @@ Generate a fresh plan from the updated skeleton, then have the agent mark one st
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Document HTML attributes as the portable source of truth in <code>SKILL.md</code></span>
               </div>
               <div class="step-why">Update Step 6 (Status) and the Step 8 acceptance-criteria and completion gates to state explicitly that marking a criterion means <em>adding</em> the <code>checked</code> attribute (<code>&lt;input type="checkbox"&gt;</code> → <code>&lt;input type="checkbox" checked&gt;</code>) and unmarking means <em>removing</em> it — an attribute edit, not a JS property toggle. Add a clause to the "readable without JavaScript" bullet under HTML Output Requirements naming the <code>checked</code> attribute as the portable source of truth and forbidding <code>localStorage</code>. <strong>Why:</strong> the agent is now the sole writer of canonical state, so the skill must instruct it to edit attributes consistently and prevent any future reintroduction of browser-only persistence.</div>
@@ -1401,7 +1401,7 @@ Generate a fresh plan from the updated skeleton, then have the agent mark one st
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add a portability smoke test and fixture</span>
               </div>
               <div class="step-why">Create <code>tests/fixtures/checkbox-portability/fixture.html</code> (a minimal plan with some criteria pre-marked via <code>checked</code> attributes and a step pre-marked via <code>.completed</code>) and <code>tests/test-checkbox-portability.sh</code> that asserts (a) <code>reference/SKELETON.html</code> contains no <code>localStorage</code>, and (b) the fixture's <code>checked</code> attributes and <code>.completed</code> class are present in the file on disk. <strong>Why:</strong> locks in the portability guarantee so a later edit cannot silently reintroduce <code>localStorage</code> or break attribute-driven state. Follows the repo's shell-test convention (e.g. <code>tests/pages/test-pages-smoke.sh</code>).</div>
@@ -1418,7 +1418,7 @@ Generate a fresh plan from the updated skeleton, then have the agent mark one st
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">done</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Record the change in <code>kit/plugins/plan-agent/CHANGELOG.md</code></span>
               </div>
               <div class="step-why">Add a CHANGELOG entry describing the <code>localStorage</code> removal and the move to attribute-based, portable checkbox state. <strong>Why:</strong> repo convention requires a CHANGELOG entry plus a conventional-commit message (<code>refactor(kit/plugins/plan-agent): …</code>) so CI applies the correct version bump after merge.</div>
@@ -1543,15 +1543,15 @@ Generate a fresh plan from the updated skeleton, then have the agent mark one st
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled aria-description="Auto-computed from step state">
+            <input type="checkbox" id="cc1" disabled aria-description="Auto-computed from step state" checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled aria-description="Auto-computed from criteria state">
+            <input type="checkbox" id="cc2" disabled aria-description="Auto-computed from criteria state" checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled aria-description="Auto-computed from plan status">
+            <input type="checkbox" id="cc3" disabled aria-description="Auto-computed from plan status" checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

@@ -1294,7 +1294,7 @@ Graceful degradation: with Agent Teams disabled (unset CLAUDE_CODE_EXPERIMENTAL_
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add <code>Review the plan</code> to both Step 8 option lists in <code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code>.</span>
               </div>
               <div class="step-why">In the &quot;no workflow prompt&quot; list (currently 3 options) insert <code>Review the plan</code> between <code>Implement now</code> and <code>Edit the plan</code> → 4 options. In the &quot;workflow prompt exists&quot; list (already at the 4-option <code>AskUserQuestion</code> ceiling) replace <code>Edit the plan</code> with <code>Review the plan</code> → <code>Implement now</code> / <code>Run as workflow</code> / <code>Review the plan</code> / <code>Exit</code>. This is the adaptive-swap decision: the cap forbids a 5th option, so Edit yields its slot only when a workflow prompt is present.</div>
@@ -1311,7 +1311,7 @@ Graceful degradation: with Agent Teams disabled (unset CLAUDE_CODE_EXPERIMENTAL_
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add the <strong>&quot;If the user chooses <code>Review the plan</code>&quot;</strong> handler block to Step 8.</span>
               </div>
               <div class="step-why">Place it alongside the other choice handlers (after <code>Run as workflow</code>, before where <code>Edit the plan</code> would be). The handler must: (1) first ask a one-question <code>AskUserQuestion</code> sub-prompt — &quot;Run the review now, or dispatch it in the background?&quot; — with two options: <strong>(a) Run now (foreground)</strong> invokes the <code>review-plan</code> skill via the <code>Skill</code> tool — <code>Skill(skill: &quot;review-plan&quot;, args: &quot;&lt;plan path&gt;&quot;)</code> — passing the current plan&#39;s relative path (resolved when the plan was created) so review targets <em>this</em> plan instead of globbing; <strong>(b) Background</strong> invokes <code>Skill(skill: &quot;plan-agent:review-plan&quot;, args: &quot;&lt;plan path&gt; --background&quot;)</code> — the <code>--background</code> flag puts <code>review-plan</code> in detached mode so the team runs without blocking the session; (2) handle <code>review-plan</code>&#39;s hard-stop when Agent Teams are unavailable (Claude Code &lt; 2.1.32 or <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code> unset) — relay its guidance and return to the menu without error; (3) after a <strong>foreground</strong> run completes, re-render the now-updated plan in the browser via the Step 7 sub-steps, then loop back to Step 8 and ask again (mirroring the <code>Edit the plan</code> loop); after a <strong>background</strong> dispatch, return to the menu immediately and note the user can reopen the plan to see changes once the detached run finishes; (4) leave the plan <code>status</code> at <code>todo</code> across all three representations, because reviewing is not implementing.</div>
@@ -1328,7 +1328,7 @@ Graceful degradation: with Agent Teams disabled (unset CLAUDE_CODE_EXPERIMENTAL_
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Document the new option in <code>kit/plugins/plan-agent/README.md</code>.</span>
               </div>
               <div class="step-why">Update the <code>implementation-plan</code> skill section (near the Step 8 / next-action and &quot;Workflow prompt&quot; descriptions) to list the <code>Review the plan</code> exit option, state that it runs the <code>review-plan</code> team on the current plan (with a foreground-or-background choice), and note the adaptive-swap behavior (<code>Edit the plan</code> drops off the top menu when a workflow prompt is present). Project CLAUDE.md requires docs to be updated alongside plugin changes.</div>
@@ -1345,7 +1345,7 @@ Graceful degradation: with Agent Teams disabled (unset CLAUDE_CODE_EXPERIMENTAL_
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Add a <code>## 1.11.0</code> entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code>.</span>
               </div>
               <div class="step-why">Insert a new <code>## 1.11.0 — Review option in the plan exit step (2026-06-08)</code> section below the <code># Changelog</code> heading with an <code>### Added</code> bullet (the Step 8 <code>Review the plan</code> option that runs <code>review-plan</code> on the current plan, foreground or background) and a <code>### Changed</code> bullet (workflow-variant menu swaps out <code>Edit the plan</code> for <code>Review the plan</code> to stay within the 4-option limit). If the pending &quot;Unreleased — Add background mode to review-plan&quot; item ships in the same release, fold its bullet into 1.11.0; otherwise leave it untouched. <code>marketplace.md</code> requires a CHANGELOG entry for every plugin change.</div>
@@ -1362,7 +1362,7 @@ Graceful degradation: with Agent Teams disabled (unset CLAUDE_CODE_EXPERIMENTAL_
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Bump the <code>plan-agent</code> version in <code>.claude-plugin/marketplace.json</code> from <code>1.10.0</code> to <code>1.11.0</code>.</span>
               </div>
               <div class="step-why">A new skill option is a MINOR change per <code>.claude/rules/marketplace.md</code>. Set <code>version</code> only in <code>marketplace.json</code> — never add it to <code>plugin.json</code>. There is no CI auto-bump, so the value committed here is what ships. The <code>.claude/settings.json</code> post-edit hook validates <code>marketplace.json</code> JSON syntax automatically.</div>
@@ -1668,8 +1668,12 @@ function copyPrompt(btn) {
 (function () {
   'use strict';
 
-  /* ── Progress bar + localStorage ────────────────────────────── */
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1690,26 +1694,10 @@ function copyPrompt(btn) {
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
 
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function restoreState() {
-    var raw;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state;
-    try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
-
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
       updateProgress();
-      saveState();
       if (liveRegion) {
         liveRegion.textContent = 'Criterion ' + (i + 1) +
           ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
@@ -1717,7 +1705,6 @@ function copyPrompt(btn) {
     });
   });
 
-  restoreState();
   updateProgress();
 
   /* ── Completion checklist auto-update ──────────────────────── */

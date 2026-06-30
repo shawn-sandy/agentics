@@ -934,12 +934,12 @@ Switching between grid and list view still shows the link below each card in bot
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Update <code>gallery.html</code> — add <code>.gallery-card-wrap</code> and <code>.open-img-link</code> CSS; update <code>applyFilters()</code> JS to target <code>.gallery-card-wrap</code></span>
               </div>
               <div class="step-why">Each gallery card entry needs a thin wrapper div so the filter JS can show/hide both the card and the &quot;View image&quot; link together. Without a wrapper, hiding <code>.gallery-card</code> would leave orphaned links visible. Adding <code>.open-img-link</code> CSS gives the plain link a consistent visual treatment matching the dark-mode gallery theme.</div>
@@ -959,12 +959,12 @@ Switching between grid and list view still shows the link below each card in bot
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">completed</span>
                 <span class="step-chip-text">Update <code>SKILL.md</code> Step 3 — wrap each card entry in <code>&lt;div class="gallery-card-wrap"&gt;</code> and add a plain <code>&lt;a class="open-img-link"&gt;</code> below the card</span>
               </div>
               <div class="step-why">The SKILL.md Step 3 block is the exact HTML template the skill generates per card when it builds <code>docs/media/social/index.html</code>. Wrapping in <code>.gallery-card-wrap</code> and placing the image link as a sibling after <code>&lt;/a&gt;</code> (not inside it) keeps the HTML valid — no nested anchors — and no JS click handler is needed.</div>
@@ -995,23 +995,23 @@ Switching between grid and list view still shows the link below each card in bot
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code>gallery.html</code> has a <code>.gallery-card-wrap</code> CSS rule and a <code>.open-img-link</code> CSS rule.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The <code>applyFilters()</code> JS in <code>gallery.html</code> targets <code>.gallery-card-wrap</code> for show/hide, reading <code>data-type</code> and <code>data-topic</code> from the inner <code>.gallery-card</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code>SKILL.md</code> Step 3 wraps each entry in <code>&lt;div class="gallery-card-wrap"&gt;</code> and places <code>&lt;a class="open-img-link" href="{BASENAME_PNG}" target="_blank" rel="noopener"&gt;View image&lt;/a&gt;</code> as a sibling after the card <code>&lt;/a&gt;</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">No nested <code>&lt;a&gt;</code> elements exist in the generated entry — the image link is a sibling of the card anchor, not a child.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">After running <code>/social-media-tools:media-library</code> to rebuild the gallery, each card shows a &quot;View image&quot; link below it; clicking it opens the <code>.png</code> in a new browser tab, and the card filter (type chips + search) still hides both the card and its link together.</label>
         </li>
       </ul>
@@ -1183,8 +1183,12 @@ function copyPrompt(btn) {
 (function () {
   'use strict';
 
-  /* ── Progress bar + localStorage ────────────────────────────── */
-  var STORAGE_KEY = 'plan-steps-' + encodeURIComponent(document.title);
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1205,26 +1209,10 @@ function copyPrompt(btn) {
     if (label) label.textContent = done + ' / ' + total + ' done';
   }
 
-  function saveState() {
-    var state = {};
-    checkboxes.forEach(function (cb, i) { state[i] = cb.checked; });
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function restoreState() {
-    var raw;
-    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (!raw) return;
-    var state;
-    try { state = JSON.parse(raw); } catch (e) { return; }
-    checkboxes.forEach(function (cb, i) { if (state[i]) cb.checked = true; });
-    updateProgress();
-  }
-
   checkboxes.forEach(function (cb, i) {
     cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
       updateProgress();
-      saveState();
       if (liveRegion) {
         liveRegion.textContent = 'Criterion ' + (i + 1) +
           ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
@@ -1232,7 +1220,6 @@ function copyPrompt(btn) {
     });
   });
 
-  restoreState();
   updateProgress();
 
   /* ── Scroll rail ─────────────────────────────────────────────── */
