@@ -29,15 +29,16 @@ fi
 
 echo "2. Fixture criteria carry the checked attribute in the file..."
 if [ -f "$FIXTURE" ] \
-  && [ "$(grep -c 'type="checkbox" id="ac[12]" checked' "$FIXTURE")" -eq 2 ]; then
+  && grep -Eq '<input[^>]*(id="ac1"[^>]*checked|checked[^>]*id="ac1")[^>]*>' "$FIXTURE" \
+  && grep -Eq '<input[^>]*(id="ac2"[^>]*checked|checked[^>]*id="ac2")[^>]*>' "$FIXTURE"; then
   echo "  PASS"
 else
-  echo "  FAIL: fixture missing or does not carry exactly two pre-checked criteria"
+  echo "  FAIL: fixture missing or does not carry both pre-checked criteria (ac1, ac2)"
   FAILURES=$((FAILURES + 1))
 fi
 
 echo "3. Fixture step completion travels as the .completed class..."
-if [ -f "$FIXTURE" ] && grep -q 'step-card completed' "$FIXTURE"; then
+if [ -f "$FIXTURE" ] && grep -Eq 'class="[^"]*(step-card[^"]*completed|completed[^"]*step-card)[^"]*"' "$FIXTURE"; then
   echo "  PASS"
 else
   echo "  FAIL: fixture step is not pre-marked with the completed class"
