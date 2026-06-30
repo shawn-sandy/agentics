@@ -1036,9 +1036,9 @@ function copyPath(btn, id) {
   /* stays the single source of truth.                                 */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
-  var liveRegion = document.getElementById('criteria-status');
+  var liveRegion = document.getElementById('live-region');
   var checkboxes = Array.prototype.slice.call(
-    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+    document.querySelectorAll('.criteria-item input[type="checkbox"]')
   );
   var total = checkboxes.length;
 
