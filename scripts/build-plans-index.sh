@@ -89,7 +89,9 @@ def get_meta(content, name, fallback=''):
 
 def get_title(content, fname):
     m = re.search(r'<title>(?:Plan:\s*)?([^<]+)</title>', content, re.IGNORECASE)
-    return m.group(1).strip() if m else os.path.basename(fname)
+    # Unescape here so titles are plain text; e() escapes exactly once at render,
+    # keeping regeneration idempotent (no &amp;amp; drift).
+    return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
 def e(s):
     return html.escape(str(s))
@@ -113,7 +115,7 @@ for f in plan_files:
     effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(html.unescape(title).lower())}">
+   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(title.lower())}">
   <div class="card-badges">
     <span class="status-chip status-{e(status)}">{e(status_display)}</span>
     <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
