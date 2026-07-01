@@ -158,6 +158,10 @@
     .filter-chip[data-type="refactor"].active  { background: #7c3aed; border-color: #7c3aed; color: #fff; }
     .filter-chip[data-type="docs"].active      { background: #ea580c; border-color: #ea580c; color: #fff; }
     .filter-chip[data-type="chore"].active     { background: #0d9488; border-color: #0d9488; color: #fff; }
+    .filter-chip[data-effort="all"].active     { background: var(--text); border-color: var(--text); color: #fff; }
+    .filter-chip[data-effort="low"].active     { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .filter-chip[data-effort="medium"].active  { background: #d97706; border-color: #d97706; color: #fff; }
+    .filter-chip[data-effort="high"].active    { background: #dc2626; border-color: #dc2626; color: #fff; }
 
     /* ── Visible count ───────────────────────────────────────────── */
     .visible-count {
@@ -201,7 +205,7 @@
       gap: 5px;
     }
 
-    .status-chip, .type-chip {
+    .status-chip, .type-chip, .effort-chip {
       display: inline-block;
       font-size: 10px;
       font-weight: 700;
@@ -224,6 +228,12 @@
     .type-docs     { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
     .type-chore    { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
     .type-untyped  { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+
+    /* Effort colours — mirror the plan template's effort badge */
+    .effort-low    { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .effort-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .effort-high   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .effort-chip::before { content: "\2022\00a0"; opacity: .6; }
 
     .card-title {
       font-size: 14px;
@@ -335,11 +345,21 @@
     </div>
   </div>
 
+  <div class="filter-row" id="effortRow">
+    <span class="filter-row-label">Effort</span>
+    <div class="filter-chips" id="effortChips">
+      <button class="filter-chip active" data-effort="all" aria-pressed="true">All</button>
+      <button class="filter-chip" data-effort="low" aria-pressed="false">Low</button>
+      <button class="filter-chip" data-effort="medium" aria-pressed="false">Medium</button>
+      <button class="filter-chip" data-effort="high" aria-pressed="false">High</button>
+    </div>
+  </div>
+
   <div class="visible-count" id="visibleCount"></div>
 
   <div class="gallery-grid" id="galleryGrid">
     <a class="gallery-card" href="add-effort-level-to-plan-html.html"
-   data-status="completed" data-type="feature" data-title="add an effort level to implementation-plan html output">
+   data-status="completed" data-type="feature" data-effort="" data-title="add an effort level to implementation-plan html output">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -350,20 +370,8 @@
     <span class="card-file">add-effort-level-to-plan-html.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-prototype-generator-skill.html"
-   data-status="completed" data-type="feature" data-title="add a static-html prototype generator to plan-agent">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Add a static-HTML prototype generator to plan-agent</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-29</span>
-    <span class="card-file">add-prototype-generator-skill.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="add-plan-tts-playback.html"
-   data-status="todo" data-type="feature" data-title="vocalize plans with a native listen control">
+   data-status="todo" data-type="feature" data-effort="" data-title="vocalize plans with a native listen control">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -374,8 +382,20 @@
     <span class="card-file">add-plan-tts-playback.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-prototype-generator-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a static-html prototype generator to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a static-HTML prototype generator to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-29</span>
+    <span class="card-file">add-prototype-generator-skill.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="build-html-artifact-system.html"
-   data-status="todo" data-type="feature" data-title="build artifact-forge — an independent html artifact system">
+   data-status="todo" data-type="feature" data-effort="" data-title="build artifact-forge — an independent html artifact system">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -387,7 +407,7 @@
   </div>
 </a>
 <a class="gallery-card" href="extend-setup-sites-multi-host-publishing.html"
-   data-status="todo" data-type="feature" data-title="extend setup-sites to publish to netlify, vercel, and cloudflare">
+   data-status="todo" data-type="feature" data-effort="" data-title="extend setup-sites to publish to netlify, vercel, and cloudflare">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -399,9 +419,9 @@
   </div>
 </a>
 <a class="gallery-card" href="make-write-guide-output-dynamic.html"
-   data-status="todo" data-type="feature" data-title="make write-guide output dynamic">
+   data-status="completed" data-type="feature" data-effort="" data-title="make write-guide output dynamic">
   <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
+    <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
   </div>
   <div class="card-title">Make write-guide output dynamic</div>
@@ -411,7 +431,7 @@
   </div>
 </a>
 <a class="gallery-card" href="replace-plan-digest-with-extractor.html"
-   data-status="completed" data-type="refactor" data-title="replace the stored plan digest with a compute-on-read extractor">
+   data-status="completed" data-type="refactor" data-effort="" data-title="replace the stored plan digest with a compute-on-read extractor">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-refactor">refactor</span>
@@ -423,7 +443,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-ship-pages-skill.html"
-   data-status="todo" data-type="feature" data-title="add a ship-pages skill — one-command publish for plans &amp; media galleries">
+   data-status="todo" data-type="feature" data-effort="" data-title="add a ship-pages skill — one-command publish for plans &amp; media galleries">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -435,7 +455,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-build-proposal-skill.html"
-   data-status="completed" data-type="feature" data-title="add the build-proposal skill to plan-agent">
+   data-status="completed" data-type="feature" data-effort="" data-title="add the build-proposal skill to plan-agent">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -447,7 +467,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-md-plan-conversion-to-implementation-plan.html"
-   data-status="completed" data-type="feature" data-title="add markdown plan conversion to implementation-plan">
+   data-status="completed" data-type="feature" data-effort="" data-title="add markdown plan conversion to implementation-plan">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -459,7 +479,7 @@
   </div>
 </a>
 <a class="gallery-card" href="distribute-skills-via-skill-box-catalog.html"
-   data-status="todo" data-type="feature" data-title="distribute skills via a skill-box catalog (option 3)">
+   data-status="todo" data-type="feature" data-effort="" data-title="distribute skills via a skill-box catalog (option 3)">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -471,7 +491,7 @@
   </div>
 </a>
 <a class="gallery-card" href="port-pdf-export-button-to-plan-agent.html"
-   data-status="completed" data-type="feature" data-title="port the pdf export button to plan-agent plans">
+   data-status="completed" data-type="feature" data-effort="" data-title="port the pdf export button to plan-agent plans">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -483,7 +503,7 @@
   </div>
 </a>
 <a class="gallery-card" href="retrofit-responsive-plan-css.html"
-   data-status="completed" data-type="fix" data-title="retrofit responsive css into every html plan">
+   data-status="completed" data-type="fix" data-effort="" data-title="retrofit responsive css into every html plan">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-fix">fix</span>
@@ -495,7 +515,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-plans-index-merge-driver.html"
-   data-status="todo" data-type="fix" data-title="add merge driver for docs/plans/index.html">
+   data-status="todo" data-type="fix" data-effort="" data-title="add merge driver for docs/plans/index.html">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-fix">fix</span>
@@ -506,8 +526,20 @@
     <span class="card-file">add-plans-index-merge-driver.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-review-findings-walkthrough.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="walkthrough &amp; analysis of review-plan findings">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Walkthrough &amp; analysis of review-plan findings</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-10</span>
+    <span class="card-file">add-review-findings-walkthrough.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="embed-markdown-digest-in-html-plans.html"
-   data-status="completed" data-type="feature" data-title="embed a machine-readable markdown digest in every html plan">
+   data-status="completed" data-type="feature" data-effort="" data-title="embed a machine-readable markdown digest in every html plan">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -519,7 +551,7 @@
   </div>
 </a>
 <a class="gallery-card" href="fix-ship-autonomous-skill-chaining.html"
-   data-status="todo" data-type="fix" data-title="fix ship-autonomous skill chaining (claude-code#43809)">
+   data-status="todo" data-type="fix" data-effort="" data-title="fix ship-autonomous skill chaining (claude-code#43809)">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-fix">fix</span>
@@ -531,7 +563,7 @@
   </div>
 </a>
 <a class="gallery-card" href="replace-pipeline-with-uml-activity-diagram.html"
-   data-status="todo" data-type="refactor" data-title="replace the pipeline flow with a uml activity diagram">
+   data-status="todo" data-type="refactor" data-effort="" data-title="replace the pipeline flow with a uml activity diagram">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-refactor">refactor</span>
@@ -542,20 +574,8 @@
     <span class="card-file">replace-pipeline-with-uml-activity-diagram.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-review-findings-walkthrough.html"
-   data-status="completed" data-type="feature" data-title="walkthrough &amp; analysis of review-plan findings">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Walkthrough &amp; analysis of review-plan findings</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-10</span>
-    <span class="card-file">add-review-findings-walkthrough.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="add-share-react-skill.html"
-   data-status="completed" data-type="feature" data-title="add a share-react skill to social-media-tools">
+   data-status="completed" data-type="feature" data-effort="" data-title="add a share-react skill to social-media-tools">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -567,7 +587,7 @@
   </div>
 </a>
 <a class="gallery-card" href="build-guides-html-in-ci.html"
-   data-status="todo" data-type="feature" data-title="build browsable html for docs/guides in ci">
+   data-status="todo" data-type="feature" data-effort="" data-title="build browsable html for docs/guides in ci">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -578,20 +598,8 @@
     <span class="card-file">build-guides-html-in-ci.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-review-plan-option-to-exit-step.html"
-   data-status="completed" data-type="feature" data-title="add a &quot;review the plan&quot; option to the plan exit step">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Add a &quot;Review the plan&quot; option to the plan exit step</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-08</span>
-    <span class="card-file">add-review-plan-option-to-exit-step.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="add-multi-host-deploy-targets.html"
-   data-status="todo" data-type="feature" data-title="add multi-host deploy targets to docs-publisher">
+   data-status="todo" data-type="feature" data-effort="" data-title="add multi-host deploy targets to docs-publisher">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -602,8 +610,20 @@
     <span class="card-file">add-multi-host-deploy-targets.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-research-agent-team-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: add research agent team to implementation-plan skill">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span>
+    <span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Add Research Agent Team to implementation-plan skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">add-research-agent-team-review.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="add-research-agent-team.html"
-   data-status="todo" data-type="feature" data-title="add research agent team to implementation-plan skill">
+   data-status="todo" data-type="feature" data-effort="" data-title="add research agent team to implementation-plan skill">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -614,8 +634,20 @@
     <span class="card-file">add-research-agent-team.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-review-plan-option-to-exit-step.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a &quot;review the plan&quot; option to the plan exit step">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a &quot;Review the plan&quot; option to the plan exit step</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">add-review-plan-option-to-exit-step.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="create-docs-publishing-skills.html"
-   data-status="todo" data-type="feature" data-title="create docs publishing skills for plugin users">
+   data-status="todo" data-type="feature" data-effort="" data-title="create docs publishing skills for plugin users">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -627,7 +659,7 @@
   </div>
 </a>
 <a class="gallery-card" href="publish-plugins-to-dist-repo-daily.html"
-   data-status="completed" data-type="feature" data-title="publish plugin dist to agentics-kit daily">
+   data-status="completed" data-type="feature" data-effort="" data-title="publish plugin dist to agentics-kit daily">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -638,80 +670,8 @@
     <span class="card-file">publish-plugins-to-dist-repo-daily.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-research-agent-team-review.html"
-   data-status="todo" data-type="untyped" data-title="review: add research agent team to implementation-plan skill">
-  <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
-    <span class="type-chip type-untyped">untyped</span>
-  </div>
-  <div class="card-title">Review: Add Research Agent Team to implementation-plan skill</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-08</span>
-    <span class="card-file">add-research-agent-team-review.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="add-docs-landing-hub.html"
-   data-status="completed" data-type="feature" data-title="add a docs landing hub linking the plans and social galleries">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Add a docs landing hub linking the Plans and Social galleries</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-07</span>
-    <span class="card-file">add-docs-landing-hub.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="fix-version-bump-ruleset-bypass.html"
-   data-status="todo" data-type="fix" data-title="fix auto-version-bump via ruleset bypass">
-  <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
-    <span class="type-chip type-fix">fix</span>
-  </div>
-  <div class="card-title">Fix auto-version-bump via ruleset bypass</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-07</span>
-    <span class="card-file">fix-version-bump-ruleset-bypass.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="fix-review-plan-agent-frontmatter.html"
-   data-status="todo" data-type="fix" data-title="fix review-plan agent frontmatter and descriptions to match product-plans pattern">
-  <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
-    <span class="type-chip type-fix">fix</span>
-  </div>
-  <div class="card-title">Fix review-plan agent frontmatter and descriptions to match product-plans pattern</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-07</span>
-    <span class="card-file">fix-review-plan-agent-frontmatter.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="persist-checkbox-state-in-html-attributes.html"
-   data-status="completed" data-type="refactor" data-title="persist plan-html checkbox state in html attributes">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-refactor">refactor</span>
-  </div>
-  <div class="card-title">Persist plan-HTML checkbox state in HTML attributes</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-07</span>
-    <span class="card-file">persist-checkbox-state-in-html-attributes.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="publish-plans-to-github-pages.html"
-   data-status="completed" data-type="feature" data-title="publish html plans to github pages">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Publish HTML plans to GitHub Pages</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-07</span>
-    <span class="card-file">publish-plans-to-github-pages.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="add-docs-landing-hub-review.html"
-   data-status="todo" data-type="untyped" data-title="review: add a docs landing hub linking the plans and social galleries">
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: add a docs landing hub linking the plans and social galleries">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-untyped">untyped</span>
@@ -722,32 +682,20 @@
     <span class="card-file">add-docs-landing-hub-review.html</span>
   </div>
 </a>
-<a class="gallery-card" href="persist-checkbox-state-in-html-attributes-review.html"
-   data-status="todo" data-type="untyped" data-title="review: persist plan-html checkbox state in html attributes">
+<a class="gallery-card" href="add-docs-landing-hub.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a docs landing hub linking the plans and social galleries">
   <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
-    <span class="type-chip type-untyped">untyped</span>
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
   </div>
-  <div class="card-title">Review: Persist plan-HTML checkbox state in HTML attributes</div>
+  <div class="card-title">Add a docs landing hub linking the Plans and Social galleries</div>
   <div class="card-meta">
     <span class="card-date">2026-06-07</span>
-    <span class="card-file">persist-checkbox-state-in-html-attributes-review.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="publish-plans-to-github-pages-review.html"
-   data-status="todo" data-type="untyped" data-title="review: publish html plans to github pages">
-  <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
-    <span class="type-chip type-untyped">untyped</span>
-  </div>
-  <div class="card-title">Review: Publish HTML plans to GitHub Pages</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-07</span>
-    <span class="card-file">publish-plans-to-github-pages-review.html</span>
+    <span class="card-file">add-docs-landing-hub.html</span>
   </div>
 </a>
 <a class="gallery-card" href="add-plan-review-team-skill-review.html"
-   data-status="todo" data-type="untyped" data-title="team review — add a plan-review agent team skill to plan-agent">
+   data-status="todo" data-type="untyped" data-effort="" data-title="team review — add a plan-review agent team skill to plan-agent">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-untyped">untyped</span>
@@ -758,20 +706,80 @@
     <span class="card-file">add-plan-review-team-skill-review.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-plan-review-team-skill.html"
-   data-status="completed" data-type="feature" data-title="add a plan-review agent team skill to plan-agent">
+<a class="gallery-card" href="fix-review-plan-agent-frontmatter.html"
+   data-status="todo" data-type="fix" data-effort="" data-title="fix review-plan agent frontmatter and descriptions to match product-plans pattern">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span>
+    <span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Fix review-plan agent frontmatter and descriptions to match product-plans pattern</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">fix-review-plan-agent-frontmatter.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="fix-version-bump-ruleset-bypass.html"
+   data-status="todo" data-type="fix" data-effort="" data-title="fix auto-version-bump via ruleset bypass">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span>
+    <span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Fix auto-version-bump via ruleset bypass</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">fix-version-bump-ruleset-bypass.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="persist-checkbox-state-in-html-attributes-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: persist plan-html checkbox state in html attributes">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span>
+    <span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Persist plan-HTML checkbox state in HTML attributes</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">persist-checkbox-state-in-html-attributes-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="persist-checkbox-state-in-html-attributes.html"
+   data-status="completed" data-type="refactor" data-effort="" data-title="persist plan-html checkbox state in html attributes">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-refactor">refactor</span>
+  </div>
+  <div class="card-title">Persist plan-HTML checkbox state in HTML attributes</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">persist-checkbox-state-in-html-attributes.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="publish-plans-to-github-pages-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: publish html plans to github pages">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span>
+    <span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Publish HTML plans to GitHub Pages</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">publish-plans-to-github-pages-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="publish-plans-to-github-pages.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="publish html plans to github pages">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
   </div>
-  <div class="card-title">Add a plan-review Agent Team skill to plan-agent</div>
+  <div class="card-title">Publish HTML plans to GitHub Pages</div>
   <div class="card-meta">
-    <span class="card-date">2026-06-06</span>
-    <span class="card-file">add-plan-review-team-skill.html</span>
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">publish-plans-to-github-pages.html</span>
   </div>
 </a>
 <a class="gallery-card" href="add-markdown-plan-conversion.html"
-   data-status="todo" data-type="feature" data-title="add markdown-source conversion to the implementation-plan skill">
+   data-status="todo" data-type="feature" data-effort="" data-title="add markdown-source conversion to the implementation-plan skill">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -783,7 +791,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-pdf-export-to-html-plans.html"
-   data-status="completed" data-type="feature" data-title="add pdf export to html plans">
+   data-status="completed" data-type="feature" data-effort="" data-title="add pdf export to html plans">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -794,8 +802,20 @@
     <span class="card-file">add-pdf-export-to-html-plans.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-plan-review-team-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a plan-review agent team skill to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a plan-review Agent Team skill to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-06</span>
+    <span class="card-file">add-plan-review-team-skill.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="add-tests-section-to-plans.html"
-   data-status="completed" data-type="feature" data-title="add tests section to implementation plans">
+   data-status="completed" data-type="feature" data-effort="" data-title="add tests section to implementation plans">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -807,7 +827,7 @@
   </div>
 </a>
 <a class="gallery-card" href="publish-clean-main-from-develop-branch.html"
-   data-status="todo" data-type="feature" data-title="publish a clean main branch from a develop workspace">
+   data-status="todo" data-type="feature" data-effort="" data-title="publish a clean main branch from a develop workspace">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -819,7 +839,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-visual-components-to-plan-skill.html"
-   data-status="completed" data-type="feature" data-title="add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill">
+   data-status="completed" data-type="feature" data-effort="" data-title="add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -831,7 +851,7 @@
   </div>
 </a>
 <a class="gallery-card" href="build-clean-plugin-dist.html"
-   data-status="completed" data-type="feature" data-title="publish a clean plugin distribution repo">
+   data-status="completed" data-type="feature" data-effort="" data-title="publish a clean plugin distribution repo">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -843,7 +863,7 @@
   </div>
 </a>
 <a class="gallery-card" href="refine-social-copy-instructional.html"
-   data-status="completed" data-type="refactor" data-title="refine social-media-tools copy to teach, not just promote">
+   data-status="completed" data-type="refactor" data-effort="" data-title="refine social-media-tools copy to teach, not just promote">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-refactor">refactor</span>
@@ -855,7 +875,7 @@
   </div>
 </a>
 <a class="gallery-card" href="clean-up-docs-and-plans.html"
-   data-status="in-progress" data-type="chore" data-title="clean up and make docs/plans manageable">
+   data-status="in-progress" data-type="chore" data-effort="" data-title="clean up and make docs/plans manageable">
   <div class="card-badges">
     <span class="status-chip status-in-progress">in progress</span>
     <span class="type-chip type-chore">chore</span>
@@ -867,7 +887,7 @@
   </div>
 </a>
 <a class="gallery-card" href="convert-keeper-plans-to-html.html"
-   data-status="todo" data-type="chore" data-title="convert 24 keeper markdown plans to html and set up retention routine">
+   data-status="todo" data-type="chore" data-effort="" data-title="convert 24 keeper markdown plans to html and set up retention routine">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-chore">chore</span>
@@ -879,7 +899,7 @@
   </div>
 </a>
 <a class="gallery-card" href="create-prompt-refiner-skill.html"
-   data-status="completed" data-type="feature" data-title="create refine-prompt skill">
+   data-status="completed" data-type="feature" data-effort="" data-title="create refine-prompt skill">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -891,7 +911,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-codebase-explain-skill.html"
-   data-status="completed" data-type="feature" data-title="add explain-codebase skill to social-media-tools">
+   data-status="completed" data-type="feature" data-effort="" data-title="add explain-codebase skill to social-media-tools">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -902,20 +922,8 @@
     <span class="card-file">add-codebase-explain-skill.html</span>
   </div>
 </a>
-<a class="gallery-card" href="enable-model-invocation-for-implementation-plan.html"
-   data-status="completed" data-type="chore" data-title="make implementation-plan model-invocable without colliding with plan mode">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-chore">chore</span>
-  </div>
-  <div class="card-title">Make implementation-plan model-invocable without colliding with Plan Mode</div>
-  <div class="card-meta">
-    <span class="card-date">2026-06-03</span>
-    <span class="card-file">enable-model-invocation-for-implementation-plan.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="add-image-dialog-modal.html"
-   data-status="completed" data-type="feature" data-title="open gallery images in a native dialog modal">
+   data-status="completed" data-type="feature" data-effort="" data-title="open gallery images in a native dialog modal">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -926,8 +934,20 @@
     <span class="card-file">add-image-dialog-modal.html</span>
   </div>
 </a>
+<a class="gallery-card" href="enable-model-invocation-for-implementation-plan.html"
+   data-status="completed" data-type="chore" data-effort="" data-title="make implementation-plan model-invocable without colliding with plan mode">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-chore">chore</span>
+  </div>
+  <div class="card-title">Make implementation-plan model-invocable without colliding with Plan Mode</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-03</span>
+    <span class="card-file">enable-model-invocation-for-implementation-plan.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="add-image-link-media-library-gallery.html"
-   data-status="completed" data-type="feature" data-title="add &quot;view image&quot; link to media-library gallery cards">
+   data-status="completed" data-type="feature" data-effort="" data-title="add &quot;view image&quot; link to media-library gallery cards">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -939,7 +959,7 @@
   </div>
 </a>
 <a class="gallery-card" href="widen-social-card-templates-to-1024px.html"
-   data-status="completed" data-type="chore" data-title="widen social card templates to 1024px">
+   data-status="completed" data-type="chore" data-effort="" data-title="widen social card templates to 1024px">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-chore">chore</span>
@@ -951,7 +971,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-issue-ingestion-to-planning-skill.html"
-   data-status="completed" data-type="feature" data-title="add issue ingestion to /plan-agent:planning">
+   data-status="completed" data-type="feature" data-effort="" data-title="add issue ingestion to /plan-agent:planning">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -963,7 +983,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-security-scrub-user-gate.html"
-   data-status="completed" data-type="feature" data-title="add user gate to security-scrub skill">
+   data-status="completed" data-type="feature" data-effort="" data-title="add user gate to security-scrub skill">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -974,20 +994,8 @@
     <span class="card-file">add-security-scrub-user-gate.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-plans-library-to-plan-agent.html"
-   data-status="completed" data-type="feature" data-title="add plans-library skill to plan-agent">
-  <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Add plans-library Skill to plan-agent</div>
-  <div class="card-meta">
-    <span class="card-date">2026-05-30</span>
-    <span class="card-file">add-plans-library-to-plan-agent.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="add-hook-to-rebuild-plans-index.html"
-   data-status="todo" data-type="feature" data-title="add posttooluse hook to auto-rebuild the plans index">
+   data-status="todo" data-type="feature" data-effort="" data-title="add posttooluse hook to auto-rebuild the plans index">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -998,8 +1006,20 @@
     <span class="card-file">add-hook-to-rebuild-plans-index.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-plans-library-to-plan-agent.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add plans-library skill to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add plans-library Skill to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">add-plans-library-to-plan-agent.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="add-sample-widget.html"
-   data-status="todo" data-type="feature" data-title="add sample widget to dashboard">
+   data-status="todo" data-type="feature" data-effort="" data-title="add sample widget to dashboard">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
@@ -1010,20 +1030,8 @@
     <span class="card-file">add-sample-widget.html</span>
   </div>
 </a>
-<a class="gallery-card" href="sample-add-user-profile-page.html"
-   data-status="todo" data-type="feature" data-title="add user profile page with avatar upload">
-  <div class="card-badges">
-    <span class="status-chip status-todo">todo</span>
-    <span class="type-chip type-feature">feature</span>
-  </div>
-  <div class="card-title">Add user profile page with avatar upload</div>
-  <div class="card-meta">
-    <span class="card-date">2026-05-30</span>
-    <span class="card-file">sample-add-user-profile-page.html</span>
-  </div>
-</a>
 <a class="gallery-card" href="create-plans-index-page.html"
-   data-status="completed" data-type="feature" data-title="create plans index page">
+   data-status="completed" data-type="feature" data-effort="" data-title="create plans index page">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -1035,7 +1043,7 @@
   </div>
 </a>
 <a class="gallery-card" href="fix-planning-html-output.html"
-   data-status="completed" data-type="fix" data-title="fix planning skill html output">
+   data-status="completed" data-type="fix" data-effort="" data-title="fix planning skill html output">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-fix">fix</span>
@@ -1046,20 +1054,20 @@
     <span class="card-file">fix-planning-html-output.html</span>
   </div>
 </a>
-<a class="gallery-card" href="add-reinvoke-prompt-to-plan-output.html"
-   data-status="completed" data-type="feature" data-title="add re-invoke prompt to plan output">
+<a class="gallery-card" href="sample-add-user-profile-page.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add user profile page with avatar upload">
   <div class="card-badges">
-    <span class="status-chip status-completed">completed</span>
+    <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-feature">feature</span>
   </div>
-  <div class="card-title">Add re-invoke prompt to plan output</div>
+  <div class="card-title">Add user profile page with avatar upload</div>
   <div class="card-meta">
-    <span class="card-date">2026-05-28</span>
-    <span class="card-file">add-reinvoke-prompt-to-plan-output.html</span>
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">sample-add-user-profile-page.html</span>
   </div>
 </a>
 <a class="gallery-card" href="add-background-mode-social-skills.html"
-   data-status="completed" data-type="feature" data-title="close background-mode gaps for social-media-tools skills">
+   data-status="completed" data-type="feature" data-effort="" data-title="close background-mode gaps for social-media-tools skills">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span>
     <span class="type-chip type-feature">feature</span>
@@ -1070,8 +1078,20 @@
     <span class="card-file">add-background-mode-social-skills.html</span>
   </div>
 </a>
+<a class="gallery-card" href="add-reinvoke-prompt-to-plan-output.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add re-invoke prompt to plan output">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span>
+    <span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add re-invoke prompt to plan output</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-28</span>
+    <span class="card-file">add-reinvoke-prompt-to-plan-output.html</span>
+  </div>
+</a>
 <a class="gallery-card" href="add-rejection-remediation-prompt-review.html"
-   data-status="todo" data-type="untyped" data-title="add rejection remediation prompt to plan-review-agents">
+   data-status="todo" data-type="untyped" data-effort="" data-title="add rejection remediation prompt to plan-review-agents">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-untyped">untyped</span>
@@ -1083,7 +1103,7 @@
   </div>
 </a>
 <a class="gallery-card" href="rename-plan-to-html-to-markdown-to-html-review.html"
-   data-status="todo" data-type="untyped" data-title="rename plan-to-html → markdown-to-html — panel review">
+   data-status="todo" data-type="untyped" data-effort="" data-title="rename plan-to-html → markdown-to-html — panel review">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-untyped">untyped</span>
@@ -1095,7 +1115,7 @@
   </div>
 </a>
 <a class="gallery-card" href="add-html-output-to-plan-review-agents-review.html"
-   data-status="todo" data-type="untyped" data-title="emit self-contained html artifact from plan-review-agents">
+   data-status="todo" data-type="untyped" data-effort="" data-title="emit self-contained html artifact from plan-review-agents">
   <div class="card-badges">
     <span class="status-chip status-todo">todo</span>
     <span class="type-chip type-untyped">untyped</span>
@@ -1112,12 +1132,13 @@
 
   <div class="gallery-footer">
     <span>64 plans</span>
-    <span>Generated 2026-06-30 13:03</span>
+    <span>Generated 2026-07-01 18:21</span>
   </div>
 
   <script>
     var activeStatus = 'all';
     var activeType   = 'all';
+    var activeEffort = 'all';
     var searchText   = '';
     var grid         = document.getElementById('galleryGrid');
     var cards        = grid.querySelectorAll('.gallery-card');
@@ -1130,11 +1151,14 @@
         var card   = cards[i];
         var status = card.getAttribute('data-status') || '';
         var type   = card.getAttribute('data-type')   || '';
+        var effort = card.getAttribute('data-effort') || '';
         var title  = card.getAttribute('data-title')  || '';
         var matchStatus = activeStatus === 'all' || status === activeStatus;
         var matchType   = activeType   === 'all' || type   === activeType;
+        // Plans with no effort tag pass every effort filter.
+        var matchEffort = activeEffort === 'all' || effort === '' || effort === activeEffort;
         var matchSearch = !searchText  || title.indexOf(searchText) !== -1;
-        if (matchStatus && matchType && matchSearch) {
+        if (matchStatus && matchType && matchEffort && matchSearch) {
           card.style.display = '';
           shown++;
         } else {
@@ -1158,8 +1182,10 @@
           }
           this.classList.add('active');
           this.setAttribute('aria-pressed', 'true');
-          if (prop === 'status') activeStatus = this.getAttribute('data-status');
-          else                   activeType   = this.getAttribute('data-type');
+          var val = this.getAttribute('data-' + prop);
+          if      (prop === 'status') activeStatus = val;
+          else if (prop === 'type')   activeType   = val;
+          else                        activeEffort = val;
           applyFilters();
         });
       }
@@ -1167,6 +1193,7 @@
 
     wireChips('statusChips', 'status');
     wireChips('typeChips',   'type');
+    wireChips('effortChips', 'effort');
 
     document.getElementById('searchBox').addEventListener('input', function () {
       searchText = this.value.trim().toLowerCase();

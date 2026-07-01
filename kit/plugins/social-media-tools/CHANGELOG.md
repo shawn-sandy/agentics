@@ -1,5 +1,33 @@
 # Changelog — social-media-tools
 
+## v2.13.0 — 2026-07-01 — write-guide: dynamic output via section library and archetypes
+
+### Changed
+
+- **`write-guide` output is now topic-shaped, not template-shaped** — the fixed 12-section
+  skeleton is reframed as a section library (`references/skeleton.md`): the author assembles each
+  guide from it, adding, dropping, reordering, or blending sections to fit the topic. The enforced
+  contract is the invariant spine (provenance callout → body → Quick reference → Cross-references),
+  the six discipline rules, and a depth bar (≥1 verbatim-quoted primary source + ≥1 worked example
+  per guide) — never a fixed section sequence.
+- **Discovery surfaces reframed** — the root `CLAUDE.md` plugin table and this plugin's README no
+  longer advertise a "fixed 12-section skeleton"; both now describe the section library and
+  archetype starting points.
+
+### Added
+
+- **Five archetypes as non-binding starting points** (`references/exemplars.md`) —
+  `system-explainer` and `rule-deep-dive` (the original two, grounded in real exemplars) plus
+  `how-to` (task tutorial), `concept-explainer` (mental-model builder), and `change-recap`
+  (what changed and why). Each gives a suggested section set and a "what to steal" note, with
+  explicit permission to deviate; a per-archetype picker table with a most-specific-wins
+  starting-point heuristic replaces the old binary rule-vs-system choice.
+- **"Select a starting archetype" workflow step** in SKILL.md, between Structure and the
+  verification steps — pick the closest archetype, then assemble the body from the section
+  library; the archetype is a starting shape, not a contract.
+- **Change-recap boundary** — SKILL.md now routes plan-completion documentation to
+  `plan-interview:documenting-plans`; `change-recap` guides tell the story of a change for readers.
+
 ## v2.12.3 — 2026-06-27 — Order media library newest-first by card date, not mtime
 
 ### Fixed

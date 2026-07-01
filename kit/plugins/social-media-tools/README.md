@@ -30,7 +30,7 @@ No path in this plugin auto-posts — human review is always required before any
 | `media-library` | Skill | Browse saved posts interactively and retrieve copy for reposting |
 | `share-init` | Skill | Analyze the project and generate a `SOCIAL.md` config with default platform, tone (including Instructional / Educational), hashtags, focus areas, and audience |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
-| `write-guide` | Skill | Write a long-form internal developer guide (system, rule, concept, or saved memory) to `docs/` on a 12-section skeleton, verifying every URL and on-disk fact before it lands |
+| `write-guide` | Skill | Write a long-form internal developer guide (system, rule, how-to, concept, change recap, or saved memory) to `docs/`, assembled from a section library with five non-binding archetype starting points, verifying every URL and on-disk fact before it lands |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 
 ## Installation
