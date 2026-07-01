@@ -1,0 +1,49 @@
+name: Regenerate plans gallery
+
+# Rebuilds docs/plans/index.html from the plan HTML files whenever a plan
+# changes. The vendored builder (scripts/build-plans-index.sh) is a byte-for-byte
+# copy of plan-agent's build-index.sh hook, so it needs no plugin runtime in CI.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/plans/*.html'          # top-level plans
+      - 'docs/plans/**/*.html'       # plans in subdirectories
+      - '!docs/plans/index.html'     # the file we generate — never let it re-trigger us
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Serialize runs: this job pushes to the branch, so overlapping runs would race
+# on `git push` and leave the loser red with the index un-updated.
+concurrency:
+  group: regen-plans
+  cancel-in-progress: false
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate the gallery index
+        run: bash scripts/build-plans-index.sh "$GITHUB_WORKSPACE"
+
+      - name: Commit only if real card content changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/plans/index.html
+          # -I ignores the build-clock line ("Generated <date> ...") so a
+          # timestamp-only rebuild is treated as no change and skipped.
+          if git diff --cached --quiet -I'>Generated [0-9]'; then
+            echo "No card changes (timestamp-only or identical) — skipping commit."
+            git reset -q docs/plans/index.html
+          else
+            # No [skip ci]: a GITHUB_TOKEN push never triggers push-based
+            # workflows anyway (GitHub's loop-prevention), and [skip ci] would
+            # additionally suppress a downstream deploy if a PAT were ever used.
+            git commit -m "chore: regenerate plans gallery"
+            git push
+          fi
