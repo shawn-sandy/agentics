@@ -18,8 +18,9 @@ The builder is a self-contained `bash` + `python3` script — no plugin runtime,
 
 ```bash
 mkdir -p scripts
-# find the builder inside the installed plugin (path includes a version dir)
-src="$(find ~/.claude/plugins -path '*plan-agent*/hooks/build-index.sh' | sort | tail -1)"
+# find the builder inside the installed plugin (path includes a version dir;
+# sort -V so 10.0.0 sorts after 9.9.9, not before it)
+src="$(find ~/.claude/plugins -path '*plan-agent*/hooks/build-index.sh' | sort -V | tail -1)"
 cp "$src" scripts/build-plans-index.sh
 git add scripts/build-plans-index.sh
 git commit -m "chore: vendor plans-index builder for CI"
@@ -30,9 +31,11 @@ The copy is byte-for-byte identical to the plugin hook. That's deliberate: on a 
 The optional `templates/` directory the builder looks for degrades gracefully — if it's absent, cards render with a plain fallback. Copy it too only if the fallback looks too bare:
 
 ```bash
-# optional: fully-styled cards
-find ~/.claude/plugins -path '*plan-agent*/templates' -type d | sort | tail -1 \
-  | xargs -I{} cp -r {} scripts/plan-agent-templates
+# optional: fully-styled cards. The builder only discovers a directory literally
+# named `templates` with `plan-agent` somewhere in its path — so copy it to
+# scripts/plan-agent/templates, NOT scripts/plan-agent-templates.
+tdir="$(find ~/.claude/plugins -path '*plan-agent*/templates' -type d | sort -V | tail -1)"
+[ -n "$tdir" ] && mkdir -p scripts/plan-agent && cp -r "$tdir" scripts/plan-agent/templates
 ```
 
 ## 2. Add the workflow
@@ -46,12 +49,17 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/plans/**.html'
-      - '!docs/plans/index.html'   # the file we generate — never let it re-trigger us
+      - 'docs/plans/*.html'          # top-level plans
+      - 'docs/plans/**/*.html'       # plans in subdirectories
+      - '!docs/plans/index.html'     # the file we generate — never let it re-trigger us
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:                          # serialize: the job pushes, so runs must not race
+  group: regen-plans
+  cancel-in-progress: false
 
 jobs:
   regen:
@@ -69,7 +77,7 @@ jobs:
             echo "No card changes (timestamp-only or identical) — skipping commit."
             git reset -q docs/plans/index.html
           else
-            git commit -m "chore: regenerate plans gallery [skip ci]"
+            git commit -m "chore: regenerate plans gallery"
             git push
           fi
 ```
@@ -113,7 +121,17 @@ gh run watch
 
 ## Boundaries — what this does NOT do
 
-1. **It does not deploy.** Publishing `docs/` to a public URL is the separate Pages pipeline — see [Publishing Plans and Social Cards to GitHub Pages](publish-docs-to-github-pages.md). This workflow only keeps the *index* honest; the deploy workflow ships it. Run both and the chain is: push a plan → regenerate index → deploy.
+1. **It does not deploy — and its commit will not trigger a deploy.** Publishing `docs/` to a public URL is the separate Pages pipeline — see [Publishing Plans and Social Cards to GitHub Pages](publish-docs-to-github-pages.md). This workflow only keeps the *index* honest. Be aware of a GitHub subtlety: a commit pushed with the default `GITHUB_TOKEN` **does not trigger further push-based workflows** (built-in loop-prevention). So this job's regenerated-index commit will *not* auto-fire a push-triggered `deploy-pages.yml` — the human push that added the plan already ran the deploy, but against the *pre-regen* index. To publish the fresh index you have two options:
+
+   - **Trigger the deploy explicitly** from this workflow after the push (needs a `workflow_dispatch:` on the deploy workflow):
+     ```yaml
+     - name: Publish the regenerated gallery
+       if: <the commit step actually committed>
+       run: gh workflow run deploy-pages.yml --ref main
+       env:
+         GH_TOKEN: ${{ github.token }}
+     ```
+   - **Or regenerate inside the deploy workflow** instead of here — run `bash scripts/build-plans-index.sh "$GITHUB_WORKSPACE"` as a step in `deploy-pages.yml` before it uploads, so the artifact is always fresh and no cross-workflow trigger is needed. This is the simpler, race-free option if you already deploy from Actions.
 2. **It does not replace the local hook.** The `plan-agent` `PostToolUse` hook still rebuilds the gallery in your session — that's faster feedback. CI regeneration is the backstop for commits the hook never saw.
 3. **It does not regenerate the social-media gallery.** `docs/media/social/index.html` is built by the `media-library` skill and has no CI equivalent here.
 4. **It does not stay in sync automatically.** The vendored script drifts from the plugin on upgrades — re-run the `cp` from step 1 to refresh. If you'd rather never vendor, install the marketplace in a CI step and call the builder from the plugin path instead (more moving parts, always current).

@@ -7,12 +7,19 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/plans/**.html'
-      - '!docs/plans/index.html'   # the file we generate — never let it re-trigger us
+      - 'docs/plans/*.html'          # top-level plans
+      - 'docs/plans/**/*.html'       # plans in subdirectories
+      - '!docs/plans/index.html'     # the file we generate — never let it re-trigger us
   workflow_dispatch:
 
 permissions:
   contents: write
+
+# Serialize runs: this job pushes to the branch, so overlapping runs would race
+# on `git push` and leave the loser red with the index un-updated.
+concurrency:
+  group: regen-plans
+  cancel-in-progress: false
 
 jobs:
   regen:
@@ -34,6 +41,9 @@ jobs:
             echo "No card changes (timestamp-only or identical) — skipping commit."
             git reset -q docs/plans/index.html
           else
-            git commit -m "chore: regenerate plans gallery [skip ci]"
+            # No [skip ci]: a GITHUB_TOKEN push never triggers push-based
+            # workflows anyway (GitHub's loop-prevention), and [skip ci] would
+            # additionally suppress a downstream deploy if a PAT were ever used.
+            git commit -m "chore: regenerate plans gallery"
             git push
           fi
