@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.1 — Fix double-escaped titles in the plans gallery index (2026-07-01)
+
+### Fixed
+
+- **Idempotent title escaping in the gallery generator** — `hooks/build-index.sh` (and its vendored copy `scripts/build-plans-index.sh`) extracted card titles from each plan's `<title>` tag as already-encoded HTML and escaped them again on render, so titles containing entities (e.g. `&amp;`) came out as `&amp;amp;` on every regeneration (regressed in PR #362, previously hand-fixed in PR #241). `get_title` now unescapes on extraction so the pipeline holds plain text and `e()` escapes exactly once — regeneration is idempotent.
+
 ## 2.12.0 — Effort badge and filter in the plans gallery (2026-06-30)
 
 ### Added
