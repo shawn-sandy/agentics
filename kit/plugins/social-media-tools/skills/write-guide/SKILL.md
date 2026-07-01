@@ -9,9 +9,10 @@ allowed-tools: Read, Glob, Grep, Bash, WebFetch, WebSearch, Write, Edit, AskUser
 
 Write a long-form developer guide that explains any project topic in depth — systems, rules,
 concepts, tools, resources, plans, changes, or saved memories — for internal teammates or external
-contributors alike. The output is a single Markdown file in `<plansDirectory>/guides/`, built to a fixed 12-section
-skeleton and a strict tone, modeled on two canonical exemplars (a broad system explainer and a
-narrow single-rule deep-dive).
+contributors alike. The output is a single Markdown file in `<plansDirectory>/guides/`, assembled
+from a section library to fit the topic and written in a strict tone. Five archetypes (system
+explainer, rule deep-dive, how-to/tutorial, concept explainer, change recap) offer non-binding
+starting shapes.
 
 This is a writing skill with a verification spine: every external URL, file path, and quoted
 fact is checked against its source before it lands in the doc. A guide that ships an unverified
@@ -22,8 +23,9 @@ claim is a defect, not a draft.
 - One Markdown file saved to a `guides/` subfolder inside the configured `plansDirectory` (e.g.
   `docs/plans/guides/`), named in `verb-target` kebab-case — e.g. `explain-memory-recall.md`,
   `review-bot-loop-discipline.md`, never `guide.md`.
-- The file follows the 12-section skeleton in
-  `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md`.
+- The file's body is assembled from the section library in
+  `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md` — sections chosen, ordered,
+  and blended to fit the topic.
 - Concrete throughout: real file paths, verbatim frontmatter/configs/verdicts, cited numbers,
   ASCII diagrams for flows, tables for comparisons.
 
@@ -44,11 +46,12 @@ Invoke when the user says any of:
 Do not invoke for these — redirect instead:
 
 - **README updates** — suggest editing the existing `README.md` directly; do not produce a `docs/` guide.
-- **API reference docs** — these need a reference format (signatures, params, return types), not this narrative skeleton. Decline and say so.
+- **API reference docs** — these need a reference format (signatures, params, return types), not this narrative section library. Decline and say so.
 - **Marketing copy or press releases** — out of scope; this skill writes developer-facing guides, not promotional content.
 - **Blog posts** — use the `share-blog` skill instead.
 - **Status reports, leadership updates, incident comms** — use the `internal-comms` skill instead.
 - **Single-paragraph notes or commit messages** — too small for a guide; write the note inline.
+- **Plan-completion docs** — a change-recap guide tells the story of a change for readers; generating the canonical documentation for a completed plan file belongs to `plan-interview:documenting-plans`.
 
 If the request is ambiguous between a guide and one of the above, ask before drafting.
 
@@ -57,9 +60,9 @@ If the request is ambiguous between a guide and one of the above, ask before dra
 Read all three before drafting. They are the authoritative spec for structure, voice, and the
 style models — do not reconstruct them from memory:
 
-1. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md` — the 12-section template, verbatim. Every guide follows it.
+1. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/skeleton.md` — the section library: twelve documented section intents and devices to assemble a guide from. Pick what the topic needs.
 2. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/tone-rules.md` — tone rules and the mandatory discipline rules, each expanded with a worked example.
-3. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/exemplars.md` — synopsis of the two exemplar docs (broad explainer vs. single-rule deep-dive) and which to model for a given topic.
+3. `${CLAUDE_PLUGIN_ROOT}/skills/write-guide/references/exemplars.md` — five archetypes (system-explainer, rule-deep-dive, how-to, concept-explainer, change-recap), each a non-binding starting point, plus the picker for choosing one.
 
 ## Workflow
 
@@ -70,7 +73,7 @@ Follow these steps in order.
    self-evident — do not add friction to a well-specified ask.
 
 2. **Source.** Gather facts, in this priority order. Stop when you have enough to fill the
-   skeleton; do not over-collect.
+   sections the topic needs; do not over-collect.
    - Current conversation — if the topic was just discussed, the freshest source is here.
    - Files the user named — `Read` them in full.
    - Memory files — read them, but treat their contents as frozen-in-time (see discipline rule 3).
@@ -78,37 +81,51 @@ Follow these steps in order.
    - Code search — `Grep`/`Glob` for related symbols, configs, call sites.
    - External canonical docs — `WebFetch` only, verified URLs only (see discipline rule 1).
 
-3. **Structure.** Map what you gathered onto the 12-section skeleton. Decide per section whether it
+3. **Structure.** Map what you gathered onto the section library. Decide per section whether it
    genuinely applies. Omit the ones that do not — never emit an empty stub or a section padded with
    filler to look complete.
 
-4. **Verify externals.** Fan out `WebFetch` calls in parallel for every external URL you intend to
+4. **Select a starting archetype.** Pick the closest of the five archetypes in `exemplars.md` as a
+   starting point, then assemble the body from the section library to fit the topic — add, drop,
+   reorder, or blend sections freely. The archetype is a starting shape, not a contract; deviate
+   whenever the topic demands it.
+
+5. **Verify externals.** Fan out `WebFetch` calls in parallel for every external URL you intend to
    cite. Confirm each resolves (HTTP 200) and paste the canonical destination, not a redirector.
 
-5. **Verify on-disk.** `Read` or `Grep` every file path, function name, line number, and
+6. **Verify on-disk.** `Read` or `Grep` every file path, function name, line number, and
    frontmatter field before you cite it. A path that 404s or a function that was renamed is a
    defect.
 
-6. **Write.** Draft the doc applying every tone rule. Lead each major section as the skeleton
-   prescribes: bold thesis in §1, italic-blockquote diagnostic question in §6, paired do / do-NOT
-   in §7, numbered carve-outs in §8.
+7. **Write.** Draft the doc applying every tone rule. Where a library section appears, use its
+   device as the library prescribes: a bold thesis opening the rule/thesis section, an
+   italic-blockquote diagnostic question opening decision criteria, paired do / do-NOT in the
+   operational script, numbered carve-outs in boundaries.
 
-7. **Cross-link.** Point upward to canonical external docs and sideways to sibling internal docs
+8. **Cross-link.** Point upward to canonical external docs and sideways to sibling internal docs
    and relevant config files. Label per-user paths (`~/.claude/...`) and memory wikilinks
    (`[[name]]`) as per-user, not in this repo, whenever they appear (discipline rule 6).
 
-8. **Name.** Choose a `verb-target` kebab-case filename that names the topic. Reject generic names
+9. **Name.** Choose a `verb-target` kebab-case filename that names the topic. Reject generic names
    like `guide.md`, `doc.md`, `notes.md`.
 
-9. **Save.** Resolve the target directory in order: (1) `<plansDirectory>/guides/` if
+10. **Save.** Resolve the target directory in order: (1) `<plansDirectory>/guides/` if
    `plansDirectory` is configured — read it via Claude Code's settings precedence (project-local
    `.claude/settings.local.json` → project `.claude/settings.json` → global
    `~/.claude/settings.json`); (2) `docs/guides/` if that directory exists; (3) `docs/` at the
    repo root as a last fallback. Create the `guides/` subfolder if it does not exist. Honor an
    explicit user-specified path above all other resolution rules.
 
-10. **Confirm.** Return the saved file as a clickable Markdown link plus a one-paragraph summary of
-    what the doc covers and which exemplar archetype it follows.
+11. **Confirm.** Return the saved file as a clickable Markdown link plus a one-paragraph summary of
+    what the doc covers, which archetype it started from, and how the shape deviated (if it did).
+
+## Invariant spine (every guide)
+
+Whatever shape the body takes, every guide carries the same spine: a provenance callout
+(`> **Origin.**` or `> **Status.**`) up front, a body assembled from the section library, a closing
+Quick reference (ASCII), and a Cross-references list — held to the six discipline rules below. The
+enforced contract is this spine plus the depth bar (at least one verbatim-quoted primary source and
+at least one worked example per guide) — never any fixed section sequence.
 
 ## Discipline rules (mandatory)
 
@@ -135,7 +152,8 @@ Confirm all of the following before returning the file:
 
 - The filename is `verb-target` kebab-case, not generic.
 - The file opens with a title, a one-sentence subtitle, and a `> **Origin.**` (or `> **Status.**`) callout.
-- Every one of the 12 skeleton sections is either present and substantive, or deliberately omitted — no empty stubs.
+- Every section in the body earns its place: chosen from the section library because it fits the topic — no empty stubs, no section padded in to look complete, no section the topic needs missing.
+- The depth bar is met: at least one primary source is quoted verbatim and at least one worked example appears in the guide.
 - Every external URL was `WebFetch`-verified this session.
 - Every cited path / symbol / frontmatter field was `Read` or `Grep`-confirmed this session.
 - Primary sources are quoted verbatim, not paraphrased.

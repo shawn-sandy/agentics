@@ -1,15 +1,22 @@
-# Skeleton — the 12-section explainer template
+# Section library — the twelve sections guides are assembled from
 
-Every guide this skill produces follows the structure below. Copy it as the starting shape, then
-fill each section with verified, concrete content. **Omit a section only when it genuinely does not
-apply** — never leave an empty stub, and never pad a section with filler to look complete.
+Every guide this skill produces is assembled from the section library below: pick the sections the
+topic needs, add, drop, reorder, or blend them freely, then fill each chosen section with verified,
+concrete content. **Include a section only when it genuinely applies** — never leave an empty
+stub, and never pad a section in to look complete.
 
-The two exemplars map onto this skeleton exactly: a narrow single-rule deep-dive uses all twelve
-sections as written; a broad system explainer may rename §1–§6 toward "overview / what it is / why
-/ how it works / how it loads / the diagnostic question" and fold §7–§8 into an anti-patterns
-section. The section *intent* is fixed; the section *title* flexes to the topic.
+The archetypes in `exemplars.md` are suggested starting subsets of this library, not molds. A
+narrow rule deep-dive tends to use most sections close to how they are written here; broader or
+differently-shaped topics (systems, tutorials, concepts, change recaps) rename, merge, drop, and
+reorder sections to fit — e.g. renaming toward "overview / what it is / why / how it works" or
+folding the operational script and boundaries into an anti-patterns section. The section *intent*
+is stable; the section *title*, order, and presence flex to the topic.
 
-## The template (copy verbatim)
+## The library (a menu, not a required sequence)
+
+The numbers below are catalog ids for referring to sections, not a mandatory order or count. The
+opening frame (title, subtitle, provenance callout, table of contents) and the closing frame
+(Quick reference, Cross-references) appear in every guide; the numbered body sections are the menu.
 
 ````text
 # <Title>
