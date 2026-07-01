@@ -1104,6 +1104,7 @@
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
   .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
   .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-list li > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
@@ -1359,11 +1360,12 @@ img, video { max-width: 100%; height: auto; }
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 2.12.0 → 2.13.0</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
-          <ul class="file-list">
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.13.0 entry for depth + mode</span></li>
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document lite/full and execution modes</span></li>
-          </ul>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/
+            <ul class="file-list">
+              <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.13.0 entry for depth + mode</span></li>
+              <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document lite/full and execution modes</span></li>
+            </ul>
+          </li>
           <li><code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">depth axis, lite path, mode phase, delivery + save</span></li>
           <li><code>tests/plugins/test-refine-prompt-dynamic.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">smoke test for dynamic-output markers</span></li>
         </ul>
