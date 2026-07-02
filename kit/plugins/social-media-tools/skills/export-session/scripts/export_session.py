@@ -30,7 +30,11 @@ def main():
     src, outdir = Path(sys.argv[1]), Path(sys.argv[2])
 
     turns, session_id, first_ts, first_user = [], None, None, None
-    with src.open(encoding="utf-8") as f:
+    try:
+        f = src.open(encoding="utf-8")
+    except OSError as e:
+        sys.exit(f"Cannot read transcript {src}: {e.strerror or e}")
+    with f:
         for line in f:
             try:
                 rec = json.loads(line)
