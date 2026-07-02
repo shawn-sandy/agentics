@@ -2,7 +2,7 @@
 # Objective smoke test for the save-artifact skill.
 # Asserts the skill's documented copy logic lands a dated artifact under
 # ${CLAUDE_PLUGIN_ROOT}/artifacts and refuses to write when the var is unset.
-set -u
+set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILL="$ROOT/kit/plugins/social-media-tools/skills/save-artifact/SKILL.md"
