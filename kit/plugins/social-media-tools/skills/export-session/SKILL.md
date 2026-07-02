@@ -17,7 +17,7 @@ Convert a session JSONL transcript into a readable Markdown file under `{plansDi
    - Otherwise default to the most recent transcript for this project:
 
      ```bash
-     ls -t ~/.claude/projects/$(pwd | sed 's|[/.]|-|g')/*.jsonl | head -1
+     ls -t ~/.claude/projects/$(pwd | sed 's|[/.]|-|g')/*.jsonl 2>/dev/null | head -1
      ```
 
      If that directory doesn't exist (e.g. running from a worktree), list `~/.claude/projects/` and pick the entry matching the main repo path, then take its newest `.jsonl`.

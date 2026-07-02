@@ -30,48 +30,51 @@ def main():
     src, outdir = Path(sys.argv[1]), Path(sys.argv[2])
 
     turns, session_id, first_ts, first_user = [], None, None, None
-    for line in src.read_text().splitlines():
-        try:
-            rec = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        session_id = session_id or rec.get("sessionId")
-        first_ts = first_ts or rec.get("timestamp")
-        if rec.get("isSidechain") or rec.get("type") not in ("user", "assistant"):
-            continue
-        msg = rec.get("message") or {}
-        content = msg.get("content")
-        # skip tool_result-only user records
-        if isinstance(content, list) and all(
-            b.get("type") == "tool_result" for b in content
-        ):
-            continue
-        text = text_of(content)
-        # ponytail: prefix blocklist for harness-injected messages; extend if new tags appear
-        if not text or text.startswith(
-            ("<system-reminder>", "<command-", "<local-command-", "<task-notification")
-        ):
-            continue
-        role = "User" if rec["type"] == "user" else "Claude"
-        if role == "User" and first_user is None:
-            first_user = text
-        turns.append((role, text))
+    with src.open(encoding="utf-8") as f:
+        for line in f:
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            session_id = session_id or rec.get("sessionId")
+            first_ts = first_ts or rec.get("timestamp")
+            if rec.get("isSidechain") or rec.get("type") not in ("user", "assistant"):
+                continue
+            msg = rec.get("message") or {}
+            content = msg.get("content")
+            # skip tool_result-only user records
+            if isinstance(content, list) and all(
+                b.get("type") == "tool_result" for b in content
+            ):
+                continue
+            text = text_of(content)
+            # ponytail: prefix blocklist for harness-injected messages; extend if new tags appear
+            if not text or text.startswith(
+                ("<system-reminder>", "<command-", "<local-command-", "<task-notification")
+            ):
+                continue
+            role = "User" if rec["type"] == "user" else "Claude"
+            if role == "User" and first_user is None:
+                first_user = text
+            turns.append((role, text))
 
     if not turns:
         sys.exit(f"No conversation turns found in {src}")
 
+    session_id = session_id or src.stem
     date = (first_ts or datetime.now().isoformat())[:10]
     slug = re.sub(r"[^a-z0-9]+", "-", (first_user or "session").lower()).strip("-")
     slug = "-".join(slug.split("-")[:6]) or "session"
-    out = outdir / f"{date}-{slug}.md"
+    # short session-id suffix: collision-proof across sessions, idempotent per session
+    out = outdir / f"{date}-{slug}-{session_id[:8]}.md"
     outdir.mkdir(parents=True, exist_ok=True)
 
     title = (first_user or "Session export").splitlines()[0][:80]
     body = [
         "---",
-        f"session-id: {session_id or src.stem}",
+        f"session-id: {json.dumps(session_id)}",
         f"date: {date}",
-        f"source: {src}",
+        f"source: {json.dumps(str(src))}",
         "type: session-export",
         "---",
         "",
@@ -81,7 +84,7 @@ def main():
     for role, text in turns:
         body += [f"## {role}", "", text, ""]
 
-    out.write_text("\n".join(body))
+    out.write_text("\n".join(body), encoding="utf-8")
     print(out)
 
 
