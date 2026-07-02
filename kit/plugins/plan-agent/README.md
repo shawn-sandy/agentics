@@ -24,7 +24,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
-| `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html]` |
+| `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
 | `refine-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:refine-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
@@ -227,6 +227,7 @@ Reviews an HTML plan for codebase implementation evidence, verifies each accepta
 ```
 /plan-agent:finalize-plan add-dark-mode-toggle.html
 /plan-agent:finalize-plan
+/plan-agent:finalize-plan --all
 ```
 
 When invoked without arguments, prompts for the plan file. The skill:
@@ -235,6 +236,8 @@ When invoked without arguments, prompts for the plan file. The skill:
 3. Runs the objective-verification test (the `.objective-test-card` **Run** command) for an end-to-end pass/fail signal
 4. Presents a summary showing which criteria are verified vs unverified, plus the objective-test result
 5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
+
+**Sweep mode (`--all`)** finds plans that are implemented but never marked completed. It scans the plans directory for every plan carrying a `<meta name="plan-status">` tag whose value is `todo` or `in-progress` (non-plan HTML without the tag is ignored), runs the cheap token-evidence scan on each, and presents a candidate table — plans with 80%+ evidence are flagged as "done but not marked". One multi-select prompt picks which plans to finalize (plus a single criteria mode for the whole batch); full per-criterion verification and the objective test then run only on the selected plans before the status writes.
 
 #### `refine-prompt` — Manual invoke only
 
@@ -485,7 +488,7 @@ Usage:
 
 ### `finalize-plan` Skill
 
-Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:finalize-plan [plan-filename.html]`.
+Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:finalize-plan [plan-filename.html] [--all] [--dir <path>]`.
 
 Reviews an HTML plan for codebase implementation evidence with per-criterion verification:
 1. Reads the plan's acceptance criteria
@@ -495,6 +498,8 @@ Reviews an HTML plan for codebase implementation evidence with per-criterion ver
 5. Offers three completion options: check all, only auto-check verified, or cancel
 6. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
 7. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
+
+With `--all`, the skill runs in sweep mode: it discovers every non-completed plan in the plans directory (`grep -l` for a `plan-status` meta tag valued `todo` or `in-progress`, excluding `index.html` and `archive/`; HTML without the tag is never a candidate), scores each with the cheap token-evidence pass (non-interactive — token-less plans score 0% instead of prompting), batch-confirms via one multi-select prompt, then runs the full per-criterion verification, objective test, and status writes on the selected plans only.
 
 ### `plans-open` Skill
 

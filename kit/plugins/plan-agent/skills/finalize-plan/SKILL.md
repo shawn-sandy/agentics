@@ -1,8 +1,8 @@
 ---
 name: finalize-plan
-description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks every acceptance-criteria checkbox. Use via /plan-agent:finalize-plan."
+description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks every acceptance-criteria checkbox; --all sweeps for done-but-unmarked plans. Use via /plan-agent:finalize-plan."
 disable-model-invocation: true
-argument-hint: "[plan-filename.html] [--dir <path>]"
+argument-hint: "[plan-filename.html] [--all] [--dir <path>]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile
 ---
 
@@ -22,6 +22,7 @@ Mark a plan as done: inspect the codebase for implementation evidence, confirm w
 
 Parse `$ARGUMENTS`:
 
+0. If `$ARGUMENTS` contains `--all`, skip single-file resolution entirely and follow **Sweep mode (`--all`)** below. Sweep mode replaces the single-plan sequence of Steps 2–6 as the top-level flow, invoking those steps per candidate/selected plan as its S2 and S4 sub-steps direct.
 1. If `$ARGUMENTS` contains a token ending in `.html`, use that as the plan filename. Reduce to basename only (strip any leading path components). Resolve against these roots in order until the file is found:
    a. `--dir` value (if passed)
    b. `plansDirectory` via Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`
@@ -52,6 +53,63 @@ find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 \
 3. If no file is found, tell the user: `"No HTML plan found. Pass a filename: /plan-agent:finalize-plan my-plan.html"` and **STOP**.
 
 Announce: `"Reviewing plan for completion: <resolved-path>"`
+
+---
+
+## Sweep mode (`--all`)
+
+Find plans that are implemented but never marked completed, and finalize them in one batch. Reuses the single-plan steps below — only discovery, confirmation, and delivery differ.
+
+### S1 — Discover candidates
+
+Resolve `PLANS_DIR` exactly as in Step 1 (honor `--dir`, then the settings precedence, then `docs/plans/`). Then list every plan not yet marked completed:
+
+```bash
+candidates=$(
+  grep -lE 'name="plan-status" content="(todo|in-progress)"' "$PLANS_DIR"/*.html 2>/dev/null \
+    | grep -v '/index\.html$' || true
+)
+```
+
+`grep -l` returns only files carrying a real `plan-status` meta tag whose value is `todo` or `in-progress`. Non-plan HTML artifacts in the same directory (review reports, galleries — anything without the tag) are never candidates. Never descend into `archive/`. The `|| true` keeps the no-match case non-fatal — `grep` exits non-zero when nothing matches, and that must not abort the sweep.
+
+If `$candidates` is empty, report `"All plans in <PLANS_DIR> are already marked completed."` and **STOP**.
+
+### S2 — Score each candidate (cheap pass)
+
+For each candidate, run **Step 2** (read plan, extract signals) and **Step 3a**'s Glob/Grep token checks only. Do **not** run Step 3b per-criterion verification or the Step 3c objective test yet — those are expensive and run only on plans the user actually selects.
+
+Sweep scoring is non-interactive: if a candidate yields no extractable tokens, skip Step 3a's no-token `AskUserQuestion` entirely — score the plan as `0% evidence (no signals)` and keep it in the table. All user decisions happen in S3.
+
+### S3 — Present candidates and batch-confirm
+
+Output one table sorted by evidence score, highest first:
+
+```
+| Plan                        | Status      | Evidence | Criteria checked |
+|-----------------------------|-------------|----------|------------------|
+| add-dark-mode-toggle.html   | in-progress | 5/5      | 2/5              |
+| fix-login-redirect.html     | todo        | 3/7      | 0/4              |
+```
+
+Plans at **80%+ evidence** are the "done but not marked" candidates; call them out.
+
+Ask via a single `AskUserQuestion` with two questions:
+
+1. `"Which plans should be finalized?"` — `multiSelect: true`, one option per candidate labelled `<filename> (<evidence>)`. List the 80%+ candidates first.
+2. `"How should acceptance criteria be checked?"` — Options: `Only auto-check verified criteria (Recommended)` / `Check all criteria`
+
+If no plans are selected, **STOP**.
+
+### S4 — Finalize each selected plan
+
+For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** (all sub-steps), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result).
+
+### S5 — Deliver
+
+Send all updated plan files in one `SendUserFile` call. Report a summary table: per plan, the final status (`completed` or `in-progress` via the 5b downgrade), criteria verified/checked, and objective-test result. List any plans left `in-progress` and their unchecked criteria.
+
+**STOP.** Do not commit, push, or start any implementation work.
 
 ---
 
