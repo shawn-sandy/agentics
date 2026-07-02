@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- **Nested directory list is now a child of its directory `<li>`** — the implementation-plan File-Tree Auto-Generation instructions told the generator to emit a `<li class="file-dir">` heading *followed by* a sibling `<ul class="file-list">`, making the inner `ul` a direct child of the outer `ul` (invalid HTML — a `ul` may only contain `li` children; flagged by Copilot on PR #364). `SKILL.md`'s Grouping prose and Rendering pattern, plus the skeleton's row-template comment, now place the nested `ul` inside the directory `li`, and the skeleton CSS gains `.file-list li > ul { flex-basis: 100%; }` so the nested list renders on its own row inside the flex `li`. Matches the hand-fixed markup in `docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html` (commit 371f812).
+- **Nested directory list is now a child of its directory `<li>`** — the implementation-plan File-Tree Auto-Generation instructions told the generator to emit a `<li class="file-dir">` heading *followed by* a sibling `<ul class="file-list">`, making the inner `ul` a direct child of the outer `ul` (invalid HTML — a `ul` may only contain `li` children; flagged by Copilot on PR #364). `SKILL.md`'s Grouping prose and Rendering pattern, plus the skeleton's row-template comment, now place the nested `ul` inside the directory `li`, and the skeleton CSS gains `.file-list li.file-dir > ul { flex-basis: 100%; }` so the nested list renders on its own row inside the flex `li`. Matches the hand-fixed markup in `docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html` (commit 371f812).
 
 ## 2.12.1 — Fix double-escaped titles in the plans gallery index (2026-07-01)
 
