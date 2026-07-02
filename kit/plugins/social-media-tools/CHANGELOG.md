@@ -1,5 +1,15 @@
 # Changelog — social-media-tools
 
+## v2.14.0 — 2026-07-02 — export-session: session transcripts to Markdown
+
+### Added
+
+- **`export-session` skill** — converts a Claude Code session JSONL transcript into a Markdown
+  file under `{plansDirectory}/sessions/` (YAML frontmatter + user/Claude turns, harness noise
+  filtered) via a bundled `export_session.py` script, so sessions can be reused as reference and
+  educational material. Trigger with `/export-session` or by asking to export/save/archive a
+  session as Markdown.
+
 ## v2.13.0 — 2026-07-01 — write-guide: dynamic output via section library and archetypes
 
 ### Changed

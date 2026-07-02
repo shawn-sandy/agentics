@@ -19,6 +19,7 @@ No path in this plugin auto-posts — human review is always required before any
 |-----------|------|-------------|
 | `social-share` | Skill | **Router** — classifies a natural-language request and runs the right skill |
 | `share-session` | Skill | Generate a narrative session recap card with teachable takeaways, lessons learned, and platform copy |
+| `export-session` | Skill | Export a session JSONL transcript to Markdown under `{plansDirectory}/sessions/` for reference and education |
 | `share-code` | Skill | Draft copy + render dark-mode card for local git commits and diffs |
 | `share-blog` | Skill | Fetch blog post metadata from a URL or local `.md`; generate card + copy |
 | `share-video` | Skill | Fetch YouTube/Vimeo metadata via oEmbed; generate card + copy |
@@ -61,6 +62,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 |-------|-----------|---------|
 | `social-share` | Automatic | Share what you're working on, post code, a blog, video, or project update |
 | `share-session` | Automatic | Share my session, session recap, what I worked on, what I did today, session summary |
+| `export-session` | Automatic | Export, save, or archive a session as Markdown |
 | `share-code` | Automatic | Post or share a code change, write a LinkedIn post about today's changes |
 | `share-blog` | Automatic | Share a blog post or article on social media |
 | `share-video` | Automatic | Share a video on social media |
@@ -213,6 +215,10 @@ social-media-tools/
 │   │       └── interesting-patterns.md    ← scoring table (user-tunable)
 │   ├── share-selection/
 │   │   └── SKILL.md                       ← share selected/highlighted/open/pasted code
+│   ├── export-session/
+│   │   ├── SKILL.md                       ← export session JSONL to Markdown in {plansDirectory}/sessions
+│   │   └── scripts/
+│   │       └── export_session.py          ← JSONL → Markdown converter
 │   ├── share-session/
 │   │   └── SKILL.md                       ← narrative session recap card (lessons learned, takeaways, tokens)
 │   ├── share-video/
