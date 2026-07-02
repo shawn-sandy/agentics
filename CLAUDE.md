@@ -63,7 +63,7 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 
 ## Reference Implementations
 
-11 plugins in the marketplace (`agentics-kit` v4.0.0):
+12 plugins in the marketplace (`agentics-kit` v4.1.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
@@ -76,6 +76,7 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 | `wcag-compliance-reviewer` | Skills | WCAG accessibility review |
 | `product-plans` | Skills + Agents + Commands | Cross-functional review panel (PM, Dev, UX, Frontend, A11y, Security); background-mode panel via `/product-plans:product-plans-bg`; codebase-only research (no WebFetch/WebSearch) |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo; routine-compatible |
+| `session-tools` | Skills | `export-session` converts a session JSONL transcript into a Markdown file under `{plansDirectory}/sessions/` (frontmatter + user/Claude turns, harness noise filtered) for reference and educational reuse |
 | `social-media-tools` | Skills + Commands | Discover teachable content (git history, codebase path, blog posts, videos, GitHub snippets, selected code), scrub for secrets, generate dark-mode social cards for LinkedIn/Twitter/Bluesky/Substack with contextual follow CTAs; `social-share` router skill classifies any share request and runs the right workflow directly; `share-init` generates a `SOCIAL.md` project config for default platform, tone, and content preferences; `share-react` shares a React component with a static rendered preview and a typed props table on one card; `write-guide` writes a long-form internal developer explainer guide (system, rule, how-to, concept, or change recap) to `docs/`, assembled from a section library with five non-binding archetype starting points; `/social-media-tools:digest` for interactive digest scanning |
 | `plan-agent` | Skills + Agents + Hooks + Commands | `/plan-agent:implementation-plan <objective>` runs Steps 0–8 plan workflow with built-in interview; `/plan-agent:review-plan` spawns a seven-reviewer Agent Team; `/plan-agent:review-plan-bg <path>` runs the review team in the background; `/plan-agent:finalize-plan` reviews and marks plans completed with per-criterion verification; `/plan-agent:build-proposal <idea>` turns a vague idea into a decision-complete `docs/proposals/<slug>.md` via an 8-step research→decide loop + Tier 0/1/2 right-sizing gate, then hands off to implementation-plan; `/plan-agent:refine-prompt` generates AI prompts from Anthropic best practices (command-only); accepts issue URLs/`#n` to seed plans and `.md` plan paths for conversion to HTML; `plans-library` builds filterable gallery; `plans-open` reopens gallery; `/plan-agent:setup-sites` scaffolds the GitHub Pages deploy pipeline (workflow, `.nojekyll`, hub, preview script) into any repo so `docs/` HTML publishes to a public URL; `/plan-agent:prototype <plan.html\|idea>` generates a runnable, framework-free static-HTML prototype under `docs/prototypes/` (inline JSON seed + per-prototype localStorage, escaped output, a11y baked in) auto-indexed into a Prototypes gallery; automatic filename hook + plans/prototypes gallery index auto-rebuild hooks |
 

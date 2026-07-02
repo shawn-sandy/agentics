@@ -1,0 +1,17 @@
+{
+  "name": "session-tools",
+  "description": "Export Claude Code session transcripts to Markdown in the plans directory so they can be reused as reference and educational material.",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "session",
+    "export",
+    "transcript",
+    "markdown",
+    "documentation"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/session-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
