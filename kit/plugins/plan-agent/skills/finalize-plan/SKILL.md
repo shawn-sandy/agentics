@@ -65,17 +65,19 @@ Find plans that are implemented but never marked completed, and finalize them in
 Resolve `PLANS_DIR` exactly as in Step 1 (honor `--dir`, then the settings precedence, then `docs/plans/`). Then list every plan not yet marked completed:
 
 ```bash
-grep -L 'name="plan-status" content="completed"' "$PLANS_DIR"/*.html 2>/dev/null \
+grep -lE 'name="plan-status" content="(todo|in-progress)"' "$PLANS_DIR"/*.html 2>/dev/null \
   | grep -v '/index\.html$'
 ```
 
-`grep -L` returns files *lacking* the completed meta tag — i.e. plans whose status is still `todo` or `in-progress`. Never descend into `archive/`.
+`grep -l` returns only files carrying a real `plan-status` meta tag whose value is `todo` or `in-progress`. Non-plan HTML artifacts in the same directory (review reports, galleries — anything without the tag) are never candidates. Never descend into `archive/`.
 
 If the list is empty, report `"All plans in <PLANS_DIR> are already marked completed."` and **STOP**.
 
 ### S2 — Score each candidate (cheap pass)
 
-For each candidate, run **Step 2** (read plan, extract signals) and **Step 3a** (token-level evidence) only. Do **not** run Step 3b per-criterion verification or the Step 3c objective test yet — those are expensive and run only on plans the user actually selects.
+For each candidate, run **Step 2** (read plan, extract signals) and **Step 3a**'s Glob/Grep token checks only. Do **not** run Step 3b per-criterion verification or the Step 3c objective test yet — those are expensive and run only on plans the user actually selects.
+
+Sweep scoring is non-interactive: if a candidate yields no extractable tokens, skip Step 3a's no-token `AskUserQuestion` entirely — score the plan as `0% evidence (no signals)` and keep it in the table. All user decisions happen in S3.
 
 ### S3 — Present candidates and batch-confirm
 

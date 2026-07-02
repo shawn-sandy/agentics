@@ -4,9 +4,10 @@ set -euo pipefail
 # Objective smoke test for the finalize-plan --all sweep flag.
 #
 # Sweep mode discovers plans that are implemented but never marked completed
-# (grep -L on the completed meta tag), scores them with the cheap token-
-# evidence pass, batch-confirms via one multi-select prompt, and finalizes
-# only the selected plans. These asserts pin the flag to the SKILL.md
+# (grep -l for a plan-status meta tag valued todo/in-progress, so non-plan
+# HTML is never a candidate), scores them with the cheap non-interactive
+# token-evidence pass, batch-confirms via one multi-select prompt, and
+# finalizes only the selected plans. These asserts pin the flag to the SKILL.md
 # contract, the README docs, and the marketplace version so they cannot
 # silently diverge.
 
@@ -35,13 +36,13 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "3. Sweep mode section with grep -L discovery excluding index.html..."
+echo "3. Sweep discovery matches todo/in-progress status tags, excluding index.html..."
 if grep -q '## Sweep mode (\`--all\`)' "$SKILL" \
-   && grep -q "grep -L 'name=\"plan-status\" content=\"completed\"'" "$SKILL" \
+   && grep -q "grep -lE 'name=\"plan-status\" content=\"(todo|in-progress)\"'" "$SKILL" \
    && grep -q "grep -v '/index" "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: sweep section is missing the heading, grep -L discovery, or index.html exclusion"
+  echo "  FAIL: sweep section is missing the heading, positive status-tag discovery, or index.html exclusion"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -54,11 +55,13 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "5. Expensive verification is deferred to selected plans (S2 cheap pass)..."
-if grep -q 'Do \*\*not\*\* run Step 3b' "$SKILL"; then
+echo "5. Expensive verification is deferred and sweep scoring is non-interactive..."
+if grep -q 'Do \*\*not\*\* run Step 3b' "$SKILL" \
+   && grep -q 'Sweep scoring is non-interactive' "$SKILL" \
+   && grep -q "skip Step 3a's no-token \`AskUserQuestion\`" "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: S2 does not defer Step 3b/3c to selected plans"
+  echo "  FAIL: S2 does not defer Step 3b/3c or does not skip the no-token prompt"
   FAILURES=$((FAILURES + 1))
 fi
 
