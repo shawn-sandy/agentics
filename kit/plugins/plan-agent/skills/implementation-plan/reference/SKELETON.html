@@ -1103,6 +1103,7 @@
   .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
   .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
   .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
   .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
   .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
@@ -1385,7 +1386,10 @@ img, video { max-width: 100%; height: auto; }
           {file-tree-rows}
           <!-- Row template (duplicate as needed):
           <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
-          Nest a directory with: <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/</li> followed by a child <ul class="file-list">…</ul> -->
+          Nest a directory with the child list INSIDE the li:
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/
+            <ul class="file-list">…</ul>
+          </li> -->
         </ul>
       </div>
     </section>

@@ -380,17 +380,18 @@ When the plan's steps reference files to create, modify, or delete, automaticall
 
 When ambiguous, default to `file-badge-modified`. When a file appears in multiple steps with different operations, keep the most impactful badge: `deleted` > `new` > `generated` > `modified`.
 
-**Grouping.** Group files by their immediate parent directory. For each directory that contains two or more files, emit a `<li class="file-dir">` directory heading followed by a nested `<ul class="file-list">` containing its children (show only the filename inside the nested list, not the full path). Files whose parent directory has only one entry are shown at the top level with their full relative path — no directory wrapper. Sort directories alphabetically, then files within each directory alphabetically.
+**Grouping.** Group files by their immediate parent directory. For each directory that contains two or more files, emit a `<li class="file-dir">` containing the directory heading **and** a nested `<ul class="file-list">` of its children — close the `</li>` after the nested `</ul>`, so the inner list is a child of the directory `<li>`, never a sibling (a `<ul>` may only contain `<li>` children). Show only the filename inside the nested list, not the full path. Files whose parent directory has only one entry are shown at the top level with their full relative path — no directory wrapper. Sort directories alphabetically, then files within each directory alphabetically.
 
 **Rendering.** Build the `{file-tree-rows}` markup using this pattern:
 
 ```html
-<!-- Directory with 2+ files -->
-<li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> src/components/</li>
-<ul class="file-list">
-  <li><code>Button.tsx</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">primary action component</span></li>
-  <li><code>Modal.tsx</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add close callback prop</span></li>
-</ul>
+<!-- Directory with 2+ files — nested ul lives INSIDE the directory li -->
+<li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> src/components/
+  <ul class="file-list">
+    <li><code>Button.tsx</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">primary action component</span></li>
+    <li><code>Modal.tsx</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add close callback prop</span></li>
+  </ul>
+</li>
 
 <!-- Single file in a unique directory — show full path, no wrapper -->
 <li><code>src/index.ts</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">re-export new component</span></li>
