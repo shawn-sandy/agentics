@@ -10,10 +10,11 @@ fail() { echo "FAIL: $1" >&2; exit 1; }
 
 # 1. Skill exists and documents the destination + guard.
 [ -f "$SKILL" ] || fail "SKILL.md missing at $SKILL"
-grep -q 'CLAUDE_PLUGIN_ROOT}/artifacts' "$SKILL" || fail "destination not documented"
+grep -qF '${CLAUDE_PLUGIN_ROOT}/artifacts' "$SKILL" || fail "destination not documented"
 grep -q 'CLAUDE_PLUGIN_ROOT is not set' "$SKILL" || fail "unset-var guard not documented"
 
-# The copy recipe under test, mirroring SKILL.md Steps 2-3.
+# The copy logic from SKILL.md Steps 2-3; prints the bare target path
+# (instead of the skill's "Saved artifact → …" line) so checks can parse it.
 run_save() {
   local src="$1"
   [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || { echo "Error: CLAUDE_PLUGIN_ROOT is not set" >&2; return 1; }
