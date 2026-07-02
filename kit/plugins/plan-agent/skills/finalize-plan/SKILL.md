@@ -1,6 +1,6 @@
 ---
 name: finalize-plan
-description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks every acceptance-criteria checkbox; --all sweeps for done-but-unmarked plans. Use via /plan-agent:finalize-plan."
+description: "Marks an HTML plan as completed. Inspects codebase evidence, confirms with the user, and ticks acceptance criteria; --all sweeps done-but-unmarked plans. Use via /plan-agent:finalize-plan."
 disable-model-invocation: true
 argument-hint: "[plan-filename.html] [--all] [--dir <path>]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile
