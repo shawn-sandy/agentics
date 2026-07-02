@@ -18,7 +18,7 @@ Add a `--all` sweep mode to the `finalize-plan` skill that discovers every non-c
 
 ## Steps
 
-1. Add sweep mode to `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` — a `--all` routing clause in Step 1 plus a `## Sweep mode (--all)` section (S1 discover via `grep -l` for a `plan-status` meta tag valued `todo`/`in-progress`, S2 cheap non-interactive scoring reusing Steps 2/3a token checks, S3 batch confirm via one two-question `AskUserQuestion` with `multiSelect`, S4 finalize selected plans via Steps 3b/3c/5, S5 single `SendUserFile` delivery). Update `argument-hint` and `description` frontmatter. — *Why:* Steps 2–5 are already a reusable per-plan pipeline; only discovery, confirmation, and delivery differ in a sweep. *Verify:* SKILL.md contains the routing clause, sweep section, `grep -L` discovery, and updated `argument-hint`.
+1. Add sweep mode to `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` — a `--all` routing clause in Step 1 plus a `## Sweep mode (--all)` section (S1 discover via `grep -l` for a `plan-status` meta tag valued `todo`/`in-progress`, S2 cheap non-interactive scoring reusing Steps 2/3a token checks, S3 batch confirm via one two-question `AskUserQuestion` with `multiSelect`, S4 finalize selected plans via Steps 3b/3c/5, S5 single `SendUserFile` delivery). Update `argument-hint` and `description` frontmatter. — *Why:* Steps 2–5 are already a reusable per-plan pipeline; only discovery, confirmation, and delivery differ in a sweep. *Verify:* SKILL.md contains the routing clause, sweep section, `grep -lE` todo/in-progress discovery, and updated `argument-hint`.
 2. Document the flag in `kit/plugins/plan-agent/README.md` — feature table row, usage example, sweep-mode paragraph in both finalize-plan sections. — *Why:* README is the user-facing contract for invocation syntax. *Verify:* `grep -- '--all' README.md` hits the table, usage block, and both descriptions.
 3. Add a `2.13.0` CHANGELOG entry and bump `plan-agent` to `2.13.0` in `.claude-plugin/marketplace.json` (new behavior = minor), extending the marketplace description with the sweep clause. — *Why:* Marketplace version must exceed `main` for the change to ship; convention requires a CHANGELOG entry. *Verify:* both files carry `2.13.0` and the JSON validation hook passes.
 4. Add `tests/plugins/test-finalize-all-flag.sh` pinning the flag to the SKILL.md contract, README docs, and marketplace version. — *Why:* Prevents the sweep contract from silently diverging across the four files. *Verify:* `bash tests/plugins/test-finalize-all-flag.sh` exits 0 with all checks passing.
@@ -31,7 +31,7 @@ Add a `--all` sweep mode to the `finalize-plan` skill that discovers every non-c
 
 - **File:** `tests/plugins/test-finalize-all-flag.sh`
 - **Type:** smoke test
-- **Asserts:** the `--all` flag exists in the SKILL.md contract (routing clause, sweep section with `grep -L` discovery and `index.html` exclusion, multi-select batch confirmation, deferred expensive verification), is documented in the README, and ships as version 2.13.0 in both CHANGELOG and marketplace.json.
+- **Asserts:** the `--all` flag exists in the SKILL.md contract (routing clause, sweep section with `grep -lE` todo/in-progress discovery and the `index.html`/`archive/` exclusions, multi-select batch confirmation, deferred expensive verification), is documented in the README, and ships as version 2.13.0 in both CHANGELOG and marketplace.json.
 - **Run:** `bash tests/plugins/test-finalize-all-flag.sh`
 
 ## Acceptance Criteria

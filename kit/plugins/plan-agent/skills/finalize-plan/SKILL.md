@@ -22,7 +22,7 @@ Mark a plan as done: inspect the codebase for implementation evidence, confirm w
 
 Parse `$ARGUMENTS`:
 
-0. If `$ARGUMENTS` contains `--all`, skip single-file resolution entirely and follow **Sweep mode (`--all`)** below instead of Steps 2–6.
+0. If `$ARGUMENTS` contains `--all`, skip single-file resolution entirely and follow **Sweep mode (`--all`)** below. Sweep mode replaces the single-plan sequence of Steps 2–6 as the top-level flow, invoking those steps per candidate/selected plan as its S2 and S4 sub-steps direct.
 1. If `$ARGUMENTS` contains a token ending in `.html`, use that as the plan filename. Reduce to basename only (strip any leading path components). Resolve against these roots in order until the file is found:
    a. `--dir` value (if passed)
    b. `plansDirectory` via Claude Code's settings precedence — project-local `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`
