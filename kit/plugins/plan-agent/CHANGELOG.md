@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.13.0 — `--all` sweep flag on finalize-plan (2026-07-02)
+
+### Added
+
+- **Sweep mode for finalize-plan** — `/plan-agent:finalize-plan --all` finds plans that are implemented but never marked completed. Discovery uses `grep -L` on the `<meta name="plan-status" content="completed">` tag across the plans directory (excluding `index.html` and `archive/`), then a cheap token-evidence pass scores each candidate; plans at 80%+ evidence are flagged as "done but not marked". A single two-question `AskUserQuestion` (multi-select plan picker + one criteria mode for the whole batch) replaces the per-plan confirmation, and the expensive per-criterion verification and objective-verification test run only on the selected plans before the status writes. All updated files are delivered in one `SendUserFile` call with a per-plan summary. `tests/plugins/test-finalize-all-flag.sh` pins the flag to the SKILL.md contract, README docs, and marketplace version.
+
 ## 2.12.2 — Fix invalid file-tree nesting in generated plans (2026-07-01)
 
 ### Fixed
