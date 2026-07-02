@@ -75,6 +75,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | `share-init` | Automatic | Set up social sharing preferences, create a SOCIAL.md, configure sharing defaults |
 | `security-scrub` | Automatic | Check for secrets, review a diff for leaks, scrub this file for sensitive data |
 | `write-guide` | Automatic | Write a guide on X, document this rule, deep-dive X, explain X as a guide, capture this session's lessons as a guide |
+| `save-artifact` | Automatic | Save or share an artifact, save this HTML page, stash the artifact I just built |
 
 ### Discover what's worth sharing
 

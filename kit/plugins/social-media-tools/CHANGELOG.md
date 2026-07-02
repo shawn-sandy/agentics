@@ -1,5 +1,19 @@
 # Changelog — social-media-tools
 
+## v2.15.0 — 2026-07-02 — save-artifact: save HTML Artifact pages for sharing
+
+### Added
+
+- **`save-artifact` skill** — copies a chosen HTML Artifact page into
+  `${CLAUDE_PLUGIN_ROOT}/artifacts/` under a dated `<name>-YYYY-MM-DD.html`
+  filename and reports the saved path. Resolves the source from an explicit
+  path or by asking; guards against an unset `CLAUDE_PLUGIN_ROOT` (errors
+  rather than writing elsewhere) and appends a numeric suffix on filename
+  collision. Note: the plugin cache is wiped on reinstall/update, so saved
+  artifacts are not durable — documented in the skill.
+- **`tests/plugins/test-save-artifact.sh`** — objective smoke test covering the
+  copy, collision, and unset-guard paths.
+
 ## v2.14.0 — 2026-07-02 — export-session: session transcripts to Markdown
 
 ### Added
