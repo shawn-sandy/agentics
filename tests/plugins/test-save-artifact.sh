@@ -18,12 +18,12 @@ run_save() {
   local src="$1"
   [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || { echo "Error: CLAUDE_PLUGIN_ROOT is not set" >&2; return 1; }
   local dest="${CLAUDE_PLUGIN_ROOT}/artifacts"
-  mkdir -p "$dest"
+  mkdir -p "$dest" || { echo "Error: could not create $dest" >&2; return 1; }
   local base day target n
   base=$(basename "$src" .html); day=$(date +%F)
   target="$dest/${base}-${day}.html"; n=2
   while [ -e "$target" ]; do target="$dest/${base}-${day}-${n}.html"; n=$((n + 1)); done
-  cp "$src" "$target"
+  cp "$src" "$target" || { echo "Error: copy failed — nothing saved" >&2; return 1; }
   echo "$target"
 }
 
@@ -45,10 +45,15 @@ out2="$(run_save "$tmp/demo.html")" || fail "second save exited non-zero"
 [ "$out2" != "$out" ] || fail "collision not handled — same path returned twice"
 [ -f "$out2" ] || fail "no file for second save"
 
-# 4. Unset guard: refuses to write, exits non-zero.
+# 4. Copy failure: missing source exits non-zero, no false success.
+if out3="$(run_save "$tmp/does-not-exist.html" 2>/dev/null)"; then
+  fail "expected non-zero exit when source is missing (got: $out3)"
+fi
+
+# 5. Unset guard: refuses to write, exits non-zero.
 unset CLAUDE_PLUGIN_ROOT
 if run_save "$tmp/demo.html" >/dev/null 2>&1; then
   fail "expected non-zero exit when CLAUDE_PLUGIN_ROOT is unset"
 fi
 
-echo "PASS: save-artifact smoke test (4 checks)"
+echo "PASS: save-artifact smoke test (5 checks)"

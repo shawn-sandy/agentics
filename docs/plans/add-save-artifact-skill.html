@@ -1351,24 +1351,6 @@ img, video { max-width: 100%; height: auto; }
       <p>Claude's Artifact tool produces self-contained HTML pages (design-guided pages, dashboards, tools), but each lives only in the chat session — there is no one-step way to drop a finished page somewhere shareable. This adds a <code>save-artifact</code> skill to <code>social-media-tools</code> (the repo's share-focused plugin) that copies a chosen HTML artifact into <code>${CLAUDE_PLUGIN_ROOT}/artifacts/</code>. <strong>Tradeoff, chosen deliberately:</strong> <code>${CLAUDE_PLUGIN_ROOT}</code> resolves to the <em>installed</em> plugin cache (e.g. <code>~/.claude/plugins/cache/…</code>), which is wiped on every plugin reinstall or update — so artifacts saved there are not durable and are not committed with the repo. This location was requested explicitly; the durability tradeoff is tracked in Unresolved Questions.</p>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Files file-tree.
-         KEEP and fill <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/social-media-tools/skills/save-artifact/</li>
-          <ul class="file-list">
-            <li><code>SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the save-artifact skill body</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/social-media-tools/</li>
-          <ul class="file-list">
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.14.0 entry</span></li>
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">list save-artifact skill</span></li>
-          </ul>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump version to 2.14.0</span></li>
-          <li><code>tests/plugins/test-save-artifact.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test</span></li> when the plan touches files
-         (most multi-file plans). DELETE this whole section element and
-         its nav entry (the "#files" link) when not needed.
-         Badge classes: file-badge-new | file-badge-modified |
-         file-badge-deleted | file-badge-generated.
-         ════════════════════════════════════════════════════════════ -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
@@ -1383,10 +1365,10 @@ img, video { max-width: 100%; height: auto; }
           </ul>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/social-media-tools/</li>
           <ul class="file-list">
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.14.0 entry</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.15.0 entry</span></li>
             <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">list save-artifact skill</span></li>
           </ul>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump version to 2.14.0</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump version to 2.15.0</span></li>
           <li><code>tests/plugins/test-save-artifact.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test</span></li>
           <!-- Row template (duplicate as needed):
           <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
@@ -1409,7 +1391,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Author the <code>save-artifact</code> SKILL.md at <code>kit/plugins/social-media-tools/skills/save-artifact/SKILL.md</code> — frontmatter (<code>name: save-artifact</code>, a three-part <code>description</code> ending in a trigger phrase, <code>allowed-tools: Bash, Read, Write, Glob, AskUserQuestion, ExitPlanMode</code>) plus a body that (1) resolves the source HTML artifact — explicit path arg, else the newest <code>.html</code> written this session, else <code>AskUserQuestion</code>; (2) resolves <code>${CLAUDE_PLUGIN_ROOT}/artifacts</code> and <code>mkdir -p</code>s it, erroring clearly if the variable is unset rather than writing elsewhere; (3) copies to a dated <code>&lt;slug&gt;-YYYY-MM-DD.html</code> basename, appending <code>-2</code>/<code>-3</code> on collision; (4) reports the saved absolute path.</span>
+                <span class="step-chip-text">Author the <code>save-artifact</code> SKILL.md at <code>kit/plugins/social-media-tools/skills/save-artifact/SKILL.md</code> — frontmatter (<code>name: save-artifact</code>, a three-part <code>description</code> ending in a trigger phrase, <code>allowed-tools: Bash, Read, Write, Glob, AskUserQuestion, ToolSearch, ExitPlanMode</code>) plus a body that (1) resolves the source HTML artifact — explicit path arg, else materializes an in-chat artifact to a temp file via <code>Write</code>, else <code>Glob</code> + <code>AskUserQuestion</code>; (2) resolves <code>${CLAUDE_PLUGIN_ROOT}/artifacts</code> and <code>mkdir -p</code>s it, erroring clearly if the variable is unset rather than writing elsewhere; (3) copies to a dated <code>&lt;slug&gt;-YYYY-MM-DD.html</code> basename, appending <code>-2</code>/<code>-3</code> on collision; (4) reports the saved absolute path.</span>
               </div>
               <div class="step-why">The skill body is the whole deliverable — everything else is registration and docs. One <code>SKILL.md</code> matches how every other social-media-tools skill is structured.</div>
               <details class="step-verify-toggle">
@@ -1426,12 +1408,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump the <code>social-media-tools</code> <code>version</code> in <code>.claude-plugin/marketplace.json</code> from <code>2.13.0</code> to <code>2.14.0</code> (skills auto-discover, so no <code>plugin.json</code> edit; do not add a <code>version</code> field to <code>plugin.json</code>).</span>
+                <span class="step-chip-text">Bump the <code>social-media-tools</code> <code>version</code> in <code>.claude-plugin/marketplace.json</code> from <code>2.13.0</code> to <code>2.15.0</code> (originally planned as 2.14.0; main took 2.14.0 for <code>export-session</code> while this plan was in flight) (skills auto-discover, so no <code>plugin.json</code> edit; do not add a <code>version</code> field to <code>plugin.json</code>).</span>
               </div>
               <div class="step-why">Relative-path plugins take their version only from <code>marketplace.json</code>, and a new skill is a MINOR bump per the repo's semver rule.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>python3 -c "import json;print([p['version'] for p in json.load(open('.claude-plugin/marketplace.json'))['plugins'] if p['name']=='social-media-tools'])"</code> prints <code>['2.14.0']</code>; settings.json marketplace-JSON validation passes.</div>
+                <div class="verify-body"><code>python3 -c "import json;print([p['version'] for p in json.load(open('.claude-plugin/marketplace.json'))['plugins'] if p['name']=='social-media-tools'])"</code> prints <code>['2.15.0']</code>; settings.json marketplace-JSON validation passes.</div>
               </details>
             </div>
           </div>
@@ -1443,12 +1425,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a <code>## v2.14.0 — 2026-07-02 — save-artifact</code> entry to <code>kit/plugins/social-media-tools/CHANGELOG.md</code> and a <code>save-artifact</code> bullet to the <code>### Skills</code> list in <code>kit/plugins/social-media-tools/README.md</code>.</span>
+                <span class="step-chip-text">Add a <code>## v2.15.0 — 2026-07-02 — save-artifact</code> entry to <code>kit/plugins/social-media-tools/CHANGELOG.md</code> and a <code>save-artifact</code> bullet to the <code>### Skills</code> list in <code>kit/plugins/social-media-tools/README.md</code>.</span>
               </div>
               <div class="step-why">The repo requires docs and changelog updates alongside any plugin change, and the README skills list is how users discover the skill.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>grep -c save-artifact kit/plugins/social-media-tools/CHANGELOG.md kit/plugins/social-media-tools/README.md</code> returns ≥1 for both; the CHANGELOG's top entry is <code>v2.14.0</code>.</div>
+                <div class="verify-body"><code>grep -c save-artifact kit/plugins/social-media-tools/CHANGELOG.md kit/plugins/social-media-tools/README.md</code> returns ≥1 for both; the CHANGELOG's top entry is <code>v2.15.0</code>.</div>
               </details>
             </div>
           </div>
@@ -1502,7 +1484,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4"><code>.claude-plugin/marketplace.json</code> lists <code>social-media-tools</code> at <code>2.14.0</code> and passes JSON validation.</label>
+          <label for="ac4"><code>.claude-plugin/marketplace.json</code> lists <code>social-media-tools</code> at <code>2.15.0</code> and passes JSON validation.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
