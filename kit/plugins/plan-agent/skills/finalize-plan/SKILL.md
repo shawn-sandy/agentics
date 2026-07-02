@@ -65,13 +65,15 @@ Find plans that are implemented but never marked completed, and finalize them in
 Resolve `PLANS_DIR` exactly as in Step 1 (honor `--dir`, then the settings precedence, then `docs/plans/`). Then list every plan not yet marked completed:
 
 ```bash
-grep -lE 'name="plan-status" content="(todo|in-progress)"' "$PLANS_DIR"/*.html 2>/dev/null \
-  | grep -v '/index\.html$'
+candidates=$(
+  grep -lE 'name="plan-status" content="(todo|in-progress)"' "$PLANS_DIR"/*.html 2>/dev/null \
+    | grep -v '/index\.html$' || true
+)
 ```
 
-`grep -l` returns only files carrying a real `plan-status` meta tag whose value is `todo` or `in-progress`. Non-plan HTML artifacts in the same directory (review reports, galleries — anything without the tag) are never candidates. Never descend into `archive/`.
+`grep -l` returns only files carrying a real `plan-status` meta tag whose value is `todo` or `in-progress`. Non-plan HTML artifacts in the same directory (review reports, galleries — anything without the tag) are never candidates. Never descend into `archive/`. The `|| true` keeps the no-match case non-fatal — `grep` exits non-zero when nothing matches, and that must not abort the sweep.
 
-If the list is empty, report `"All plans in <PLANS_DIR> are already marked completed."` and **STOP**.
+If `$candidates` is empty, report `"All plans in <PLANS_DIR> are already marked completed."` and **STOP**.
 
 ### S2 — Score each candidate (cheap pass)
 

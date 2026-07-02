@@ -36,13 +36,14 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "3. Sweep discovery matches todo/in-progress status tags, excluding index.html..."
-if grep -q '## Sweep mode (\`--all\`)' "$SKILL" \
-   && grep -q "grep -lE 'name=\"plan-status\" content=\"(todo|in-progress)\"'" "$SKILL" \
-   && grep -q "grep -v '/index" "$SKILL"; then
+echo "3. Sweep discovery matches todo/in-progress status tags, excluding index.html and archive/..."
+if grep -Fq '## Sweep mode (`--all`)' "$SKILL" \
+   && grep -Fq "grep -lE 'name=\"plan-status\" content=\"(todo|in-progress)\"'" "$SKILL" \
+   && grep -Fq "| grep -v '/index\\.html\$' || true" "$SKILL" \
+   && grep -Fq 'Never descend into `archive/`' "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: sweep section is missing the heading, positive status-tag discovery, or index.html exclusion"
+  echo "  FAIL: sweep section is missing the heading, positive status-tag discovery, non-fatal no-match handling, or the index.html/archive exclusions"
   FAILURES=$((FAILURES + 1))
 fi
 
