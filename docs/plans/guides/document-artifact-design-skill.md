@@ -1,7 +1,7 @@
 # The artifact-design skill
 A deep-dive into Claude Code's built-in design-guidance skill: what it is, where it actually lives, when it fires, and how it shapes every Artifact page Claude publishes.
 
-> **Origin.** Written 2026-07-02 in response to a request for a guide "on the artifact-design skill or plugin." First finding: it is a **skill, not a plugin** — it is not in this marketplace, not under `kit/plugins/`, and not on disk under `~/.claude/` at all. Its full `SKILL.md` text was extracted this session from the compiled Claude Code binary (version 2.1.198) and every quotation below is verbatim from that extraction.
+> **Origin.** Written 2026-07-02 in response to a request for a guide "on the artifact-design skill or plugin." First finding: it is a **skill, not a plugin** — it is not in this marketplace, not under `kit/plugins/`, and not on disk under `~/.claude/` at all. Its `SKILL.md` text was inspected this session inside the compiled Claude Code binary (version 2.1.198). Because that text is Anthropic's, this guide **paraphrases** the skill's content and limits quotation to brief identifying fragments — it does not reproduce the skill body.
 
 ---
 
@@ -28,14 +28,7 @@ A deep-dive into Claude Code's built-in design-guidance skill: what it is, where
 
 ## 2. What it is
 
-The skill's frontmatter, quoted verbatim from the extracted `SKILL.md`:
-
-```yaml
----
-name: artifact-design
-description: Design guidance and fundamentals for Artifacts.
----
-```
+The skill's frontmatter declares the name `artifact-design` and the one-line description "Design guidance and fundamentals for Artifacts." — the same description shown in a session's available-skills list.
 
 The body is roughly 8,000 characters of design instruction organized into four parts:
 
@@ -51,17 +44,13 @@ artifact-design, dataviz, code-review, code-walkthrough,
 pr-explainer, verify, simplify, commit, pr, commit-push-pr
 ```
 
-The skill surfaces in a session's available-skills list with exactly its frontmatter description: `artifact-design: Design guidance and fundamentals for Artifacts.`
-
 ## 3. Why it exists
 
-The skill's own text names the problem directly. LLM-generated pages converge on a small set of recognizable looks, and the skill enumerates them so they can be avoided — quoted verbatim:
+The skill's own text names the problem directly: AI-generated pages converge on a small set of recognizable looks, and the skill enumerates them so that unprompted design freedom is not spent on one of them. Paraphrasing its cliché inventory: a warm-cream ground with a serif display face and terracotta accent; near-black with a single acid-green or vermilion pop; broadsheet-style hairline rules over dense columns; a purple-to-blue gradient hero on white; Inter or Space Grotesk as the reflexive "safe" typeface; emoji as section markers; center-aligned everything; uniform large corner rounding; and the accent-bar-on-rounded-card pattern.
 
-> AI-generated design currently clusters around a few looks: warm cream (#F4F1EA) with a serif display and terracotta accent; near-black with a lone acid-green or vermilion pop; broadsheet hairline rules with dense columns; a purple-to-blue gradient hero on white; Inter or Space Grotesk as the "safe" face; emoji as section markers; everything centered; `rounded-lg` everywhere; accent bar/rail on rounded cards.
+The rule attached to that list is precedence-aware: when the user asks for a specific visual direction — including one of these looks — "their words always win"; the prohibition only applies to unspent freedom.
 
-The rule attached to that list is precedence-aware: *"Where the user pins down a visual direction, follow it exactly — their words always win, including when they ask for one of these looks. Where nothing is specified, don't spend that freedom on one of these defaults."*
-
-The second motivation is environmental: Artifact pages run under a strict Content Security Policy. The Artifact tool's own definition states: *"A strict CSP blocks requests to any external host — CDN scripts, external stylesheets, fonts, remote images, fetch/XHR/WebSockets."* Several of the skill's rules exist specifically because naive HTML habits (linking a Google Fonts URL, loading a chart library from a CDN) silently fail in that sandbox.
+The second motivation is environmental: Artifact pages run under a strict Content Security Policy that (per the Artifact tool's definition) "blocks requests to any external host" — CDN scripts, external stylesheets, webfonts, remote images. Several of the skill's rules exist specifically because naive HTML habits (linking a Google Fonts URL, loading a chart library from a CDN) silently fail in that sandbox.
 
 ## 4. How it works structurally
 
@@ -81,29 +70,29 @@ Request arrives (Artifact tool about to be used)
                     + one deliberate aesthetic risk
 ```
 
-The eleven fundamentals, compressed to their imperatives:
+The eleven fundamentals, paraphrased to their imperatives:
 
-| Rule | Core instruction |
+| Rule | Core instruction (paraphrase) |
 |---|---|
-| Honor what's already there | Existing design system wins; precedence is "the user's own words, then the project's existing system, then your choices" |
-| Ground it in the subject | One concrete subject, real content throughout, "never lorem" |
-| Pair typefaces | Inline fonts as `@font-face` data URIs (CSP blocks font CDNs); ~65-char measure; `text-wrap: balance` on headings |
-| Choose neutrals | A grey with a hue bias toward the accent "reads as chosen"; pure mid-grey "reads as unconsidered" |
-| Let layout do the spacing | Flex/grid with `gap`, not per-element margins; `overflow-x: auto` on wide content; `tabular-nums` for digit columns |
-| Avoid AI-generated design | The cliché list in §3 |
+| Honor what's already there | An existing design system wins; precedence runs user's words, then the project's system, then the skill's own choices |
+| Ground it in the subject | One concrete subject and real content throughout — no lorem ipsum |
+| Pair typefaces | Inline fonts as `@font-face` data URIs (the CSP blocks font CDNs); ~65-char measure; balanced heading wrapping |
+| Choose neutrals | Pick the grey deliberately (hue-biased toward the accent) rather than defaulting to a pure mid-grey |
+| Let layout do the spacing | Flex/grid with `gap`, not per-element margins; `overflow-x: auto` on wide content; tabular numerals for digit columns |
+| Avoid AI-generated design | The cliché inventory in §3 |
 | Build cleanly | Close every element, quote attributes, visible focus states, respect `prefers-reduced-motion`; Canvas/WebGL over hand-authored SVG paths |
-| CSS rules | Watch selector specificity so classes don't "cancel each other out" |
-| Writing the copy | "Words are design material, not decoration"; name things by what users recognize |
-| Structure is information | Numbered markers only "if the content actually is a sequence" |
+| CSS rules | Watch selector specificity so generated classes don't cancel each other's spacing |
+| Writing the copy | Copy is design material — name things by what users recognize, active voice, specific over clever |
+| Structure is information | Numbered markers only when the content truly is a sequence |
 | When it's a UI, not a document | Summary before detail; state encoded in form (pills, chips, stripes); semantic color is separate from the accent |
 
-The body also contains a literal `<!-- dataviz-callout -->` placeholder comment between the fundamentals and the Process section — presumably substituted at load time to point at the sibling `dataviz` built-in when charts are in play (the substitution mechanism itself is unverified; the placeholder text is verbatim).
+The body also contains a literal `<!-- dataviz-callout -->` placeholder comment between the fundamentals and the Process section — presumably substituted at load time to point at the sibling `dataviz` built-in when charts are in play (the substitution mechanism itself is unverified).
 
 ## 5. How it fires
 
 Two activation paths:
 
-1. **Mandated by the Artifact tool.** The tool's definition (Claude Code 2.1.198, captured this session) instructs, verbatim: *"Before writing the page, you MUST load the `artifact-design` skill to calibrate how much design investment this particular request warrants."* Any session where Claude publishes an Artifact is supposed to load this skill first.
+1. **Mandated by the Artifact tool.** The tool's definition (Claude Code 2.1.198, captured this session) instructs that before writing the page, Claude "MUST load the `artifact-design` skill" to calibrate how much design investment the request warrants. Any session where Claude publishes an Artifact is supposed to load this skill first.
 2. **Directly invocable.** It appears in the session's available-skills list, so Claude (or a skill that composes it) can load it via the Skill tool by name, even outside an Artifact flow — for example when writing a standalone HTML page where the same fundamentals apply.
 
 What prevents it from firing: nothing suppresses it selectively, but it is scoped to page-building. Ordinary code edits, terminal output, and Markdown deliverables never trigger it. It also does not fire retroactively — a page written without it doesn't get re-audited.
@@ -114,23 +103,23 @@ What prevents it from firing: nothing suppresses it selectively, but it is scope
 
 The skill's opening section is the decision:
 
-- **Utilitarian** — "a plan, a memo, a demo." Full craft, restrained treatment: "real typographic hierarchy, considered spacing, and a proper palette, but avoid over-designing. Most pages do not need a flashy, gigantic hero."
-- **Editorial** — "a landing page, a game, an app or tool they'll keep or share." The stance shifts: "the client has already rejected proposals that felt templated, and is paying for a distinctive point of view."
-- **Unsure** — the skill gives an explicit tiebreaker, verbatim: *"a well-composed page is never the wrong answer; an over-designed visual identity sometimes is."*
+- **Utilitarian** — plans, memos, demos. Full craft, restrained treatment: real typographic hierarchy, considered spacing, and a proper palette, but no oversized hero and only limited flourishes.
+- **Editorial** — landing pages, games, apps or tools the user will keep or share. The stance shifts to that of a client paying for a distinctive point of view, who has already rejected templated proposals.
+- **Unsure** — the skill's explicit tiebreaker (quoted, its signature line): *"a well-composed page is never the wrong answer; an over-designed visual identity sometimes is."*
 
-Note the framing in the skill's own words: "Calibrate treatment, not whether to design. A doc deserves the same craft as a landing page — what changes is the treatment that craft is delivered in."
+The framing throughout is that the calibration governs *treatment*, never *whether* to design — a doc deserves the same craft as a landing page, delivered more quietly.
 
 ## 7. Operational script
 
 What to actually do when building an artifact under this skill:
 
-- **Do** sketch the design plan first — "a compact token system" with 4–6 named hex values, typefaces for 2+ roles, and a one-or-two-sentence layout concept. **Do NOT** start writing HTML and let the palette emerge ad hoc.
+- **Do** sketch the design plan first — a compact token system with 4–6 named hex values, typefaces for 2+ roles, and a one-or-two-sentence layout concept. **Do NOT** start writing HTML and let the palette emerge ad hoc.
 - **Do** inline fonts as `@font-face` data URIs. **Do NOT** link a webfont URL — the CSP silently drops it and you ship the fallback face without knowing.
-- **Do** lay out sibling groups with flex/grid and `gap`. **Do NOT** stack per-element margins "that silently collapse or double."
+- **Do** lay out sibling groups with flex/grid and `gap`. **Do NOT** stack per-element margins that silently collapse or double.
 - **Do** apply an existing design system when the project has one (CLAUDE.md, tokens file, component styles). **Do NOT** let the skill's guidance override the user's words or the project's system — precedence is fixed: user, project, then you.
 - **Do** put wide tables/code/diagrams in their own `overflow-x: auto` container. **Do NOT** let the page body scroll horizontally.
-- **Do**, for editorial work, review the design plan and revise "if any part of it reads like the generic default you would produce for any similar page." **Do NOT** take that editorial license on a memo — restraint is the assignment there.
-- **Do** spend boldness once: "Spend your boldness in one place; keep everything around it quiet." **Do NOT** scatter effects — "sometimes less is more, and extra animation contributes to the feeling that the design is AI-generated."
+- **Do**, for editorial work, review the design plan and revise any part that reads like the generic default you would produce for any similar page. **Do NOT** take that editorial license on a memo — restraint is the assignment there.
+- **Do** spend boldness in one place and keep everything around it quiet. **Do NOT** scatter effects — the skill warns that extra animation is itself one of the tells of AI-generated design.
 
 ## 8. Boundaries — what it does NOT cover
 
@@ -153,15 +142,15 @@ This repo generates a lot of HTML — plan documents from `plan-agent`, gallerie
 
 ## 11. Maintenance and audit
 
-- The skill's content is version-locked to the Claude Code release. Every claim in this guide was extracted from **2.1.198**; a later binary may revise the text (the cliché list in §3 is explicitly time-stamped by its own wording — "AI-generated design *currently* clusters…" — and is the most likely section to churn).
-- There is no changelog for built-in skills. The only audit method is re-extraction and diff (see §12).
-- Prune this guide if a future Claude Code release surfaces built-in skills as readable files or documents artifact-design publicly — at that point the primary source changes and the binary-extraction sections above become historical.
+- The skill's content is version-locked to the Claude Code release. Every claim in this guide was verified against **2.1.198**; a later binary may revise the text (the skill's own wording frames the cliché list in §3 as a *current* snapshot, making it the most likely section to churn).
+- There is no changelog for built-in skills. The only audit method is re-inspection and diff (see §12).
+- Prune this guide if a future Claude Code release surfaces built-in skills as readable files or documents artifact-design publicly — at that point the primary source changes and the binary-inspection sections above become historical.
 
 ## 12. Verification protocol
 
 Concrete checks that this guide's claims still hold:
 
-1. **Confirm the version.** `claude --version` — if it no longer reports 2.1.198, treat every verbatim quote here as needing re-verification.
+1. **Confirm the version.** `claude --version` — if it no longer reports 2.1.198, treat this guide's claims as needing re-verification.
 2. **Confirm the skill is still embedded.** *(Per-machine path — adjust the version segment.)*
 
    ```bash
@@ -172,7 +161,7 @@ Concrete checks that this guide's claims still hold:
    ```
 
    Expected: an offset, not `NOT FOUND`.
-3. **Confirm it still loads in a session.** Canned prompt: *"Load the artifact-design skill and quote its first sentence."* Expected response quotes the design-lead-at-a-small-studio framing. Failure mode: the skill is missing from the available-skills list or the first sentence has changed — re-extract and update this guide.
+3. **Confirm it still loads in a session.** Canned prompt: *"Load the artifact-design skill and describe its first sentence."* Expected response describes the design-lead-at-a-small-studio framing. Failure mode: the skill is missing from the available-skills list or the opening has changed — re-inspect and update this guide.
 4. **Confirm the Artifact-tool mandate.** In any session with the Artifact tool available, the tool description should still contain "you MUST load the `artifact-design` skill." If that sentence is gone, §5's activation story is stale.
 
 ---

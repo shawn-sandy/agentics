@@ -34,6 +34,8 @@ jobs:
         run: bash tests/plugins/test-build-prototypes-index.sh
       - name: Test prototype persistence
         run: node tests/plugins/test-prototype-persistence.mjs
+      - name: Test save-artifact skill
+        run: bash tests/plugins/test-save-artifact.sh
       - name: Publish to agentics-kit
         run: node scripts/build-dist.mjs --publish
         env:

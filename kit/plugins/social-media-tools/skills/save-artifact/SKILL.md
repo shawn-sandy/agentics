@@ -42,7 +42,7 @@ stop.
 ## Step 2 — Resolve the destination
 
 ```bash
-if [ -z "${CLAUDE_PLUGIN_ROOT}" ]; then
+if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
   echo "Error: CLAUDE_PLUGIN_ROOT is not set — run this skill from within the installed social-media-tools plugin." >&2
   exit 1
 fi
