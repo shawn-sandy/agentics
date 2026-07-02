@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session Recap: export-session skill</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #1F2429;
+    --muted: #6E7378;
+    --accent: #2F6B4F;
+    --tint: #E9F2ED;
+    --inset: #22272E;
+    --inset-ink: #D8DEE4;
+    --rule: #E3E1DA;
+    --serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 24px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 8px 0 0;
+    text-wrap: balance;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+  }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 62ch; }
+  section { display: flex; flex-direction: column; gap: 16px; }
+
+  .frontmatter {
+    background: var(--inset);
+    color: var(--inset-ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    border-radius: 6px;
+    padding: 18px 22px;
+    overflow-x: auto;
+  }
+  .frontmatter .k { color: #8FB89F; }
+  .frontmatter .d { color: #768390; }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 0 18px;
+    position: relative;
+    padding-bottom: 28px;
+  }
+  .step:last-child { padding-bottom: 0; }
+  .step::before {
+    content: "";
+    position: absolute;
+    left: 21px;
+    top: 34px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--rule);
+  }
+  .step:last-child::before { display: none; }
+  .step-n {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--tint);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step h3 {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    margin: 10px 0 6px;
+  }
+  .step p { color: var(--muted); font-size: 15px; max-width: 60ch; }
+  .step code, .files code, td code, li code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--tint);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .files { display: flex; flex-direction: column; }
+  .file {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: baseline;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14.5px;
+  }
+  .file:first-child { border-top: 1px solid var(--rule); }
+  .file .path { font-family: var(--mono); font-size: 13px; overflow-x: auto; }
+  .file .role { color: var(--muted); text-align: right; white-space: nowrap; }
+
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    text-align: left;
+    padding: 8px 14px 8px 0;
+    border-bottom: 2px solid var(--ink);
+  }
+  td {
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  td:first-child { white-space: nowrap; }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .fact {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .fact .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .fact .value {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .fact .value a { color: var(--accent); text-decoration: none; }
+  .fact .value a:hover, .fact .value a:focus-visible { text-decoration: underline; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ul.notes { margin: 0; padding-left: 20px; color: var(--muted); font-size: 15px; display: flex; flex-direction: column; gap: 8px; }
+  ul.notes li { max-width: 62ch; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Session recap · agentics · 2026-07-02</p>
+    <h1>Building the export-session skill, from one-off to shipped plugin</h1>
+    <p class="lede" style="margin-top:12px">One session took a single request — “export sessions as Markdown so they can teach” — through four shapes: standalone skill, standalone plugin, a skill folded into <code style="font-family:var(--mono);font-size:0.9em">social-media-tools</code>, and finally a reviewed, hardened pull request.</p>
+  </header>
+
+  <section>
+    <h2>What the skill produces</h2>
+    <p class="lede">Every export opens with frontmatter like this — the recap you are reading borrows the format.</p>
+    <div class="frontmatter">---<br>
+<span class="k">session-id:</span> "5f240d94-3602-4f95-8b49-e69764d87b9f"<br>
+<span class="k">date:</span> 2026-07-02<br>
+<span class="k">source:</span> "~/.claude/projects/-Users-shawnsandy-devbox-agentics/…jsonl"<br>
+<span class="k">type:</span> session-export<br>
+---<br>
+<span class="d"># then: user / Claude turns, tool calls as one-liners, harness noise removed</span></div>
+  </section>
+
+  <section>
+    <h2>How the session unfolded</h2>
+    <div class="timeline">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div>
+          <h3>Skill first, script-backed</h3>
+          <p>Built <code>export-session</code> as a project skill: a SKILL.md workflow plus <code>export_session.py</code>, so multi-megabyte JSONL transcripts are converted by Python and never enter model context. First smoke test exposed harness noise (<code>&lt;local-command-caveat&gt;</code>) leaking into output; fixed with a prefix blocklist.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div>
+          <h3>Promoted to a plugin</h3>
+          <p>Repackaged as a <code>session-tools</code> marketplace plugin (0.1.0) — manifest, README, CHANGELOG, marketplace registration at 4.1.0 — using <code>${CLAUDE_PLUGIN_ROOT}</code> so the script path survives installation anywhere.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <div>
+          <h3>Folded into social-media-tools</h3>
+          <p>The one-skill plugin dissolved: <code>export-session</code> moved beside its sibling <code>share-session</code>, which already reads the same transcripts. Expressed as a minor bump (2.13.0 → 2.14.0); the marketplace returned to 4.0.0 with 11 plugins. The skill needed zero content changes to move.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">4</div>
+        <div>
+          <h3>PR, review, hardening</h3>
+          <p>Opened PR #368. Copilot's review surfaced four legitimate findings; all fixed in one pass, replied to, and resolved. Rate-limited bot posts from Codex and CodeRabbit were correctly treated as non-findings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What shipped</h2>
+    <div class="files">
+      <div class="file"><span class="path">kit/plugins/social-media-tools/skills/export-session/SKILL.md</span><span class="role">workflow + discovery</span></div>
+      <div class="file"><span class="path">…/export-session/scripts/export_session.py</span><span class="role">JSONL → Markdown</span></div>
+      <div class="file"><span class="path">kit/plugins/social-media-tools/CHANGELOG.md</span><span class="role">v2.14.0 entry</span></div>
+      <div class="file"><span class="path">.claude-plugin/marketplace.json</span><span class="role">2.13.0 → 2.14.0</span></div>
+      <div class="file"><span class="path">docs/plans/add-export-session-skill.md</span><span class="role">plan, completed</span></div>
+      <div class="file"><span class="path">CLAUDE.md · plugin README</span><span class="role">discovery surfaces</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Review findings, all fixed in 3a56b99</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">Finding</th><th scope="col">Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Filename collisions</td><td>Short session-id suffix: <code>&lt;date&gt;-&lt;slug&gt;-&lt;sid8&gt;.md</code> — unique across sessions, idempotent per session (proved by exporting twice → one file)</td></tr>
+          <tr><td>Unquoted YAML</td><td><code>session-id</code> and <code>source</code> now JSON-quoted in frontmatter</td></tr>
+          <tr><td>Whole-file read</td><td>Transcript streams line-by-line with explicit UTF-8</td></tr>
+          <tr><td>Noisy glob</td><td>Discovery command silences stderr when no sessions exist yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>By the numbers</h2>
+    <div class="facts">
+      <div class="fact"><div class="label">Pull request</div><div class="value"><a href="https://github.com/shawn-sandy/agentics/pull/368">#368</a></div></div>
+      <div class="fact"><div class="label">Commits</div><div class="value">3</div></div>
+      <div class="fact"><div class="label">Smoke-test turns</div><div class="value">264</div></div>
+      <div class="fact"><div class="label">Review threads resolved</div><div class="value">4 / 4</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Worth remembering</h2>
+    <ul class="notes">
+      <li>Scripts over context: converting transcripts in Python keeps the model from ever reading megabytes of JSONL — the skill just locates the file and shells out.</li>
+      <li>Domain-container naming resolved itself: the standalone plugin lasted one commit before the skill found its real home next to <code>share-session</code>.</li>
+      <li>Unshipped versions are free: because 2.14.0 and 4.1.0 never reached main, the restructure cost nothing — no compatibility story, just cleaner history.</li>
+      <li>Idempotent filenames beat counters: a session-id suffix makes re-exports overwrite themselves instead of piling up <code>-2</code>, <code>-3</code> duplicates.</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>
