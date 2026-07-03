@@ -1,25 +1,24 @@
 ---
 name: save-artifact
-description: "Saves an HTML Artifact page to the plugin's artifacts folder for sharing. Copies a chosen .html into ${CLAUDE_PLUGIN_ROOT}/artifacts with a dated name. Use when asked to save or share an artifact."
+description: "Saves an HTML Artifact page to the plans directory for sharing. Copies a chosen .html into {plansDirectory}/artifacts with a dated name. Use when asked to save or share an artifact."
 allowed-tools: Bash, Read, Write, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # save-artifact
 
-Copy an HTML Artifact page into the plugin's `artifacts/` folder under a dated
-filename, so a page you just built can be handed off and shared in one step.
+Copy an HTML Artifact page into the plans directory's `artifacts/` folder under
+a dated filename, so a page you just built can be handed off and shared in one
+step.
 
 ## Overview
 
 Claude's Artifact tool produces self-contained HTML pages, but each lives only
-in the chat session. This skill copies one into
-`${CLAUDE_PLUGIN_ROOT}/artifacts/` with a `<name>-YYYY-MM-DD.html` filename and
-reports the saved path.
+in the chat session. This skill copies one into `{plansDirectory}/artifacts/`
+with a `<name>-YYYY-MM-DD.html` filename and reports the saved path.
 
-> **Note on durability.** `${CLAUDE_PLUGIN_ROOT}` resolves to the *installed*
-> plugin cache. That directory is wiped when the plugin is reinstalled or
-> updated, so files saved here are not durable and are not committed with any
-> repo. Save copies you need to keep somewhere else.
+Saving into the plans directory (a repo path such as `docs/plans/`) keeps the
+artifact durable and committable alongside the project — unlike the installed
+plugin cache, which is wiped on every plugin reinstall or update.
 
 ## Exit plan mode
 
@@ -46,17 +45,15 @@ stop.
 
 ## Step 2 — Resolve the destination
 
+Read `plansDirectory` from `.claude/settings.json`, falling back to `docs/plans`
+when it is unset. The destination is `<plansDirectory>/artifacts`.
+
 ```bash
-if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
-  echo "Error: CLAUDE_PLUGIN_ROOT is not set — run this skill from within the installed social-media-tools plugin." >&2
-  exit 1
-fi
-DEST="${CLAUDE_PLUGIN_ROOT}/artifacts"
+PLANS_DIR=$(node -e 'try{process.stdout.write(require("./.claude/settings.json").plansDirectory||"")}catch(e){}' 2>/dev/null)
+PLANS_DIR="${PLANS_DIR:-docs/plans}"
+DEST="$PLANS_DIR/artifacts"
 mkdir -p "$DEST" || { echo "Error: could not create $DEST" >&2; exit 1; }
 ```
-
-If the variable is unset, stop with the error above — do not fall back to
-another directory.
 
 ## Step 3 — Copy under a dated, collision-safe name
 
@@ -76,6 +73,5 @@ echo "Saved artifact → $target"
 
 ## Step 4 — Report
 
-Tell the user the saved path (`$target`) so they can share it. Mention the
-durability note from the Overview if the artifact is something they intend to
-keep long-term.
+Tell the user the saved path (`$target`) so they can share it. Since it lives
+under the plans directory, remind them to commit it with the repo to keep it.
