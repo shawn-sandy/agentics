@@ -1,5 +1,15 @@
 # Changelog — social-media-tools
 
+## v2.15.1 — 2026-07-03 — save-artifact: save into the plans directory
+
+### Fixed
+
+- **`save-artifact` destination** — now copies the artifact into
+  `{plansDirectory}/artifacts/` (read from `.claude/settings.json`, falling
+  back to `docs/plans/artifacts/`) instead of `${CLAUDE_PLUGIN_ROOT}/artifacts/`.
+  The plugin cache is wiped on reinstall/update, so saves there were not
+  durable; the plans directory is a committable repo path.
+
 ## v2.15.0 — 2026-07-02 — save-artifact: save HTML Artifact pages for sharing
 
 ### Added
