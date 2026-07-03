@@ -49,11 +49,16 @@ Read `plansDirectory` from `.claude/settings.json`, falling back to `docs/plans`
 when it is unset. The destination is `<plansDirectory>/artifacts`.
 
 ```bash
-PLANS_DIR=$(node -e 'try{process.stdout.write(require("./.claude/settings.json").plansDirectory||"")}catch(e){}' 2>/dev/null)
+# .trim() strips stray whitespace/newlines from the configured value.
+PLANS_DIR=$(node -e 'try{process.stdout.write((require("./.claude/settings.json").plansDirectory||"").trim())}catch(e){}' 2>/dev/null)
 PLANS_DIR="${PLANS_DIR:-docs/plans}"
 DEST="$PLANS_DIR/artifacts"
 mkdir -p "$DEST" || { echo "Error: could not create $DEST" >&2; exit 1; }
 ```
+
+Paths are resolved relative to the current working directory, which is the
+project root the skill is invoked from (same convention as the sibling
+`export-session` skill).
 
 ## Step 3 — Copy under a dated, collision-safe name
 
