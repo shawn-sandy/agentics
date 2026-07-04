@@ -45,13 +45,32 @@ stop.
 
 ## Step 2 — Resolve the destination
 
-Read `plansDirectory` from `.claude/settings.json`, falling back to `docs/plans`
-when it is unset. The destination is `<plansDirectory>/artifacts`.
+Resolve `plansDirectory` following Claude Code's settings precedence — project-local
+`.claude/settings.local.json`, then project `.claude/settings.json`, then global
+`~/.claude/settings.json`; the first that sets it wins. Fall back to `docs/plans` if
+none do. This matches how the `plans-library` skill resolves the directory, so the
+saved artifact always lands in the same `artifacts/` folder the plans gallery scans.
+The destination is `<plansDirectory>/artifacts`.
 
 ```bash
-# .trim() strips stray whitespace/newlines from the configured value.
-PLANS_DIR=$(node -e 'try{process.stdout.write((require("./.claude/settings.json").plansDirectory||"").trim())}catch(e){}' 2>/dev/null)
-PLANS_DIR="${PLANS_DIR:-docs/plans}"
+PLANS_DIR=$(python3 - <<'EOF'
+import json, os, sys
+# Claude settings precedence: project-local → project → user-global
+candidates = (
+    os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+    os.path.join(os.getcwd(), '.claude', 'settings.json'),
+    os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+)
+for path in candidates:
+    try:
+        v = json.load(open(path)).get('plansDirectory', '').strip()
+        if v:
+            print(v); sys.exit(0)
+    except Exception:
+        pass
+print('docs/plans')
+EOF
+)
 DEST="$PLANS_DIR/artifacts"
 mkdir -p "$DEST" || { echo "Error: could not create $DEST" >&2; exit 1; }
 ```

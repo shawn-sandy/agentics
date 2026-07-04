@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.14.0 — Show saved artifacts in the plans gallery (2026-07-03)
+
+### Added
+
+- **Plans gallery now lists saved artifacts** — both gallery generators surface `.html` files in the plans directory's `artifacts/` subfolder (where `save-artifact` writes) as cards under a new **Artifact** type filter:
+  - `plans-library` skill (manual `/plan-agent:plans-library`) scans `artifacts/` and renders artifact cards.
+  - `build-index.sh` hook (auto-rebuild on every plan Write/Edit) classifies files under `artifacts/` as `type=artifact` instead of default `todo`/`untyped` plan cards, so the auto-generated gallery matches the new filter and does not misfile artifacts.
+  - Artifacts carry no plan metadata, so cards show only a title, an `artifact` type chip, and the date parsed from the `<base>-YYYY-MM-DD.html` filename — no status/effort chips. Artifact links are prefixed with `artifacts/` (the subdirectory), and artifacts sort after plans, newest-first. Reuses the existing type-filter/search/count machinery (one CSS rule + one chip in `plans-gallery.html`).
+- **Gallery count/copy reworded "plans" → "items"** in `plans-gallery.html` (header, footer, no-results, live count) since the gallery now mixes plans and artifacts.
+- **`plans-library` no longer reports an empty library for artifact-only projects** — the Step 1 empty-state check now also considers `artifacts/`, so a project with saved artifacts but no top-level plans still builds a gallery.
+
 ## 2.13.1 — Trim finalize-plan skill description to budget (2026-07-02)
 
 ### Fixed

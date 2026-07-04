@@ -59,19 +59,36 @@ for dirpath, dirnames, filenames in os.walk(plans_dir):
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
+def _is_artifact(path):
+    """True for files under the plans dir's artifacts/ subdirectory."""
+    rel = os.path.relpath(path, plans_dir).replace(os.sep, '/')
+    return rel.startswith('artifacts/')
+
+def _artifact_created(path):
+    """YYYY-MM-DD date suffix in an artifact filename (save-artifact naming), else ''."""
+    m = re.search(r'-(\d{4}-\d{2}-\d{2})(?:-\d+)?\.html$', os.path.basename(path))
+    return m.group(1) if m else ''
+
 def _plan_created_sort_key(path):
-    """Sort by plan-created meta descending; plans without the meta sort last by filename."""
+    """Plans first (by plan-created desc), then artifacts (by filename date desc);
+    undated entries within each group sort last by filename."""
+    base = os.path.basename(path)
+    if _is_artifact(path):
+        d = _artifact_created(path)
+        if d:
+            y, mo, dd = (int(x) for x in d.split('-'))
+            return (1, 0, -y, -mo, -dd, base)
+        return (1, 1, 0, 0, 0, base)
     try:
         with open(path, encoding='utf-8', errors='replace') as fh:
             head = fh.read(2000)
         m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
         if m:
-            d = m.group(1).strip()
-            parts = d.split('-')
-            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), os.path.basename(path))
+            parts = m.group(1).strip().split('-')
+            return (0, 0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
     except Exception:
         pass
-    return (1, 0, 0, 0, os.path.basename(path))
+    return (0, 1, 0, 0, 0, base)
 
 plan_files.sort(key=_plan_created_sort_key)
 
@@ -102,23 +119,29 @@ for f in plan_files:
         content = open(f, encoding='utf-8', errors='replace').read()
     except Exception:
         continue
-    status   = get_meta(content, 'plan-status', 'todo')
-    ptype    = get_meta(content, 'plan-type',   'untyped')
-    effort   = get_meta(content, 'plan-effort', '').lower()
-    created  = get_meta(content, 'plan-created', '')
-    title    = get_title(content, f)
     rel_path = os.path.relpath(f, plans_dir)
+    if _is_artifact(f):
+        # Artifacts carry no plan metadata: type=artifact, no status/effort chips,
+        # date parsed from the filename. Matches the plans-library skill.
+        status, ptype, effort = '', 'artifact', ''
+        created = _artifact_created(f)
+    else:
+        status   = get_meta(content, 'plan-status', 'todo')
+        ptype    = get_meta(content, 'plan-type',   'untyped')
+        effort   = get_meta(content, 'plan-effort', '').lower()
+        created  = get_meta(content, 'plan-created', '')
+    title = get_title(content, f)
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
-    # No plan-effort tag → no badge; empty data-effort passes every effort filter.
+    # Empty status/effort → omit the badge; empty data-* passes every filter.
+    status_badge = f'<span class="status-chip status-{e(status)}">{e(status_display)}</span>' if status else ''
     effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
    data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(title.lower())}">
   <div class="card-badges">
-    <span class="status-chip status-{e(status)}">{e(status_display)}</span>
-    <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
+    {status_badge}<span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
   </div>
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
@@ -175,5 +198,5 @@ else:
 with open(output_path, 'w', encoding='utf-8') as fh:
     fh.write(content)
 
-print(f'[build-index] wrote {output_path} ({plan_count} plans, {generated_at})')
+print(f'[build-index] wrote {output_path} ({plan_count} items, {generated_at})')
 EOF

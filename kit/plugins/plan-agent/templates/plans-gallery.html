@@ -158,6 +158,7 @@
     .filter-chip[data-type="refactor"].active  { background: #7c3aed; border-color: #7c3aed; color: #fff; }
     .filter-chip[data-type="docs"].active      { background: #ea580c; border-color: #ea580c; color: #fff; }
     .filter-chip[data-type="chore"].active     { background: #0d9488; border-color: #0d9488; color: #fff; }
+    .filter-chip[data-type="artifact"].active  { background: #4f46e5; border-color: #4f46e5; color: #fff; }
     .filter-chip[data-effort="all"].active     { background: var(--text); border-color: var(--text); color: #fff; }
     .filter-chip[data-effort="low"].active     { background: #16a34a; border-color: #16a34a; color: #fff; }
     .filter-chip[data-effort="medium"].active  { background: #d97706; border-color: #d97706; color: #fff; }
@@ -228,6 +229,7 @@
     .type-docs     { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
     .type-chore    { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
     .type-untyped  { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+    .type-artifact { background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; }
 
     /* Effort colours — mirror the plan template's effort badge */
     .effort-low    { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
@@ -311,7 +313,7 @@
 
   <div class="gallery-header">
     <h1>Plans Library</h1>
-    <p>{{PLAN_COUNT}} plans &mdash; click any card to open it</p>
+    <p>{{PLAN_COUNT}} items &mdash; click any card to open it</p>
   </div>
 
   <div class="toolbar">
@@ -342,6 +344,7 @@
       <button class="filter-chip" data-type="refactor" aria-pressed="false">Refactor</button>
       <button class="filter-chip" data-type="docs" aria-pressed="false">Docs</button>
       <button class="filter-chip" data-type="chore" aria-pressed="false">Chore</button>
+      <button class="filter-chip" data-type="artifact" aria-pressed="false">Artifact</button>
     </div>
   </div>
 
@@ -361,10 +364,10 @@
     {{GALLERY_ENTRIES}}
   </div>
 
-  <div class="no-results" id="noResults">No plans match your search.</div>
+  <div class="no-results" id="noResults">No items match your search.</div>
 
   <div class="gallery-footer">
-    <span>{{PLAN_COUNT}} plans</span>
+    <span>{{PLAN_COUNT}} items</span>
     <span>Generated {{GENERATED_AT}}</span>
   </div>
 
@@ -401,7 +404,7 @@
       noResults.style.display = shown === 0 ? 'block' : 'none';
       visibleCount.textContent = shown === cards.length
         ? ''
-        : 'Showing ' + shown + ' of ' + cards.length + ' plans';
+        : 'Showing ' + shown + ' of ' + cards.length + ' items';
     }
 
     function wireChips(containerId, prop) {
