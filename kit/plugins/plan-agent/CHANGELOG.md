@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.14.0 — Show saved artifacts in the plans gallery (2026-07-03)
+
+### Added
+
+- **`plans-library` gallery now lists saved artifacts** — the skill scans the `artifacts/` subdirectory of the plans directory (where `save-artifact` writes) and renders each `.html` as a gallery card under a new **Artifact** type filter. Artifacts carry no plan metadata, so cards show only a title, an `artifact` type chip, and the date parsed from the `<base>-YYYY-MM-DD.html` filename — no status/effort chips. Reuses the existing type-filter/search/count machinery (one CSS rule + one chip in `plans-gallery.html`); artifact links are prefixed with `artifacts/` since they live in the subdirectory. An absent `artifacts/` folder simply yields no artifact cards.
+
 ## 2.13.1 — Trim finalize-plan skill description to budget (2026-07-02)
 
 ### Fixed

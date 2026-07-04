@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.15.2 — 2026-07-03 — save-artifact: align path resolution with plans-library
+
+### Fixed
+
+- **`save-artifact` now resolves `plansDirectory` with full Claude settings precedence** (project-local `settings.local.json` → project `settings.json` → global `~/.claude/settings.json`), matching the `plans-library` skill. Previously it read only project `.claude/settings.json` via `node require`, so a `plansDirectory` set in the local or global settings file would send artifacts to a folder the plans gallery does not scan. Both skills now compute the same `<plansDirectory>/artifacts` destination, so saved artifacts always appear in the gallery.
+
 ## v2.15.1 — 2026-07-03 — save-artifact: save into the plans directory
 
 ### Fixed
