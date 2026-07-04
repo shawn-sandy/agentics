@@ -313,7 +313,7 @@
 
   <div class="gallery-header">
     <h1>Plans Library</h1>
-    <p>{{PLAN_COUNT}} plans &mdash; click any card to open it</p>
+    <p>{{PLAN_COUNT}} items &mdash; click any card to open it</p>
   </div>
 
   <div class="toolbar">
@@ -364,10 +364,10 @@
     {{GALLERY_ENTRIES}}
   </div>
 
-  <div class="no-results" id="noResults">No plans match your search.</div>
+  <div class="no-results" id="noResults">No items match your search.</div>
 
   <div class="gallery-footer">
-    <span>{{PLAN_COUNT}} plans</span>
+    <span>{{PLAN_COUNT}} items</span>
     <span>Generated {{GENERATED_AT}}</span>
   </div>
 
@@ -404,7 +404,7 @@
       noResults.style.display = shown === 0 ? 'block' : 'none';
       visibleCount.textContent = shown === cards.length
         ? ''
-        : 'Showing ' + shown + ' of ' + cards.length + ' plans';
+        : 'Showing ' + shown + ' of ' + cards.length + ' items';
     }
 
     function wireChips(containerId, prop) {

@@ -41,11 +41,11 @@ EOF
 )
 ```
 
-If the directory does not exist or contains no `.html` files (other than `index.html`), tell the user:
+If the directory does not exist, or contains no `.html` files (other than `index.html`) **at the top level and none in `artifacts/`**, tell the user:
 
 > "No HTML plans found in `<PLANS_DIR>`. Run `/plan-agent:implementation-plan` to create your first plan."
 
-**STOP.**
+**STOP.** An artifact-only project (files in `artifacts/` but no top-level plans) is **not** empty — do not stop; continue to build a gallery of just the artifacts.
 
 ---
 
@@ -190,7 +190,7 @@ open "$GALLERY_PATH" 2>/dev/null || xdg-open "$GALLERY_PATH" 2>/dev/null || true
 ```
 
 Tell the user:
-> "Plans library generated at `<PLANS_DIR>/index.html` with {count} plans — opened in your browser. Click any card to open that plan."
+> "Plans library generated at `<PLANS_DIR>/index.html` with {count} items (plans + artifacts) — opened in your browser. Click any card to open it."
 
 ---
 
