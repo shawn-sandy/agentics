@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.16.0 — 2026-07-07 — save-artifact: auto-rebuild the plans gallery index
+
+### Added
+
+- **`save-artifact` now rebuilds `docs/plans/index.html` after copying the artifact.** Because the copy uses `cp` (which does not match the `rebuild-plans-index` hook's `Write|Edit|MultiEdit` matcher), saving an artifact previously left the gallery index stale until the next plan write. The skill now locates `plan-agent`'s bundled `build-index.sh` — the same script the hook and the deploy workflow use — and runs it against the project root, so the new artifact card appears before commit. Best-effort: the script always exits 0, and if `plan-agent` is not installed the save still succeeds with a note to run `/plan-agent:plans-library` manually.
+
 ## v2.15.2 — 2026-07-03 — save-artifact: align path resolution with plans-library
 
 ### Fixed
