@@ -95,7 +95,34 @@ cp "$SRC" "$target" || { echo "Error: copy failed — nothing saved" >&2; exit 1
 echo "Saved artifact → $target"
 ```
 
-## Step 4 — Report
+## Step 4 — Rebuild the plans gallery index
+
+The copy above uses `cp`, which does not match the `rebuild-plans-index` hook's
+`Write|Edit|MultiEdit` matcher, so saving the artifact does not itself refresh
+the gallery. Run `plan-agent`'s `build-index.sh` directly so the new artifact
+card appears in `docs/plans/index.html` before the user commits. This is
+best-effort: the script always exits 0, and if `plan-agent` is not installed the
+save still succeeds.
+
+Locate the bundled script the same way `setup-sites` does (versioned cache,
+direct install, or `--plugin-dir` load), then run it with the project root:
+
+```bash
+BUILD_INDEX=$( { \
+  find ~/.claude/plugins -path "*/plan-agent/*/hooks/build-index.sh" -type f 2>/dev/null | sort -rV; \
+  find ~/.claude/plugins -path "*/plan-agent/hooks/build-index.sh"   -type f 2>/dev/null; \
+  find "$PWD"            -path "*/plan-agent/hooks/build-index.sh"   -type f 2>/dev/null; \
+} | head -1 )
+if [ -n "$BUILD_INDEX" ]; then
+  bash "$BUILD_INDEX" "$PWD" && echo "Rebuilt plans index"
+else
+  echo "plan-agent not found — run /plan-agent:plans-library to refresh the gallery"
+fi
+```
+
+## Step 5 — Report
 
 Tell the user the saved path (`$target`) so they can share it. Since it lives
 under the plans directory, remind them to commit it with the repo to keep it.
+Note whether the gallery index was rebuilt (Step 4) or still needs a manual
+`/plan-agent:plans-library` run.
