@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>implementation-plan — Feature Reference</title>
+<style>
+  :root {
+    --ink: #171b24;
+    --ink-soft: #3a414f;
+    --muted: #6c7688;
+    --faint: #9aa3b2;
+    --paper: #eef1f7;
+    --surface: #ffffff;
+    --surface-2: #f6f8fc;
+    --line: #dbe0ea;
+    --line-soft: #e7ebf3;
+    --accent: #3b52c4;
+    --accent-soft: #eceffb;
+    --accent-ink: #2c3d99;
+    /* semantic status */
+    --todo: #7b8798;
+    --progress: #c9791f;
+    --done: #2f9463;
+    --high: #cf4550;
+    --code-bg: #f2f4fa;
+    --shadow: 0 1px 2px rgba(23,27,36,.04), 0 6px 20px rgba(23,27,36,.06);
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e9ecf3;
+      --ink-soft: #c2c8d4;
+      --muted: #8b93a4;
+      --faint: #626b7d;
+      --paper: #0d0f15;
+      --surface: #161a22;
+      --surface-2: #1b2029;
+      --line: #2a303c;
+      --line-soft: #232833;
+      --accent: #8ea0ff;
+      --accent-soft: #1c2338;
+      --accent-ink: #b7c2ff;
+      --todo: #8892a2;
+      --progress: #e0993f;
+      --done: #4bbd8a;
+      --high: #ec6b74;
+      --code-bg: #1b2029;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --ink: #171b24; --ink-soft: #3a414f; --muted: #6c7688; --faint: #9aa3b2;
+    --paper: #eef1f7; --surface: #ffffff; --surface-2: #f6f8fc; --line: #dbe0ea;
+    --line-soft: #e7ebf3; --accent: #3b52c4; --accent-soft: #eceffb; --accent-ink: #2c3d99;
+    --todo: #7b8798; --progress: #c9791f; --done: #2f9463; --high: #cf4550; --code-bg: #f2f4fa;
+    --shadow: 0 1px 2px rgba(23,27,36,.04), 0 6px 20px rgba(23,27,36,.06);
+  }
+  :root[data-theme="dark"] {
+    --ink: #e9ecf3; --ink-soft: #c2c8d4; --muted: #8b93a4; --faint: #626b7d;
+    --paper: #0d0f15; --surface: #161a22; --surface-2: #1b2029; --line: #2a303c;
+    --line-soft: #232833; --accent: #8ea0ff; --accent-soft: #1c2338; --accent-ink: #b7c2ff;
+    --todo: #8892a2; --progress: #e0993f; --done: #4bbd8a; --high: #ec6b74; --code-bg: #1b2029;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px 120px; }
+
+  /* ---------- header ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-inner {
+    max-width: 880px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand {
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    letter-spacing: .01em; color: var(--ink);
+  }
+  .brand .slash { color: var(--accent); }
+  .top-meta {
+    margin-left: auto; font-family: var(--mono); font-size: 11px;
+    color: var(--muted); letter-spacing: .04em; text-transform: uppercase;
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 20px;
+  }
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.02; margin: 0 0 20px;
+    letter-spacing: -.02em; font-weight: 800; text-wrap: balance;
+  }
+  h1 code {
+    font-family: var(--mono); font-weight: 700; font-size: .92em;
+    background: none; padding: 0; color: var(--accent);
+  }
+  .lede {
+    font-size: 1.18rem; color: var(--ink-soft); max-width: 62ch;
+    line-height: 1.5; margin: 0 0 28px;
+  }
+  .hero-facts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .fact {
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 11px;
+  }
+  .fact b { color: var(--accent); font-weight: 600; }
+
+  /* ---------- section ---------- */
+  section { padding: 56px 0 0; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .sec-num {
+    font-family: var(--mono); font-size: 12px; color: var(--faint);
+    letter-spacing: .1em; font-weight: 600;
+  }
+  h2 {
+    font-size: 1.55rem; margin: 0; letter-spacing: -.01em; font-weight: 700;
+    text-wrap: balance;
+  }
+  .sec-sub { color: var(--muted); max-width: 64ch; margin: 4px 0 24px; }
+
+  h3 {
+    font-size: 1.05rem; margin: 32px 0 12px; letter-spacing: -.005em;
+    font-weight: 650;
+  }
+  p { max-width: 68ch; }
+
+  /* ---------- code + mono bits ---------- */
+  code {
+    font-family: var(--mono); font-size: .86em;
+    background: var(--code-bg); padding: .12em .38em; border-radius: 4px;
+    color: var(--ink); border: 1px solid var(--line-soft);
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px 18px; overflow-x: auto;
+    font-family: var(--mono); font-size: 13px; line-height: 1.55;
+    color: var(--ink); margin: 16px 0;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+  .cmt { color: var(--muted); }
+  .tok { color: var(--accent); }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; }
+  @media (min-width: 620px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+
+  .card h4 {
+    margin: 0 0 6px; font-size: 1rem; font-weight: 650;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .card p { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+  .card .tag {
+    font-family: var(--mono); font-size: 11px; padding: 2px 7px;
+    border-radius: 5px; background: var(--accent-soft); color: var(--accent-ink);
+    letter-spacing: .02em; font-weight: 600;
+  }
+
+  /* ---------- workflow rail ---------- */
+  .rail { margin-top: 26px; position: relative; }
+  .rail::before {
+    content: ""; position: absolute; left: 19px; top: 14px; bottom: 14px;
+    width: 2px; background: var(--line);
+  }
+  .stepx { position: relative; padding: 0 0 22px 56px; }
+  .stepx:last-child { padding-bottom: 0; }
+  .stepx .dot {
+    position: absolute; left: 0; top: 0; width: 40px; height: 40px;
+    border-radius: 10px; background: var(--surface); border: 1px solid var(--line);
+    display: grid; place-items: center; font-family: var(--mono);
+    font-weight: 700; font-size: 14px; color: var(--accent);
+    box-shadow: var(--shadow); z-index: 1;
+  }
+  .stepx h4 { margin: 6px 0 5px; font-size: 1.02rem; font-weight: 650; }
+  .stepx p { margin: 0; color: var(--ink-soft); font-size: .94rem; max-width: 64ch; }
+  .skipnote {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    margin-top: 6px; display: inline-block;
+  }
+
+  /* ---------- badges / chips ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 8px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    padding: 5px 11px; border-radius: 999px; border: 1px solid;
+  }
+  .badge .swatch { width: 8px; height: 8px; border-radius: 50%; }
+  .b-todo { color: var(--todo); border-color: color-mix(in srgb, var(--todo) 40%, var(--line)); background: color-mix(in srgb, var(--todo) 8%, var(--surface)); }
+  .b-todo .swatch { background: var(--todo); }
+  .b-prog { color: var(--progress); border-color: color-mix(in srgb, var(--progress) 40%, var(--line)); background: color-mix(in srgb, var(--progress) 10%, var(--surface)); }
+  .b-prog .swatch { background: var(--progress); }
+  .b-done { color: var(--done); border-color: color-mix(in srgb, var(--done) 40%, var(--line)); background: color-mix(in srgb, var(--done) 10%, var(--surface)); }
+  .b-done .swatch { background: var(--done); }
+  .b-low { color: var(--done); border-color: color-mix(in srgb, var(--done) 40%, var(--line)); background: color-mix(in srgb, var(--done) 10%, var(--surface)); }
+  .b-low .swatch { background: var(--done); }
+  .b-med { color: var(--progress); border-color: color-mix(in srgb, var(--progress) 40%, var(--line)); background: color-mix(in srgb, var(--progress) 10%, var(--surface)); }
+  .b-med .swatch { background: var(--progress); }
+  .b-high { color: var(--high); border-color: color-mix(in srgb, var(--high) 40%, var(--line)); background: color-mix(in srgb, var(--high) 10%, var(--surface)); }
+  .b-high .swatch { background: var(--high); }
+
+  /* ---------- tables ---------- */
+  .table-scroll { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 460px; }
+  caption { text-align: left; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 12px 14px 0; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th { background: var(--surface-2); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  td code, th code { white-space: nowrap; }
+  td .flag { font-family: var(--mono); color: var(--accent); font-weight: 600; }
+
+  /* ---------- inline list ---------- */
+  ul.clean { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 10px; }
+  ul.clean > li { padding-left: 26px; position: relative; color: var(--ink-soft); max-width: 66ch; }
+  ul.clean > li::before {
+    content: ""; position: absolute; left: 4px; top: 10px; width: 7px; height: 7px;
+    border-radius: 2px; background: var(--accent); transform: rotate(45deg);
+  }
+  ul.clean b { color: var(--ink); font-weight: 620; }
+
+  .callout {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 20px 0;
+    font-size: .94rem; color: var(--ink-soft);
+  }
+  .callout b { color: var(--accent-ink); }
+
+  hr.soft { border: none; border-top: 1px solid var(--line); margin: 0; }
+
+  footer {
+    margin-top: 72px; padding-top: 28px; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <span class="brand"><span class="slash">/</span>plan-agent:implementation-plan</span>
+    <span class="top-meta">Feature Reference</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Plan-agent plugin · Skill</div>
+    <h1>A planning engine that ships a <code>.html</code> plan, not a to-do list.</h1>
+    <p class="lede">
+      <code>implementation-plan</code> turns an objective, a GitHub/GitLab issue, or a markdown
+      plan into a single self-contained, interactive HTML document — steps, tests, acceptance
+      criteria, effort estimate, and copy-paste implement prompts, all portable in one file.
+      It plans; it does not implement (until you tell it to).
+    </p>
+    <div class="hero-facts">
+      <span class="fact">model <b>opus</b></span>
+      <span class="fact">output <b>self-contained .html</b></span>
+      <span class="fact">workflow <b>steps 0 → 8</b></span>
+      <span class="fact">activation <b>command + ambient</b></span>
+    </div>
+  </div>
+
+  <!-- 01 · WHAT IT DOES -->
+  <section id="overview">
+    <div class="sec-head"><span class="sec-num">01</span><h2>What it produces</h2></div>
+    <p class="sec-sub">One HTML file with everything a plan needs, readable in any browser with no
+      external CSS, no CDN, and no build step. Checkbox and status state live as HTML attributes,
+      so progress travels with the file across machines, browsers, and git.</p>
+    <div class="grid two">
+      <div class="card">
+        <h4><span class="tag">core</span> Structured plan body</h4>
+        <p>Context, a prominent objective, numbered step cards (action + <em>why</em> + expandable
+          <em>verify</em>), a Tests section, interactive acceptance criteria, end-to-end verification,
+          and a completion checklist.</p>
+      </div>
+      <div class="card">
+        <h4><span class="tag">auto</span> Derived artifacts</h4>
+        <p>An auto-generated file-tree, an auto-derived effort badge, and three ready-to-paste prompts —
+          <em>implement</em>, <em>goal</em>, and (when warranted) <em>workflow</em>.</p>
+      </div>
+      <div class="card">
+        <h4><span class="tag">machine</span> Embedded metadata</h4>
+        <p>Plan status, type, effort, repo, paths, and prompts are embedded as <code>&lt;meta&gt;</code>
+          tags so the plans gallery and hooks can read the file without parsing prose.</p>
+      </div>
+      <div class="card">
+        <h4><span class="tag">portable</span> No-JS-required interactivity</h4>
+        <p>Native checkboxes, a Save-as-PDF button, per-prompt Copy buttons, and a progress
+          indicator. Minimal JS only enhances; the <code>checked</code> attribute is the source of truth.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · ACTIVATION -->
+  <section id="activation">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Two ways to invoke it</h2></div>
+    <div class="grid two">
+      <div class="card">
+        <h4>Command invocation</h4>
+        <p style="margin-bottom:12px">Explicit, with full flag control. <code>$ARGUMENTS</code> carries
+          the objective and flags.</p>
+        <pre><code><span class="tok">/plan-agent:implementation-plan</span> add dark mode toggle <span class="tok">--quick</span></code></pre>
+      </div>
+      <div class="card">
+        <h4>Model invocation (ambient)</h4>
+        <p>Auto-activates when you ask to “create a plan document” or “generate an HTML plan.” Flags
+          can’t be passed, so it runs the <b>full</b> workflow (Clarify + Align + Interview) by default
+          and infers the objective from context.</p>
+      </div>
+    </div>
+    <p style="margin-top:18px">Both paths apply the same input detection: issue references, an existing
+      <code>.html</code> plan to revise, or a <code>.md</code> file to convert.</p>
+  </section>
+
+  <!-- 03 · INPUT MODES -->
+  <section id="inputs">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Four input modes</h2></div>
+    <p class="sec-sub">The first non-flag token decides what the skill is working from. Detection order
+      is issue-ref → <code>.html</code> → <code>.md</code> → plain objective.</p>
+    <div class="grid two">
+      <div class="card">
+        <h4>Plain objective</h4>
+        <p>All non-flag text becomes the objective. Empty on the command path → it asks once via
+          <code>AskUserQuestion</code>.</p>
+      </div>
+      <div class="card">
+        <h4>Issue reference <span class="tag">Step 0.5</span></h4>
+        <p>A GitHub/GitLab URL, bare <code>#42</code>, or a plain integer. Fetched via <code>gh</code>/<code>glab</code>;
+          title → objective, body → context, labels → <code>--type</code> hint, URL → frontmatter. Falls back
+          gracefully if the CLI call fails.</p>
+      </div>
+      <div class="card">
+        <h4>Plan revision</h4>
+        <p>A <code>.html</code> token targets an existing plan to extend. Path-safe (basename only, resolved
+          under plan roots); reads the <code>&lt;title&gt;</code> as the objective fallback.</p>
+      </div>
+      <div class="card">
+        <h4>Markdown conversion</h4>
+        <p>A <code>.md</code> token enters conversion mode — maps sections 1:1 into the HTML skeleton, carries
+          frontmatter over, and implies <code>--no-clarify --no-align --no-interview</code> since committed
+          markdown is pre-validated.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 · FLAGS -->
+  <section id="flags">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Flags &amp; arguments</h2></div>
+    <p class="sec-sub">Command-path only. Absent flags fall back to smart defaults — <code>--type</code> is
+      inferred from the objective’s leading verb; the skip flags are opt-in and never inferred.</p>
+    <div class="table-scroll">
+      <table>
+        <caption>Recognized flags</caption>
+        <thead><tr><th>Flag</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><span class="flag">--quick</span></td><td>Shorthand for <code>--no-clarify --no-align --no-interview</code>. Skips Clarify (1), Align (5), Interview (5b), and Explore (0b).</td></tr>
+          <tr><td><span class="flag">--no-clarify</span></td><td>Skip Step 1 Clarify only.</td></tr>
+          <tr><td><span class="flag">--no-align</span></td><td>Skip Step 5 Align only.</td></tr>
+          <tr><td><span class="flag">--no-interview</span></td><td>Skip Step 5b Interview only.</td></tr>
+          <tr><td><span class="flag">--workflow</span></td><td>Always emit a workflow prompt, bypassing the complexity heuristic.</td></tr>
+          <tr><td><span class="flag">--type</span> <code>&lt;kind&gt;</code></td><td>Preset frontmatter type: <code>feature</code> · <code>fix</code> · <code>refactor</code> · <code>docs</code> · <code>chore</code>.</td></tr>
+          <tr><td><span class="flag">--template</span> <code>&lt;name&gt;</code></td><td>Skeleton variant. Only <code>default</code> ships today; <code>minimal</code>/<code>adr</code>/<code>spike</code> are planned.</td></tr>
+          <tr><td><span class="flag">--dir</span> <code>&lt;path&gt;</code></td><td>Override directory resolution; write the plan here.</td></tr>
+          <tr><td><span class="flag">--priority</span> <code>&lt;level&gt;</code></td><td>Write <code>priority:</code> frontmatter — <code>low</code> · <code>medium</code> · <code>high</code> · <code>critical</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <b>Verb inference for <code>--type</code>:</b> create/add/build/implement → <code>feature</code> ·
+      fix/repair/patch/resolve → <code>fix</code> · refactor/rename/extract/move/convert → <code>refactor</code> ·
+      document → <code>docs</code> · anything else → <code>chore</code>.
+    </div>
+  </section>
+
+  <!-- 05 · WORKFLOW -->
+  <section id="workflow">
+    <div class="sec-head"><span class="sec-num">05</span><h2>The workflow — steps 0 → 8</h2></div>
+    <p class="sec-sub">A real, ordered pipeline. Some steps are conditional (issue ref present, flags set);
+      the numbering reflects the sequence the skill actually walks.</p>
+    <div class="rail">
+      <div class="stepx"><div class="dot">0</div>
+        <h4>Self-bootstrap</h4>
+        <p>If in plan mode, silently call <code>ExitPlanMode</code> first — writing an HTML file is a filesystem
+          mutation the harness would otherwise force to markdown, defeating the skill’s whole guarantee.</p>
+      </div>
+      <div class="stepx"><div class="dot">0.5</div>
+        <h4>Issue ingestion</h4>
+        <p>When an issue reference was detected, fetch it and inject title, body, labels, and URL as planning inputs.</p>
+        <span class="skipnote">skipped when no issue reference</span>
+      </div>
+      <div class="stepx"><div class="dot">0b</div>
+        <h4>Explore</h4>
+        <p>Read the codebase — Glob for files, Grep for symbols, Read for architecture — proportional to scope,
+          to ground the plan in what actually exists.</p>
+        <span class="skipnote">skipped when --quick</span>
+      </div>
+      <div class="stepx"><div class="dot">1</div>
+        <h4>Clarify</h4>
+        <p>Resolve ambiguous requirements via <code>AskUserQuestion</code>; use <code>WebSearch</code>/<code>WebFetch</code>
+          when research would strengthen the plan. Well-specified requests skip it.</p>
+        <span class="skipnote">skipped when --quick / --no-clarify</span>
+      </div>
+      <div class="stepx"><div class="dot">2</div>
+        <h4>Create</h4>
+        <p>Resolve the plans directory (settings precedence, <code>--dir</code> override, <code>docs/plans/</code> fallback),
+          pick a <code>verb-target</code> filename, and compute the implement, goal, workflow prompts + effort level.</p>
+      </div>
+      <div class="stepx"><div class="dot">3</div>
+        <h4>Frontmatter</h4>
+        <p>Embed status, effort, type, created, repo-name, file/path, and prompt <code>&lt;meta&gt;</code> tags in the
+          <code>&lt;head&gt;</code> — plus optional priority and issue tags, and any <code>extraFrontmatter</code> from settings.</p>
+      </div>
+      <div class="stepx"><div class="dot">4</div>
+        <h4>Rename</h4>
+        <p>Enforce the <code>verb-target</code> kebab-case filename before writing. Backed by the
+          <code>validate-plan-filename</code> PostToolUse hook.</p>
+      </div>
+      <div class="stepx"><div class="dot">5</div>
+        <h4>Align</h4>
+        <p>Batched <code>AskUserQuestion</code> confirming each step maps to the objective — step-to-objective
+          alignment, not final approval.</p>
+        <span class="skipnote">skipped when --quick / --no-align</span>
+      </div>
+      <div class="stepx"><div class="dot">5b</div>
+        <h4>Interview</h4>
+        <p>Stress-test the draft across 1–3 rounds scaled by complexity, with a mandatory UI/accessibility
+          round when UI signals appear. See §06.</p>
+        <span class="skipnote">skipped when --quick / --no-interview</span>
+      </div>
+      <div class="stepx"><div class="dot">5c</div>
+        <h4>Tests</h4>
+        <p>Classify Tier 1 vs Tier 2 and populate the Tests section, always including the objective-verification
+          test. <b>Never skipped by any flag.</b> See §07.</p>
+      </div>
+      <div class="stepx"><div class="dot">6</div>
+        <h4>Status</h4>
+        <p>Keep the three status representations in sync — <code>&lt;html data-status&gt;</code>,
+          <code>&lt;meta&gt;</code>, and the visible badge — as the plan advances todo → in-progress → completed.</p>
+      </div>
+      <div class="stepx"><div class="dot">7</div>
+        <h4>Open</h4>
+        <p>Deliver + verify rendering: spin up a local HTTP server, screenshot via the browser MCP, and send the
+          file with <code>SendUserFile</code>. Falls back to file delivery in headless environments. Mandatory.</p>
+      </div>
+      <div class="stepx"><div class="dot">8</div>
+        <h4>Implement, Edit, or Exit</h4>
+        <p>Ask what’s next: implement now, run as workflow, review the plan (foreground or background), edit, or
+          exit. See §08 for the implement path’s three gates.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 · INTERVIEW -->
+  <section id="interview">
+    <div class="sec-head"><span class="sec-num">06</span><h2>The Step 5b interview</h2></div>
+    <p class="sec-sub">Complexity detection sets the depth; every question references specific plan details —
+      no generic prompts. A UI override forces Round 2 whenever the plan touches React/Vue/Svelte, JSX/CSS/HTML,
+      or UX terms.</p>
+    <div class="table-scroll">
+      <table>
+        <caption>Interview rounds by scope</caption>
+        <thead><tr><th>Scope</th><th>Rounds</th><th>Covers</th></tr></thead>
+        <tbody>
+          <tr><td>Short / focused<br><span style="color:var(--muted);font-size:.85em">1–2 files</span></td><td>1</td><td>Technical &amp; trade-offs — the most uncertain decision, build-vs-buy, perf/data model, integration points.</td></tr>
+          <tr><td>Medium<br><span style="color:var(--muted);font-size:.85em">UI + logic, or 2 domains</span></td><td>1 + 2</td><td>Adds 2a UI/UX &amp; flows and 2b Accessibility &amp; semantic (keyboard, ARIA, WCAG 2.1 AA, semantic HTML).</td></tr>
+          <tr><td>Complex<br><span style="color:var(--muted);font-size:.85em">architecture, 3+ domains</span></td><td>1 + 2 + 3</td><td>Adds edge cases &amp; best practices — failure modes, race conditions, regression risk, open questions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>After the rounds, the skill summarizes confirmed decisions and surfaced concerns, then offers to fold the
+      findings back into the plan before moving to Tests.</p>
+  </section>
+
+  <!-- 07 · TESTS -->
+  <section id="tests">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Tests — two tiers, one mandatory hero</h2></div>
+    <p class="sec-sub">Tier is chosen by what the steps actually touch, never by the <code>type:</code> field. A
+      <code>chore</code> that changes import paths is Tier 1; a <code>chore</code> that moves docs is Tier 2.</p>
+    <ul class="clean">
+      <li><b>Objective-verification test</b> — mandatory in both tiers, rendered first as a highlighted hero card.
+        A real mock/smoke test asserting the plan’s stated objective actually works in the running app.</li>
+      <li><b>Tier 1 (code-touching)</b> — adds applicable <span class="badge b-todo" style="padding:2px 8px"><span class="swatch" style="background:#4b7bd6"></span>unit</span>
+        <span class="badge b-med" style="padding:2px 8px">integration</span>
+        <span class="badge" style="padding:2px 8px;color:#8257c9;border-color:color-mix(in srgb,#8257c9 40%,var(--line));background:color-mix(in srgb,#8257c9 10%,var(--surface))">e2e</span>
+        cards, each with File / Targets / Key-cases.</li>
+      <li><b>Tier 2 (non-code)</b> — docs, renames of non-source files, non-runtime metadata: only the
+        objective-verification card remains; unit/integration/E2E sub-sections are omitted, never left as empty stubs.</li>
+    </ul>
+  </section>
+
+  <!-- 08 · IMPLEMENT GATES -->
+  <section id="gates">
+    <div class="sec-head"><span class="sec-num">08</span><h2>The implement path &amp; its three gates</h2></div>
+    <p class="sec-sub">Choosing “Implement now” lifts the scope constraint for that session and walks each step,
+      then runs three mandatory gates in order before a plan can be marked <code>completed</code>.</p>
+    <div class="rail">
+      <div class="stepx"><div class="dot" style="color:var(--done)">✓</div>
+        <h4>Acceptance-criteria gate</h4>
+        <p>Verify each <code>#criteria-list</code> checkbox against the real codebase and add the <code>checked</code>
+          attribute only when met. Unverifiable items are surfaced for a keep/leave decision.</p>
+      </div>
+      <div class="stepx"><div class="dot" style="color:var(--done)">✓</div>
+        <h4>End-to-end verification gate</h4>
+        <p>Run the objective-verification test plus the plan’s Verification steps. On failure, a bounded
+          fix-and-re-verify loop (up to 3 attempts) then a user choice: keep trying, mark in-progress, or mark completed anyway.</p>
+      </div>
+      <div class="stepx"><div class="dot" style="color:var(--done)">✓</div>
+        <h4>Completion-checklist gate</h4>
+        <p>Confirm all steps done, all criteria checked, status set. Incomplete items populate a Completion Report
+          (<code>&lt;dt&gt;</code>/<code>&lt;dd&gt;</code>) naming the exact step or criterion and why. Then commit source + plan together.</p>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:22px">
+      <b>Other Step 8 choices:</b> <b>Run as workflow</b> emits a <code>/workflows</code>-compatible prompt for
+      parallel subagents · <b>Review the plan</b> launches the seven-reviewer <code>review-plan</code> Agent Team
+      (foreground or background) · <b>Edit</b> loops back for revisions · <b>Exit</b> leaves the plan at <code>todo</code>.
+    </div>
+  </section>
+
+  <!-- 09 · DERIVED ARTIFACTS -->
+  <section id="derived">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Auto-derived artifacts</h2></div>
+    <div class="grid two">
+      <div class="card">
+        <h4>Implement prompt <span class="tag">always</span></h4>
+        <p>A short <code>Read and implement all steps…</code> line; its Copy button actually builds a richer,
+          status-aware prompt from live DOM state via <code>buildImplementPrompt()</code>.</p>
+      </div>
+      <div class="card">
+        <h4>Goal prompt <span class="tag">always</span></h4>
+        <p>An outcome-driven sibling — <code>Achieve this goal: …</code> — giving the implementer latitude to deviate
+          when a better path to the same outcome exists. Never omitted.</p>
+      </div>
+      <div class="card">
+        <h4>Workflow prompt <span class="tag">conditional</span></h4>
+        <p>Emitted with <code>--workflow</code>, or when the plan touches 5+ files across 3+ dirs, has repetitive
+          per-file changes, parallelizable steps, or needs cross-checking. Otherwise the block is removed entirely.</p>
+      </div>
+      <div class="card">
+        <h4>Effort level <span class="tag">always</span></h4>
+        <p>Deterministic from step count, distinct file count, and interview tier → Low / Medium / High. Drives a
+          coloured badge, a meta-row chip, and the <code>data-effort</code> attribute.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · BADGES -->
+  <section id="badges">
+    <div class="sec-head"><span class="sec-num">10</span><h2>Status &amp; effort legends</h2></div>
+    <p class="sec-sub">Both are colour-coded in the rendered plan. Status is carried in three synced places;
+      effort is auto-derived and never author-set.</p>
+    <h3>Status</h3>
+    <div class="legend">
+      <span class="badge b-todo"><span class="swatch"></span>todo</span>
+      <span class="badge b-prog"><span class="swatch"></span>in-progress</span>
+      <span class="badge b-done"><span class="swatch"></span>completed</span>
+    </div>
+    <h3>Effort</h3>
+    <div class="legend">
+      <span class="badge b-low"><span class="swatch"></span>low · ≤3 steps &amp; ≤2 files</span>
+      <span class="badge b-med"><span class="swatch"></span>medium · in between</span>
+      <span class="badge b-high"><span class="swatch"></span>high · ≥7 steps / ≥6 files / complex</span>
+    </div>
+  </section>
+
+  <!-- 11 · VISUAL COMPONENTS -->
+  <section id="visuals">
+    <div class="sec-head"><span class="sec-num">11</span><h2>Visual components</h2></div>
+    <p class="sec-sub">Pure CSS / inline SVG only — no CDN, no <code>&lt;canvas&gt;</code>, no charting library. The
+      file-tree is auto-generated; the rest are opt-in and deleted (markup + sidebar link) when unused.</p>
+    <div class="table-scroll">
+      <table>
+        <caption>Component triggers</caption>
+        <thead><tr><th>Component</th><th>Use when the plan…</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr><td><b>File-tree</b></td><td>references any file — scanned from step text, badged new / modified / deleted / generated</td><td><span class="badge b-done" style="padding:2px 8px">auto</span></td></tr>
+          <tr><td><b>Flow / pipeline</b></td><td>has a process, data flow, or architecture sequence</td><td><span class="badge b-todo" style="padding:2px 8px">opt-in</span></td></tr>
+          <tr><td><b>Comparison grid</b></td><td>weighs a 2–3-way trade-off (kept/dropped, before/after)</td><td><span class="badge b-todo" style="padding:2px 8px">opt-in</span></td></tr>
+          <tr><td><b>Bar chart</b></td><td>shows a distribution or relative magnitudes</td><td><span class="badge b-todo" style="padding:2px 8px">opt-in</span></td></tr>
+          <tr><td><b>Data table</b></td><td>maps structured data (file→change, option→behaviour)</td><td><span class="badge b-todo" style="padding:2px 8px">opt-in</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Accessibility is baked in: tables carry a <code>&lt;caption&gt;</code> and scoped headers, charts show a visible
+      numeric value plus a descriptive <code>aria-label</code>, and file badges use a text label alongside colour.</p>
+  </section>
+
+  <!-- 12 · META TAGS -->
+  <section id="meta">
+    <div class="sec-head"><span class="sec-num">12</span><h2>Embedded <code>&lt;meta&gt;</code> tags</h2></div>
+    <p class="sec-sub">Machine-readable metadata the plans gallery and hooks consume without reading prose.</p>
+    <pre><code><span class="cmt">&lt;!-- always present --&gt;</span>
+&lt;meta name=<span class="tok">"plan-status"</span>    content="todo | in-progress | completed"&gt;
+&lt;meta name=<span class="tok">"plan-effort"</span>    content="low | medium | high"&gt;
+&lt;meta name=<span class="tok">"plan-type"</span>      content="feature | fix | refactor | docs | chore"&gt;
+&lt;meta name=<span class="tok">"plan-created"</span>   content="YYYY-MM-DD"&gt;
+&lt;meta name=<span class="tok">"plan-repo"</span>      content="&lt;repo-name&gt;"&gt;
+&lt;meta name=<span class="tok">"plan-file"</span>      content="&lt;basename&gt;.html"&gt;
+&lt;meta name=<span class="tok">"plan-path"</span>      content="docs/plans/&lt;basename&gt;.html"&gt;
+&lt;meta name=<span class="tok">"plan-implement"</span> content="Read and implement all steps…"&gt;
+&lt;meta name=<span class="tok">"plan-goal"</span>      content="Achieve this goal: …"&gt;
+
+<span class="cmt">&lt;!-- conditional --&gt;</span>
+&lt;meta name=<span class="tok">"plan-workflow"</span> content="Run a workflow to implement…"&gt;  <span class="cmt">// when generated</span>
+&lt;meta name=<span class="tok">"plan-issue"</span>    content="&lt;issue-url&gt;"&gt;                <span class="cmt">// when seeded from an issue</span>
+&lt;meta name=<span class="tok">"plan-priority"</span> content="low | medium | high | critical"&gt; <span class="cmt">// when --priority set</span></code></pre>
+  </section>
+
+  <!-- 13 · SCOPE -->
+  <section id="scope">
+    <div class="sec-head"><span class="sec-num">13</span><h2>Scope constraint — plans only</h2></div>
+    <div class="card" style="border-left:3px solid var(--high)">
+      <p style="color:var(--ink)"><b>The skill produces a plan document. It does not implement anything</b> — until you
+        pick “Implement now” at Step 8, which lifts the constraint for that session alone.</p>
+      <ul class="clean" style="margin-bottom:0">
+        <li>No edits to source, config, or any file outside the resolved <code>plansDirectory</code> (or <code>docs/plans/</code>).</li>
+        <li>Read / Glob / Grep / Bash are for read-only exploration — the one exception is the Step 7 local HTTP preview server.</li>
+        <li>“Fix X” or “implement Y” means <em>write a plan for how</em> — the work itself stays a separate, user-initiated step.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>plan-agent · implementation-plan · agentics-kit</span>
+    <span><a href="https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/plan-agent">kit/plugins/plan-agent</a></span>
+  </footer>
+
+</div>
+</body>
+</html>
