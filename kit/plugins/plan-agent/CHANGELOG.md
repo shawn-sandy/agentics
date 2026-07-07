@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.14.1 — Default plan-implementation model set to Fable (2026-07-07)
+
+### Changed
+
+- **`implementation-plan` now runs on Fable by default** — the skill's `model:` frontmatter changed from `opus` to `fable`. Both the `/plan-agent:implementation-plan` command and ambient model-invocation now generate plans with Fable unless overridden.
+
 ## 2.14.0 — Show saved artifacts in the plans gallery (2026-07-03)
 
 ### Added
