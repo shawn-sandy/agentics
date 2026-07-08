@@ -75,17 +75,16 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "7. CHANGELOG has a 2.13.0 entry and marketplace.json carries 2.13.0..."
-if grep -q '## 2.13.0' "$CHANGELOG" \
-   && python3 -c "
-import json, sys
-m = json.load(open('$MARKETPLACE'))
-v = next(p['version'] for p in m['plugins'] if p['name'] == 'plan-agent')
-sys.exit(0 if v == '2.13.0' else 1)
+echo "7. CHANGELOG top entry version matches marketplace.json plan-agent version..."
+if python3 -c "
+import json, re, sys
+mv = next(p['version'] for p in json.load(open('$MARKETPLACE'))['plugins'] if p['name'] == 'plan-agent')
+top = next(m.group(1) for line in open('$CHANGELOG') if (m := re.match(r'## (\d+\.\d+\.\d+)', line)))
+sys.exit(0 if top == mv else 1)
 "; then
   echo "  PASS"
 else
-  echo "  FAIL: version 2.13.0 missing from CHANGELOG or marketplace.json"
+  echo "  FAIL: CHANGELOG top version and marketplace.json plan-agent version disagree"
   FAILURES=$((FAILURES + 1))
 fi
 
