@@ -14,6 +14,14 @@ python3 - "$PROJECT_ROOT" <<'EOF' || true
 import os, re, sys, html, shutil
 from datetime import datetime
 
+# Best-effort + observable: the shell `|| true` guarantees a zero exit, but a
+# silent swallow would hide real failures (permission errors, a malformed
+# template). Log any uncaught exception to stderr first so a debugging user
+# still gets a signal about why the gallery did not update.
+def _log_uncaught(exc_type, exc, tb):
+    print(f'[build-artifacts-index] publish failed (non-blocking): {exc}', file=sys.stderr)
+sys.excepthook = _log_uncaught
+
 project_root = sys.argv[1]
 os.chdir(project_root)
 
