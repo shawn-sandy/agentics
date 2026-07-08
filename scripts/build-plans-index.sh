@@ -48,30 +48,35 @@ def find_templates_dir():
         m = re.search(r'/(\d+\.\d+\.\d+)/', p)
         return tuple(int(x) for x in m.group(1).split('.')) if m else (0, 0, 0)
     candidates.sort(key=version_key, reverse=True)
-    return candidates[0] if candidates else ''
+    # Prefer a project-local template (a repo that vendors plan-agent is
+    # authoritative over the installed cache); else fall back to the cache.
+    root = os.path.abspath(project_root) + os.sep
+    local = [c for c in candidates if os.path.abspath(c).startswith(root)]
+    return (local or candidates)[0] if candidates else ''
 
 templates_dir = find_templates_dir()
 
 # ── Collect and sort plan files ────────────────────────────────────────────────
 plan_files = []
 for dirpath, dirnames, filenames in os.walk(plans_dir):
-    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d != 'archive']
+    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in ('archive', 'artifacts')]
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
 def _plan_created_sort_key(path):
-    """Sort by plan-created meta descending; plans without the meta sort last by filename."""
+    """Sort by plan-created desc; undated plans sort last by filename.
+    Artifacts live in their own gallery (docs/artifacts/), not here."""
+    base = os.path.basename(path)
     try:
         with open(path, encoding='utf-8', errors='replace') as fh:
             head = fh.read(2000)
         m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
         if m:
-            d = m.group(1).strip()
-            parts = d.split('-')
-            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), os.path.basename(path))
+            parts = m.group(1).strip().split('-')
+            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
     except Exception:
         pass
-    return (1, 0, 0, 0, os.path.basename(path))
+    return (1, 0, 0, 0, base)
 
 plan_files.sort(key=_plan_created_sort_key)
 
@@ -102,23 +107,23 @@ for f in plan_files:
         content = open(f, encoding='utf-8', errors='replace').read()
     except Exception:
         continue
+    rel_path = os.path.relpath(f, plans_dir)
     status   = get_meta(content, 'plan-status', 'todo')
     ptype    = get_meta(content, 'plan-type',   'untyped')
     effort   = get_meta(content, 'plan-effort', '').lower()
     created  = get_meta(content, 'plan-created', '')
-    title    = get_title(content, f)
-    rel_path = os.path.relpath(f, plans_dir)
+    title = get_title(content, f)
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
-    # No plan-effort tag → no badge; empty data-effort passes every effort filter.
+    # Empty status/effort → omit the badge; empty data-* passes every filter.
+    status_badge = f'<span class="status-chip status-{e(status)}">{e(status_display)}</span>' if status else ''
     effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
    data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(title.lower())}">
   <div class="card-badges">
-    <span class="status-chip status-{e(status)}">{e(status_display)}</span>
-    <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
+    {status_badge}<span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
   </div>
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
@@ -136,6 +141,7 @@ output_path   = os.path.join(plans_dir, 'index.html')
 if template_path and os.path.isfile(template_path):
     with open(template_path, encoding='utf-8') as fh:
         content = fh.read()
+    content = content.replace('{{GALLERY_TITLE}}',   'Plans')
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(plan_count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)
@@ -175,5 +181,5 @@ else:
 with open(output_path, 'w', encoding='utf-8') as fh:
     fh.write(content)
 
-print(f'[build-index] wrote {output_path} ({plan_count} plans, {generated_at})')
+print(f'[build-index] wrote {output_path} ({plan_count} items, {generated_at})')
 EOF

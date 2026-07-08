@@ -19,10 +19,6 @@ os.chdir(project_root)
 inbox_dir  = os.path.join(os.getcwd(), '.claude', 'artifacts')
 output_dir = os.path.join(os.getcwd(), 'docs', 'artifacts')
 
-if not os.path.isdir(inbox_dir):
-    print(f'[build-artifacts-index] no inbox at {inbox_dir} — nothing to publish', file=sys.stderr)
-    sys.exit(0)
-
 # ── Locate plugin templates directory (same discovery as build-index.sh) ───────
 def find_templates_dir():
     candidates = []
@@ -45,21 +41,28 @@ def find_templates_dir():
 
 templates_dir = find_templates_dir()
 
-# ── Collect artifacts from the inbox ───────────────────────────────────────────
-artifacts = [
-    name for name in os.listdir(inbox_dir)
-    if name.endswith('.html') and name != 'index.html'
-    and os.path.isfile(os.path.join(inbox_dir, name))
-]
+# ── Publish: copy any inbox artifacts into the deployed tree ───────────────────
+def _html_files(d):
+    if not os.path.isdir(d):
+        return []
+    return [n for n in os.listdir(d)
+            if n.endswith('.html') and n != 'index.html'
+            and os.path.isfile(os.path.join(d, n))]
 
+inbox_files = _html_files(inbox_dir)
+if inbox_files:
+    os.makedirs(output_dir, exist_ok=True)
+    for name in inbox_files:
+        shutil.copy2(os.path.join(inbox_dir, name), os.path.join(output_dir, name))
+
+# ── Render set = every artifact currently published ────────────────────────────
+# Build the gallery from docs/artifacts/ (the committed, deployed set), not just
+# the inbox. The inbox is gitignored, so on a clean checkout it is empty; reading
+# only the inbox would unlink every already-published artifact on the next save.
+artifacts = _html_files(output_dir)
 if not artifacts:
-    print('[build-artifacts-index] inbox empty — no gallery written', file=sys.stderr)
+    print('[build-artifacts-index] no artifacts to publish', file=sys.stderr)
     sys.exit(0)
-
-# ── Publish: copy each artifact into docs/artifacts/ ───────────────────────────
-os.makedirs(output_dir, exist_ok=True)
-for name in artifacts:
-    shutil.copy2(os.path.join(inbox_dir, name), os.path.join(output_dir, name))
 
 def _artifact_created(name):
     """YYYY-MM-DD suffix in the save-artifact filename, else ''."""

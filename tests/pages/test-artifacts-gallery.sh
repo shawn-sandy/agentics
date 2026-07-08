@@ -53,6 +53,14 @@ if [ -f "$TMP/docs/plans/index.html" ] \
    && ! grep -q 'href="artifacts/' "$TMP/docs/plans/index.html"; then
   echo "  PASS"; else echo "  FAIL: plans gallery leaked an artifact card"; FAILURES=$((FAILURES+1)); fi
 
+echo "6. Already-published artifacts survive an empty-inbox rebuild ..."
+# The inbox is gitignored, so a clean checkout has none — publishing a new one
+# must not drop artifacts already committed under docs/artifacts/.
+rm -f "$TMP/.claude/artifacts/"*.html
+bash "$BUILD_ARTIFACTS" "$TMP" >/dev/null 2>&1 || true
+if grep -q "href=\"$art\"" "$TMP/docs/artifacts/index.html"; then
+  echo "  PASS"; else echo "  FAIL: published artifact dropped when inbox was empty"; FAILURES=$((FAILURES+1)); fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
   echo "All checks passed."; exit 0
