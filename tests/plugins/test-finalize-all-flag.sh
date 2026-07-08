@@ -78,9 +78,9 @@ fi
 echo "7. CHANGELOG top entry version matches marketplace.json plan-agent version..."
 if python3 -c "
 import json, re, sys
-mv = next(p['version'] for p in json.load(open('$MARKETPLACE'))['plugins'] if p['name'] == 'plan-agent')
-top = next(m.group(1) for line in open('$CHANGELOG') if (m := re.match(r'## (\d+\.\d+\.\d+)', line)))
-sys.exit(0 if top == mv else 1)
+mv = next((p['version'] for p in json.load(open('$MARKETPLACE'))['plugins'] if p['name'] == 'plan-agent'), None)
+top = next((m.group(1) for line in open('$CHANGELOG') if (m := re.match(r'## (\d+\.\d+\.\d+)', line))), None)
+sys.exit(0 if mv is not None and top is not None and top == mv else 1)
 "; then
   echo "  PASS"
 else
