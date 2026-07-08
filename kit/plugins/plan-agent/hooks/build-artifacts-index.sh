@@ -3,12 +3,14 @@
 # Copies every .html from the local inbox (.claude/artifacts/) into the deployed
 # docs/artifacts/ tree, then builds docs/artifacts/index.html from the shared
 # plans-gallery template. PROJECT_ROOT is passed as $1.
-# Always exits 0 — publish failures must never block the caller.
+# Always exits 0 — publish failures must never block the caller. The `|| true`
+# on the python invocation guarantees that even an uncaught exception in the
+# embedded script cannot propagate a non-zero status.
 set -eu
 
 PROJECT_ROOT="${1:-$(pwd)}"
 
-python3 - "$PROJECT_ROOT" <<'EOF'
+python3 - "$PROJECT_ROOT" <<'EOF' || true
 import os, re, sys, html, shutil
 from datetime import datetime
 
