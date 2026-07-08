@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.14.2 — Fix plans-gallery CSS regression (2026-07-07)
+
+### Fixed
+
+- **Restored the `prefers-reduced-motion: reduce` override in `templates/plans-gallery.html`** — the 2.14.1 template had reverted to an older variant that dropped the block, so every `plans-library` / `save-artifact` / index-hook rebuild silently removed it from `docs/plans/index.html`. Users requesting reduced motion no longer get smooth scrolling and transitions forced on them.
+- **Fixed a sub-pixel `letter-spacing` typo on `.filter-chip`** — the reverted template emitted `letter-spacing: .04px` (effectively zero) instead of `0.04em`. Restored the `em` unit so filter chips render with their intended tracking.
+- Both regressions came from `plans-gallery.html` drifting to a pre-Prettier 4-space variant that no longer matched the committed `docs/plans/index.html`; the template is now realigned so regenerating the gallery reproduces the committed output instead of downgrading it.
+
 ## 2.14.1 — Default plan-implementation model set to Fable (2026-07-07)
 
 ### Changed
