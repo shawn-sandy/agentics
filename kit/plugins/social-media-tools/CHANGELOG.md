@@ -1,5 +1,12 @@
 # Changelog — social-media-tools
 
+## v2.17.0 — 2026-07-08 — save-artifact: save to `.claude/artifacts`, publish to the Artifacts gallery
+
+### Changed
+
+- **`save-artifact` now saves to the local inbox `.claude/artifacts/` instead of `{plansDirectory}/artifacts`.** Artifacts are no longer mixed into the plans tree. The inbox is gitignored; the durable, deployed copy is published under `docs/artifacts/`.
+- **Publish step replaces the plans-index rebuild.** After copying to the inbox, the skill runs `plan-agent`'s new `build-artifacts-index.sh` to copy the artifact into `docs/artifacts/` and rebuild the standalone Artifacts gallery (reachable from the docs hub), instead of rebuilding `docs/plans/index.html`.
+
 ## v2.16.0 — 2026-07-07 — save-artifact: auto-rebuild the plans gallery index
 
 ### Added

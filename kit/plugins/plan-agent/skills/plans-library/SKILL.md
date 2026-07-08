@@ -41,11 +41,11 @@ EOF
 )
 ```
 
-If the directory does not exist, or contains no `.html` files (other than `index.html`) **at the top level and none in `artifacts/`**, tell the user:
+If the directory does not exist, or contains no `.html` files (other than `index.html`) at the top level, tell the user:
 
 > "No HTML plans found in `<PLANS_DIR>`. Run `/plan-agent:implementation-plan` to create your first plan."
 
-**STOP.** An artifact-only project (files in `artifacts/` but no top-level plans) is **not** empty — do not stop; continue to build a gallery of just the artifacts.
+**STOP.** (Saved artifacts have their own gallery at `docs/artifacts/`, built by `build-artifacts-index.sh` — they are not part of the plans library.)
 
 ---
 
@@ -66,18 +66,12 @@ If `TEMPLATES_DIR` is empty, output:
 
 ---
 
-## Step 3 — Scan plan and artifact files
+## Step 3 — Scan plan files
 
-Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/` or any other subdirectory. Capture the result in `PLAN_FILES`.
+Collect all `.html` files in `PLANS_DIR`, excluding `index.html`. The `-maxdepth 1` flag prevents recursion into `archive/`, `artifacts/`, or any other subdirectory — saved artifacts have their own gallery (`docs/artifacts/`) and never appear here. Capture the result in `PLAN_FILES`.
 
 ```bash
 PLAN_FILES=$(find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" 2>/dev/null | sort)
-```
-
-Separately, collect saved artifacts from the `artifacts/` subdirectory (written by the `save-artifact` skill). This directory may not exist yet — the `2>/dev/null` keeps that silent, leaving `ARTIFACT_FILES` empty.
-
-```bash
-ARTIFACT_FILES=$(find "$PLANS_DIR/artifacts" -maxdepth 1 -name "*.html" ! -name "index.html" 2>/dev/null | sort)
 ```
 
 > Do **not** sort by filesystem modification time (`ls -t`). A `git clone`/`checkout` resets every file's mtime to checkout time, so mtime order is meaningless. The gallery's newest-first order is established in Step 4 from each plan's `plan-created` metadata, not from the filesystem.
@@ -137,8 +131,7 @@ Parse the JSON output with `json.loads()` into a list of entries. **Sort the lis
 ```
 
 Where:
-- `{BASENAME}` = filename without path (e.g. `add-dark-mode-toggle.html`)
-- `{HREF}` = link target; for plans this is just `{BASENAME}` (see the Artifact entries section below for the artifact override)
+- `{BASENAME}` = filename without path (e.g. `add-dark-mode-toggle.html`), used directly as the link target
 - `{STATUS}` = `plan-status` value, lowercased (e.g. `todo`, `in-progress`, `completed`)
 - `{STATUS_DISPLAY}` = `{STATUS}` with hyphens replaced by spaces (e.g. `in progress`)
 - `{TYPE}` = `plan-type` value, lowercased (e.g. `feature`, `fix`)
@@ -148,18 +141,6 @@ Where:
 - `{CREATED}` = `plan-created` value (e.g. `2026-05-30`); omit the `<span class="card-date">` if empty
 
 **HTML-escape** all values before inserting: replace `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#39;`.
-
-### Artifact entries
-
-For each file in `$ARTIFACT_FILES`, generate the **same** `<a>` block, but artifacts carry no plan metadata so use these fixed values:
-
-- `{HREF}` = `artifacts/{BASENAME}` — artifacts live in the subdirectory, so the link must include the `artifacts/` prefix (plans use just `{BASENAME}`).
-- `data-type` / type chip = `artifact` (this is what the new **Artifact** type filter matches).
-- `data-status="" data-effort=""` and **omit** the status-chip and effort-chip elements entirely — artifacts have neither, and an empty effort passes every effort filter.
-- `{TITLE}` = the `<title>` text of the artifact file.
-- `{CREATED}` = the `YYYY-MM-DD` date suffix in the filename if present (`save-artifact` names files `<base>-YYYY-MM-DD.html`), else empty.
-
-Append artifact cards **after** all plan cards, sorted newest-first among themselves by `{CREATED}`. HTML-escape every value as above.
 
 ---
 
@@ -174,8 +155,9 @@ GENERATED_AT=$(date '+%Y-%m-%d %H:%M')
 2. **Read the gallery template** from `$TEMPLATES_DIR/plans-gallery.html`.
 
 3. **Substitute** in the template:
-   - `{{GALLERY_ENTRIES}}` → concatenated `<a>` blocks from Step 4 (plan cards, then artifact cards)
-   - `{{PLAN_COUNT}}` → total number of cards rendered (plans + artifacts)
+   - `{{GALLERY_TITLE}}` → `Plans` (the shared template also serves the Artifacts gallery, which substitutes `Artifacts`)
+   - `{{GALLERY_ENTRIES}}` → concatenated `<a>` blocks from Step 4
+   - `{{PLAN_COUNT}}` → total number of plan cards rendered
    - `{{GENERATED_AT}}` → value of `$GENERATED_AT`
 
 4. **Write** the result to `$PLANS_DIR/index.html`.
@@ -190,7 +172,7 @@ open "$GALLERY_PATH" 2>/dev/null || xdg-open "$GALLERY_PATH" 2>/dev/null || true
 ```
 
 Tell the user:
-> "Plans library generated at `<PLANS_DIR>/index.html` with {count} items (plans + artifacts) — opened in your browser. Click any card to open it."
+> "Plans library generated at `<PLANS_DIR>/index.html` with {count} plans — opened in your browser. Click any card to open it."
 
 ---
 

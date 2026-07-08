@@ -2,9 +2,11 @@
 <!--
   plans-gallery.html — Plans library index for plan-agent.
 
-  Static variables (substituted by the plans-library skill):
-    GALLERY_ENTRIES  — Repeated <a> blocks, one per plan file
-    PLAN_COUNT       — Total number of plans displayed
+  Static variables (substituted by the plans-library skill and the
+  build-index.sh / build-artifacts-index.sh generators):
+    GALLERY_TITLE    — Heading noun: "Plans" or "Artifacts"
+    GALLERY_ENTRIES  — Repeated <a> blocks, one per item
+    PLAN_COUNT       — Total number of items displayed
     GENERATED_AT     — Date and time of gallery generation
 -->
 <html lang="en">
@@ -495,7 +497,7 @@
   <body>
     <div class="gallery-header">
       <h1>Plans Library</h1>
-      <p>68 items &mdash; click any card to open it</p>
+      <p>67 items &mdash; click any card to open it</p>
     </div>
 
     <div class="toolbar">
@@ -504,7 +506,7 @@
         class="search-box"
         id="searchBox"
         placeholder="Search by title..."
-        aria-label="Search plans by title"
+        aria-label="Search by title"
       />
       <div class="view-toggle">
         <button
@@ -609,7 +611,19 @@
 
     <div class="visible-count" id="visibleCount"></div>
 
-    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="add-save-artifact-skill.html"
+    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="split-artifacts-into-own-gallery.html"
+   data-status="completed" data-type="feature" data-effort="high" data-title="split artifacts into their own gallery">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+    <span class="effort-chip effort-high">high</span>
+  </div>
+  <div class="card-title">Split artifacts into their own gallery</div>
+  <div class="card-meta">
+    <span class="card-date">2026-07-08</span>
+    <span class="card-file">split-artifacts-into-own-gallery.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-save-artifact-skill.html"
    data-status="completed" data-type="feature" data-effort="medium" data-title="add a save-artifact skill to social-media-tools">
   <div class="card-badges">
     <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
@@ -1336,35 +1350,13 @@
     <span class="card-date">2026-05-17</span>
     <span class="card-file">add-html-output-to-plan-review-agents-review.html</span>
   </div>
-</a>
-<a class="gallery-card" href="artifacts/implementation-plan-reference-2026-07-07.html"
-   data-status="" data-type="artifact" data-effort="" data-title="implementation-plan — feature reference">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">implementation-plan — Feature Reference</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-07</span>
-    <span class="card-file">artifacts/implementation-plan-reference-2026-07-07.html</span>
-  </div>
-</a>
-<a class="gallery-card" href="artifacts/session-recap-export-session-skill.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session recap: export-session skill">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Session Recap: export-session skill</div>
-  <div class="card-meta">
-    
-    <span class="card-file">artifacts/session-recap-export-session-skill.html</span>
-  </div>
 </a></div>
 
     <div class="no-results" id="noResults">No items match your search.</div>
 
     <div class="gallery-footer">
-      <span>68 items</span>
-      <span>Generated 2026-07-07 20:52</span>
+      <span>67 items</span>
+      <span>Generated 2026-07-08 10:51</span>
     </div>
 
     <script>
