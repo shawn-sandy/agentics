@@ -3,6 +3,9 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
+# Local artifacts inbox — the published copy lives in docs/artifacts/
+.claude/artifacts/
+
 # Claude Code local overrides
 CLAUDE.local.md
 .claude.md.local

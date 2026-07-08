@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Regenerate docs/plans/index.html from all non-index HTML plan files.
-# Called by kit/plugins/plan-agent/hooks/rebuild-plans-index.py on every plan write.
+# Regenerate the plans index.html from all non-index HTML plan files.
+# Called by rebuild-plans-index.py; PROJECT_ROOT is passed as $1.
 # Always exits 0 — index-rebuild failures must never block plan writes.
 set -eu
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="${1:-$(pwd)}"
 
 python3 - "$PROJECT_ROOT" <<'EOF'
 import json, os, re, sys, html
@@ -44,27 +43,42 @@ def find_templates_dir():
             dirnames[:] = [d for d in dirnames if not d.startswith('.')]
             if os.path.basename(dirpath) == 'templates' and 'plan-agent' in dirpath:
                 candidates.append(dirpath)
-    # Sort versioned paths descending so highest version wins
     def version_key(p):
         import re
         m = re.search(r'/(\d+\.\d+\.\d+)/', p)
         return tuple(int(x) for x in m.group(1).split('.')) if m else (0, 0, 0)
     candidates.sort(key=version_key, reverse=True)
-    return candidates[0] if candidates else ''
+    # Prefer a project-local template (a repo that vendors plan-agent is
+    # authoritative over the installed cache); else fall back to the cache.
+    root = os.path.abspath(project_root) + os.sep
+    local = [c for c in candidates if os.path.abspath(c).startswith(root)]
+    return (local or candidates)[0] if candidates else ''
 
 templates_dir = find_templates_dir()
 
 # ── Collect and sort plan files ────────────────────────────────────────────────
 plan_files = []
 for dirpath, dirnames, filenames in os.walk(plans_dir):
-    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d != 'archive']
+    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in ('archive', 'artifacts')]
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
-# Stable base order only; final newest-first order is by plan-created metadata
-# below. Do NOT sort by mtime — git checkout resets every file's mtime to the
-# same checkout time, so mtime order is meaningless.
-plan_files.sort()
+def _plan_created_sort_key(path):
+    """Sort by plan-created desc; undated plans sort last by filename.
+    Artifacts live in their own gallery (docs/artifacts/), not here."""
+    base = os.path.basename(path)
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            head = fh.read(2000)
+        m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
+        if m:
+            parts = m.group(1).strip().split('-')
+            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
+    except Exception:
+        pass
+    return (1, 0, 0, 0, base)
+
+plan_files.sort(key=_plan_created_sort_key)
 
 if not plan_files:
     print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
@@ -80,9 +94,8 @@ def get_meta(content, name, fallback=''):
 
 def get_title(content, fname):
     m = re.search(r'<title>(?:Plan:\s*)?([^<]+)</title>', content, re.IGNORECASE)
-    # Decode any HTML entities in the source title (e.g. &rarr;, &mdash;) so the
-    # downstream html.escape() in e() does not double-escape them into literal
-    # "&rarr;" text in the rendered card.
+    # Unescape here so titles are plain text; e() escapes exactly once at render,
+    # keeping regeneration idempotent (no &amp;amp; drift).
     return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
 def e(s):
@@ -94,36 +107,32 @@ for f in plan_files:
         content = open(f, encoding='utf-8', errors='replace').read()
     except Exception:
         continue
+    rel_path = os.path.relpath(f, plans_dir)
     status   = get_meta(content, 'plan-status', 'todo')
     ptype    = get_meta(content, 'plan-type',   'untyped')
     effort   = get_meta(content, 'plan-effort', '').lower()
     created  = get_meta(content, 'plan-created', '')
-    title    = get_title(content, f)
-    rel_path = os.path.relpath(f, plans_dir)
+    title = get_title(content, f)
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
-    # No plan-effort tag → no badge; empty data-effort passes every effort filter.
+    # Empty status/effort → omit the badge; empty data-* passes every filter.
+    status_badge = f'<span class="status-chip status-{e(status)}">{e(status_display)}</span>' if status else ''
     effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
 
-    cards.append((created, title.lower(), f'''<a class="gallery-card" href="{e(rel_path)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(html.unescape(title).lower())}">
+    cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
+   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(title.lower())}">
   <div class="card-badges">
-    <span class="status-chip status-{e(status)}">{e(status_display)}</span>
-    <span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
+    {status_badge}<span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
   </div>
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
     {date_span}
     <span class="card-file">{e(rel_path)}</span>
   </div>
-</a>'''))
+</a>''')
 
-# Newest-first: sort by plan-created (YYYY-MM-DD) descending; blank dates last,
-# ties broken by title ascending. Two stable passes: title asc, then date desc.
-cards.sort(key=lambda c: c[1])                       # title asc (tiebreak)
-cards.sort(key=lambda c: c[0] or '', reverse=True)   # created desc; '' sorts last
-gallery_entries = '\n'.join(c[2] for c in cards)
+gallery_entries = '\n'.join(cards)
 
 # ── Build index.html ───────────────────────────────────────────────────────────
 template_path = os.path.join(templates_dir, 'plans-gallery.html') if templates_dir else ''
@@ -132,11 +141,11 @@ output_path   = os.path.join(plans_dir, 'index.html')
 if template_path and os.path.isfile(template_path):
     with open(template_path, encoding='utf-8') as fh:
         content = fh.read()
+    content = content.replace('{{GALLERY_TITLE}}',   'Plans')
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(plan_count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)
 else:
-    # Fallback: minimal embedded gallery when template is unavailable
     content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,5 +181,5 @@ else:
 with open(output_path, 'w', encoding='utf-8') as fh:
     fh.write(content)
 
-print(f'[build-index] wrote {output_path} ({plan_count} plans, {generated_at})')
+print(f'[build-index] wrote {output_path} ({plan_count} items, {generated_at})')
 EOF

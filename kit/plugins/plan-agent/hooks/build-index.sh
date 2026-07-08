@@ -48,47 +48,35 @@ def find_templates_dir():
         m = re.search(r'/(\d+\.\d+\.\d+)/', p)
         return tuple(int(x) for x in m.group(1).split('.')) if m else (0, 0, 0)
     candidates.sort(key=version_key, reverse=True)
-    return candidates[0] if candidates else ''
+    # Prefer a project-local template (a repo that vendors plan-agent is
+    # authoritative over the installed cache); else fall back to the cache.
+    root = os.path.abspath(project_root) + os.sep
+    local = [c for c in candidates if os.path.abspath(c).startswith(root)]
+    return (local or candidates)[0] if candidates else ''
 
 templates_dir = find_templates_dir()
 
 # ── Collect and sort plan files ────────────────────────────────────────────────
 plan_files = []
 for dirpath, dirnames, filenames in os.walk(plans_dir):
-    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d != 'archive']
+    dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in ('archive', 'artifacts')]
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
-def _is_artifact(path):
-    """True for files under the plans dir's artifacts/ subdirectory."""
-    rel = os.path.relpath(path, plans_dir).replace(os.sep, '/')
-    return rel.startswith('artifacts/')
-
-def _artifact_created(path):
-    """YYYY-MM-DD date suffix in an artifact filename (save-artifact naming), else ''."""
-    m = re.search(r'-(\d{4}-\d{2}-\d{2})(?:-\d+)?\.html$', os.path.basename(path))
-    return m.group(1) if m else ''
-
 def _plan_created_sort_key(path):
-    """Plans first (by plan-created desc), then artifacts (by filename date desc);
-    undated entries within each group sort last by filename."""
+    """Sort by plan-created desc; undated plans sort last by filename.
+    Artifacts live in their own gallery (docs/artifacts/), not here."""
     base = os.path.basename(path)
-    if _is_artifact(path):
-        d = _artifact_created(path)
-        if d:
-            y, mo, dd = (int(x) for x in d.split('-'))
-            return (1, 0, -y, -mo, -dd, base)
-        return (1, 1, 0, 0, 0, base)
     try:
         with open(path, encoding='utf-8', errors='replace') as fh:
             head = fh.read(2000)
         m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
         if m:
             parts = m.group(1).strip().split('-')
-            return (0, 0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
+            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
     except Exception:
         pass
-    return (0, 1, 0, 0, 0, base)
+    return (1, 0, 0, 0, base)
 
 plan_files.sort(key=_plan_created_sort_key)
 
@@ -120,16 +108,10 @@ for f in plan_files:
     except Exception:
         continue
     rel_path = os.path.relpath(f, plans_dir)
-    if _is_artifact(f):
-        # Artifacts carry no plan metadata: type=artifact, no status/effort chips,
-        # date parsed from the filename. Matches the plans-library skill.
-        status, ptype, effort = '', 'artifact', ''
-        created = _artifact_created(f)
-    else:
-        status   = get_meta(content, 'plan-status', 'todo')
-        ptype    = get_meta(content, 'plan-type',   'untyped')
-        effort   = get_meta(content, 'plan-effort', '').lower()
-        created  = get_meta(content, 'plan-created', '')
+    status   = get_meta(content, 'plan-status', 'todo')
+    ptype    = get_meta(content, 'plan-type',   'untyped')
+    effort   = get_meta(content, 'plan-effort', '').lower()
+    created  = get_meta(content, 'plan-created', '')
     title = get_title(content, f)
 
     status_display = status.replace('-', ' ')
@@ -159,6 +141,7 @@ output_path   = os.path.join(plans_dir, 'index.html')
 if template_path and os.path.isfile(template_path):
     with open(template_path, encoding='utf-8') as fh:
         content = fh.read()
+    content = content.replace('{{GALLERY_TITLE}}',   'Plans')
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(plan_count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)

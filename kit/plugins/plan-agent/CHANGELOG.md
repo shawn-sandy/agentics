@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.15.0 — Standalone Artifacts gallery (2026-07-08)
+
+### Added
+
+- **New `hooks/build-artifacts-index.sh` publisher** — copies every HTML file from the local inbox `.claude/artifacts/` into the deployed `docs/artifacts/` tree and builds `docs/artifacts/index.html`, a standalone Artifacts gallery reusing the shared `plans-gallery.html` template. Artifacts now have their own first-class section on the docs hub, separate from implementation plans.
+- **`{{GALLERY_TITLE}}` placeholder in `templates/plans-gallery.html`** — the title and `<h1>` are now parametrized so the same template renders both the "Plans" and "Artifacts" galleries. `build-index.sh` substitutes `Plans`; `build-artifacts-index.sh` substitutes `Artifacts`.
+
+### Changed
+
+- **`build-index.sh` no longer renders artifacts.** The plans gallery is plans-only again: the `_is_artifact` / `_artifact_created` special-casing was removed and the `os.walk` prune now also skips an `artifacts/` subdirectory, so a stray `docs/plans/artifacts/` can never leak back into the plans list.
+- **Template discovery prefers a project-local template.** `find_templates_dir` in both generators now prefers a `kit/plugins/plan-agent/templates` under the project root over the installed plugin cache, so a repo that vendors plan-agent renders its galleries from its own (authoritative) template.
+- **Vendored plan builders kept in sync.** `scripts/build-plans-index.sh` (used by the `regen-plans.yml` CI workflow) and `docs/plans/build-index.sh` (the rebuild-hook fallback) are byte-for-byte copies of the hook; both were updated in lockstep so an automatic regeneration substitutes `{{GALLERY_TITLE}}` and never commits a gallery with the literal token.
+
+### Fixed
+
+- **`build-artifacts-index.sh` builds the gallery from the published tree, not just the inbox.** The inbox (`.claude/artifacts/`) is gitignored, so on a clean checkout it is empty; the publisher now renders cards from every artifact under `docs/artifacts/` (the committed set) after copying in any new inbox files, so saving a new artifact no longer unlinks already-published ones.
+
 ## 2.14.2 — Fix plans-gallery CSS regression (2026-07-07)
 
 ### Fixed
