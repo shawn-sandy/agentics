@@ -16,6 +16,15 @@ repo-name: <repo-name>
 
 <one or two sentences>
 
+## Resources *(optional — omit if none)*
+
+<Images, screenshots, and links to material used to create the plan, so the
+reader can illustrate and verify the implementation. Give every image
+descriptive alt text and credit/link the source.>
+
+- ![<descriptive alt text>](<https:// URL or relative asset path>) — <what it shows, source>
+- [<reference title>](<https:// URL>) — <why it matters to this plan>
+
 ## Steps
 
 1. <action> — *Why:* <reason>. *Verify:* <how to confirm>.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.16.0 — Resources section in implementation plans (2026-07-09)
+
+### Added
+
+- **New opt-in Resources section in `implementation-plan` plans** — HTML plans can now embed the images, screenshots, and reference links used to create the plan, so readers can *illustrate* what the work is about and *verify* the implementation against the same material. Rendered as `section.card-resources#resources` (new `#ic-photo` icon) between Context and Files, with a `.resource-grid` of `.resource-figure` image cards (mandatory `alt` text + source-crediting `<figcaption>`) and a `.resource-links` list (each link paired with a `.resource-note`). Ships behind a removal comment like the other opt-in visuals — kept and filled only when the plan was informed by screenshots, mockups, diagrams, external docs, or a seeding issue; otherwise the section and its sidebar nav link are deleted.
+- **`reference/SKELETON.html`** — added the `#ic-photo` symbol, `.resource-grid` / `.resource-figure` / `.resource-links` styles, the opt-in `#resources` section markup with fill templates, and the `#resources` sidebar nav link (auto-handled by the existing scroll-spy).
+- **`SKILL.md`** — documented the section under Required Structure, HTML Output Requirements, and the Visual Components table, added a **Resources Capture** guide (when to capture, image portability/no-CDN rules, accessibility, HTML-escaping), and wired capture reminders into Step 0b Explore and Step 1 Clarify. The markdown fallback `reference/SKELETON.md` gained an optional `## Resources` section.
+
 ## 2.15.0 — Standalone Artifacts gallery (2026-07-08)
 
 ### Added

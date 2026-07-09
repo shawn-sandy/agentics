@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" data-status="{status}" data-effort="{effort-value}">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="{status}">
-<meta name="plan-effort" content="{effort-value}">
-<meta name="plan-type" content="{type}">
-<meta name="plan-created" content="{created}">
-<meta name="plan-repo" content="{repo-name}">
-<meta name="plan-file" content="{plan-filename}">
-<meta name="plan-path" content="{plan-path}">
-<meta name="plan-implement" content="{implement-prompt}">
-<meta name="plan-goal" content="{goal-prompt}">
-<!-- Remove the next line entirely when {workflow-prompt} is empty -->
-<meta name="plan-workflow" content="{workflow-prompt}">
-<title>Plan: {title}</title>
+<meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-07-09">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-resources-section-to-plans.html">
+<meta name="plan-path" content="docs/plans/add-resources-section-to-plans.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-resources-section-to-plans.html — Add an opt-in Resources section (images, screenshots, links) to implementation plans">
+<meta name="plan-goal" content="Achieve this goal: Let implementation plans embed the images, screenshots, and reference links used to create them so readers can illustrate and verify the work. The plan at docs/plans/add-resources-section-to-plans.html describes one approach — use it as reference, but optimize for the outcome">
+<title>Plan: Add a Resources section to implementation plans</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -169,7 +167,7 @@
     flex-shrink: 0;
   }
   [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"] .status-badge { background: #d97706; }
   [data-status="completed"]   .status-badge { background: #16a34a; }
 
   /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
@@ -193,7 +191,7 @@
   [data-effort="high"]   .effort-badge { background: #dc2626; }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
-  [data-status="in-progress"] .status-badge::before {
+  [data-status="completed"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
 
@@ -1255,30 +1253,30 @@ img, video { max-width: 100%; height: auto; }
     </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">{title}</h1>
+      <h1 class="plan-title">Add a Resources section to implementation plans</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="effort-badge" aria-label="Effort level">{effort}</span>
-        <span class="status-badge">{status}</span>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        {created}
+        2026-07-09
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        {repo-name}
+        agentics
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        {type}
+        feature
       </span>
       <span>
         <svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg>
-        {effort} effort
+        High effort
       </span>
     </div>
   </div>
@@ -1294,12 +1292,9 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Resources section is kept; delete otherwise -->
       <li><a href="#resources"><svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg> Resources</a></li>
       <!-- Keep the next link only if the Files section is kept; delete otherwise -->
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
@@ -1315,13 +1310,13 @@ img, video { max-width: 100%; height: auto; }
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>{objective}</p>
+      <p>Let an implementation plan embed the <strong>images, screenshots, and reference links used to create it</strong>, so a reader can illustrate what the work is about and verify the implementation against the same material. Ship it as an opt-in <code>Resources</code> section in the plan skeleton — present when the plan was informed by visuals or external references, cleanly removed when it was not.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-resources-section-to-plans.html — Add an opt-in Resources section (images, screenshots, links) to implementation plans</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1330,19 +1325,9 @@ img, video { max-width: 100%; height: auto; }
     <details class="plan-goal">
       <summary>Pursue as goal — optimize for the outcome</summary>
       <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">{goal-prompt}</code>
+        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Let implementation plans embed the images, screenshots, and reference links used to create them so readers can illustrate and verify the work. The plan at docs/plans/add-resources-section-to-plans.html describes one approach — use it as reference, but optimize for the outcome</code>
         <button class="copy-goal-btn" type="button"
                 onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
-      </div>
-    </details>
-
-    <!-- ── Workflow prompt (remove entire details when {workflow-prompt} is empty) ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
     </details>
 
@@ -1350,13 +1335,13 @@ img, video { max-width: 100%; height: auto; }
     <div class="plan-source">
       <div class="plan-source-row">
         <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">{plan-filename}</code>
+        <code id="plan-file" aria-label="Plan file name">add-resources-section-to-plans.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
       </div>
       <div class="plan-source-row">
         <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">{plan-path}</code>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-resources-section-to-plans.html</code>
         <button class="copy-src-btn" type="button"
                 onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
       </div>
@@ -1366,12 +1351,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Acceptance criteria</span>
-        <span id="progress-label">0 / {criteria-count} done</span>
+        <span id="progress-label">6 / 6 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1381,49 +1366,33 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>{context}</p>
+      <p>Implementation plans are self-contained HTML documents produced by the <code>plan-agent:implementation-plan</code> skill from <code>reference/SKELETON.html</code>. They already carry rich structure — objective, context, an auto-generated file-tree, steps, tests, acceptance criteria — but there was <strong>no place to show the material a plan was built from</strong>: a screenshot of current behaviour, a design mockup, an architecture diagram, or the docs and issues consulted while planning.</p>
+      <p>Without that, a reader cannot easily <em>illustrate</em> what the plan changes or <em>verify</em> the implementation against the same references the author used. This plan adds an opt-in <code>Resources</code> section: an image grid of screenshots/mockups (each with mandatory <code>alt</code> text and a source-crediting caption) plus a list of reference links (each with a short note). It follows the same keep-or-delete, self-contained, no-CDN conventions as the existing opt-in visual blocks.</p>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Resources — images, screenshots & reference links.
-         KEEP and fill when the plan was informed by screenshots, mockups,
-         diagrams, docs, issues, or other references worth citing so the
-         reader can illustrate and verify the work. DELETE this whole
-         section element AND its nav entry (the "#resources" link) when
-         the plan has no supporting resources.
-         • Images: use an https:// source URL or a relative asset path
-           committed alongside the plan (small screenshots may be inlined
-           as a data: URI). ALWAYS give descriptive alt text and a
-           <figcaption> that credits/links the source. Never rely on a
-           CDN for anything the page needs to render.
-         • Links: cite every doc, issue, or reference consulted, each with
-           a short note on why it matters. HTML-escape all URLs and text.
-         ════════════════════════════════════════════════════════════ -->
+    <!-- ── Resources (dogfood — this plan uses the very feature it ships) ── -->
     <section class="section-card card-resources" id="resources" aria-labelledby="h-resources">
       <h2 id="h-resources">
         <svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg>
         Resources
       </h2>
 
-      <!-- Images / screenshots — remove this block if unused -->
       <div class="resource-grid">
-        {resource-figures}
-        <!-- Figure template (duplicate as needed):
         <figure class="resource-figure">
-          <a href="https://example.com/full-image.png" target="_blank" rel="noopener noreferrer">
-            <img src="https://example.com/screenshot.png" alt="Descriptive alt text of what the screenshot shows" loading="lazy">
+          <a href="assets/resources-section-render.png" target="_blank" rel="noopener noreferrer">
+            <img src="assets/resources-section-render.png" alt="Rendered Resources section of an implementation plan: a two-column image grid of mockup screenshots with captions crediting their sources, above a list of reference links each with an explanatory note" loading="lazy">
           </a>
-          <figcaption>What this shows — <a href="https://example.com/source" target="_blank" rel="noopener noreferrer">source</a></figcaption>
-        </figure> -->
+          <figcaption>The Resources section this plan adds, rendered from the updated skeleton with sample figures and links.</figcaption>
+        </figure>
       </div>
 
-      <!-- Reference links — remove this block if unused -->
       <ul class="resource-links">
-        {resource-links}
-        <!-- Link template (duplicate as needed):
-        <li><a href="https://example.com/doc" target="_blank" rel="noopener noreferrer">Resource title</a> <span class="resource-note">why it matters to this plan</span></li> -->
+        <li><a href="https://github.com/shawn-sandy/agentics/pull/380" target="_blank" rel="noopener noreferrer">PR #380 — Add a Resources section to implementation plans</a> <span class="resource-note">the change this plan documents</span></li>
+        <li><a href="https://github.com/shawn-sandy/agentics/blob/main/CLAUDE.md" target="_blank" rel="noopener noreferrer">CLAUDE.md — repository conventions</a> <span class="resource-note">"Always include the plan file in commits for plugin changes" — why this plan exists</span></li>
+        <li><a href="https://github.com/shawn-sandy/agentics/blob/main/kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html" target="_blank" rel="noopener noreferrer">reference/SKELETON.html</a> <span class="resource-note">the plan skeleton the section was added to</span></li>
       </ul>
     </section>
+
 
     <!-- ════════════════════════════════════════════════════════════
          OPT-IN VISUAL: Files file-tree.
@@ -1436,75 +1405,25 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files Modified
       </h2>
       <div class="file-tree">
-        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> {repo-name}/</div>
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          {file-tree-rows}
-          <!-- Row template (duplicate as needed):
-          <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
-          Nest a directory with the child list INSIDE the li:
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/
-            <ul class="file-list">…</ul>
-          </li> -->
-        </ul>
-      </div>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/implementation-plan/reference/
+            <ul class="file-list">
+              <li><code>SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">#ic-photo icon, .resource-* CSS, #resources section, nav link</span></li>
+              <li><code>SKELETON.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">optional ## Resources in the markdown fallback</span></li>
+            </ul>
+          </li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document section + Resources Capture guide</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add 2.16.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent 2.15.0 → 2.16.0</span></li>
+          <li><code>tests/plugins/test-resources-section.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Resources section smoke test</span></li>
+          <li><code>docs/plans/add-resources-section-to-plans.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">this plan document</span></li>
+        </ul></div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <!-- Flow / pipeline — remove if unused -->
-      <div class="diagram-subheading">{diagram-heading}</div>
-      <div class="pipeline">
-        {diagram-nodes}
-        <!-- Node + arrow template (duplicate; drop the trailing arrow on the last node):
-        <div class="pipeline-node"><div class="pipeline-label">Stage</div><code>label</code><div class="pipeline-sub">detail</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div> -->
-      </div>
-
-      <!-- Comparison grid — remove if unused -->
-      <div class="diagram-subheading">{compare-heading}</div>
-      <div class="compare-grid">
-        {compare-columns}
-        <!-- Column template (use compare-col-add | compare-col-neutral | compare-col-remove):
-        <div class="compare-col-add"><div class="compare-header">Title</div><ul class="compare-list"><li>item</li></ul></div> -->
-      </div>
-
-      <!-- Bar chart — remove if unused. role="img" + aria-label restates the data for screen readers -->
-      <div class="diagram-subheading">{chart-heading}</div>
-      <div class="bar-chart" role="img" aria-label="{chart-aria-label}">
-        {chart-rows}
-        <!-- Row template (set --val to a percent; show the real value in .bar-value):
-        <div class="bar-row"><span class="bar-label">label</span><span class="bar-track"><span class="bar-fill" style="--val:72%"></span></span><span class="bar-value">72%</span></div> -->
-      </div>
-
-      <!-- Data table — remove if unused. Keep <caption> and scope="col" for accessibility -->
-      <div class="diagram-subheading">{table-heading}</div>
-      <table class="plan-table">
-        <caption>{table-caption}</caption>
-        <thead>
-          <tr>{table-head-cells}<!-- <th scope="col">Column</th> --></tr>
-        </thead>
-        <tbody>
-          {table-rows}
-          <!-- Row template: <tr><td>cell</td><td>cell</td></tr> -->
-        </tbody>
-      </table>
-    </section>
 
     <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
@@ -1514,24 +1433,111 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        
+
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">{step-1-action}</span>
+                <span class="step-chip-text">Add the <code>#ic-photo</code> icon and the <code>.resource-*</code> CSS to <code>reference/SKELETON.html</code>.</span>
               </div>
-              <div class="step-why">{step-1-why}</div>
+              <div class="step-why">The section needs a sidebar/heading icon and self-contained styling. Add a Heroicons-outline <code>#ic-photo</code> symbol and the <code>.resource-grid</code> (auto-fill image grid), <code>.resource-figure</code> (bordered card with <code>overflow:hidden</code>), <code>.resource-figure &gt; a</code> (image-wrapper only — scoped so figcaption source links keep normal line-height), <code>.resource-figure img</code>, <code>.resource-figure figcaption</code>, <code>.resource-links</code>, and <code>.resource-note</code> rules. Pure CSS / inline SVG — no CDN.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body">{step-1-verify}</div>
+                <div class="verify-body"><code>grep -n 'id="ic-photo"' reference/SKELETON.html</code> and <code>grep -n '^  \.resource-grid {' reference/SKELETON.html</code> both match.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <!-- Duplicate the block above for each additional step -->
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the opt-in <code>#resources</code> section between Context and Files, plus its sidebar nav link.</span>
+              </div>
+              <div class="step-why">Ships behind a removal comment like the other opt-in visuals. Contains a <code>.resource-grid</code> holding <code>{resource-figures}</code> (figure template: linked <code>&lt;img&gt;</code> with mandatory <code>alt</code> + a source-crediting <code>&lt;figcaption&gt;</code>) and a <code>.resource-links</code> list holding <code>{resource-links}</code> (link + <code>.resource-note</code>). Add a matching <code>&lt;li&gt;&lt;a href="#resources"&gt;</code> nav entry using <code>#ic-photo</code> — the existing scroll-spy picks it up via <code>querySelectorAll</code> + <code>filter(Boolean)</code>, so no JS edit is needed.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">The rendered section id order is Context → Resources → Files; filling <code>{resource-figures}</code>/<code>{resource-links}</code> yields a document that parses with an accessible <code>&lt;img alt&gt;</code> and a captioned link.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Document the section in <code>SKILL.md</code> and add a <code>Resources Capture</code> guide.</span>
+              </div>
+              <div class="step-why">Add the section to Required Structure (Visual sections), HTML Output Requirements, and the Visual Components table, then a <code>Resources Capture</code> guide covering when to capture, image portability/no-CDN rules, mandatory alt text, and HTML-escaping. Wire capture reminders into Step 0b Explore and Step 1 Clarify so references are noted as they are consulted.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>grep -n 'Resources Capture\|{resource-figures}\|{resource-links}' SKILL.md</code> shows the guide and both placeholders; Step 0b/1 mention capturing references.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add an optional <code>## Resources</code> section to the markdown fallback <code>reference/SKELETON.md</code>.</span>
+              </div>
+              <div class="step-why">Keeps the lightweight markdown template aligned with the HTML skeleton for headless/markdown output paths — an optional section between Objective and Steps with an example image (alt + source) and an example reference link.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>grep -n '## Resources' reference/SKELETON.md</code> matches, placed between Objective and Steps.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Bump <code>plan-agent</code> to <code>2.16.0</code> in <code>marketplace.json</code> and add a CHANGELOG entry.</span>
+              </div>
+              <div class="step-why">A new opt-in section is a MINOR change; the value in <code>marketplace.json</code> is what ships (no CI bump). Update the plugin description to mention the Resources section and add a matching <code>2.16.0</code> section to <code>CHANGELOG.md</code>.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>python3 -c "import json;d=json.load(open('.claude-plugin/marketplace.json'));print([p['version'] for p in d['plugins'] if p['name']=='plan-agent'][0])"</code> prints <code>2.16.0</code>, and the CHANGELOG head shows the entry.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the smoke test <code>tests/plugins/test-resources-section.sh</code>.</span>
+              </div>
+              <div class="step-why">Pins the section to the skeleton and its SKILL.md contract so the fill pipeline cannot silently drop it or diverge. Asserts the icon, section placement, placeholders, nav link, and CSS, plus a render check that fills the placeholders and confirms an accessible image and captioned link survive parsing.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>bash tests/plugins/test-resources-section.sh</code> exits 0 with all assertions passing.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+
 
       </div>
     </section>
@@ -1542,36 +1548,49 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
-      <div class="test-tier-label">{test-tier-label}</div>
+      <div class="test-tier-label">Tier 1 — Code-touching plan</div>
 
       <!-- Objective-verification test — mandatory, always first -->
       <div class="objective-test-card">
         <div class="test-card-header">
           <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">{objective-test-title}</span>
+          <span class="test-card-title">Plans can embed resources, and the section cleanly omits when unused</span>
         </div>
         <div class="test-card-body">
-          {objective-test-body}
+          <p><strong>File:</strong> <code>tests/plugins/test-resources-section.sh</code></p>
+          <p><strong>Type:</strong> smoke test</p>
+          <p><strong>Asserts:</strong> the skeleton defines the <code>#ic-photo</code> icon, the <code>#resources</code> section between Context and Files, the <code>{resource-figures}</code>/<code>{resource-links}</code> placeholders, the nav link, and the <code>.resource-*</code> CSS; filling the placeholders yields a parseable section carrying an accessible <code>&lt;img alt&gt;</code>, a <code>&lt;figcaption&gt;</code>, and a captioned reference link; and <code>SKILL.md</code> documents the section and Resources Capture. The plan's objective, verified through the real skeleton.</p>
+          <p><strong>Run:</strong> <code>bash tests/plugins/test-resources-section.sh</code></p>
         </div>
       </div>
 
-      <!-- Tier 1 test sub-sections — omit entirely for Tier 2 plans -->
+      <!-- Tier 1 test sub-sections -->
       <div class="test-list">
-        {test-items}
-        <!-- Each test item uses this pattern:
+
         <div class="test-card">
           <div class="test-card-header">
             <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">{test-title}</span>
+            <span class="test-card-title">Skeleton markup + CSS contract</span>
           </div>
           <div class="test-card-body">
-            <p><strong>File:</strong> <code>{test-file-path}</code></p>
-            <p><strong>Targets:</strong> {test-targets}</p>
-            <p><strong>Key cases:</strong> {test-cases}</p>
+            <p><strong>File:</strong> <code>tests/plugins/test-resources-section.sh</code></p>
+            <p><strong>Targets:</strong> <code>reference/SKELETON.html</code> — icon symbol, section element, placeholders, nav link, <code>.resource-*</code> CSS blocks.</p>
+            <p><strong>Key cases:</strong> <code>#ic-photo</code> present; <code>section.card-resources#resources</code> present; both placeholders live inside <code>.resource-grid</code>/<code>.resource-links</code>; <code>#resources</code> nav link uses the photo icon; CSS classes defined.</p>
           </div>
         </div>
-        Use test-badge-unit, test-badge-integration, or test-badge-e2e as appropriate.
-        For Tier 2, remove this entire .test-list container. -->
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-integration">Integration</span>
+            <span class="test-card-title">Filled section renders accessibly</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>tests/plugins/test-resources-section.sh</code></p>
+            <p><strong>Targets:</strong> the fill path — <code>{resource-figures}</code>/<code>{resource-links}</code> substituted with sample content, parsed via <code>html.parser</code>.</p>
+            <p><strong>Key cases:</strong> filled document parses without error; the section retains a non-empty <code>alt</code>, a <code>&lt;figcaption&gt;</code>, and the reference link with its <code>.resource-note</code>.</p>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1583,14 +1602,29 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
-          <label for="ac1">{criterion-1}</label>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1"><code>reference/SKELETON.html</code> defines the <code>#ic-photo</code> icon and the <code>.resource-grid</code> / <code>.resource-figure</code> / <code>.resource-links</code> CSS.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
-          <label for="ac2">{criterion-2}</label>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">An opt-in <code>#resources</code> section renders between Context and Files, with <code>{resource-figures}</code> in <code>.resource-grid</code> and <code>{resource-links}</code> in <code>.resource-links</code>, plus a <code>#resources</code> sidebar nav link.</label>
         </li>
-        <!-- Add more <li> items as needed -->
+        <li>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">The image-wrapper rule is scoped to <code>.resource-figure &gt; a</code> so a <code>&lt;figcaption&gt;</code> source link is not collapsed by <code>line-height:0</code>.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4"><code>SKILL.md</code> documents the section (Required Structure, HTML Output Requirements, Visual Components) with a <code>Resources Capture</code> guide, and Step 0b/1 remind to capture references.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5">The markdown fallback <code>reference/SKELETON.md</code> has an optional <code>## Resources</code> section; <code>plan-agent</code> is <code>2.16.0</code> in <code>marketplace.json</code> with a matching CHANGELOG entry.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6"><code>tests/plugins/test-resources-section.sh</code> passes; every resource image requires descriptive <code>alt</code> text; no CDN, <code>&lt;canvas&gt;</code>, or charting library was added.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1602,7 +1636,8 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>{end-to-end-verification}</p>
+      <p>Run the smoke test: <code>bash tests/plugins/test-resources-section.sh</code> — it must exit 0 with every assertion passing (icon, section placement, placeholders, nav link, CSS, the filled-render check, and the SKILL.md contract).</p>
+      <p>Then exercise the section in a real render: copy <code>reference/SKELETON.html</code>, substitute <code>{resource-figures}</code> with a linked <code>&lt;figure&gt;</code> (image + <code>alt</code> + captioned source) and <code>{resource-links}</code> with a reference <code>&lt;li&gt;</code>, open it in a browser, and confirm the image grid and link list render with the photo icon in the sidebar. Finally, delete the whole <code>#resources</code> block and its nav link and confirm the plan still renders and the scroll-spy is unaffected (it filters to existing sections).</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1611,21 +1646,21 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1644,31 +1679,26 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <div class="next-steps-list">
 
-        <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>{next-step-1-label}</summary>
+          <summary>Auto-capture Step 7 browser-verification screenshots into Resources</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>{next-step-1-prompt}</pre>
+            <pre>In the agentics repo, extend plan-agent's implementation-plan skill so the Step 7 browser-verification screenshot (saved via mcp__claude-in-chrome__computer) is optionally added to the plan's Resources section as a committed asset under docs/plans/assets/, with descriptive alt text. Keep it opt-in and skip in headless/no-browser runs. Update SKILL.md and the smoke test; bump plan-agent and add a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
         <div class="wish-list-header">
           <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
           Wish List
         </div>
 
         <details class="next-step-item wish-item">
-          <summary>
-            {wish-1-label}
-            <span class="wish-badge">Wish List</span>
-          </summary>
+          <summary><span class="wish-badge">🔭 Wish List</span> Pull mockups straight from Figma into Resources</summary>
           <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>{wish-1-prompt}</pre>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Run a workflow to design a Figma-to-Resources bridge for plan-agent: when a plan objective references a Figma URL, fetch the frame via the Figma MCP server, export a PNG into docs/plans/assets/, and emit a .resource-figure card citing the Figma source. Research the Figma MCP capabilities, propose the skill changes, and draft an implementation plan.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1677,31 +1707,9 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>{question-1-label}</summary>
-              <div class="unresolved-prompt">
-                <pre>{question-1-prompt}</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · {created} · {repo-name}
+      Generated by plan-agent · 2026-07-09 · agentics
     </footer>
 
   </main>
