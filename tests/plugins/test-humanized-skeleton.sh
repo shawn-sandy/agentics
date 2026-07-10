@@ -175,7 +175,7 @@ fi
 # ── Extractor purity ───────────────────────────────────────────────────
 
 echo "10. extract-plan-spec.mjs output carries no glance or section-intro copy..."
-SPEC="$(node "$EXTRACTOR" "$SKELETON")"
+SPEC="$(node "$EXTRACTOR" "$SKELETON" 2>/dev/null || true)"
 if [ -n "$SPEC" ] \
   && echo "$SPEC" | grep -qF '{objective}' \
   && echo "$SPEC" | grep -qF '{context}' \
