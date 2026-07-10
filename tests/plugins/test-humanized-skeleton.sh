@@ -189,6 +189,33 @@ else
   fail "extractor output is missing spec fields or leaks at-a-glance/section-intro copy"
 fi
 
+echo "11. Sidebar nav labels match their target section headings..."
+if python3 - "$SKELETON" << 'PYEOF'
+import sys, re
+html = open(sys.argv[1]).read()
+links = re.findall(r'<a href="#([a-z-]+)">(?:<svg.*?</svg>)?\s*([^<]+)</a>', html)
+ok = True
+for sec_id, label in links:
+    label = ' '.join(label.split())
+    m = re.search(r'<section[^>]*id="%s"[^>]*>' % re.escape(sec_id), html)
+    if not m:
+        continue  # non-section targets (#objective, #progress) have no h2 to compare
+    seg = html[m.end():html.find('</section>', m.end())]
+    h = re.search(r'<h2[^>]*>(.*?)</h2>', seg, re.S)
+    if not h:
+        continue
+    h2 = ' '.join(re.sub(r'<[^>]+>', ' ', h.group(1)).split())
+    if h2 != label:
+        print("nav '%s' != heading '%s' for #%s" % (label, h2, sec_id), file=sys.stderr)
+        ok = False
+sys.exit(0 if ok else 1)
+PYEOF
+then
+  pass
+else
+  fail "a sidebar nav label does not match its target section heading"
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All humanized-skeleton checks passed."

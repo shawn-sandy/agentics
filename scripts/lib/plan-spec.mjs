@@ -165,11 +165,19 @@ export function extractSections(html) {
   // Humanized skeletons (plan-agent >= 2.17.0) place a one-line
   // <p class="section-intro"> under each section heading. Intro copy is
   // presentation-only chrome — strip it so extracted spec text stays pure.
-  const stripIntro = (inner) => inner.replace(/<p class="section-intro">[\s\S]*?<\/p>/gi, ' ');
+  // Attribute-agnostic on purpose: generated plans may add ids/classes to
+  // the intro <p>, and a missed match silently pollutes the spec.
+  const stripIntro = (inner) =>
+    inner.replace(/<p\b[^>]*class="[^"]*\bsection-intro\b[^"]*"[^>]*>[\s\S]*?<\/p>/gi, ' ');
 
   const objectiveInner = innerByMarker(html, 'id="objective"', 'div');
   if (objectiveInner === null) fail('no objective element (id="objective")');
-  const objective = textOf(stripIntro(objectiveInner).replace(/<div class="section-label">[\s\S]*?<\/div>/i, ' '));
+  // Defense against the one placement error the skill warns about: a
+  // .plan-glance block mistakenly nested inside #objective must not leak
+  // into the extracted objective.
+  const stripGlance = (inner) =>
+    inner.replace(/<section\b[^>]*class="[^"]*\bplan-glance\b[^"]*"[^>]*>[\s\S]*?<\/section>/gi, ' ');
+  const objective = textOf(stripGlance(stripIntro(objectiveInner)).replace(/<div class="section-label">[\s\S]*?<\/div>/i, ' '));
   if (!objective) fail('objective is empty');
 
   const stripHeading = (inner) => inner.replace(/<h2\b[\s\S]*?<\/h2>/i, ' ');

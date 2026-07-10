@@ -329,7 +329,8 @@
     color: #1e3a5f;
     line-height: 1.6;
   }
-  .objective-card .section-label {
+  .objective-card .section-label,
+  .plan-glance-label {
     font-size: .65rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -347,14 +348,7 @@
     margin: -1.5rem 0 1.5rem;
     line-height: 1.7;
   }
-  .plan-glance-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: .5rem;
-  }
+  .plan-glance-label { color: var(--muted); }
   .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
@@ -818,6 +812,7 @@
     min-height: 44px;
   }
   .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--muted); }
   .plan-more-ways-body {
     padding: .75rem 1rem 1rem;
     border-top: 1px solid var(--border);
@@ -881,15 +876,13 @@
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
   /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
     margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -983,6 +976,7 @@
   .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
@@ -1036,6 +1030,7 @@
   .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
   @media print { .plan-goal { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
@@ -1348,9 +1343,9 @@ img, video { max-width: 100%; height: auto; }
       <!-- Keep the next link only if the Resources section is kept; delete otherwise -->
       <li><a href="#resources"><svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg> Resources</a></li>
       <!-- Keep the next link only if the Files section is kept; delete otherwise -->
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> How it fits together</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
@@ -1372,7 +1367,7 @@ img, video { max-width: 100%; height: auto; }
     <!-- ── At a glance (SIBLING of #objective — never nest it inside;
          the extractor reads #objective's inner HTML) ─────────────── -->
     <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <h2 class="plan-glance-label" id="plan-glance-label">At a glance</h2>
+      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
       <p>{at-a-glance}</p>
     </section>
 
@@ -1387,7 +1382,7 @@ img, video { max-width: 100%; height: auto; }
     <!-- ── More ways to run this plan (collapsed drawer — one flat
          details, no nested details, never ship the open attribute) ── -->
     <details class="plan-more-ways">
-      <summary>More ways to run this plan</summary>
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
       <div class="plan-more-ways-body">
 
         <!-- Goal prompt row (outcome-driven — always present) -->
@@ -1432,7 +1427,7 @@ img, video { max-width: 100%; height: auto; }
     <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
+        <span>Definition of done</span>
         <span id="progress-label">0 / {criteria-count} done</span>
       </div>
       <div class="progress-bar-bg">
