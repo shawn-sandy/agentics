@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo" data-effort="high">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-effort" content="high">
+<meta name="plan-type" content="refactor">
+<meta name="plan-created" content="2026-07-09">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="humanize-plan-output.html">
+<meta name="plan-path" content="docs/plans/humanize-plan-output.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/humanize-plan-output.html &#8212; Humanize the implementation-plan HTML output for easier, friendlier reading">
+<meta name="plan-goal" content="Achieve this goal: Humanize the implementation-plan HTML output for easier, friendlier reading. The plan at docs/plans/humanize-plan-output.html describes one approach &#8212; use it as reference, but optimize for the outcome">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/humanize-plan-output.html &#8212; Humanize the implementation-plan HTML output for easier, friendlier reading. Brief subagents with the plan file at docs/plans/humanize-plan-output.html">
+<title>Plan: Humanize the implementation-plan output</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --green-border:#bbf7d0;
+    --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --amber-border:#fde68a;
+    --red:        #dc2626;
+    --red-bg:     #fef2f2;
+    --red-border: #fecaca;
+    --purple:     #a21caf;
+    --purple-bg:  #fdf4ff;
+    --purple-border:#f0abfc;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { background: #16a34a; }
+  [data-effort="medium"] .effort-badge { background: #d97706; }
+  [data-effort="high"]   .effort-badge { background: #dc2626; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: .8; }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .objective-card .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { flex: 1; min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--text);
+  }
+  .step-chip {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .1em .5em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--subtle);
+    border: 1px solid var(--border);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-chip-text { flex: 1; }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle {
+    margin-top: .5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    padding-top: .4rem;
+  }
+  .step-verify-toggle summary {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem;
+    color: var(--text);
+    margin-top: .4rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--surface);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem;
+    background: #f3e8ff;
+    color: #6d28d9;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid #ddd6fe;
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-implement code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  .plan-workflow {
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+  }
+  .plan-workflow summary {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    padding: .25rem 0;
+    user-select: none;
+  }
+  .plan-workflow summary:hover { text-decoration: underline; }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt (outcome-driven — always present) ────────────── */
+  .plan-goal {
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+  }
+  .plan-goal summary {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    cursor: pointer;
+    padding: .25rem 0;
+    user-select: none;
+  }
+  .plan-goal summary:hover { text-decoration: underline; }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    flex: 1;
+  }
+  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .objective-test-card {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: #14532d; }
+  .objective-test-card .test-card-body { color: #166534; }
+  .objective-test-card .test-card-body strong { color: #14532d; }
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--subtle);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--text); }
+  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--green); }
+  .bar-fill.zero { background: var(--subtle); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
+  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table code { font-size: .8em; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+  </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ── Header — document cover ─────────────────────────────────── -->
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Humanize the implementation-plan output</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <span class="status-badge">todo</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
+        2026-07-09
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
+        agentics
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
+        refactor
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg>
+        High effort
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar — table of contents ─────────────────────────── -->
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── Objective ────────────────────────────────────────────── -->
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Make every generated plan read like a briefing from a teammate &#8212; a plain-language summary first, one clear call-to-action, and the machinery tucked into a collapsed drawer &#8212; without breaking a single machine contract the galleries, hooks, and tests depend on.</p>
+    </div>
+
+    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/humanize-plan-output.html &#8212; Humanize the implementation-plan HTML output for easier, friendlier reading</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <!-- ── Goal prompt (outcome-driven — always present) ─────────── -->
+    <details class="plan-goal">
+      <summary>Pursue as goal — optimize for the outcome</summary>
+      <div class="plan-goal-inner">
+        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Humanize the implementation-plan HTML output for easier, friendlier reading. The plan at docs/plans/humanize-plan-output.html describes one approach &#8212; use it as reference, but optimize for the outcome</code>
+        <button class="copy-goal-btn" type="button"
+                onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+      </div>
+    </details>
+
+    <!-- ── Workflow prompt (remove entire details when Run a workflow to implement the plan at docs/plans/humanize-plan-output.html &#8212; Humanize the implementation-plan HTML output for easier, friendlier reading. Brief subagents with the plan file at docs/plans/humanize-plan-output.html is empty) ── -->
+    <details class="plan-workflow">
+      <summary>Run as workflow — launch parallel subagents</summary>
+      <div class="plan-workflow-inner">
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/humanize-plan-output.html &#8212; Humanize the implementation-plan HTML output for easier, friendlier reading. Brief subagents with the plan file at docs/plans/humanize-plan-output.html</code>
+        <button class="copy-workflow-btn" type="button"
+                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+      </div>
+    </details>
+
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">humanize-plan-output.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/humanize-plan-output.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+    <!-- ── Progress ─────────────────────────────────────────────── -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">0 / 9 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+<p>The <code>/plan-agent:implementation-plan</code> skill produces dense, tool-first HTML. Immediately after the objective, readers hit four stacked copy-paste prompt rows (implement, goal, workflow, file/path) before any human explanation. Headings are terse uppercase jargon (&#8220;ACCEPTANCE CRITERIA&#8221;, &#8220;VERIFICATION&#8221;, &#8220;Tier 1 &#8212; Code-touching plan&#8221;), and step cards use bare <strong>Why:</strong> / <strong>Verify</strong> labels. The feedback driving this plan: the output feels very technical and needs to be easier to read and more user-friendly.</p>
+      <p>The constraint that shapes every decision here: a web of downstream consumers &#8212; the plans-library gallery, the finalize-plan skill, the filename and index-rebuild hooks, and the contract tests under <code>tests/plugins/</code> &#8212; greps exact ids, classes, and <code>&lt;meta name=&quot;plan-*&quot;&gt;</code> tags out of every plan file. So this is a <em>presentation-and-copy</em> refactor of the skeleton and its authoring contract, never a rename of the machine layer.</p>
+    </section>
+
+
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files to Modify
+      </h2>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+<li><code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">at-a-glance block, prompt drawer, human copy</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document new placeholders, copy rules, frozen strings</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">mirror humanized structure into markdown fallback</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.17.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent to 2.17.0</span></li>
+          <li><code>tests/plugins/test-humanized-skeleton.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">human layer + machine contract smoke test</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
+      <h2 id="h-diagram">
+        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
+        Diagram
+      </h2>
+
+      <!-- Comparison grid -->
+      <div class="diagram-subheading">Reading experience &#8212; before vs after</div>
+      <div class="compare-grid">
+        <div class="compare-col-remove">
+          <div class="compare-header">Today &#8212; reads like tooling</div>
+          <ul class="compare-list">
+            <li>Four copy-paste prompt rows stacked before any explanation</li>
+            <li>Uppercase terse headings: &#8220;ACCEPTANCE CRITERIA&#8221;, &#8220;VERIFICATION&#8221;</li>
+            <li>Jargon labels: &#8220;Tier 1 &#8212; Code-touching plan&#8221;, bare &#8220;Why:&#8221; / &#8220;Verify&#8221;</li>
+            <li>No plain-language entry point for non-technical readers</li>
+          </ul>
+        </div>
+        <div class="compare-col-add">
+          <div class="compare-header">After &#8212; reads like a briefing</div>
+          <ul class="compare-list">
+            <li>&#8220;At a glance&#8221; summary right under the objective</li>
+            <li>One visible Implement action; the rest in a collapsed drawer</li>
+            <li>Sentence-case human headings with one-line intros</li>
+            <li>Same ids, classes, and meta tags &#8212; zero consumer breakage</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Steps ────────────────────────────────────────────────── -->
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <div class="steps-list">
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add an &#8220;At a glance&#8221; plain-language summary block to <code>SKELETON.html</code> via a new <code>{at-a-glance}</code> placeholder &#8212; a <code>.plan-glance</code> element rendered as a <em>sibling</em> immediately after <code>div#objective</code> (never a child), with its own accessible name (a visible &#8220;At a glance&#8221; label wired via <code>aria-labelledby</code> or <code>aria-label</code>)</span>
+              </div>
+              <div class="step-why">Readers currently land on prompt strings and file paths before any human explanation; a two-to-three sentence summary gives every reader &#8212; technical or not &#8212; an entry point. The objective and the glance get distinct jobs so they never restate each other: objective = the one-line <em>what</em>; at-a-glance = <em>why it matters</em> and <em>how we&#8217;ll know it worked</em>. Sibling placement is load-bearing: <code>scripts/extract-plan-spec.mjs</code> derives the objective spec from <code>div#objective</code>&#8217;s inner HTML, so nesting the glance inside would silently pollute every downstream automated review.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">The skeleton contains a <code>.plan-glance</code> block with the <code>{at-a-glance}</code> placeholder as a <em>sibling</em> between <code>div#objective</code> and the Implement row, and <code>node scripts/extract-plan-spec.mjs</code> run against a filled plan emits objective text that does not contain the glance copy.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Regroup the four prompt rows: keep Implement visible as the single call-to-action, and collapse the goal, workflow, and plan-source rows into one flat <code>&lt;details class=&quot;plan-more-ways&quot;&gt;</code> disclosure labelled &#8220;More ways to run this plan&#8221; &#8212; three plainly-labelled rows inside, never nested <code>&lt;details&gt;</code></span>
+              </div>
+              <div class="step-why">Four stacked tool rows before the Context section is the loudest &#8220;a machine wrote this&#8221; signal on the page; one clear action plus a collapsed drawer keeps every power-user feature without the clutter. Each row keeps its distinguishing scent text (&#8220;Pursue as goal &#8212; optimize for the outcome&#8221;, &#8220;Run as workflow &#8212; launch parallel subagents&#8221;, File/Path) so opening costs exactly one click and nothing loses meaning. When no workflow prompt was generated, the workflow row is omitted entirely and the drawer still opens with the remaining rows. The drawer&#8217;s chevron reuses the existing <code>.optional-section &gt; summary::before</code> rotate + <code>prefers-reduced-motion</code> pair rather than new transition CSS.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>grep</code> confirms the <code>implement-cmd</code>, <code>goal-cmd</code>, <code>workflow-cmd</code>, <code>plan-file</code>, and <code>plan-path</code> ids plus their <code>copyCmd</code>/<code>copyGoal</code>/<code>copyWorkflow</code>/<code>copyPath</code> handlers are all unchanged; the drawer is a single <code>details.plan-more-ways</code> element without the <code>open</code> attribute containing no nested <code>&lt;details&gt;</code>; and the raw skeleton shows exactly one visible prompt row on first paint.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Rewrite headings, labels, and step-card copy in plain sentence-case English, adding a one-line <code>&lt;p class=&quot;section-intro&quot;&gt;</code> under each section heading &#8212; scoping the uppercase removal to the <code>.section-card h2</code> rules only</span>
+              </div>
+              <div class="step-why">&#8220;Acceptance Criteria&#8221;, &#8220;Verification&#8221;, and bare &#8220;Why:&#8221; labels read like a compliance document; &#8220;Definition of done&#8221;, &#8220;Final check&#8221;, &#8220;Why this matters&#8221;, and &#8220;How to check this worked&#8221; say the same thing in human terms, and a short intro orients readers who skipped the docs. Three guardrails: the intro is a <code>&lt;p&gt;</code> styled with <code>var(--muted)</code> (4.83:1 contrast) &#8212; never <code>var(--subtle)</code> (2.86:1, fails WCAG 1.4.3) and never a heading element; intros inside <code>#objective</code>, <code>#context</code>, and <code>#verification</code> must sit outside the text that <code>extractSections()</code> in <code>scripts/lib/plan-spec.mjs</code> extracts (or that helper learns to strip <code>.section-intro</code>); and the other ~17 <code>text-transform: uppercase</code> rules (<code>.step-chip</code>, <code>.completion-badge</code>, <code>.file-badge</code>, <code>.pipeline-label</code>, <code>.compare-header</code>, <code>.plan-table thead th</code>, <code>.diagram-subheading</code>, &#8230;) stay untouched.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Every <code>h2</code> keeps its existing <code>id</code> (all sidebar links still scroll to their section); <code>text-transform: uppercase</code> is gone from <code>.section-card h2</code> but still present on chips, badges, and table headers; each <code>.section-card</code> opens with a <code>p.section-intro</code>; and <code>node scripts/extract-plan-spec.mjs</code> emits objective/context/verification text free of intro copy.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update <code>SKILL.md</code> so generated plans actually use the new structure: an <code>{at-a-glance}</code> generation rule, the <code>.plan-more-ways</code> drawer contract (including the omit-workflow-row-when-empty rule), humanized tier-label strings, a plain-language writing rule, and a frozen-strings list</span>
+              </div>
+              <div class="step-why">The skeleton is only half the contract &#8212; SKILL.md tells the model what to write into it; without these rules, newly generated plans would skip the new blocks or fill them with the same jargon. The frozen-strings list is load-bearing: <code>finalize-plan</code> does a literal find/replace on <code>&lt;span class=&quot;step-chip&quot;&gt;todo&lt;/span&gt;</code> &#8594; <code>done</code> and leaves the <code>report-empty</code> sentence (&#8220;No items to report &#8212; all requirements met.&#8221;) verbatim, and <code>test-goal-prompt.sh</code> greps the literal <code>Pursue as goal</code> label &#8212; reword any of these and those consumers silently no-op.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">SKILL.md names the <code>{at-a-glance}</code> placeholder, the <code>.plan-glance</code> block, and the <code>.plan-more-ways</code> disclosure using the exact class names the skeleton ships; the Writing Style section instructs: write for a reader who wasn&#8217;t in the planning session, expanding jargon on first use; a &#8220;frozen strings&#8221; subsection lists the <code>step-chip</code> <code>todo</code>/<code>done</code> tokens, the <code>report-empty</code> sentence, and the <code>Pursue as goal</code> label as byte-for-byte invariants; and the tier-label rewrite targets the exact rule that currently sets <code>{test-tier-label}</code> to &#8220;Tier 1 &#8212; Code-touching plan&#8221; / &#8220;Tier 2 &#8212; Non-code plan&#8221;.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Mirror the humanized structure into the markdown fallback <code>reference/SKELETON.md</code></span>
+              </div>
+              <div class="step-why">The 2.16.0 release established the twin-file convention (the Resources section landed in both skeletons in lockstep); leaving the markdown fallback jargon-heavy would let the two templates drift apart.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>reference/SKELETON.md</code> opens with an &#8220;At a glance&#8221; analog and uses the same de-jargoned section names as the HTML skeleton (&#8220;Definition of done&#8221;, &#8220;Final check&#8221;, &#8230;); no HTML-only mechanics (drawer markup, ids) are copied into it.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>tests/plugins/test-humanized-skeleton.sh</code> covering the new human layer, the untouched machine contract, and the frozen strings</span>
+              </div>
+              <div class="step-why">The whole change hinges on &#8220;humanize without breaking consumers&#8221;; a test asserting both sides keeps every future skeleton edit honest.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>bash tests/plugins/test-humanized-skeleton.sh</code> passes &#8212; asserting the literal new heading strings (&#8220;Definition of done&#8221;, &#8220;Final check&#8221;), the frozen strings (<code>Pursue as goal</code>, step-chip <code>todo</code>, the <code>report-empty</code> sentence), a <code>details.plan-more-ways</code> element without the <code>open</code> attribute, and extractor output purity &#8212; and the existing suite (<code>test-goal-prompt.sh</code>, <code>test-extractor-wiring.sh</code>, <code>test-save-pdf.sh</code>, <code>test-resources-section.sh</code>, and <code>test-responsive-retrofit.sh</code>, whose byte-identical <code>#plan-responsive-fix</code> style block must survive every skeleton edit) still passes without any edits.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Bump plan-agent to 2.17.0 in <code>.claude-plugin/marketplace.json</code> and describe the change in <code>CHANGELOG.md</code></span>
+              </div>
+              <div class="step-why">Marketplace convention: every plugin change ships a manual semver bump (minor &#8212; the output format changed) plus a changelog line so users and the merge driver can track it.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><code>marketplace.json</code> parses as valid JSON (the settings hook auto-validates on write) with plan-agent at <code>2.17.0</code>, and <code>kit/plugins/plan-agent/CHANGELOG.md</code> has a 2.17.0 entry in the established format (<code>## X.Y.Z &#8212; Title (date)</code> with <code>### Added</code>/<code>### Changed</code> subsections), including a one-line note on why this is a minor bump (output format changed; nothing removed or renamed).</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Tests ────────────────────────────────────────────────── -->
+    <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
+      <h2 id="h-tests">
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
+        Tests
+      </h2>
+      <div class="test-tier-label">Tier 1 &#8212; Code-touching plan</div>
+
+      <!-- Objective-verification test — mandatory, always first -->
+      <div class="objective-test-card">
+        <div class="test-card-header">
+          <span class="test-badge test-badge-objective">Objective</span>
+          <span class="test-card-title">Generated plans lead with human content on an intact machine contract</span>
+        </div>
+        <div class="test-card-body">
+<p><strong>File:</strong> <code>tests/plugins/test-humanized-skeleton.sh</code></p>
+          <p><strong>Type:</strong> smoke test</p>
+          <p><strong>Asserts:</strong> the skeleton leads with human content &#8212; the <code>.plan-glance</code> block sits above the Implement row, exactly one prompt row is visible on first paint, and every section carries a <code>.section-intro</code> &#8212; while every machine hook (<code>plan-*</code> meta tags, <code>implement-cmd</code>/<code>goal-cmd</code>/<code>workflow-cmd</code> ids, <code>#criteria-list</code>, <code>#completion-list</code>, <code>.step-card</code>, <code>data-status</code>) is still present and unrenamed.</p>
+          <p><strong>Run:</strong> <code>bash tests/plugins/test-humanized-skeleton.sh</code></p>
+        </div>
+      </div>
+
+      <p>Unit and E2E sub-sections are deliberately omitted: this is a markup-and-copy change with no isolable function to unit-test, and end-to-end coverage requires a live skill invocation &#8212; exercised manually in Verification via a real <code>--quick</code> plan generation.</p>
+
+      <!-- Tier 1 test sub-sections — omit entirely for Tier 2 plans -->
+      <div class="test-list">
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-integration">Integration</span>
+            <span class="test-card-title">Existing plan-agent contract suite stays green</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>tests/plugins/test-goal-prompt.sh</code>, <code>test-extractor-wiring.sh</code>, <code>test-save-pdf.sh</code>, <code>test-resources-section.sh</code>, <code>test-responsive-retrofit.sh</code></p>
+            <p><strong>Targets:</strong> the prompt-row ids, meta tags, literal labels, and section markers that the plans gallery, hooks, extractor, and finalize flow grep out of plan files</p>
+            <p><strong>Key cases:</strong> goal and workflow meta tags plus their rows survive the regroup (including the literal <code>Pursue as goal</code> label); no <code>#plan-digest</code> regression; the Save-as-PDF button and print CSS are intact; the Resources section contract is unchanged; the <code>#plan-responsive-fix</code> style block stays byte-identical to the retrofit script&#8217;s <code>STYLE_BLOCK</code></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Acceptance Criteria
+      </h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">A plan generated from the updated skeleton shows a plain-language &#8220;At a glance&#8221; summary directly under the objective, before any copy-paste prompt.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2">Exactly one prompt row (Implement) is visible on first paint; the goal, workflow, and plan-source rows sit inside a single flat <code>details.plan-more-ways</code> element that lacks the <code>open</code> attribute and contains no nested <code>&lt;details&gt;</code>.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">All pre-existing ids, classes, and <code>plan-*</code> meta names are unchanged &#8212; <code>test-goal-prompt.sh</code> and <code>test-extractor-wiring.sh</code> pass without edits.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">Every section heading is sentence-case plain English with a one-line intro, and every sidebar link still scrolls to its section.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">SKILL.md defines <code>{at-a-glance}</code>, the collapsed drawer, and the plain-language writing rule, so newly generated plans include them.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6"><code>bash tests/plugins/test-humanized-skeleton.sh</code> passes.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7"><code>marketplace.json</code> lists plan-agent at 2.17.0 and <code>CHANGELOG.md</code> documents the change.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8"><code>reference/SKELETON.md</code> mirrors the humanized structure (at-a-glance analog, de-jargoned section names).</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">The frozen strings survive byte-for-byte &#8212; <code>Pursue as goal</code>, step-chip <code>todo</code>/<code>done</code>, the <code>report-empty</code> sentence &#8212; and <code>extract-plan-spec.mjs</code> output contains no glance or intro copy.</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <!-- ── Verification ──────────────────────────────────────────── -->
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Verification
+      </h2>
+      <p>Open the updated <code>SKELETON.html</code> raw in a browser and confirm the reading order: title &#8594; objective &#8594; at a glance &#8594; one Implement action &#8594; progress &#8594; sections with sentence-case headings and intros, with the goal, workflow, and source rows collapsed. Run the full <code>tests/plugins/</code> suite (the new smoke test plus the existing contract tests). Finally, generate one real plan with <code>/plan-agent:implementation-plan --quick</code> and confirm the humanized layout appears and the plans gallery still indexes the new file. Render the raw skeleton at a ~375px viewport to confirm the glance block and the <code>details.plan-more-ways</code> drawer behave on mobile, and run <code>node scripts/extract-plan-spec.mjs</code> against the generated plan to confirm objective, context, and verification text stays free of glance and intro copy.</p>
+    </section>
+
+    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Completion Checklist
+      </h2>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next Steps
+      </h2>
+      <div class="next-steps-list">
+
+        <!-- Actionable next steps -->
+        <details class="next-step-item">
+          <summary>Humanize the plans-library gallery to match</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, apply the humanized tone introduced in kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html to the plans gallery generator at kit/plugins/plan-agent/hooks/build-index.sh and the plans-library skill: sentence-case labels, plain-language filter names, and a one-line description of what the gallery is for. Keep every data attribute and parsing contract unchanged, bump the plan-agent version in .claude-plugin/marketplace.json, and update kit/plugins/plan-agent/CHANGELOG.md.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Apply the same treatment to the review-plan artifact template</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, humanize kit/plugins/plan-agent/skills/review-plan/references/output-template.md the same way SKELETON.html was humanized in the humanize-plan-output plan: plain sentence-case headings, one-line section intros, reviewer jargon expanded on first use. Keep all machine-parsed markers unchanged, bump the plan-agent version in .claude-plugin/marketplace.json, and update the CHANGELOG.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <!-- Wish List (blue-sky / visionary items) -->
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            &#8220;Simple view&#8221; toggle for stakeholder reading
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &#8212; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Add a pure-CSS &quot;Simple view&quot; toggle to kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html that hides the technical chrome (prompt rows, meta chips, Tests section, completion checklist) so a stakeholder can read just the story: objective, at-a-glance summary, background, steps, and definition of done. No new JavaScript beyond what exists, no external assets, and print output must be unaffected.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Jargon audit across existing plans
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &#8212; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Run a workflow to audit every HTML plan under docs/plans/ in the agentics repo (excluding docs/plans/archive/) for jargon-heavy prose &#8212; terms like idempotent, frontmatter, or semver used without a plain-language gloss &#8212; and propose per-plan copy edits that keep the meaning but read human-first. Report a table of plan file to suggested edits; do not modify any files.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-07-09 · agentics
+    </footer>
+
+    <details id="team-review-20260710001404" class="team-review">
+      <summary>Team Review (2026-07-10 00:14:04 UTC)</summary>
+      <div class="review-body">
+        <h3>Executive Summary</h3>
+        <p>Sound with revisions &#8212; no reviewer recommended rejection. All seven reviewers endorse the core approach: a presentation-and-copy refactor over a preserved machine contract. The recurring theme (five of seven reviewers) was that the plan named the contract it must preserve but under-specified the <em>new</em> markup precisely enough to guarantee it: the drawer&#8217;s internal shape, the glance block&#8217;s DOM position, and a set of literal strings that <code>finalize-plan</code> and <code>test-goal-prompt.sh</code> match byte-for-byte. All accepted findings have been applied to this plan in place.</p>
+
+        <h3>Role-by-Role Findings</h3>
+        <ul>
+          <li><strong>Architecture</strong> &#8212; Sound; verified no consumer keys off visible heading text. Flagged <code>scripts/extract-plan-spec.mjs</code> as a real consumer missing from the plan&#8217;s inventory (medium), the drawer&#8217;s nested-vs-flat ambiguity (low), and the glance block&#8217;s sibling-vs-child ambiguity (low).</li>
+          <li><strong>Completeness</strong> &#8212; Specific on ids/classes but missed <code>test-responsive-retrofit.sh</code>, which asserts a byte-identical <code>#plan-responsive-fix</code> style block inside SKELETON.html (high); the drawer wrapper had no fixed class name to test against (medium); <code>.section-intro</code> placement vs <code>extractSections()</code> unreconciled (medium).</li>
+          <li><strong>Testability</strong> &#8212; Smoke test followed repo patterns but pinned only structural markers, not the literal new copy strings (medium); Tier 1 unit/E2E omission needed a stated rationale (low); &#8220;one visible prompt row&#8221; lacked a concrete markup mechanism (low).</li>
+          <li><strong>Risk</strong> &#8212; Rated high pre-revision: <code>test-goal-prompt.sh</code> greps the literal <code>Pursue as goal</code> label (high); <code>finalize-plan</code> does literal find/replace on step-chip <code>todo</code>/<code>done</code> and the <code>report-empty</code> sentence (high); <code>.section-intro</code> could silently leak into extracted objective/context/verification text (medium); uppercase removal needed scoping to <code>.section-card h2</code> among ~18 rules (medium).</li>
+          <li><strong>Conventions</strong> &#8212; Naming, placement, version bump direction, and test naming all verified correct; flagged the missing <code>reference/SKELETON.md</code> twin-file update per the 2.16.0 precedent (medium) and CHANGELOG format/minor-bump-justification pinning (low).</li>
+          <li><strong>UX</strong> &#8212; Endorsed the redesign; flagged the drawer&#8217;s internal structure as the highest-severity UX unknown (nested disclosures would add clicks and lose scent text), the missing empty-workflow rule, objective/glance content overlap, and no narrow-viewport check.</li>
+          <li><strong>Accessibility</strong> &#8212; Largely WCAG 2.1 AA-safe by preservation; pinned <code>.section-intro</code> to <code>var(--muted)</code> (4.83:1) because the similar <code>var(--subtle)</code> token fails contrast (2.86:1); glance block needs an accessible name; intro must be a <code>&lt;p&gt;</code>, not a heading; new chevron needs the existing reduced-motion guard.</li>
+        </ul>
+
+        <h3>Agreements &amp; Conflicts</h3>
+        <p><strong>Confirmed concerns</strong> (multiple reviewers): drawer shape underspecified (UX, Architecture, Risk, Completeness); <code>extract-plan-spec.mjs</code> as unlisted consumer (Architecture, Risk, Completeness); literal-string fragility (Risk, Testability). <strong>No conflicts</strong> &#8212; recommendations were complementary; the only tension (how much precision belongs in a plan vs implementation) was resolved in favour of precision because three independent reviewers hit the same ambiguities.</p>
+
+        <h3>Highest-Risk Issues</h3>
+        <ul>
+          <li>Frozen literal strings (<code>Pursue as goal</code>, step-chip <code>todo</code>/<code>done</code>, <code>report-empty</code> sentence) &#8212; Risk; now a SKILL.md frozen-strings contract + smoke-test assertions (Steps 4, 6).</li>
+          <li><code>test-responsive-retrofit.sh</code> byte-identity of the responsive style block &#8212; Completeness; now in the suite list and Integration test card (Step 6, Tests).</li>
+          <li><code>.plan-glance</code>/<code>.section-intro</code> leakage into <code>extract-plan-spec.mjs</code> output &#8212; Architecture/Risk; now sibling-placement + purity assertions (Steps 1, 3, criterion ac9).</li>
+          <li>Drawer shape &#8212; UX; now pinned: one flat <code>details.plan-more-ways</code>, no nesting, scent text preserved, empty-workflow rule (Step 2, criterion ac2).</li>
+        </ul>
+
+        <h3>Inline Edits Applied</h3>
+        <ul>
+          <li>Step 1 &#8212; sibling placement, accessible name, objective-vs-glance job split (Architecture, Accessibility, UX).</li>
+          <li>Step 2 &#8212; <code>details.plan-more-ways</code> flat structure, scent text, empty-workflow rule, reduced-motion chevron (UX, Architecture, Risk, Accessibility, Completeness).</li>
+          <li>Step 3 &#8212; uppercase scoped to <code>.section-card h2</code>; intro is a <code>&lt;p&gt;</code> in <code>var(--muted)</code>; extractor-purity guardrail (Risk, Accessibility, Completeness).</li>
+          <li>Step 4 &#8212; frozen-strings contract; exact tier-label rule cited (Risk, Completeness).</li>
+          <li>New Step 5 &#8212; mirror <code>reference/SKELETON.md</code>; old steps 5&#8211;6 renumbered to 6&#8211;7 (Conventions).</li>
+          <li>Step 6 &#8212; smoke test pins literal copy + frozen strings + extractor purity; suite list includes <code>test-responsive-retrofit.sh</code> (Testability, Risk, Completeness).</li>
+          <li>Step 7 &#8212; CHANGELOG format + minor-bump justification (Conventions).</li>
+          <li>Files &#8212; added <code>reference/SKELETON.md</code> row. Tests &#8212; unit/E2E omission rationale; Integration card extended. Criteria &#8212; ac2 made mechanism-precise; ac8, ac9 added (progress label 0 / 9). Verification &#8212; 375px viewport check + extractor run. Effort recomputed medium &#8594; high (7 steps).</li>
+        </ul>
+
+        <h3>Triage Outcome</h3>
+        <p>The Step 6b walkthrough was bypassed by the &#8220;Apply all&#8221; gate choice: all proposed edits were applied as-is; none were modified or rejected.</p>
+
+        <h3>Revised Plan</h3>
+        <p>This document is the revised plan &#8212; all edits above were applied in place on 2026-07-10. The pre-review version is recoverable from git history.</p>
+      </div>
+    </details>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
+  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
+  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
+  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+
+  return lines.join('\n');
+}
+
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
+      btn._copyTimer = null;
+    }, delay);
+  }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash(); else fail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
+function copyWorkflow(btn) {
+  var code = document.getElementById('workflow-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar — state from HTML attributes ──────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>
