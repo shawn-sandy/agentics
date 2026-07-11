@@ -51,9 +51,12 @@ Read `$ARGUMENTS`.
 **Case B — `$ARGUMENTS` contains spaces or reads as a descriptive phrase:**
 Convert it to a human-readable slug — lowercase, replace spaces and special
 characters with `-`, collapse consecutive dashes, strip leading/trailing
-dashes, truncate to 30 characters. Example: `"add allowed tools to skills"` →
-`"add-allowed-tools-to-skills"`. Use the slug as the branch name and proceed
-to Step 2b.
+dashes. Keep the user's words whole; if the slug exceeds 60 characters, drop
+trailing words (never chop mid-word). If a single word alone exceeds 60
+characters (so no word boundary exists to trim at), hard-truncate that word
+at 60 characters as a last resort. Example:
+`"add allowed tools to skills"` → `"add-allowed-tools-to-skills"`. Use the
+slug as the branch name and proceed to Step 2b.
 
 **Case C — `$ARGUMENTS` is already a valid branch name** (no spaces): Use it
 verbatim as the branch name. Do not slugify, abbreviate, or transform it.
@@ -62,9 +65,9 @@ Proceed to Step 2b.
 ## Step 2a: Auto-Generate Branch Name from Changes
 
 Use this format: `<type>/<scope>-<description>` (or `<type>/<description>` if
-the scope is omitted). Total length ≤ 49 characters — this reserves 11 chars
+the scope is omitted). Total length ≤ 60 characters — this reserves 11 chars
 for the `-YYYY-MM-DD` suffix appended in Step 2b so the final branch name
-stays under 60 chars.
+stays within 72 chars.
 
 **Type inference (first match wins):**
 
@@ -90,16 +93,34 @@ files, **omit the scope** entirely (use `<type>/<description>`).
 
 **Description inference:**
 
-From the changed file basenames and `git diff --stat`, extract 2–5 keywords
-that describe the change. Lowercase, hyphen-separated, alphanumeric only. Strip
-non-alphanumeric characters; collapse repeated hyphens; trim leading/trailing
-hyphens.
+From the changed file basenames and `git diff --stat`, write the description
+as a short verb-led phrase (3–7 words) that reads like a commit subject a
+human would write: start with an imperative verb (`add`, `fix`, `update`,
+`remove`, `rename`, `improve`, …) followed by what changed. Lowercase,
+hyphen-separated, alphanumeric only. Strip non-alphanumeric characters;
+collapse repeated hyphens; trim leading/trailing hyphens.
+
+Readability rules:
+
+- Use whole dictionary words — never abbreviate a word to save space
+  (`validation`, not `valid` or `val`; `config`, not `cfg`)
+- Prefer describing *what the change does* over listing filenames
+- If the name runs long, drop the least important trailing words instead of
+  shortening individual words
+
+Examples:
+
+| Change | Good | Bad |
+|--------|------|-----|
+| New login validation in `src/auth/` | `feat/src-add-login-form-validation` | `feat/src-login-form-valid` |
+| Typo fixes across README files | `docs/fix-readme-typos` | `docs/rdme-typo-fx` |
+| CI workflow updated to Node 22 | `ci/update-workflow-to-node-22` | `ci/wf-node22` |
 
 **Validation:**
 
 - Lowercase only; characters in `[a-z0-9/-]`; no leading/trailing hyphens
-- Total length ≤ 49 chars (truncate the description segment at a word boundary
-  if needed; never truncate the type or scope)
+- Total length ≤ 60 chars (drop trailing description words to fit; never chop
+  mid-word; never truncate the type or scope)
 - Must contain a `/` separator after the type
 
 If validation fails, regenerate once with `chore` as the type and a shortened
@@ -124,9 +145,9 @@ the final branch name: `<branch>-<YYYY-MM-DD>` (e.g. `feat/login-fix` →
 `feat/login-fix-2026-04-17`). This always runs, regardless of whether the
 name came from Case A, B, or C.
 
-If the final name exceeds 60 characters, truncate the description portion at
-a word boundary until it fits. Never truncate the date suffix, the type
-prefix, or the scope segment.
+If the final name exceeds 72 characters, drop trailing words from the
+description portion until it fits. Never chop mid-word, and never truncate
+the date suffix, the type prefix, or the scope segment.
 
 Use this date-suffixed name as `<branch>` for the rest of the flow. Proceed
 to Step 3.

@@ -1,5 +1,18 @@
 # Changelog — git-agent
 
+## v3.11.1 — 2026-07-11 — More descriptive, human-readable generated branch names
+
+### Changed
+
+- `branch-agent` skill: auto-generated branch descriptions are now verb-led
+  phrases that read like commit subjects (e.g.
+  `feat/add-login-form-validation`) instead of extracted keyword fragments.
+  Whole words only — abbreviations to save space are prohibited; long names
+  drop trailing words instead of chopping mid-word.
+- Length budgets raised to make room for readable names: pre-suffix name
+  ≤ 60 chars (was 49), final date-suffixed name ≤ 72 chars (was 60), and
+  descriptive-phrase slugs (Case B) ≤ 60 chars (was 30).
+
 ## v3.11.0 — 2026-06-16 — Absorb create-issue skill from issue-agent plugin
 
 ### Added
