@@ -6,7 +6,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 
 ### Skills (foreground)
 
-- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified (e.g. `"add login page"` → `add-login-page`, max 30 chars). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after. Auto-activates on intent match.
+- **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified into readable, whole-word slugs (e.g. `"add login page"` → `add-login-page`, max 60 chars; long names drop trailing words rather than abbreviating). Auto-generated names read like commit subjects (e.g. `feat/add-login-form-validation`). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after. Auto-activates on intent match.
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
