@@ -84,7 +84,8 @@ The skill will:
 2. Resolve the branch name:
    - If you provided a valid branch name, use it verbatim
    - If you provided a descriptive phrase (with spaces), auto-slugify it to
-     a 30-char kebab-case slug
+     a readable, whole-word kebab-case slug (max 60 chars; long phrases drop
+     trailing words rather than abbreviating)
    - If you didn't provide one and the working tree has uncommitted changes,
      auto-generate a `<type>/<scope>-<description>` name from those changes
      (mirrors `commit-agent`'s conventional types)

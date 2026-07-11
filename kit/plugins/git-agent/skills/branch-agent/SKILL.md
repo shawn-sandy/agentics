@@ -52,7 +52,9 @@ Read `$ARGUMENTS`.
 Convert it to a human-readable slug — lowercase, replace spaces and special
 characters with `-`, collapse consecutive dashes, strip leading/trailing
 dashes. Keep the user's words whole; if the slug exceeds 60 characters, drop
-trailing words (never chop mid-word). Example:
+trailing words (never chop mid-word). If a single word alone exceeds 60
+characters (so no word boundary exists to trim at), hard-truncate that word
+at 60 characters as a last resort. Example:
 `"add allowed tools to skills"` → `"add-allowed-tools-to-skills"`. Use the
 slug as the branch name and proceed to Step 2b.
 
