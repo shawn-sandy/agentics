@@ -1,0 +1,396 @@
+<title>Ultra code review, explained — PR #382 as the worked example</title>
+<style>
+  :root {
+    --paper: #F7F8F5;
+    --ink: #1F2933;
+    --ink-soft: #4B5865;
+    --ink-faint: #8A96A3;
+    --line: #D9DEE3;
+    --card: #FFFFFF;
+    --accent: #2456A6;
+    --accent-soft: #E8EEF8;
+    --pass: #2E7D4F;
+    --pass-bg: #E7F2EA;
+    --fail: #C4453B;
+    --fail-bg: #F9E9E7;
+    --warn: #9A6E1B;
+    --warn-bg: #F7EFDC;
+    --code-bg: #EEF1F4;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --serif: Charter, "Bitstream Charter", Georgia, "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #161B21;
+      --ink: #E4E9ED;
+      --ink-soft: #A9B4BE;
+      --ink-faint: #6E7B87;
+      --line: #2C353E;
+      --card: #1D242C;
+      --accent: #7BA3E0;
+      --accent-soft: #22304A;
+      --pass: #6FBF8E;
+      --pass-bg: #1C2E24;
+      --fail: #E08A82;
+      --fail-bg: #392220;
+      --warn: #D3A94F;
+      --warn-bg: #33290F;
+      --code-bg: #232B33;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F7F8F5; --ink: #1F2933; --ink-soft: #4B5865; --ink-faint: #8A96A3;
+    --line: #D9DEE3; --card: #FFFFFF; --accent: #2456A6; --accent-soft: #E8EEF8;
+    --pass: #2E7D4F; --pass-bg: #E7F2EA; --fail: #C4453B; --fail-bg: #F9E9E7;
+    --warn: #9A6E1B; --warn-bg: #F7EFDC; --code-bg: #EEF1F4;
+  }
+  :root[data-theme="dark"] {
+    --paper: #161B21; --ink: #E4E9ED; --ink-soft: #A9B4BE; --ink-faint: #6E7B87;
+    --line: #2C353E; --card: #1D242C; --accent: #7BA3E0; --accent-soft: #22304A;
+    --pass: #6FBF8E; --pass-bg: #1C2E24; --fail: #E08A82; --fail-bg: #392220;
+    --warn: #D3A94F; --warn-bg: #33290F; --code-bg: #232B33;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    margin: 0;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .75rem;
+  }
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(1.7rem, 4.5vw, 2.4rem);
+    font-weight: 750;
+    letter-spacing: -.015em;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0 0 .9rem;
+  }
+  .lede {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 2.5rem;
+    text-wrap: balance;
+  }
+  h2 {
+    font-family: var(--sans);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 3rem 0 .35rem;
+  }
+  h2 + .kicker {
+    font-family: var(--sans);
+    font-size: .95rem;
+    color: var(--ink-faint);
+    margin: 0 0 1rem;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin: 1.8rem 0 .4rem;
+  }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .84em;
+    background: var(--code-bg);
+    padding: .1em .35em;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .85rem 1rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: .82rem;
+    line-height: 1.55;
+    margin: 0 0 1rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .cmd-note { font-family: var(--sans); font-size: .82rem; color: var(--ink-faint); margin: -.5rem 0 1rem; }
+
+  /* ── Fact strip ── */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 0 1.5rem;
+  }
+  .fact { background: var(--card); padding: .8rem 1rem; }
+  .fact b {
+    display: block;
+    font-family: var(--sans);
+    font-size: 1.35rem;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .fact span {
+    font-family: var(--sans);
+    font-size: .74rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ── Pipeline diagram ── */
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 1.25rem 0 1.5rem; }
+  .stage {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .9rem 1.1rem;
+  }
+  .stage-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .stage-num {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: .1rem .4rem;
+    flex-shrink: 0;
+  }
+  .stage-title { font-family: var(--sans); font-weight: 700; font-size: .98rem; }
+  .stage-meta { font-family: var(--mono); font-size: .74rem; color: var(--ink-faint); margin-left: auto; }
+  .stage p { font-family: var(--sans); font-size: .9rem; color: var(--ink-soft); margin: .45rem 0 0; line-height: 1.55; }
+  .flow-arrow {
+    align-self: center;
+    color: var(--ink-faint);
+    font-family: var(--sans);
+    font-size: .8rem;
+    padding: .25rem 0;
+    line-height: 1;
+  }
+
+  /* ── Angle grid ── */
+  .angles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+    gap: .6rem;
+    margin: 1rem 0 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  .angles li {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .65rem .8rem;
+    font-family: var(--sans);
+    font-size: .84rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .angles b { display: block; color: var(--ink); font-size: .87rem; }
+  .angles .n { font-family: var(--mono); font-size: .72rem; color: var(--ink-faint); float: right; font-variant-numeric: tabular-nums; }
+
+  /* ── Verdict cards ── */
+  .verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .6rem; margin: 1rem 0 1.5rem; }
+  .verdict { border-radius: 8px; padding: .7rem .85rem; font-family: var(--sans); font-size: .85rem; line-height: 1.5; border: 1px solid var(--line); background: var(--card); }
+  .verdict b { font-family: var(--mono); font-size: .78rem; letter-spacing: .04em; display: inline-block; padding: .05rem .45rem; border-radius: 4px; margin-bottom: .35rem; }
+  .v-confirmed b { color: var(--pass); background: var(--pass-bg); }
+  .v-plausible b { color: var(--warn); background: var(--warn-bg); }
+  .v-refuted b { color: var(--fail); background: var(--fail-bg); }
+  .verdict p { margin: 0; color: var(--ink-soft); }
+
+  /* ── Findings ledger ── */
+  .ledger-wrap { overflow-x: auto; margin: 1rem 0 .5rem; border: 1px solid var(--line); border-radius: 10px; }
+  table.ledger { border-collapse: collapse; width: 100%; min-width: 38rem; font-family: var(--sans); font-size: .84rem; background: var(--card); }
+  .ledger th {
+    text-align: left;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+    padding: .6rem .8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .ledger td { padding: .55rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.45; }
+  .ledger tr:last-child td { border-bottom: none; }
+  .ledger td:first-child { font-variant-numeric: tabular-nums; color: var(--ink-faint); font-family: var(--mono); font-size: .78rem; }
+  .ledger .file { font-family: var(--mono); font-size: .74rem; color: var(--ink-faint); display: block; margin-top: .15rem; }
+  .chip {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .12rem .5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .chip-fixed { color: var(--pass); background: var(--pass-bg); }
+  .chip-partial { color: var(--warn); background: var(--warn-bg); }
+  .chip-refuted { color: var(--fail); background: var(--fail-bg); }
+  .table-note { font-family: var(--sans); font-size: .8rem; color: var(--ink-faint); margin: .5rem 0 1rem; }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 8px 8px 0;
+    padding: .8rem 1rem;
+    margin: 1.25rem 0;
+    font-family: var(--sans);
+    font-size: .9rem;
+    line-height: 1.6;
+  }
+  .callout b { font-weight: 700; }
+
+  ul.plain { padding-left: 1.2rem; margin: 0 0 1rem; }
+  ul.plain li { margin-bottom: .4rem; }
+
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--sans);
+    font-size: .8rem;
+    color: var(--ink-faint);
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Guide · Claude Code review tooling</p>
+  <h1>What <code style="font-size:.85em">/code-review ultra 382</code> does, and what it did</h1>
+  <p class="lede">A walkthrough of the ultra review command and the max-effort pipeline that reviewed pull request #382 in this repo — ten independent finder angles, an adversarial verification pass, a gap sweep, and eleven findings, every one of them fixed on the branch.</p>
+
+  <div class="facts" role="group" aria-label="Review at a glance">
+    <div class="fact"><b>11</b><span>finder agents</span></div>
+    <div class="fact"><b>27</b><span>raw candidates</span></div>
+    <div class="fact"><b>3</b><span>refuted &amp; dropped</span></div>
+    <div class="fact"><b>11</b><span>findings shipped</span></div>
+    <div class="fact"><b>11 / 11</b><span>fixed on branch</span></div>
+  </div>
+
+  <h2>The command</h2>
+  <p class="kicker">One line, two very different execution paths.</p>
+  <pre><code>/code-review ultra 382</code></pre>
+  <p><strong>Ultra</strong> is the top effort tier of the <code>/code-review</code> command. Its native form launches a <em>multi-agent cloud review</em>: the branch (or a GitHub PR, when you pass a number like <code>382</code>) is shipped to a fleet of reviewer agents running remotely. It is user-triggered and billed — Claude cannot launch the cloud run on your behalf from inside a session. The older <code>/ultrareview</code> name is a deprecated alias for the same thing. It needs a git repository; the no-argument form bundles your local branch and doesn't even need a GitHub remote.</p>
+  <p>When the cloud run can't start — as in this session — the command falls back to a <strong>local max-effort review</strong> that reproduces the same philosophy with the Agent tool: many independent readers, then adversarial verification, then a sweep for what everyone missed. That fallback is what actually reviewed PR #382, and it's what the rest of this guide dissects.</p>
+
+  <div class="callout"><b>The one design idea to remember:</b> at max effort the review optimizes for <em>recall</em> — catching every real bug — not precision. A missed bug ships; a false positive costs one verification. So the pipeline generates aggressively and filters afterwards, instead of asking one careful reader to be right the first time.</div>
+
+  <h2>The pipeline</h2>
+  <p class="kicker">Four phases: gather, fan out, verify, sweep.</p>
+
+  <div class="pipeline" role="list">
+    <div class="stage" role="listitem">
+      <div class="stage-head"><span class="stage-num">PHASE 0</span><span class="stage-title">Gather the diff</span><span class="stage-meta">853 lines · 7 files</span></div>
+      <p>The review scope is pinned down first: <code>git diff origin/main...HEAD</code>, exported to one file every agent reads. For PR #382 that was the humanized plan-skeleton change — an HTML template, a skill spec, an extractor library, a new smoke test, and version metadata.</p>
+    </div>
+    <div class="flow-arrow" aria-hidden="true">▼</div>
+    <div class="stage" role="listitem">
+      <div class="stage-head"><span class="stage-num">PHASE 1</span><span class="stage-title">Fan out 10 finder angles</span><span class="stage-meta">up to 8 candidates each</span></div>
+      <p>Ten agents read the same diff in parallel, each through a different lens (listed below). They are deliberately blind to each other — if two angles flag the same line for different reasons, both records survive. Duplicates are a feature: five independent angles converging on one line is itself evidence.</p>
+    </div>
+    <div class="flow-arrow" aria-hidden="true">▼</div>
+    <div class="stage" role="listitem">
+      <div class="stage-head"><span class="stage-num">PHASE 2</span><span class="stage-title">Dedupe, then verify each survivor</span><span class="stage-meta">1 vote · 3 states</span></div>
+      <p>Candidates pointing at the same mechanism are merged, keeping the most concrete failure scenario. Each survivor then gets one verification pass against the <em>actual code</em> — not the diff, the files — and lands in one of three states: CONFIRMED, PLAUSIBLE, or REFUTED. Only REFUTED kills a finding at this effort level.</p>
+    </div>
+    <div class="flow-arrow" aria-hidden="true">▼</div>
+    <div class="stage" role="listitem">
+      <div class="stage-head"><span class="stage-num">PHASE 3</span><span class="stage-title">Sweep for gaps</span><span class="stage-meta">1 fresh reviewer</span></div>
+      <p>A final agent gets the verified list and one job: find defects <em>not on it</em>. Fresh eyes plus the list of what's already known is a strong prior for what the first pass tends to miss. On #382 the sweeper found four new issues — including the best copy bug of the whole review.</p>
+    </div>
+  </div>
+
+  <h3>The ten angles, and what each one caught on #382</h3>
+  <ul class="angles">
+    <li><b>A · Line-by-line scan <span class="n">3 found</span></b>Reads every hunk plus its enclosing function. Caught the fragile extractor regex and a half-applied navigation rename.</li>
+    <li><b>B · Removed-behavior audit <span class="n">2 found</span></b>For every deleted line: what invariant did it enforce, and where is it re-established? Caught the File/Path rows losing their always-visible placement.</li>
+    <li><b>C · Cross-file tracer <span class="n">2 found</span></b>Follows every changed symbol to its consumers. Cleared the galleries, hooks, and finalize flow as safe — and confirmed the extractor gaps.</li>
+    <li><b>D · Language pitfalls <span class="n">4 found</span></b>Hunts the classic traps of each language in the diff. Caught a <code>set&nbsp;-e</code> abort path in the new bash test and the heading-outline problem.</li>
+    <li><b>E · Wrapper correctness <span class="n">3 found</span></b>When code wraps or restructures a mechanism, checks every route still lands. Verified all copy handlers and scroll-spy survived the drawer regroup.</li>
+    <li><b>Reuse <span class="n">1 found</span></b>Flags new code that re-implements something the codebase has. Caught a CSS rule duplicating an existing label style six declarations out of seven.</li>
+    <li><b>Simplification <span class="n">4 found</span></b>Hunts redundant state and dead code. Caught print rules made unreachable by the regroup and a rule stated three times in the skill spec.</li>
+    <li><b>Efficiency <span class="n">0 found</span></b>Hunts wasted work. Checked the new regexes for catastrophic backtracking on 100&nbsp;KB plan files — clean, and said so instead of padding.</li>
+    <li><b>Altitude <span class="n">4 found</span></b>Asks whether each fix sits at the right depth or is a band-aid on shared infrastructure. Caught the four-copies-of-one-heading drift risk.</li>
+    <li><b>Conventions <span class="n">0 found</span></b>Reads every CLAUDE.md governing the changed paths and flags only quotable rule violations. Verified the version bump and changelog were right.</li>
+  </ul>
+
+  <h3>The three verdicts</h3>
+  <div class="verdicts">
+    <div class="verdict v-confirmed"><b>CONFIRMED</b><p>The verifier can name the inputs or state that trigger the bug and quote the failing line. Ships in the report.</p></div>
+    <div class="verdict v-plausible"><b>PLAUSIBLE</b><p>The mechanism is real but the trigger is uncertain — timing, environment, a generator's future behavior. Ships too: this is recall mode.</p></div>
+    <div class="verdict v-refuted"><b>REFUTED</b><p>The code doesn't say that, or a guard elsewhere covers it — proven with a quoted line. Dropped.</p></div>
+  </div>
+  <p>Verification is where the pipeline earns its keep. Three plausible-sounding candidates on #382 died here: a claimed false-pass in the new test (refuted — the test's chunking bounds the search correctly), a CSS coupling complaint (refuted — the plan explicitly mandated that selector reuse), and a "missing sections" claim against the markdown skeleton (refuted — the gap predates the PR). All three would have read as legitimate findings in a single-pass review.</p>
+
+  <h2>The findings ledger — PR #382</h2>
+  <p class="kicker">Eleven survivors, ranked most-severe first, and what happened to each.</p>
+
+  <div class="ledger-wrap">
+  <table class="ledger">
+    <thead><tr><th scope="col">#</th><th scope="col">Finding</th><th scope="col">Outcome</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Intro-stripping regex matched only one byte-exact tag form, so any attribute drift in a generated plan would leak presentation copy into the extracted spec — the exact pollution the change existed to prevent. Flagged independently by <strong>five</strong> angles.<span class="file">scripts/lib/plan-spec.mjs</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>2</td><td>The skill spec still prescribed the old <code>&lt;summary&gt;Verify&lt;/summary&gt;</code> markup its own skeleton had just humanized — a contract contradicting itself.<span class="file">implementation-plan/SKILL.md</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>3</td><td>No defense against the one placement error the spec warns about most: an "At a glance" block nested inside the objective would silently pollute every extracted spec.<span class="file">scripts/lib/plan-spec.mjs</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>4</td><td>The progress bar still said "Acceptance criteria" while the section it tracks was renamed "Definition of done" — one checkbox list, two names.<span class="file">reference/SKELETON.html</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>5</td><td>"At a glance" rendered as the page's first <code>&lt;h2&gt;</code> while the Objective had no heading at all — inverting the outline for screen-reader users navigating by heading.<span class="file">reference/SKELETON.html</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>6</td><td>For completed plans the collapsed drawer held only the File/Path rows, yet its label gave no hint a file path lived inside; File/Path also vanished from print.<span class="file">reference/SKELETON.html</span></td><td><span class="chip chip-partial">Partial</span></td></tr>
+      <tr><td>7</td><td>Half-applied rename: sidebar links "Files" and "Diagram" no longer matched their renamed headings — a live instance of one heading existing as four uncoordinated copies.<span class="file">reference/SKELETON.html</span></td><td><span class="chip chip-fixed">Fixed + guard</span></td></tr>
+      <tr><td>8</td><td>Changelog described a "finalize" prompt that doesn't exist and overclaimed structural parity between the two skeleton formats.<span class="file">plan-agent/CHANGELOG.md</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>9</td><td>Leftover CSS after the drawer regroup: unreachable print rules, inert declarations, and a bordered box nested inside a bordered box.<span class="file">reference/SKELETON.html</span></td><td><span class="chip chip-partial">Partial</span></td></tr>
+      <tr><td>10</td><td>A new label style duplicated an existing rule in six of seven declarations, letting two adjacent labels drift apart on any future tweak.<span class="file">reference/SKELETON.html</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+      <tr><td>11</td><td>One placement rule stated in full three times across the skill spec, with wording already diverging between copies.<span class="file">implementation-plan/SKILL.md</span></td><td><span class="chip chip-fixed">Fixed</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="table-note">The two partials are deliberate, not unfinished: finding 6's print behavior stays (a closed <code>&lt;details&gt;</code> can't be revealed by print CSS, and the path already prints in the footer), and finding 9 keeps two "dead" print rules because an existing contract test pins one of them byte-for-byte — annotated in the CSS so the next editor knows why.</p>
+
+  <h3>Fixes worth a closer look</h3>
+  <ul class="plain">
+    <li><strong>Findings 1 and 3 were proven, not just patched.</strong> After loosening the regex and adding the nested-block guard, a functional check fed the extractor a deliberately-drifted plan — extra attributes on the intro, a glance block nested inside the objective — and asserted the output stayed pure.</li>
+    <li><strong>Finding 7 got a mechanism, not just a rename.</strong> The smoke test gained a new check that walks every sidebar link and asserts its label equals the target section's heading text — so the four-copy drift class of bug now fails CI instead of shipping.</li>
+    <li><strong>Finding 9 shows the review respecting frozen contracts.</strong> Before deleting "dead" CSS, the pipeline grepped the existing test suite and discovered one of those rules is pinned byte-for-byte by <code>test-goal-prompt.sh</code>. The cleanup adapted to reality instead of breaking a passing test.</li>
+  </ul>
+
+  <h2>Running it yourself</h2>
+  <p class="kicker">Three effort tiers, one command.</p>
+  <pre><code># cloud multi-agent review of the current branch
+/code-review ultra
+
+# cloud review of a specific GitHub PR
+/code-review ultra 382
+
+# lighter local tiers — fewer, higher-confidence findings
+/code-review            # default effort
+/code-review high       # broader coverage, may include uncertain findings</code></pre>
+  <p class="cmd-note">The ultra cloud run must be started by you (it's billed); if it can't launch, the session runs the local max-effort pipeline described above. <code>--fix</code> applies findings to the working tree; <code>--comment</code> posts them as inline PR comments.</p>
+
+  <p>Rule of thumb for choosing a tier: default and <code>high</code> for everyday diffs, where a false positive costs more than it's worth; <code>ultra</code> (or the local max-effort fallback) when the change guards a contract other systems depend on — exactly the situation on #382, where one template feeds galleries, hooks, extractors, and a test suite that all grep it byte-for-byte.</p>
+
+  <footer>Reviewed and fixed in this session · findings landed on PR #382 (commits <code>5e3cdac</code>, <code>d85ca94</code>) · full suite green: 8 test files, including 11 smoke checks.</footer>
+</div>

@@ -329,7 +329,8 @@
     color: #1e3a5f;
     line-height: 1.6;
   }
-  .objective-card .section-label {
+  .objective-card .section-label,
+  .plan-glance-label {
     font-size: .65rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -337,6 +338,18 @@
     color: var(--accent);
     margin-bottom: .5rem;
   }
+
+  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  .plan-glance {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    margin: -1.5rem 0 1.5rem;
+    line-height: 1.7;
+  }
+  .plan-glance-label { color: var(--muted); }
+  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
@@ -383,17 +396,21 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    letter-spacing: -.01em;
+    color: var(--text);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
     gap: .45rem;
   }
   .section-card h2 .icon { opacity: .6; }
+  .section-card .section-intro {
+    font-size: .875rem;
+    color: var(--muted);
+    margin: -1rem 0 1.25rem;
+  }
   .section-card p { margin-bottom: .75rem; color: var(--text); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
@@ -494,7 +511,7 @@
   }
   .step-chip-text { flex: 1; }
   .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
   .step-verify-toggle {
     margin-top: .5rem;
     border: 0;
@@ -762,13 +779,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
   .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -823,16 +875,14 @@
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -876,20 +926,17 @@
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
@@ -929,23 +976,21 @@
   .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
-  /* ── Goal prompt (outcome-driven — always present) ────────────── */
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
   .plan-goal {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-goal summary {
+  .plan-goal-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--purple);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-goal summary:hover { text-decoration: underline; }
   .plan-goal-inner {
     display: flex;
     align-items: flex-start;
@@ -985,6 +1030,7 @@
   .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
   @media print { .plan-goal { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
@@ -1297,15 +1343,15 @@ img, video { max-width: 100%; height: auto; }
       <!-- Keep the next link only if the Resources section is kept; delete otherwise -->
       <li><a href="#resources"><svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg> Resources</a></li>
       <!-- Keep the next link only if the Files section is kept; delete otherwise -->
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> How it fits together</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
   </nav>
 
@@ -1318,7 +1364,14 @@ img, video { max-width: 100%; height: auto; }
       <p>{objective}</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <!-- ── At a glance (SIBLING of #objective — never nest it inside;
+         the extractor reads #objective's inner HTML) ─────────────── -->
+    <section class="plan-glance" aria-labelledby="plan-glance-label">
+      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+      <p>{at-a-glance}</p>
+    </section>
+
+    <!-- ── Implement prompt — the single visible call-to-action ──── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
       <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
@@ -1326,46 +1379,55 @@ img, video { max-width: 100%; height: auto; }
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Goal prompt (outcome-driven — always present) ─────────── -->
-    <details class="plan-goal">
-      <summary>Pursue as goal — optimize for the outcome</summary>
-      <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">{goal-prompt}</code>
-        <button class="copy-goal-btn" type="button"
-                onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+    <!-- ── More ways to run this plan (collapsed drawer — one flat
+         details, no nested details, never ship the open attribute) ── -->
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <!-- Goal prompt row (outcome-driven — always present) -->
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">{goal-prompt}</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <!-- Workflow prompt row (remove this whole row when {workflow-prompt} is empty — keep the drawer) -->
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <!-- Plan source (file name + relative path, for docs & prompts) -->
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">{plan-filename}</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">{plan-path}</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+        </div>
+
       </div>
     </details>
-
-    <!-- ── Workflow prompt (remove entire details when {workflow-prompt} is empty) ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-      </div>
-    </details>
-
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">{plan-filename}</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">{plan-path}</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
 
     <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
+        <span>Definition of done</span>
         <span id="progress-label">0 / {criteria-count} done</span>
       </div>
       <div class="progress-bar-bg">
@@ -1381,6 +1443,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
       <p>{context}</p>
     </section>
 
@@ -1404,6 +1467,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg>
         Resources
       </h2>
+      <p class="section-intro">Screenshots, mockups, and reference links that informed this plan.</p>
 
       <!-- Images / screenshots — remove this block if unused -->
       <div class="resource-grid">
@@ -1436,8 +1500,9 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> {repo-name}/</div>
         <ul class="file-list">
@@ -1464,8 +1529,9 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
       <h2 id="h-diagram">
         <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
+        How it fits together
       </h2>
+      <p class="section-intro">A visual overview of the moving pieces and how they connect.</p>
 
       <!-- Flow / pipeline — remove if unused -->
       <div class="diagram-subheading">{diagram-heading}</div>
@@ -1512,6 +1578,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
         <div class="step-card">
@@ -1524,7 +1591,7 @@ img, video { max-width: 100%; height: auto; }
               </div>
               <div class="step-why">{step-1-why}</div>
               <details class="step-verify-toggle">
-                <summary>Verify</summary>
+                <summary>How to check this worked</summary>
                 <div class="verify-body">{step-1-verify}</div>
               </details>
             </div>
@@ -1542,6 +1609,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">{test-tier-label}</div>
 
       <!-- Objective-verification test — mandatory, always first -->
@@ -1579,8 +1647,9 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
@@ -1600,8 +1669,9 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
       <p>{end-to-end-verification}</p>
     </section>
 
@@ -1609,8 +1679,9 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
       <div class="completion-checklist" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
@@ -1640,8 +1711,9 @@ img, video { max-width: 100%; height: auto; }
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
 
         <!-- Actionable next step -->
@@ -1681,7 +1753,7 @@ img, video { max-width: 100%; height: auto; }
     <details class="optional-section">
       <summary>
         <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
+        Unresolved questions
       </summary>
       <div class="optional-body">
         <ul class="unresolved-list">

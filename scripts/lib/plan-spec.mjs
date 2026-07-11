@@ -162,9 +162,22 @@ export function extractSections(html) {
   if (!titleMatch || !textOf(titleMatch[1])) fail('no <title>');
   const title = textOf(titleMatch[1]);
 
+  // Humanized skeletons (plan-agent >= 2.17.0) place a one-line
+  // <p class="section-intro"> under each section heading. Intro copy is
+  // presentation-only chrome — strip it so extracted spec text stays pure.
+  // Attribute-agnostic on purpose: generated plans may add ids/classes to
+  // the intro <p>, and a missed match silently pollutes the spec.
+  const stripIntro = (inner) =>
+    inner.replace(/<p\b[^>]*class="[^"]*\bsection-intro\b[^"]*"[^>]*>[\s\S]*?<\/p>/gi, ' ');
+
   const objectiveInner = innerByMarker(html, 'id="objective"', 'div');
   if (objectiveInner === null) fail('no objective element (id="objective")');
-  const objective = textOf(objectiveInner.replace(/<div class="section-label">[\s\S]*?<\/div>/i, ' '));
+  // Defense against the one placement error the skill warns about: a
+  // .plan-glance block mistakenly nested inside #objective must not leak
+  // into the extracted objective.
+  const stripGlance = (inner) =>
+    inner.replace(/<section\b[^>]*class="[^"]*\bplan-glance\b[^"]*"[^>]*>[\s\S]*?<\/section>/gi, ' ');
+  const objective = textOf(stripGlance(stripIntro(objectiveInner)).replace(/<div class="section-label">[\s\S]*?<\/div>/i, ' '));
   if (!objective) fail('objective is empty');
 
   const stripHeading = (inner) => inner.replace(/<h2\b[\s\S]*?<\/h2>/i, ' ');
@@ -172,7 +185,7 @@ export function extractSections(html) {
   let context = null;
   const contextInner = innerByMarker(html, 'id="context"', 'section');
   if (contextInner !== null) {
-    context = blockTextOf(stripHeading(contextInner));
+    context = blockTextOf(stripIntro(stripHeading(contextInner)));
     if (!context) fail('context section present but empty');
   }
 
@@ -255,7 +268,7 @@ export function extractSections(html) {
     if (tests.entries.length === 0) {
       // Older generation: prose tests with no card markup — keep the whole
       // section text rather than dropping the plan.
-      tests.prose = blockTextOf(stripHeading(testsInner));
+      tests.prose = blockTextOf(stripIntro(stripHeading(testsInner)));
       if (!tests.prose) fail('tests section present but no test cards or prose parsed');
     }
   }
@@ -273,7 +286,7 @@ export function extractSections(html) {
 
   const verificationInner = innerByMarker(html, 'id="verification"', 'section');
   if (verificationInner === null) fail('no verification section (id="verification")');
-  const verification = blockTextOf(stripHeading(verificationInner));
+  const verification = blockTextOf(stripIntro(stripHeading(verificationInner)));
   if (!verification) fail('verification section is empty');
 
   return { title, objective, context, files, steps, tests, criteria, verification };

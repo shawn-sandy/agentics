@@ -14,7 +14,14 @@ repo-name: <repo-name>
 
 ## Objective
 
-<one or two sentences>
+<one or two sentences — the one-line *what*>
+
+## At a glance
+
+<Two or three plain-language sentences for a reader who wasn't in the
+planning session: why this work matters and how we'll know it worked.
+Don't restate the objective — it covers the *what*; this covers the
+*why* and the *proof*.>
 
 ## Resources *(optional — omit if none)*
 
@@ -27,19 +34,19 @@ descriptive alt text and credit/link the source.>
 
 ## Steps
 
-1. <action> — *Why:* <reason>. *Verify:* <how to confirm>.
-2. <action> — *Why:* <reason>. *Verify:* <how to confirm>.
+1. <action> — *Why this matters:* <reason>. *How to check this worked:* <how to confirm>.
+2. <action> — *Why this matters:* <reason>. *How to check this worked:* <how to confirm>.
 
-## Acceptance Criteria
+## Definition of done
 
 - [ ] <falsifiable condition that must be true for this plan to be done>
 - [ ] <another condition>
 
-## Verification
+## Final check
 
-<end-to-end confirmation>
+<end-to-end confirmation that the whole change achieved the goal>
 
-## Next Steps *(optional)*
+## Next steps *(optional)*
 
 - <label for the follow-up>:
   ```text
@@ -50,7 +57,7 @@ descriptive alt text and credit/link the source.>
   shape. Skip completed plans. Report a list of files changed.">
   ```
 
-## Unresolved Questions *(optional — omit if none)*
+## Unresolved questions *(optional — omit if none)*
 
 - <label for the open question>:
   ```text

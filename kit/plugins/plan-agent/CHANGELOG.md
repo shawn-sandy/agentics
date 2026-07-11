@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.17.0 — Humanized implementation-plan output (2026-07-09)
+
+### Added
+
+- **"At a glance" plain-language summary block** — generated plans now open with a short, jargon-free summary of what the plan does and why, rendered from a new `{at-a-glance}` placeholder as a `.plan-glance` block placed as a sibling immediately after `div#objective` (never nested inside it, so `extract-plan-spec.mjs` output stays pure). Written for a reader who was not in the planning session; the technical Objective remains unchanged.
+- **"More ways to run this plan" drawer** — the secondary prompt rows are regrouped into a collapsed `details.plan-more-ways` drawer so **Implement** is the single visible action in the prompts area; the goal and workflow prompts and the plan-source File/Path rows live inside the drawer and expand on demand. All existing prompt ids, classes, and copy buttons are unchanged — this is purely a regrouping.
+- **SKILL.md authoring rules + frozen-strings contract** — new writing guidance (sentence-case human headings, a one-line plain-language intro under each section heading, audience-first phrasing) plus an explicit contract listing the byte-for-byte strings and machine-readable hooks (ids, classes, `plan-*` meta tags, "Pursue as goal", `todo`/`done` step chips, the "No items to report — all requirements met." sentence) that generators must never alter.
+- **`tests/plugins/test-humanized-skeleton.sh`** — smoke test pinning the humanized skeleton: presence of the at-a-glance block, the collapsed more-ways drawer, sentence-case headings, and all frozen strings/contract selectors.
+
+### Changed
+
+- **Section headings and intros humanized** — `reference/SKELETON.html` headings moved to sentence case with a one-line intro under each, and the markdown fallback `reference/SKELETON.md` was mirrored to the same humanized headings ("At a glance", "Definition of done", "Final check") — the markdown skeleton remains the lighter fallback and does not gain the HTML-only sections (Tests, Completion checklist, drawer).
+- Minor bump rationale: the output format changed, but nothing was removed or renamed — all machine contracts (ids, classes, `plan-*` meta tags) consumed by the gallery, hooks, finalize-plan, and extract-plan-spec remain unchanged.
+
 ## 2.16.0 — Resources section in implementation plans (2026-07-09)
 
 ### Added
