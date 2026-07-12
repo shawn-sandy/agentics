@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.18.0 — Markdown-spec-to-HTML plan renderer (2026-07-12)
+
+### Added
+
+- **`scripts/build-plan-html.mjs` renderer CLI** (repo-level) — `node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>]` renders a small Markdown plan spec into the full styled HTML plan, reproducing today's DOM contract (all `plan-*` meta tags, `#objective`, the implement row and more-ways drawer, `#steps` step cards, `#tests`, `#criteria-list`, `#verification`, the completion checklist) with all spec text HTML-escaped. Derived fields are computed, never authored: the implement/goal/workflow prompts, the effort level (same Low/Medium/High thresholds the skill uses), the file-tree markup, the criteria count, and a sidebar nav filtered to the sections present.
+- **`parseSpecMarkdown()` in `scripts/lib/plan-spec.mjs`** — the inverse of `buildDigest()`: parses a spec (optional YAML frontmatter for metadata, then title/Objective/Context/Files/Steps with Why:/Verify:/Tests/Acceptance Criteria/Verification) into the same sections object `extractSections()` returns, so the extractor and renderer cannot drift apart.
+- **`scripts/lib/plan-shell.mjs` presentation shell** — the SKELETON.html CSS, icon sprite, JavaScript behaviours, and frozen strings (`todo` step chip, "No items to report — all requirements met.", "Pursue as goal — optimize for the outcome") extracted into exported template functions holding style and layout only, never plan content.
+- **`hooks/render-plan-html.py` regeneration hook** — PostToolUse on Write|Edit|MultiEdit: when a `# Plan:` Markdown spec inside the resolved plans directory is written, the sibling `.html` is re-rendered via `build-plan-html.mjs` — preferring the copy bundled with the plugin (`$CLAUDE_PLUGIN_ROOT/scripts/`), falling back to the consumer project's `scripts/build-plan-html.mjs`, and silently skipping when neither exists. Resolves `plansDirectory` with the skill's full settings precedence (project `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`, falling back to `docs/plans/`), and exits non-zero with the error on stderr when the renderer fails. After a successful render it rebuilds the plans gallery index best-effort, since the index hook skipped the `.md` write and a subprocess-written `.html` is not a tool event.
+- **Bundled renderer** — `scripts/build-plan-html.mjs` plus `scripts/lib/plan-spec.mjs` and `scripts/lib/plan-shell.mjs` ship inside the plugin (byte-identical copies of the repo-root sources, pinned by a parity test) so normal marketplace installs get a working hook without vendoring the development repo.
+- **`tests/plugins/test-build-plan-html.mjs`** — unit cases for `parseSpecMarkdown()`, CLI and hook integration cases, and the round-trip property: every committed plan in `docs/plans/` whose sections extract cleanly must survive extract → digest → parse → render → re-extract with a deep-equal sections object (59 plans at introduction; ≥10 required), plus frozen-string and zero-unfilled-placeholder assertions.
+
+### Changed
+
+- **Reduced-motion coverage in `reference/SKELETON.html` (and the extracted shell)** — `prefers-reduced-motion: reduce` now also disables smooth scrolling and the in-progress status-badge pulse, matching the reduced-motion handling the other animated elements already had.
+
 ## 2.17.0 — Humanized implementation-plan output (2026-07-09)
 
 ### Added
