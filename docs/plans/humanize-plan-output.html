@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-07-09">
@@ -1259,7 +1259,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1439,12 +1439,12 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add an &#8220;At a glance&#8221; plain-language summary block to <code>SKELETON.html</code> via a new <code>{at-a-glance}</code> placeholder &#8212; a <code>.plan-glance</code> element rendered as a <em>sibling</em> immediately after <code>div#objective</code> (never a child), with its own accessible name (a visible &#8220;At a glance&#8221; label wired via <code>aria-labelledby</code> or <code>aria-label</code>)</span>
               </div>
               <div class="step-why">Readers currently land on prompt strings and file paths before any human explanation; a two-to-three sentence summary gives every reader &#8212; technical or not &#8212; an entry point. The objective and the glance get distinct jobs so they never restate each other: objective = the one-line <em>what</em>; at-a-glance = <em>why it matters</em> and <em>how we&#8217;ll know it worked</em>. Sibling placement is load-bearing: <code>scripts/extract-plan-spec.mjs</code> derives the objective spec from <code>div#objective</code>&#8217;s inner HTML, so nesting the glance inside would silently pollute every downstream automated review.</div>
@@ -1456,12 +1456,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Regroup the four prompt rows: keep Implement visible as the single call-to-action, and collapse the goal, workflow, and plan-source rows into one flat <code>&lt;details class=&quot;plan-more-ways&quot;&gt;</code> disclosure labelled &#8220;More ways to run this plan&#8221; &#8212; three plainly-labelled rows inside, never nested <code>&lt;details&gt;</code></span>
               </div>
               <div class="step-why">Four stacked tool rows before the Context section is the loudest &#8220;a machine wrote this&#8221; signal on the page; one clear action plus a collapsed drawer keeps every power-user feature without the clutter. Each row keeps its distinguishing scent text (&#8220;Pursue as goal &#8212; optimize for the outcome&#8221;, &#8220;Run as workflow &#8212; launch parallel subagents&#8221;, File/Path) so opening costs exactly one click and nothing loses meaning. When no workflow prompt was generated, the workflow row is omitted entirely and the drawer still opens with the remaining rows. The drawer&#8217;s chevron reuses the existing <code>.optional-section &gt; summary::before</code> rotate + <code>prefers-reduced-motion</code> pair rather than new transition CSS.</div>
@@ -1473,12 +1473,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite headings, labels, and step-card copy in plain sentence-case English, adding a one-line <code>&lt;p class=&quot;section-intro&quot;&gt;</code> under each section heading &#8212; scoping the uppercase removal to the <code>.section-card h2</code> rules only</span>
               </div>
               <div class="step-why">&#8220;Acceptance Criteria&#8221;, &#8220;Verification&#8221;, and bare &#8220;Why:&#8221; labels read like a compliance document; &#8220;Definition of done&#8221;, &#8220;Final check&#8221;, &#8220;Why this matters&#8221;, and &#8220;How to check this worked&#8221; say the same thing in human terms, and a short intro orients readers who skipped the docs. Three guardrails: the intro is a <code>&lt;p&gt;</code> styled with <code>var(--muted)</code> (4.83:1 contrast) &#8212; never <code>var(--subtle)</code> (2.86:1, fails WCAG 1.4.3) and never a heading element; intros inside <code>#objective</code>, <code>#context</code>, and <code>#verification</code> must sit outside the text that <code>extractSections()</code> in <code>scripts/lib/plan-spec.mjs</code> extracts (or that helper learns to strip <code>.section-intro</code>); and the other ~17 <code>text-transform: uppercase</code> rules (<code>.step-chip</code>, <code>.completion-badge</code>, <code>.file-badge</code>, <code>.pipeline-label</code>, <code>.compare-header</code>, <code>.plan-table thead th</code>, <code>.diagram-subheading</code>, &#8230;) stay untouched.</div>
@@ -1490,12 +1490,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update <code>SKILL.md</code> so generated plans actually use the new structure: an <code>{at-a-glance}</code> generation rule, the <code>.plan-more-ways</code> drawer contract (including the omit-workflow-row-when-empty rule), humanized tier-label strings, a plain-language writing rule, and a frozen-strings list</span>
               </div>
               <div class="step-why">The skeleton is only half the contract &#8212; SKILL.md tells the model what to write into it; without these rules, newly generated plans would skip the new blocks or fill them with the same jargon. The frozen-strings list is load-bearing: <code>finalize-plan</code> does a literal find/replace on <code>&lt;span class=&quot;step-chip&quot;&gt;todo&lt;/span&gt;</code> &#8594; <code>done</code> and leaves the <code>report-empty</code> sentence (&#8220;No items to report &#8212; all requirements met.&#8221;) verbatim, and <code>test-goal-prompt.sh</code> greps the literal <code>Pursue as goal</code> label &#8212; reword any of these and those consumers silently no-op.</div>
@@ -1507,12 +1507,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Mirror the humanized structure into the markdown fallback <code>reference/SKELETON.md</code></span>
               </div>
               <div class="step-why">The 2.16.0 release established the twin-file convention (the Resources section landed in both skeletons in lockstep); leaving the markdown fallback jargon-heavy would let the two templates drift apart.</div>
@@ -1524,12 +1524,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add <code>tests/plugins/test-humanized-skeleton.sh</code> covering the new human layer, the untouched machine contract, and the frozen strings</span>
               </div>
               <div class="step-why">The whole change hinges on &#8220;humanize without breaking consumers&#8221;; a test asserting both sides keeps every future skeleton edit honest.</div>
@@ -1541,12 +1541,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump plan-agent to 2.17.0 in <code>.claude-plugin/marketplace.json</code> and describe the change in <code>CHANGELOG.md</code></span>
               </div>
               <div class="step-why">Marketplace convention: every plugin change ships a manual semver bump (minor &#8212; the output format changed) plus a changelog line so users and the merge driver can track it.</div>
@@ -1609,39 +1609,39 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A plan generated from the updated skeleton shows a plain-language &#8220;At a glance&#8221; summary directly under the objective, before any copy-paste prompt.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Exactly one prompt row (Implement) is visible on first paint; the goal, workflow, and plan-source rows sit inside a single flat <code>details.plan-more-ways</code> element that lacks the <code>open</code> attribute and contains no nested <code>&lt;details&gt;</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">All pre-existing ids, classes, and <code>plan-*</code> meta names are unchanged &#8212; <code>test-goal-prompt.sh</code> and <code>test-extractor-wiring.sh</code> pass without edits.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Every section heading is sentence-case plain English with a one-line intro, and every sidebar link still scrolls to its section.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">SKILL.md defines <code>{at-a-glance}</code>, the collapsed drawer, and the plain-language writing rule, so newly generated plans include them.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code>bash tests/plugins/test-humanized-skeleton.sh</code> passes.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code>marketplace.json</code> lists plan-agent at 2.17.0 and <code>CHANGELOG.md</code> documents the change.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code>reference/SKELETON.md</code> mirrors the humanized structure (at-a-glance analog, de-jargoned section names).</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">The frozen strings survive byte-for-byte &#8212; <code>Pursue as goal</code>, step-chip <code>todo</code>/<code>done</code>, the <code>report-empty</code> sentence &#8212; and <code>extract-plan-spec.mjs</code> output contains no glance or intro copy.</label>
         </li>
       </ul>
@@ -1664,21 +1664,21 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Completion Checklist
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
