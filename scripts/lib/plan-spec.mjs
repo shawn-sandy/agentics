@@ -292,6 +292,137 @@ export function extractSections(html) {
   return { title, objective, context, files, steps, tests, criteria, verification };
 }
 
+/**
+ * Parse a Markdown plan spec back into the sections object extractSections()
+ * returns — the exact inverse of buildDigest(). Accepts an optional YAML-ish
+ * frontmatter block (`key: value` lines only) whose fields are returned
+ * separately as `metadata`; the digest's blockquote preamble is skipped.
+ *
+ * Returns { metadata, sections }. Throws ParseError when a required section
+ * (title, Objective, Steps, Acceptance Criteria, Verification) is missing or
+ * malformed; optional sections (Context, Files, Tests) come back null when
+ * absent, matching extractSections().
+ */
+export function parseSpecMarkdown(md) {
+  const fail = (reason) => {
+    throw new ParseError(reason);
+  };
+  // Input is CLEAN spec markdown — the format extract-plan-spec.mjs prints
+  // and authors write. A still-guarded digest must be un-guarded by the
+  // caller first (guarding is deliberately non-injective, so doing it here
+  // would corrupt spec text that legitimately contains a guarded sequence).
+  let body = String(md).replace(/\r\n/g, '\n');
+
+  const metadata = {};
+  const fm = body.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (fm) {
+    for (const line of fm[1].split('\n')) {
+      const kv = line.match(/^([A-Za-z][\w-]*):\s*(.*)$/);
+      if (kv) metadata[kv[1]] = kv[2].trim().replace(/^["']|["']$/g, '');
+    }
+    body = body.slice(fm[0].length);
+  }
+
+  const titleMatch = body.match(/^#\s+(?:Plan:\s*)?(.+)$/m);
+  if (!titleMatch || !titleMatch[1].trim()) fail('no "# Plan: <title>" heading');
+  const title = titleMatch[1].replace(/\s+/g, ' ').trim();
+
+  // Split on "## " headings; text before the first heading (the title line
+  // and the digest's "> Authored spec only…" blockquote) is discarded.
+  const chunks = {};
+  const headingRe = /^##\s+(.+)$/gm;
+  let m;
+  const marks = [];
+  while ((m = headingRe.exec(body)) !== null) {
+    marks.push({ name: m[1].trim(), start: m.index, end: m.index + m[0].length });
+  }
+  marks.forEach((mark, i) => {
+    const next = i + 1 < marks.length ? marks[i + 1].start : body.length;
+    chunks[mark.name] = body.slice(mark.end, next);
+  });
+
+  // blockTextOf-style normalization: single-line collapse for inline values,
+  // trimmed lines + collapsed blank runs for block values.
+  const inline = (s) => s.replace(/\s+/g, ' ').trim();
+  const block = (s) =>
+    s
+      .split('\n')
+      .map((l) => l.replace(/[ \t]+/g, ' ').trim())
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  const listItems = (s) =>
+    s
+      .split(/\n(?=- )/)
+      .map((l) => l.trim())
+      .filter((l) => l.startsWith('- '))
+      .map((l) => inline(l.slice(2)));
+
+  if (!('Objective' in chunks)) fail('no "## Objective" section');
+  const objective = inline(chunks.Objective);
+  if (!objective) fail('objective is empty');
+
+  let context = null;
+  if ('Context' in chunks) {
+    context = block(chunks.Context);
+    if (!context) fail('Context section present but empty');
+  }
+
+  let files = null;
+  if ('Files' in chunks) {
+    files = [];
+    for (const item of listItems(chunks.Files)) {
+      // Greedy path: badge is the LAST "(badge)" token before the optional
+      // " — note", so paths containing spaces or parenthesised text survive.
+      const fmatch = item.match(/^(.+)\s+\((new|modified|deleted|generated)\)(?:\s+—\s+(.*))?$/);
+      if (!fmatch) fail(`unparseable Files entry: "${item}"`);
+      files.push({ path: fmatch[1], badge: fmatch[2], note: fmatch[3] || '' });
+    }
+    if (files.length === 0) fail('Files section present but no entries');
+  }
+
+  if (!('Steps' in chunks)) fail('no "## Steps" section');
+  const steps = [];
+  // Numbered items may wrap across lines in hand-written specs; fold
+  // continuations into the item before splitting on the Why:/Verify: markers.
+  const stepLines = chunks.Steps.split(/\n(?=\d+\.\s)/);
+  for (const raw of stepLines) {
+    const item = inline(raw);
+    const numbered = item.match(/^\d+\.\s+(.*)$/);
+    if (!numbered) continue;
+    const parts = numbered[1].match(/^(.*?)\s+Why:\s+(.*?)\s+Verify:\s+(.*)$/);
+    if (!parts) fail(`step ${steps.length + 1} is missing its "Why:" or "Verify:" part`);
+    steps.push({ action: parts[1], why: parts[2], verify: parts[3] });
+  }
+  if (steps.length === 0) fail('Steps section has no numbered steps');
+
+  let tests = null;
+  if ('Tests' in chunks) {
+    const entries = listItems(chunks.Tests);
+    const bare = block(chunks.Tests.split(/\n- /)[0]);
+    if (entries.length > 0) {
+      // buildDigest emits the tier as the only bare line above the entries.
+      tests = { tier: bare ? inline(bare) : null, entries, prose: null };
+    } else {
+      // ponytail: tier-with-prose never occurs in committed plans (verified
+      // over docs/plans/); if it ever does, fold the tier into prose here.
+      const prose = block(chunks.Tests);
+      if (!prose) fail('Tests section present but empty');
+      tests = { tier: null, entries: [], prose };
+    }
+  }
+
+  if (!('Acceptance Criteria' in chunks)) fail('no "## Acceptance Criteria" section');
+  const criteria = listItems(chunks['Acceptance Criteria']);
+  if (criteria.length === 0) fail('Acceptance Criteria section has no items');
+
+  if (!('Verification' in chunks)) fail('no "## Verification" section');
+  const verification = block(chunks.Verification);
+  if (!verification) fail('Verification section is empty');
+
+  return { metadata, sections: { title, objective, context, files, steps, tests, criteria, verification } };
+}
+
 /** Render the spec sections as the digest's markdown body (guarded). */
 export function buildDigest(sections) {
   const lines = [];

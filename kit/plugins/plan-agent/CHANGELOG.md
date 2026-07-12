@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.18.0 — Markdown-spec-to-HTML plan renderer (2026-07-12)
+
+### Added
+
+- **`scripts/build-plan-html.mjs` renderer CLI** (repo-level) — `node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>]` renders a small Markdown plan spec into the full styled HTML plan, reproducing today's DOM contract (all `plan-*` meta tags, `#objective`, the implement row and more-ways drawer, `#steps` step cards, `#tests`, `#criteria-list`, `#verification`, the completion checklist) with all spec text HTML-escaped. Derived fields are computed, never authored: the implement/goal/workflow prompts, the effort level (same Low/Medium/High thresholds the skill uses), the file-tree markup, the criteria count, and a sidebar nav filtered to the sections present.
+- **`parseSpecMarkdown()` in `scripts/lib/plan-spec.mjs`** — the inverse of `buildDigest()`: parses a spec (optional YAML frontmatter for metadata, then title/Objective/Context/Files/Steps with Why:/Verify:/Tests/Acceptance Criteria/Verification) into the same sections object `extractSections()` returns, so the extractor and renderer cannot drift apart.
+- **`scripts/lib/plan-shell.mjs` presentation shell** — the SKELETON.html CSS, icon sprite, JavaScript behaviours, and frozen strings (`todo` step chip, "No items to report — all requirements met.", "Pursue as goal — optimize for the outcome") extracted into exported template functions holding style and layout only, never plan content.
+- **`hooks/render-plan-html.py` regeneration hook** — PostToolUse on Write|Edit|MultiEdit: when a `# Plan:` Markdown spec inside the resolved plans directory is written, the sibling `.html` is re-rendered via `build-plan-html.mjs`. Resolves `plansDirectory` with the skill's full settings precedence (project `.claude/settings.local.json`, then project `.claude/settings.json`, then global `~/.claude/settings.json`, falling back to `docs/plans/`), and exits non-zero with the error on stderr when the renderer fails. Projects without `scripts/build-plan-html.mjs` are silently skipped.
+- **`tests/plugins/test-build-plan-html.mjs`** — unit cases for `parseSpecMarkdown()`, CLI and hook integration cases, and the round-trip property: every committed plan in `docs/plans/` whose sections extract cleanly must survive extract → digest → parse → render → re-extract with a deep-equal sections object (59 plans at introduction; ≥10 required), plus frozen-string and zero-unfilled-placeholder assertions.
+
 ## 2.17.0 — Humanized implementation-plan output (2026-07-09)
 
 ### Added
