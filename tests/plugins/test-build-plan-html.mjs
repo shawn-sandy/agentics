@@ -11,10 +11,12 @@
  * produces a deep-equal sections object (modulo the documented, deliberately
  * non-injective closing-script guard). At least 10 plans must round-trip.
  *
- * Also pinned: the three frozen shell strings, the required plan-* meta tags,
- * zero unfilled skeleton placeholder tokens, effort derivation thresholds,
- * CLI exit codes, and the hook's plansDirectory settings precedence
- * (settings.local.json → settings.json → global → docs/plans).
+ * Also pinned: the required plan-* meta tags, zero unfilled skeleton
+ * placeholder tokens, effort derivation thresholds, CLI exit codes, the
+ * spec-carried progress state (checkbox criteria, [x] step markers, the
+ * Completion Report section, the derived completion checklist), and the
+ * hook's plansDirectory settings precedence (settings.local.json →
+ * settings.json → global → docs/plans).
  *
  * Run: node tests/plugins/test-build-plan-html.mjs
  */
@@ -34,7 +36,6 @@ import {
   unguardScriptClose,
 } from '../../scripts/lib/plan-spec.mjs';
 import { deriveEffort, renderPlanHtml } from '../../scripts/build-plan-html.mjs';
-import { GOAL_LABEL, NO_ITEMS_REPORT, STEP_CHIP } from '../../scripts/lib/plan-shell.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const RENDERER = join(ROOT, 'scripts', 'build-plan-html.mjs');
@@ -242,13 +243,74 @@ ok('workflow meta tag omitted for small specs, present for wide ones', () => {
   assert.ok(wideHtml.includes('<meta name="plan-workflow" content="Run a workflow to implement the plan at w.html'));
 });
 
-ok('frozen strings survive byte-for-byte in shell and rendered output', () => {
-  assert.equal(STEP_CHIP, '<span class="step-chip">todo</span>');
-  assert.equal(NO_ITEMS_REPORT, 'No items to report — all requirements met.');
-  assert.equal(GOAL_LABEL, 'Pursue as goal — optimize for the outcome');
-  for (const frozen of [STEP_CHIP, NO_ITEMS_REPORT, GOAL_LABEL]) {
-    assert.ok(sampleHtml.includes(frozen), `rendered output carries: ${frozen}`);
+/* ── Unit: spec-carried progress state ────────────────────────────── */
+
+// SAMPLE_SPEC with one step done, one criterion checked, status in-progress.
+const PARTIAL_SPEC = SAMPLE_SPEC.replace('status: todo', 'status: in-progress')
+  .replace('1. Do the first thing.', '1. [x] Do the first thing.')
+  .replace('- The first criterion holds.', '- [x] The first criterion holds.');
+
+// Everything done: status completed, both steps [x], both criteria [x],
+// plus a Completion Report section.
+const DONE_SPEC = SAMPLE_SPEC.replace('status: todo', 'status: completed')
+  .replace('1. Do the first thing.', '1. [x] Do the first thing.')
+  .replace('2. Do the second thing.', '2. [x] Do the second thing.')
+  .replace('- The first criterion holds.', '- [x] The first criterion holds.')
+  .replace('- The second criterion holds.', '- [x] The second criterion holds.');
+const REPORTED_SPEC = DONE_SPEC.replace(
+  '## Verification',
+  '## Completion Report\n- The second criterion holds. — tsc --noEmit exited with code 1\n\n## Verification'
+);
+
+ok('parseSpecMarkdown reads checkbox state into progress, keeping sections pure', () => {
+  const { sections, progress } = parseSpecMarkdown(PARTIAL_SPEC);
+  assert.deepEqual(progress.steps, [true, false]);
+  assert.deepEqual(progress.criteria, [true, false]);
+  assert.deepEqual(progress.report, []);
+  // Content is identical to the unchecked spec — state never leaks into text.
+  assert.deepEqual(sections, parseSpecMarkdown(SAMPLE_SPEC).sections);
+  assert.deepEqual(parseSpecMarkdown(SAMPLE_SPEC).progress, { steps: [false, false], criteria: [false, false], report: [] });
+});
+
+ok('parseSpecMarkdown parses Completion Report entries and rejects malformed ones', () => {
+  const { progress } = parseSpecMarkdown(REPORTED_SPEC);
+  assert.deepEqual(progress.report, [
+    { item: 'The second criterion holds.', reason: 'tsc --noEmit exited with code 1' },
+  ]);
+  const noDash = REPORTED_SPEC.replace('holds. — tsc', 'holds. tsc');
+  assert.throws(() => parseSpecMarkdown(noDash), ParseError);
+});
+
+ok('progress state renders: checked inputs, completed step cards, live progress bar', () => {
+  const html = renderPlanHtml(parseSpecMarkdown(PARTIAL_SPEC), { fileName: 'p.html', planPath: 'p.html' });
+  assert.ok(html.includes('<input type="checkbox" id="ac1" checked>'), 'done criterion renders checked');
+  assert.ok(html.includes('<input type="checkbox" id="ac2">'), 'open criterion renders unchecked');
+  assert.ok(html.includes('class="step-card completed"'), 'done step card carries completed class');
+  assert.ok(html.includes('<span class="step-chip">done</span>'), 'done step chip flips');
+  assert.ok(html.includes('<span class="step-chip">todo</span>'), 'open step chip stays todo');
+  assert.ok(html.includes('id="progress-label">1 / 2 done<'), 'progress label reflects checked count');
+  assert.ok(html.includes('aria-valuenow="50"'), 'progress bar reflects checked count');
+  // Progress must not disturb content extraction.
+  assert.deepEqual(extractSections(html), sampleParsed.sections);
+});
+
+ok('completion checklist and report are derived from spec state', () => {
+  assert.ok(sampleHtml.includes('<input type="checkbox" id="cc1" disabled>'), 'todo spec: cc1 unchecked');
+  assert.ok(sampleHtml.includes('<div class="completion-checklist" id="completion-checklist">'), 'todo spec: no all-complete class');
+  assert.ok(sampleHtml.includes('No items to report — all requirements met.'), 'default report sentence');
+
+  const done = renderPlanHtml(parseSpecMarkdown(DONE_SPEC), { fileName: 'd.html', planPath: 'd.html' });
+  for (const cc of ['cc1', 'cc2', 'cc3']) {
+    assert.ok(done.includes(`<input type="checkbox" id="${cc}" disabled checked>`), `${cc} checked`);
   }
+  assert.ok(done.includes('completion-checklist all-complete'), 'all-complete class present');
+  assert.ok(done.includes('data-status="completed"'), 'status stamped from frontmatter');
+
+  const reported = renderPlanHtml(parseSpecMarkdown(REPORTED_SPEC), { fileName: 'r.html', planPath: 'r.html' });
+  assert.ok(reported.includes('<dl class="report-list">'), 'report list rendered');
+  assert.ok(reported.includes('<dt>The second criterion holds.</dt>'), 'report dt carries the item');
+  assert.ok(reported.includes('<dd>tsc --noEmit exited with code 1</dd>'), 'report dd carries the reason');
+  assert.ok(!reported.includes('<p class="report-empty">'), 'default sentence replaced by the report list');
 });
 
 ok('rendered output has every required plan-* meta tag and no unfilled placeholders', () => {

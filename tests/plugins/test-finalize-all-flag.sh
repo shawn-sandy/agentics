@@ -20,16 +20,29 @@ FAILURES=0
 
 echo "=== finalize-plan --all Sweep Smoke Test ==="
 
-echo "1. SKILL.md argument-hint advertises --all..."
-if grep -q 'argument-hint: "\[plan-filename.html\] \[--all\] \[--dir <path>\]"' "$SKILL"; then
+echo "1. SKILL.md argument-hint advertises md/html input and --all..."
+if grep -q 'argument-hint: "\[plan-file.md|.html\] \[--all\] \[--dir <path>\]"' "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: argument-hint does not include [--all]"
+  echo "  FAIL: argument-hint does not include [plan-file.md|.html] and [--all]"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "1b. Spec mode edits the Markdown and re-renders via build-plan-html.mjs..."
+if grep -q '^### Spec mode' "$SKILL" \
+   && grep -q '^### Legacy mode' "$SKILL" \
+   && grep -q 'status: completed' "$SKILL" \
+   && grep -q 'build-plan-html.mjs' "$SKILL" \
+   && grep -q '## Completion Report' "$SKILL"; then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 5 is missing the spec-mode md edits (frontmatter status, checkbox flips, Completion Report, re-render) or the legacy fallback"
   FAILURES=$((FAILURES + 1))
 fi
 
 echo "2. Step 1 routes --all to sweep mode..."
-if grep -q 'If \`\$ARGUMENTS\` contains \`--all\`' "$SKILL"; then
+# grep -F: a BRE-escaped backtick (\`) is a GNU buffer anchor, never a match.
+if grep -qF 'If `$ARGUMENTS` contains `--all`' "$SKILL"; then
   echo "  PASS"
 else
   echo "  FAIL: Step 1 has no --all routing clause"
@@ -68,7 +81,7 @@ fi
 
 echo "6. README documents the --all flag..."
 if grep -q '/plan-agent:finalize-plan --all' "$README" \
-   && grep -q 'Sweep mode (\`--all\`)' "$README"; then
+   && grep -qF 'Sweep mode (`--all`)' "$README"; then
   echo "  PASS"
 else
   echo "  FAIL: README is missing the --all usage line or sweep-mode paragraph"

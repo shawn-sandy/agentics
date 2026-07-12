@@ -1,32 +1,21 @@
-/**
- * plan-shell.mjs — the presentation shell for generated HTML plans.
- *
- * Style and layout ONLY, never plan content: the CSS, icon sprite, and
- * JavaScript below are extracted verbatim from the versioned template at
- * kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html,
- * and every template function takes its content as pre-escaped HTML args.
- * scripts/build-plan-html.mjs is the only consumer; it derives, escapes, and
- * assembles — this module just stamps the ~55 KB of boilerplate the model
- * used to emit by hand.
- *
- * The CSS / ICON_SPRITE / SCRIPT blocks are spliced from SKELETON.html by a
- * one-shot generator; regenerate them there if the skeleton changes.
- *
- * UI strings below were once byte-for-byte contracts that finalize-plan and
- * the status gates matched with literal find/replace on the HTML. Since the
- * md-first flows (plan-agent 2.20.0) tools edit the Markdown spec and
- * re-render, so these are ordinary presentation strings now — reword freely
- * alongside SKELETON.html.
- */
-
-/* ── UI strings ───────────────────────────────────────────────────── */
-const STEP_CHIP = '<span class="step-chip">todo</span>';
-const STEP_CHIP_DONE = '<span class="step-chip">done</span>';
-const NO_ITEMS_REPORT = 'No items to report — all requirements met.';
-const GOAL_LABEL = 'Pursue as goal — optimize for the outcome';
-
-/* ── Blocks extracted verbatim from SKELETON.html ─────────────────── */
-export const CSS = `/* ── Design tokens ─────────────────────────────────────────────── */
+<!DOCTYPE html>
+<html lang="en" data-status="completed" data-effort="high">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
+<meta name="plan-type" content="refactor">
+<meta name="plan-created" content="2026-07-12">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="make-plan-status-flows-md-first.html">
+<meta name="plan-path" content="docs/plans/make-plan-status-flows-md-first.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/make-plan-status-flows-md-first.html — Make plan status and checkbox flows Markdown-first">
+<meta name="plan-goal" content="Achieve this goal: Make plan status and checkbox flows Markdown-first. The plan at docs/plans/make-plan-status-flows-md-first.html describes one approach — use it as reference, but optimize for the outcome">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/make-plan-status-flows-md-first.html — Make plan status and checkbox flows Markdown-first. Brief subagents with the plan file at docs/plans/make-plan-status-flows-md-first.html">
+<title>Plan: Make plan status and checkbox flows Markdown-first</title>
+<style>
+/* ── Design tokens ─────────────────────────────────────────────── */
   :root {
     --bg:         #ffffff;
     --surface:    #ffffff;
@@ -1234,18 +1223,22 @@ export const CSS = `/* ── Design tokens ────────────
     transition: color .15s;
   }
   .plan-back-link:hover { color: var(--accent); }
-  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }`;
-
-export const RESPONSIVE_CSS = `/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
 body { overflow-wrap: anywhere; }
 main, nav, aside { min-width: 0; }
 .layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
 pre { white-space: pre-wrap; max-width: 100%; }
 table { max-width: 100%; }
 img, video { max-width: 100%; height: auto; }
-@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }`;
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
 
-export const ICON_SPRITE = `<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
   </symbol>
@@ -1295,9 +1288,395 @@ export const ICON_SPRITE = `<svg xmlns="http://www.w3.org/2000/svg" style="displ
   <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
   </symbol>
-</svg>`;
+</svg>
 
-export const SCRIPT = `/* ── Save as PDF (native browser print dialog) ──────────────── */
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Make plan status and checkbox flows Markdown-first</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <span class="status-badge">completed</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-07-12</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> refactor</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+    </ul>
+  </nav>
+
+  <main id="main">
+
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Point `finalize-plan` and the implementation-plan status/checkbox gates at the Markdown spec — checkbox flips plus frontmatter edits plus a re-render via `build-plan-html.mjs` — and retire the byte-for-byte frozen-string contracts that HTML surgery depended on (Phase 3 of the plan-generation-from-markdown proposal).</p>
+    </div>
+
+    <section class="plan-glance" aria-labelledby="plan-glance-label">
+      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+      <p>Completing a plan used to mean careful find-and-replace surgery on 84 KB of HTML. Now every status flip and checkbox tick is a one-line Markdown edit and the renderer redraws the page — cheaper, safer, and impossible to get half-right.</p>
+    </section>
+
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/make-plan-status-flows-md-first.html — Make plan status and checkbox flows Markdown-first</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Make plan status and checkbox flows Markdown-first. The plan at docs/plans/make-plan-status-flows-md-first.html describes one approach — use it as reference, but optimize for the outcome</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/make-plan-status-flows-md-first.html — Make plan status and checkbox flows Markdown-first. Brief subagents with the plan file at docs/plans/make-plan-status-flows-md-first.html</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">make-plan-status-flows-md-first.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/make-plan-status-flows-md-first.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+        </div>
+
+      </div>
+    </details>
+
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Definition of done</span>
+        <span id="progress-label">6 / 6 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
+      </div>
+    </div>
+
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>Phases 1–2 made the Markdown spec the authored source of truth and shipped the deterministic renderer, but progress state still lived in the HTML only: finalize-plan did literal find/replace on the `todo` step chip and the report-empty sentence, and re-rendering a spec reset all progress. That kept three frozen strings pinned byte-for-byte and made every status edit an attribute-surgery exercise. Carrying state in the spec&#39;s checkbox syntax (as the proposal specifies) makes re-rendering lossless and lets the renderer derive every completion representation mechanically.</p>
+    </section>
+
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files that change
+      </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> scripts/lib/
+            <ul class="file-list">
+            <li><code>plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">parse checkbox state and the Completion Report section into a progress key</span></li>
+            <li><code>plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">progress-aware criteria/progress/completion blocks; frozen strings demoted to internal</span></li>
+            </ul>
+          </li>
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">wire progress through rendering; derive cc1–cc3, all-complete, report list</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical bundled copy</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/scripts/lib/
+            <ul class="file-list">
+            <li><code>plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical bundled copy</span></li>
+            <li><code>plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical bundled copy</span></li>
+            </ul>
+          </li>
+          <li><code>kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">spec mode edits the md and re-renders; legacy mode keeps HTML edits</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Step 6 and Step 8 gates flip state in the spec</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/guidelines/section-catalog.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">checkbox syntax and Completion Report section</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">criteria start as unchecked checkbox bullets</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/
+            <ul class="file-list">
+            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">md-first finalize-plan and pipeline docs</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.20.0 entry</span></li>
+            </ul>
+          </li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 2.19.0 → 2.20.0</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
+            <ul class="file-list">
+            <li><code>test-build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">progress-state tests replace the byte-for-byte frozen-string pin</span></li>
+            <li><code>test-finalize-all-flag.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">pins the md/html argument hint and the spec-mode contract</span></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
+      <div class="steps-list">
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Extend parseSpecMarkdown in scripts/lib/plan-spec.mjs to read `- [x]` criteria bullets, `[x]` step markers, and a `## Completion Report` section into a separate progress return key</span>
+              </div>
+              <div class="step-why">completion state must travel in the spec without disturbing the content sections that the extract-digest-parse round-trip compares</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">node tests/plugins/test-build-plan-html.mjs passes the new progress parsing cases and the existing round-trip property.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Teach plan-shell.mjs and build-plan-html.mjs to render progress state — checked inputs, completed step cards, initial progress bar, derived completion checklist, and the report list</span>
+              </div>
+              <div class="step-why">the renderer must emit every representation finalize-plan used to write by hand so tools never touch the HTML</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">rendering a spec with mixed checkbox state shows checked/unchecked inputs, a done chip, a 50% progress bar, and derived cc1–cc3 state.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Sync the bundled renderer copies under kit/plugins/plan-agent/scripts/</span>
+              </div>
+              <div class="step-why">marketplace installs run the bundled copy and a parity test pins it byte-identical to the repo-root sources</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">the plugin-bundled-copies parity test passes.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Rewrite finalize-plan SKILL.md around spec mode — frontmatter status, checkbox flips, step markers, Completion Report, explicit re-render — with a legacy HTML fallback for plans without a spec</span>
+              </div>
+              <div class="step-why">finalize-plan was the main frozen-string consumer; md-first editing retires the byte-for-byte find/replace contract</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">tests/plugins/test-finalize-all-flag.sh passes, including the new spec-mode assertions.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Update implementation-plan SKILL.md Step 6 and Step 8 gates to flip state in the spec and re-render, and document the syntax in section-catalog.md and SKELETON.md</span>
+              </div>
+              <div class="step-why">the authoring skill must stop writing HTML attributes now that re-rendering is lossless</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">SKILL.md contains no instructions to edit checked attributes or step-card classes in the HTML.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Replace the byte-for-byte frozen-string test with behavioral progress assertions, bump plan-agent to 2.20.0, and update README and CHANGELOG</span>
+              </div>
+              <div class="step-why">the contracts retire only when nothing reads them — tests pinning the bytes were the last reader</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">the full plugin test suite passes and marketplace.json matches the CHANGELOG top entry.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
+      <h2 id="h-tests">
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
+        Tests
+      </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
+      <div class="test-tier-label">Tier 1 — This plan changes application code</div>
+      <div class="objective-test-card">Objective: a spec carrying checkbox state renders to HTML whose progress, step, criteria, and completion-checklist markup all reflect that state, and re-extracts to identical content sections. File: tests/plugins/test-build-plan-html.mjs; Type: smoke; Asserts: md-carried state drives every derived completion representation without breaking the round-trip; Run: node tests/plugins/test-build-plan-html.mjs</div>
+      <div class="test-list">
+        <div class="test-card">Unit: parseSpecMarkdown progress parsing. File: tests/plugins/test-build-plan-html.mjs; Targets: parseSpecMarkdown; Key cases: mixed [x]/[ ] criteria, step markers, Completion Report entries, malformed report bullets</div>
+        <div class="test-card">Integration: finalize-plan skill contract. File: tests/plugins/test-finalize-all-flag.sh; Targets: finalize-plan SKILL.md; Key cases: md/html argument hint, spec-mode section, legacy fallback, version parity</div>
+      </div>
+    </section>
+
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Definition of done
+      </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1">parseSpecMarkdown returns progress state (steps, criteria, report) without changing the content sections object</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">The renderer derives checked inputs, completed step cards, the initial progress bar, cc1–cc3, all-complete, and the report list from the spec</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">finalize-plan edits the Markdown spec and re-renders when a sibling spec exists, and only falls back to HTML edits for legacy plans</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4">implementation-plan Step 6 and Step 8 gates contain no HTML attribute-editing instructions</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5">No exported frozen-string constants remain in plan-shell.mjs and no test pins them byte-for-byte</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6">All plugin test suites pass and plan-agent ships as 2.20.0</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Final check
+      </h2>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Run node tests/plugins/test-build-plan-html.mjs, node tests/plugins/test-extract-plan-spec.mjs, node tests/plugins/test-backfill-digest.mjs, and bash tests/plugins/test-finalize-all-flag.sh — all green. Then exercise the flow end to end exactly as a tool would: flip a criterion bullet in this very spec, re-render with node scripts/build-plan-html.mjs, and confirm the rendered HTML&#39;s checkbox, progress bar, and completion checklist follow the Markdown.</p>
+    </section>
+
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Wrapping up
+      </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist all-complete" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled checked>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled checked>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled checked>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <dl class="report-list">
+            <dt>Legacy plans without a sibling spec</dt>
+            <dd>still finalized via direct HTML edits by design; Phase 4 backfill will retire that path</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-07-12 · agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
 }
@@ -1331,11 +1710,11 @@ function buildImplementPrompt() {
   lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
   lines.push('4. Complete the completion checklist to update the plan status to completed.');
 
-  return lines.join('\\n');
+  return lines.join('\n');
 }
 
 /* ── Shared clipboard helper ────────────────────────────────── */
-/* All copy buttons delegate here. \`restoreLabel\` is the button's   */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
 /* idle text. On failure (Clipboard API rejects AND execCommand     */
 /* fails) the button shows a visible error so the user knows to      */
 /* select manually — never a silent no-op.                          */
@@ -1412,7 +1791,7 @@ function copyPrompt(btn) {
 
   /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
-  /* <input> carries the \`checked\` attribute, which the browser        */
+  /* <input> carries the `checked` attribute, which the browser        */
   /* renders natively on load. Toggling a box syncs the attribute so   */
   /* the live DOM (and any saved copy of this file) stays the single   */
   /* portable source of truth — no browser-only storage layer.         */
@@ -1526,319 +1905,7 @@ function copyPrompt(btn) {
     }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
     sections.forEach(function (el) { observer.observe(el); });
   }
-})();`;
-
-/* ── Section chrome — intros are presentation-only (the extractor
-      strips <p class="section-intro">), headings match the skeleton ── */
-export const SECTION_CHROME = {
-  context: { icon: 'ic-document-text', heading: 'Context', intro: 'The story behind this plan — what prompted the work and why it matters now.' },
-  files: { icon: 'ic-folder', heading: 'Files that change', intro: 'Every file this plan touches, and what happens to each one.' },
-  steps: { icon: 'ic-list-bullet', heading: 'Steps', intro: 'The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.' },
-  tests: { icon: 'ic-beaker', heading: 'Tests', intro: 'The tests that prove the change does what it promises.' },
-  criteria: { icon: 'ic-check-circle', heading: 'Definition of done', intro: 'The plan counts as done when every statement below is true — check each one off as you verify it.' },
-  verification: { icon: 'ic-magnifying-glass', heading: 'Final check', intro: 'One last pass to confirm the whole change works end to end.' },
-  completion: { icon: 'ic-clipboard-check', heading: 'Wrapping up', intro: 'Three gates that must all pass before this plan is marked completed.' },
-};
-
-/* Sidebar nav entries in skeleton order; the renderer filters to the
-   sections actually present. */
-export const NAV_ENTRIES = [
-  { id: 'objective', icon: 'ic-bolt', label: 'Objective' },
-  { id: 'progress', icon: 'ic-chart-bar', label: 'Progress' },
-  { id: 'context', icon: 'ic-document-text', label: 'Context' },
-  { id: 'files', icon: 'ic-folder', label: 'Files that change' },
-  { id: 'steps', icon: 'ic-list-bullet', label: 'Steps' },
-  { id: 'tests', icon: 'ic-beaker', label: 'Tests' },
-  { id: 'criteria', icon: 'ic-check-circle', label: 'Definition of done' },
-  { id: 'verification', icon: 'ic-magnifying-glass', label: 'Final check' },
-  { id: 'completion', icon: 'ic-clipboard-check', label: 'Wrapping up' },
-];
-
-const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;
-
-/* ── Template functions — args are pre-escaped HTML strings ────────── */
-
-/** <head> meta tags. `workflow` may be empty → tag omitted entirely. */
-export function metaTags({ status, effort, type, created, repo, file, path, implement, goal, workflow }) {
-  const tags = [
-    `<meta name="plan-status" content="${status}">`,
-    `<meta name="plan-effort" content="${effort}">`,
-    `<meta name="plan-type" content="${type}">`,
-    `<meta name="plan-created" content="${created}">`,
-    `<meta name="plan-repo" content="${repo}">`,
-    `<meta name="plan-file" content="${file}">`,
-    `<meta name="plan-path" content="${path}">`,
-    `<meta name="plan-implement" content="${implement}">`,
-    `<meta name="plan-goal" content="${goal}">`,
-  ];
-  if (workflow) tags.push(`<meta name="plan-workflow" content="${workflow}">`);
-  return tags.join('\n');
-}
-
-export function header({ title, status, effortLabel, created, repo, type }) {
-  return `<header class="plan-header">
-  <div class="plan-header-inner">
-    <div class="plan-back-nav">
-      <a href="./index.html" class="plan-back-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
-        Plans
-      </a>
-    </div>
-    <div class="plan-doc-type">Implementation Plan</div>
-    <div class="plan-header-top">
-      <h1 class="plan-title">${title}</h1>
-      <div class="plan-header-actions">
-        <button class="save-pdf-btn" type="button" onclick="savePDF()"
-                aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>
-        <span class="status-badge">${status}</span>
-      </div>
-    </div>
-    <div class="plan-meta">
-      <span>${icon('ic-calendar')} ${created}</span>
-      <span>${icon('ic-code-bracket')} ${repo}</span>
-      <span>${icon('ic-tag')} ${type}</span>
-      <span>${icon('ic-bolt')} ${effortLabel} effort</span>
-    </div>
-  </div>
-</header>`;
-}
-
-/** Sidebar nav from NAV_ENTRIES filtered to present ids. */
-export function nav(ids) {
-  const items = NAV_ENTRIES.filter((e) => ids.includes(e.id))
-    .map((e) => `      <li><a href="#${e.id}">${icon(e.icon)} ${e.label}</a></li>`)
-    .join('\n');
-  return `  <nav class="plan-nav" aria-label="Plan sections">
-    <div class="scroll-rail" aria-hidden="true"></div>
-    <div class="nav-heading">On this page</div>
-    <ul>
-${items}
-    </ul>
-  </nav>`;
-}
-
-export function objectiveCard(objective) {
-  return `    <div class="objective-card" id="objective">
-      <div class="section-label">Objective</div>
-      <p>${objective}</p>
-    </div>`;
-}
-
-/** At-a-glance block — ALWAYS a sibling of #objective, never nested. */
-export function glanceBlock(glance) {
-  return `    <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>${glance}</p>
-    </section>`;
-}
-
-export function implementRow(implement) {
-  return `    <div class="plan-implement">
-      <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">${implement}</code>
-      <button class="copy-cmd-btn" type="button"
-              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
-    </div>`;
-}
-
-/** More-ways drawer. `workflow` empty → row omitted, drawer kept. */
-export function moreWaysDrawer({ goal, workflow, file, path }) {
-  const workflowRow = workflow
-    ? `
-        <div class="plan-workflow">
-          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
-          <div class="plan-workflow-inner">
-            <code id="workflow-cmd" aria-label="Workflow prompt">${workflow}</code>
-            <button class="copy-workflow-btn" type="button"
-                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-          </div>
-        </div>
-`
-    : '';
-  return `    <details class="plan-more-ways">
-      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
-      <div class="plan-more-ways-body">
-
-        <div class="plan-goal">
-          <div class="plan-goal-label">${GOAL_LABEL}</div>
-          <div class="plan-goal-inner">
-            <code id="goal-cmd" aria-label="Goal prompt">${goal}</code>
-            <button class="copy-goal-btn" type="button"
-                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
-          </div>
-        </div>
-${workflowRow}
-        <div class="plan-source">
-          <div class="plan-source-row">
-            <span class="plan-source-label">File</span>
-            <code id="plan-file" aria-label="Plan file name">${file}</code>
-            <button class="copy-src-btn" type="button"
-                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-          </div>
-          <div class="plan-source-row">
-            <span class="plan-source-label">Path</span>
-            <code id="plan-path" aria-label="Plan relative path">${path}</code>
-            <button class="copy-src-btn" type="button"
-                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-          </div>
-        </div>
-
-      </div>
-    </details>`;
-}
-
-/** Progress bar with its server-rendered initial state; the inline script
- * recomputes it from the live checkboxes on load and on every toggle. */
-export function progressBlock(doneCount, criteriaCount) {
-  const pct = criteriaCount ? Math.round((doneCount / criteriaCount) * 100) : 0;
-  return `    <div class="progress-wrap" id="progress">
-      <div class="progress-header">
-        <span>Definition of done</span>
-        <span id="progress-label">${doneCount} / ${criteriaCount} done</span>
-      </div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill${pct > 0 ? ' has-progress' : ''}" id="progress-bar"
-             role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:${pct}%"></div>
-      </div>
-    </div>`;
-}
-
-/** Generic section wrapper matching the skeleton's .section-card shape. */
-export function sectionCard(id, body) {
-  const { icon: ic, heading, intro } = SECTION_CHROME[id];
-  return `    <section class="section-card card-${id}" id="${id}" aria-labelledby="h-${id}">
-      <h2 id="h-${id}">
-        ${icon(ic)}
-        ${heading}
-      </h2>
-      <p class="section-intro">${intro}</p>
-${body}
-    </section>`;
-}
-
-export function fileTreeBlock(repo, rows) {
-  return `      <div class="file-tree">
-        <div class="file-tree-root">${icon('ic-folder')} ${repo}/</div>
-        <ul class="file-list">
-${rows}
-        </ul>
-      </div>`;
-}
-
-export function stepCard(n, { action, why, verify, done = false }) {
-  return `        <div class="step-card${done ? ' completed' : ''}">
-          <div class="step-card-header">
-            <div class="step-number">${n}</div>
-            <div class="step-body">
-              <div class="step-action">
-                ${done ? STEP_CHIP_DONE : STEP_CHIP}
-                <span class="step-chip-text">${action}</span>
-              </div>
-              <div class="step-why">${why}</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">${verify}</div>
-              </details>
-            </div>
-          </div>
-        </div>`;
-}
-
-/** items: [{ text, done }] — done renders the `checked` attribute, the
- * file-persisted completion state the spec's `- [x]` bullets carry. */
-export function criteriaListBlock(items) {
-  const lis = items
-    .map(
-      ({ text, done }, i) => `        <li>
-          <input type="checkbox" id="ac${i + 1}"${done ? ' checked' : ''}>
-          <label for="ac${i + 1}">${text}</label>
-        </li>`
-    )
-    .join('\n');
-  return `      <ul class="criteria-list" id="criteria-list">
-${lis}
-      </ul>
-      <span id="criteria-status" aria-live="polite" aria-atomic="true"
-            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>`;
-}
-
-/**
- * Completion checklist with its state derived from the spec (all steps done,
- * all criteria checked, status completed) — the same conditions the inline
- * script recomputes from the live DOM on load. `reportHtml` replaces the
- * default "No items to report" paragraph when the spec carries a
- * `## Completion Report` section.
- */
-export function completionBlock({ allStepsDone = false, allCriteriaDone = false, statusCompleted = false, reportHtml = '' } = {}) {
-  const allComplete = allStepsDone && allCriteriaDone && statusCompleted;
-  const box = (id, on, label) => `          <li>
-            <input type="checkbox" id="${id}" disabled${on ? ' checked' : ''}>
-            <label for="${id}">${label}</label>
-          </li>`;
-  return `      <div class="completion-checklist${allComplete ? ' all-complete' : ''}" id="completion-checklist">
-        <div class="completion-header">
-          <span class="completion-badge" id="completion-badge">Required</span>
-        </div>
-        <ul class="completion-list" id="completion-list">
-${box('cc1', allStepsDone, 'All step TODOs marked as done')}
-${box('cc2', allCriteriaDone, 'All acceptance criteria verified and checked off')}
-${box('cc3', statusCompleted, 'Plan status updated to completed')}
-        </ul>
-        <div class="completion-report" id="completion-report">
-          <h3 class="report-heading">Completion Report</h3>
-${reportHtml || `          <p class="report-empty">${NO_ITEMS_REPORT}</p>`}
-        </div>
-      </div>`;
-}
-
-export function footer({ created, repo }) {
-  return `    <footer class="plan-footer">
-      ${icon('ic-sparkles')}
-      Generated by plan-agent · ${created} · ${repo}
-    </footer>`;
-}
-
-/** Assemble the full self-contained document. */
-export function page({ status, effort, title, meta, headerHtml, navHtml, mainHtml }) {
-  return `<!DOCTYPE html>
-<html lang="en" data-status="${status}" data-effort="${effort}">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-${meta}
-<title>Plan: ${title}</title>
-<style>
-${CSS}
-</style>
-<style id="plan-responsive-fix" data-version="1">
-${RESPONSIVE_CSS}
-</style>
-</head>
-<body>
-
-${ICON_SPRITE}
-
-<a href="#main" class="skip-link">Skip to content</a>
-
-${headerHtml}
-
-<div class="layout">
-
-${navHtml}
-
-  <main id="main">
-
-${mainHtml}
-
-  </main>
-</div><!-- /.layout -->
-
-<script>
-${SCRIPT}
+})();
 </script>
 </body>
 </html>
-`;
-}

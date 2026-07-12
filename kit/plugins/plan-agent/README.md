@@ -222,10 +222,10 @@ Plan updated in place: docs/plans/add-dark-mode-toggle.html
 
 #### `finalize-plan` — Manual invoke only
 
-Reviews an HTML plan for codebase implementation evidence, verifies each acceptance criterion individually, runs the plan's objective-verification test as an end-to-end signal, then marks the plan as completed. Each criterion is classified as `verified` or `unverified` based on actual codebase evidence. Offers three completion options: check all criteria, only auto-check verified ones, or cancel.
+Reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, runs the plan's objective-verification test as an end-to-end signal, then marks the plan as completed. Each criterion is classified as `verified` or `unverified` based on actual codebase evidence. Offers three completion options: check all criteria, only auto-check verified ones, or cancel.
 
 ```
-/plan-agent:finalize-plan add-dark-mode-toggle.html
+/plan-agent:finalize-plan add-dark-mode-toggle.md
 /plan-agent:finalize-plan
 /plan-agent:finalize-plan --all
 ```
@@ -233,9 +233,9 @@ Reviews an HTML plan for codebase implementation evidence, verifies each accepta
 When invoked without arguments, prompts for the plan file. The skill:
 1. Reads the plan's acceptance criteria
 2. Searches the codebase for implementation evidence per criterion
-3. Runs the objective-verification test (the `.objective-test-card` **Run** command) for an end-to-end pass/fail signal
+3. Runs the objective-verification test (the Tests section's **Run** command) for an end-to-end pass/fail signal
 4. Presents a summary showing which criteria are verified vs unverified, plus the objective-test result
-5. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates all status representations (`<html data-status>`, `<meta name="plan-status">`, visible badge)
+5. On confirmation: writes the completion state to the plan's **Markdown spec** (`status:` frontmatter, `- [x]` criteria flips, `[x]` step markers, a `## Completion Report` section when gaps remain) and re-renders the HTML with `build-plan-html.mjs` — the renderer derives the checked boxes, completed step cards, status representations, and completion checklist. Legacy plans without a sibling spec fall back to direct HTML attribute edits.
 
 **Sweep mode (`--all`)** finds plans that are implemented but never marked completed. It scans the plans directory for every plan carrying a `<meta name="plan-status">` tag whose value is `todo` or `in-progress` (non-plan HTML without the tag is ignored), runs the cheap token-evidence scan on each, and presents a candidate table — plans with 80%+ evidence are flagged as "done but not marked". One multi-select prompt picks which plans to finalize (plus a single criteria mode for the whole batch); full per-criterion verification and the objective test then run only on the selected plans before the status writes.
 
@@ -468,7 +468,7 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 - **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
 - **Implement-now gates** (Step 8) — when implementing in-session, three sequential gates run before completion: an **acceptance-criteria gate** (verify and check off each criterion), an **end-to-end verification gate** (run the plan's objective-verification test + walk the Verification section; on failure, fix and re-verify up to 3 times), and a **completion-checklist gate** (confirm step TODOs, criteria, and status)
-- **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `scripts/build-plan-html.mjs`; the renderer owns all presentation (CSS, JS, meta tags, frozen strings, derived implement/goal/workflow prompts, effort level, file-tree)
+- **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `scripts/build-plan-html.mjs`; the renderer owns all presentation (CSS, JS, meta tags, derived implement/goal/workflow prompts, effort level, file-tree) *and* all progress state: `- [x]` criteria bullets, `[x]` step markers, and an optional `## Completion Report` section render as checked boxes, completed step cards, the derived completion checklist, and the report list — status/checkbox changes are Markdown edits plus a re-render, never HTML surgery
 - **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
 - **Spec starter** — `reference/SKELETON.md` is the copyable spec skeleton in the exact format the renderer parses
 
@@ -493,15 +493,15 @@ Usage:
 
 ### `finalize-plan` Skill
 
-Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:finalize-plan [plan-filename.html] [--all] [--dir <path>]`.
+Manual-invoke only (`disable-model-invocation: true`). Triggered as `/plan-agent:finalize-plan [plan-file.md|.html] [--all] [--dir <path>]`.
 
-Reviews an HTML plan for codebase implementation evidence with per-criterion verification:
-1. Reads the plan's acceptance criteria
+Reviews a plan for codebase implementation evidence with per-criterion verification:
+1. Reads the plan's acceptance criteria (from the Markdown spec when one exists; from the HTML for legacy plans)
 2. Maps implementation evidence to individual criteria, classifying each as `verified` or `unverified`
-3. Runs the objective-verification test (the `.objective-test-card` **Run** command) for an end-to-end pass/fail signal
+3. Runs the objective-verification test (the Tests section's **Run** command) for an end-to-end pass/fail signal
 4. Presents a confirmation summary with per-criterion verification status plus the objective-test result
 5. Offers three completion options: check all, only auto-check verified, or cancel
-6. On confirmation: checks acceptance-criteria boxes, adds `completed` class to step cards, updates `<html data-status>`, `<meta name="plan-status">`, and visible badge
+6. On confirmation — **spec mode** (sibling `<stem>.md` spec exists): sets `status:` frontmatter, flips `- [x]` criteria bullets and `[x]` step markers, writes a `## Completion Report` section for any gaps, and re-renders the HTML via `build-plan-html.mjs`; **legacy mode** (no spec): checks acceptance-criteria boxes, adds `completed` class to step cards, and updates `<html data-status>`, `<meta name="plan-status">`, and the visible badge directly
 7. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
 
 With `--all`, the skill runs in sweep mode: it discovers every non-completed plan in the plans directory (`grep -l` for a `plan-status` meta tag valued `todo` or `in-progress`, excluding `index.html` and `archive/`; HTML without the tag is never a candidate), scores each with the cheap token-evidence pass (non-interactive — token-less plans score 0% instead of prompting), batch-confirms via one multi-select prompt, then runs the full per-criterion verification, objective test, and status writes on the selected plans only.

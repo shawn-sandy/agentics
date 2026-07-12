@@ -13,9 +13,11 @@ argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify
 You author the plan as a small **Markdown spec** (~5–10 KB) and a bundled
 script renders it into the full styled, interactive, self-contained HTML
 plan. You own the *content*; the renderer owns *all* presentation — CSS,
-JavaScript behaviours, SVG icons, meta tags, HTML escaping, the sidebar nav,
-and every frozen string downstream tools match on. Never hand-write plan
-HTML.
+JavaScript behaviours, SVG icons, meta tags, HTML escaping, and the sidebar
+nav. Progress state travels in the spec too: `- [x]` criteria bullets and
+`[x]` step markers render as checked boxes and completed step cards, so
+every status or checkbox change is a Markdown edit plus a re-render. Never
+hand-write or hand-edit plan HTML.
 
 Render command (the script ships with this plugin):
 
@@ -150,16 +152,19 @@ Echo the resolved objective and effective flags after Step 0.
 - **Effort level** — low/medium/high badge from step and file counts
   (low: ≤3 steps and ≤2 files; high: ≥7 steps or ≥6 files). Override with
   the `effort:` frontmatter key when the interview tier justifies it.
-- **Everything else** — file-tree grouping, progress bar and criteria
-  counts, sidebar nav filtered to the sections present, the
-  Save as PDF button (`save-pdf-btn`, prints via the browser dialog),
-  copy buttons,
-  completion checklist, meta tags (`plan-status`, `plan-effort`,
-  `plan-type`, `plan-created`, `plan-repo`, `plan-file`, `plan-path`,
-  `plan-implement`, `plan-goal`, conditional `plan-workflow`), HTML
-  escaping, and the frozen strings downstream tools match byte-for-byte
-  (the `todo` step chip, the "No items to report — all requirements met."
-  completion sentence, the "Pursue as goal" label).
+- **Progress and completion state** — from the spec's checkbox syntax:
+  `- [x]` criteria render as `checked` inputs and drive the progress bar;
+  a `[x]` marker after a step number renders the completed step card (chip
+  flips to done); the completion checklist (cc1–cc3, `all-complete`) is
+  derived from all-steps-done + all-criteria-done + `status: completed`;
+  an optional `## Completion Report` section renders as the report list,
+  otherwise the default "No items to report" sentence.
+- **Everything else** — file-tree grouping, criteria counts, sidebar nav
+  filtered to the sections present, the Save as PDF button
+  (`save-pdf-btn`, prints via the browser dialog), copy buttons, meta tags
+  (`plan-status`, `plan-effort`, `plan-type`, `plan-created`, `plan-repo`,
+  `plan-file`, `plan-path`, `plan-implement`, `plan-goal`, conditional
+  `plan-workflow`), and HTML escaping.
 
 ## Workflow
 
@@ -315,20 +320,22 @@ EOF
    and re-run — never hand-edit the HTML to compensate. Re-run the render
    after *any* later edit to the spec.
 
-6. **Status** — The spec's `status:` frontmatter (`todo` → `in-progress` →
-   `completed`) is the authored status; a re-render stamps it into all
-   three HTML representations (`<html data-status>`, the `plan-status` meta
-   tag, the visible badge). **Progress state, however, lives in the HTML
-   only**: step completion is the `.completed` class on each `.step-card`,
-   criterion completion is the `checked` attribute on each `#criteria-list`
-   `<input>` — attribute edits written into the file, the portable source
-   of truth (never `localStorage`). The spec carries the authored plan, not
-   progress. **Re-rendering resets HTML progress state** — during
-   implementation, flip status/checkbox state in the HTML directly (as
-   `finalize-plan` does); if you must re-render mid-implementation, update
-   the spec's `status:` first and re-apply checkbox/chip state after. Note:
-   `plan-interview:plan-status` targets YAML-frontmatter `.md` plans — it
-   may be pointed at the spec, but the HTML is only updated on re-render.
+6. **Status** — All plan state lives in the spec markdown; the HTML is a
+   pure render of it. The `status:` frontmatter (`todo` → `in-progress` →
+   `completed`) stamps all three HTML representations (`<html
+   data-status>`, the `plan-status` meta tag, the visible badge). Step
+   completion is a `[x]` marker after the step number (`3. [x] <action>
+   …`); criterion completion is a `- [x]` checkbox bullet under
+   `## Acceptance Criteria` (author new criteria as `- [ ]` or plain `- `
+   — both render unchecked). Every state change is a one-line Markdown
+   edit followed by a re-render (the `render-plan-html.py` hook does this
+   automatically on each spec write; run the Step 5d command when you need
+   the failure surfaced). Re-rendering is lossless — progress re-renders
+   from the spec, so there is no state to re-apply. Never edit `checked`
+   attributes, `.step-card` classes, or status attributes in the HTML;
+   `/plan-agent:finalize-plan` follows the same rule. A user ticking a box
+   in the browser changes only their local DOM/file copy — tool-side state
+   belongs in the spec.
 
 7. **Open** — Deliver the plan and verify rendering. Mandatory — do not
    skip. After all sub-steps complete, proceed immediately to Step 8.
@@ -371,29 +378,26 @@ EOF
      - `Exit — I'll implement later` — Stop here; no further action.
 
    **If the user chooses `Implement now`:** Lift the Scope Constraint for
-   this session only. Set the spec's `status:` to `in-progress` and
-   re-render once, then work through each step sequentially — apply the
-   changes, verify each step, and mark progress in the HTML as you go (add
-   the `completed` class to each finished `.step-card`; the chip flips to
-   done via CSS). Do not re-render after this point without re-applying
-   progress state (Step 6).
+   this session only. Set the spec's `status:` to `in-progress`, then work
+   through each step sequentially — apply the changes, verify each step,
+   and mark progress in the spec as you go (insert the `[x]` marker after
+   each finished step's number; the re-render flips the card and chip).
 
    **Acceptance criteria gate (mandatory — after all steps, before marking
    `completed`):**
-   1. Read each criterion from `#criteria-list` in the plan HTML (not the
-      `#completion-list` checklist).
+   1. Read each criterion from the spec's `## Acceptance Criteria` bullets.
    2. Verify each one — run the relevant command or inspect the changed
       files.
-   3. Check a criterion off by **adding** the `checked` attribute to its
-      `<input>` only after confirming it; remove the attribute to undo.
-      Attribute edits in the file — never a JS toggle or browser-only
-      persistence.
+   3. Check a criterion off by flipping its bullet to `- [x]` only after
+      confirming it; flip back to `- [ ]` to undo. Markdown edits in the
+      spec — never `checked` attributes in the HTML, a JS toggle, or
+      browser-only persistence.
    4. If any criterion cannot be verified, list the unverified items via
       `AskUserQuestion` ("Mark them as done anyway?" — `Yes, check them
       off` / `No, leave unchecked`).
-   5. Only set status to `completed` (spec frontmatter **and** all three
-      HTML representations) after every criterion is checked; otherwise set
-      `in-progress` and note what remains open.
+   5. Only set `status: completed` after every criterion is checked;
+      otherwise set `in-progress` and note what remains open. The
+      re-render stamps the status into all three HTML representations.
 
    **End-to-end verification gate (mandatory — after the criteria gate):**
    confirms the *objective* works end-to-end, not just that criteria are
@@ -418,17 +422,22 @@ EOF
       to proceed anyway. Report the outcome briefly.
 
    **Completion checklist gate (mandatory — before committing):**
-   1. Verify: (a) all `.step-card` elements have the `completed` class,
-      (b) all criteria checkboxes are `checked`, (c) status is `completed`
-      in all three HTML representations.
-   2. Check off each `#completion-list` checkbox (add `checked` to the
-      `disabled` input) only after confirming its condition; when all three
-      hold, add the `all-complete` class to the `completion-checklist` div.
-   3. Any condition unmet → leave its box unchecked, keep status
-      `in-progress`, and populate the Completion Report: replace the
-      `report-empty` paragraph inside `#completion-report` with a
-      `<dl class="report-list">` of specific `<dt>` (exact step/criterion)
-      + `<dd>` (reason) entries — never a generic "some steps incomplete".
+   1. Verify in the spec: (a) every step carries its `[x]` marker, (b)
+      every acceptance criterion is `- [x]`, (c) the frontmatter says
+      `status: completed`.
+   2. Re-render and confirm the derived state: all `.step-card` elements
+      completed, all criteria inputs `checked`, the three status
+      representations `completed`, cc1–cc3 checked and the
+      `completion-checklist` div carrying `all-complete`. The renderer
+      computes all of this from (a)–(c) — if something is missing, fix the
+      spec, never the HTML.
+   3. Any condition unmet → keep `status: in-progress` and write a
+      `## Completion Report` section in the spec (after
+      `## Acceptance Criteria`): one `- <exact step/criterion> — <reason>`
+      bullet per gap — never a generic "some steps incomplete". The
+      renderer turns it into the report list; when everything is resolved,
+      remove the section and the default "No items to report" sentence
+      returns.
 
    Commit the source changes together with the updated spec and HTML when
    implementation finishes.

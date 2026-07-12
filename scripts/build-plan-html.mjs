@@ -17,6 +17,14 @@
  * Optional spec frontmatter (all keys optional):
  *   status | type | created | repo | effort | glance | workflow (true/false)
  *
+ * Progress state travels in the spec too (Phase 3 of the proposal): `- [x]`
+ * acceptance-criteria bullets render as checked inputs, a `[x]` marker after
+ * a step number renders the completed step card (chip flips to done), and an
+ * optional `## Completion Report` section fills the report block. The
+ * completion checklist (cc1–cc3, all-complete) is derived from those plus
+ * the status — tools flip state in the Markdown and re-render instead of
+ * editing HTML attributes.
+ *
  * Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>]
  * Exit:  0 on success; 1 on missing/unparseable input; 2 on misuse.
  */
@@ -125,13 +133,27 @@ function testsBody(tests) {
   return paragraphs(tests.prose);
 }
 
+/** `## Completion Report` entries → the dl.report-list markup finalize-plan
+ * used to write by hand; replaces the default report-empty paragraph. */
+function reportList(entries) {
+  const rows = entries
+    .map((e) => `            <dt>${esc(e.item)}</dt>\n            <dd>${esc(e.reason)}</dd>`)
+    .join('\n');
+  return `          <dl class="report-list">\n${rows}\n          </dl>`;
+}
+
 /**
- * Render a parsed spec ({ metadata, sections }) to the full HTML document.
- * `fileName`/`planPath` locate the output for the source rows and prompts.
+ * Render a parsed spec ({ metadata, sections, progress }) to the full HTML
+ * document. `fileName`/`planPath` locate the output for the source rows and
+ * prompts. `progress` (optional) carries per-step/per-criterion done state
+ * and completion-report entries; omitted state renders as not done.
  */
-export function renderPlanHtml({ metadata = {}, sections }, { fileName, planPath, today, repo } = {}) {
+export function renderPlanHtml({ metadata = {}, sections, progress }, { fileName, planPath, today, repo } = {}) {
   const md = metadata;
   const s = sections;
+  const stepsDone = (progress && progress.steps) || [];
+  const criteriaDone = (progress && progress.criteria) || [];
+  const report = (progress && progress.report) || [];
 
   const status = ['todo', 'in-progress', 'completed'].includes(md.status) ? md.status : 'todo';
   const type = md.type || 'feature';
@@ -162,17 +184,23 @@ export function renderPlanHtml({ metadata = {}, sections }, { fileName, planPath
     file: esc(file),
     path: esc(path),
   }));
-  main.push('', shell.progressBlock(s.criteria.length));
+  const criteriaDoneCount = s.criteria.filter((_, i) => Boolean(criteriaDone[i])).length;
+  main.push('', shell.progressBlock(criteriaDoneCount, s.criteria.length));
   if (s.context) main.push('', shell.sectionCard('context', paragraphs(s.context)));
   if (s.files) main.push('', shell.sectionCard('files', shell.fileTreeBlock(esc(repoName), fileTreeRows(s.files))));
   const stepCards = s.steps
-    .map((st, i) => shell.stepCard(i + 1, { action: esc(st.action), why: esc(st.why), verify: esc(st.verify) }))
+    .map((st, i) => shell.stepCard(i + 1, { action: esc(st.action), why: esc(st.why), verify: esc(st.verify), done: Boolean(stepsDone[i]) }))
     .join('\n\n');
   main.push('', shell.sectionCard('steps', `      <div class="steps-list">\n\n${stepCards}\n\n      </div>`));
   if (s.tests) main.push('', shell.sectionCard('tests', testsBody(s.tests)));
-  main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map(esc))));
+  main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map((c, i) => ({ text: esc(c), done: Boolean(criteriaDone[i]) })))));
   main.push('', shell.sectionCard('verification', paragraphs(s.verification)));
-  main.push('', shell.sectionCard('completion', shell.completionBlock()));
+  main.push('', shell.sectionCard('completion', shell.completionBlock({
+    allStepsDone: s.steps.length > 0 && s.steps.every((_, i) => Boolean(stepsDone[i])),
+    allCriteriaDone: s.criteria.length > 0 && criteriaDoneCount === s.criteria.length,
+    statusCompleted: status === 'completed',
+    reportHtml: report.length > 0 ? reportList(report) : '',
+  })));
   main.push('', shell.footer({ created: esc(created), repo: esc(repoName) }));
 
   const navIds = shell.NAV_ENTRIES.map((e) => e.id).filter((id) => {

@@ -39,10 +39,20 @@ logical line — no sub-bullets, no blank lines inside an item. The `Why:` and
 `Verify:` markers are mandatory on every step; the parser rejects a step
 missing either.
 
+**Completion state:** an optional `[x]` marker right after the number
+(`1. [x] Wire up the provider… Why: … Verify: …`) renders the step as a
+completed card with a `done` chip. Author new steps without the marker;
+tools insert it as implementation progresses.
+
 ### `## Acceptance Criteria`
 
-One `- ` bullet per criterion; each a single-line falsifiable statement.
+One bullet per criterion; each a single-line falsifiable statement.
 Rendered as interactive checkboxes under the "Definition of done" heading.
+Use checkbox bullets to carry completion state: `- [ ] <criterion>` renders
+unchecked, `- [x] <criterion>` renders checked and advances the progress
+bar (plain `- ` bullets also parse, as unchecked). The spec is the source
+of truth for this state — status flips are made here and re-rendered, never
+as `checked` attribute edits in the HTML.
 
 ### `## Verification`
 
@@ -98,6 +108,25 @@ unit/integration/E2E apply (never empty stubs). **Tier 2** when steps only
 touch docs, plans, or non-runtime metadata — the objective test alone. Keep
 the tier line's `Tier 1 — ` / `Tier 2 — ` prefix; tooling matches on it.
 Judge the tier by what the steps actually do, not the `type:` frontmatter.
+
+### `## Completion Report`
+
+Lifecycle section — never authored at planning time. Written by
+`finalize-plan` or the implementation gates when a plan is closed out with
+gaps: one bullet per finding, an em dash separating the item from the
+reason:
+
+```markdown
+## Completion Report
+
+- Tests pass — npm test exited with code 1
+- Implementation evidence gap — 3/5 tokens found; missing: AuthProvider
+```
+
+Renders as the report list inside the completion checklist. When the
+section is absent the block shows the default "No items to report — all
+requirements met." sentence; remove the section once every gap is resolved.
+Place it after `## Acceptance Criteria`.
 
 ## Frontmatter keys (all optional — the renderer derives sane defaults)
 

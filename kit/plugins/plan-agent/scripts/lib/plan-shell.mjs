@@ -9,19 +9,21 @@
  * assembles — this module just stamps the ~55 KB of boilerplate the model
  * used to emit by hand.
  *
- * The frozen-string constants are byte-for-byte DOM contracts pinned by
- * tests/plugins/test-build-plan-html.mjs and the older shell test suite —
- * change them only alongside SKELETON.html itself.
- *
  * The CSS / ICON_SPRITE / SCRIPT blocks are spliced from SKELETON.html by a
  * one-shot generator; regenerate them there if the skeleton changes.
+ *
+ * UI strings below were once byte-for-byte contracts that finalize-plan and
+ * the status gates matched with literal find/replace on the HTML. Since the
+ * md-first flows (plan-agent 2.20.0) tools edit the Markdown spec and
+ * re-render, so these are ordinary presentation strings now — reword freely
+ * alongside SKELETON.html.
  */
 
-/* ── Frozen strings — pinned DOM contract ─────────────────────────── */
-export const STEP_CHIP = '<span class="step-chip">todo</span>';
-export const STEP_CHIP_DONE = '<span class="step-chip">done</span>';
-export const NO_ITEMS_REPORT = 'No items to report — all requirements met.';
-export const GOAL_LABEL = 'Pursue as goal — optimize for the outcome';
+/* ── UI strings ───────────────────────────────────────────────────── */
+const STEP_CHIP = '<span class="step-chip">todo</span>';
+const STEP_CHIP_DONE = '<span class="step-chip">done</span>';
+const NO_ITEMS_REPORT = 'No items to report — all requirements met.';
+const GOAL_LABEL = 'Pursue as goal — optimize for the outcome';
 
 /* ── Blocks extracted verbatim from SKELETON.html ─────────────────── */
 export const CSS = `/* ── Design tokens ─────────────────────────────────────────────── */
@@ -1686,16 +1688,19 @@ ${workflowRow}
     </details>`;
 }
 
-export function progressBlock(criteriaCount) {
+/** Progress bar with its server-rendered initial state; the inline script
+ * recomputes it from the live checkboxes on load and on every toggle. */
+export function progressBlock(doneCount, criteriaCount) {
+  const pct = criteriaCount ? Math.round((doneCount / criteriaCount) * 100) : 0;
   return `    <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / ${criteriaCount} done</span>
+        <span id="progress-label">${doneCount} / ${criteriaCount} done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill${pct > 0 ? ' has-progress' : ''}" id="progress-bar"
+             role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:${pct}%"></div>
       </div>
     </div>`;
 }
@@ -1741,11 +1746,13 @@ export function stepCard(n, { action, why, verify, done = false }) {
         </div>`;
 }
 
+/** items: [{ text, done }] — done renders the `checked` attribute, the
+ * file-persisted completion state the spec's `- [x]` bullets carry. */
 export function criteriaListBlock(items) {
   const lis = items
     .map(
-      (text, i) => `        <li>
-          <input type="checkbox" id="ac${i + 1}">
+      ({ text, done }, i) => `        <li>
+          <input type="checkbox" id="ac${i + 1}"${done ? ' checked' : ''}>
           <label for="ac${i + 1}">${text}</label>
         </li>`
     )
@@ -1757,28 +1764,31 @@ ${lis}
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>`;
 }
 
-export function completionBlock() {
-  return `      <div class="completion-checklist" id="completion-checklist">
+/**
+ * Completion checklist with its state derived from the spec (all steps done,
+ * all criteria checked, status completed) — the same conditions the inline
+ * script recomputes from the live DOM on load. `reportHtml` replaces the
+ * default "No items to report" paragraph when the spec carries a
+ * `## Completion Report` section.
+ */
+export function completionBlock({ allStepsDone = false, allCriteriaDone = false, statusCompleted = false, reportHtml = '' } = {}) {
+  const allComplete = allStepsDone && allCriteriaDone && statusCompleted;
+  const box = (id, on, label) => `          <li>
+            <input type="checkbox" id="${id}" disabled${on ? ' checked' : ''}>
+            <label for="${id}">${label}</label>
+          </li>`;
+  return `      <div class="completion-checklist${allComplete ? ' all-complete' : ''}" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
-          <li>
-            <input type="checkbox" id="cc1" disabled>
-            <label for="cc1">All step TODOs marked as done</label>
-          </li>
-          <li>
-            <input type="checkbox" id="cc2" disabled>
-            <label for="cc2">All acceptance criteria verified and checked off</label>
-          </li>
-          <li>
-            <input type="checkbox" id="cc3" disabled>
-            <label for="cc3">Plan status updated to completed</label>
-          </li>
+${box('cc1', allStepsDone, 'All step TODOs marked as done')}
+${box('cc2', allCriteriaDone, 'All acceptance criteria verified and checked off')}
+${box('cc3', statusCompleted, 'Plan status updated to completed')}
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">${NO_ITEMS_REPORT}</p>
+${reportHtml || `          <p class="report-empty">${NO_ITEMS_REPORT}</p>`}
         </div>
       </div>`;
 }
