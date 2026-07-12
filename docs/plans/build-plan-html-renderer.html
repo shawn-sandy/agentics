@@ -1604,12 +1604,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the regeneration hook <code>kit/plugins/plan-agent/hooks/render-plan-html.py</code> and register it in <code>kit/plugins/plan-agent/hooks.json</code> (PostToolUse on Write|Edit) — when a spec <code>.md</code> inside a resolved plans directory is written, re-render its sibling <code>.html</code> via <code>build-plan-html.mjs</code>.</span>
+                <span class="step-chip-text">Add the regeneration hook <code>kit/plugins/plan-agent/hooks/render-plan-html.py</code> and register it in <code>kit/plugins/plan-agent/hooks.json</code> (PostToolUse on Write|Edit) — when a spec <code>.md</code> inside the resolved plans directory is written, re-render its sibling <code>.html</code> via <code>build-plan-html.mjs</code>. Resolve the directory with the full <code>plansDirectory</code> settings precedence the skill mandates — project <code>.claude/settings.local.json</code>, then project <code>.claude/settings.json</code>, then global <code>~/.claude/settings.json</code>, falling back to <code>docs/plans/</code> — so other projects that configure a custom plans path re-render in the right place (note: <code>rebuild-plans-index.py</code> and <code>validate-plan-filename.py</code> currently skip the <code>settings.local.json</code> layer; the new hook follows the skill&#39;s full precedence).</span>
               </div>
               <div class="step-why">The hook keeps the Markdown/HTML pair in lockstep so drift cannot happen in normal operation — the same pattern the plugin already uses to rebuild the plans gallery index.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">Pipe a simulated PostToolUse JSON payload for a spec write into the hook and confirm the sibling HTML is regenerated; a markdown write outside a plans directory leaves everything untouched.</div>
+                <div class="verify-body">Pipe a simulated PostToolUse JSON payload for a spec write into the hook and confirm the sibling HTML is regenerated; a markdown write outside the plans directory leaves everything untouched; with <code>plansDirectory</code> set to a custom path in settings, a spec write under that path re-renders there while a write under <code>docs/plans/</code> is ignored.</div>
               </details>
             </div>
           </div>
@@ -1686,7 +1686,7 @@ img, video { max-width: 100%; height: auto; }
           <div class="test-card-body">
             <p><strong>File:</strong> <code>tests/plugins/test-build-plan-html.mjs</code></p>
             <p><strong>Targets:</strong> <code>kit/plugins/plan-agent/hooks/render-plan-html.py</code></p>
-            <p><strong>Key cases:</strong> a spec write under <code>docs/plans/</code> re-renders the sibling <code>.html</code>; markdown outside plans directories is a no-op; a malformed hook payload exits cleanly without touching files.</p>
+            <p><strong>Key cases:</strong> a spec write under the resolved plans directory re-renders the sibling <code>.html</code>; a custom <code>plansDirectory</code> in settings (local → project → global precedence) is honoured, with <code>docs/plans/</code> only as the fallback; markdown outside the plans directory is a no-op; a malformed hook payload exits cleanly without touching files.</p>
           </div>
         </div>
       </div>
@@ -1722,7 +1722,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">Writing a spec <code>.md</code> under <code>docs/plans/</code> triggers <code>render-plan-html.py</code> to regenerate the sibling <code>.html</code>, and a markdown write outside a plans directory is a no-op.</label>
+          <label for="ac6">Writing a spec <code>.md</code> under the resolved <code>plansDirectory</code> (settings.local.json → settings.json → ~/.claude/settings.json, defaulting to <code>docs/plans/</code>) triggers <code>render-plan-html.py</code> to regenerate the sibling <code>.html</code>; a markdown write outside that directory is a no-op, including when a custom directory is configured.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
@@ -1834,9 +1834,9 @@ img, video { max-width: 100%; height: auto; }
         <ul class="unresolved-list">
           <li>
             <details class="unresolved-item">
-              <summary>Resolved — spec files live as sibling &lt;name&gt;.md files in docs/plans/</summary>
+              <summary>Resolved — spec files live as sibling &lt;name&gt;.md files in the resolved plans directory (docs/plans/ by default)</summary>
               <div class="unresolved-prompt">
-                <p><strong>Decision (2026-07-12):</strong> a spec is a sibling <code>&lt;name&gt;.md</code> beside <code>&lt;name&gt;.html</code> in <code>docs/plans/</code> — not a <code>specs/</code> subdirectory. The evidence: 31 legacy standalone markdown plans already live at the top level of <code>docs/plans/</code>, one (<code>add-visual-components-to-plan-skill</code>) already has a sibling HTML pair from a conversion-mode run, and every existing tool already behaves correctly — <code>validate-plan-filename.py</code> validates <code>.md</code> plan names, <code>rebuild-plans-index.py</code> reacts to <code>.html</code> only so specs never pollute the gallery, and conversion mode resolves <code>.md</code> tokens by basename in the plan roots and outputs the extension-swapped sibling, which is exactly this convention. A <code>specs/</code> subdirectory would break conversion-mode basename resolution, need extra path mapping in the regeneration hook, and orphan specs when <code>organize-completed-plans</code> moves finished plans into <code>archive/&lt;type&gt;/</code>.</p>
+                <p><strong>Decision (2026-07-12):</strong> a spec is a sibling <code>&lt;name&gt;.md</code> beside <code>&lt;name&gt;.html</code> in the resolved plans directory — the <code>plansDirectory</code> setting (project-local, then project, then global), with <code>docs/plans/</code> only as the fallback — never a <code>specs/</code> subdirectory. The convention is relative to whatever plans directory a project configures, so plugin consumers with custom paths store specs correctly. The evidence: 31 legacy standalone markdown plans already live at the top level of <code>docs/plans/</code>, one (<code>add-visual-components-to-plan-skill</code>) already has a sibling HTML pair from a conversion-mode run, and every existing tool already behaves correctly — <code>validate-plan-filename.py</code> validates <code>.md</code> plan names, <code>rebuild-plans-index.py</code> reacts to <code>.html</code> only so specs never pollute the gallery, and conversion mode resolves <code>.md</code> tokens by basename in the plan roots and outputs the extension-swapped sibling, which is exactly this convention. A <code>specs/</code> subdirectory would break conversion-mode basename resolution, need extra path mapping in the regeneration hook, and orphan specs when <code>organize-completed-plans</code> moves finished plans into <code>archive/&lt;type&gt;/</code>.</p>
                 <p><strong>Guard:</strong> the regeneration hook must only re-render a <code>.md</code> that parses as a spec — attempt <code>parseSpecMarkdown()</code> and no-op on <code>ParseError</code> — and must skip <code>README.md</code> and the <code>archive/</code>, <code>guides/</code>, <code>assets/</code>, and <code>sessions/</code> subdirectories. <strong>Phase 2 follow-through:</strong> conversion mode&#39;s Step 8 &quot;remove the source .md&quot; option retires once the markdown is the source of truth — keeping the source becomes the only behaviour.</p>
               </div>
             </details>
