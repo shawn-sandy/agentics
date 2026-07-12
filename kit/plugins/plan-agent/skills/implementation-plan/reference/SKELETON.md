@@ -1,69 +1,57 @@
 ---
-# Place in: configured plansDirectory (settings.local.json → settings.json → ~/.claude/settings.json), else ${PWD}/docs/plans/
 status: todo
 type: <feature|fix|refactor|docs|chore>
 created: YYYY-MM-DD
-repo-name: <repo-name>
+glance: <2–3 plain-language sentences on ONE line — why this matters and how we'll know it worked; never restates the objective>
 ---
 
-# Plan: <title>
-
-## Context
-
-<why this work is needed>
+# Plan: <title — a rallying statement, not a ticket summary>
 
 ## Objective
 
 <one or two sentences — the one-line *what*>
 
-## At a glance
+## Context
 
-<Two or three plain-language sentences for a reader who wasn't in the
-planning session: why this work matters and how we'll know it worked.
-Don't restate the objective — it covers the *what*; this covers the
-*why* and the *proof*.>
+<why this work is needed; risks with mitigations; issue link when seeded
+from one. Omit the whole section for self-evident chores.>
 
-## Resources *(optional — omit if none)*
+## Files
 
-<Images, screenshots, and links to material used to create the plan, so the
-reader can illustrate and verify the implementation. Give every image
-descriptive alt text and credit/link the source.>
-
-- ![<descriptive alt text>](<https:// URL or relative asset path>) — <what it shows, source>
-- [<reference title>](<https:// URL>) — <why it matters to this plan>
+- <path> (new) — <short note on what happens in this file>
+- <path> (modified) — <short note>
 
 ## Steps
 
-1. <action> — *Why this matters:* <reason>. *How to check this worked:* <how to confirm>.
-2. <action> — *Why this matters:* <reason>. *How to check this worked:* <how to confirm>.
+1. <action naming real files/commands> Why: <reason a newcomer understands> Verify: <command or state that confirms this step worked>.
+2. <action> Why: <reason> Verify: <how to confirm>.
 
-## Definition of done
+## Tests
 
-- [ ] <falsifiable condition that must be true for this plan to be done>
-- [ ] <another condition>
+Tier <1 — This plan changes application code|2 — This plan doesn't change application code>
+- Objective: <what the hero test proves>. File: <test path>; Type: <mock|smoke>; Asserts: <the plan's objective is accomplished in the running app>; Run: <test runner command>
+- Unit: <what it covers>. File: <test path>; Targets: <function/module>; Key cases: <scenarios>
 
-## Final check
+## Acceptance Criteria
 
-<end-to-end confirmation that the whole change achieved the goal>
+- <falsifiable condition that must be true for this plan to be done>
+- <another condition>
 
-## Next steps *(optional)*
+## Verification
 
-- <label for the follow-up>:
-  ```text
-  <Self-contained prompt the user can paste into Claude to execute this
-  follow-up. Include enough context that no prior plan reading is required.
-  Example: "Scan every plan under docs/plans/ that has a Next Steps section
-  with single-line bullets and rewrite them to the label + fenced-prompt
-  shape. Skip completed plans. Report a list of files changed.">
-  ```
+<end-to-end confirmation that the whole change achieved the objective —
+walk it as a user or caller would>
 
-## Unresolved questions *(optional — omit if none)*
+## Next Steps
 
-- <label for the open question>:
-  ```text
-  <Self-contained prompt asking Claude to investigate and recommend.
-  Example: "Should the new requirement in plan-mode.md be advisory or
-  enforced by a PostToolUse hook? Recommend one approach with reasoning,
-  and if a hook is right, draft the minimum-viable check that avoids
-  false-positives on completed plans or plans with no follow-ups.">
-  ```
+<markdown-only (not rendered into the HTML yet): follow-ups with
+self-contained paste-ready prompts; label blue-sky items as wish list>
+
+## Unresolved Questions
+
+<markdown-only: open questions needing user input — omit if none>
+
+## Resources
+
+<markdown-only: links/screenshots consulted while planning, each with a
+descriptive title and why it matters — omit if none>

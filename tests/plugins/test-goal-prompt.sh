@@ -74,12 +74,14 @@ else
 fi
 
 echo "6. implementation-plan SKILL.md documents the goal prompt contract..."
-if grep -q '{goal-prompt}' "$PLAN_SKILL" \
+# Since the markdown-spec pipeline (plan-agent 2.19.0) the renderer derives
+# the goal prompt; SKILL.md documents the contract, not a fill-in placeholder.
+if grep -q 'Achieve this goal:' "$PLAN_SKILL" \
    && grep -q 'plan-goal' "$PLAN_SKILL" \
    && grep -q 'copyGoal(this)' "$PLAN_SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: SKILL.md does not document {goal-prompt}, the plan-goal element, and copyGoal wiring"
+  echo "  FAIL: SKILL.md does not document the goal prompt format, the plan-goal meta, and copyGoal wiring"
   FAILURES=$((FAILURES + 1))
 fi
 

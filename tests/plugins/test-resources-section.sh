@@ -137,14 +137,18 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "8. implementation-plan SKILL.md documents the Resources section and Resources Capture..."
-if grep -q 'Resources section' "$PLAN_SKILL" \
-   && grep -q 'Resources Capture' "$PLAN_SKILL" \
-   && grep -q '{resource-figures}' "$PLAN_SKILL" \
-   && grep -q '{resource-links}' "$PLAN_SKILL"; then
+echo "8. implementation-plan guidelines document Resources capture (markdown-spec pipeline)..."
+# Since the markdown-spec pipeline (plan-agent 2.19.0) SKILL.md no longer
+# fills skeleton placeholders; the Resources habit lives in the guidelines
+# (capture during Explore/Clarify, kept as a markdown-only section) and the
+# skeleton's resource markup is exercised by the checks above.
+CATALOG="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/guidelines/section-catalog.md"
+if grep -qi 'Resources Capture' "$CATALOG" \
+   && grep -qi 'Resources' "$PLAN_SKILL" \
+   && grep -q 'Resources' "$ROOT/kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.md"; then
   echo "  PASS"
 else
-  echo "  FAIL: SKILL.md does not document the Resources section / Resources Capture / placeholders"
+  echo "  FAIL: guidelines/section-catalog.md, SKILL.md, or SKELETON.md dropped the Resources guidance"
   FAILURES=$((FAILURES + 1))
 fi
 
