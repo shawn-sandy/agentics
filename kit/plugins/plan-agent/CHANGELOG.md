@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.19.0 — Guideline-driven plan authoring (Phase 2) (2026-07-12)
+
+### Added
+
+- **`skills/implementation-plan/guidelines/` library** — four guideline documents replacing the prescriptive markup rulebook, loaded via progressive disclosure (SKILL.md keeps a one-paragraph summary of each; the full file is read only when the step calls for it): `planning-principles.md` (falsifiable "done", what/why/verify per step, end-to-end verification, surfaced risks, explicit scope), `section-catalog.md` (each spec section's purpose, when it earns its place, and the exact syntax `build-plan-html.mjs` parses, plus the frontmatter key table), `right-sizing.md` (minimal / standard / deep depth profiles with a calibration table — where the `minimal`/`adr`/`spike` intent ships as guidance instead of extra HTML skeletons), and `writing-style.md` (tone, plain language, objective-vs-glance — moved out of the workflow doc).
+
+### Changed
+
+- **`SKILL.md` rewritten around the markdown-spec pipeline** — the agent now authors a ~5–10 KB Markdown plan spec (the source of truth, committed beside the HTML) and renders it with the bundled `scripts/build-plan-html.mjs`; the agent decides which optional sections a plan includes, at what depth, per the guidelines. Workflow Steps 0–8 (issue ingestion, explore, clarify, align, interview, tests, status gates, delivery, next-action menu) survive intact; a new Step 5d runs the renderer, and Step 8's "Edit the plan" edits the spec and re-renders instead of patching HTML. The Required Structure, HTML Output Requirements, Visual Components, Frozen Strings, File-Tree Auto-Generation, and skeleton-copying prose is gone — the renderer owns all of it mechanically. SKILL.md drops from 76 KB to ~26 KB.
+- **`reference/SKELETON.md` is now the spec starter** — rewritten to the exact format `parseSpecMarkdown()` accepts (frontmatter keys, `# Plan:` title, `Why:`/`Verify:` step markers, `- path (badge) — note` file entries, tier line + test bullets), replacing the old humanized-headings fallback. `reference/SKELETON.html` remains for reference and its smoke tests but is no longer copied by the skill.
+- **`--priority` and issue URLs land in the spec, not meta tags** — `priority:` and `issue:` are written as spec frontmatter keys (preserved in the markdown, not yet rendered as `plan-priority`/`plan-issue` meta tags); the seeding issue is also cited in the Context section. `planAgent.extraFrontmatter` pairs likewise go to spec frontmatter instead of extra `<meta>` tags.
+- **Tests updated for the pipeline** — `test-goal-prompt.sh` asserts SKILL.md documents the derived goal-prompt contract (format + `plan-goal` meta + `copyGoal(this)`) rather than a `{goal-prompt}` placeholder; `test-resources-section.sh` asserts the Resources guidance lives in `guidelines/section-catalog.md` and the spec skeleton.
+
 ## 2.18.0 — Markdown-spec-to-HTML plan renderer (2026-07-12)
 
 ### Added

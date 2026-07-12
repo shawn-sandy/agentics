@@ -410,10 +410,15 @@ plan-agent/
     plugin.json             — Plugin manifest
   skills/
     implementation-plan/
-      SKILL.md              — Plan Mode workflow, arguments, structure, writing style
+      SKILL.md              — Workflow, arguments, spec authoring, render pipeline
+      guidelines/
+        planning-principles.md — What every good plan says (falsifiable done, what/why/verify)
+        section-catalog.md     — Section menu: purpose, when it earns its place, exact spec syntax
+        right-sizing.md        — Minimal / standard / deep depth profiles
+        writing-style.md       — Tone, plain language, objective-vs-glance
       reference/
-        SKELETON.html       — Default full-plan HTML template
-        SKELETON.md         — Markdown skeleton reference
+        SKELETON.html       — Legacy full-plan HTML template (kept for reference/tests)
+        SKELETON.md         — Markdown plan-spec starter (the format build-plan-html.mjs parses)
     build-proposal/
       SKILL.md              — Idea→proposal loop (Tier gate, 8 steps, artifact resolver)
       references/
@@ -463,9 +468,9 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 - **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
 - **Implement-now gates** (Step 8) — when implementing in-session, three sequential gates run before completion: an **acceptance-criteria gate** (verify and check off each criterion), an **end-to-end verification gate** (run the plan's objective-verification test + walk the Verification section; on failure, fix and re-verify up to 3 times), and a **completion-checklist gate** (confirm step TODOs, criteria, and status)
-- **Required Structure** — context, objective, steps (with per-step *why*/*verify*), acceptance criteria, verification, next-steps (with Wish List), unresolved-questions
-- **Writing Style** — direct, imperative, developer-friendly; HTML-escapes all user-supplied content
-- **Skeleton reference** — points to `reference/SKELETON.html` (only supported template; `minimal`, `adr`, and `spike` are planned)
+- **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `scripts/build-plan-html.mjs`; the renderer owns all presentation (CSS, JS, meta tags, frozen strings, derived implement/goal/workflow prompts, effort level, file-tree)
+- **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
+- **Spec starter** — `reference/SKELETON.md` is the copyable spec skeleton in the exact format the renderer parses
 
 ### `build-proposal` Skill
 
