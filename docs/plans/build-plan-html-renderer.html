@@ -1834,11 +1834,10 @@ img, video { max-width: 100%; height: auto; }
         <ul class="unresolved-list">
           <li>
             <details class="unresolved-item">
-              <summary>Where should spec files live so they don&#39;t collide with legacy markdown plans?</summary>
+              <summary>Resolved — spec files live as sibling &lt;name&gt;.md files in docs/plans/</summary>
               <div class="unresolved-prompt">
-                <pre>Decide the on-disk convention for Markdown plan specs: a sibling name.md in docs/plans/ (risk: collides with legacy standalone .md plans and conversion-mode sources) versus a docs/plans/specs/ subdirectory (risk: the pair lives apart). Review docs/plans/ contents and the conversion-mode rules in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md, then recommend one.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+                <p><strong>Decision (2026-07-12):</strong> a spec is a sibling <code>&lt;name&gt;.md</code> beside <code>&lt;name&gt;.html</code> in <code>docs/plans/</code> — not a <code>specs/</code> subdirectory. The evidence: 31 legacy standalone markdown plans already live at the top level of <code>docs/plans/</code>, one (<code>add-visual-components-to-plan-skill</code>) already has a sibling HTML pair from a conversion-mode run, and every existing tool already behaves correctly — <code>validate-plan-filename.py</code> validates <code>.md</code> plan names, <code>rebuild-plans-index.py</code> reacts to <code>.html</code> only so specs never pollute the gallery, and conversion mode resolves <code>.md</code> tokens by basename in the plan roots and outputs the extension-swapped sibling, which is exactly this convention. A <code>specs/</code> subdirectory would break conversion-mode basename resolution, need extra path mapping in the regeneration hook, and orphan specs when <code>organize-completed-plans</code> moves finished plans into <code>archive/&lt;type&gt;/</code>.</p>
+                <p><strong>Guard:</strong> the regeneration hook must only re-render a <code>.md</code> that parses as a spec — attempt <code>parseSpecMarkdown()</code> and no-op on <code>ParseError</code> — and must skip <code>README.md</code> and the <code>archive/</code>, <code>guides/</code>, <code>assets/</code>, and <code>sessions/</code> subdirectories. <strong>Phase 2 follow-through:</strong> conversion mode&#39;s Step 8 &quot;remove the source .md&quot; option retires once the markdown is the source of truth — keeping the source becomes the only behaviour.</p>
               </div>
             </details>
           </li>
