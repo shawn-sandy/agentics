@@ -293,10 +293,16 @@ function makeProject({ localSettings = null, settings = { plansDirectory: 'docs/
   return proj;
 }
 
-function runHook(proj, filePath) {
+function runHook(proj, filePath, extraEnv = {}) {
+  // CLAUDE_PLUGIN_ROOT is cleared by default so these tests exercise the
+  // project-scripts fallback deterministically; the bundled-resolution test
+  // sets it explicitly.
+  const env = { ...process.env, CLAUDE_PROJECT_DIR: proj };
+  delete env.CLAUDE_PLUGIN_ROOT;
+  Object.assign(env, extraEnv);
   return spawnSync('python3', [HOOK], {
     cwd: proj,
-    env: { ...process.env, CLAUDE_PROJECT_DIR: proj },
+    env,
     input: JSON.stringify({ tool_input: { file_path: filePath } }),
     encoding: 'utf8',
   });
@@ -342,6 +348,30 @@ ok('hook honors plansDirectory from settings.local.json over settings.json', () 
   assert.equal(runHook(proj, defaultSpec).status, 0);
   assert.ok(!existsSync(join(proj, 'docs', 'plans', 'other.html')), 'docs/plans ignored when custom dir configured');
   rmSync(proj, { recursive: true, force: true });
+});
+
+ok('hook prefers the plugin-bundled renderer when the project has none', () => {
+  const proj = mkdtempSync(join(tmpdir(), 'render-hook-bundled-'));
+  mkdirSync(join(proj, '.claude'), { recursive: true });
+  writeFileSync(join(proj, '.claude', 'settings.json'), JSON.stringify({ plansDirectory: 'docs/plans' }));
+  mkdirSync(join(proj, 'docs', 'plans'), { recursive: true });
+  const spec = join(proj, 'docs', 'plans', 'sample.md');
+  writeFileSync(spec, SAMPLE_SPEC);
+  // No project scripts/ dir at all — only the bundled copy can render.
+  const res = runHook(proj, spec, { CLAUDE_PLUGIN_ROOT: join(ROOT, 'kit', 'plugins', 'plan-agent') });
+  assert.equal(res.status, 0, res.stderr);
+  const html = readFileSync(join(proj, 'docs', 'plans', 'sample.html'), 'utf8');
+  assert.deepEqual(extractSections(html), sampleParsed.sections);
+  assert.ok(existsSync(join(proj, 'docs', 'plans', 'index.html')), 'gallery index rebuilt after render');
+  rmSync(proj, { recursive: true, force: true });
+});
+
+ok('plugin-bundled renderer copies are byte-identical to the repo-root sources', () => {
+  for (const rel of ['build-plan-html.mjs', 'lib/plan-spec.mjs', 'lib/plan-shell.mjs']) {
+    const source = readFileSync(join(ROOT, 'scripts', rel), 'utf8');
+    const bundled = readFileSync(join(ROOT, 'kit', 'plugins', 'plan-agent', 'scripts', rel), 'utf8');
+    assert.equal(bundled, source, `kit/plugins/plan-agent/scripts/${rel} drifted from scripts/${rel} — re-copy it`);
+  }
 });
 
 ok('hook exits non-zero with stderr when the renderer fails on a broken spec', () => {

@@ -5,9 +5,13 @@ written.
 
 Fires on every Write/Edit/MultiEdit. Triggers only when the written file is a
 Markdown plan spec (first heading is "# Plan:") inside the configured plans
-directory. Renders <stem>.html next to the spec via the project's
-scripts/build-plan-html.mjs; projects without that renderer are silently
-skipped.
+directory. Renders <stem>.html next to the spec via build-plan-html.mjs —
+preferring the copy bundled with this plugin ($CLAUDE_PLUGIN_ROOT/scripts/),
+falling back to the consumer project's scripts/build-plan-html.mjs; when
+neither exists the hook silently skips. After a successful render it rebuilds
+the plans gallery index (best-effort): the index hook that fired on the .md
+write skipped it as non-HTML, and the sibling .html written here is a
+subprocess write, not a tool event, so no other hook run would catch it.
 
 Unlike rebuild-plans-index.py this hook is best-effort but NOT silent: a
 renderer failure exits non-zero with the error on stderr, so a stale
@@ -76,6 +80,38 @@ def _is_plan_spec(path, plans_dir):
     return False
 
 
+def _find_renderer(project):
+    """Bundled renderer first (normal plugin installs), project copy second."""
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
+    candidates = []
+    if plugin_root:
+        candidates.append(os.path.join(plugin_root, "scripts", "build-plan-html.mjs"))
+    candidates.append(os.path.join(project, "scripts", "build-plan-html.mjs"))
+    for candidate in candidates:
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def _rebuild_index(project, plans_dir):
+    """Best-effort gallery index rebuild — same resolution as
+    rebuild-plans-index.py, which cannot see the sibling .html this hook just
+    wrote (a subprocess write is not a PostToolUse event)."""
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
+    bundled = os.path.join(plugin_root, "hooks", "build-index.sh") if plugin_root else ""
+    plans_script = os.path.join(plans_dir, "build-index.sh")
+    if bundled and os.path.isfile(bundled):
+        cmd = ["bash", bundled, project]
+    elif os.path.isfile(plans_script):
+        cmd = ["bash", plans_script]
+    else:
+        return
+    try:
+        subprocess.run(cmd, cwd=project, capture_output=True, timeout=25)
+    except Exception:  # noqa: BLE001 — index staleness must never fail the render
+        pass
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -96,8 +132,8 @@ def main():
     if not _is_plan_spec(path, plans_dir):
         sys.exit(0)
 
-    renderer = os.path.join(project, "scripts", "build-plan-html.mjs")
-    if not os.path.isfile(renderer):
+    renderer = _find_renderer(project)
+    if renderer is None:
         sys.exit(0)
 
     spec = os.path.abspath(path)
@@ -118,6 +154,7 @@ def main():
         sys.stderr.write(result.stderr or f"render-plan-html: renderer exited {result.returncode}\n")
         sys.exit(2)
 
+    _rebuild_index(project, plans_dir)
     sys.exit(0)
 
 
