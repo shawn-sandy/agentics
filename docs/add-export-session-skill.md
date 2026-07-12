@@ -10,7 +10,7 @@
 ## What shipped
 
 - Created `kit/plugins/social-media-tools/skills/export-session/` with `SKILL.md` and a bundled `scripts/export_session.py` converter.
-- The Python script parses the JSONL transcript, keeps only `user` and `assistant` turns, strips sidechains, tool results, and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes `<date>-<slug>.md` with YAML frontmatter (`type: session-export`). The script handles huge transcripts out of context — Claude only invokes the script rather than reading JSONL lines directly.
+- The Python script parses the JSONL transcript, keeps only `user` and `assistant` turns, strips sidechains, tool results, and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes `<date>-<slug>-<session-id-prefix>.md` with YAML frontmatter containing `session-id`, `date`, `source`, and `type: session-export`. The script handles huge transcripts out of context — Claude only invokes the script rather than reading JSONL lines directly.
 - Skill resolves the output directory from `plansDirectory` in Claude Code settings (falls back to `docs/plans`); output lands at `<plansDirectory>/sessions/`.
 - `social-media-tools` bumped to `2.14.0` in `.claude-plugin/marketplace.json`, with a `CHANGELOG.md` entry, README skill listing, and root `CLAUDE.md` table update.
 - No standalone `session-tools` plugin was left behind — the skill was folded directly into `social-media-tools` which already owns session-derived content via `share-session`.
@@ -34,9 +34,9 @@ The skill starts by resolving the output directory: it reads `plansDirectory` fr
 
 Transcript location follows a priority order: a user-supplied `.jsonl` path or session ID takes precedence; otherwise the skill lists `~/.claude/projects/<project-slug>/` and picks the newest file. Worktree detection is included — when the current working directory doesn't match a project slug, the skill lists `~/.claude/projects/` and selects the entry closest to the main repo path.
 
-Conversion is entirely handled by the bundled `export_session.py` script, invoked via the `${CLAUDE_PLUGIN_ROOT}` env variable so the path is portable regardless of how the plugin was loaded. The script reads the raw JSONL line by line, retains only `user` and `assistant` role entries, and applies a filter to drop tool-result blocks, sidechain messages, and harness-injected system messages. The output Markdown carries a YAML frontmatter block with `type: session-export`, the session date, source transcript path, and project slug, followed by the cleaned conversation turns.
+Conversion is entirely handled by the bundled `export_session.py` script, invoked via the `${CLAUDE_PLUGIN_ROOT}` env variable so the path is portable regardless of how the plugin was loaded. The script reads the raw JSONL line by line, retains only `user` and `assistant` role entries, and applies a filter to drop tool-result blocks, sidechain messages, and harness-injected system messages. The output Markdown carries `session-id`, `date`, `source`, and `type: session-export` frontmatter, followed by the cleaned conversation turns.
 
-The output filename is `<YYYY-MM-DD>-<session-slug>.md`, placed under the resolved sessions subdirectory. The skill prints the absolute output path on completion.
+The output filename is `<YYYY-MM-DD>-<session-slug>-<session-id-prefix>.md` (the 8-character session ID prefix makes filenames collision-proof across sessions of the same date), placed under the resolved sessions subdirectory. The skill prints the generated output path on completion.
 
 ## How to use it
 

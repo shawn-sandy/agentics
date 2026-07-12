@@ -27,13 +27,13 @@
 
 ## How it works
 
-The `branch-agent` skill generates branch names in the format `<type>/<scope>-<description>[-YYYY-MM-DD]`. Before this change, the description segment was derived by extracting 2–5 keywords from the working tree diff, producing terse names like `feat/src-login-form-valid`. These were hard to read in branch lists, PR pages, and `git log --oneline` output.
+The `branch-agent` skill generates branch names in the format `<type>/[<scope>-]<description>[-YYYY-MM-DD]` (scope is optional). Before this change, the description segment was derived by extracting 2–5 keywords from the working tree diff, producing terse names like `feat/src-login-form-valid`. These were hard to read in branch lists, PR pages, and `git log --oneline` output.
 
 Step 2a now instructs the model to synthesize a short phrase rather than extract keywords. The phrase must start with an imperative verb (matching the git commit subject convention), describe what changed in plain language, and use only whole dictionary words — abbreviations like `auth`, `impl`, or `val` are explicitly forbidden. When the phrase exceeds the budget, trailing words are dropped at the nearest word boundary; the phrase is never shortened by truncating a word mid-character.
 
 Length budgets were raised to give the new phrasing room to breathe. The pre-suffix segment was the most constrained at 49 chars; raising it to 60 allows 3–4 meaningful words in most cases. The 11-character date suffix (`-YYYY-MM-DD`) is accounted for in the final 72-char cap. Case B (when the user supplies a descriptive phrase as the argument) now slugifies at up to 60 chars with the same word-boundary dropping rule, preventing the previous behaviour where a user's carefully chosen phrase might be cut mid-word.
 
-The good/bad examples table in SKILL.md serves as a concrete calibration signal for the model. Generating branch names is a judgment call that varies with diff content; examples like `feat/add-user-auth-flow` (good) versus `feat/src-auth-flow-impl` (bad — abbreviated) make the constraint unambiguous.
+The good/bad examples table in SKILL.md serves as a concrete calibration signal for the model. Generating branch names is a judgment call that varies with diff content; examples like `feat/add-user-authentication-flow` (good) versus `feat/src-auth-flow-impl` (bad — abbreviated) make the constraint unambiguous.
 
 ## How to use it
 

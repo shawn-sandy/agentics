@@ -10,9 +10,9 @@
 ## What shipped
 
 - Added `<meta name="plan-goal" content="{goal-prompt}">` in `reference/SKELETON.html`'s `<head>` — always emitted, no flag or heuristic gates it.
-- Added a collapsible `.plan-goal` `<details>` block (purple `--purple*` accent tokens) between the implement row and the workflow block in the skeleton body, with a `copyGoal()` clipboard helper mirroring the existing `copyWorkflow()` pattern.
-- Updated `implementation-plan` SKILL.md to compute `{goal-prompt}` in Step 2 (always, from the condensed objective + plan path + digest-extraction one-liner) and emit the `plan-goal` meta tag in Step 3.
-- Goal prompt text: "Achieve this goal: `<condensed-objective>` — use the plan at `<plan-path>` as reference, but optimize for the outcome." The implementer is explicitly invited to deviate when a better path to the same result exists.
+- Added an always-present `.plan-goal` row inside the flat `.plan-more-ways` drawer in the skeleton body (purple accent colours), with a `copyGoal()` clipboard helper. The drawer is a single flat `<details>` that must not contain nested `<details>` elements — the `.plan-goal` row is a plain `<div>`, not a disclosure.
+- Updated `implementation-plan` SKILL.md to compute `{goal-prompt}` in Step 2 (always) and emit the `plan-goal` meta tag in Step 3.
+- Goal prompt text: "Achieve this goal: `<condensed-objective>`. The plan at `<plan-path>` describes one approach — use it as reference, but optimize for the outcome." The implementer is explicitly invited to deviate when a better path to the same result exists.
 - Documented the goal prompt in the plugin README and added a `2.6.0` CHANGELOG entry; version bumped `plan-agent` from `2.5.1` to `2.6.0` in `marketplace.json`.
 - Added `tests/plugins/test-goal-prompt.sh` — 6 assertions covering the meta tag, `.plan-goal` markup + `copyGoal()` wiring, CSS hidden-when-completed/print rules, DOM order `implement → goal → workflow`, and the SKILL.md contract.
 
@@ -22,7 +22,7 @@
 
 | Path | Role | Status |
 | --- | --- | --- |
-| `kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html` | HTML plan skeleton — `plan-goal` meta tag, `.plan-goal` details block, `copyGoal()` helper, purple CSS tokens | Modified |
+| `kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.html` | HTML plan skeleton — `plan-goal` meta tag, `.plan-goal` row in `.plan-more-ways` drawer, `copyGoal()` helper, purple CSS tokens | Modified |
 | `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` | Skill contract — Step 2 computes `{goal-prompt}`, Step 3 emits `plan-goal` meta, HTML Output Requirements updated | Modified |
 | `kit/plugins/plan-agent/README.md` | Plugin docs — "Goal prompt" bullet in feature table | Modified |
 | `kit/plugins/plan-agent/CHANGELOG.md` | Release history — 2.6.0 entry | Modified |
@@ -33,25 +33,25 @@
 
 Every HTML plan is generated from `reference/SKELETON.html`. Adding the goal prompt there means all future plans automatically inherit it — no per-plan decision is needed.
 
-The skeleton change adds three things: a `<meta name="plan-goal">` tag in `<head>` (machine-readable, same pattern as `plan-implement` and `plan-workflow`), a `.plan-goal` `<details>` element in the body rendered in purple accent colors to visually distinguish it from the green implement block and blue workflow block, and a `copyGoal(this)` JavaScript helper that copies the prompt text to the clipboard.
+The skeleton change adds three things: a `<meta name="plan-goal">` tag in `<head>` (machine-readable, same pattern as `plan-implement` and `plan-workflow`), a `.plan-goal` plain `<div>` row inside the flat `.plan-more-ways` drawer rendered in purple accent colours, and a `copyGoal(this)` JavaScript helper that copies the prompt text to the clipboard. The drawer is a single `<details class="plan-more-ways">` — it contains no nested `<details>` elements. The goal row sits first inside the drawer body, before the optional workflow row and the plan-source rows.
 
-The SKILL.md update wires the template slot: Step 2 now always computes `{goal-prompt}` as "Achieve this goal: `<condensed-objective>` — use the plan at `<plan-path>` as reference, but optimize for the outcome." The condensed objective is derived the same way as the implement prompt — from the plan's Objective section, trimmed for token efficiency. The digest-extraction clause is appended so the implementer's agent reads the spec digest from the HTML rather than the full ~21k styled document.
+The SKILL.md update wires the template slot: Step 2 now always computes `{goal-prompt}` as "Achieve this goal: `<condensed-objective>`. The plan at `<plan-path>` describes one approach — use it as reference, but optimize for the outcome." The condensed objective and relative plan path are the same values used in the implement prompt.
 
-Step 3 emits the `plan-goal` meta tag unconditionally. The HTML Output Requirements section of SKILL.md lists `plan-goal` among always-present meta tags and documents the `.plan-goal` element's expected structure, keeping the contract auditable.
+Step 3 emits the `plan-goal` meta tag unconditionally. The HTML Output Requirements section of SKILL.md lists `plan-goal` among always-present meta tags and documents the `.plan-goal` element as a plain row inside the drawer, keeping the contract auditable.
 
-The DOM order `implement → goal → workflow` is enforced by position in the skeleton and validated by `test-goal-prompt.sh`. CSS hides `.plan-goal` when `[data-status="completed"]` is set on `<html>` and in `@media print`, matching the existing behavior of the implement and workflow rows.
+CSS hides `.plan-goal` when `[data-status="completed"]` is set on `<html>` and in `@media print`. The entire `.plan-more-ways` drawer is also suppressed in print, making the print rule on `.plan-goal` redundant — but it is retained verbatim because `test-goal-prompt.sh` pins it byte-for-byte.
 
 ## How to use it
 
-The goal prompt appears automatically in every plan generated after 2026-06-18 — no invocation change is needed. When you open a plan HTML file, the purple "Pursue as goal" disclosure is collapsed by default; click to expand and copy the prompt with the clipboard button.
+The goal prompt appears automatically in every plan generated after 2026-06-18 — no invocation change is needed. Open a plan HTML file and expand the "More ways to run this plan" drawer; the purple "Pursue as goal" row is always present. Click Copy to copy the prompt to the clipboard.
 
-The prompt is designed to be pasted at the start of a new session: it tells Claude to treat the plan's objective as the success condition, use the plan as reference material, but not feel bound to execute steps in order if a better route to the same outcome exists.
+The prompt is designed to be pasted at the start of a new session: it frames the work as an outcome to achieve rather than steps to execute, giving the implementer latitude to deviate from the plan when a better path to the same result exists.
 
 ```
 # Example goal prompt text (auto-computed per plan)
-Achieve this goal: <condensed objective> — use the plan at docs/plans/<slug>.html
-as reference, but optimize for the outcome. Extract the spec digest with:
-python3 -c "import re,sys; c=open(sys.argv[1]).read(); ..."
+Achieve this goal: Ship a dark-mode toggle that persists across all three themes.
+The plan at docs/plans/add-dark-mode-toggle.html describes one approach — use it
+as reference, but optimize for the outcome.
 ```
 
 ## Commit history
