@@ -323,19 +323,32 @@ export function parseSpecMarkdown(md) {
     body = body.slice(fm[0].length);
   }
 
-  const titleMatch = body.match(/^#\s+(?:Plan:\s*)?(.+)$/m);
-  if (!titleMatch || !titleMatch[1].trim()) fail('no "# Plan: <title>" heading');
-  const title = titleMatch[1].replace(/\s+/g, ' ').trim();
-
-  // Split on "## " headings; text before the first heading (the title line
-  // and the digest's "> Authored spec only…" blockquote) is discarded.
-  const chunks = {};
-  const headingRe = /^##\s+(.+)$/gm;
-  let m;
+  // Line scan for the title and "## " section headings, masking fenced code
+  // blocks so a spec whose prose quotes markdown (e.g. a ```text example
+  // containing "## Context") is not chopped at the quoted heading.
+  let titleText = null;
   const marks = [];
-  while ((m = headingRe.exec(body)) !== null) {
-    marks.push({ name: m[1].trim(), start: m.index, end: m.index + m[0].length });
+  let fenced = false;
+  let offset = 0;
+  for (const line of body.split('\n')) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      fenced = !fenced;
+    } else if (!fenced) {
+      if (titleText === null) {
+        const t = line.match(/^#\s+(?:Plan:\s*)?(.+)$/);
+        if (t) titleText = t[1];
+      }
+      const h = line.match(/^##\s+(.+)$/);
+      if (h) marks.push({ name: h[1].trim(), start: offset, end: offset + line.length });
+    }
+    offset += line.length + 1;
   }
+  if (titleText === null || !titleText.trim()) fail('no "# Plan: <title>" heading');
+  const title = titleText.replace(/\s+/g, ' ').trim();
+
+  // Text before the first heading (the title line and the digest's
+  // "> Authored spec only…" blockquote) is discarded.
+  const chunks = {};
   marks.forEach((mark, i) => {
     const next = i + 1 < marks.length ? marks[i + 1].start : body.length;
     chunks[mark.name] = body.slice(mark.end, next);
@@ -392,7 +405,11 @@ export function parseSpecMarkdown(md) {
     if (!numbered) continue;
     const parts = numbered[1].match(/^(.*?)\s+Why:\s+(.*?)\s+Verify:\s+(.*)$/);
     if (!parts) fail(`step ${steps.length + 1} is missing its "Why:" or "Verify:" part`);
-    steps.push({ action: parts[1], why: parts[2], verify: parts[3] });
+    const [action, why, verify] = parts.slice(1).map((p) => p.trim());
+    // An empty part would render HTML that extractSections() rejects — fail
+    // here, at authoring time, instead of breaking the round trip later.
+    if (!action || !why || !verify) fail(`step ${steps.length + 1} has an empty action, "Why:", or "Verify:" part`);
+    steps.push({ action, why, verify });
   }
   if (steps.length === 0) fail('Steps section has no numbered steps');
 

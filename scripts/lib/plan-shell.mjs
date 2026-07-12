@@ -204,6 +204,10 @@ export const CSS = `/* ── Design tokens ────────────
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
 
   /* Save as PDF button */
   .save-pdf-btn {

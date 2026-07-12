@@ -74,7 +74,15 @@ def _is_plan_spec(path, plans_dir):
             head = fh.read(4096)
     except OSError:
         return False
-    for line in head.splitlines():
+    # Skip a leading YAML frontmatter block first — a frontmatter comment
+    # such as "# schema: v2" must not be mistaken for the title heading.
+    lines = head.splitlines()
+    in_frontmatter = lines[:1] == ["---"]
+    for line in lines[1:] if in_frontmatter else lines:
+        if in_frontmatter:
+            if line.strip() == "---":
+                in_frontmatter = False
+            continue
         if line.startswith("# "):
             return line.startswith("# Plan:")
     return False

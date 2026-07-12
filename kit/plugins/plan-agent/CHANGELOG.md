@@ -11,6 +11,10 @@
 - **Bundled renderer** — `scripts/build-plan-html.mjs` plus `scripts/lib/plan-spec.mjs` and `scripts/lib/plan-shell.mjs` ship inside the plugin (byte-identical copies of the repo-root sources, pinned by a parity test) so normal marketplace installs get a working hook without vendoring the development repo.
 - **`tests/plugins/test-build-plan-html.mjs`** — unit cases for `parseSpecMarkdown()`, CLI and hook integration cases, and the round-trip property: every committed plan in `docs/plans/` whose sections extract cleanly must survive extract → digest → parse → render → re-extract with a deep-equal sections object (59 plans at introduction; ≥10 required), plus frozen-string and zero-unfilled-placeholder assertions.
 
+### Changed
+
+- **Reduced-motion coverage in `reference/SKELETON.html` (and the extracted shell)** — `prefers-reduced-motion: reduce` now also disables smooth scrolling and the in-progress status-badge pulse, matching the reduced-motion handling the other animated elements already had.
+
 ## 2.17.0 — Humanized implementation-plan output (2026-07-09)
 
 ### Added

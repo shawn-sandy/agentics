@@ -243,6 +243,10 @@ function main() {
     process.exit(2);
   }
   if (!outPath) outPath = specPath.replace(/\.md$/, '') + '.html';
+  if (resolve(outPath) === resolve(specPath)) {
+    console.error('build-plan-html: output path must differ from the input spec');
+    process.exit(2);
+  }
 
   let md;
   try {
@@ -264,10 +268,24 @@ function main() {
     throw err;
   }
 
+  // Keep plan-created stable across re-renders: when the spec's frontmatter
+  // omits `created`, reuse the existing sibling HTML's value instead of
+  // stamping the wall clock on every regeneration.
+  let created = parsed.metadata.created || null;
+  if (!created) {
+    try {
+      const prev = readFileSync(outPath, 'utf8').match(/<meta name="plan-created" content="([^"]+)">/);
+      if (prev) created = prev[1];
+    } catch {
+      /* no existing sibling — fall through to today */
+    }
+  }
+
   const html = renderPlanHtml(parsed, {
     fileName: basename(outPath),
     planPath: parsed.metadata.path || relative(process.cwd(), resolve(outPath)),
     repo: defaultRepo(),
+    today: created || undefined,
   });
   writeFileSync(outPath, html);
   console.log(`build-plan-html: wrote ${outPath} (${html.length} bytes)`);

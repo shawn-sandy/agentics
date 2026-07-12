@@ -62,6 +62,7 @@ type: feature
 created: 2026-07-12
 repo: sample-repo
 glance: A short plain-language summary of the work.
+# schema: v1 — a frontmatter comment must not read as the title heading
 ---
 # Plan: Ship a sample feature
 
@@ -169,6 +170,26 @@ ok('parseSpecMarkdown raises ParseError on missing required sections', () => {
   assert.throws(() => parseSpecMarkdown('no title here'), ParseError);
 });
 
+ok('parseSpecMarkdown ignores headings inside fenced code blocks', () => {
+  const fencedSpec = SAMPLE_SPEC.replace(
+    'First paragraph of context.',
+    'First paragraph of context.\n\n```text\n# Plan: quoted title\n## Steps\nnot real structure\n```\n\nStill context.'
+  );
+  const { sections } = parseSpecMarkdown(fencedSpec);
+  assert.equal(sections.title, 'Ship a sample feature');
+  assert.ok(sections.context.includes('## Steps'), 'quoted heading stays inside context');
+  assert.equal(sections.steps.length, 2, 'real Steps section still parsed');
+});
+
+ok('parseSpecMarkdown rejects steps with an empty action, Why:, or Verify: part', () => {
+  // After whitespace collapse an empty part either fails the marker regex
+  // ("missing") or the emptiness check ("empty") — both are ParseErrors.
+  const emptyWhy = SAMPLE_SPEC.replace('Why: because it unblocks everything.', 'Why:');
+  assert.throws(() => parseSpecMarkdown(emptyWhy), ParseError);
+  const emptyVerify = SAMPLE_SPEC.replace('Verify: run the check.', 'Verify:');
+  assert.throws(() => parseSpecMarkdown(emptyVerify), ParseError);
+});
+
 ok('parseSpecMarkdown inverts buildDigest for a synthetic sections object', () => {
   const { sections } = parseSpecMarkdown(SAMPLE_SPEC);
   const again = parseSpecMarkdown(unguardScriptClose(buildDigest(sections)));
@@ -236,6 +257,7 @@ ok('rendered output has every required plan-* meta tag and no unfilled placehold
   }
   const leftovers = sampleHtml.match(/\{[a-z][a-z0-9-]*\}/g);
   assert.equal(leftovers, null, `unfilled skeleton tokens: ${leftovers}`);
+  assert.ok(sampleHtml.includes('html { scroll-behavior: auto; }'), 'reduced-motion scroll rule present');
 });
 
 ok('sidebar nav is filtered to the sections actually present', () => {
@@ -280,6 +302,25 @@ ok('CLI exits 1 with a helpful message on an unparseable spec', () => {
 ok('CLI exits 2 on misuse and 1 on a missing file', () => {
   assert.equal(spawnSync('node', [RENDERER], { encoding: 'utf8' }).status, 2);
   assert.equal(spawnSync('node', [RENDERER, join(tmp, 'nope.md')], { encoding: 'utf8' }).status, 1);
+});
+
+ok('CLI refuses an output path equal to the input spec', () => {
+  const spec = join(tmp, 'same.md');
+  writeFileSync(spec, SAMPLE_SPEC);
+  const res = spawnSync('node', [RENDERER, spec, '-o', spec], { encoding: 'utf8' });
+  assert.equal(res.status, 2);
+  assert.match(res.stderr, /must differ/);
+  assert.ok(readFileSync(spec, 'utf8').startsWith('---'), 'source spec untouched');
+});
+
+ok('CLI keeps plan-created stable when re-rendering over an existing sibling', () => {
+  const spec = join(tmp, 'stable.md');
+  const out = join(tmp, 'stable.html');
+  // No created: frontmatter — first render stamps a date, re-render must reuse it.
+  writeFileSync(spec, SAMPLE_SPEC.replace('created: 2026-07-12\n', ''));
+  writeFileSync(out, '<meta name="plan-created" content="2020-01-01">');
+  execFileSync('node', [RENDERER, spec, '-o', out]);
+  assert.ok(readFileSync(out, 'utf8').includes('<meta name="plan-created" content="2020-01-01">'));
 });
 
 /* ── Integration: render-plan-html.py hook ────────────────────────── */
