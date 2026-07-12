@@ -298,10 +298,21 @@ export function extractSections(html) {
  * frontmatter block (`key: value` lines only) whose fields are returned
  * separately as `metadata`; the digest's blockquote preamble is skipped.
  *
- * Returns { metadata, sections }. Throws ParseError when a required section
- * (title, Objective, Steps, Acceptance Criteria, Verification) is missing or
- * malformed; optional sections (Context, Files, Tests) come back null when
- * absent, matching extractSections().
+ * Returns { metadata, sections, progress }. Throws ParseError when a required
+ * section (title, Objective, Steps, Acceptance Criteria, Verification) is
+ * missing or malformed; optional sections (Context, Files, Tests) come back
+ * null when absent, matching extractSections().
+ *
+ * `progress` carries completion state, kept out of `sections` so the
+ * content round-trip (extract → digest → parse) stays byte-stable:
+ *   - steps:    boolean per step, from an optional `[ ]`/`[x]` marker after
+ *               the step number (`3. [x] Do the thing. Why: … Verify: …`);
+ *   - criteria: boolean per criterion, from optional `- [ ]`/`- [x]` bullets
+ *               in Acceptance Criteria (plain `- ` bullets parse as not done);
+ *   - report:   entries from an optional `## Completion Report` section,
+ *               one `- <item> — <reason>` bullet each, rendered into the
+ *               #completion-report block (absent section → the default
+ *               "No items to report" sentence).
  */
 export function parseSpecMarkdown(md) {
   const fail = (reason) => {
@@ -394,8 +405,16 @@ export function parseSpecMarkdown(md) {
     if (files.length === 0) fail('Files section present but no entries');
   }
 
+  // Optional checkbox marker carrying done-state; strip it before content
+  // parsing so `sections` stays pure and return the flag separately.
+  const takeCheckbox = (s) => {
+    const box = s.match(/^\[([ xX])\]\s+/);
+    return box ? { text: s.slice(box[0].length), done: box[1] !== ' ' } : { text: s, done: false };
+  };
+
   if (!('Steps' in chunks)) fail('no "## Steps" section');
   const steps = [];
+  const stepsDone = [];
   // Numbered items may wrap across lines in hand-written specs; fold
   // continuations into the item before splitting on the Why:/Verify: markers.
   const stepLines = chunks.Steps.split(/\n(?=\d+\.\s)/);
@@ -403,13 +422,15 @@ export function parseSpecMarkdown(md) {
     const item = inline(raw);
     const numbered = item.match(/^\d+\.\s+(.*)$/);
     if (!numbered) continue;
-    const parts = numbered[1].match(/^(.*?)\s+Why:\s+(.*?)\s+Verify:\s+(.*)$/);
+    const { text: stepText, done: stepDone } = takeCheckbox(numbered[1]);
+    const parts = stepText.match(/^(.*?)\s+Why:\s+(.*?)\s+Verify:\s+(.*)$/);
     if (!parts) fail(`step ${steps.length + 1} is missing its "Why:" or "Verify:" part`);
     const [action, why, verify] = parts.slice(1).map((p) => p.trim());
     // An empty part would render HTML that extractSections() rejects — fail
     // here, at authoring time, instead of breaking the round trip later.
     if (!action || !why || !verify) fail(`step ${steps.length + 1} has an empty action, "Why:", or "Verify:" part`);
     steps.push({ action, why, verify });
+    stepsDone.push(stepDone);
   }
   if (steps.length === 0) fail('Steps section has no numbered steps');
 
@@ -430,14 +451,36 @@ export function parseSpecMarkdown(md) {
   }
 
   if (!('Acceptance Criteria' in chunks)) fail('no "## Acceptance Criteria" section');
-  const criteria = listItems(chunks['Acceptance Criteria']);
+  const criteria = [];
+  const criteriaDone = [];
+  for (const item of listItems(chunks['Acceptance Criteria'])) {
+    const { text, done } = takeCheckbox(item);
+    if (!text) fail(`acceptance criterion ${criteria.length + 1} is empty`);
+    criteria.push(text);
+    criteriaDone.push(done);
+  }
   if (criteria.length === 0) fail('Acceptance Criteria section has no items');
 
   if (!('Verification' in chunks)) fail('no "## Verification" section');
   const verification = block(chunks.Verification);
   if (!verification) fail('Verification section is empty');
 
-  return { metadata, sections: { title, objective, context, files, steps, tests, criteria, verification } };
+  const report = [];
+  if ('Completion Report' in chunks) {
+    for (const item of listItems(chunks['Completion Report'])) {
+      // Same em-dash separator the Files section uses: `- <item> — <reason>`.
+      const rmatch = item.match(/^(.+?)\s+—\s+(.+)$/);
+      if (!rmatch) fail(`unparseable Completion Report entry: "${item}" (want "- <item> — <reason>")`);
+      report.push({ item: rmatch[1], reason: rmatch[2] });
+    }
+    if (report.length === 0) fail('Completion Report section present but no entries');
+  }
+
+  return {
+    metadata,
+    sections: { title, objective, context, files, steps, tests, criteria, verification },
+    progress: { steps: stepsDone, criteria: criteriaDone, report },
+  };
 }
 
 /** Render the spec sections as the digest's markdown body (guarded). */

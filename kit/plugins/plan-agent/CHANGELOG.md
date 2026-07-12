@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.20.0 — Markdown-first status and checkbox flows (Phase 3) (2026-07-12)
+
+### Added
+
+- **Progress state in the plan spec** — `parseSpecMarkdown()` now reads completion state from checkbox syntax and returns it as a separate `progress` key (content `sections` stay byte-stable, so the extract → digest → parse round-trip is untouched): `- [x]` / `- [ ]` bullets under `## Acceptance Criteria` carry per-criterion state (plain `- ` bullets parse as unchecked), an optional `[x]` marker after a step number (`3. [x] <action> Why: … Verify: …`) carries per-step state, and a new optional `## Completion Report` lifecycle section (`- <item> — <reason>` bullets) carries close-out findings.
+- **Renderer derives all completion markup** — `build-plan-html.mjs` renders checked criteria inputs, completed step cards with `done` chips, a server-rendered initial progress bar (label, width, `aria-valuenow`), the completion checklist (cc1–cc3 `checked` plus the `all-complete` class, from all-steps-done + all-criteria-done + `status: completed`), and the `dl.report-list` Completion Report — the exact markup `finalize-plan` used to write by hand.
+
+### Changed
+
+- **`finalize-plan` goes md-first** — when the plan has a sibling `<stem>.md` spec, all completion writes are Markdown edits (frontmatter `status`, criteria checkbox flips per the user's choice, step `[x]` markers, a `## Completion Report` section for unverified criteria / evidence gaps / objective-test failures) followed by an explicit re-render via `build-plan-html.mjs`; it also reconciles transition-window drift (criteria checked in the HTML before this release are flipped into the spec). Accepts `.md` plan arguments alongside `.html`. Legacy plans without a spec keep the direct HTML attribute edits.
+- **`implementation-plan` status gates edit the spec** — Step 6 and the Step 8 implement-now gates flip step/criterion state in the spec markdown and re-render instead of editing `checked` attributes, `.step-card` classes, and status attributes in the HTML; re-rendering is now lossless (progress re-renders from the spec), so the "re-rendering resets HTML progress state" caveat is gone. The completion-checklist gate verifies spec state and lets the renderer derive cc1–cc3/`all-complete`; gaps are recorded as `## Completion Report` bullets.
+- **Frozen-string contracts retired** — nothing matches the `todo` step chip, the "No items to report — all requirements met." sentence, or the "Pursue as goal" label byte-for-byte anymore, so the exported `STEP_CHIP`/`STEP_CHIP_DONE`/`NO_ITEMS_REPORT`/`GOAL_LABEL` constants in `plan-shell.mjs` are demoted to internal presentation strings and the byte-for-byte test pin is replaced by behavioral progress-state assertions. The gallery keeps reading `plan-*` meta tags from rendered HTML unchanged.
+- **`section-catalog.md` documents the state syntax** — checkbox bullets for Acceptance Criteria, the step `[x]` marker, and the `## Completion Report` lifecycle section; `SKELETON.md` starts criteria as `- [ ]` bullets.
+
 ## 2.19.0 — Guideline-driven plan authoring (Phase 2) (2026-07-12)
 
 ### Added

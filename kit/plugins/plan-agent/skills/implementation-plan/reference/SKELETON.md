@@ -34,8 +34,8 @@ Tier <1 — This plan changes application code|2 — This plan doesn't change ap
 
 ## Acceptance Criteria
 
-- <falsifiable condition that must be true for this plan to be done>
-- <another condition>
+- [ ] <falsifiable condition that must be true for this plan to be done>
+- [ ] <another condition — flip to [x] only when verified during implementation>
 
 ## Verification
 
