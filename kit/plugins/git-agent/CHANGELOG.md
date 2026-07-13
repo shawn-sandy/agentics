@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v3.12.1 — 2026-07-13 — Per-skill model pinning
+
+### Changed
+
+- Model frontmatter tuned to match each component's job: `branch-agent` fixed from `Haiku` to the documented lowercase `haiku` alias; `commit-agent` and the `agent-commit` background agent pinned to `haiku` (rigid conventional-commit format, high frequency); `pr-agent` and `create-issue` pinned to `sonnet` (outward-facing prose, matching `agent-pr`). `ship` and `ship-autonomous` deliberately inherit the session model — ship-autonomous's CI autofix step applies real code edits and should never run on a downgraded model. Overrides are turn-scoped and fall back to the session model if excluded by an org `availableModels` allowlist.
+
 ## v3.12.0 — 2026-07-13 — create-issue accepts plan files as a source
 
 ### Added

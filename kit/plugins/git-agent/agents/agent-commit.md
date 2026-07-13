@@ -11,7 +11,7 @@ description: >
   agent-pr or agent-ship for those.
 tools: Bash, Read, Grep, Glob
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
+model: haiku
 maxTurns: 10
 background: true
 ---

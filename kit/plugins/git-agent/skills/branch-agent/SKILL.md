@@ -4,7 +4,7 @@ description: "Creates a git branch from origin/<default> with no upstream tracki
 allowed-tools: Bash(git *), Bash(date *), ToolSearch, AskUserQuestion, ExitPlanMode
 argument-hint: "[branch-name] (optional) — omit to auto-generate from uncommitted changes using <type>/<scope>-<description>"
 disable-model-invocation: true
-model: Haiku
+model: haiku
 ---
 
 Create a new branch from the latest `origin/<default>` with no upstream tracking

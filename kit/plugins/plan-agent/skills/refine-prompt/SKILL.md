@@ -1,5 +1,6 @@
 ---
 name: refine-prompt
+model: opus
 description: "Builds structured AI prompts using Anthropic techniques. Interviews users, classifies prompt type, and delivers a copy-pasteable prompt. Use when the user asks to refine or build a prompt."
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"

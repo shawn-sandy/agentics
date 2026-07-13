@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.22.1 — Per-skill model pinning (2026-07-13)
+
+### Changed
+
+- **Model frontmatter across skills and the background review agent** — reasoning-heavy skills now pin their model for the invocation turn: `implementation-plan` and `build-proposal` run on `claude-fable-5`; `review-plan`, `refine-prompt`, and `prototype` run on `opus`; `finalize-plan` runs on `sonnet`. The `agent-review-plan` background agent moves from `sonnet` to `opus` to match the foreground review path's synthesis step. The seven `plan-reviewer-*` agents stay on `sonnet`, and mechanical skills (`plans-library`, `plans-open`, `setup-sites`) inherit the session model. The override is turn-scoped and falls back to the session model if an org `availableModels` allowlist excludes the pinned model.
+
 ## 2.22.0 — Optional tracking-issue creation at the end of every plan (2026-07-13)
 
 ### Added

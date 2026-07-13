@@ -9,7 +9,7 @@ description: >
   this plan while I keep working".
   Mirrors the review-plan skill but runs as a background subagent.
 tools: Skill, Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
+model: opus
 maxTurns: 30
 background: true
 ---
