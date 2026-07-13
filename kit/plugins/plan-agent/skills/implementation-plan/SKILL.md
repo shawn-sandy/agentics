@@ -135,20 +135,32 @@ Echo the resolved objective and effective flags after Step 0.
 - **Implement prompt** —
   `Read and implement all steps in the plan at <filepath> — <objective>`,
   rendered as the single visible call-to-action
-  row and the `plan-implement` meta tag. Its Copy button copies a fuller
-  action-oriented prompt built from live DOM state.
+  row and the `plan-implement` meta tag. `<filepath>` is the **markdown
+  spec's** relative path, not the HTML's — an implementing agent reads the
+  ~5–10 KB spec instead of the 60–120 KB rendered page, and updates
+  progress where it lives. Its Copy button copies a fuller action-oriented
+  prompt built from live DOM state that walks the agent through the
+  markdown-first loop: tick `[x]` step markers and `- [x]` criteria in the
+  spec, set `status: completed`, then re-render the sibling HTML so it shows
+  every step and criterion complete — never hand-edit the HTML.
 - **Goal prompt** — always present: `Achieve this goal: <objective>. The
   plan at <filepath> describes one approach — use it as reference, but
-  optimize for the outcome`. Emitted as the `plan-goal` meta tag and the
-  "Pursue as goal" drawer row with its `copyGoal(this)` copy button.
+  optimize for the outcome` (same spec `<filepath>`). Emitted as the
+  `plan-goal` meta tag and the "Pursue as goal" drawer row with its
+  `copyGoal(this)` copy button.
 - **Workflow prompt** — `Run a workflow to implement the plan at <filepath>
-  — <objective>. Brief subagents with the plan file at <filepath>`. Emitted
+  — <objective>. Brief subagents with the plan file at <filepath>` (same
+  spec `<filepath>` — every subagent briefed with the compact spec). Emitted
   (row + `plan-workflow` meta tag) only when frontmatter says
   `workflow: true` or the heuristic fires (5+ files across 3+ top-level
   directories). `workflow: false` suppresses it. For the other workflow
   triggers — repetitive per-file changes, independent parallel steps,
   cross-checking review — set `workflow: true` yourself (see
   `right-sizing.md`).
+- **Next Steps cards** — an optional `## Next Steps` spec section renders as
+  collapsible follow-up cards with Copy-prompt buttons (bullet = card;
+  fenced block in the bullet = paste-ready prompt). See
+  `section-catalog.md` for the syntax.
 - **Effort level** — low/medium/high badge from step and file counts
   (low: ≤3 steps and ≤2 files; high: ≥7 steps or ≥6 files). Override with
   the `effort:` frontmatter key when the interview tier justifies it.
@@ -163,8 +175,8 @@ Echo the resolved objective and effective flags after Step 0.
   filtered to the sections present, the Save as PDF button
   (`save-pdf-btn`, prints via the browser dialog), copy buttons, meta tags
   (`plan-status`, `plan-effort`, `plan-type`, `plan-created`, `plan-repo`,
-  `plan-file`, `plan-path`, `plan-implement`, `plan-goal`, conditional
-  `plan-workflow`), and HTML escaping.
+  `plan-file`, `plan-path`, `plan-md`, `plan-implement`, `plan-goal`,
+  conditional `plan-workflow`), and HTML escaping.
 
 ## Workflow
 
@@ -239,8 +251,9 @@ EOF
       `reference/SKELETON.md` is a copyable starter. Required always:
       title, Objective, Steps (action + `Why:` + `Verify:` per item),
       Acceptance Criteria, Verification. Optional by judgment: Context,
-      Files, Tests (filled in Step 5c), the frontmatter keys, and the
-      markdown-only sections (Next Steps, Unresolved Questions, Resources).
+      Files, Tests (filled in Step 5c), Next Steps (rendered as collapsible
+      follow-up cards), the frontmatter keys, and the markdown-only sections
+      (Unresolved Questions, Resources).
    3. Write it to `$PLANS_DIR/<verb-target>.md` — kebab-case `verb-target`
       filename (`add-dark-mode-toggle.md`, `fix-login-redirect.md`). The
       rendered plan will live at the same stem with `.html`.

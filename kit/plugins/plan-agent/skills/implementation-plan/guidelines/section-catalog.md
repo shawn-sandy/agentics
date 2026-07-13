@@ -109,6 +109,30 @@ touch docs, plans, or non-runtime metadata — the objective test alone. Keep
 the tier line's `Tier 1 — ` / `Tier 2 — ` prefix; tooling matches on it.
 Judge the tier by what the steps actually do, not the `type:` frontmatter.
 
+### `## Next Steps` *(optional)*
+
+Follow-up work that builds on the plan but is not required to finish it.
+Renders as collapsible cards, each with a Copy-prompt button — the same
+markup legacy hand-written plans carried. Each top-level `- ` bullet is one
+card: the bullet's first line is the summary, an indented fenced code block
+is the self-contained paste-ready prompt, and any other indented lines are
+description prose. Bullet-less content (or lines before the first bullet)
+renders as plain paragraphs. Label blue-sky items as wish list. Prompts must
+be self-contained — name the repo, files, version bump, and CHANGELOG so the
+follow-up can run in a fresh session.
+
+```markdown
+## Next Steps
+
+- Add a background dispatcher for the panel
+  Mirrors the review-plan-bg command pattern.
+  ```text
+  In the agentics repo, add kit/plugins/plan-agent/commands/panel-bg.md
+  mirroring review-plan-bg.md. Bump the plan-agent minor version in
+  .claude-plugin/marketplace.json and add a CHANGELOG entry.
+  ```
+```
+
 ### `## Completion Report`
 
 Lifecycle section — never authored at planning time. Written by
@@ -151,12 +175,12 @@ today.
 
 ## Markdown-only sections (kept in the spec, skipped by the renderer)
 
-`## Next Steps`, `## Unresolved Questions`, and `## Resources` may be
-authored in the spec for readers of the markdown — follow-ups with
-paste-ready prompts, open questions, and the Resources links/screenshots
-consulted while planning (the Resources Capture habit from Explore/Clarify:
-record what you actually used, with descriptive titles, so a reader can
-verify the implementation against the same references). The renderer
-currently skips headings outside the catalog, so this content does not
-appear in the HTML; it still travels with the plan in git and will render
-once generic-section support lands.
+`## Unresolved Questions` and `## Resources` may be authored in the spec for
+readers of the markdown — open questions, and the Resources
+links/screenshots consulted while planning (the Resources Capture habit from
+Explore/Clarify: record what you actually used, with descriptive titles, so
+a reader can verify the implementation against the same references). The
+renderer currently skips headings outside the catalog, so this content does
+not appear in the HTML; it still travels with the plan in git and will
+render once generic-section support lands. (`## Next Steps` used to be in
+this group; it renders since plan-agent 2.21.0 — see its catalog entry.)
