@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.22.0 — Optional tracking-issue creation at the end of every plan (2026-07-13)
+
+### Added
+
+- **Step 8 tracking-issue question** — the end-of-plan `AskUserQuestion` now batches a second question: "Create a tracking issue for this plan on GitHub/GitLab?" Choosing yes invokes `git-agent:create-issue` with the new `plan <spec path>` source, which drafts the issue from the plan's objective, steps, and acceptance criteria behind its own confirmation gate. The created issue URL is recorded as the spec's `issue:` frontmatter key (the same key issue-seeded plans already carry) and the HTML is re-rendered. If the `git-agent` plugin is not installed, the skill notes it in one line and continues — issue creation never blocks the plan flow.
+
 ## 2.21.0 — Prompts reference the Markdown spec; Next Steps renders again (2026-07-13)
 
 ### Changed

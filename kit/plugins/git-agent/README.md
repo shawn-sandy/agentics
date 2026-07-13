@@ -11,7 +11,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
 - **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
-- **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, or `session`. Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Manual invoke only — does not auto-activate on intent match.
+- **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, `session`, or `plan` (a plan file becomes a tracked ticket). Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Manual invoke only — does not auto-activate on intent match.
 
 ### Subagents (background, fire-and-forget)
 
@@ -175,7 +175,7 @@ The skill will:
 1. Exit plan mode if active (Phase 0 — no-op when already off)
 2. Detect the git host from `git remote get-url origin` (`gh` for GitHub, `glab` for GitLab); ask if ambiguous
 3. Pre-flight check that the relevant CLI is installed and authenticated (stops with a helpful message if not)
-4. Resolve the source (`bug`, `feature`, `selection`, `session`) and title from `$ARGUMENTS`, asking if missing
+4. Resolve the source (`bug`, `feature`, `selection`, `session`, `plan`) and title from `$ARGUMENTS`, asking if missing
 5. Gather repo context — duplicate-issue search, related files via `Grep`/`Glob`, plus environment info for `bug` sources
 6. Draft the issue body using the matching template under `references/`
 7. Show a Create / Edit / Cancel confirmation gate — **never creates without explicit approval**
@@ -192,6 +192,7 @@ Sources:
 | `feature` | User-story + acceptance-criteria format. Uses `[FEATURE]` title prefix. |
 | `selection` | Treats provided text as the issue seed; structures it. |
 | `session` | Synthesizes from the current conversation context. |
+| `plan` | Reads a plan file (`.md` spec or rendered `.html`) and maps its objective, steps, and acceptance criteria into a checklist-style issue. Plan title becomes the issue title. |
 
 Examples:
 
@@ -200,6 +201,7 @@ Examples:
 /git-agent:create-issue feature Add dark mode toggle to settings panel
 /git-agent:create-issue selection <paste the text here>
 /git-agent:create-issue session
+/git-agent:create-issue plan docs/plans/add-dark-mode-toggle.md
 /git-agent:create-issue                  # asks what you need
 /git-agent:create-issue bug --no-open    # create but skip browser
 ```
