@@ -2,33 +2,15 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agentics-kit",
   "version": "4.0.0",
-  "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization",
+  "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization",
   "owner": {
     "name": "Agentics Team",
     "email": "shawnsandy04@gmail.com"
   },
   "metadata": {
-    "description": "Agentics plugin kit \u2014 developer tools, code review, planning, and CLAUDE.md optimization"
+    "description": "Agentics plugin kit — developer tools, code review, planning, and CLAUDE.md optimization"
   },
   "plugins": [
-    {
-      "name": "team-defaults",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/team-defaults"
-      },
-      "version": "0.1.0",
-      "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
-      "category": "productivity",
-      "tags": [
-        "team",
-        "defaults",
-        "rules",
-        "conventions",
-        "onboarding"
-      ]
-    },
     {
       "name": "memory-tools",
       "source": {
@@ -74,7 +56,7 @@
         "path": "kit/plugins/plan-interview"
       },
       "version": "2.2.8",
-      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins \u2014 auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
+      "description": "Stress-test implementation plans with structured multi-round interviews before coding begins — auto-routes product plans to the panel review skill, always emits an interview HTML artifact",
       "category": "development",
       "tags": [
         "planning",
@@ -114,7 +96,7 @@
         "path": "kit/plugins/skill-reviewer"
       },
       "version": "2.2.6",
-      "description": "Review and optimize Claude Code skill files \u2014 score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
+      "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
         "skills",
@@ -136,7 +118,7 @@
         "path": "kit/plugins/code-testing-agent"
       },
       "version": "3.4.4",
-      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent \u2014 not arbitrary coverage",
+      "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
         "testing",
@@ -156,8 +138,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.0.0",
-      "description": "Automated git workflow \u2014 create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship plus auto-linking plan issue references in PR descriptions",
+      "version": "4.0.1",
+      "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
         "git",
@@ -188,7 +170,7 @@
         "path": "kit/plugins/product-plans"
       },
       "version": "3.4.10",
-      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) \u2014 produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
+      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing plan-interview HTML artifact",
       "category": "productivity",
       "tags": [
         "panel-review",
@@ -212,7 +194,7 @@
         "path": "kit/plugins/settings-sync"
       },
       "version": "1.0.2",
-      "description": "Back up and restore Claude Code user settings to a dedicated git repo \u2014 routine-compatible for automated backups",
+      "description": "Back up and restore Claude Code user settings to a dedicated git repo — routine-compatible for automated backups",
       "category": "productivity",
       "tags": [
         "settings",
@@ -233,7 +215,7 @@
         "path": "kit/plugins/social-media-tools"
       },
       "version": "2.17.0",
-      "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code \u2014 scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
+      "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
         "social-media",
@@ -277,8 +259,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "2.22.0",
-      "description": "Plan creation and review on demand or via ambient activation \u2014 /plan-agent:implementation-plan skill (command or model-invocable) authors a compact Markdown plan spec guided by a bundled guidelines library (planning principles, section catalog, right-sizing profiles, writing style) and renders it deterministically via the bundled build-plan-html.mjs into self-contained interactive HTML plans with a rich copy-paste implement prompt (includes status, steps, acceptance criteria, and completion instructions), an always-present outcome-driven goal prompt (achieve the objective using the plan as reference but optimizing for the outcome), a one-click Save as PDF export button, and optional workflow prompt for complex plans; auto-activates on plan-document intent without colliding with built-in Plan Mode; /plan-agent:review-plan skill spawns a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, UX, accessibility) to review implementation plans, synthesize findings, apply improvements in place, and emit shareable HTML review artifacts; /plan-agent:finalize-plan skill reviews a plan for completion evidence with per-criterion verification, checks acceptance-criteria boxes (all or only verified, per user choice), and sets status to completed or in-progress accordingly, with an --all sweep mode that discovers done-but-unmarked plans across the plans directory and batch-finalizes them behind one multi-select confirmation; accepts GitHub/GitLab issue URLs and #n references to auto-seed plans from backlog; accepts .md plan paths for conversion mode that turns an existing markdown plan into the HTML format with frontmatter carry-over and a keep-or-remove source prompt; built-in structured interview; mandatory acceptance criteria gate during implementation; Step 8 exit menu offers Review the plan option that runs the review-plan Agent Team on the current plan (foreground or background) before implementing; adaptive menu swap keeps all options within the 4-option limit; /plan-agent:refine-prompt skill interviews users and generates copy-pasteable AI prompts grounded in Anthropic best practices (role, XML structure, CoT, examples, output format); plans-open skill reopens the gallery without rebuilding; PostToolUse hook auto-regenerates the gallery index; filename hook enforces verb-target kebab-case; /plan-agent:build-proposal skill turns a vague idea into a decision-complete proposal under docs/proposals/ via an 8-step research-then-decide loop with a Tier 0/1/2 right-sizing gate, grounding claims in web + codebase research and separating facts from decisions, then hands the proposal to implementation-plan for execution planning; /plan-agent:setup-sites skill scaffolds the GitHub Pages deploy pipeline into any repo (deploy-pages.yml workflow, docs/.nojekyll, landing hub, serve-docs.sh preview), computes the live URL from the git remote, and guides the one-time Settings \u2192 Pages \u2192 GitHub Actions step so generated docs/ HTML publishes to a public URL; /plan-agent:prototype skill turns a completed HTML plan, a one-line idea, an image/screenshot/mockup, or a Figma design into a runnable, framework-free static-HTML prototype under docs/prototypes/ (inline JSON seed + per-prototype localStorage, escaped output, accessibility baked in), auto-indexed into a Prototypes gallery reachable from the docs hub",
+      "version": "2.22.1",
+      "description": "Plan creation, review, and follow-through. implementation-plan authors a Markdown plan spec and renders it into a self-contained interactive HTML plan with copy-paste implement and goal prompts; review-plan runs a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, UX, accessibility) that improves the plan in place; finalize-plan verifies completion evidence and marks plans done; build-proposal turns a vague idea into a decision-complete proposal; refine-prompt builds prompts from Anthropic best practices; prototype turns a plan, idea, image, or Figma design into a runnable static-HTML prototype; setup-sites scaffolds GitHub Pages publishing; plans-library and plans-open browse the plan gallery. Accepts GitHub/GitLab issue URLs and .md plans as input; hooks enforce verb-target filenames and auto-rebuild the gallery index. Full feature detail in the plugin README and CHANGELOG.",
       "category": "productivity",
       "tags": [
         "planning",
@@ -293,6 +275,24 @@
         "proposal",
         "research"
       ]
+    },
+    {
+      "name": "team-defaults",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/team-defaults"
+      },
+      "version": "0.1.0",
+      "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
+      "category": "productivity",
+      "tags": [
+        "team",
+        "defaults",
+        "rules",
+        "conventions",
+        "onboarding"
+      ]
     }
   ],
   "removed": [
@@ -300,7 +300,7 @@
       "name": "issue-agent",
       "version": "0.2.4",
       "removedDate": "2026-06-16",
-      "reason": "Absorbed into git-agent v3.11.0 \u2014 create-issue skill now lives at /git-agent:create-issue. Reduces plugin count without losing functionality."
+      "reason": "Absorbed into git-agent v3.11.0 — create-issue skill now lives at /git-agent:create-issue. Reduces plugin count without losing functionality."
     },
     {
       "name": "agent-creator",
@@ -324,19 +324,19 @@
       "name": "react-perf-analyzer",
       "version": "1.3.1",
       "removedDate": "2026-05-29",
-      "reason": "Too specialized \u2014 only useful in React projects; general perf issues are covered by code-review"
+      "reason": "Too specialized — only useful in React projects; general perf issues are covered by code-review"
     },
     {
       "name": "agentic-plugin-dev",
       "version": "1.2.2",
       "removedDate": "2026-05-29",
-      "reason": "Removed from marketplace; directory retained for reference \u2014 plugin scaffolding covered by existing skills"
+      "reason": "Removed from marketplace; directory retained for reference — plugin scaffolding covered by existing skills"
     },
     {
       "name": "code-simplifier",
       "version": "1.0.2",
       "removedDate": "2026-05-29",
-      "reason": "Removed from marketplace; directory retained for reference \u2014 structural analysis covered by code-review"
+      "reason": "Removed from marketplace; directory retained for reference — structural analysis covered by code-review"
     }
   ]
 }

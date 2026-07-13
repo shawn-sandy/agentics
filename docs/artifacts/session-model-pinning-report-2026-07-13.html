@@ -1,0 +1,352 @@
+<title>Session Report — Per-Skill Model Pinning</title>
+<style>
+  :root {
+    --ground: #fafafc;
+    --surface: #ffffff;
+    --ink: #23222b;
+    --ink-2: #55525f;
+    --ink-3: #8b8896;
+    --line: #e4e2ea;
+    --accent: #6d5bd0;
+    --accent-soft: #efecfa;
+    --good: #1d7a5f;
+    --warn: #9a6a12;
+    --mono-bg: #f2f1f6;
+    --tier-fable: #6d5bd0;
+    --tier-opus: #2f6bb0;
+    --tier-sonnet: #1d7a7a;
+    --tier-haiku: #3d8a4e;
+    --tier-inherit: #8b8896;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #17161d;
+      --surface: #1e1d26;
+      --ink: #e8e6f0;
+      --ink-2: #b3b0c0;
+      --ink-3: #7d7a8a;
+      --line: #34323f;
+      --accent: #a494f0;
+      --accent-soft: #2a2638;
+      --good: #57c29a;
+      --warn: #d9a94e;
+      --mono-bg: #26242f;
+      --tier-fable: #a494f0;
+      --tier-opus: #7cabde;
+      --tier-sonnet: #5fc0c0;
+      --tier-haiku: #7cc48a;
+      --tier-inherit: #7d7a8a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #17161d;
+    --surface: #1e1d26;
+    --ink: #e8e6f0;
+    --ink-2: #b3b0c0;
+    --ink-3: #7d7a8a;
+    --line: #34323f;
+    --accent: #a494f0;
+    --accent-soft: #2a2638;
+    --good: #57c29a;
+    --warn: #d9a94e;
+    --mono-bg: #26242f;
+    --tier-fable: #a494f0;
+    --tier-opus: #7cabde;
+    --tier-sonnet: #5fc0c0;
+    --tier-haiku: #7cc48a;
+    --tier-inherit: #7d7a8a;
+  }
+  :root[data-theme="light"] {
+    --ground: #fafafc;
+    --surface: #ffffff;
+    --ink: #23222b;
+    --ink-2: #55525f;
+    --ink-3: #8b8896;
+    --line: #e4e2ea;
+    --accent: #6d5bd0;
+    --accent-soft: #efecfa;
+    --good: #1d7a5f;
+    --warn: #9a6a12;
+    --mono-bg: #f2f1f6;
+    --tier-fable: #6d5bd0;
+    --tier-opus: #2f6bb0;
+    --tier-sonnet: #1d7a7a;
+    --tier-haiku: #3d8a4e;
+    --tier-inherit: #8b8896;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+
+  h1, h2, h3 { font-family: Charter, "Bitstream Charter", Georgia, Cambria, serif; text-wrap: balance; line-height: 1.2; }
+  h1 { font-size: 2.1rem; font-weight: 700; margin: 0.4rem 0 0.8rem; }
+  h2 { font-size: 1.35rem; font-weight: 700; margin: 0 0 0.9rem; }
+  h3 { font-size: 1.05rem; font-weight: 700; margin: 1.6rem 0 0.5rem; }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  .eyebrow {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .lede { font-size: 1.08rem; color: var(--ink-2); margin-bottom: 0; }
+
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 2rem;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 0.9rem 0; margin: 2rem 0 3rem;
+    font-size: 0.85rem;
+  }
+  .meta div { display: flex; flex-direction: column; gap: 0.1rem; }
+  .meta dt { color: var(--ink-3); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .meta dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+  section { margin-bottom: 3.2rem; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 0.9rem; margin-bottom: 1rem;
+  }
+  .sec-num {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+    flex: none;
+  }
+  .sec-head h2 { margin: 0; }
+
+  code, .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.86em;
+  }
+  code { background: var(--mono-bg); padding: 0.1em 0.35em; border-radius: 3px; }
+  pre {
+    background: var(--mono-bg); border: 1px solid var(--line); border-radius: 6px;
+    padding: 0.9rem 1.1rem; overflow-x: auto; font-size: 0.83rem; line-height: 1.55;
+    margin: 1rem 0;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  blockquote {
+    margin: 1.2rem 0; padding: 0.2rem 0 0.2rem 1.1rem;
+    border-left: 3px solid var(--accent); color: var(--ink-2); font-size: 0.94rem;
+  }
+  blockquote p { margin-bottom: 0.4rem; }
+  blockquote cite { font-size: 0.8rem; color: var(--ink-3); font-style: normal; }
+
+  .table-scroll { overflow-x: auto; margin: 1.2rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  th {
+    text-align: left; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; padding: 0.5rem 0.9rem 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  td { padding: 0.55rem 0.9rem 0.55rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:last-child, th:last-child { padding-right: 0; }
+
+  .tier {
+    display: inline-block; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.75rem; font-weight: 600; padding: 0.08em 0.55em; border-radius: 999px;
+    border: 1px solid currentColor; white-space: nowrap;
+  }
+  .t-fable { color: var(--tier-fable); }
+  .t-opus { color: var(--tier-opus); }
+  .t-sonnet { color: var(--tier-sonnet); }
+  .t-haiku { color: var(--tier-haiku); }
+  .t-inherit { color: var(--tier-inherit); border-style: dashed; }
+
+  .rationale {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 1.1rem 1.3rem; margin: 1.2rem 0;
+  }
+  .rationale .r-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); display: block; margin-bottom: 0.4rem;
+  }
+  .rationale p:last-child { margin-bottom: 0; }
+
+  .ledger { list-style: none; padding: 0; margin: 1rem 0; }
+  .ledger li {
+    display: grid; grid-template-columns: 5.4rem 1fr; gap: 1rem;
+    padding: 0.55rem 0; border-bottom: 1px solid var(--line); font-size: 0.9rem;
+  }
+  .ledger .when {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.76rem; color: var(--ink-3); padding-top: 0.15rem;
+  }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.4rem 0; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.8rem 1.1rem; flex: 1 1 130px; min-width: 130px;
+  }
+  .stat .n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; font-family: Charter, Georgia, serif; }
+  .stat .l { font-size: 0.74rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+
+  ul.tight { padding-left: 1.2rem; margin: 0.6rem 0 1rem; }
+  ul.tight li { margin-bottom: 0.45rem; }
+
+  .footer-note {
+    border-top: 1px solid var(--line); margin-top: 3rem; padding-top: 1.2rem;
+    font-size: 0.82rem; color: var(--ink-3);
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Session Report · agentics</span>
+    <h1>Per-skill model pinning across the plugin marketplace</h1>
+    <p class="lede">How one question — “can my skills switch to Fable when invoked?” — became a verified, tiered model-routing policy across two plugins, a marketplace description rewrite, and a merged-ready PR, with every decision grounded in official docs or repo convention.</p>
+
+    <dl class="meta">
+      <div><dt>Date</dt><dd>2026-07-13</dd></div>
+      <div><dt>Branch</dt><dd class="mono">claude/skills-dynamic-model-switch-21faf0</dd></div>
+      <div><dt>Pull request</dt><dd><a href="https://github.com/shawn-sandy/agentics/pull/395">shawn-sandy/agentics #395</a></dd></div>
+      <div><dt>Status</dt><dd class="good">Mergeable · smoke tests 15/15</dd></div>
+    </dl>
+  </header>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n">16</div><div class="l">Files changed</div></div>
+    <div class="stat"><div class="n">2</div><div class="l">Plugins re-versioned</div></div>
+    <div class="stat"><div class="n">13</div><div class="l">Model pins set or fixed</div></div>
+    <div class="stat"><div class="n">80%</div><div class="l">Description size cut</div></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Verify the mechanism before recommending</h2></div>
+    <p>The request was to add a <code>/model Fable</code> step to skills. <code>/model</code> is an interactive CLI command that a skill body cannot invoke, so the first move was to establish what Claude Code actually supports — from documentation, not memory.</p>
+    <p>A <code>claude-code-guide</code> agent checked the official docs, and the two load-bearing pages were then fetched directly to confirm the wording first-hand:</p>
+    <blockquote>
+      <p><code>model</code> — Model to use when this skill is active. The override applies for the rest of the current turn and is not saved to settings; the session model resumes on your next prompt. Accepts the same values as <code>/model</code>, or <code>inherit</code> to keep the active model. A value excluded by your organization’s <code>availableModels</code> allowlist is not used and the session keeps its current model.</p>
+      <cite>— <a href="https://code.claude.com/docs/en/skills#frontmatter-reference">Extend Claude with skills, frontmatter reference</a></cite>
+    </blockquote>
+    <div class="rationale">
+      <span class="r-label">Rationale</span>
+      <p>Three properties of this field shaped everything downstream. It is <strong>turn-scoped</strong> — no skill can permanently change the session model, so pinning is safe to apply liberally. It <strong>fails silently</strong> — an unrecognized value or an org allowlist exclusion falls back to the session model with no error, which makes exact spelling a correctness concern, not a style one. And it applies to <strong>the whole turn</strong>, so a pinned skill also governs whatever follows it in that turn — an argument for pinning down only on paths that never edit code.</p>
+      <p>One claim from the guide agent (a v2.1.196+ version requirement) could not be confirmed on the docs page itself and was reported to the user as unverified rather than repeated as fact.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>The tiering heuristic</h2></div>
+    <p>With the mechanism verified, model assignment followed one rule applied per component:</p>
+    <div class="rationale">
+      <span class="r-label">Principle</span>
+      <p><strong>Pin cheap on the frequent, mechanical paths; pin high on the synthesis-heavy paths; never pin down the path that edits code.</strong> Commit messages happen ten times a day and a small model is indistinguishable there; autonomous CI autofix happens rarely and model quality is the entire safety margin.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Tier</th><th>Assigned to</th><th>Test for membership</th></tr>
+        <tr><td><span class="tier t-fable">claude-fable-5</span></td><td>Deep synthesis</td><td>Multi-step reasoning where output quality compounds: full plan authoring, research-and-decide proposal loops</td></tr>
+        <tr><td><span class="tier t-opus">opus</span></td><td>Synthesis and prose</td><td>Combining many inputs into one judgment, or single-shot generation where quality shows: review synthesis, prompt crafting, prototypes</td></tr>
+        <tr><td><span class="tier t-sonnet">sonnet</span></td><td>Structured judgment</td><td>One narrow lens or outward-facing structured prose: single-dimension reviewers, PR bodies, issue tickets</td></tr>
+        <tr><td><span class="tier t-haiku">haiku</span></td><td>Rigid-format, high-frequency</td><td>Output shape is fixed and errors are cheap: branch names, conventional commit messages</td></tr>
+        <tr><td><span class="tier t-inherit">inherit</span></td><td>Trivial or dangerous</td><td>Either too mechanical to matter (galleries, dispatchers) or too risky to downgrade (CI autofix that edits code)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>plan-agent — 2.22.0 → 2.22.1</h2></div>
+    <p>Two skills already carried pins (<code>implementation-plan: fable</code>, <code>build-proposal: opus</code>); the seven reviewer agents were already on <code>sonnet</code>. The pass corrected, extended, and aligned:</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Component</th><th>Before</th><th>After</th><th>Why</th></tr>
+        <tr><td class="mono">implementation-plan</td><td class="mono">fable</td><td><span class="tier t-fable">claude-fable-5</span></td><td>Full model ID replaces an alias the docs don’t list — silent fallback made the typo undetectable</td></tr>
+        <tr><td class="mono">build-proposal</td><td class="mono">opus</td><td><span class="tier t-fable">claude-fable-5</span></td><td>Same class of work as implementation-plan; same tier</td></tr>
+        <tr><td class="mono">review-plan</td><td>—</td><td><span class="tier t-opus">opus</span></td><td>Synthesizes seven reviewers’ findings and applies them — the synthesis outranks the reviews</td></tr>
+        <tr><td class="mono">agent-review-plan</td><td class="mono">sonnet</td><td><span class="tier t-opus">opus</span></td><td>Background twin of review-plan; foreground and background paths should behave identically</td></tr>
+        <tr><td class="mono">refine-prompt</td><td>—</td><td><span class="tier t-opus">opus</span></td><td>Prompt quality is the whole deliverable</td></tr>
+        <tr><td class="mono">prototype</td><td>—</td><td><span class="tier t-opus">opus</span></td><td>Single-shot HTML generation where design quality shows</td></tr>
+        <tr><td class="mono">finalize-plan</td><td>—</td><td><span class="tier t-sonnet">sonnet</span></td><td>Methodical evidence-checking, not creative work</td></tr>
+        <tr><td class="mono">plan-reviewer-* ×7</td><td class="mono">sonnet</td><td><span class="tier t-sonnet">sonnet</span></td><td>One narrow lens each, run seven-wide — the right cost point</td></tr>
+        <tr><td class="mono">plans-library / plans-open / setup-sites</td><td>—</td><td><span class="tier t-inherit">inherit</span></td><td>Mechanical scan/open/scaffold; pinning adds nothing</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>git-agent — 3.12.0 → 4.0.1</h2></div>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Component</th><th>Before</th><th>After</th><th>Why</th></tr>
+        <tr><td class="mono">branch-agent</td><td class="mono">Haiku</td><td><span class="tier t-haiku">haiku</span></td><td>Case fix — the docs list lowercase aliases, and an unrecognized value falls back silently</td></tr>
+        <tr><td class="mono">commit-agent + agent-commit</td><td>— / sonnet</td><td><span class="tier t-haiku">haiku</span></td><td>Rigid conventional-commit format at the highest invocation frequency — the biggest cost win in either plugin</td></tr>
+        <tr><td class="mono">pr-agent</td><td>—</td><td><span class="tier t-sonnet">sonnet</span></td><td>Outward-facing branch summaries; matches agent-pr’s existing pin</td></tr>
+        <tr><td class="mono">create-issue</td><td>—</td><td><span class="tier t-sonnet">sonnet</span></td><td>Structuring a plan or session into a ticket is synthesis, not plumbing</td></tr>
+        <tr><td class="mono">ship / ship-autonomous</td><td>—</td><td><span class="tier t-inherit">inherit</span></td><td>Deliberate non-pin — see below</td></tr>
+      </table>
+    </div>
+    <div class="rationale">
+      <span class="r-label">The deliberate non-decision</span>
+      <p><code>ship-autonomous</code> was the one place a pin was explicitly refused. Its autofix step applies real code edits to fix failing CI, up to three attempts per check. Because a skill’s pin governs the whole turn, a cheap pin on the ship pipeline would also govern autonomous debugging — the single spot in either plugin where a weak model does damage. Restraint was recorded in the changelog as a decision, so a future pass doesn’t “complete” the pinning by mistake.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Marketplace description rewrite</h2></div>
+    <p>plan-agent’s <code>marketplace.json</code> description had grown to 4,633 characters — each release had appended its changelog entry into it. It was rewritten to 924 characters.</p>
+    <div class="rationale">
+      <span class="r-label">Rationale</span>
+      <p>The constraint that shaped the rewrite: <strong>one clause per skill</strong>, so marketplace search still hits every component name, while per-flag behavior, menu mechanics, and release-note material moved to where they already lived — the README and CHANGELOG. The root cause (descriptions accreting changelog content) was flagged as a candidate rule for <code>.claude/rules/marketplace.md</code> rather than silently fixed once, since git-agent and social-media-tools show the same pattern.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Review triage: fix the real findings, ignore the noise</h2></div>
+    <p>After the PR opened, three categories of bot feedback arrived and were handled differently on purpose.</p>
+    <h3>Acted on — two Codex findings (both P2, both real)</h3>
+    <ul class="tight">
+      <li><code>tests/plugins/test-build-proposal.sh</code> check 1 pinned the old contract <code>^model: opus$</code> — updated to <code>^model: claude-fable-5$</code>, since the new pin is the intended behavior and the test encodes the contract.</li>
+      <li>Check 12 required the literal <code>/plan-agent:build-proposal</code> in the marketplace description — relaxed to <code>build-proposal</code>, preserving the discoverability contract without re-bloating the description the rewrite had just fixed.</li>
+    </ul>
+    <p>Both threads got a one-line reply naming the fix commit and were resolved. The full smoke suite passed 15/15 before pushing.</p>
+    <h3>Deliberately ignored — quota notices</h3>
+    <p>Copilot posted three identical “quota limit reached” comments and CodeRabbit one rate-limit notice. None contained findings. Per the repo’s <em>review-bot-loops</em> rule, no commits were pushed to re-trigger them and no reply threads were opened — automated reviewers have no memory between runs, and each polish round can cost more than the change it reviews.</p>
+    <div class="rationale">
+      <span class="r-label">Rationale</span>
+      <p>The distinction applied throughout: a <strong>review fire</strong> (a bot re-running because a push happened) is not a <strong>review concern</strong> (a new blocking finding). Only the latter earns a commit.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Merge conflict: main moved underneath the PR</h2></div>
+    <p>While the PR was open, main took git-agent to 4.0.0 (create-issue auto-activation, a breaking change) and added a new team-defaults plugin. Three files conflicted; each resolution preserved both sides’ intent:</p>
+    <ul class="tight">
+      <li><strong><code>create-issue/SKILL.md</code></strong> — kept main’s removal of <code>disable-model-invocation</code> <em>and</em> this branch’s <code>model: sonnet</code>. The changes are orthogonal: one governs when the skill activates, the other what it runs on.</li>
+      <li><strong>git-agent CHANGELOG</strong> — kept both entries, renumbering this branch’s v3.12.1 to <strong>v4.0.1</strong> above main’s v4.0.0, since a version below main violates the repo’s bump rule.</li>
+      <li><strong><code>marketplace.json</code></strong> — the repo’s custom merge driver auto-kept main’s higher 4.0.0; the entry was then bumped to 4.0.1 so this PR’s change ships above main. Post-merge checks confirmed plan-agent 2.22.1 and the 924-char description survived, team-defaults 0.1.0 arrived intact, the JSON parsed, and the smoke suite stayed green.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Timeline</h2></div>
+    <ul class="ledger">
+      <li><span class="when">verify</span><span>Confirmed <code>model:</code> frontmatter semantics against official docs; corrected one unverifiable claim from the guide agent</span></li>
+      <li><span class="when">recommend</span><span>Per-component tier recommendations for plan-agent, then git-agent, each grounded in the frequency-vs-stakes heuristic</span></li>
+      <li><span class="when">c623ff1</span><span>Applied all pins, fixed two unverified alias spellings, rewrote the plan-agent description, bumped both plugins, updated changelogs</span></li>
+      <li><span class="when">PR #395</span><span>Opened with template checklist; the untestable “plugin loads” box honestly left unticked</span></li>
+      <li><span class="when">cb6caed</span><span>Updated the two smoke-test contracts Codex flagged; replied on and resolved both threads; suite 15/15</span></li>
+      <li><span class="when">1c1e535</span><span>Merged origin/main; resolved three conflicts; git-agent re-versioned to 4.0.1; PR mergeable</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Principles this session ran on</h2></div>
+    <ul class="tight">
+      <li><strong>Docs over memory.</strong> The whole feature hinged on turn-scoping and silent fallback — details easy to misremember and cheap to verify. Unverifiable claims were labeled as such.</li>
+      <li><strong>Silent fallback makes spelling a bug class.</strong> Both alias fixes (<code>fable</code>, <code>Haiku</code>) mattered precisely because a wrong value produces no error — only quietly absent behavior.</li>
+      <li><strong>Tests encode contracts; change them with the contract.</strong> The smoke test pinning <code>model: opus</code> wasn’t an obstacle — it was the contract doing its job, and it was updated in the same change that moved the contract.</li>
+      <li><strong>Record restraint, not just action.</strong> The ship-autonomous non-pin and the reviewers staying on sonnet are documented decisions, so future passes don’t mistake them for gaps.</li>
+      <li><strong>Convention is part of the change.</strong> Every plugin edit carried its semver bump and changelog entry in the same commit — nothing left for a second prompt.</li>
+    </ul>
+  </section>
+
+  <p class="footer-note">Generated from the working session on branch <span class="mono">claude/skills-dynamic-model-switch-21faf0</span> · <a href="https://github.com/shawn-sandy/agentics/pull/395">PR #395</a> · model reference: <a href="https://code.claude.com/docs/en/skills#frontmatter-reference">skills frontmatter docs</a></p>
+</div>

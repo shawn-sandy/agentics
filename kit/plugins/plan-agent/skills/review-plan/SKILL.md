@@ -1,5 +1,6 @@
 ---
 name: review-plan
+model: opus
 description: Plan review Agent Team. Reviews HTML implementation plans in parallel, synthesizes findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
 allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode
 ---
