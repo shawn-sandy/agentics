@@ -374,10 +374,24 @@ EOF
 8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the
    user what to do next.
 
-   Use `AskUserQuestion` with a single question. **When a workflow prompt
-   was generated** (frontmatter `workflow: true` or the renderer's
-   heuristic fired — check for the `plan-workflow` meta tag in the rendered
-   HTML), include the workflow option:
+   Use `AskUserQuestion` with **two questions batched in one call**: the
+   next-step question below, and a tracking-issue question:
+   - Question: "Create a tracking issue for this plan on GitHub/GitLab?"
+   - Options:
+     - `Yes — create an issue` — Run the `git-agent:create-issue` skill with this plan.
+     - `No` — Skip issue creation.
+
+   **Skip the tracking-issue question entirely when the spec's frontmatter
+   already carries an `issue:` key** — the plan was seeded from an issue
+   (Step 0.5) or one was created in an earlier pass through this menu.
+   Creating another would duplicate the backlog item and overwrite the
+   existing link; ask only the next-step question and mention the linked
+   issue URL in one line instead.
+
+   For the next-step question, **when a workflow prompt was generated**
+   (frontmatter `workflow: true` or the renderer's heuristic fired — check
+   for the `plan-workflow` meta tag in the rendered HTML), include the
+   workflow option:
    - Question: "The plan is complete. What would you like to do next?"
    - Options (when workflow prompt exists):
      - `Implement now` — Begin implementing the plan steps in the current session.
@@ -389,6 +403,16 @@ EOF
      - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
+
+   **If the user answered `Yes — create an issue`:** before acting on the
+   next-step choice, invoke
+   `Skill(skill: "git-agent:create-issue", args: "plan <spec path>")` with
+   the markdown spec's repo-relative path. That skill handles host
+   detection, drafting, and its own confirmation gate; when it finishes,
+   record the created issue URL as an `issue:` frontmatter key in the spec
+   and re-render. If the `git-agent` plugin is not installed (the Skill
+   call fails to resolve), say so in one line and continue with the
+   next-step choice — never block on it.
 
    **If the user chooses `Implement now`:** Lift the Scope Constraint for
    this session only. Set the spec's `status:` to `in-progress`, then work

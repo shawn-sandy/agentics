@@ -3,7 +3,7 @@ name: create-issue
 description: "Drafts and opens a GitHub or GitLab issue from any context source. Detects host from git remote and confirms before creating. Use when the user asks to file, open, or create an issue or ticket."
 allowed-tools: Bash(gh *), Bash(glab *), Bash(git *), Bash(node *), Bash(npm *), AskUserQuestion, Read, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
-argument-hint: "[bug|feature|selection|session] [title or description]"
+argument-hint: "[bug|feature|selection|session|plan] [title, description, or plan path]"
 ---
 
 # Create Issue
@@ -12,7 +12,7 @@ Open a GitHub or GitLab issue from any context. Always confirms before creating 
 
 ## Overview
 
-Ingests context from four sources (selection, session, bug, feature), detects the git host, drafts a structured issue body, shows a confirmation gate, then calls `gh` or `glab` to create the issue.
+Ingests context from five sources (selection, session, bug, feature, plan), detects the git host, drafts a structured issue body, shows a confirmation gate, then calls `gh` or `glab` to create the issue.
 
 ## Workflow
 
@@ -63,8 +63,9 @@ ARGS="${ARGS%% }"     # trim trailing space
 Use `$ARGS` (not `$ARGUMENTS`) for all subsequent argument parsing in this phase.
 
 Parse `$ARGS` for:
-- An explicit source keyword: `bug`, `feature`, `selection`, `session`
+- An explicit source keyword: `bug`, `feature`, `selection`, `session`, `plan`
 - A title/description (everything after the keyword)
+- A token ending in `.md` or `.html` implies the `plan` source even without the keyword
 
 If both are missing or ambiguous, ask via `AskUserQuestion` (batch both questions):
 1. "What is the source? (bug / feature / selection / session)"
@@ -86,6 +87,16 @@ Read `package.json` for relevant deps. Gather reproduction steps, expected vs ac
 
 **`session`** — synthesize from the current conversation context: the bug surfaced, the feature discussed, or the TODO identified. State clearly what was synthesized.
 
+**`plan`** — the remaining argument is a plan file path (a markdown plan spec, or a rendered plan HTML whose sibling `.md` spec is the real source — always prefer the `.md`). Resolve it as given, then by basename under the configured `plansDirectory` or `docs/plans/`. Read the plan and map:
+- Plan title (`# Plan: …` heading or frontmatter) → issue title
+- Objective → Summary
+- Steps → a `- [ ]` task checklist (action text only — drop the *Why*/*Verify* detail)
+- Acceptance Criteria → carried over as checklist items
+- Frontmatter `type:` → label hint (`fix` → `bug`, `feature` → `enhancement`, `docs` → `documentation`, else `chore`)
+- The plan file's repo-relative path → cited in the issue body so the issue links back to the plan
+
+If the path cannot be read anywhere, report where you looked and stop — never invent plan content.
+
 ### Phase 4 — Gather repo context
 
 ```bash
@@ -104,6 +115,7 @@ Select the matching template from `references/`:
 - `bug` → `bug-report.md`
 - `feature` → `feature-request.md`
 - `selection` or `session` → `general-issue.md`
+- `plan` → `plan-issue.md`
 
 Populate the template:
 - Title prefix: `[BUG]` for bugs, `[FEATURE]` for features, none for general
@@ -183,4 +195,5 @@ Print the issue URL and number. Then indicate what happened with the browser:
 - `references/bug-report.md` — bug issue body skeleton
 - `references/feature-request.md` — feature request body skeleton
 - `references/general-issue.md` — general/selection/session body skeleton
+- `references/plan-issue.md` — plan-to-issue body skeleton (objective, step checklist, acceptance criteria)
 - `references/host-commands.md` — `gh` vs `glab` command and flag equivalence table

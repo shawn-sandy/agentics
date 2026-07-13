@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v3.12.0 — 2026-07-13 — create-issue accepts plan files as a source
+
+### Added
+
+- `create-issue` skill: new `plan` source — pass a plan file path (`.md` spec or rendered `.html`; a bare `.md`/`.html` token implies the source without the keyword) and the skill maps the plan's title, Objective, Steps (as a `- [ ]` checklist), and Acceptance Criteria into a structured issue body via the new `references/plan-issue.md` template. Labels are suggested from the plan's `type:` frontmatter. The issue body cites the plan path so the ticket links back to its plan.
+
 ## v3.11.1 — 2026-07-11 — More descriptive, human-readable generated branch names
 
 ### Changed
