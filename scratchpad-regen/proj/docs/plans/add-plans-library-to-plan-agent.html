@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en" data-status="completed">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="completed">
+<meta name="plan-modified" content="2026-06-03">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-05-30">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-plans-library-to-plan-agent.html">
+<meta name="plan-path" content="docs/plans/add-plans-library-to-plan-agent.html">
+<title>Plan: Add plans-library Skill to plan-agent</title>
+<style>
+  :root {
+    --bg:#ffffff; --surface:#ffffff; --border:#e5e7eb; --border-mid:#d1d5db;
+    --text:#111827; --muted:#6b7280; --subtle:#9ca3af; --accent:#2563eb;
+    --accent-bg:#eff6ff; --green:#16a34a; --green-bg:#f0fdf4; --amber:#d97706;
+    --grey-bg:#f9fafb; --wish-bg:#fdf8ff; --wish-border:#d8b4fe;
+    --radius:4px; --shadow:0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:15px; line-height:1.7; color:var(--text); background:var(--bg); }
+  a { color:var(--accent); }
+  code, pre { font-family:ui-monospace,"SF Mono","Fira Code",Consolas,monospace; font-size:.875em; }
+  code { background:var(--grey-bg); padding:.1em .35em; border-radius:3px; border:1px solid var(--border); }
+  pre { background:var(--grey-bg); border:1px solid var(--border); border-radius:var(--radius); padding:.75rem 1rem; overflow-x:auto; white-space:pre-wrap; word-break:break-word; }
+  pre code { background:none; border:none; padding:0; }
+  .icon { width:1rem; height:1rem; display:inline-block; vertical-align:middle; flex-shrink:0; }
+  .skip-link { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  .skip-link:focus { position:fixed; left:1rem; top:1rem; width:auto; height:auto; overflow:visible; background:var(--accent); color:#fff; padding:.5rem 1rem; border-radius:var(--radius); font-weight:700; z-index:9999; text-decoration:none; }
+  .plan-header { background:var(--bg); border-bottom:1px solid var(--border); }
+  .plan-header::before { content:""; display:block; height:3px; background:var(--accent); }
+  .plan-header-inner { max-width:1040px; margin:0 auto; padding:1.75rem 1.5rem 1.5rem; }
+  .plan-doc-type { font-size:.68rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:.6rem; }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title { font-size:1.75rem; font-weight:700; letter-spacing:-.025em; line-height:1.2; color:var(--text); }
+  .status-badge { display:inline-flex; align-items:center; gap:.4rem; font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:.25rem .75rem; border-radius:999px; white-space:nowrap; flex-shrink:0; color:#fff; }
+  .status-badge::before { content:""; display:inline-block; width:.45em; height:.45em; border-radius:50%; background:currentColor; flex-shrink:0; }
+  [data-status="completed"] .status-badge { background:#6b7280; }
+  [data-status="in-progress"] .status-badge { background:#d97706; }
+  [data-status="completed"] .status-badge { background:#16a34a; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+  [data-status="in-progress"] .status-badge::before { animation:pulse-dot 1.4s ease-in-out infinite; }
+  .plan-meta { display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); font-size:.8rem; color:var(--muted); }
+  .plan-meta span { display:inline-flex; align-items:center; gap:.3rem; }
+  .plan-meta .icon { opacity:.55; }
+  .layout { display:grid; grid-template-columns:200px 1fr; gap:3rem; max-width:1040px; margin:0 auto; padding:2.5rem 1.5rem 5rem; align-items:start; }
+  @media (max-width:720px) { .layout { grid-template-columns:1fr; padding:1.5rem .75rem 4rem; gap:0; } }
+  .plan-nav { position:sticky; top:1.5rem; align-self:start; overflow:hidden; }
+  @media (max-width:720px) { .plan-nav { position:static; border-bottom:1px solid var(--border); padding-bottom:1.5rem; margin-bottom:2rem; } }
+  .nav-heading { font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--subtle); padding:0 1rem .6rem; margin-bottom:.25rem; border-bottom:1px solid var(--border); }
+  .plan-nav ul { list-style:none; padding:0; margin:0; }
+  .plan-nav li a { display:flex; align-items:center; min-height:44px; padding:.125rem 1rem .125rem 1.25rem; font-size:.825rem; color:var(--muted); text-decoration:none; gap:.5rem; border-left:2px solid transparent; transition:color .12s,border-color .12s; }
+  .plan-nav li a:hover { color:var(--text); border-left-color:var(--border-mid); }
+  .plan-nav li a.active { color:var(--accent); font-weight:600; border-left-color:var(--accent); }
+  .plan-nav .icon { opacity:.5; }
+  .objective-card { background:var(--accent-bg); border:1px solid #bfdbfe; border-left:4px solid var(--accent); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:2.5rem; font-size:1.05rem; font-weight:500; color:#1e3a5f; line-height:1.6; }
+  .objective-card .section-label { font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:.5rem; }
+  .section-card { border-top:1px solid var(--border); padding:2rem 0 1.25rem; }
+  .section-card:first-of-type { border-top:none; }
+  .section-card h2 { font-size:.9rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:1.25rem; display:flex; align-items:center; gap:.45rem; }
+  .section-card h2 .icon { opacity:.6; }
+  .section-card p { margin-bottom:.75rem; color:var(--text); }
+  .section-card p:last-child { margin-bottom:0; }
+  .section-card ul, .section-card ol { padding-left:1.4rem; display:flex; flex-direction:column; gap:.4rem; }
+  .file-list { list-style:none !important; padding-left:0 !important; }
+  .file-list li { font-size:.9rem; }
+  .file-list .tag { display:inline-block; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:.1em .5em; border-radius:999px; margin-right:.5rem; }
+  .tag-new { background:var(--green-bg); color:var(--green); border:1px solid #bbf7d0; }
+  .tag-edit { background:var(--accent-bg); color:var(--accent); border:1px solid #bfdbfe; }
+  .steps-list { display:flex; flex-direction:column; gap:.75rem; position:relative; }
+  .steps-list::before { content:""; position:absolute; left:.9rem; top:1.75rem; bottom:1.75rem; width:1px; background:var(--border); }
+  .step-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; box-shadow:var(--shadow); position:relative; margin-left:2.25rem; }
+  .step-card::before { content:""; position:absolute; left:-1.6rem; top:1.1rem; width:.75rem; height:.75rem; border-radius:50%; background:var(--border); border:2px solid var(--bg); }
+  .step-card-header { display:flex; align-items:flex-start; gap:.75rem; }
+  .step-number { flex-shrink:0; width:1.75rem; height:1.75rem; background:var(--grey-bg); color:var(--muted); border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; margin-top:.1rem; }
+  .step-body { min-width:0; }
+  .step-action { font-weight:600; margin-bottom:.3rem; display:flex; align-items:baseline; gap:.45rem; flex-wrap:wrap; color:var(--text); }
+  .step-chip { display:inline-block; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:.1em .5em; border-radius:999px; background:var(--grey-bg); color:var(--subtle); border:1px solid var(--border); vertical-align:middle; user-select:none; flex-shrink:0; }
+  .step-chip-text { }
+  .step-why { font-size:.875rem; color:var(--muted); margin-bottom:.4rem; }
+  .step-why::before { content:"Why: "; font-weight:600; color:var(--text); }
+  .step-verify-toggle { margin-top:.5rem; border-top:1px solid var(--border); padding-top:.4rem; }
+  .step-verify-toggle summary { font-size:.8rem; font-weight:600; color:var(--accent); cursor:pointer; list-style:none; display:flex; align-items:center; gap:.35rem; user-select:none; }
+  .step-verify-toggle summary::before { content:"\25B6"; font-size:.55em; transition:transform .2s; }
+  .step-verify-toggle[open] summary::before { transform:rotate(90deg); }
+  .step-verify-toggle .verify-body { font-size:.875rem; color:var(--text); margin-top:.4rem; padding-left:.5rem; border-left:2px solid var(--accent); }
+  .progress-wrap { margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border); }
+  .progress-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.6rem; font-size:.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .progress-bar-bg { height:6px; background:var(--border); border-radius:999px; overflow:hidden; }
+  .progress-bar-fill { height:100%; border-radius:999px; background:var(--accent); transition:width .5s cubic-bezier(.4,0,.2,1); width:0%; }
+  .criteria-list { list-style:none; padding:0; display:flex; flex-direction:column; gap:.6rem; }
+  .criteria-list li { display:flex; align-items:flex-start; gap:.75rem; padding:.6rem .75rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+  .criteria-list li:has(input:checked) { background:var(--grey-bg); }
+  .criteria-list input[type="checkbox"] { flex-shrink:0; width:1rem; height:1rem; margin-top:.2rem; accent-color:var(--green); cursor:pointer; }
+  .criteria-list label { cursor:pointer; font-size:.9rem; }
+  .criteria-list input:checked + label { text-decoration:line-through; color:var(--muted); }
+  .next-steps-list { padding:0; display:flex; flex-direction:column; gap:.75rem; }
+  .next-step-item { border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--surface); }
+  .next-step-item summary { font-weight:600; font-size:.9rem; padding:.75rem 1rem; cursor:pointer; list-style:none; display:flex; align-items:center; gap:.5rem; background:var(--surface); user-select:none; min-height:44px; }
+  .next-step-item summary::before { content:"\25B6"; font-size:.55em; color:var(--subtle); transition:transform .2s; }
+  .next-step-item[open] summary::before { transform:rotate(90deg); }
+  .next-step-prompt { padding:.75rem 1rem 1rem; background:var(--grey-bg); border-top:1px solid var(--border); }
+  .next-step-prompt p { font-size:.8rem; color:var(--muted); margin-bottom:.5rem; }
+  .next-step-prompt pre { margin:0; }
+  .copy-prompt-btn { display:inline-flex; align-items:center; gap:.35rem; margin-top:.6rem; padding:.3rem .75rem; font-size:.775rem; font-weight:500; color:var(--accent); background:var(--accent-bg); border:1px solid #bfdbfe; border-radius:var(--radius); cursor:pointer; font-family:inherit; }
+  .copy-prompt-btn:hover { background:#dbeafe; border-color:var(--accent); }
+  .copy-prompt-btn.copied { color:var(--green); background:var(--green-bg); border-color:#bbf7d0; }
+  .wish-list-header { display:flex; align-items:center; gap:.5rem; font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#7c3aed; margin:1.5rem 0 .75rem; }
+  .wish-list-header::after { content:""; height:1px; background:var(--wish-border); opacity:.5; }
+  .wish-item { border:1px dashed var(--wish-border) !important; background:var(--wish-bg) !important; }
+  .wish-item summary { background:var(--wish-bg) !important; color:#6d28d9; }
+  .wish-badge { font-size:.6rem; background:#f3e8ff; color:#6d28d9; padding:.1rem .5rem; border-radius:999px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-left:auto; border:1px solid #ddd6fe; }
+  .plan-footer { display:flex; align-items:center; justify-content:center; gap:.4rem; font-size:.75rem; color:var(--subtle); margin-top:3rem; padding-top:1.25rem; border-top:1px solid var(--border); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ── Save as PDF button (backfilled) ──────────────────────────── */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent, #2563eb);
+    border: 1px solid var(--accent, #2563eb);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
+  @media print { .save-pdf-btn { display: none !important; } }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add plans-library Skill to plan-agent
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a plans-library skill in the plan-agent plugin that scans every HTML plan in the plans directory, reads each plan's status, type, title, and created date from its <meta> tags, and renders them into a single self-contained docs/plans/index.html gallery &mdash; filterable by status and type, searchable by title, and openable in the browser &mdash; mirroring the media-library skill from social-media-tools.
+
+## Context
+The plan-agent plugin now emits every plan as a self-contained .html file in docs/plans/ , each carrying machine-readable <meta> tags ( plan-status , plan-type , plan-created , plan-repo ) and a <title> . With 100+ plan files in that directory there is no way to browse or organise them without knowing exact filenames.
+
+The sibling social-media-tools plugin already solves the identical problem for its cards: the media-library skill scans docs/media/social/*.html , parses each file, populates a static templates/gallery.html with one card per entry, writes index.html , and opens it in the browser. This plan ports that proven template-plus-skill pattern to plan-agent, adapting the data source (plan <meta> tags instead of filename parsing) and the filter dimensions (status + type instead of card type).
+
+An existing todo plan, create-plans-index-page.html , describes a one-off bash-script index for this repo only. Per the chosen direction this plan supersedes it: instead of a repo-local script, we deliver a reusable plugin skill any plan-agent user can invoke. The old plan is marked superseded in Step 6.
+
+## Steps
+1. Create the plans-gallery.html template Why: Presentation must live in a static template so the skill only substitutes data &mdash; the same separation media-library uses. Reuse the light-theme design tokens from SKELETON.html so the gallery matches the plans it indexes. Verify: Open the template in a browser with placeholder rows hand-filled; confirm status chips (todo / in-progress / completed), type chips (feature / fix / refactor / docs / chore), a search box, and a card grid all render, and that the embedded JS filters cards by both data-status and data-type plus title search.
+2. Define the gallery card markup & placeholders Why: The card must surface exactly the fields plans carry: title, status badge, type badge, created date, and filename link &mdash; no PNG thumbnail (plans have no screenshots). Placeholders {{GALLERY_ENTRIES}} , {{PLAN_COUNT}} , {{GENERATED_AT}} mirror media-library's contract. Verify: Each card is an <a href="{filename}"> with data-status and data-type attributes; clicking a card opens the underlying plan file via a relative link.
+3. Write SKILL.md with the scan &rarr; parse &rarr; render &rarr; open workflow Why: The skill is the only runtime artefact Claude loads; all imperative logic lives here. Model it on media-library's six-step structure, swapping in plan-specific parsing. Verify: Frontmatter declares name: plans-library , a two-sentence description with a trigger phrase, and allowed-tools: Bash, Read, Write, ToolSearch, ExitPlanMode . Body covers: locate plans dir, scan *.html (exclude index.html and archive/ ), parse meta tags + title per file, build entries, substitute into template, write index.html , open in browser, then STOP.
+4. Resolve the plans directory & exclusions correctly Why: plan-agent already resolves a plans dir ( plansDirectory setting &rarr; docs/plans/ &rarr; default). The library must scan that same directory, and must never include docs/plans/archive/ (global + project search-exclusion rule) or the generated index.html . Verify: Dry-run the scan command: it lists only top-level docs/plans/*.html , omits index.html , and does not descend into archive/ . Plans missing a meta tag fall back gracefully (e.g. plan-type &rarr; untyped , title &rarr; filename).
+5. Register the skill: bump version & update docs Why: A new skill is a MINOR bump per the marketplace versioning table. Version lives only in marketplace.json for relative-path plugins; CHANGELOG, README, and plugin.json description keep the plugin self-documenting. Verify: marketplace.json shows plan-agent 0.11.0 ; plugin.json has no version field; CHANGELOG has a 0.11.0 entry; README lists plans-library under Features, the structure tree, and Components; the .claude/settings.json marketplace-JSON validator passes.
+6. Mark create-plans-index-page.html as superseded Why: The chosen direction supersedes the one-off index plan; leaving it as todo would invite duplicate work on a now-redundant approach. Verify: That plan's status is updated (both <html data-status> and the plan-status meta) with a one-line note pointing to this plan / the plans-library skill.
+
+## Acceptance Criteria
+- kit/plugins/plan-agent/skills/plans-library/SKILL.md exists with valid frontmatter ( name , two-sentence description , allowed-tools ).
+- kit/plugins/plan-agent/templates/plans-gallery.html exists and is fully self-contained (no external CSS/JS/CDN).
+- Running the skill against docs/plans/ writes docs/plans/index.html with one card per HTML plan.
+- Each card shows title, status badge, type badge, and created date, and links to the plan file.
+- Status chips, type chips, and the search box all filter the visible cards in the browser.
+- The scan excludes index.html and never descends into docs/plans/archive/ .
+- plan-agent is bumped to 0.11.0 in marketplace.json only; CHANGELOG and README document the new skill.
+- create-plans-index-page.html is marked superseded so it is not worked separately.
+
+## Verification
+End-to-end: Load the plugin locally with claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent , then trigger the skill (e.g. &ldquo;browse my plans&rdquo;). Confirm it scans docs/plans/ , writes docs/plans/index.html , and opens it in the browser.
+
+In the browser: Verify the card count matches ls docs/plans/*.html | grep -v index.html | wc -l ; click a completed chip and confirm only completed plans remain; click a feature chip and confirm the set narrows further; type a known plan title into the search box and confirm a single card matches; click a card and confirm the underlying plan opens.
+
+Regression: Re-run the skill and confirm index.html is regenerated (not duplicated) and is itself excluded from the next scan. Confirm no archive/ plans appear. Confirm the marketplace-JSON validator passes after the version bump.
+</script>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/></symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/></symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/><path d="M6 6h.008v.008H6V6Z"/></symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/></symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Add a plans-library Skill to plan-agent</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+              aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="status-badge">todo</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-05-30</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <main id="main">
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Ship a <code>plans-library</code> skill in the plan-agent plugin that scans every HTML plan in the plans directory, reads each plan&#39;s status, type, title, and created date from its <code>&lt;meta&gt;</code> tags, and renders them into a single self-contained <code>docs/plans/index.html</code> gallery &mdash; filterable by status and type, searchable by title, and openable in the browser &mdash; mirroring the <code>media-library</code> skill from social-media-tools.</p>
+    </div>
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">add-plans-library-to-plan-agent.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-plans-library-to-plan-agent.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">0 / 8 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <section class="section-card" id="context" aria-labelledby="h-context">
+      <h2 id="h-context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</h2>
+      <p>The plan-agent plugin now emits every plan as a self-contained <code>.html</code> file in <code>docs/plans/</code>, each carrying machine-readable <code>&lt;meta&gt;</code> tags (<code>plan-status</code>, <code>plan-type</code>, <code>plan-created</code>, <code>plan-repo</code>) and a <code>&lt;title&gt;</code>. With 100+ plan files in that directory there is no way to browse or organise them without knowing exact filenames.</p>
+      <p>The sibling social-media-tools plugin already solves the identical problem for its cards: the <code>media-library</code> skill scans <code>docs/media/social/*.html</code>, parses each file, populates a static <code>templates/gallery.html</code> with one card per entry, writes <code>index.html</code>, and opens it in the browser. This plan ports that proven template-plus-skill pattern to plan-agent, adapting the data source (plan <code>&lt;meta&gt;</code> tags instead of filename parsing) and the filter dimensions (status + type instead of card type).</p>
+      <p>An existing todo plan, <code>create-plans-index-page.html</code>, describes a one-off bash-script index for this repo only. Per the chosen direction this plan <strong>supersedes</strong> it: instead of a repo-local script, we deliver a reusable plugin skill any plan-agent user can invoke. The old plan is marked superseded in Step 6.</p>
+    </section>
+
+    <section class="section-card" id="files" aria-labelledby="h-files">
+      <h2 id="h-files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</h2>
+      <ul class="file-list">
+        <li><span class="tag tag-new">new</span> <code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> &mdash; the scanning &amp; rendering skill</li>
+        <li><span class="tag tag-new">new</span> <code>kit/plugins/plan-agent/templates/plans-gallery.html</code> &mdash; static gallery template with placeholders</li>
+        <li><span class="tag tag-edit">edit</span> <code>.claude-plugin/marketplace.json</code> &mdash; bump plan-agent <code>0.10.0</code> &rarr; <code>0.11.0</code> (MINOR: new skill)</li>
+        <li><span class="tag tag-edit">edit</span> <code>kit/plugins/plan-agent/CHANGELOG.md</code> &mdash; add <code>0.11.0</code> entry</li>
+        <li><span class="tag tag-edit">edit</span> <code>kit/plugins/plan-agent/README.md</code> &mdash; document the skill; update structure tree &amp; Components</li>
+        <li><span class="tag tag-edit">edit</span> <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> &mdash; extend description to mention the library skill</li>
+        <li><span class="tag tag-edit">edit</span> <code>docs/plans/create-plans-index-page.html</code> &mdash; mark superseded</li>
+      </ul>
+    </section>
+
+    <section class="section-card" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</h2>
+      <div class="steps-list">
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Create the <code>plans-gallery.html</code> template</span></div>
+              <div class="step-why">Presentation must live in a static template so the skill only substitutes data &mdash; the same separation media-library uses. Reuse the light-theme design tokens from <code>SKELETON.html</code> so the gallery matches the plans it indexes.</div>
+              <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Open the template in a browser with placeholder rows hand-filled; confirm status chips (todo / in-progress / completed), type chips (feature / fix / refactor / docs / chore), a search box, and a card grid all render, and that the embedded JS filters cards by both <code>data-status</code> and <code>data-type</code> plus title search.</div></details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Define the gallery card markup &amp; placeholders</span></div>
+              <div class="step-why">The card must surface exactly the fields plans carry: title, status badge, type badge, created date, and filename link &mdash; no PNG thumbnail (plans have no screenshots). Placeholders <code>{{GALLERY_ENTRIES}}</code>, <code>{{PLAN_COUNT}}</code>, <code>{{GENERATED_AT}}</code> mirror media-library&#39;s contract.</div>
+              <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Each card is an <code>&lt;a href="{filename}"&gt;</code> with <code>data-status</code> and <code>data-type</code> attributes; clicking a card opens the underlying plan file via a relative link.</div></details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Write <code>SKILL.md</code> with the scan &rarr; parse &rarr; render &rarr; open workflow</span></div>
+              <div class="step-why">The skill is the only runtime artefact Claude loads; all imperative logic lives here. Model it on media-library&#39;s six-step structure, swapping in plan-specific parsing.</div>
+              <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Frontmatter declares <code>name: plans-library</code>, a two-sentence description with a trigger phrase, and <code>allowed-tools: Bash, Read, Write, ToolSearch, ExitPlanMode</code>. Body covers: locate plans dir, scan <code>*.html</code> (exclude <code>index.html</code> and <code>archive/</code>), parse meta tags + title per file, build entries, substitute into template, write <code>index.html</code>, open in browser, then STOP.</div></details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Resolve the plans directory &amp; exclusions correctly</span></div>
+              <div class="step-why">plan-agent already resolves a plans dir (<code>plansDirectory</code> setting &rarr; <code>docs/plans/</code> &rarr; default). The library must scan that same directory, and must never include <code>docs/plans/archive/</code> (global + project search-exclusion rule) or the generated <code>index.html</code>.</div>
+              <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">Dry-run the scan command: it lists only top-level <code>docs/plans/*.html</code>, omits <code>index.html</code>, and does not descend into <code>archive/</code>. Plans missing a meta tag fall back gracefully (e.g. <code>plan-type</code> &rarr; <code>untyped</code>, title &rarr; filename).</div></details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Register the skill: bump version &amp; update docs</span></div>
+              <div class="step-why">A new skill is a MINOR bump per the marketplace versioning table. Version lives only in <code>marketplace.json</code> for relative-path plugins; CHANGELOG, README, and plugin.json description keep the plugin self-documenting.</div>
+              <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body"><code>marketplace.json</code> shows plan-agent <code>0.11.0</code>; <code>plugin.json</code> has no <code>version</code> field; CHANGELOG has a <code>0.11.0</code> entry; README lists <code>plans-library</code> under Features, the structure tree, and Components; the <code>.claude/settings.json</code> marketplace-JSON validator passes.</div></details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action"><span class="step-chip">completed</span><span class="step-chip-text">Mark <code>create-plans-index-page.html</code> as superseded</span></div>
+              <div class="step-why">The chosen direction supersedes the one-off index plan; leaving it as <code>todo</code> would invite duplicate work on a now-redundant approach.</div>
+              <details class="step-verify-toggle"><summary>Verify</summary><div class="verify-body">That plan&#39;s status is updated (both <code>&lt;html data-status&gt;</code> and the <code>plan-status</code> meta) with a one-line note pointing to this plan / the <code>plans-library</code> skill.</div></details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section-card" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Acceptance Criteria</h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li><input type="checkbox" id="ac1" checked><label for="ac1"><code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> exists with valid frontmatter (<code>name</code>, two-sentence <code>description</code>, <code>allowed-tools</code>).</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2"><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> exists and is fully self-contained (no external CSS/JS/CDN).</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3">Running the skill against <code>docs/plans/</code> writes <code>docs/plans/index.html</code> with one card per HTML plan.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4">Each card shows title, status badge, type badge, and created date, and links to the plan file.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">Status chips, type chips, and the search box all filter the visible cards in the browser.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The scan excludes <code>index.html</code> and never descends into <code>docs/plans/archive/</code>.</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">plan-agent is bumped to <code>0.11.0</code> in <code>marketplace.json</code> only; CHANGELOG and README document the new skill.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8"><code>create-plans-index-page.html</code> is marked superseded so it is not worked separately.</label></li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <section class="section-card" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</h2>
+      <p><strong>End-to-end:</strong> Load the plugin locally with <code>claude --plugin-dir ~/devbox/agentics/kit/plugins/plan-agent</code>, then trigger the skill (e.g. &ldquo;browse my plans&rdquo;). Confirm it scans <code>docs/plans/</code>, writes <code>docs/plans/index.html</code>, and opens it in the browser.</p>
+      <p><strong>In the browser:</strong> Verify the card count matches <code>ls docs/plans/*.html | grep -v index.html | wc -l</code>; click a <code>completed</code> chip and confirm only completed plans remain; click a <code>feature</code> chip and confirm the set narrows further; type a known plan title into the search box and confirm a single card matches; click a card and confirm the underlying plan opens.</p>
+      <p><strong>Regression:</strong> Re-run the skill and confirm <code>index.html</code> is regenerated (not duplicated) and is itself excluded from the next scan. Confirm no <code>archive/</code> plans appear. Confirm the marketplace-JSON validator passes after the version bump.</p>
+    </section>
+
+    <section class="section-card" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</h2>
+      <div class="next-steps-list">
+
+        <details class="next-step-item">
+          <summary>Add a sort control (newest / status / type) to the gallery</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In kit/plugins/plan-agent/templates/plans-gallery.html, add a sort dropdown to the toolbar with options: Newest first (by plan-created desc), Oldest first, Status, and Type. Implement the sort client-side in the existing inline script by reordering the .gallery-card elements in #galleryGrid. Keep it dependency-free and ensure it composes with the existing status/type/search filters. Update the plans-library SKILL.md only if the placeholder contract changes.</pre>
+            <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <div class="wish-list-header"><svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg> Wish List</div>
+
+        <details class="next-step-item wish-item">
+          <summary>Auto-regenerate the index via a PostToolUse hook<span class="wish-badge">Wish List</span></summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Design a PostToolUse hook for the plan-agent plugin that regenerates docs/plans/index.html automatically whenever a plan .html file under docs/plans/ is created or edited. Reuse the plans-library scan/render logic (extract it into a small script the hook and skill share). The hook must be debounced/cheap, must skip when only index.html itself changed, and must never descend into docs/plans/archive/. Recommend whether the shared logic should be a bash or python script and justify the choice.</pre>
+            <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-05-30 · agentics
+    </footer>
+  </main>
+</div>
+
+<script>
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied \u2713';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') { pre = btn.parentElement && btn.parentElement.querySelector('pre'); }
+  if (!pre) return;
+  var text = pre.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); btn._copyTimer = null; }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(flash).catch(fallback); }
+  else { fallback(); }
+}
+(function () {
+  'use strict';
+  var bar = document.getElementById('progress-bar');
+  var label = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(document.querySelectorAll('#criteria-list input[type="checkbox"]'));
+  var total = checkboxes.length;
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+})();
+</script>
+<script>
+/* Save as PDF (native browser print dialog) — backfilled */
+function savePDF() {
+  window.print();
+}
+</script>
+</body>
+</html>

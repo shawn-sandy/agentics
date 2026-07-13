@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<!--
+  blog-card.html — Dark-mode blog post / article card for social posts.
+
+  Static variables (always substituted):
+    social-media-tools          — Headline of the blog post (og:title or YAML front matter title)
+    Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack.        — Short excerpt or description (og:description or first paragraph)
+    Shawn Sandy         — Author name (article:author, byline, or YAML author field)
+    May 29, 2026           — Publication date (article:published_time or YAML date field)
+    local file  — Domain of the source URL, e.g. "dev.to" (strip www.)
+
+  Conditional element variables (skill injects full HTML element or empty string ""):
+    <span class="read-time">11 min read</span> — '<span class="read-time">N min read</span>' or ""
+                          Only computed for local .md files (word count / 200 wpm).
+                          Leave "" for URL sources.
+         — Full '<div class="card-footer">...</div>' block with tag chips,
+                          or "" if no tags. Each tag value must be HTML-escaped by the skill.
+                          Chip format: <span class="tag">{escaped_tag}</span>
+
+  Note: all text values substituted into this template must be HTML-escaped by the skill
+  before substitution (& → &amp;, < → &lt;, > → &gt;).
+
+    <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">I built a Claude Code plugin that handles the whole social sharing pipeline — and honestly it's been one of the most satisfying things to dog-food.
+
+social-media-tools takes any code change, blog post, video, or session recap and turns it into a styled dark-mode card with platform-ready copy. Here's what I kept coming back to:
+
+1. Seven card templates (diff, feature, quote, blog, video, snippet, session) — populate with variables, screenshot via Playwright, done.
+2. Security scrub runs on every path before anything goes out — API keys, JWTs, credentials. No manual check required.
+3. The social-share router figures out which skill to invoke from a natural-language request. You just describe what you want to share.
+
+The piece I like most: the media library saves every card as HTML with the post copy inside it. Pull copy for reposting weeks later without touching the generator again.
+
+If you're building Claude Code plugins or just trying to share dev work without the manual assembly — worth a look.
+
+Follow along if this kind of tooling is your thing.
+
+#ClaudeCode #Plugins #DeveloperTools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">Built a Claude Code plugin that scrubs secrets, drafts platform-aware copy, and screenshots a dark-mode card — for code changes, blogs, videos, or session recaps. One skill, full pipeline. #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">Wrote a Claude Code plugin that handles the full social sharing pipeline — detect content, scrub secrets, draft copy per platform, screenshot a dark-mode card. The media library bit is what I keep reaching for. Worth a look if you share dev work regularly.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">I kept hitting the same wall sharing dev work — pick a platform, write copy, stay under the character limit, make it not look terrible.
+
+So I built social-media-tools for Claude Code: security-scrub on every path, seven card templates, platform-aware copy with limits enforced, and a media library that saves the HTML + copy together for easy reuse later.
+
+The reuse piece is what surprised me most. Regenerating a card from scratch is annoying — having the copy already there isn't.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div> — Copy panel HTML: one panel for a single site, or three per-site panels for "All sites" (see variables.md)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>social-media-tools</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --tag-bg: rgba(56, 139, 253, 0.12);
+      --tag-fg: #79c0ff;
+      --excerpt-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Header ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .domain-pill {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.2px;
+    }
+
+    .read-time {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Body ── */
+    .card-body {
+      padding: 28px 32px 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      margin-bottom: 14px;
+    }
+
+    .excerpt {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+      border-left: 3px solid var(--excerpt-accent);
+      padding-left: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ── Meta row ── */
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-author {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .meta-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Tags footer (conditional — injected by skill or omitted entirely) ── */
+    .card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px 32px 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--tag-fg);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Copy panel ── */
+    .copy-panel {
+      width: 680px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="label">Blog Post</span>
+        <span class="domain-pill">local file</span>
+      </div>
+      <span class="read-time">11 min read</span>
+    </div>
+
+    <div class="card-body">
+      <h1>social-media-tools</h1>
+      <p class="excerpt">Discover shareable code, blog posts, videos, GitHub snippets, selected/pasted code, and project updates — scrub for secrets, draft objective-driven platform-aware copy, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack.</p>
+    </div>
+
+    <div class="card-meta">
+      <span class="meta-author">Shawn Sandy</span>
+      <span class="meta-date">May 29, 2026</span>
+    </div>
+
+    
+
+  </div>
+    <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">I built a Claude Code plugin that handles the whole social sharing pipeline — and honestly it's been one of the most satisfying things to dog-food.
+
+social-media-tools takes any code change, blog post, video, or session recap and turns it into a styled dark-mode card with platform-ready copy. Here's what I kept coming back to:
+
+1. Seven card templates (diff, feature, quote, blog, video, snippet, session) — populate with variables, screenshot via Playwright, done.
+2. Security scrub runs on every path before anything goes out — API keys, JWTs, credentials. No manual check required.
+3. The social-share router figures out which skill to invoke from a natural-language request. You just describe what you want to share.
+
+The piece I like most: the media library saves every card as HTML with the post copy inside it. Pull copy for reposting weeks later without touching the generator again.
+
+If you're building Claude Code plugins or just trying to share dev work without the manual assembly — worth a look.
+
+Follow along if this kind of tooling is your thing.
+
+#ClaudeCode #Plugins #DeveloperTools</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">Built a Claude Code plugin that scrubs secrets, drafts platform-aware copy, and screenshots a dark-mode card — for code changes, blogs, videos, or session recaps. One skill, full pipeline. #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">Wrote a Claude Code plugin that handles the full social sharing pipeline — detect content, scrub secrets, draft copy per platform, screenshot a dark-mode card. The media library bit is what I keep reaching for. Worth a look if you share dev work regularly.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+  <div class="copy-panel">
+    <p class="copy-label">Substack</p>
+    <textarea readonly class="post-copy-text" id="post-copy-substack">I kept hitting the same wall sharing dev work — pick a platform, write copy, stay under the character limit, make it not look terrible.
+
+So I built social-media-tools for Claude Code: security-scrub on every path, seven card templates, platform-aware copy with limits enforced, and a media library that saves the HTML + copy together for easy reuse later.
+
+The reuse piece is what surprised me most. Regenerating a card from scratch is annoying — having the copy already there isn't.</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-substack', this)">Copy Substack post</button>
+  </div>
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

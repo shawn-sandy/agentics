@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>settings-sync</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #388bfd;
+      --badge-bg: #1f6feb;
+      --badge-fg: #ffffff;
+      --tag-bg: rgba(56, 139, 253, 0.12);
+      --tag-fg: #79c0ff;
+      --excerpt-accent: #3fb950;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .card {
+      width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .domain-pill {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.2px;
+    }
+
+    .read-time {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .card-body {
+      padding: 28px 32px 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      margin-bottom: 14px;
+    }
+
+    .excerpt {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+      border-left: 3px solid var(--excerpt-accent);
+      padding-left: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-author {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .meta-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px 32px 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--tag-fg);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .copy-panel {
+      width: 680px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .copy-panel + .copy-panel { margin-top: 0; }
+
+    .copy-label {
+      color: #8b949e;
+      font-size: 12px;
+      margin: 0 0 8px;
+    }
+
+    .post-copy-text {
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 6px 16px;
+      background: #238636;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .copy-btn:hover { background: #2ea043; }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="label">Plugin</span>
+        <span class="domain-pill">local file</span>
+      </div>
+      <span class="read-time">2 min read</span>
+    </div>
+
+    <div class="card-body">
+      <h1>settings-sync</h1>
+      <p class="excerpt">Back up and restore Claude Code user settings to a dedicated git repo. Routine-compatible for automated backups.</p>
+    </div>
+
+    <div class="card-meta">
+      <span class="meta-author"></span>
+      <span class="meta-date"></span>
+    </div>
+
+    <div class="card-footer">
+      <span class="tag">claude-code</span>
+      <span class="tag">devtools</span>
+      <span class="tag">backup</span>
+      <span class="tag">plugin</span>
+      <span class="tag">automation</span>
+    </div>
+
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">LinkedIn</p>
+    <textarea readonly class="post-copy-text" id="post-copy-linkedin">Your Claude Code setup took effort to configure — it should be version-controlled.
+
+settings-sync backs up your Claude Code settings to a dedicated git repo and restores them on demand. Here's what stood out:
+
+1. Full config capture: settings.json, CLAUDE.md, keybindings.json, plus your custom rules, commands, and skills directories — everything that makes your Claude Code feel like yours.
+2. Restore is always interactive: before overwriting anything, it generates a file-level diff and waits for your confirmation. No silent clobbers.
+3. Routine-compatible: schedule it with /schedule for hands-free daily backups. No prompts when a repo path is pre-configured in ~/.claude/settings-sync.json.
+
+If you've ever had to rebuild a dev environment from scratch and wished you'd backed up your editor config, this is the Claude Code equivalent.
+
+Install it: /plugin install settings-sync@agentics-kit
+
+Follow for more Claude Code plugin builds and dev-environment automation.
+
+#ClaudeCode #DevTools #Automation</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-linkedin', this)">Copy LinkedIn post</button>
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">Twitter/X</p>
+    <textarea readonly class="post-copy-text" id="post-copy-twitter">Claude Code settings are one reinstall away from being gone. settings-sync backs them up to git — config, CLAUDE.md, rules, keybindings, everything. https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/settings-sync #ClaudeCode</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-twitter', this)">Copy Twitter/X post</button>
+  </div>
+
+  <div class="copy-panel">
+    <p class="copy-label">Bluesky</p>
+    <textarea readonly class="post-copy-text" id="post-copy-bluesky">settings-sync backs up your Claude Code config (settings.json, CLAUDE.md, rules, keybindings) to git with a diff preview on restore. Worth it if you've ever rebuilt a dev env from scratch. https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/settings-sync</textarea>
+    <button class="copy-btn" onclick="copyPost('post-copy-bluesky', this)">Copy Bluesky post</button>
+  </div>
+
+  <script>
+    function copyPost(id, btn) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var orig = btn.textContent;
+      function done() {
+        btn.textContent = 'Copied ✓';
+        setTimeout(function () { btn.textContent = orig; }, 2000);
+      }
+      function fallback() { t.select(); document.execCommand('copy'); done(); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(done).catch(fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

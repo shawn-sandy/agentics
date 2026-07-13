@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-08">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-research-agent-team.html">
+<meta name="plan-path" content="docs/plans/add-research-agent-team.html">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-research-agent-team.html &mdash; Ship a Research Agent Team phase for the implementation-plan skill">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-research-agent-team.html &mdash; Ship a Research Agent Team for implementation-plan">
+<title>Plan: Add Research Agent Team to implementation-plan skill</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --green-border:#bbf7d0;
+    --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --amber-border:#fde68a;
+    --red:        #dc2626;
+    --red-bg:     #fef2f2;
+    --red-border: #fecaca;
+    --purple:     #a21caf;
+    --purple-bg:  #fdf4ff;
+    --purple-border:#f0abfc;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: .8; }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .objective-card .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--text);
+  }
+  .step-chip {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .1em .5em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--subtle);
+    border: 1px solid var(--border);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-chip-text { }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle {
+    margin-top: .5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    padding-top: .4rem;
+  }
+  .step-verify-toggle summary {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem;
+    color: var(--text);
+    margin-top: .4rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--surface);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem;
+    background: #f3e8ff;
+    color: #6d28d9;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid #ddd6fe;
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-implement code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  .plan-workflow {
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+  }
+  .plan-workflow summary {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    padding: .25rem 0;
+    user-select: none;
+  }
+  .plan-workflow summary:hover { text-decoration: underline; }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+  }
+  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    height: 1px;
+    background: var(--border);
+  }
+  .objective-test-card {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: #14532d; }
+  .objective-test-card .test-card-body { color: #166534; }
+  .objective-test-card .test-card-body strong { color: #14532d; }
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--subtle);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--text); }
+  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--green); }
+  .bar-fill.zero { background: var(--subtle); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
+  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table code { font-size: .8em; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ── Save as PDF button (backfilled) ──────────────────────────── */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent, #2563eb);
+    border: 1px solid var(--accent, #2563eb);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
+  @media print { .save-pdf-btn { display: none !important; } }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Add Research Agent Team to implementation-plan skill
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a Research Agent Team phase (Step 0c) that spawns 4&ndash;6 specialized researcher teammates to investigate the plan objective from multiple angles in parallel, synthesizes findings into a Research Brief that feeds Steps 1&ndash;2, and gracefully degrades to single-session Explore when Agent Teams are unavailable
+
+## Context
+The implementation-plan skill currently runs a single-session sequential pipeline &mdash; one Claude instance explores the codebase (Step 0b), clarifies requirements (Step 1), and writes the plan (Step 2). For complex plans spanning multiple subsystems, research breadth is limited by what one context window can hold, and there is no adversarial tension: the same agent that researches also writes the plan.
+
+The review-plan skill already demonstrates a proven Agent Team pattern in this plugin: it spawns 5&ndash;7 parallel reviewers with structured output, collects findings via SendMessage , and synthesizes results. The same pattern can be applied earlier in the pipeline &mdash; during research, before plan creation &mdash; to produce richer, more thoroughly investigated plans. Agent Teams (experimental, v2.1.32+) are the right tool because researchers need to communicate with each other: a codebase analyst discovering an API constraint can message the dependency researcher directly to adjust the investigation.
+
+When Agent Teams are unavailable (flag unset, old version), the skill must degrade gracefully to the existing single-session Explore &mdash; not hard-stop like review-plan does. Plan creation is too critical to block on an experimental feature.
+
+## Files
+- kit/plugins/plan-agent/agents/plan-researcher-codebase.md (new) — codebase architecture researcher agent
+- kit/plugins/plan-agent/agents/plan-researcher-dependencies.md (new) — library and API dependency researcher
+- kit/plugins/plan-agent/agents/plan-researcher-devils-advocate.md (new) — adversarial assumption challenger (conditional)
+- kit/plugins/plan-agent/agents/plan-researcher-prior-art.md (new) — web best-practices researcher
+- kit/plugins/plan-agent/agents/plan-researcher-test-strategy.md (new) — test infrastructure analyst
+- kit/plugins/plan-agent/agents/plan-researcher-ux.md (new) — UI pattern researcher (conditional)
+- kit/plugins/plan-agent/skills/implementation-plan/references/research-prompts.md (new) — role-prompt templates for 6 researchers
+- kit/plugins/plan-agent/skills/implementation-plan/references/research-brief-template.md (new) — synthesis template for Research Brief
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — add Step 0c, --research flag, allowed-tools
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — add version entry for research team
+- kit/plugins/plan-agent/README.md (modified) — document research team feature
+- kit/plugins/plan-agent/.claude-plugin/plugin.json (modified) — mention research team in description
+- .claude-plugin/marketplace.json (modified) — bump plan-agent minor version
+
+## Steps
+1. Create references/research-prompts.md with role-prompt templates for all 6 researcher types Why: Externalizing prompts into a reference file follows the proven pattern from review-plan/references/role-prompts.md and keeps the main SKILL.md focused on orchestration logic. Each prompt needs <OBJECTIVE> and <CODEBASE_CONTEXT> placeholders plus a structured [Role Report] output format with SendMessage . Panel recommendation: the agent definition files (Step 3&ndash;4) should carry the full role prompt, making this reference file the canonical template source that agents are generated from &mdash; not a parallel source of truth. The orchestrator reads prompts from agent definitions at spawn time, matching the review-plan pattern exactly. Verify: Pre-check: confirm kit/plugins/plan-agent/skills/implementation-plan/references/ directory exists (create it if not). Then read the file; confirm 6 distinct role sections (codebase-analyst, dependency-researcher, prior-art-researcher, test-strategist, ux-researcher, devils-advocate) with <OBJECTIVE> and <CODEBASE_CONTEXT> placeholders and SendMessage reporting format in each.
+2. Create references/research-brief-template.md with the synthesis template Why: A structured template ensures synthesis is consistent regardless of which researchers were spawned, and bridges directly into the Clarify and Create steps. Sections: Executive Summary, Per-Role Findings (6 slots), Key Constraints Discovered, Recommended Approach, Open Questions for Clarify Step. Verify: Read the file; confirm it has all 6 role-finding sections, an Executive Summary section, Key Constraints, Recommended Approach, and Open Questions sections.
+3. Create 4 core agent definitions: plan-researcher-codebase.md , plan-researcher-dependencies.md , plan-researcher-prior-art.md , plan-researcher-test-strategy.md Why: Agent definitions let the Agent Team system use these as subagent types when spawning teammates, giving each researcher a scoped tool allowlist and a focused system prompt. Follow the existing plan-reviewer-*.md pattern: frontmatter with name , description , allowed-tools , model: sonnet ; body with mandate, how-to-research instructions, and SendMessage reporting format. Codebase-analyst gets Read, Glob, Grep, Bash ; dependency-researcher gets Read, Glob, Grep, Bash, WebSearch, WebFetch ; prior-art gets WebSearch, WebFetch, Read ; test-strategist gets Read, Glob, Grep, Bash . Verify: Pre-check: confirm kit/plugins/plan-agent/agents/ directory exists (create it if not &mdash; existing plan-reviewer-*.md agent files already live here, so the directory should exist, but verify). Then read each of the 4 files; confirm valid frontmatter with model: sonnet and the correct allowed-tools per role. Confirm each has a mandate section and a SendMessage output format block.
+4. Create 2 conditional agent definitions: plan-researcher-ux.md and plan-researcher-devils-advocate.md Why: Conditional agents avoid wasting tokens on UI research for backend-only plans or adversarial challenge for simple plans. Mirrors the review-plan pattern where UX and accessibility reviewers are conditional on UI signals. UX researcher gets Read, Glob, Grep, WebSearch, WebFetch ; devil&rsquo;s advocate gets Read, Glob, Grep, Bash . Verify: Read both files; confirm frontmatter and body structure match the core agents from Step 3. Confirm the UX researcher mentions UI signal activation and the devil&rsquo;s advocate mentions complex-plan activation.
+5. Add --research and --no-research flags to SKILL.md argument parsing Why: Explicit opt-in/opt-out keeps the feature controllable and avoids surprise token consumption from Agent Teams. --research forces the Research Agent Team phase. --no-research skips it. --quick shorthand expands to include --no-research . Panel recommendation: document the conflict resolution rule explicitly in the SKILL.md flags section: when both --research and --no-research are present, last-wins (consistent with standard CLI flag conventions). This must be visible in the flags documentation, not just tested. Verify: Read the SKILL.md Invocation & Arguments section; confirm both flags are documented with the same structure as existing flags. Confirm the --quick description now includes --no-research in its shorthand expansion.
+6. Add Step 0c (Research Agent Team) to SKILL.md Workflow between Step 0b and Step 1 Why: This is the core feature. The step must: (a) check if --research is set or auto-detect complexity &mdash; concrete heuristic: spawn when any of: objective mentions 3+ distinct subsystem keywords (e.g. frontend+backend+database, or auth+API+UI), file-tree from Step 0b spans 3+ top-level directories, or objective contains cross-layer verbs (migrate, integrate, bridge, sync); default to skip otherwise (conservative, opt-in bias); (b) check Agent Teams availability (version >= 2.1.32 + CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS ); (c) if unavailable and --research was explicitly passed, emit a visible warning (not just a log note): &ldquo;Research Agent Team requested but Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo;; if auto-detected, log silently and fall through; (d) detect UI signals (same heuristic as review-plan Step 3b); (e) read agent definitions from agents/plan-researcher-*.md , substitute placeholders; (f) spawn 4 core + up to 2 conditional researchers; (g) wait for all via SendMessage &mdash; partial-failure rule: if fewer than 3 of 4 core researchers report within the turn limit, proceed with available findings and note missing roles in the Research Brief (e.g. &ldquo;dependency-researcher: no findings received&rdquo;); (h) read references/research-brief-template.md and synthesize; (i) inject Research Brief into context for Steps 1&ndash;2. Progress reporting: as each researcher completes, emit a status line (e.g. &ldquo;Research: codebase-analyst done (2/4 complete)&rdquo;). Verify: Read SKILL.md; confirm Step 0c exists between 0b and 1 with all 9 sub-steps. Confirm the Agent Teams check is soft (logs and falls through) not hard (stops). Confirm --no-research and --quick skip the step entirely.
+7. Update SKILL.md Step 2 (Create) to inject the Research Brief into the plan&rsquo;s Context section Why: Preserving the research findings in the plan makes it self-documenting &mdash; readers can see what investigation informed the plan&rsquo;s decisions. When a Research Brief was generated, render it as a collapsible <details open> block (open by default for discoverability) titled &ldquo;Research Brief&rdquo; inside the Context section; omit entirely when no brief was generated. Panel recommendation: default to open so users don&rsquo;t miss the research findings; they can collapse it after reading. Verify: Read SKILL.md Step 2; confirm it references Research Brief injection with the collapsible <details> pattern and the omit-when-empty rule.
+8. Update SKILL.md allowed-tools frontmatter to include Agent Team tools Why: Without Agent Team tools in allowed-tools , the skill will trigger permission prompts when orchestrating the research team. Panel recommendation: before adding tool names, verify the exact spellings against the current Agent Teams API (check the review-plan skill&rsquo;s allowed-tools as the authoritative reference). The plan assumes TeamCreate and TeamDelete but these must be confirmed &mdash; wrong names cause silent permission failures, not clear errors. Verify: Read the SKILL.md frontmatter allowed-tools line; confirm it includes SendMessage , TeamCreate , and TeamDelete .
+9. Update plugin.json description to mention the Research Agent Team capability Why: The plugin description is shown in marketplace listings and skill discovery; it should reflect the new capability so users know the feature exists. Verify: Read .claude-plugin/plugin.json ; confirm the description mentions &ldquo;Research Agent Team&rdquo; or &ldquo;research team&rdquo;.
+10. Update README.md with Research Agent Team documentation Why: The README is the primary user-facing documentation. Add a section covering: when the research phase activates, what researchers are spawned, how to force ( --research ) or skip ( --no-research ) it, and the graceful degradation behavior. Verify: Read README.md ; confirm a new section documents the research team feature with flag documentation and degradation behavior.
+11. Add a new version entry to CHANGELOG.md Why: The CHANGELOG tracks all plugin changes per the project&rsquo;s versioning conventions. This is a minor-bump feature addition. Verify: Read CHANGELOG.md ; confirm the new version entry exists and describes the Research Agent Team feature under an &ldquo;Added&rdquo; heading.
+12. Bump plan-agent minor version in .claude-plugin/marketplace.json Why: The project convention requires a manual version bump in marketplace.json for every plugin change. New feature = minor bump. Verify: Read .claude-plugin/marketplace.json ; confirm the plan-agent version is higher than the current value on main and follows semver minor-bump convention.
+
+## Tests
+Tier 1 &mdash; Code-touching plan
+- Objective Research Agent Team spawns, collects, and synthesizes a Research Brief File: tests/plan-agent/research-team-smoke.test.ts Type: Smoke test Asserts: Invoking /plan-agent:implementation-plan --research on a multi-subsystem objective spawns at least 4 researcher teammates, collects structured findings via SendMessage , and produces a Research Brief block in the plan&rsquo;s Context section. Also verifies that --no-research skips the team entirely and produces no Research Brief. Run: claude --plugin-dir kit/plugins/plan-agent -p "/plan-agent:implementation-plan add auth middleware --research --no-clarify --no-align --no-interview"
+- Unit Argument parsing: --research and --no-research flags File: tests/plan-agent/research-flags.test.ts Targets: SKILL.md argument parsing logic for new flags Key cases: --research sets research mode; --no-research disables it; --quick implies --no-research ; both flags absent triggers auto-detection; conflicting --research --no-research uses last-wins
+- Unit Agent definition files have valid frontmatter File: tests/plan-agent/researcher-agents-valid.test.ts Targets: All 6 plan-researcher-*.md agent definition files Key cases: Each file has valid YAML frontmatter with required fields ( name , description , allowed-tools , model ); model is sonnet ; allowed-tools matches the role&rsquo;s expected tool set; body contains SendMessage reporting instructions
+- Integration Graceful degradation when Agent Teams are unavailable File: tests/plan-agent/research-team-degradation.test.ts Targets: Step 0c Agent Teams availability check and fallback path Key cases: When CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS is unset, Step 0c logs a note and falls through to Step 1 (not hard-stop); when Claude Code version < 2.1.32, same behavior; plan is still produced successfully without the Research Brief
+- Integration Research Brief injection into plan Context section File: tests/plan-agent/research-brief-injection.test.ts Targets: Step 2 (Create) Research Brief handling Key cases: When Research Brief exists, a collapsible <details> block appears in Context; when no brief was generated, the block is absent; the brief content is HTML-escaped
+
+## Acceptance Criteria
+- 6 agent definition files exist at kit/plugins/plan-agent/agents/plan-researcher-*.md with valid frontmatter
+- references/research-prompts.md exists with 6 role-prompt sections containing <OBJECTIVE> and <CODEBASE_CONTEXT> placeholders
+- references/research-brief-template.md exists with Executive Summary, Per-Role Findings, Key Constraints, Recommended Approach, and Open Questions sections
+- SKILL.md documents --research and --no-research flags; --quick shorthand includes --no-research
+- SKILL.md Step 0c exists between Step 0b (Explore) and Step 1 (Clarify) with the full 9-sub-step orchestration logic
+- Step 0c gracefully degrades (logs and falls through) when Agent Teams are unavailable &mdash; never hard-stops
+- SKILL.md allowed-tools includes SendMessage , TeamCreate , and TeamDelete
+- Step 2 (Create) injects the Research Brief as a collapsible <details> in the plan Context section when available; omits it when not
+- plugin.json , README.md , and CHANGELOG.md are updated to reflect the new feature
+- marketplace.json plan-agent version is bumped (minor) above the current value on main
+- (Panel-added) Step 0c includes partial-failure handling: if fewer than 3 core researchers report, synthesis proceeds with available findings and notes missing roles in the Research Brief
+- (Panel-added) Step 0c emits progress status lines as each researcher completes (e.g. &ldquo;Research: codebase-analyst done (2/4 complete)&rdquo;)
+- (Panel-added) --research / --no-research conflict resolution (last-wins) is documented in the SKILL.md flags section, not just tested
+
+## Verification
+Full-feature path: Set CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 , run /plan-agent:implementation-plan "Add WebSocket real-time notifications across frontend, backend, and database layers" --research --no-clarify --no-align --no-interview . Confirm: Step 0c spawns at least 4 researchers, collects findings, produces a Research Brief in the plan&rsquo;s Context section as a collapsible <details> block. The plan itself is well-formed HTML with all required sections.
+
+Graceful degradation path: Unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS , run the same command with --research . Confirm: Step 0c logs &ldquo;Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo; (or similar) and proceeds to Step 1 without error. The plan is produced successfully without a Research Brief block.
+
+Skip path: Run /plan-agent:implementation-plan "Fix typo in README" --no-research --quick . Confirm: Step 0c is skipped entirely. No Agent Team is created. Plan is produced as normal.
+
+Conditional researchers: Run a plan with UI signals (e.g. &ldquo;Add React dashboard with charts and filters&rdquo;) using --research . Confirm: UX researcher is spawned (6 total researchers). Run a complex non-UI plan. Confirm: devil&rsquo;s advocate is spawned but UX researcher is not (5 total).
+
+Agent definitions: Run ls kit/plugins/plan-agent/agents/plan-researcher-*.md | wc -l and confirm output is 6. Grep each for model: sonnet and SendMessage .
+</script>
+
+<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ── Header — document cover ─────────────────────────────────── -->
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Add Research Agent Team to implementation-plan skill</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+              aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="status-badge">todo</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
+        2026-06-08
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
+        agentics
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
+        feature
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar — table of contents ─────────────────────────── -->
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
+      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
+      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── Objective ────────────────────────────────────────────── -->
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Ship a Research Agent Team phase (Step 0c) that spawns 4&ndash;6 specialized researcher teammates to investigate the plan objective from multiple angles in parallel, synthesizes findings into a Research Brief that feeds Steps 1&ndash;2, and gracefully degrades to single-session Explore when Agent Teams are unavailable</p>
+    </div>
+
+    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-research-agent-team.html &mdash; Ship a Research Agent Team phase for the implementation-plan skill</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <details class="plan-workflow">
+      <summary>Run as workflow &mdash; launch parallel subagents</summary>
+      <div class="plan-workflow-inner">
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-research-agent-team.html &mdash; Ship a Research Agent Team for implementation-plan</code>
+        <button class="copy-workflow-btn" type="button"
+                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+      </div>
+    </details>
+
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">add-research-agent-team.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-research-agent-team.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+    <!-- ── Progress ─────────────────────────────────────────────── -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">0 / 10 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p>The <code>implementation-plan</code> skill currently runs a single-session sequential pipeline &mdash; one Claude instance explores the codebase (Step 0b), clarifies requirements (Step 1), and writes the plan (Step 2). For complex plans spanning multiple subsystems, research breadth is limited by what one context window can hold, and there is no adversarial tension: the same agent that researches also writes the plan.</p>
+      <p>The <code>review-plan</code> skill already demonstrates a proven Agent Team pattern in this plugin: it spawns 5&ndash;7 parallel reviewers with structured output, collects findings via <code>SendMessage</code>, and synthesizes results. The same pattern can be applied <em>earlier</em> in the pipeline &mdash; during research, before plan creation &mdash; to produce richer, more thoroughly investigated plans. Agent Teams (experimental, v2.1.32+) are the right tool because researchers need to communicate with each other: a codebase analyst discovering an API constraint can message the dependency researcher directly to adjust the investigation.</p>
+      <p>When Agent Teams are unavailable (flag unset, old version), the skill must degrade gracefully to the existing single-session Explore &mdash; not hard-stop like <code>review-plan</code> does. Plan creation is too critical to block on an experimental feature.</p>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         OPT-IN VISUAL: Files file-tree.
+         KEEP and fill {file-tree-rows} when the plan touches files
+         (most multi-file plans). DELETE this whole section element and
+         its nav entry (the "#files" link) when not needed.
+         Badge classes: file-badge-new | file-badge-modified |
+         file-badge-deleted | file-badge-generated.
+         ════════════════════════════════════════════════════════════ -->
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files to Modify
+      </h2>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/agents/</li>
+          <ul class="file-list">
+            <li><code>plan-researcher-codebase.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">codebase architecture researcher agent</span></li>
+            <li><code>plan-researcher-dependencies.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">library and API dependency researcher</span></li>
+            <li><code>plan-researcher-devils-advocate.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">adversarial assumption challenger (conditional)</span></li>
+            <li><code>plan-researcher-prior-art.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">web best-practices researcher</span></li>
+            <li><code>plan-researcher-test-strategy.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">test infrastructure analyst</span></li>
+            <li><code>plan-researcher-ux.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">UI pattern researcher (conditional)</span></li>
+          </ul>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/implementation-plan/references/</li>
+          <ul class="file-list">
+            <li><code>research-prompts.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">role-prompt templates for 6 researchers</span></li>
+            <li><code>research-brief-template.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">synthesis template for Research Brief</span></li>
+          </ul>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/implementation-plan/</li>
+          <ul class="file-list">
+            <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Step 0c, --research flag, allowed-tools</span></li>
+          </ul>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
+          <ul class="file-list">
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add version entry for research team</span></li>
+            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document research team feature</span></li>
+          </ul>
+          <li><code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">mention research team in description</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent minor version</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         OPT-IN VISUAL: Diagram / Chart / Table.
+         KEEP and fill when the plan has a flow, comparison,
+         distribution, or structured data worth showing. DELETE this
+         whole section element and its nav entry (the "#diagram" link)
+         when not needed. Use any subset of the building blocks below
+         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
+         the sub-blocks you do not use.
+         ════════════════════════════════════════════════════════════ -->
+    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
+      <h2 id="h-diagram">
+        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
+        Diagram
+      </h2>
+
+      <!-- Flow / pipeline — research team integration -->
+      <div class="diagram-subheading">Implementation-plan workflow with Research Agent Team</div>
+      <div class="pipeline">
+        <div class="pipeline-node"><div class="pipeline-label">Step 0b</div><code>Explore</code><div class="pipeline-sub">Quick codebase scan (single session)</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">&darr;</div>
+        <div class="pipeline-node"><div class="pipeline-label">Step 0c (NEW)</div><code>Research Agent Team</code><div class="pipeline-sub">4&ndash;6 parallel researchers &rarr; Research Brief</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">&darr;</div>
+        <div class="pipeline-node"><div class="pipeline-label">Step 1</div><code>Clarify</code><div class="pipeline-sub">Informed by Research Brief findings</div></div>
+        <div class="pipeline-arrow" aria-hidden="true">&darr;</div>
+        <div class="pipeline-node"><div class="pipeline-label">Step 2</div><code>Create</code><div class="pipeline-sub">Write plan with deeper context</div></div>
+      </div>
+
+      <!-- Comparison grid — Agent Teams vs alternatives -->
+      <div class="diagram-subheading">Why Agent Teams over alternatives</div>
+      <div class="compare-grid">
+        <div class="compare-col-add"><div class="compare-header">Agent Teams (chosen)</div><ul class="compare-list"><li>Researchers message each other directly</li><li>Adversarial tension between teammates</li><li>Shared task list for coordination</li><li>Proven pattern in review-plan skill</li></ul></div>
+        <div class="compare-col-neutral"><div class="compare-header">Subagents</div><ul class="compare-list"><li>Simpler, no flag needed</li><li>Lower token overhead</li><li>No inter-agent communication</li><li>Each reports in isolation</li></ul></div>
+        <div class="compare-col-remove"><div class="compare-header">Single session (status quo)</div><ul class="compare-list"><li>One context window limit</li><li>No adversarial challenge</li><li>Sequential research only</li><li>Already in place as fallback</li></ul></div>
+      </div>
+
+      <!-- Data table — researcher roles -->
+      <div class="diagram-subheading">Researcher roles</div>
+      <table class="plan-table">
+        <caption>Research Agent Team composition &mdash; 4 core + 2 conditional</caption>
+        <thead>
+          <tr><th scope="col">Role</th><th scope="col">Focus</th><th scope="col">Tools</th><th scope="col">When</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>codebase-analyst</td><td>Map architecture, find patterns, identify integration points</td><td>Read, Glob, Grep, Bash</td><td>Always</td></tr>
+          <tr><td>dependency-researcher</td><td>Libraries, APIs, external services, version compatibility</td><td>Read, Glob, Grep, Bash, WebSearch, WebFetch</td><td>Always</td></tr>
+          <tr><td>prior-art-researcher</td><td>Best practices, known pitfalls, reference implementations</td><td>WebSearch, WebFetch, Read</td><td>Always</td></tr>
+          <tr><td>test-strategist</td><td>Test infrastructure, coverage gaps, recommended approach</td><td>Read, Glob, Grep, Bash</td><td>Always</td></tr>
+          <tr><td>ux-researcher</td><td>UI patterns, accessibility requirements, responsive design</td><td>Read, Glob, Grep, WebSearch, WebFetch</td><td>UI signals</td></tr>
+          <tr><td>devils-advocate</td><td>Challenge assumptions, find failure modes, identify risks</td><td>Read, Glob, Grep, Bash</td><td>Complex plans</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── Steps ────────────────────────────────────────────────── -->
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <div class="steps-list">
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Create <code>references/research-prompts.md</code> with role-prompt templates for all 6 researcher types</span>
+              </div>
+              <div class="step-why">Externalizing prompts into a reference file follows the proven pattern from <code>review-plan/references/role-prompts.md</code> and keeps the main SKILL.md focused on orchestration logic. Each prompt needs <code>&lt;OBJECTIVE&gt;</code> and <code>&lt;CODEBASE_CONTEXT&gt;</code> placeholders plus a structured <code>[Role Report]</code> output format with <code>SendMessage</code>. <strong>Panel recommendation:</strong> the agent definition files (Step 3&ndash;4) should carry the full role prompt, making this reference file the canonical template source that agents are generated from &mdash; not a parallel source of truth. The orchestrator reads prompts from agent definitions at spawn time, matching the <code>review-plan</code> pattern exactly.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><strong>Pre-check:</strong> confirm <code>kit/plugins/plan-agent/skills/implementation-plan/references/</code> directory exists (create it if not). Then read the file; confirm 6 distinct role sections (codebase-analyst, dependency-researcher, prior-art-researcher, test-strategist, ux-researcher, devils-advocate) with <code>&lt;OBJECTIVE&gt;</code> and <code>&lt;CODEBASE_CONTEXT&gt;</code> placeholders and <code>SendMessage</code> reporting format in each.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Create <code>references/research-brief-template.md</code> with the synthesis template</span>
+              </div>
+              <div class="step-why">A structured template ensures synthesis is consistent regardless of which researchers were spawned, and bridges directly into the Clarify and Create steps. Sections: Executive Summary, Per-Role Findings (6 slots), Key Constraints Discovered, Recommended Approach, Open Questions for Clarify Step.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read the file; confirm it has all 6 role-finding sections, an Executive Summary section, Key Constraints, Recommended Approach, and Open Questions sections.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Create 4 core agent definitions: <code>plan-researcher-codebase.md</code>, <code>plan-researcher-dependencies.md</code>, <code>plan-researcher-prior-art.md</code>, <code>plan-researcher-test-strategy.md</code></span>
+              </div>
+              <div class="step-why">Agent definitions let the Agent Team system use these as subagent types when spawning teammates, giving each researcher a scoped tool allowlist and a focused system prompt. Follow the existing <code>plan-reviewer-*.md</code> pattern: frontmatter with <code>name</code>, <code>description</code>, <code>allowed-tools</code>, <code>model: sonnet</code>; body with mandate, how-to-research instructions, and <code>SendMessage</code> reporting format. Codebase-analyst gets <code>Read, Glob, Grep, Bash</code>; dependency-researcher gets <code>Read, Glob, Grep, Bash, WebSearch, WebFetch</code>; prior-art gets <code>WebSearch, WebFetch, Read</code>; test-strategist gets <code>Read, Glob, Grep, Bash</code>.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body"><strong>Pre-check:</strong> confirm <code>kit/plugins/plan-agent/agents/</code> directory exists (create it if not &mdash; existing <code>plan-reviewer-*.md</code> agent files already live here, so the directory should exist, but verify). Then read each of the 4 files; confirm valid frontmatter with <code>model: sonnet</code> and the correct <code>allowed-tools</code> per role. Confirm each has a mandate section and a <code>SendMessage</code> output format block.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Create 2 conditional agent definitions: <code>plan-researcher-ux.md</code> and <code>plan-researcher-devils-advocate.md</code></span>
+              </div>
+              <div class="step-why">Conditional agents avoid wasting tokens on UI research for backend-only plans or adversarial challenge for simple plans. Mirrors the <code>review-plan</code> pattern where UX and accessibility reviewers are conditional on UI signals. UX researcher gets <code>Read, Glob, Grep, WebSearch, WebFetch</code>; devil&rsquo;s advocate gets <code>Read, Glob, Grep, Bash</code>.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read both files; confirm frontmatter and body structure match the core agents from Step 3. Confirm the UX researcher mentions UI signal activation and the devil&rsquo;s advocate mentions complex-plan activation.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code>--research</code> and <code>--no-research</code> flags to SKILL.md argument parsing</span>
+              </div>
+              <div class="step-why">Explicit opt-in/opt-out keeps the feature controllable and avoids surprise token consumption from Agent Teams. <code>--research</code> forces the Research Agent Team phase. <code>--no-research</code> skips it. <code>--quick</code> shorthand expands to include <code>--no-research</code>. <strong>Panel recommendation:</strong> document the conflict resolution rule explicitly in the SKILL.md flags section: when both <code>--research</code> and <code>--no-research</code> are present, last-wins (consistent with standard CLI flag conventions). This must be visible in the flags documentation, not just tested.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read the SKILL.md Invocation &amp; Arguments section; confirm both flags are documented with the same structure as existing flags. Confirm the <code>--quick</code> description now includes <code>--no-research</code> in its shorthand expansion.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add Step 0c (Research Agent Team) to SKILL.md Workflow between Step 0b and Step 1</span>
+              </div>
+              <div class="step-why">This is the core feature. The step must: (a) check if <code>--research</code> is set or auto-detect complexity &mdash; <strong>concrete heuristic:</strong> spawn when any of: objective mentions 3+ distinct subsystem keywords (e.g. frontend+backend+database, or auth+API+UI), file-tree from Step 0b spans 3+ top-level directories, or objective contains cross-layer verbs (migrate, integrate, bridge, sync); default to skip otherwise (conservative, opt-in bias); (b) check Agent Teams availability (version &gt;= 2.1.32 + <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code>); (c) if unavailable and <code>--research</code> was explicitly passed, emit a <strong>visible warning</strong> (not just a log note): &ldquo;Research Agent Team requested but Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo;; if auto-detected, log silently and fall through; (d) detect UI signals (same heuristic as review-plan Step 3b); (e) read agent definitions from <code>agents/plan-researcher-*.md</code>, substitute placeholders; (f) spawn 4 core + up to 2 conditional researchers; (g) wait for all via <code>SendMessage</code> &mdash; <strong>partial-failure rule:</strong> if fewer than 3 of 4 core researchers report within the turn limit, proceed with available findings and note missing roles in the Research Brief (e.g. &ldquo;dependency-researcher: no findings received&rdquo;); (h) read <code>references/research-brief-template.md</code> and synthesize; (i) inject Research Brief into context for Steps 1&ndash;2. <strong>Progress reporting:</strong> as each researcher completes, emit a status line (e.g. &ldquo;Research: codebase-analyst done (2/4 complete)&rdquo;).</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read SKILL.md; confirm Step 0c exists between 0b and 1 with all 9 sub-steps. Confirm the Agent Teams check is soft (logs and falls through) not hard (stops). Confirm <code>--no-research</code> and <code>--quick</code> skip the step entirely.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update SKILL.md Step 2 (Create) to inject the Research Brief into the plan&rsquo;s Context section</span>
+              </div>
+              <div class="step-why">Preserving the research findings in the plan makes it self-documenting &mdash; readers can see what investigation informed the plan&rsquo;s decisions. When a Research Brief was generated, render it as a collapsible <code>&lt;details open&gt;</code> block (open by default for discoverability) titled &ldquo;Research Brief&rdquo; inside the Context section; omit entirely when no brief was generated. <strong>Panel recommendation:</strong> default to open so users don&rsquo;t miss the research findings; they can collapse it after reading.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read SKILL.md Step 2; confirm it references Research Brief injection with the collapsible <code>&lt;details&gt;</code> pattern and the omit-when-empty rule.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update SKILL.md <code>allowed-tools</code> frontmatter to include Agent Team tools</span>
+              </div>
+              <div class="step-why">Without Agent Team tools in <code>allowed-tools</code>, the skill will trigger permission prompts when orchestrating the research team. <strong>Panel recommendation:</strong> before adding tool names, verify the exact spellings against the current Agent Teams API (check the <code>review-plan</code> skill&rsquo;s <code>allowed-tools</code> as the authoritative reference). The plan assumes <code>TeamCreate</code> and <code>TeamDelete</code> but these must be confirmed &mdash; wrong names cause silent permission failures, not clear errors.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read the SKILL.md frontmatter <code>allowed-tools</code> line; confirm it includes <code>SendMessage</code>, <code>TeamCreate</code>, and <code>TeamDelete</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">9</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update <code>plugin.json</code> description to mention the Research Agent Team capability</span>
+              </div>
+              <div class="step-why">The plugin description is shown in marketplace listings and skill discovery; it should reflect the new capability so users know the feature exists.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>.claude-plugin/plugin.json</code>; confirm the description mentions &ldquo;Research Agent Team&rdquo; or &ldquo;research team&rdquo;.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">10</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Update <code>README.md</code> with Research Agent Team documentation</span>
+              </div>
+              <div class="step-why">The README is the primary user-facing documentation. Add a section covering: when the research phase activates, what researchers are spawned, how to force (<code>--research</code>) or skip (<code>--no-research</code>) it, and the graceful degradation behavior.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>README.md</code>; confirm a new section documents the research team feature with flag documentation and degradation behavior.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">11</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add a new version entry to <code>CHANGELOG.md</code></span>
+              </div>
+              <div class="step-why">The CHANGELOG tracks all plugin changes per the project&rsquo;s versioning conventions. This is a minor-bump feature addition.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>CHANGELOG.md</code>; confirm the new version entry exists and describes the Research Agent Team feature under an &ldquo;Added&rdquo; heading.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">12</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Bump <code>plan-agent</code> minor version in <code>.claude-plugin/marketplace.json</code></span>
+              </div>
+              <div class="step-why">The project convention requires a manual version bump in <code>marketplace.json</code> for every plugin change. New feature = minor bump.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>.claude-plugin/marketplace.json</code>; confirm the <code>plan-agent</code> version is higher than the current value on <code>main</code> and follows semver minor-bump convention.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Tests ────────────────────────────────────────────────── -->
+    <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
+      <h2 id="h-tests">
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
+        Tests
+      </h2>
+      <div class="test-tier-label">Tier 1 &mdash; Code-touching plan</div>
+
+      <!-- Objective-verification test — mandatory, always first -->
+      <div class="objective-test-card">
+        <div class="test-card-header">
+          <span class="test-badge test-badge-objective">Objective</span>
+          <span class="test-card-title">Research Agent Team spawns, collects, and synthesizes a Research Brief</span>
+        </div>
+        <div class="test-card-body">
+          <p><strong>File:</strong> <code>tests/plan-agent/research-team-smoke.test.ts</code></p>
+          <p><strong>Type:</strong> Smoke test</p>
+          <p><strong>Asserts:</strong> Invoking <code>/plan-agent:implementation-plan --research</code> on a multi-subsystem objective spawns at least 4 researcher teammates, collects structured findings via <code>SendMessage</code>, and produces a Research Brief block in the plan&rsquo;s Context section. Also verifies that <code>--no-research</code> skips the team entirely and produces no Research Brief.</p>
+          <p><strong>Run:</strong> <code>claude --plugin-dir kit/plugins/plan-agent -p &quot;/plan-agent:implementation-plan add auth middleware --research --no-clarify --no-align --no-interview&quot;</code></p>
+        </div>
+      </div>
+
+      <div class="test-list">
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title">Argument parsing: --research and --no-research flags</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>tests/plan-agent/research-flags.test.ts</code></p>
+            <p><strong>Targets:</strong> SKILL.md argument parsing logic for new flags</p>
+            <p><strong>Key cases:</strong> <code>--research</code> sets research mode; <code>--no-research</code> disables it; <code>--quick</code> implies <code>--no-research</code>; both flags absent triggers auto-detection; conflicting <code>--research --no-research</code> uses last-wins</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-unit">Unit</span>
+            <span class="test-card-title">Agent definition files have valid frontmatter</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>tests/plan-agent/researcher-agents-valid.test.ts</code></p>
+            <p><strong>Targets:</strong> All 6 <code>plan-researcher-*.md</code> agent definition files</p>
+            <p><strong>Key cases:</strong> Each file has valid YAML frontmatter with required fields (<code>name</code>, <code>description</code>, <code>allowed-tools</code>, <code>model</code>); <code>model</code> is <code>sonnet</code>; <code>allowed-tools</code> matches the role&rsquo;s expected tool set; body contains <code>SendMessage</code> reporting instructions</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-integration">Integration</span>
+            <span class="test-card-title">Graceful degradation when Agent Teams are unavailable</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>tests/plan-agent/research-team-degradation.test.ts</code></p>
+            <p><strong>Targets:</strong> Step 0c Agent Teams availability check and fallback path</p>
+            <p><strong>Key cases:</strong> When <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code> is unset, Step 0c logs a note and falls through to Step 1 (not hard-stop); when Claude Code version &lt; 2.1.32, same behavior; plan is still produced successfully without the Research Brief</p>
+          </div>
+        </div>
+
+        <div class="test-card">
+          <div class="test-card-header">
+            <span class="test-badge test-badge-integration">Integration</span>
+            <span class="test-card-title">Research Brief injection into plan Context section</span>
+          </div>
+          <div class="test-card-body">
+            <p><strong>File:</strong> <code>tests/plan-agent/research-brief-injection.test.ts</code></p>
+            <p><strong>Targets:</strong> Step 2 (Create) Research Brief handling</p>
+            <p><strong>Key cases:</strong> When Research Brief exists, a collapsible <code>&lt;details&gt;</code> block appears in Context; when no brief was generated, the block is absent; the brief content is HTML-escaped</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Acceptance Criteria
+      </h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">6 agent definition files exist at <code>kit/plugins/plan-agent/agents/plan-researcher-*.md</code> with valid frontmatter</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2"><code>references/research-prompts.md</code> exists with 6 role-prompt sections containing <code>&lt;OBJECTIVE&gt;</code> and <code>&lt;CODEBASE_CONTEXT&gt;</code> placeholders</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3"><code>references/research-brief-template.md</code> exists with Executive Summary, Per-Role Findings, Key Constraints, Recommended Approach, and Open Questions sections</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">SKILL.md documents <code>--research</code> and <code>--no-research</code> flags; <code>--quick</code> shorthand includes <code>--no-research</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">SKILL.md Step 0c exists between Step 0b (Explore) and Step 1 (Clarify) with the full 9-sub-step orchestration logic</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6">Step 0c gracefully degrades (logs and falls through) when Agent Teams are unavailable &mdash; never hard-stops</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7">SKILL.md <code>allowed-tools</code> includes <code>SendMessage</code>, <code>TeamCreate</code>, and <code>TeamDelete</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8">Step 2 (Create) injects the Research Brief as a collapsible <code>&lt;details&gt;</code> in the plan Context section when available; omits it when not</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9"><code>plugin.json</code>, <code>README.md</code>, and <code>CHANGELOG.md</code> are updated to reflect the new feature</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10"><code>marketplace.json</code> plan-agent version is bumped (minor) above the current value on <code>main</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11"><em>(Panel-added)</em> Step 0c includes partial-failure handling: if fewer than 3 core researchers report, synthesis proceeds with available findings and notes missing roles in the Research Brief</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12"><em>(Panel-added)</em> Step 0c emits progress status lines as each researcher completes (e.g. &ldquo;Research: codebase-analyst done (2/4 complete)&rdquo;)</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac13">
+          <label for="ac13"><em>(Panel-added)</em> <code>--research</code> / <code>--no-research</code> conflict resolution (last-wins) is documented in the SKILL.md flags section, not just tested</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <!-- ── Verification ──────────────────────────────────────────── -->
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Verification
+      </h2>
+      <ol>
+        <li><strong>Full-feature path:</strong> Set <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code>, run <code>/plan-agent:implementation-plan &quot;Add WebSocket real-time notifications across frontend, backend, and database layers&quot; --research --no-clarify --no-align --no-interview</code>. Confirm: Step 0c spawns at least 4 researchers, collects findings, produces a Research Brief in the plan&rsquo;s Context section as a collapsible <code>&lt;details&gt;</code> block. The plan itself is well-formed HTML with all required sections.</li>
+        <li><strong>Graceful degradation path:</strong> Unset <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code>, run the same command with <code>--research</code>. Confirm: Step 0c logs &ldquo;Agent Teams unavailable &mdash; falling back to single-session Explore&rdquo; (or similar) and proceeds to Step 1 without error. The plan is produced successfully without a Research Brief block.</li>
+        <li><strong>Skip path:</strong> Run <code>/plan-agent:implementation-plan &quot;Fix typo in README&quot; --no-research --quick</code>. Confirm: Step 0c is skipped entirely. No Agent Team is created. Plan is produced as normal.</li>
+        <li><strong>Conditional researchers:</strong> Run a plan with UI signals (e.g. &ldquo;Add React dashboard with charts and filters&rdquo;) using <code>--research</code>. Confirm: UX researcher is spawned (6 total researchers). Run a complex non-UI plan. Confirm: devil&rsquo;s advocate is spawned but UX researcher is not (5 total).</li>
+        <li><strong>Agent definitions:</strong> Run <code>ls kit/plugins/plan-agent/agents/plan-researcher-*.md | wc -l</code> and confirm output is 6. Grep each for <code>model: sonnet</code> and <code>SendMessage</code>.</li>
+      </ol>
+    </section>
+
+    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Completion Checklist
+      </h2>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next Steps
+      </h2>
+      <div class="next-steps-list">
+
+        <details class="next-step-item">
+          <summary>Add a <code>--research-bg</code> background research mode</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a --research-bg flag to the implementation-plan skill that spawns the Research Agent Team in the background (via the agent-review-plan background pattern) and proceeds immediately to Steps 1-2 with whatever Explore context is available. When the research team completes, inject the Research Brief into the plan retroactively via an Edit pass. This lets users start planning immediately without waiting for the full research phase. Model the background dispatch on kit/plugins/plan-agent/agents/agent-review-plan.md.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Run the review-plan Agent Team on plans produced with research</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>After the Research Agent Team feature is shipped, run /plan-agent:review-plan on 3 plans produced with --research and 3 produced without. Compare the review findings: do researched plans have fewer completeness gaps, better architecture fit, and lower risk ratings? Report the comparison as a table. This validates whether the research phase measurably improves plan quality.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Update the CLAUDE.md reference table for plan-agent</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Update the plan-agent row in the CLAUDE.md Reference Implementations table to mention the Research Agent Team capability. Add a note about the --research flag and the 4-6 researcher teammates. Keep the entry concise (single table cell) and consistent with the other plugin descriptions.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <!-- Wish List -->
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Researchers that learn from plan review feedback
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Design a feedback loop between the review-plan Agent Team and the Research Agent Team. When a review finds a gap (e.g. "missing migration rollback strategy"), store that finding category in a persistent researcher-hints file. On subsequent plan creations, the relevant researcher (e.g. risk or dependency) loads those hints to proactively investigate areas that past reviews flagged. This creates a learning loop where the research phase improves over time based on actual review outcomes. Investigate whether CLAUDE.md project memory or a dedicated .claude/plan-agent/research-hints.json would be the better persistence mechanism.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Token budget awareness for research team sizing
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Add token budget awareness to Step 0c so the research team size adapts to the user's context. When the user passes a "+500k" budget directive, spawn all 6 researchers with deeper investigation prompts. At default budget, spawn only 4 core researchers with focused prompts. At low budget or --quick, skip the team entirely. Investigate whether the Workflow tool's budget.total / budget.remaining() API could be used here, or whether a simpler heuristic based on plan complexity alone is sufficient.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
+    <details class="optional-section">
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item">
+              <summary>Should complexity auto-detection default to spawning the team or skipping it?</summary>
+              <div class="unresolved-prompt">
+                <pre>The implementation-plan skill needs a complexity heuristic to decide when to auto-spawn the Research Agent Team (when neither --research nor --no-research is set). Two options: (A) conservative default — only spawn when complexity clearly exceeds a threshold (3+ subsystems, cross-layer changes), meaning most plans skip the research phase unless explicitly requested; (B) aggressive default — spawn for any plan that touches 2+ files, meaning most non-trivial plans get research. Consider: Agent Teams are expensive (5-10x tokens), experimental (flag required), and the single-session Explore is already decent for simple plans. Recommend one approach with reasoning, and draft the specific heuristic rules for the chosen approach.</pre>
+                <button class="copy-prompt-btn" type="button"
+                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+              </div>
+            </details>
+          </li>
+          <li>
+            <details class="unresolved-item">
+              <summary>Should researchers use the existing agent definitions or spawn as plain teammates?</summary>
+              <div class="unresolved-prompt">
+                <pre>Agent Teams can spawn teammates using subagent definitions (AGENT.md files) via the agentType option, which gives each teammate a scoped tool allowlist and system prompt. Alternatively, teammates can be spawned as plain sessions with the role prompt passed directly in the spawn instruction. The review-plan skill uses agent definitions (plan-reviewer-*.md). Compare: (A) using AGENT.md files (consistent with review-plan, tool scoping, reusable as standalone subagents) vs (B) plain spawn prompts (simpler, fewer files, prompts live in research-prompts.md only). Given that this plan already creates 6 agent definition files AND a research-prompts.md, is that redundant? Should the agent definitions contain the full prompt and research-prompts.md be eliminated, or should agent definitions be minimal (tools + model only) with research-prompts.md carrying the role instructions? Recommend one approach.</pre>
+                <button class="copy-prompt-btn" type="button"
+                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <details id="team-review-20260608-135100" class="team-review" style="margin-top:2rem;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;">
+      <summary style="cursor:pointer;font-weight:700;font-size:1.1rem;">Team Review (2026-06-08 13:51:00 UTC)</summary>
+      <div class="review-body" style="margin-top:1rem;line-height:1.7;">
+
+        <h3>Executive Summary</h3>
+        <p>The plan is <strong>sound with revisions</strong>. All 7 reviewers agree the design follows the proven <code>review-plan</code> Agent Team pattern and inserts cleanly into the existing pipeline as Step 0c with proper graceful degradation. However, the team identified three high-priority issues that should be resolved before implementation: (1) the dual-artifact redundancy between agent definition files and <code>research-prompts.md</code> &mdash; flagged by 5 of 7 reviewers &mdash; needs a single source of truth; (2) the complexity auto-detection heuristic is underspecified, leaving the most common invocation path (no flags) with an undefined branch; and (3) the test infrastructure is incomplete &mdash; test files are declared but no runner, framework, or directory creation steps exist.</p>
+
+        <hr style="margin:1.5rem 0;border:none;border-top:1px solid var(--border);">
+
+        <h3>Role-by-Role Findings</h3>
+
+        <h4>Architecture Review</h4>
+        <p><strong>Fit:</strong> Follows the established Agent Team pattern with well-scoped component boundaries and proper graceful degradation.</p>
+        <ul>
+          <li><strong>Dual-artifact redundancy</strong> between agent definitions and <code>research-prompts.md</code> (medium) &mdash; recommends agent definitions as single source of truth, matching <code>review-plan</code></li>
+          <li><strong>Context injection is implicit</strong> &mdash; Research Brief handoff between 0c and Step 1 has no defined serialization boundary (medium)</li>
+          <li><strong>Auto-detection heuristic underspecified</strong> &mdash; no programmatic detection logic defined (medium)</li>
+          <li><strong>Unverified tool names</strong> <code>TeamCreate</code>/<code>TeamDelete</code> (low)</li>
+        </ul>
+
+        <h4>Completeness Review</h4>
+        <p><strong>Completeness:</strong> Well-structured with 12 steps covering all named files, but several gaps could cause implementation friction.</p>
+        <ul>
+          <li><strong>No directory creation steps</strong> for <code>agents/</code> and <code>references/</code> before writing files (medium)</li>
+          <li><strong>No step to read existing SKILL.md</strong> before Steps 5&ndash;8 edits (medium)</li>
+          <li><strong>Auto-detection heuristic buried</strong> in Unresolved Question, not in Step 6 (high)</li>
+          <li><strong>Test files declared but no creation steps</strong> &mdash; tests appear in Tests section but not in Steps (high)</li>
+          <li><strong>Unresolved Questions affect implementation</strong> &mdash; two open design decisions directly impact Step 6 (high)</li>
+          <li><strong>No test runner specified</strong> for <code>.ts</code> test files (medium)</li>
+        </ul>
+
+        <h4>Testability Review</h4>
+        <p><strong>Test coverage:</strong> Adequate for Tier 1 with objective-verification, unit, and integration tests, but several critical paths lack coverage.</p>
+        <ul>
+          <li><strong>No test for auto-detection heuristic</strong> (high)</li>
+          <li><strong>Objective-verification test is manual CLI invocation</strong>, not a runnable automated test (high)</li>
+          <li><strong>No test runner or framework specified</strong> for <code>.ts</code> files (high)</li>
+          <li><strong>No test for conditional researcher spawning</strong> based on UI signals (medium)</li>
+          <li><strong>Integration test doesn&rsquo;t specify</strong> how to simulate env var manipulation (medium)</li>
+        </ul>
+
+        <h4>Risk Review</h4>
+        <p><strong>Risk level:</strong> Medium overall.</p>
+        <ul>
+          <li><strong>No partial-failure handling</strong> for researcher agents &mdash; if one hangs, synthesis blocks indefinitely (high)</li>
+          <li><strong>Unverified tool names</strong> in <code>allowed-tools</code> could cause silent permission failures (high)</li>
+          <li><strong>Dual-artifact prompt drift</strong> risk between agent files and reference file (medium)</li>
+          <li><strong>No token budget ceiling</strong> for 4&ndash;6 parallel researchers (medium)</li>
+          <li><strong>Experimental flag dependency</strong> &mdash; silent removal could break the feature (medium)</li>
+        </ul>
+
+        <h4>Conventions Review</h4>
+        <p><strong>Fit:</strong> Closely follows established project patterns &mdash; agent definition structure, file placement, kebab-case naming all align.</p>
+        <ul>
+          <li><strong>Redundant prompt storage</strong> conflicts with <code>review-plan</code> single-source pattern (medium)</li>
+          <li><strong>Test file placement</strong> in non-existent <code>tests/plan-agent/</code> directory (medium)</li>
+          <li><strong><code>allowed-tools</code> casing</strong> for <code>TeamCreate</code>/<code>TeamDelete</code> needs verification (medium)</li>
+        </ul>
+
+        <h4>UX Review</h4>
+        <p><strong>User fit:</strong> Well-structured plan, but the research phase UX lacks progress feedback and auto-detection predictability.</p>
+        <ul>
+          <li><strong>No progress indication</strong> during research phase &mdash; users face silent wait (high)</li>
+          <li><strong>Auto-detection UX undefined</strong> &mdash; users cannot predict when research spawns (high)</li>
+          <li><strong>Graceful degradation is too quiet</strong> when <code>--research</code> was explicitly requested (medium)</li>
+          <li><strong>Research Brief hidden by default</strong> in collapsed <code>&lt;details&gt;</code> (low)</li>
+          <li><strong>No empty-state handling</strong> for partial researcher failure in the Brief (low)</li>
+        </ul>
+
+        <h4>Accessibility Review</h4>
+        <p><strong>A11y compliance:</strong> Largely WCAG 2.1 AA compliant with strong foundations, but medium-severity gaps in the plan HTML template itself.</p>
+        <ul>
+          <li><strong><code>status-badge</code> lacks accessible label</strong> tying it to the plan title (medium)</li>
+          <li><strong><code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code></strong> marker removal may break VoiceOver disclosure announcement (medium)</li>
+          <li><strong>Disabled checkboxes</strong> removed from tab order without <code>aria-disabled</code> backup (medium)</li>
+          <li><strong><code>compare-grid</code></strong> uses divs instead of semantic table structure (medium)</li>
+          <li><strong>Pulse-dot animation</strong> missing <code>prefers-reduced-motion</code> suppression (medium)</li>
+        </ul>
+
+        <hr style="margin:1.5rem 0;border:none;border-top:1px solid var(--border);">
+
+        <h3>Agreements &amp; Conflicts</h3>
+        <p><strong>Confirmed concerns</strong> (multiple reviewers agree):</p>
+        <ul>
+          <li><strong>Dual-artifact redundancy</strong> &mdash; flagged by architecture, completeness, risk, conventions, and accessibility (5/7). <em>Consensus: use agent definitions as single source of truth.</em></li>
+          <li><strong>Auto-detection heuristic underspecified</strong> &mdash; flagged by architecture, completeness, UX, risk (4/7). <em>Consensus: define concrete rules in the step, default to conservative (opt-in bias).</em></li>
+          <li><strong>Unverified tool names</strong> &mdash; flagged by architecture, risk, conventions (3/7). <em>Consensus: verify against review-plan&rsquo;s allowed-tools before implementation.</em></li>
+          <li><strong>No partial-failure handling</strong> &mdash; flagged by risk, UX, architecture (3/7). <em>Consensus: proceed with available findings after turn limit, note missing roles.</em></li>
+          <li><strong>Test infrastructure incomplete</strong> &mdash; flagged by completeness, testability (2/7). <em>Consensus: specify test runner and add test creation steps.</em></li>
+        </ul>
+        <p><strong>No conflicts</strong> &mdash; all reviewers were directionally aligned. No contradictory recommendations were surfaced.</p>
+
+        <hr style="margin:1.5rem 0;border:none;border-top:1px solid var(--border);">
+
+        <h3>Highest-Risk Issues (priority order)</h3>
+        <ol>
+          <li><strong>Dual-artifact prompt drift</strong> (5 reviewers) &mdash; resolve before implementation by making agent definitions the single canonical prompt source</li>
+          <li><strong>Auto-detection heuristic undefined</strong> (4 reviewers) &mdash; embed concrete detection rules in Step 6 with conservative default</li>
+          <li><strong>No partial-failure / timeout handling</strong> (3 reviewers) &mdash; add turn-limit rule and missing-role notation to synthesis</li>
+          <li><strong>Unverified <code>TeamCreate</code>/<code>TeamDelete</code> tool names</strong> (3 reviewers) &mdash; cross-reference with actual Agent Teams API before writing <code>allowed-tools</code></li>
+          <li><strong>Test infrastructure gaps</strong> (2 reviewers) &mdash; specify test runner, add test creation steps, clarify manual vs automated test expectations</li>
+        </ol>
+
+        <hr style="margin:1.5rem 0;border:none;border-top:1px solid var(--border);">
+
+        <h3>Inline Edits Applied</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+          <thead><tr style="border-bottom:2px solid var(--border);text-align:left;">
+            <th style="padding:.5rem;">Target</th><th style="padding:.5rem;">Action</th><th style="padding:.5rem;">Change</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 1 <code>.step-why</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Added panel recommendation: agent definitions as single source of truth for role prompts</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 6 <code>.step-why</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Added concrete auto-detection heuristic, partial-failure rule, progress reporting, and stronger degradation warning</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 5 <code>.step-why</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Added last-wins conflict resolution documentation requirement</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 7 <code>.step-why</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Changed <code>&lt;details&gt;</code> to <code>&lt;details open&gt;</code> for Research Brief discoverability</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 8 <code>.step-why</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Added tool name verification requirement against Agent Teams API</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 1 <code>.verify-body</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Added directory pre-check for <code>references/</code></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;">Step 3 <code>.verify-body</code></td><td style="padding:.5rem;">edit</td><td style="padding:.5rem;">Added directory pre-check for <code>agents/</code></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:.5rem;"><code>#criteria-list</code></td><td style="padding:.5rem;">append</td><td style="padding:.5rem;">Added AC11 (partial-failure handling), AC12 (progress reporting), AC13 (flag conflict docs)</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </details>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent &middot; 2026-06-08 &middot; agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan file and implement every step marked todo.');
+  lines.push('2. After completing each step, mark it done in the plan.');
+  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
+  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+
+  return lines.join('\n');
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  var text = buildImplementPrompt();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy workflow prompt ──────────────────────────────────── */
+function copyWorkflow(btn) {
+  var code = document.getElementById('workflow-cmd');
+  if (!code) return;
+  var text = code.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  var text = pre.textContent;
+
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy prompt';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+<script>
+/* Save as PDF (native browser print dialog) — backfilled */
+function savePDF() {
+  window.print();
+}
+</script>
+</body>
+</html>

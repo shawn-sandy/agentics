@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="plan-created" content="2026-05-18">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self' 'unsafe-inline';
+                 script-src 'self' 'unsafe-inline'; img-src data:;
+                 base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta name="generator" content="product-plans v3.4.0">
+  <meta name="plan-file" content="add-rejection-remediation-prompt-review.html">
+<meta name="plan-path" content="docs/plans/add-rejection-remediation-prompt-review.html">
+<title>Plan: Add rejection remediation prompt to plan-review-agents</title>
+  <style>
+    /* reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg);
+           color: var(--text); line-height: 1.6; }
+
+    /* theme tokens */
+    body.theme-default  { --bg: #ffffff; --surface: #f5f7fa; --border: #d0d5dd;
+                          --text: #101828; --text-muted: #475467;
+                          --accent: #1d4ed8; --accent-fg: #ffffff;
+                          --badge-approve: #15803d; --badge-revise: #92400e;
+                          --badge-reject: #b91c1c; --badge-fg: #ffffff; }
+    body.theme-developer{ --bg: #0d1117; --surface: #161b22; --border: #30363d;
+                          --text: #e6edf3; --text-muted: #8b949e;
+                          --accent: #58a6ff; --accent-fg: #0d1117;
+                          --badge-approve: #2ea043; --badge-revise: #d29922;
+                          --badge-reject: #f85149; --badge-fg: #ffffff; }
+    body.theme-document { --bg: #faf9f6; --surface: #f0ede8; --border: #ccc7be;
+                          --text: #1a1a1a; --text-muted: #5a5a5a;
+                          --accent: #2563eb; --accent-fg: #ffffff;
+                          --badge-approve: #166534; --badge-revise: #78350f;
+                          --badge-reject: #991b1b; --badge-fg: #ffffff; }
+    body.theme-minimal  { --bg: #ffffff; --surface: #ffffff; --border: #e5e7eb;
+                          --text: #111111; --text-muted: #6b7280;
+                          --accent: #000000; --accent-fg: #ffffff;
+                          --badge-approve: #166534; --badge-revise: #92400e;
+                          --badge-reject: #991b1b; --badge-fg: #ffffff; }
+
+    /* layout */
+    .layout        { display: grid;
+                     grid-template-columns: 240px 1fr;
+                     gap: 2rem; max-width: 1100px;
+                     margin: 0 auto; padding: 1.5rem; }
+    @media (max-width: 768px) {
+      .layout      { grid-template-columns: 1fr; }
+      .sidebar     { position: static; }
+    }
+    .sidebar       { position: sticky; top: 1.5rem;
+                     align-self: start; }
+
+    /* sidebar nav */
+    nav ol { list-style: none; padding: 0; }
+    nav li { margin: .25em 0; }
+    nav a  { color: var(--text-muted); text-decoration: none; font-size: .875rem;
+             display: block; padding: .25em .5em; border-radius: .25em; }
+    nav a:hover { color: var(--accent); background: var(--surface); }
+    nav a[aria-current="location"] { color: var(--accent); font-weight: 600;
+                                      background: var(--surface); }
+
+    /* decision banner */
+    .decision-banner { padding: 1em 1.25em; border-radius: .5em; margin: 1.5em 0;
+                       color: var(--badge-fg); }
+    .decision-banner strong { font-size: 1.1rem; }
+    .decision-banner p { margin-top: .25em; font-size: .9rem; opacity: .9; }
+    .banner-approve { background: var(--badge-approve); }
+    .banner-revise  { background: var(--badge-revise); }
+    .banner-reject  { background: var(--badge-reject); }
+
+    /* sr-only */
+    .sr-only { position: absolute; width: 1px; height: 1px;
+               padding: 0; margin: -1px; overflow: hidden;
+               clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    /* reviewer cards */
+    .reviewer-card { background: var(--surface); border: 1px solid var(--border);
+                     border-radius: .5em; padding: 1em; margin: 1em 0; }
+    .reviewer-card h3 { margin-bottom: .5em; font-size: 1rem; }
+    .reviewer-card dl { display: grid; grid-template-columns: auto 1fr; gap: .25em .75em; }
+    .reviewer-card dt { font-weight: 600; color: var(--text-muted); font-size: .875rem; }
+    .reviewer-card dd { font-size: .875rem; margin: 0; }
+    .unavailable-pill  { display: inline-flex; align-items: center; gap: .4em;
+                         padding: .25em .75em; border-radius: 9999px;
+                         background: var(--surface); border: 1px solid var(--border);
+                         font-size: .875rem; color: var(--text-muted); }
+
+    /* tables */
+    table        { width: 100%; border-collapse: collapse; font-size: .9rem; margin: 1em 0; }
+    th, td       { padding: .5em .75em; border: 1px solid var(--border);
+                   text-align: left; vertical-align: top; }
+    thead th     { background: var(--surface); color: var(--text); font-weight: 600; }
+
+    /* appendix toggle */
+    details > summary { cursor: pointer; font-weight: 600;
+                        padding: .5em 0; color: var(--accent);
+                        list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "\25B6 "; font-size: .75em; }
+    details[open] > summary::before { content: "\25BC "; }
+    .appendix-body { padding-top: 1em; }
+
+    /* content spacing */
+    main h2 { margin: 1.5em 0 .5em; padding-bottom: .25em; border-bottom: 1px solid var(--border); }
+    main h3 { margin: 1em 0 .5em; }
+    main h4 { margin: .75em 0 .25em; }
+    main p  { margin: .5em 0; }
+    main ul, main ol { margin: .5em 0; padding-left: 1.5em; }
+    main li { margin: .25em 0; }
+    main code { background: var(--surface); padding: .1em .3em; border-radius: .2em;
+                font-size: .9em; }
+    main pre { background: var(--surface); padding: 1em; border-radius: .5em;
+               overflow-x: auto; font-size: .85rem; margin: .5em 0; }
+
+    /* header */
+    header { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 0; }
+    header h1 { font-size: 1.5rem; margin-bottom: .25em; }
+    .provenance { color: var(--text-muted); font-size: .875rem; }
+
+    /* footer */
+    footer { max-width: 1100px; margin: 2rem auto 0; padding: 1rem 1.5rem;
+             border-top: 1px solid var(--border); }
+    .disclaimer { color: var(--text-muted); font-size: .8rem; }
+
+    /* focus */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    :focus:not(:focus-visible) { outline: none; }
+
+    /* checklist */
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { padding: .15em 0; }
+    .checklist li::before { content: "\2610 "; color: var(--text-muted); }
+
+    /* print */
+    @media print {
+      .sidebar          { display: none; }
+      .layout           { display: block; }
+      details           { display: block; }
+      summary           { display: none; }
+      ::details-content { content-visibility: visible; }
+      .copy-btn         { display: none; }
+    }
+  
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+  .plan-back-nav { margin-bottom: 1rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted, #6b7280);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent, #2563eb); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="theme-default">
+<div class="plan-back-nav">
+  <a href="./index.html" class="plan-back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Plans
+  </a>
+</div>
+
+  <header>
+    <h1>Plan: Add rejection remediation prompt to plan-review-agents</h1>
+    <p class="provenance">
+      Generated: 2026-05-18T17:45:00Z &middot;
+      Source: <code>add-rejection-remediation-prompt.md</code>
+    </p>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav aria-label="Table of contents">
+        <ol>
+          <li><a href="#context">Context</a></li>
+          <li><a href="#objective">Objective</a></li>
+          <li><a href="#steps">Steps</a></li>
+          <li><a href="#acceptance-criteria">Acceptance Criteria</a></li>
+          <li><a href="#verification">Verification</a></li>
+          <li><a href="#files-to-modify">Files to modify</a></li>
+          <li><a href="#key-design-decisions">Key design decisions</a></li>
+          <li><a href="#next-steps">Next Steps</a></li>
+          <li><a href="#interview-summary">Interview Summary</a></li>
+          <li><a href="#appendix">Panel Review</a></li>
+        </ol>
+      </nav>
+    </aside>
+
+    <main id="main-content">
+
+      <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+      <div class="plan-source">
+        <div class="plan-source-row">
+          <span class="plan-source-label">File</span>
+          <code id="plan-file" aria-label="Plan file name">add-rejection-remediation-prompt-review.html</code>
+          <button class="copy-src-btn" type="button"
+                  onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+        </div>
+        <div class="plan-source-row">
+          <span class="plan-source-label">Path</span>
+          <code id="plan-path" aria-label="Plan relative path">docs/plans/add-rejection-remediation-prompt-review.html</code>
+          <button class="copy-src-btn" type="button"
+                  onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+        </div>
+      </div>
+
+      <h2 id="context">Context</h2>
+      <p>The <code>plan-review-agents</code> skill produces a 15-section report with a final decision of <code>Approve</code>, <code>Approve with revisions</code>, or <code>Reject</code>. Currently all three outcomes follow the same code path &mdash; section 14 states the verdict in one line plus a rationale sentence. When a plan is rejected, the user must manually cross-reference sections 3 (highest-risk issues), 4 (blocking issues), and 12 (recommended changes) to understand what went wrong and what to fix. There is no actionable, consolidated output for rejection.</p>
+      <p>The project uses a &ldquo;self-contained prompt&rdquo; pattern in plan Next Steps sections: a label followed by a fenced <code>```text</code> block containing a standalone prompt a user can copy-paste into Claude. This feature brings that pattern into the review panel&rsquo;s rejection output.</p>
+      <p>A stress test of the initial design surfaced three high-severity gaps and several medium/low issues that this revised plan addresses:</p>
+      <ul>
+        <li><strong>Re-run loop breakage</strong> &mdash; Step 7 always appends a <code>## Panel Review</code> section. On re-run after fixing a rejected plan, reviewers read their own old review and a second Panel Review gets appended. No handling exists for pre-existing panel review sections.</li>
+        <li><strong>Background mode framing</strong> &mdash; &ldquo;Paste into Claude&rdquo; is wrong when the background agent is Claude. The prompt needs context-aware framing.</li>
+        <li><strong>Triple-nested fences</strong> &mdash; The output template wraps the report in a 3-backtick <code>```markdown</code> fence. Adding an inner <code>```text</code> block breaks CommonMark parsing. The outer fence must be widened to 5 backticks.</li>
+      </ul>
+
+      <h2 id="objective">Objective</h2>
+      <p>Extend section 14 of the plan-review-agents report with decision-specific output:</p>
+      <ul>
+        <li><strong>Reject</strong> &mdash; a <code>#### Rejection Summary</code> (blocking issues with reviewer attribution) and a <code>#### Remediation Prompt</code> (self-contained, fenced <code>```text</code> block the user can copy-paste into Claude to fix the plan and re-run the panel).</li>
+        <li><strong>Approve / Approve with revisions</strong> &mdash; unchanged (verdict line + rationale).</li>
+      </ul>
+      <p>The remediation prompt is context-aware (interactive vs. background mode), handles edge cases (empty blocking issues, split decisions), and the re-run loop works cleanly via dated <code>## Panel Review</code> headings that preserve history across runs.</p>
+
+      <h2 id="steps">Steps</h2>
+      <ol>
+        <li><strong>Widen the outer fence in <code>output-template.md</code> from 3 to 5 backticks</strong> (lines 20 and 194). <em>Why:</em> CommonMark terminates a 3-backtick fence at the first 3-backtick line it encounters. <em>Verify:</em> Lines 20 and 194 use 5 backticks.</li>
+        <li><strong>Add reject-only subsections to section 14</strong> in <code>output-template.md</code>. Add <code>#### Rejection Summary</code> and <code>#### Remediation Prompt</code>. <em>Why:</em> Data contract that drives all downstream rendering. <em>Verify:</em> Subsections exist, gated by HTML comments.</li>
+        <li><strong>Handle empty section 4</strong> in the rejection summary template. <em>Why:</em> A panel can reject without formal blockers. <em>Verify:</em> Template addresses the empty-section-4 case explicitly.</li>
+        <li><strong>Make the remediation prompt context-aware</strong> for background mode. <em>Why:</em> &ldquo;Paste into Claude&rdquo; is wrong in background mode. <em>Verify:</em> Template has both variants with a clear mode gate.</li>
+        <li><strong>Update SKILL.md Step 6</strong> &mdash; add a &ldquo;Rejection remediation&rdquo; paragraph. <em>Why:</em> The lead needs explicit cross-referencing instructions. <em>Verify:</em> Step 6 names sections 3, 4, 12, plan path, mode detection.</li>
+        <li><strong>Use dated <code>## Panel Review</code> headings</strong> in SKILL.md Step 7 with seconds precision. <em>Why:</em> Preserve review history; avoid collisions. <em>Verify:</em> Format is <code>## Panel Review (YYYY-MM-DD HH:MM:SS UTC)</code>.</li>
+        <li><strong>Update <code>html-spec.md</code></strong> &mdash; replace badge with decision banner, add remediation section. <em>Why:</em> HTML artifact must render decision status prominently. <em>Verify:</em> Banner replaces badge; no duplicate announcements.</li>
+        <li><strong>Add Step 8 re-read instruction</strong> to SKILL.md. <em>Why:</em> Step 8 needs the plan content including the just-appended Panel Review. <em>Verify:</em> Step 8 instructions include re-reading the plan file.</li>
+        <li><strong>Update the header comment</strong> in <code>output-template.md</code>. <em>Why:</em> Document the rejection flow and 5-backtick convention. <em>Verify:</em> Header mentions rejection flow.</li>
+        <li><strong>Update the plugin README</strong>. <em>Why:</em> Documents user-visible output behavior. <em>Verify:</em> README mentions remediation prompt, decision banner, dated headings.</li>
+        <li><strong>Bump version to 3.4.0</strong> in CHANGELOG and marketplace.json. <em>Why:</em> New feature = MINOR bump. <em>Verify:</em> Both files updated.</li>
+      </ol>
+
+      <h2 id="acceptance-criteria">Acceptance Criteria</h2>
+      <h3>Report output</h3>
+      <ul class="checklist">
+        <li>When the final decision is <code>Reject</code>, section 14 includes <code>#### Rejection Summary</code> and <code>#### Remediation Prompt</code></li>
+        <li>When the final decision is <code>Approve</code> or <code>Approve with revisions</code>, section 14 is unchanged</li>
+        <li>The remediation prompt is a fenced <code>```text</code> block containing: plan path, blocking issues, critical concerns, recommended changes, and re-run instructions</li>
+        <li>The prompt is self-contained</li>
+        <li>Interactive mode says &ldquo;Copy and paste into Claude&rdquo;; background mode says &ldquo;Re-run the panel&rdquo;</li>
+        <li>Empty section 4 + Reject is handled with explanatory note</li>
+        <li>No section renumbering (still 15 sections: 1-14, 15a, 15b)</li>
+      </ul>
+      <h3>Re-run loop</h3>
+      <ul class="checklist">
+        <li>Re-runs append a new dated <code>## Panel Review (YYYY-MM-DD HH:MM:SS UTC)</code> section</li>
+        <li>Reviewers in subsequent runs see all historical reviews</li>
+        <li>15a edits still apply on Reject (partial improvement) with a note that some may fail</li>
+      </ul>
+      <h3>HTML artifact</h3>
+      <ul class="checklist">
+        <li>Decision banner (<code>&lt;div role=&quot;status&quot;&gt;</code>) renders for all three outcomes</li>
+        <li>No decision badge remains in <code>&lt;header&gt;</code></li>
+        <li>Reject banner includes remediation section with scrollable <code>&lt;pre&gt;</code></li>
+        <li>Clipboard JS has <code>execCommand('copy')</code> fallback; <code>aria-live</code> announces success/failure</li>
+        <li>Copy button has <code>aria-label</code> (WCAG 4.1.2)</li>
+        <li>Copy button hidden in print</li>
+        <li>Historical reviews render as collapsed <code>&lt;details&gt;</code>, newest first</li>
+        <li>Security &amp; Escaping Contract covers remediation content</li>
+        <li>CSS <code>.remediation</code> has <code>color-mix()</code> with fallback</li>
+      </ul>
+      <h3>Infrastructure</h3>
+      <ul class="checklist">
+        <li>Outer fence in <code>output-template.md</code> uses 5 backticks</li>
+        <li>README documents new features</li>
+        <li>Version bumped to 3.4.0</li>
+      </ul>
+
+      <h2 id="verification">Verification</h2>
+      <ol>
+        <li><strong>Read all modified files</strong> and confirm changes match acceptance criteria.</li>
+        <li><strong>Trace the rejection path (interactive)</strong>: output-template section 14 &rarr; Step 6 populates with &ldquo;paste into Claude&rdquo; variant &rarr; Step 7 applies 15a edits + appends dated Panel Review &rarr; Step 8 re-reads plan, renders HTML decision banner (red) + remediation.</li>
+        <li><strong>Trace the rejection path (background)</strong>: same but Step 6 uses &ldquo;re-run the panel&rdquo; variant.</li>
+        <li><strong>Trace the approve path</strong>: no reject-only content; green decision banner; dated Panel Review still appended.</li>
+        <li><strong>Trace the approve-with-revisions path</strong>: no reject-only content; amber decision banner; 15a edits apply normally.</li>
+        <li><strong>Trace the re-run path</strong>: new dated heading appended without stripping; historical reviews as collapsed <code>&lt;details&gt;</code>.</li>
+        <li><strong>Verify HTML skeleton</strong>: no badge in header; banner in main; <code>role=&quot;status&quot;</code>; scrollable <code>&lt;pre&gt;</code>; clipboard JS; <code>aria-live</code> span; print styles.</li>
+        <li><strong>Verify <code>output-template.md</code></strong>: 5-backtick fence; both prompt variants; header comment.</li>
+        <li><strong>Verify no section renumbering</strong> (still 15 sections).</li>
+      </ol>
+
+      <h2 id="files-to-modify">Files to modify</h2>
+      <table>
+        <thead><tr><th scope="col">File</th><th scope="col">Change</th></tr></thead>
+        <tbody>
+          <tr><td><code>output-template.md</code></td><td>Widen outer fence to 5 backticks; add reject-only subsections to section 14; handle empty section 4 fallback; add mode-aware prompt variants; update header comment</td></tr>
+          <tr><td><code>SKILL.md</code></td><td>Add &ldquo;Rejection remediation&rdquo; paragraph to Step 6; dated Panel Review headings in Step 7; Step 8 re-read instruction; partial-edit note for Reject</td></tr>
+          <tr><td><code>html-spec.md</code></td><td>Replace badge with decision banner; add remediation section; clipboard fallback JS; <code>aria-label</code>; print styles; <code>color-mix()</code> CSS; historical reviews; Security &amp; Escaping Contract; updated skeleton</td></tr>
+          <tr><td><code>README.md</code></td><td>Document rejection remediation, decision banner, dated Panel Review headings</td></tr>
+          <tr><td><code>CHANGELOG.md</code></td><td>Prepend 3.4.0 entry</td></tr>
+          <tr><td><code>marketplace.json</code></td><td>Bump version 3.3.0 &rarr; 3.4.0</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="key-design-decisions">Key design decisions</h2>
+      <ol>
+        <li><strong>Reject-only remediation, not &ldquo;approve with revisions&rdquo;</strong>: <code>Approve with revisions</code> already has sections 12 + 15a. A lighter revisions prompt can follow later.</li>
+        <li><strong>Inside section 14, not a new section</strong>: Avoids renumbering 15a/15b. Gated by HTML comments.</li>
+        <li><strong>Reproduce, don&rsquo;t summarize</strong>: Exact copies from sections 3/4/12 with reviewer role prefixes.</li>
+        <li><strong>5-backtick outer fence</strong>: CommonMark-spec-compliant nesting.</li>
+        <li><strong>Banner replaces badge</strong>: Single <code>&lt;div role=&quot;status&quot;&gt;</code> in <code>&lt;main&gt;</code>. No duplicate announcements.</li>
+        <li><strong>Keep all reviews with dated headings</strong>: Seconds precision. No stripping. HTML renders each as collapsed <code>&lt;details&gt;</code>.</li>
+        <li><strong>Apply 15a edits on Reject</strong>: Partial improvement is better than none.</li>
+        <li><strong>Step 8 re-reads the plan file</strong>: Captures historical reviews for HTML generation.</li>
+        <li><strong><code>execCommand('copy')</code> fallback</strong>: Progressive enhancement for <code>file://</code> origins.</li>
+        <li><strong><code>aria-live</code> pre-exists in DOM</strong>: WCAG 4.1.3 compliance.</li>
+        <li><strong>Copy button <code>aria-label</code></strong>: WCAG 4.1.2 compliance.</li>
+        <li><strong>Scrollable <code>&lt;pre&gt;</code> with keyboard access</strong>: <code>max-height: 300px</code>, <code>tabindex=&quot;0&quot;</code>, <code>role=&quot;region&quot;</code>.</li>
+        <li><strong>Mode-aware prompt variants in template</strong>: Single source of truth.</li>
+        <li><strong><code>color-mix()</code> with fallback</strong>: <code>var(--surface)</code> declared first.</li>
+      </ol>
+
+      <h2 id="next-steps">Next Steps</h2>
+      <ul>
+        <li><strong>Add a lighter revisions prompt</strong> for <code>Approve with revisions</code>: extend the section 14 conditional structure with <code>#### Revisions Summary</code> and <code>#### Revisions Prompt</code>. Bump to 3.5.0.</li>
+        <li><strong>Add reviewer-prompt guard</strong> for <code>## Panel Review</code> sections: instruct reviewers to treat historical reviews as context, not plan content.</li>
+      </ul>
+
+      <h2 id="interview-summary">Interview Summary</h2>
+      <p>Interview conducted 2026-05-18. 14 key decisions confirmed across 3 rounds covering technical trade-offs, UI/UX flows, accessibility, and edge cases.</p>
+      <h3>Key Decisions Confirmed</h3>
+      <ol>
+        <li>Keep historical reviews inline with dated headings</li>
+        <li>Both prompt variants in the template</li>
+        <li>Apply 15a edits on Reject</li>
+        <li>5-backtick outer fence is safe</li>
+        <li>Always show a decision banner for all outcomes</li>
+        <li>All historical reviews in HTML as collapsed sections</li>
+        <li>Silent clipboard fail (visually); aria-live announces for assistive technology</li>
+        <li><code>role=&quot;status&quot;</code> on decision banner</li>
+        <li>Max-height with scroll on remediation <code>&lt;pre&gt;</code></li>
+        <li>Manual trace verification</li>
+        <li>Include all three decision banners in this version</li>
+      </ol>
+      <h3>Open Risks</h3>
+      <ul>
+        <li>Plan file growth with each re-run</li>
+        <li>Decision banner scope increase beyond original ask</li>
+        <li>Dated heading parsing adds logic to Step 8</li>
+        <li>Scrollable <code>&lt;pre&gt;</code> a11y implementation complexity</li>
+      </ul>
+
+      <div class="decision-banner banner-revise" role="status">
+        <strong>Approve with revisions</strong>
+        <p>The plan is well-designed and addresses the core user need. The three highest-risk items are all addressable within the existing plan structure.</p>
+      </div>
+      <span class="sr-only" aria-live="polite"></span>
+
+      <details id="appendix">
+        <summary>Panel Review (2026-05-18 17:45:00 UTC) &mdash; full 15-section report</summary>
+        <div class="appendix-body">
+
+          <section>
+            <h2 id="sec-exec-summary">1. Executive Summary</h2>
+            <p>Six reviewers assessed the plan for adding rejection remediation prompts to the plan-review-agents skill. The plan is well-structured with clear steps, strong accessibility considerations, and thoughtful edge case handling. All six reviewers provided findings.</p>
+            <p><strong>Overall assessment: Approve with revisions</strong> &mdash; the plan is implementable as-is but benefits from the refinements identified below.</p>
+          </section>
+
+          <section aria-labelledby="sec-reviewers">
+            <h2 id="sec-reviewers">2. Role-by-Role Review</h2>
+
+            <article class="reviewer-card" aria-labelledby="card-pm">
+              <h3 id="card-pm">Product Manager</h3>
+              <dl>
+                <dt>Approval</dt><dd>Approve with revisions</dd>
+                <dt>Works well</dt><dd>Feature addresses a real pain point; self-contained prompt pattern aligns with project conventions</dd>
+                <dt>Critical concerns</dt><dd>Scope expansion to all-outcome banners is a risk to delivery timeline</dd>
+                <dt>Missing requirements</dt><dd>Success metrics for measuring feature adoption</dd>
+              </dl>
+            </article>
+
+            <article class="reviewer-card" aria-labelledby="card-dev">
+              <h3 id="card-dev">Lead Developer</h3>
+              <dl>
+                <dt>Approval</dt><dd>Approve with revisions</dd>
+                <dt>Works well</dt><dd>5-backtick CommonMark approach, section 14 nesting, mode-aware branching are sound</dd>
+                <dt>Critical concerns</dt><dd>Step 8 cannot access historical reviews without re-reading plan file after Step 7; 15a edits on Reject may partially fail</dd>
+                <dt>Missing requirements</dt><dd>Re-read instruction between Steps 7 and 8; partial-edit documentation</dd>
+              </dl>
+            </article>
+
+            <article class="reviewer-card" aria-labelledby="card-ux">
+              <h3 id="card-ux">UX Designer</h3>
+              <dl>
+                <dt>Approval</dt><dd>Approve with revisions</dd>
+                <dt>Works well</dt><dd>Decision banner placement follows UX best practices; copy-paste workflow is validated</dd>
+                <dt>Critical concerns</dt><dd>&ldquo;Silent clipboard fail&rdquo; language contradicts aria-live announcement</dd>
+                <dt>Missing requirements</dt><dd>Clarify &ldquo;silent&rdquo; means visually silent only</dd>
+              </dl>
+            </article>
+
+            <article class="reviewer-card" aria-labelledby="card-frontend">
+              <h3 id="card-frontend">Lead Frontend Engineer</h3>
+              <dl>
+                <dt>Approval</dt><dd>Approve with revisions</dd>
+                <dt>Works well</dt><dd>Architecture is sound; section 14 nesting avoids renumbering</dd>
+                <dt>Critical concerns</dt><dd>Badge/banner duplication creates duplicate screen reader announcements; missing <code>color-mix()</code> CSS fallback</dd>
+                <dt>Missing requirements</dt><dd>Banner must replace badge; extend Security &amp; Escaping Contract</dd>
+              </dl>
+            </article>
+
+            <article class="reviewer-card" aria-labelledby="card-a11y">
+              <h3 id="card-a11y">Accessibility Expert</h3>
+              <dl>
+                <dt>Approval</dt><dd>Approve with revisions</dd>
+                <dt>Works well</dt><dd><code>role=&quot;status&quot;</code> on banner, <code>tabindex=&quot;0&quot;</code> on scrollable <code>&lt;pre&gt;</code>, <code>aria-live</code> feedback are correct; WCAG 1.4.1 compliance via text labels</dd>
+                <dt>Critical concerns</dt><dd><code>aria-live</code> span must pre-exist in DOM (WCAG 4.1.3); copy button needs <code>aria-label</code> (WCAG 4.1.2)</dd>
+                <dt>Missing requirements</dt><dd>Pre-existing <code>aria-live</code> span in HTML skeleton; accessible copy button name</dd>
+              </dl>
+            </article>
+
+            <article class="reviewer-card" aria-labelledby="card-security">
+              <h3 id="card-security">Security Expert</h3>
+              <dl>
+                <dt>Approval</dt><dd>Approve with revisions</dd>
+                <dt>Works well</dt><dd>Existing CSP is adequate; clipboard as progressive enhancement is correct</dd>
+                <dt>Critical concerns</dt><dd>Remediation prompt content must be HTML-escaped before injection into <code>&lt;pre&gt;</code></dd>
+                <dt>Missing requirements</dt><dd>Security &amp; Escaping Contract must explicitly name remediation content</dd>
+              </dl>
+            </article>
+          </section>
+
+          <section>
+            <h2 id="sec-highest-risk">3. Highest-Risk Issues</h2>
+            <ol>
+              <li><strong>[Lead Dev] Step 8 re-read gap</strong> &mdash; Step 8 only has the synthesized report from Step 6, not the modified file. Historical Panel Review sections won&rsquo;t appear in the HTML. <strong>Severity: High.</strong></li>
+              <li><strong>[Frontend] Badge/banner duplication</strong> &mdash; Two announcement points cause screen readers to announce the decision twice. <strong>Severity: High.</strong></li>
+              <li><strong>[Security] Remediation content escaping</strong> &mdash; User-authored plan text in remediation prompt could break <code>&lt;pre&gt;</code> rendering or create injection vectors. <strong>Severity: Medium.</strong></li>
+            </ol>
+          </section>
+
+          <section>
+            <h2 id="sec-blocking">4. Blocking Issues</h2>
+            <p>No formally blocking issues. All three highest-risk items are addressable within the existing plan structure.</p>
+          </section>
+
+          <section>
+            <h2 id="sec-non-blocking">5. Non-Blocking Improvements</h2>
+            <ol>
+              <li><strong>[PM]</strong> Add success metrics</li>
+              <li><strong>[UX]</strong> Clarify &ldquo;silent fail&rdquo; language</li>
+              <li><strong>[A11y]</strong> Copy button <code>aria-label</code></li>
+              <li><strong>[Frontend]</strong> <code>color-mix()</code> CSS fallback</li>
+              <li><strong>[Lead Dev]</strong> Partial-edit note for Reject</li>
+              <li><strong>[A11y]</strong> <code>aria-live</code> span must pre-exist in DOM</li>
+              <li><strong>[Security]</strong> Extend Security &amp; Escaping Contract</li>
+            </ol>
+          </section>
+
+          <section>
+            <h2 id="sec-agreements">6. Cross-Reviewer Agreements</h2>
+            <ul>
+              <li><strong>All reviewers</strong> agree the 5-backtick fence approach is correct</li>
+              <li><strong>PM + UX + A11y</strong> agree the decision banner should be visible for all outcomes</li>
+              <li><strong>Lead Dev + Frontend + Security</strong> agree the architecture is sound</li>
+              <li><strong>UX + A11y</strong> agree remediation must be outside collapsed appendix</li>
+              <li><strong>Frontend + A11y</strong> agree the banner should replace the badge</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="sec-conflicts">7. Cross-Reviewer Conflicts</h2>
+            <table>
+              <thead><tr><th scope="col">Topic</th><th scope="col">Conflict</th><th scope="col">Resolution</th></tr></thead>
+              <tbody>
+                <tr><td>&ldquo;Silent fail&rdquo; vs. aria-live</td><td>Interview says &ldquo;silent clipboard fail&rdquo; but also &ldquo;announce both success and failure&rdquo;</td><td>Compatible: &ldquo;silent&rdquo; = visually silent (button unchanged); aria-live provides assistive technology feedback</td></tr>
+                <tr><td>Plan file growth vs. reviewer context</td><td>PM: unbounded file growth. Lead Dev: reviewers benefit from history.</td><td>Accept growth; Next Steps item for reviewer-prompt guard</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 id="sec-assumptions">8. Assumption Challenges</h2>
+            <ul>
+              <li><strong>Users will know to copy the prompt</strong> &mdash; Decision banner placement and copy button mitigate this; ensure clear introductory text.</li>
+              <li><strong><code>execCommand('copy')</code> will continue working</strong> &mdash; Deprecated but plan treats clipboard as progressive enhancement. Acceptable.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="sec-balance">9. Balance Assessment</h2>
+            <p>All six perspectives represented. The plan leans technical but PM and UX reviews ensured user-value and interaction-design concerns were addressed. No single perspective dominated.</p>
+          </section>
+
+          <section>
+            <h2 id="sec-risk-matrix">10. Risk Matrix</h2>
+            <table>
+              <thead><tr><th scope="col">Risk</th><th scope="col">Likelihood</th><th scope="col">Impact</th><th scope="col">Mitigation</th></tr></thead>
+              <tbody>
+                <tr><td>Step 8 re-read gap</td><td>High (confirmed)</td><td>High</td><td>Add re-read instruction</td></tr>
+                <tr><td>Badge/banner duplication</td><td>High (confirmed)</td><td>High</td><td>Replace badge with banner</td></tr>
+                <tr><td>Remediation content injection</td><td>Medium</td><td>Medium</td><td>Extend Escaping Contract</td></tr>
+                <tr><td><code>color-mix()</code> unsupported</td><td>Low</td><td>Low</td><td><code>var(--surface)</code> fallback</td></tr>
+                <tr><td>Plan file growth</td><td>Medium</td><td>Low</td><td>Reviewer-prompt guard (Next Steps)</td></tr>
+                <tr><td>15a edits partially fail on Reject</td><td>Medium</td><td>Low</td><td>Partial-edit note</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 id="sec-missing">11. Missing Requirements</h2>
+            <ul>
+              <li>No success metrics (deferred to implementation)</li>
+              <li>No explicit clipboard test plan (acceptable for plan-level spec)</li>
+              <li>No rollback strategy (acceptable &mdash; all changes are additive)</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="sec-recommended">12. Recommended Changes</h2>
+            <ol>
+              <li>Add Step 8 re-read instruction to SKILL.md</li>
+              <li>Replace badge with banner in html-spec.md</li>
+              <li>Extend Security &amp; Escaping Contract for remediation content</li>
+              <li>Add <code>aria-label</code> to copy button</li>
+              <li>Add pre-existing <code>aria-live</code> span to HTML skeleton</li>
+              <li>Add <code>color-mix()</code> CSS fallback</li>
+              <li>Clarify &ldquo;silent fail&rdquo; in key design decisions</li>
+              <li>Add partial-edit note to Step 7 Pass 1</li>
+              <li>Use seconds precision in dated headings</li>
+              <li>Update plan Objective to name the two subsections</li>
+            </ol>
+          </section>
+
+          <section>
+            <h2 id="sec-priorities">13. Implementation Priorities</h2>
+            <h3>Critical (must be in this version)</h3>
+            <ul>
+              <li>Step 8 re-read instruction</li>
+              <li>Badge-to-banner replacement</li>
+              <li>Security &amp; Escaping Contract extension</li>
+            </ul>
+            <h3>Important (strongly recommended)</h3>
+            <ul>
+              <li><code>aria-label</code> on copy button (WCAG 4.1.2)</li>
+              <li><code>aria-live</code> span pre-existing in DOM (WCAG 4.1.3)</li>
+              <li><code>color-mix()</code> CSS fallback</li>
+              <li>Seconds precision in dated headings</li>
+            </ul>
+            <h3>Nice to have (can defer)</h3>
+            <ul>
+              <li>Success metrics</li>
+              <li>Partial-edit note</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="sec-decision">14. Final Decision</h2>
+            <p><strong>Approve with revisions.</strong></p>
+            <p>The plan is well-designed and addresses the core user need. The three highest-risk items (Step 8 re-read, badge/banner duplication, remediation content escaping) are all addressable within the existing plan structure. The recommended changes strengthen accessibility, security, and correctness without changing the architecture.</p>
+          </section>
+
+          <section>
+            <h2 id="sec-edits">15a. Inline Edits Applied</h2>
+            <table>
+              <thead><tr><th scope="col">Target Section</th><th scope="col">Action</th><th scope="col">Summary</th></tr></thead>
+              <tbody>
+                <tr><td>Objective</td><td>edit</td><td>Added labeled internal structure, split decision definition by outcome</td></tr>
+                <tr><td>Steps</td><td>edit</td><td>Added Step 8 re-read, seconds precision, partial-edit note, Security &amp; Escaping Contract, badge-to-banner, copy button <code>aria-label</code>, <code>aria-live</code> pre-existing in DOM</td></tr>
+                <tr><td>Acceptance Criteria</td><td>edit</td><td>Expanded to 21-item grouped checklist</td></tr>
+                <tr><td>Verification</td><td>edit</td><td>Expanded to 9 items with separate traces per decision path</td></tr>
+                <tr><td>Files to modify</td><td>edit</td><td>Expanded change descriptions</td></tr>
+                <tr><td>Key design decisions</td><td>edit</td><td>Expanded to 14 numbered decisions</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 id="sec-revised">15b. Revised Plan</h2>
+            <p>The revised plan with all inline edits applied is the content of the source plan file above the Panel Review section.</p>
+          </section>
+
+        </div>
+      </details>
+
+    </main>
+  </div>
+
+  <footer>
+    <p class="disclaimer">This document may contain confidential plan content
+    and reviewer findings. Classify before sharing.</p>
+  </footer>
+
+  <script>
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied \u2713';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+    (function () {
+      var headings = document.querySelectorAll('main h2[id]');
+      var links = document.querySelectorAll('nav a[href^="#"]');
+      if (!headings.length || !links.length) return;
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (l) { l.removeAttribute('aria-current'); });
+          var active = document.querySelector('nav a[href="#' + e.target.id + '"]');
+          if (active) active.setAttribute('aria-current', 'location');
+        });
+      }, { rootMargin: '0px 0px -60% 0px', threshold: 0 });
+      headings.forEach(function (h) { obs.observe(h); });
+    })();
+
+    (function () {
+      function openAll()  { document.querySelectorAll('details').forEach(function(d){ d.open = true; }); }
+      function closeAll() { document.querySelectorAll('details').forEach(function(d){ d.removeAttribute('open'); }); }
+      window.addEventListener('beforeprint', openAll);
+      window.addEventListener('afterprint',  closeAll);
+    })();
+  </script>
+
+</body>
+</html>

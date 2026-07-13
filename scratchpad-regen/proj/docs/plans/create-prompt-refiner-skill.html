@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="en" data-status="completed">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="completed">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-04">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts">
+<meta name="plan-file" content="create-prompt-refiner-skill.html">
+<meta name="plan-path" content="docs/plans/create-prompt-refiner-skill.html">
+<title>Plan: Create refine-prompt skill</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --amber:      #d97706;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: .8; }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .objective-card .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--text);
+  }
+  .step-chip {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .1em .5em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--subtle);
+    border: 1px solid var(--border);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-chip-text { }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle {
+    margin-top: .5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    padding-top: .4rem;
+  }
+  .step-verify-toggle summary {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem;
+    color: var(--text);
+    margin-top: .4rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--surface);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem;
+    background: #f3e8ff;
+    color: #6d28d9;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid #ddd6fe;
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-implement code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Workflow prompt ──────────────────────────────────────────── */
+  .plan-workflow {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: #fdf8ff;
+    border: 1px solid #d8b4fe;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-workflow-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: #fdf8ff; color: #7c3aed; border-color: #d8b4fe; }
+  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; }
+  [data-status="completed"] .copy-workflow-btn { display: none; }
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--subtle);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ── Save as PDF button (backfilled) ──────────────────────────── */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent, #2563eb);
+    border: 1px solid var(--accent, #2563eb);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
+  @media print { .save-pdf-btn { display: none !important; } }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Create refine-prompt skill
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Ship a refine-prompt skill that interviews users about their intent and constraints, then generates a well-structured, copy-pasteable AI prompt grounded in Anthropic&rsquo;s official Claude Prompting Best Practices &mdash; applying the right combination of clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting for each prompt type &mdash; plus recommendations for installed skills, agents, and workflows that can achieve the goal directly.
+
+## Context
+Anthropic publishes a comprehensive Claude Prompting Best Practices guide covering clarity, XML structuring, few-shot examples, role assignment, thinking/CoT, output formatting, and agentic patterns. Most users never read it &mdash; they write vague instructions, skip context, omit output format specs, and don't leverage techniques like <example> tags, <thinking> scaffolds, or document-grounding patterns that the guide recommends.
+
+The agentics marketplace already ships 12 plugins with dozens of skills and agents. A refine-prompt skill closes the loop: instead of the user guessing the right prompt or the right technique from the guide, the skill interviews them, applies the relevant best practices automatically (clarity &rarr; XML structure &rarr; role &rarr; examples &rarr; CoT &rarr; output format), and surfaces installed capabilities that match their intent &mdash; turning every user into a power user without requiring them to study the guide.
+
+This skill lives inside the existing plan-agent plugin at kit/plugins/plan-agent/skills/refine-prompt/ , since both plan-agent and refine-prompt are about structuring user intent into well-formed output. Adding it to plan-agent avoids creating a standalone plugin for a single skill and follows the domain-container naming convention. The references/ directory includes a distilled version of the Anthropic best practices organized by technique, so the skill can cite specific guidelines as it builds the prompt.
+
+## Steps
+1. Add the refine-prompt skill directory inside the existing plan-agent plugin Why: The plan-agent plugin already exists with its own plugin.json , skills, and marketplace entry. Adding a new skill directory under kit/plugins/plan-agent/skills/refine-prompt/ (with references/ for templates) is all that&rsquo;s needed &mdash; no new plugin scaffold, no new plugin.json , no marketplace registration. Verify: Run ls kit/plugins/plan-agent/skills/refine-prompt/ and confirm the directory exists with a references/ subdirectory. Confirm kit/plugins/plan-agent/.claude-plugin/plugin.json still has "name": "plan-agent" and was not modified.
+2. Write the core SKILL.md with the six-phase best-practices pipeline Why: The SKILL.md is the runtime artifact &mdash; its frontmatter controls activation and its body defines the entire workflow. The pipeline maps directly to Anthropic&rsquo;s best practices guide: Classify (identify prompt type and select applicable techniques) &rarr; Interview (gather context per &ldquo;Add context to improve performance&rdquo;) &rarr; Structure (apply XML tags, role, examples per &ldquo;Structure prompts with XML tags&rdquo; and &ldquo;Give Claude a role&rdquo;) &rarr; Draft (assemble the prompt with CoT scaffolding per &ldquo;Leverage thinking capabilities&rdquo;) &rarr; Recommend (surface matching skills/agents) &rarr; Deliver (present in a copy-pasteable fenced block). Verify: Read kit/plugins/plan-agent/skills/refine-prompt/SKILL.md and confirm: (1) YAML frontmatter includes name , description , allowed-tools (with ToolSearch listed for the Recommend phase), and disable-model-invocation: true ; (2) body contains all six workflow phases with explicit references to the Anthropic best practices each phase implements; (3) AskUserQuestion is used in the Interview phase with batched questions.
+3. Build the prompt-type classifier with a best-practices layer matrix Why: The Anthropic guide documents seven core techniques (clarity, context/motivation, XML tags, role assignment, few-shot examples, thinking/CoT, output formatting). Different prompt types need different subsets. The classifier maps each type to its applicable layers so the Draft phase assembles only the relevant techniques. For example: a system prompt applies role + XML structure + guardrails + output formatting; a task prompt applies clarity + CoT + examples + output formatting; a creative prompt applies role + tone + context; an analytical/research prompt applies long-context patterns + quote grounding + CoT + self-check. Verify: Confirm the Classify phase in SKILL.md lists at least four prompt types (system, task, creative, analytical) and defines a technique matrix mapping each type to applicable best-practice layers (clarity, XML structure, role, examples, CoT, output format, self-check). Each type must have a distinct combination &mdash; no two types should have identical layer sets.
+4. Build the clarifying-questions engine grounded in &ldquo;Add context to improve performance&rdquo; Why: The Anthropic guide&rsquo;s &ldquo;Add context to improve performance&rdquo; principle states that providing motivation behind instructions helps Claude deliver more targeted responses. The interview phase implements this by extracting the user&rsquo;s why , not just their what . Questions are derived from the classified type and its technique matrix: a system prompt interview asks about persona, tone, boundaries, and safety constraints (feeding the Role and XML layers); a task prompt asks about input/output formats, edge cases, and success criteria (feeding the Clarity, CoT, and Output Format layers). Progressive depth means: ask the critical 2&ndash;3 questions first, then offer to go deeper if the user wants a more refined prompt. Verify: Confirm the Interview phase uses AskUserQuestion with type-specific questions (not generic ones) that map to the technique matrix from Step 3. Verify progressive depth: the first AskUserQuestion batch asks 2&ndash;3 essential questions, and a follow-up batch is offered only when the user opts in. Confirm each prompt type has its own question set, and that at least one question per type asks why (the motivation/context behind the request).
+5. Write the prompt-generation templates in references/ implementing specific best-practices techniques Why: The Anthropic guide&rsquo;s techniques must be baked directly into each template as structural scaffolding &mdash; not left to the Draft phase to improvise. Each template implements the techniques from its row in the Step 3 matrix: the system-prompt template uses <role> tags (&ldquo;Give Claude a role&rdquo;), <instructions> and <constraints> XML wrappers (&ldquo;Structure prompts with XML tags&rdquo;), and output-format indicators (&ldquo;Be direct about the desired output&rdquo;). The task-prompt template adds <thinking> scaffolding (&ldquo;Leverage thinking capabilities&rdquo;), <example> tag slots (&ldquo;Provide examples&rdquo;), and step-by-step instruction blocks (&ldquo;Be clear and direct&rdquo;). The analytical template includes document-grounding patterns with <document> tags and quote-extraction (&ldquo;Long-context prompting&rdquo;) plus self-check instructions. The creative template uses tone-setting role assignments and positive-instruction framing. A separate references/best-practices-reference.md file provides a distilled summary of all seven techniques for the SKILL.md to cite. Verify: Run ls kit/plugins/plan-agent/skills/refine-prompt/references/ and confirm at least five files: system-prompt-template.md , task-prompt-template.md , creative-prompt-template.md , analytical-prompt-template.md , and best-practices-reference.md . Read each template and confirm: (1) system template uses <role> , <instructions> , <constraints> XML tags; (2) task template includes <thinking> scaffolding and <example> slots; (3) analytical template includes <document> grounding and self-check blocks; (4) creative template uses role-based tone-setting. Confirm best-practices-reference.md covers all seven core techniques from the Anthropic guide.
+6. Implement the skill/agent/workflow recommendation engine grounded in &ldquo;Tool use and agentic patterns&rdquo; Why: The Anthropic guide&rsquo;s &ldquo;Tool use&rdquo; and &ldquo;Agentic coding&rdquo; sections describe how Claude works best when given concrete tools with clear descriptions. The recommendation engine applies this principle in reverse: it queries the session&rsquo;s live tool registry via ToolSearch with keyword queries derived from the user&rsquo;s intent, and surfaces the most relevant tools. ToolSearch is session-scoped (only returns tools actually loaded), includes MCP tools, and requires no filesystem path assumptions. This turns a generated prompt into an actionable recommendation &mdash; &ldquo;you could also run /code-review for this&rdquo; &mdash; and when the recommended tool is itself the better path, prevents the user from needing a prompt at all. Verify: Confirm the Recommend phase in SKILL.md extracts 2&ndash;3 keyword queries from the user's stated intent and calls ToolSearch (keyword search mode, max_results: 5 ) for each. Verify results are deduplicated and filtered to skills/commands/agents (excluding low-level tools like Read / Edit ). Verify the output format: a ranked list of 1&ndash;3 recommendations with invocation syntax (e.g. /plugin:command ) and a one-line explanation of why each matches. Confirm the skill explains when a recommended tool supersedes the prompt entirely (i.e. the user&rsquo;s intent is best served by running the tool directly rather than crafting a prompt). Confirm ToolSearch is listed in allowed-tools .
+7. Bump plan-agent version in .claude-plugin/marketplace.json and update CHANGELOG.md Why: Adding a new skill is a minor version bump per the marketplace versioning convention. The plan-agent plugin is already registered &mdash; no new entry is needed, just a version increment and a changelog entry documenting the new refine-prompt skill. Verify: Read .claude-plugin/marketplace.json and confirm the plan-agent entry&rsquo;s version has been bumped (minor increment). Read kit/plugins/plan-agent/CHANGELOG.md and confirm a new entry documents the addition of the refine-prompt skill. Run cat .claude-plugin/marketplace.json | python3 -m json.tool to confirm valid JSON.
+8. Add a refine-prompt section to plan-agent &rsquo;s existing README Why: The plan-agent README already documents existing skills. Adding a section for the new refine-prompt skill keeps all plugin documentation in one place. The section must explain that prompts are generated using Anthropic&rsquo;s Claude Prompting Best Practices as the foundation, list the seven techniques, and show a concrete before/after example. Verify: Read kit/plugins/plan-agent/README.md and confirm it contains a refine-prompt section with: overview (mentioning and linking to the Anthropic best practices guide), usage (at least one before/after example showing a vague request transformed into a structured prompt), and a feature matrix (table mapping prompt types to which of the seven best-practices techniques each type applies).
+
+## Acceptance Criteria
+- kit/plugins/plan-agent/skills/refine-prompt/ directory exists with SKILL.md and references/ subdirectory inside the existing plan-agent plugin
+- kit/plugins/plan-agent/skills/refine-prompt/SKILL.md has valid frontmatter ( name , description , allowed-tools , disable-model-invocation: true ) and body under 500 lines
+- The skill classifies prompts into at least four types (system, task, creative, analytical) with a technique matrix mapping each type to applicable best-practices layers from the Anthropic guide
+- The interview phase uses AskUserQuestion with type-specific questions derived from the technique matrix, asks the user&rsquo;s why (per &ldquo;Add context to improve performance&rdquo;), and offers progressive depth
+- Generated prompts use XML tags ( <instructions> , <context> , <example> ) per &ldquo;Structure prompts with XML tags&rdquo;, role assignment per &ldquo;Give Claude a role&rdquo;, <thinking> scaffolding per &ldquo;Leverage thinking capabilities&rdquo;, and output format indicators per &ldquo;Be direct about the desired output&rdquo; &mdash; each applied only when the technique matrix selects it for the classified prompt type
+- The recommendation engine uses ToolSearch to query the session&rsquo;s live tool registry and surfaces 1&ndash;3 matching tools with invocation syntax
+- .claude-plugin/marketplace.json has the plan-agent version bumped (minor increment) and kit/plugins/plan-agent/CHANGELOG.md documents the new skill
+- The final prompt output is presented in a fenced code block the user can copy-paste directly into any AI agent, and uses positive instructions (per &ldquo;Be direct about the desired output&rdquo;) rather than telling Claude what not to do
+- A references/best-practices-reference.md file exists containing a distilled summary of all seven core techniques from the Anthropic guide , organized by technique name with actionable implementation notes
+
+## Verification
+Load the plugin with claude --plugin-dir ./kit/plugins/plan-agent and run four end-to-end tests, each verifying that the generated prompt applies the specific Anthropic best practices techniques selected by the technique matrix:
+
+System prompt flow: Tell the skill you want a system prompt for a customer support chatbot. Confirm it asks about persona, tone, boundaries, and safety constraints (per &ldquo;Add context&rdquo;). Verify the output uses <role> tags (per &ldquo;Give Claude a role&rdquo;), <instructions> and <constraints> XML wrappers (per &ldquo;Structure prompts with XML tags&rdquo;), and output-format indicators (per &ldquo;Be direct about the desired output&rdquo;).
+
+Task prompt flow: Ask for a prompt to refactor a Python module. Confirm it asks about input code, target patterns, and the why behind the refactor. Verify the output includes <thinking> scaffolding (per &ldquo;Leverage thinking capabilities&rdquo;), <example> tag slots (per &ldquo;Provide examples&rdquo;), and step-by-step instructions (per &ldquo;Be clear and direct&rdquo;).
+
+Analytical prompt flow: Ask for a prompt to analyze a research paper. Confirm it asks about the document context and desired analysis depth. Verify the output includes <document> grounding tags (per &ldquo;Long-context prompting&rdquo;), quote-extraction instructions, and a self-check block.
+
+Recommendation check: In all flows above, verify the skill surfaces at least one relevant installed skill (e.g. /code-review for the refactoring task). Confirm the recommendation includes the invocation command and a brief rationale explaining when the tool supersedes the prompt.
+</script>
+
+<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ── Header — document cover ─────────────────────────────────── -->
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Create refine-prompt skill</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+              aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="status-badge">completed</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
+        2026-06-04
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
+        agentics
+      </span>
+      <span>
+        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
+        feature
+      </span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar — table of contents ─────────────────────────── -->
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Main content ─────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── Objective ────────────────────────────────────────────── -->
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Ship a <code>refine-prompt</code> skill that interviews users about their intent and constraints, then generates a well-structured, copy-pasteable AI prompt grounded in <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s official Claude Prompting Best Practices</a> &mdash; applying the right combination of clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting for each prompt type &mdash; plus recommendations for installed skills, agents, and workflows that can achieve the goal directly.</p>
+    </div>
+
+    <!-- ── Implement prompt ──────────────────────────────────────── -->
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <!-- ── Workflow prompt ──────────────────────────────────────── -->
+    <div class="plan-workflow">
+      <span class="plan-workflow-label">Workflow</span>
+      <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/create-refine-prompt-skill.html &mdash; Ship a refine-prompt skill that interviews users and generates optimized AI prompts</code>
+      <button class="copy-workflow-btn" type="button"
+              onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+    </div>
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">create-prompt-refiner-skill.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/create-prompt-refiner-skill.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+
+    <!-- ── Progress ─────────────────────────────────────────────── -->
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">9 / 9 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
+      </div>
+    </div>
+
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p>Anthropic publishes a comprehensive <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Claude Prompting Best Practices</a> guide covering clarity, XML structuring, few-shot examples, role assignment, thinking/CoT, output formatting, and agentic patterns. Most users never read it &mdash; they write vague instructions, skip context, omit output format specs, and don&#39;t leverage techniques like <code>&lt;example&gt;</code> tags, <code>&lt;thinking&gt;</code> scaffolds, or document-grounding patterns that the guide recommends.</p>
+      <p>The agentics marketplace already ships 12 plugins with dozens of skills and agents. A refine-prompt skill closes the loop: instead of the user guessing the right prompt or the right technique from the guide, the skill interviews them, applies the relevant best practices automatically (clarity &rarr; XML structure &rarr; role &rarr; examples &rarr; CoT &rarr; output format), and surfaces installed capabilities that match their intent &mdash; turning every user into a power user without requiring them to study the guide.</p>
+      <p>This skill lives inside the existing <code>plan-agent</code> plugin at <code>kit/plugins/plan-agent/skills/refine-prompt/</code>, since both plan-agent and refine-prompt are about structuring user intent into well-formed output. Adding it to plan-agent avoids creating a standalone plugin for a single skill and follows the domain-container naming convention. The <code>references/</code> directory includes a distilled version of the Anthropic best practices organized by technique, so the skill can cite specific guidelines as it builds the prompt.</p>
+    </section>
+
+    <!-- ── Steps ────────────────────────────────────────────────── -->
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <div class="steps-list">
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add the <code>refine-prompt</code> skill directory inside the existing <code>plan-agent</code> plugin</span>
+              </div>
+              <div class="step-why">The plan-agent plugin already exists with its own <code>plugin.json</code>, skills, and marketplace entry. Adding a new skill directory under <code>kit/plugins/plan-agent/skills/refine-prompt/</code> (with <code>references/</code> for templates) is all that&rsquo;s needed &mdash; no new plugin scaffold, no new <code>plugin.json</code>, no marketplace registration.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Run <code>ls kit/plugins/plan-agent/skills/refine-prompt/</code> and confirm the directory exists with a <code>references/</code> subdirectory. Confirm <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> still has <code>&quot;name&quot;: &quot;plan-agent&quot;</code> and was not modified.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Write the core <code>SKILL.md</code> with the six-phase best-practices pipeline</span>
+              </div>
+              <div class="step-why">The SKILL.md is the runtime artifact &mdash; its frontmatter controls activation and its body defines the entire workflow. The pipeline maps directly to Anthropic&rsquo;s best practices guide: <strong>Classify</strong> (identify prompt type and select applicable techniques) &rarr; <strong>Interview</strong> (gather context per &ldquo;Add context to improve performance&rdquo;) &rarr; <strong>Structure</strong> (apply XML tags, role, examples per &ldquo;Structure prompts with XML tags&rdquo; and &ldquo;Give Claude a role&rdquo;) &rarr; <strong>Draft</strong> (assemble the prompt with CoT scaffolding per &ldquo;Leverage thinking capabilities&rdquo;) &rarr; <strong>Recommend</strong> (surface matching skills/agents) &rarr; <strong>Deliver</strong> (present in a copy-pasteable fenced block).</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> and confirm: (1) YAML frontmatter includes <code>name</code>, <code>description</code>, <code>allowed-tools</code> (with <code>ToolSearch</code> listed for the Recommend phase), and <code>disable-model-invocation: true</code>; (2) body contains all six workflow phases with explicit references to the Anthropic best practices each phase implements; (3) <code>AskUserQuestion</code> is used in the Interview phase with batched questions.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Build the prompt-type classifier with a best-practices layer matrix</span>
+              </div>
+              <div class="step-why">The Anthropic guide documents seven core techniques (clarity, context/motivation, XML tags, role assignment, few-shot examples, thinking/CoT, output formatting). Different prompt types need different subsets. The classifier maps each type to its applicable layers so the Draft phase assembles only the relevant techniques. For example: a system prompt applies role + XML structure + guardrails + output formatting; a task prompt applies clarity + CoT + examples + output formatting; a creative prompt applies role + tone + context; an analytical/research prompt applies long-context patterns + quote grounding + CoT + self-check.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Confirm the Classify phase in <code>SKILL.md</code> lists at least four prompt types (system, task, creative, analytical) and defines a <strong>technique matrix</strong> mapping each type to applicable best-practice layers (clarity, XML structure, role, examples, CoT, output format, self-check). Each type must have a distinct combination &mdash; no two types should have identical layer sets.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Build the clarifying-questions engine grounded in &ldquo;Add context to improve performance&rdquo;</span>
+              </div>
+              <div class="step-why">The Anthropic guide&rsquo;s &ldquo;Add context to improve performance&rdquo; principle states that providing motivation behind instructions helps Claude deliver more targeted responses. The interview phase implements this by extracting the user&rsquo;s <em>why</em>, not just their <em>what</em>. Questions are derived from the classified type and its technique matrix: a system prompt interview asks about persona, tone, boundaries, and safety constraints (feeding the Role and XML layers); a task prompt asks about input/output formats, edge cases, and success criteria (feeding the Clarity, CoT, and Output Format layers). Progressive depth means: ask the critical 2&ndash;3 questions first, then offer to go deeper if the user wants a more refined prompt.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Confirm the Interview phase uses <code>AskUserQuestion</code> with type-specific questions (not generic ones) that map to the technique matrix from Step 3. Verify progressive depth: the first <code>AskUserQuestion</code> batch asks 2&ndash;3 essential questions, and a follow-up batch is offered only when the user opts in. Confirm each prompt type has its own question set, and that at least one question per type asks <em>why</em> (the motivation/context behind the request).</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Write the prompt-generation templates in <code>references/</code> implementing specific best-practices techniques</span>
+              </div>
+              <div class="step-why">The Anthropic guide&rsquo;s techniques must be baked directly into each template as structural scaffolding &mdash; not left to the Draft phase to improvise. Each template implements the techniques from its row in the Step 3 matrix: the system-prompt template uses <code>&lt;role&gt;</code> tags (&ldquo;Give Claude a role&rdquo;), <code>&lt;instructions&gt;</code> and <code>&lt;constraints&gt;</code> XML wrappers (&ldquo;Structure prompts with XML tags&rdquo;), and output-format indicators (&ldquo;Be direct about the desired output&rdquo;). The task-prompt template adds <code>&lt;thinking&gt;</code> scaffolding (&ldquo;Leverage thinking capabilities&rdquo;), <code>&lt;example&gt;</code> tag slots (&ldquo;Provide examples&rdquo;), and step-by-step instruction blocks (&ldquo;Be clear and direct&rdquo;). The analytical template includes document-grounding patterns with <code>&lt;document&gt;</code> tags and quote-extraction (&ldquo;Long-context prompting&rdquo;) plus self-check instructions. The creative template uses tone-setting role assignments and positive-instruction framing. A separate <code>references/best-practices-reference.md</code> file provides a distilled summary of all seven techniques for the SKILL.md to cite.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Run <code>ls kit/plugins/plan-agent/skills/refine-prompt/references/</code> and confirm at least five files: <code>system-prompt-template.md</code>, <code>task-prompt-template.md</code>, <code>creative-prompt-template.md</code>, <code>analytical-prompt-template.md</code>, and <code>best-practices-reference.md</code>. Read each template and confirm: (1) system template uses <code>&lt;role&gt;</code>, <code>&lt;instructions&gt;</code>, <code>&lt;constraints&gt;</code> XML tags; (2) task template includes <code>&lt;thinking&gt;</code> scaffolding and <code>&lt;example&gt;</code> slots; (3) analytical template includes <code>&lt;document&gt;</code> grounding and self-check blocks; (4) creative template uses role-based tone-setting. Confirm <code>best-practices-reference.md</code> covers all seven core techniques from the Anthropic guide.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Implement the skill/agent/workflow recommendation engine grounded in &ldquo;Tool use and agentic patterns&rdquo;</span>
+              </div>
+              <div class="step-why">The Anthropic guide&rsquo;s &ldquo;Tool use&rdquo; and &ldquo;Agentic coding&rdquo; sections describe how Claude works best when given concrete tools with clear descriptions. The recommendation engine applies this principle in reverse: it queries the session&rsquo;s live tool registry via <code>ToolSearch</code> with keyword queries derived from the user&rsquo;s intent, and surfaces the most relevant tools. <code>ToolSearch</code> is session-scoped (only returns tools actually loaded), includes MCP tools, and requires no filesystem path assumptions. This turns a generated prompt into an actionable recommendation &mdash; &ldquo;you could also run <code>/code-review</code> for this&rdquo; &mdash; and when the recommended tool is itself the better path, prevents the user from needing a prompt at all.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Confirm the Recommend phase in <code>SKILL.md</code> extracts 2&ndash;3 keyword queries from the user&#39;s stated intent and calls <code>ToolSearch</code> (keyword search mode, <code>max_results: 5</code>) for each. Verify results are deduplicated and filtered to skills/commands/agents (excluding low-level tools like <code>Read</code>/<code>Edit</code>). Verify the output format: a ranked list of 1&ndash;3 recommendations with invocation syntax (e.g. <code>/plugin:command</code>) and a one-line explanation of why each matches. Confirm the skill explains when a recommended tool supersedes the prompt entirely (i.e. the user&rsquo;s intent is best served by running the tool directly rather than crafting a prompt). Confirm <code>ToolSearch</code> is listed in <code>allowed-tools</code>.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Bump <code>plan-agent</code> version in <code>.claude-plugin/marketplace.json</code> and update <code>CHANGELOG.md</code></span>
+              </div>
+              <div class="step-why">Adding a new skill is a minor version bump per the marketplace versioning convention. The plan-agent plugin is already registered &mdash; no new entry is needed, just a version increment and a changelog entry documenting the new <code>refine-prompt</code> skill.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>.claude-plugin/marketplace.json</code> and confirm the <code>plan-agent</code> entry&rsquo;s version has been bumped (minor increment). Read <code>kit/plugins/plan-agent/CHANGELOG.md</code> and confirm a new entry documents the addition of the <code>refine-prompt</code> skill. Run <code>cat .claude-plugin/marketplace.json | python3 -m json.tool</code> to confirm valid JSON.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add a <code>refine-prompt</code> section to <code>plan-agent</code>&rsquo;s existing README</span>
+              </div>
+              <div class="step-why">The plan-agent README already documents existing skills. Adding a section for the new refine-prompt skill keeps all plugin documentation in one place. The section must explain that prompts are generated using <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic&rsquo;s Claude Prompting Best Practices</a> as the foundation, list the seven techniques, and show a concrete before/after example.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Read <code>kit/plugins/plan-agent/README.md</code> and confirm it contains a <code>refine-prompt</code> section with: overview (mentioning and linking to the Anthropic best practices guide), usage (at least one before/after example showing a vague request transformed into a structured prompt), and a feature matrix (table mapping prompt types to which of the seven best-practices techniques each type applies).</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Acceptance Criteria
+      </h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1"><code>kit/plugins/plan-agent/skills/refine-prompt/</code> directory exists with <code>SKILL.md</code> and <code>references/</code> subdirectory inside the existing plan-agent plugin</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2"><code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> has valid frontmatter (<code>name</code>, <code>description</code>, <code>allowed-tools</code>, <code>disable-model-invocation: true</code>) and body under 500 lines</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">The skill classifies prompts into at least four types (system, task, creative, analytical) with a technique matrix mapping each type to applicable best-practices layers from the <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic guide</a></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4">The interview phase uses <code>AskUserQuestion</code> with type-specific questions derived from the technique matrix, asks the user&rsquo;s <em>why</em> (per &ldquo;Add context to improve performance&rdquo;), and offers progressive depth</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5">Generated prompts use XML tags (<code>&lt;instructions&gt;</code>, <code>&lt;context&gt;</code>, <code>&lt;example&gt;</code>) per &ldquo;Structure prompts with XML tags&rdquo;, role assignment per &ldquo;Give Claude a role&rdquo;, <code>&lt;thinking&gt;</code> scaffolding per &ldquo;Leverage thinking capabilities&rdquo;, and output format indicators per &ldquo;Be direct about the desired output&rdquo; &mdash; each applied only when the technique matrix selects it for the classified prompt type</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6">The recommendation engine uses <code>ToolSearch</code> to query the session&rsquo;s live tool registry and surfaces 1&ndash;3 matching tools with invocation syntax</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7" checked>
+          <label for="ac7"><code>.claude-plugin/marketplace.json</code> has the <code>plan-agent</code> version bumped (minor increment) and <code>kit/plugins/plan-agent/CHANGELOG.md</code> documents the new skill</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8" checked>
+          <label for="ac8">The final prompt output is presented in a fenced code block the user can copy-paste directly into any AI agent, and uses positive instructions (per &ldquo;Be direct about the desired output&rdquo;) rather than telling Claude what <em>not</em> to do</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9" checked>
+          <label for="ac9">A <code>references/best-practices-reference.md</code> file exists containing a distilled summary of all seven core techniques from the <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic guide</a>, organized by technique name with actionable implementation notes</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <!-- ── Verification ──────────────────────────────────────────── -->
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Verification
+      </h2>
+      <p>Load the plugin with <code>claude --plugin-dir ./kit/plugins/plan-agent</code> and run four end-to-end tests, each verifying that the generated prompt applies the specific <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Anthropic best practices</a> techniques selected by the technique matrix:</p>
+      <ol>
+        <li><strong>System prompt flow:</strong> Tell the skill you want a system prompt for a customer support chatbot. Confirm it asks about persona, tone, boundaries, and safety constraints (per &ldquo;Add context&rdquo;). Verify the output uses <code>&lt;role&gt;</code> tags (per &ldquo;Give Claude a role&rdquo;), <code>&lt;instructions&gt;</code> and <code>&lt;constraints&gt;</code> XML wrappers (per &ldquo;Structure prompts with XML tags&rdquo;), and output-format indicators (per &ldquo;Be direct about the desired output&rdquo;).</li>
+        <li><strong>Task prompt flow:</strong> Ask for a prompt to refactor a Python module. Confirm it asks about input code, target patterns, and the <em>why</em> behind the refactor. Verify the output includes <code>&lt;thinking&gt;</code> scaffolding (per &ldquo;Leverage thinking capabilities&rdquo;), <code>&lt;example&gt;</code> tag slots (per &ldquo;Provide examples&rdquo;), and step-by-step instructions (per &ldquo;Be clear and direct&rdquo;).</li>
+        <li><strong>Analytical prompt flow:</strong> Ask for a prompt to analyze a research paper. Confirm it asks about the document context and desired analysis depth. Verify the output includes <code>&lt;document&gt;</code> grounding tags (per &ldquo;Long-context prompting&rdquo;), quote-extraction instructions, and a self-check block.</li>
+        <li><strong>Recommendation check:</strong> In all flows above, verify the skill surfaces at least one relevant installed skill (e.g. <code>/code-review</code> for the refactoring task). Confirm the recommendation includes the invocation command and a brief rationale explaining when the tool supersedes the prompt.</li>
+      </ol>
+    </section>
+
+    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Completion Checklist
+      </h2>
+      <div class="completion-checklist all-complete" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled checked>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled checked>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled checked>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p>Implemented as the <code>craft-prompt</code> skill (PR #248, commit <code>2672be2</code>; Phase 7 &ldquo;Save&rdquo; added in PR #249), then renamed to <code>refine-prompt</code> &mdash; the plan&rsquo;s original name &mdash; in v2.0.0 on 2026-06-10. The skill now lives at <code>kit/plugins/plan-agent/skills/refine-prompt/</code>, invoked as <code>/plan-agent:refine-prompt</code>. All functional requirements met. Verification evidence per check (recorded pre-rename; <code>craft-prompt</code> paths below now correspond to <code>skills/refine-prompt/</code>):</p>
+          <dl class="report-list">
+            <dt>step-1-directory</dt>
+            <dd>kit/plugins/plan-agent/skills/craft-prompt/ exists with SKILL.md and a references/ subdirectory containing 5 files (system-prompt-template.md, task-prompt-template.md, creative-prompt-template.md, analytical-prompt-template.md, best-practices-reference.md) — naming delta only: plan says refine-prompt, implemented as craft-prompt per PR #248 mapping. kit/plugins/plan-agent/.claude-plugin/plugin.json:2 has "name": "plan-agent", parses as valid JSON, and grep confirms no "version" key anywhere in the file; version is correctly held only in .claude-plugin/marketplace.json:253 ("version": "1.11.0").</dd>
+            <dt>step-2-skill-md-pipeline</dt>
+            <dd>kit/plugins/plan-agent/skills/craft-prompt/SKILL.md satisfies all three requirements: (1) frontmatter has name (line 2), description (lines 3-6), disable-model-invocation: true (line 7), and allowed-tools listing ToolSearch (lines 9-10); (2) all six phases are present as headings — Classify (line 30), Interview (line 64), Structure (line 115), Draft (line 143), Recommend (line 180), Deliver (line 201) — with explicit Anthropic best-practice references: the Classify technique matrix is labeled "Anthropic best-practice layers" naming role assignment/XML structure/thinking-CoT/output format (lines 42-50), Interview cites "Add context to improve performance" verbatim (line 67), Structure applies the matrix's XML/role/examples/CoT layers (lines 117-139), and Draft cites "Be direct about the desired output" verbatim under "writing rules from Anthropic's best practices" (lines 170-173); (3) the Interview phase uses AskUserQuestion "with a batched set of 2-3 essential questions" per type (line 70) plus an optional second batch (lines 109-111). Naming delta only: the skill ships as craft-prompt rather than the plan's refine-prompt path, which passes per the naming-mapping rule; the extra Phase 7 — Save (line 228) is the explicitly-acceptable addition.</dd>
+            <dt>step-3-classifier-matrix</dt>
+            <dd>Phase 1 — Classify in kit/plugins/plan-agent/skills/craft-prompt/SKILL.md lists the four required types (lines 35-40) and defines a "technique matrix" table (lines 42-50) with four distinct layer sets: system = role assignment + XML structure (instructions/constraints) + output format + guardrails (line 47); task = clarity/directness + XML structure (context/example) + thinking/CoT + output format (line 48); creative = role assignment + tone/voice + context/motivation + output format + positive framing (line 49); analytical = long-context patterns (document/quote) + thinking/CoT + self-check + output format (line 50). No two sets are identical, and they match the plan's own exemplar mapping in Step 3 (docs/plans/create-prompt-refiner-skill.html:1124), covering the best-practice pool (clarity, XML structure, role, examples via the &lt;example&gt; tag, CoT, output format, self-check). Naming delta only: the skill ships as craft-prompt instead of the plan's refine-prompt path — substance fully present.</dd>
+            <dt>step-4-interview-engine</dt>
+            <dd>Phase 2 of kit/plugins/plan-agent/skills/craft-prompt/SKILL.md uses AskUserQuestion with "a batched set of 2-3 essential questions determined by the classified type" (line 70) and offers a follow-up batch only on user confirmation ("Only run a second AskUserQuestion batch if the user confirms", lines 109-111). All four types have their own question set — system (lines 73-79), task (81-88), creative (90-98), analytical (100-107) — each question annotated "(feeds Role/Clarity/CoT/Output Format/Long-context...)" mapping directly to the Phase 1 technique matrix (lines 45-50), and each set contains an explicit why question (lines 78, 87, 98, 106) per "Add context to improve performance" (cited at line 67). Naming delta only: the skill is craft-prompt rather than the plan's refine-prompt path — substance matches plan Step 4 (plan HTML lines 1141-1144); minor non-blocking note: the creative set lists 4 candidate questions while line 70 caps the first batch at 2-3.</dd>
+            <dt>step-5-templates</dt>
+            <dd>All five required files exist in kit/plugins/plan-agent/skills/craft-prompt/references/ (system-prompt-template.md, task-prompt-template.md, creative-prompt-template.md, analytical-prompt-template.md, best-practices-reference.md). Substance verified per template: system-prompt-template.md has &lt;role&gt;/&lt;instructions&gt;/&lt;constraints&gt; (lines 12/16/25); task-prompt-template.md has &lt;example&gt; input/output slots (lines 16-19) and &lt;thinking&gt; scaffolding (lines 21-26); analytical-prompt-template.md has &lt;document&gt;&lt;content&gt; grounding (lines 12-15) and a "Self-check before responding:" block (lines 29-32); creative-prompt-template.md sets tone via &lt;role&gt;You are {{CREATIVE_ROLE}}. Your voice is {{VOICE_DESCRIPTION}}.&lt;/role&gt; (lines 12-14) with style/tone requirements (lines 24-28); best-practices-reference.md covers all seven core techniques as sections 1-7 (Clarity and Directness line 7, Context and Motivation line 21, XML Tags line 35, Role Assignment line 52, Few-Shot Examples line 66, Thinking/CoT line 80, Output Formatting line 94). Naming delta only: templates say "Used by `craft-prompt`" (e.g., system-prompt-template.md line 3) instead of the plan's "refine-prompt" — naming difference, not a substance gap.</dd>
+            <dt>step-6-recommend-engine</dt>
+            <dd>Phase 5 — Recommend in /Users/shawnsandy/devbox/agentics/.claude/worktrees/trusting-grothendieck-b678fe/kit/plugins/plan-agent/skills/craft-prompt/SKILL.md satisfies every requirement: lines 186-191 require "ToolSearch with 2–3 keyword queries derived from the user's intent" run "for each keyword phrase" (keyword search mode); lines 192-193 require "Deduplicate results, filter to skills/commands/agents only (not filesystem tools)"; lines 194-195 require "Present the top 1–3 matches with: the invocation command, a one-sentence description, and a note on when it supersedes a custom prompt" (concrete invocation-syntax example "/code-review — Reviews code for bugs and quality..." at lines 219-220); lines 182-184 state matches "may supersede the need for a custom prompt entirely"; and ToolSearch is listed in allowed-tools at lines 9-10. The literal `max_results: 5` parameter from the plan is not written out, but the phase gives explicit result-count guidance ("top 1–3 matches", line 194), so per the check rule this is a noted delta, not a defect. Naming delta only: the skill ships as craft-prompt (kit/plugins/plan-agent/skills/craft-prompt/) instead of the plan's refine-prompt — substance is fully present, so this passes.</dd>
+            <dt>step-7-version-changelog</dt>
+            <dd>Commit 2672be2 bumped the plan-agent entry in .claude-plugin/marketplace.json from 1.3.2 to 1.4.0 (minor) in the same commit that added skills/craft-prompt/ (SKILL.md + 5 references), and kit/plugins/plan-agent/CHANGELOG.md:147 contains "## v1.4.0 — 2026-06-04 — Add craft-prompt skill" with an Added section (lines 151-162) documenting all six phases and five reference files. `python3 -m json.tool .claude-plugin/marketplace.json` printed VALID, and the current plan-agent version is 1.11.0 (.claude-plugin/marketplace.json:253), which is &gt;= the 1.4.0 that shipped the skill. Naming delta only: the plan's "refine-prompt" shipped as "craft-prompt" — version/changelog substance is fully present under the shipped name.</dd>
+            <dt>step-8-readme</dt>
+            <dd>kit/plugins/plan-agent/README.md documents the skill under "#### craft-prompt — Manual invoke only" (line 210) with all three required elements: (1) line 212 overview mentions and links Anthropic's guide via [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices); (2) lines 220-249 give a "Before / after" usage example transforming the vague "write me a prompt to summarize stuff" into a structured task prompt with &lt;context&gt;/&lt;thinking&gt;/&lt;example&gt; and an output-format rule; (3) lines 260-267 provide a "Technique matrix" table mapping all four prompt types (system, task, creative, analytical) to their applied best-practices techniques. Naming delta only: the plan's "refine-prompt" is documented as "craft-prompt", which passes per the naming mapping.</dd>
+            <dt>acceptance-criteria-sweep</dt>
+            <dd>All nine criteria hold in substance under the naming delta (plan's refine-prompt shipped as craft-prompt at kit/plugins/plan-agent/skills/craft-prompt/ — name/path-only mismatch, passes per mapping). (1) `ls` shows skills/craft-prompt/ with SKILL.md and references/ holding all five files. (2) Frontmatter parses as valid YAML (Ruby YAML.safe_load) with name, description, allowed-tools, disable-model-invocation: true (SKILL.md:1-11); wc -l = 289 lines &lt; 500. (3) SKILL.md:35-40 classifies four types (system/task/creative/analytical) and SKILL.md:45-50 is the technique matrix mapping each type to best-practices layers. (4) SKILL.md:70-71 "Use **AskUserQuestion** with a batched set of 2–3 essential questions determined by the classified type"; type-specific questions at 73-107 each annotated with the matrix technique they feed; a "_Why_" question per type (lines 79, 87, 98, 106) per "Add context to improve performance" (66-68); progressive depth opt-in at 109-111. (5) SKILL.md:115-139 maps &lt;role&gt;, &lt;instructions&gt;/&lt;constraints&gt;, &lt;context&gt;, &lt;example&gt;, &lt;thinking&gt;, &lt;document&gt;, self-check to matrix types with "Skip any layer whose type is not in the technique matrix" (139) and placeholder removal for unselected techniques (168); templates carry matching tags — system-prompt-template.md:12/16/25, task-prompt-template.md:12/16/21/30, creative-prompt-template.md:12/18/24, analytical-prompt-template.md:12/18/29/34. (6) SKILL.md:180-197 Phase 5 searches "the session's live tool registry" via ToolSearch (allowed-tools, line 10) and presents "the top 1–3 matches with: the invocation command" (194-195). (7) git show 2672be2 (PR #248, the commit adding the skill) bumps marketplace.json plan-agent "1.3.2" -&gt; "1.4.0" (minor), and kit/plugins/plan-agent/CHANGELOG.md:147-161 ("v1.4.0 — Add craft-prompt skill") documents the skill and references. (8) SKILL.md:203-204 "Present the assembled prompt in a fenced code block the user can copy-paste directly" with ```text format example at 212-221; positive framing instructed at SKILL.md:172 ('Use positive framing ("Do X" not "Don't do Y")'). (9) references/best-practices-reference.md exists (119 lines) with technique-name sections 1-7 (Clarity, Context/Motivation, XML Tags, Role Assignment, Few-Shot Examples, Thinking/CoT, Output Formatting — exactly the seven the plan enumerates at HTML line 1124) plus a bonus eighth (Long-Context), each with actionable "Implementation:" bullets.</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Next Steps ──────────────────────────────────────────── -->
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next Steps
+      </h2>
+      <div class="next-steps-list">
+
+        <details class="next-step-item">
+          <summary>Add a <code>/plan-agent:refine</code> command for explicit invocation</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Create a command file at kit/plugins/plan-agent/commands/refine.md that explicitly invokes the refine-prompt skill. The command should accept $ARGUMENTS as the initial prompt text or intent description, pass it to the skill&#39;s Classify phase, and skip the initial &quot;what do you need?&quot; question when arguments are provided. Follow the command pattern in .claude/rules/plugin-patterns.md. Include YAML frontmatter with a description under 80 characters.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Add prompt-history persistence so users can iterate on past prompts</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a prompt-history feature to the plan-agent plugin at kit/plugins/plan-agent/. After the skill generates a prompt, save it to ~/.claude/plan-agent/prompt-history/ as a timestamped markdown file with YAML frontmatter (type, intent summary, date). Add a /plan-agent:history command that lists recent prompts and lets the user pick one to refine further. Use Read and Glob to scan the history directory. Limit history to the 50 most recent entries.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Run <code>/skill-reviewer:reviewing-skills</code> to audit the SKILL.md quality</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Run /skill-reviewer:reviewing-skills on kit/plugins/plan-agent/skills/refine-prompt/SKILL.md. Apply any fixes from the audit report that score below 4/5 in any dimension. Then run /skill-reviewer:auditing-allowed-tools on the same file to verify the allowed-tools list matches actual tool usage.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <!-- Wish List -->
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
+
+        <details class="next-step-item">
+          <summary>Add a best-practices version tracker to detect guide updates</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a version-tracking mechanism to the plan-agent plugin at kit/plugins/plan-agent/. Store the current Anthropic best-practices guide URL and a content hash in references/best-practices-reference.md frontmatter (e.g. guide-url, guide-hash, last-checked). Add a /plan-agent:check-guide command that fetches https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices via WebFetch, compares the content hash, and reports whether the guide has changed since the reference was last updated. If changed, list which sections differ and suggest updates to the templates and technique matrix.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Prompt quality scoring grounded in the seven best-practices dimensions
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Add a prompt-quality scoring system to the refine-prompt skill grounded in Anthropic's seven core prompting best practices. After generating a prompt, score it on 7 dimensions matching the guide: (1) Clarity/directness, (2) Context/motivation, (3) XML structure, (4) Role assignment, (5) Examples, (6) Thinking/CoT, (7) Output formatting. Each dimension scores 0 (not applicable), 1 (missing but should be present per the technique matrix), or 2 (present and well-formed). If any applicable dimension scores 1, automatically suggest targeted improvements citing the specific guide section and offer to regenerate. Store scoring rubrics in references/scoring-rubric.md with links to the corresponding Anthropic guide sections.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Multi-model prompt adaptation (Claude, GPT, Gemini, local LLMs)
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea &mdash; not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Extend the refine-prompt skill to adapt prompts for different AI models. Add a &quot;target model&quot; question to the interview phase (default: Claude). Store model-specific best practices in references/model-guides/ (e.g. claude-guide.md, gpt-guide.md, gemini-guide.md). Each guide documents the model&#39;s strengths, preferred prompt patterns, token limits, and quirks (e.g. Claude prefers XML tags for structure, GPT prefers markdown headers). The Draft phase selects the appropriate guide and adapts the prompt accordingly. Include a &quot;universal&quot; option that generates a model-agnostic prompt when the user doesn&#39;t know which model they&#39;ll use.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ── Unresolved Questions ─────────────────────────────────── -->
+    <details class="optional-section">
+      <summary>
+        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
+        Unresolved Questions
+      </summary>
+      <div class="optional-body">
+        <ul class="unresolved-list">
+          <li>
+            <details class="unresolved-item resolved">
+              <summary><s>Should the skill auto-activate or require explicit invocation?</s> <span class="step-chip" style="background:#f0fdf4;color:#16a34a;font-size:.75rem;">resolved</span></summary>
+              <div class="unresolved-prompt">
+                <pre>Resolved: command-only with disable-model-invocation: true. &ldquo;Prompt&rdquo; is too common a word in coding contexts for safe auto-activation, and the six-phase interview pipeline is too heavyweight for a false trigger. Follows the marketplace pattern where multi-step workflows (tdd-loop, tdd-fix, issue-agent) are manual-invoke only. Users invoke via /plan-agent:refine-prompt. Discoverability comes from tab completion, /help, the plan-agent README, and the Recommend phase of other runs.</pre>
+              </div>
+            </details>
+          </li>
+          <li>
+            <details class="unresolved-item resolved">
+              <summary><s>How deep should the recommendation engine scan?</s> <span class="step-chip" style="background:#f0fdf4;color:#16a34a;font-size:.75rem;">resolved</span></summary>
+              <div class="unresolved-prompt">
+                <pre>Resolved: use ToolSearch (the harness&rsquo;s live tool registry) instead of filesystem scanning. ToolSearch is session-scoped (returns only loaded tools), includes MCP tools, and requires no path assumptions. No flag needed &mdash; ToolSearch is the sole discovery mechanism. The Recommend phase extracts 2&ndash;3 keyword queries from user intent, calls ToolSearch for each, deduplicates, filters to skills/commands/agents, and presents the top 3 matches.</pre>
+              </div>
+            </details>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent &middot; 2026-06-04 &middot; agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied \u2713';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan file and implement every step marked todo.');
+  lines.push('2. After completing each step, mark it done in the plan.');
+  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
+  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+
+  return lines.join('\n');
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  var text = buildImplementPrompt();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy workflow prompt ──────────────────────────────────── */
+function copyWorkflow(btn) {
+  var el = document.getElementById('workflow-cmd');
+  var text = el ? el.textContent.trim() : '';
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  var text = pre.textContent;
+
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy prompt';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+<script>
+/* Save as PDF (native browser print dialog) — backfilled */
+function savePDF() {
+  window.print();
+}
+</script>
+</body>
+</html>

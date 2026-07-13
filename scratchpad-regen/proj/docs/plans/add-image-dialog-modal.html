@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en" data-status="completed">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="completed">
+<meta name="plan-modified" content="2026-06-03">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-06-03">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-image-dialog-modal.html — Open gallery images in a native dialog modal instead of a new tab">
+<meta name="plan-file" content="add-image-dialog-modal.html">
+<meta name="plan-path" content="docs/plans/add-image-dialog-modal.html">
+<title>Plan: Open gallery images in a native dialog modal</title>
+<style>
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --amber:      #d97706;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .icon { width: 1rem; height: 1rem; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+  .skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+  .skip-link:focus {
+    position: fixed; left: 1rem; top: 1rem; width: auto; height: auto; overflow: visible;
+    background: var(--accent); color: #fff; padding: .5rem 1rem; border-radius: var(--radius);
+    font-weight: 700; z-index: 9999; text-decoration: none;
+  }
+  .plan-header { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0; }
+  .plan-header::before { content: ""; display: block; height: 3px; background: var(--accent); }
+  .plan-header-inner { max-width: 1040px; margin: 0 auto; padding: 1.75rem 1.5rem 1.5rem; }
+  .plan-doc-type {
+    font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; color: var(--text); }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: .4rem; font-size: .7rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; padding: .25rem .75rem; border-radius: 999px;
+    white-space: nowrap; flex-shrink: 0; color: #fff;
+  }
+  .status-badge::before {
+    content: ""; display: inline-block; width: .45em; height: .45em; border-radius: 50%;
+    background: currentColor; flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before { animation: pulse-dot 1.4s ease-in-out infinite; }
+  .plan-meta {
+    display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem;
+    border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted);
+  }
+  .plan-meta span { display: inline-flex; align-items: center; gap: .3rem; }
+  .plan-meta .icon { opacity: .55; }
+  .layout {
+    display: grid; grid-template-columns: 200px 1fr; gap: 3rem; max-width: 1040px;
+    margin: 0 auto; padding: 2.5rem 1.5rem 5rem; align-items: start;
+  }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; } }
+  .plan-nav { position: sticky; top: 1.5rem; align-self: start; overflow: hidden; }
+  @media (max-width: 720px) {
+    .plan-nav { position: static; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  }
+  .nav-heading {
+    font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--subtle); padding: 0 1rem .6rem; margin-bottom: .25rem; border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--border);
+    border-radius: 1px; overflow: hidden; pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: ""; position: absolute; top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%); background: var(--accent); transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex; align-items: center; min-height: 44px; padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem; color: var(--muted); text-decoration: none; gap: .5rem;
+    border-left: 2px solid transparent; transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon, .plan-nav li a:hover .icon { opacity: .8; }
+  .objective-card {
+    background: var(--accent-bg); border: 1px solid #bfdbfe; border-left: 4px solid var(--accent);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; font-size: 1.05rem;
+    font-weight: 500; color: #1e3a5f; line-height: 1.6;
+  }
+  .objective-card .section-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .5rem;
+  }
+  .progress-wrap { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .progress-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem;
+    font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%; animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1); width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .progress-bar-fill { animation: none; transition: none; } }
+  .section-card {
+    background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0;
+    padding: 2rem 0 1.25rem; margin-bottom: 0; box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: .9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1.25rem; display: flex; align-items: center; gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol { padding-left: 1.4rem; display: flex; flex-direction: column; gap: .4rem; }
+  .steps-list { display: flex; flex-direction: column; gap: .75rem; position: relative; }
+  .steps-list::before {
+    content: ""; position: absolute; left: .9rem; top: 1.75rem; bottom: 1.75rem; width: 1px; background: var(--border);
+  }
+  .step-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1rem 1.25rem; box-shadow: var(--shadow); position: relative; margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: ""; position: absolute; left: -1.6rem; top: 1.1rem; width: .75rem; height: .75rem;
+    border-radius: 50%; background: var(--border); border: 2px solid var(--bg); transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0; width: 1.75rem; height: 1.75rem; background: var(--grey-bg); color: var(--muted);
+    border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: .75rem; font-weight: 700; margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { min-width: 0; }
+  .step-action { font-weight: 600; margin-bottom: .3rem; display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; color: var(--text); }
+  .step-chip {
+    display: inline-block; font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    padding: .1em .5em; border-radius: 999px; background: var(--grey-bg); color: var(--subtle);
+    border: 1px solid var(--border); vertical-align: middle; user-select: none; flex-shrink: 0;
+  }
+  .step-card.completed .step-chip { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-chip-text { }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle { margin-top: .5rem; border: 0; border-top: 1px solid var(--border); padding-top: .4rem; }
+  .step-verify-toggle summary {
+    font-size: .8rem; font-weight: 600; color: var(--accent); cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: .35rem; user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem; color: var(--text); margin-top: .4rem; padding-left: .5rem; border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+  .criteria-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+  .criteria-list li {
+    display: flex; align-items: flex-start; gap: .75rem; padding: .6rem .75rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface); transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] { flex-shrink: 0; width: 1rem; height: 1rem; margin-top: .2rem; accent-color: var(--green); cursor: pointer; }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-checklist { background: var(--surface); border: 2px solid var(--amber); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-top: 1rem; }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+  .completion-badge {
+    font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .15rem .6rem;
+    border-radius: 999px; background: #fef3c7; color: var(--amber); border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .completion-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+  .completion-list li {
+    display: flex; align-items: flex-start; gap: .75rem; padding: .6rem .75rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface); transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] { flex-shrink: 0; width: 1rem; height: 1rem; margin-top: .2rem; accent-color: var(--green); }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .completion-list li { transition: none; } }
+  .completion-report { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .report-heading { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; }
+  .report-empty { font-style: italic; color: var(--subtle); font-size: .875rem; }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt { font-weight: 600; color: var(--text); font-size: .875rem; display: flex; align-items: center; gap: .4rem; margin-top: .75rem; }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before { content: ""; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: #dc2626; flex-shrink: 0; }
+  .report-list dd { color: var(--muted); font-size: .85rem; margin-left: .9rem; margin-top: .2rem; margin-bottom: 0; }
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .next-step-item summary {
+    font-weight: 600; font-size: .9rem; padding: .75rem 1rem; cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: .5rem; background: var(--surface); user-select: none; min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+  .copy-prompt-btn {
+    display: inline-flex; align-items: center; gap: .35rem; margin-top: .6rem; padding: .3rem .75rem;
+    font-size: .775rem; font-weight: 500; color: var(--accent); background: var(--accent-bg);
+    border: 1px solid #bfdbfe; border-radius: var(--radius); cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s; font-family: inherit; line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  .wish-list-header {
+    display: flex; align-items: center; gap: .5rem; font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: #7c3aed; margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after { content: ""; height: 1px; background: var(--wish-border); opacity: .5; }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem; background: #f3e8ff; color: #6d28d9; padding: .1rem .5rem; border-radius: 999px;
+    font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-left: auto; border: 1px solid #ddd6fe;
+  }
+  .plan-implement {
+    display: flex; align-items: flex-start; gap: .6rem; margin-bottom: 1.5rem; padding: .45rem .75rem;
+    background: var(--green-bg); border: 1px solid #bbf7d0; border-radius: var(--radius); font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--green); flex-shrink: 0; margin-top: .1rem;
+  }
+  .plan-implement code { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .82rem; color: var(--text); word-break: break-all; }
+  .copy-cmd-btn {
+    display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .6rem; font-size: .72rem; font-weight: 500;
+    color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: background .12s, color .12s, border-color .12s; font-family: inherit; line-height: 1.4;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+  .plan-footer {
+    display: flex; align-items: center; justify-content: center; gap: .4rem; font-size: .75rem;
+    color: var(--subtle); margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ── Plan source (file name + relative path) ──────────────────── */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: -.5rem 0 1.5rem;
+    padding: .55rem .75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE-READABLE DIGEST (backfilled)
+     First element child of <body>. type="text/markdown" never renders
+     or runs. Spec only — no status/checkbox/progress state. Literal
+     closing-script sequences in the content are guarded as <\/script.
+     Extract (first-match flag-and-exit):
+       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="text/markdown" id="plan-digest">
+# Plan: Open gallery images in a native dialog modal
+
+> Authored spec only. Status and progress live in the <head> meta tags and
+> the live DOM, never in this block.
+
+## Objective
+Make the media library's "View image" control open each card's PNG in a native <dialog> modal overlay instead of navigating to a new browser tab — keeping the user in the gallery for fast, distraction-free previewing.
+
+## Context
+The media-library skill ( kit/plugins/social-media-tools/skills/media-library/SKILL.md ) builds an HTML gallery of saved social cards from the gallery.html template ( kit/plugins/social-media-tools/templates/gallery.html ). v2.7.0 added a "View image" link below each card that opens the card's .png screenshot.
+
+Today that link is an anchor — <a class="open-img-link" href="…png" target="_blank" rel="noopener"> — so clicking it leaves the gallery and opens the image in a new tab. The goal is to preview the image inline via a modal overlay without losing gallery context.
+
+Confirmed decisions: the modal shows the image only (no caption); the feature is JavaScript-only with no new-tab fallback (the trigger becomes a <button> with no href ); released as a minor bump, 2.8.0 → 2.9.0.
+
+Both the template's static markup AND the skill's generation step reference .open-img-link , so converting the anchor to a button requires editing SKILL.md Step 3 as well as the template. The browser's native <dialog> element with showModal() provides focus trapping, background inertness, and Escape-to-close for free — no library needed.
+
+## Steps
+1. Add the shared <dialog id="imgDialog"> element and its CSS to the gallery template Why: A single reusable dialog (image + close button) shared by every card is lighter than one per card. CSS styles the backdrop, centers and scales the image to fit the viewport, and styles an accessible close button. Gate any fade/scale transition behind prefers-reduced-motion . Verify: In templates/gallery.html , confirm one <dialog id="imgDialog"> exists before </body> containing an <img id="imgDialogImg"> and a close <button> with aria-label="Close" ; confirm dialog::backdrop and #imgDialog img rules exist with a max-width / max-height cap.
+2. Wire up open/close behavior via event delegation in the template's existing <script> Why: Delegate click on the gallery for .open-img-link buttons: read data-img + data-topic , set #imgDialogImg src / alt , call imgDialog.showModal() . Close on the close button, on backdrop click ( e.target === dialog ), and natively on Escape. Native <dialog> restores focus to the trigger on close. Verify: Reading the script, confirm a delegated listener opens the dialog from a clicked .open-img-link and that close handlers exist for the close button and a backdrop click. Confirm alt is set from data-topic so the image is labelled for screen readers.
+3. Change the "View image" generation in media-library/SKILL.md from an anchor to a button Why: Step 3 of the skill currently emits <a class="open-img-link" href="{BASENAME_PNG}" target="_blank" …> . Replace with <button type="button" class="open-img-link" data-img="{BASENAME_PNG}" data-topic="{TOPIC}" aria-label="View image: {TOPIC}">View image</button> . Keep the existing rule that the element is only emitted when a matching .png exists. Verify: In SKILL.md Step 3, confirm the documented markup is a <button> carrying data-img and data-topic (no href , no target="_blank" ), and that the "only include when PNG exists" condition is retained.
+4. Update .open-img-link CSS to style the button like the old link, and bump version + changelog Why: The existing .open-img-link CSS targets an anchor; reset button defaults ( background:none; border:0; cursor:pointer; font:inherit; width:100% ) so the button keeps the same centered blue "View image" look. Then bump social-media-tools 2.8.0 → 2.9.0 in .claude-plugin/marketplace.json and add a v2.9.0 entry to the plugin CHANGELOG.md . Verify: Confirm .open-img-link renders identically to before (centered, blue, hover underline) as a button. Confirm marketplace.json shows "version": "2.9.0" for social-media-tools and CHANGELOG.md has a dated v2.9.0 entry describing the dialog change.
+
+## Acceptance Criteria
+- Clicking "View image" opens a native <dialog> modal showing the card's PNG; it does NOT open a new tab or navigate away.
+- The modal closes via the close button, a click on the backdrop, and the Escape key.
+- On close, keyboard focus returns to the "View image" button that opened the modal.
+- The dialog image has meaningful alt text derived from the card topic.
+- A regenerated gallery emits <button class="open-img-link" data-img=… data-topic=…> markup — no <a … target="_blank"> for image viewing.
+- The "View image" button visually matches the previous link (centered, blue, hover underline).
+- Any open/close animation is suppressed under prefers-reduced-motion: reduce .
+- social-media-tools is bumped to 2.9.0 in marketplace.json with a matching CHANGELOG.md entry.
+
+## Verification
+After editing the template and skill, regenerate the gallery to exercise the real output path:
+
+1. Run /social-media-tools:media-library — it rewrites docs/media/social/index.html from the updated template and opens it in the browser.
+
+2. Click "View image" on a card that has a PNG (e.g. diff-rendering-pipeline-snapshot-fix-2026-06-02 ). Confirm the image opens in a centered modal over a dimmed backdrop, and the page does NOT navigate to a new tab.
+
+3. Close it three ways: click the close button, click the dark backdrop outside the image, and press Escape. All must dismiss the modal.
+
+4. Keyboard pass: Tab to a "View image" button, press Enter to open, confirm focus is inside the dialog and Tab stays trapped, press Escape, and confirm focus returns to the same button.
+
+5. View source of the regenerated index.html and confirm the image triggers are <button class="open-img-link" …> elements, not anchors.
+
+6. Confirm a card with no PNG ( session-merge-driver-2026-05-30 ) still renders with no "View image" control and no console errors.
+</script>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/></symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/><path d="M6 6h.008v.008H6V6Z"/></symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/></symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/></symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/></symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Open gallery images in a native dialog modal</h1>
+      <span class="status-badge">todo</span>
+    </div>
+    <div class="plan-meta">
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-03</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+    </ul>
+  </nav>
+
+  <main id="main">
+
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Make the media library's "View image" control open each card's PNG in a native <code>&lt;dialog&gt;</code> modal overlay instead of navigating to a new browser tab — keeping the user in the gallery for fast, distraction-free previewing.</p>
+    </div>
+
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-image-dialog-modal.html — Open gallery images in a native dialog modal instead of a new tab</code>
+      <button class="copy-cmd-btn" type="button" onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
+    <div class="plan-source">
+      <div class="plan-source-row">
+        <span class="plan-source-label">File</span>
+        <code id="plan-file" aria-label="Plan file name">add-image-dialog-modal.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+      </div>
+      <div class="plan-source-row">
+        <span class="plan-source-label">Path</span>
+        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-image-dialog-modal.html</code>
+        <button class="copy-src-btn" type="button"
+                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+      </div>
+    </div>
+
+
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Acceptance criteria</span>
+        <span id="progress-label">8 / 8 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Plan progress" style="width:100%"></div>
+      </div>
+    </div>
+
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</h2>
+      <p>The <code>media-library</code> skill (<code>kit/plugins/social-media-tools/skills/media-library/SKILL.md</code>) builds an HTML gallery of saved social cards from the <code>gallery.html</code> template (<code>kit/plugins/social-media-tools/templates/gallery.html</code>). v2.7.0 added a "View image" link below each card that opens the card's <code>.png</code> screenshot.</p>
+      <p>Today that link is an anchor — <code>&lt;a class="open-img-link" href="…png" target="_blank" rel="noopener"&gt;</code> — so clicking it leaves the gallery and opens the image in a new tab. The goal is to preview the image inline via a modal overlay without losing gallery context.</p>
+      <p><strong>Confirmed decisions:</strong> the modal shows the <em>image only</em> (no caption); the feature is <em>JavaScript-only</em> with no new-tab fallback (the trigger becomes a <code>&lt;button&gt;</code> with no <code>href</code>); released as a <em>minor</em> bump, 2.8.0 → 2.9.0.</p>
+      <p>Both the template's static markup AND the skill's generation step reference <code>.open-img-link</code>, so converting the anchor to a button requires editing <code>SKILL.md</code> Step 3 as well as the template. The browser's native <code>&lt;dialog&gt;</code> element with <code>showModal()</code> provides focus trapping, background inertness, and Escape-to-close for free — no library needed.</p>
+    </section>
+
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</h2>
+      <div class="steps-list">
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">completed</span>
+                <span class="step-chip-text">Add the shared <code>&lt;dialog id="imgDialog"&gt;</code> element and its CSS to the gallery template</span>
+              </div>
+              <div class="step-why">A single reusable dialog (image + close button) shared by every card is lighter than one per card. CSS styles the backdrop, centers and scales the image to fit the viewport, and styles an accessible close button. Gate any fade/scale transition behind <code>prefers-reduced-motion</code>.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In <code>templates/gallery.html</code>, confirm one <code>&lt;dialog id="imgDialog"&gt;</code> exists before <code>&lt;/body&gt;</code> containing an <code>&lt;img id="imgDialogImg"&gt;</code> and a close <code>&lt;button&gt;</code> with <code>aria-label="Close"</code>; confirm <code>dialog::backdrop</code> and <code>#imgDialog img</code> rules exist with a <code>max-width</code>/<code>max-height</code> cap.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">completed</span>
+                <span class="step-chip-text">Wire up open/close behavior via event delegation in the template's existing <code>&lt;script&gt;</code></span>
+              </div>
+              <div class="step-why">Delegate <code>click</code> on the gallery for <code>.open-img-link</code> buttons: read <code>data-img</code> + <code>data-topic</code>, set <code>#imgDialogImg</code> <code>src</code>/<code>alt</code>, call <code>imgDialog.showModal()</code>. Close on the close button, on backdrop click (<code>e.target === dialog</code>), and natively on Escape. Native <code>&lt;dialog&gt;</code> restores focus to the trigger on close.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Reading the script, confirm a delegated listener opens the dialog from a clicked <code>.open-img-link</code> and that close handlers exist for the close button and a backdrop click. Confirm <code>alt</code> is set from <code>data-topic</code> so the image is labelled for screen readers.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">completed</span>
+                <span class="step-chip-text">Change the "View image" generation in <code>media-library/SKILL.md</code> from an anchor to a button</span>
+              </div>
+              <div class="step-why">Step 3 of the skill currently emits <code>&lt;a class="open-img-link" href="{BASENAME_PNG}" target="_blank" …&gt;</code>. Replace with <code>&lt;button type="button" class="open-img-link" data-img="{BASENAME_PNG}" data-topic="{TOPIC}" aria-label="View image: {TOPIC}"&gt;View image&lt;/button&gt;</code>. Keep the existing rule that the element is only emitted when a matching <code>.png</code> exists.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">In <code>SKILL.md</code> Step 3, confirm the documented markup is a <code>&lt;button&gt;</code> carrying <code>data-img</code> and <code>data-topic</code> (no <code>href</code>, no <code>target="_blank"</code>), and that the "only include when PNG exists" condition is retained.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">completed</span>
+                <span class="step-chip-text">Update <code>.open-img-link</code> CSS to style the button like the old link, and bump version + changelog</span>
+              </div>
+              <div class="step-why">The existing <code>.open-img-link</code> CSS targets an anchor; reset button defaults (<code>background:none; border:0; cursor:pointer; font:inherit; width:100%</code>) so the button keeps the same centered blue "View image" look. Then bump <code>social-media-tools</code> 2.8.0 → 2.9.0 in <code>.claude-plugin/marketplace.json</code> and add a <code>v2.9.0</code> entry to the plugin <code>CHANGELOG.md</code>.</div>
+              <details class="step-verify-toggle">
+                <summary>Verify</summary>
+                <div class="verify-body">Confirm <code>.open-img-link</code> renders identically to before (centered, blue, hover underline) as a button. Confirm <code>marketplace.json</code> shows <code>"version": "2.9.0"</code> for <code>social-media-tools</code> and <code>CHANGELOG.md</code> has a dated <code>v2.9.0</code> entry describing the dialog change.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Acceptance Criteria</h2>
+      <ul class="criteria-list" id="criteria-list">
+        <li><input type="checkbox" id="ac1" checked><label for="ac1">Clicking "View image" opens a native <code>&lt;dialog&gt;</code> modal showing the card's PNG; it does NOT open a new tab or navigate away.</label></li>
+        <li><input type="checkbox" id="ac2" checked><label for="ac2">The modal closes via the close button, a click on the backdrop, and the Escape key.</label></li>
+        <li><input type="checkbox" id="ac3" checked><label for="ac3">On close, keyboard focus returns to the "View image" button that opened the modal.</label></li>
+        <li><input type="checkbox" id="ac4" checked><label for="ac4">The dialog image has meaningful <code>alt</code> text derived from the card topic.</label></li>
+        <li><input type="checkbox" id="ac5" checked><label for="ac5">A regenerated gallery emits <code>&lt;button class="open-img-link" data-img=… data-topic=…&gt;</code> markup — no <code>&lt;a … target="_blank"&gt;</code> for image viewing.</label></li>
+        <li><input type="checkbox" id="ac6" checked><label for="ac6">The "View image" button visually matches the previous link (centered, blue, hover underline).</label></li>
+        <li><input type="checkbox" id="ac7" checked><label for="ac7">Any open/close animation is suppressed under <code>prefers-reduced-motion: reduce</code>.</label></li>
+        <li><input type="checkbox" id="ac8" checked><label for="ac8"><code>social-media-tools</code> is bumped to 2.9.0 in <code>marketplace.json</code> with a matching <code>CHANGELOG.md</code> entry.</label></li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</h2>
+      <p>After editing the template and skill, regenerate the gallery to exercise the real output path:</p>
+      <p>1. Run <code>/social-media-tools:media-library</code> — it rewrites <code>docs/media/social/index.html</code> from the updated template and opens it in the browser.</p>
+      <p>2. Click "View image" on a card that has a PNG (e.g. <code>diff-rendering-pipeline-snapshot-fix-2026-06-02</code>). Confirm the image opens in a centered modal over a dimmed backdrop, and the page does NOT navigate to a new tab.</p>
+      <p>3. Close it three ways: click the close button, click the dark backdrop outside the image, and press Escape. All must dismiss the modal.</p>
+      <p>4. Keyboard pass: Tab to a "View image" button, press Enter to open, confirm focus is inside the dialog and Tab stays trapped, press Escape, and confirm focus returns to the same button.</p>
+      <p>5. View source of the regenerated <code>index.html</code> and confirm the image triggers are <code>&lt;button class="open-img-link" …&gt;</code> elements, not anchors.</p>
+      <p>6. Confirm a card with no PNG (<code>session-merge-driver-2026-05-30</code>) still renders with no "View image" control and no console errors.</p>
+    </section>
+
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion Checklist</h2>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li><input type="checkbox" id="cc1" disabled checked><label for="cc1">All step TODOs marked as done</label></li>
+          <li><input type="checkbox" id="cc2" disabled checked><label for="cc2">All acceptance criteria verified and checked off</label></li>
+          <li><input type="checkbox" id="cc3" disabled checked><label for="cc3">Plan status updated to completed</label></li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</h2>
+      <div class="next-steps-list">
+
+        <details class="next-step-item">
+          <summary>Apply the same dialog pattern to the plan-agent plans gallery</summary>
+          <div class="next-step-prompt">
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>The plan-agent plugin builds a plans gallery (plans-library skill, kit/plugins/plan-agent/...). Audit whether it has any "open in new tab" image or preview links, and if so apply the same native &lt;dialog&gt; modal pattern used in social-media-tools' gallery.html so previews open inline. Keep it image-only and JavaScript-only, matching the social-media-tools implementation. Bump plan-agent's version and changelog accordingly.</pre>
+            <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <div class="wish-list-header">
+          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+          Wish List
+        </div>
+
+        <details class="next-step-item wish-item">
+          <summary>
+            Full lightbox: prev/next navigation, captions, and pinch-zoom
+            <span class="wish-badge">Wish List</span>
+          </summary>
+          <div class="next-step-prompt">
+            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <pre>Extend the media library image dialog into a full lightbox: add prev/next arrow buttons (and Left/Right arrow keys) to browse all cards' images without closing the modal, show the card topic and date as a caption, and support pinch-zoom / click-to-zoom on the image. Keep keyboard accessibility and focus trapping intact. Implement in templates/gallery.html and bump the plugin version.</pre>
+            <button class="copy-prompt-btn" type="button" onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+      </div>
+    </section>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-06-03 · agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var text = el.textContent.trim();
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied \u2713';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+      btn._copyTimer = null;
+    }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+function copyCmd(btn) {
+  var code = document.getElementById('implement-cmd');
+  if (!code) return;
+  var text = code.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('copied'); btn._copyTimer = null; }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(flash).catch(fallback); }
+  else { fallback(); }
+}
+
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') { pre = btn.parentElement && btn.parentElement.querySelector('pre'); }
+  if (!pre) return;
+  var text = pre.textContent;
+  function flash() {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    btn._copyTimer = setTimeout(function () { btn.textContent = 'Copy prompt'; btn.classList.remove('copied'); btn._copyTimer = null; }, 2000);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); if (ok) flash();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(flash).catch(fallback); }
+  else { fallback(); }
+}
+
+(function () {
+  'use strict';
+  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load — no localStorage. Toggling a box syncs  */
+  /* the attribute so the live DOM (and any saved copy of this file)   */
+  /* stays the single source of truth.                                 */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+
+  var ccCheckboxes = Array.prototype.slice.call(document.querySelectorAll('#completion-list input[type="checkbox"]'));
+  var completionCard = document.getElementById('completion-checklist');
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 && Array.prototype.slice.call(stepCards).every(function(c) { return c.classList.contains('completed'); });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+    var allCriteriaChecked = total > 0 && checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted = document.documentElement.getAttribute('data-status') === 'completed' && (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) { if (allComplete) completionCard.classList.add('all-complete'); else completionCard.classList.remove('all-complete'); }
+  }
+  updateCompletion();
+  checkboxes.forEach(function(cb) { cb.addEventListener('change', updateCompletion); });
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(document.documentElement, { attributes: true, attributeFilter: ['data-status'] });
+  }
+
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true }); updateRail();
+  }
+
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.plan-nav a[href^="#"]'));
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>

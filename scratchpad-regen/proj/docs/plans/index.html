@@ -1,0 +1,1461 @@
+<!doctype html>
+<!--
+  plans-gallery.html — Plans library index for plan-agent.
+
+  Static variables (substituted by the plans-library skill):
+    GALLERY_ENTRIES  — Repeated <a> blocks, one per plan file
+    PLAN_COUNT       — Total number of plans displayed
+    GENERATED_AT     — Date and time of gallery generation
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plans Library</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #f9fafb;
+        --border: #e5e7eb;
+        --border-mid: #d1d5db;
+        --text: #111827;
+        --muted: #6b7280;
+        --subtle: #9ca3af;
+        --accent: #2563eb;
+        --accent-bg: #eff6ff;
+        --radius: 4px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        font-size: 15px;
+        min-height: 100vh;
+        padding: 32px;
+      }
+
+      /* ── Header ──────────────────────────────────────────────────── */
+      .gallery-header {
+        max-width: 1200px;
+        margin: 0 auto 24px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 16px;
+      }
+      .gallery-header::before {
+        content: "";
+        display: block;
+        height: 3px;
+        background: var(--accent);
+        margin-bottom: 20px;
+        border-radius: 2px;
+      }
+      .gallery-header h1 {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 4px;
+      }
+      .gallery-header p {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      /* ── Toolbar ─────────────────────────────────────────────────── */
+      .toolbar {
+        max-width: 1200px;
+        margin: 0 auto 8px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .search-box {
+        flex: 1;
+        min-width: 200px;
+        max-width: 320px;
+        padding: 7px 12px;
+        background: var(--bg);
+        border: 1px solid var(--border-mid);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .search-box:focus {
+        border-color: var(--accent);
+      }
+      .search-box::placeholder {
+        color: var(--subtle);
+      }
+
+      .view-toggle {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+      }
+      .view-btn {
+        padding: 6px 10px;
+        background: var(--bg);
+        border: 1px solid var(--border-mid);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .view-btn:first-child {
+        border-radius: var(--radius) 0 0 var(--radius);
+      }
+      .view-btn:last-child {
+        border-radius: 0 var(--radius) var(--radius) 0;
+      }
+      .view-btn.active {
+        background: var(--accent-bg);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── Filter chip rows ────────────────────────────────────────── */
+      .filter-row {
+        max-width: 1200px;
+        margin: 0 auto 6px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .filter-row-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--subtle);
+        min-width: 44px;
+        flex-shrink: 0;
+      }
+      .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .filter-chip {
+        padding: 3px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--border-mid);
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .filter-chip:hover {
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      /* Status chip active states */
+      .filter-chip[data-status="all"].active,
+      .filter-chip[data-type="all"].active {
+        background: var(--text);
+        border-color: var(--text);
+        color: #fff;
+      }
+      .filter-chip[data-status="todo"].active {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: #fff;
+      }
+      .filter-chip[data-status="in-progress"].active {
+        background: #d97706;
+        border-color: #d97706;
+        color: #fff;
+      }
+      .filter-chip[data-status="completed"].active {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: #fff;
+      }
+      .filter-chip[data-type="feature"].active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+      }
+      .filter-chip[data-type="fix"].active {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: #fff;
+      }
+      .filter-chip[data-type="refactor"].active {
+        background: #7c3aed;
+        border-color: #7c3aed;
+        color: #fff;
+      }
+      .filter-chip[data-type="docs"].active {
+        background: #ea580c;
+        border-color: #ea580c;
+        color: #fff;
+      }
+      .filter-chip[data-type="chore"].active {
+        background: #0d9488;
+        border-color: #0d9488;
+        color: #fff;
+      }
+      .filter-chip[data-type="artifact"].active {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: #fff;
+      }
+      .filter-chip[data-effort="all"].active {
+        background: var(--text);
+        border-color: var(--text);
+        color: #fff;
+      }
+      .filter-chip[data-effort="low"].active {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: #fff;
+      }
+      .filter-chip[data-effort="medium"].active {
+        background: #d97706;
+        border-color: #d97706;
+        color: #fff;
+      }
+      .filter-chip[data-effort="high"].active {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: #fff;
+      }
+
+      /* ── Visible count ───────────────────────────────────────────── */
+      .visible-count {
+        font-size: 12px;
+        color: var(--muted);
+        max-width: 1200px;
+        margin: 8px auto 14px;
+        min-height: 16px;
+      }
+
+      /* ── Grid ────────────────────────────────────────────────────── */
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .gallery-card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: var(--shadow);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .gallery-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+      }
+
+      .card-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .status-chip,
+      .type-chip,
+      .effort-chip {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+
+      /* Status colours */
+      .status-todo {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+      }
+      .status-in-progress {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fde68a;
+      }
+      .status-completed {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+      }
+
+      /* Type colours */
+      .type-feature {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+      }
+      .type-fix {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+      .type-refactor {
+        background: #faf5ff;
+        color: #7c3aed;
+        border: 1px solid #ddd6fe;
+      }
+      .type-docs {
+        background: #fff7ed;
+        color: #ea580c;
+        border: 1px solid #fed7aa;
+      }
+      .type-chore {
+        background: #f0fdfa;
+        color: #0d9488;
+        border: 1px solid #99f6e4;
+      }
+      .type-untyped {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+      }
+      .type-artifact {
+        background: #eef2ff;
+        color: #4f46e5;
+        border: 1px solid #c7d2fe;
+      }
+
+      /* Effort colours — mirror the plan template's effort badge */
+      .effort-low {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+      }
+      .effort-medium {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fde68a;
+      }
+      .effort-high {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+      .effort-chip::before {
+        content: "\2022\00a0";
+        opacity: 0.6;
+      }
+
+      .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.45;
+      }
+
+      .card-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-top: auto;
+      }
+      .card-date {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .card-file {
+        font-size: 11px;
+        color: var(--subtle);
+        font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+        word-break: break-all;
+      }
+
+      /* ── List view ───────────────────────────────────────────────── */
+      .gallery-grid.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .list-view .gallery-card {
+        flex-direction: row;
+        align-items: center;
+        padding: 12px 16px;
+        gap: 16px;
+      }
+      .list-view .card-badges {
+        flex-shrink: 0;
+      }
+      .list-view .card-title {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .list-view .card-meta {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+        margin-top: 0;
+      }
+      .list-view .card-file {
+        display: none;
+      }
+
+      /* ── No results ──────────────────────────────────────────────── */
+      .no-results {
+        max-width: 1200px;
+        margin: 48px auto;
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+        display: none;
+      }
+
+      /* ── Footer ──────────────────────────────────────────────────── */
+      .gallery-footer {
+        max-width: 1200px;
+        margin: 32px auto 0;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 16px;
+        }
+        .toolbar {
+          gap: 8px;
+        }
+        .search-box {
+          max-width: none;
+        }
+        .list-view .card-meta {
+          display: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="gallery-header">
+      <h1>Plans Library</h1>
+      <p>68 items &mdash; click any card to open it</p>
+    </div>
+
+    <div class="toolbar">
+      <input
+        type="text"
+        class="search-box"
+        id="searchBox"
+        placeholder="Search by title..."
+        aria-label="Search plans by title"
+      />
+      <div class="view-toggle">
+        <button
+          class="view-btn active"
+          id="gridBtn"
+          title="Grid view"
+          aria-label="Grid view"
+          aria-pressed="true"
+        >
+          &#9638;
+        </button>
+        <button
+          class="view-btn"
+          id="listBtn"
+          title="List view"
+          aria-label="List view"
+          aria-pressed="false"
+        >
+          &#9776;
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row" id="statusRow">
+      <span class="filter-row-label">Status</span>
+      <div class="filter-chips" id="statusChips">
+        <button
+          class="filter-chip active"
+          data-status="all"
+          aria-pressed="true"
+        >
+          All
+        </button>
+        <button class="filter-chip" data-status="todo" aria-pressed="false">
+          Todo
+        </button>
+        <button
+          class="filter-chip"
+          data-status="in-progress"
+          aria-pressed="false"
+        >
+          In Progress
+        </button>
+        <button
+          class="filter-chip"
+          data-status="completed"
+          aria-pressed="false"
+        >
+          Completed
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row" id="typeRow">
+      <span class="filter-row-label">Type</span>
+      <div class="filter-chips" id="typeChips">
+        <button class="filter-chip active" data-type="all" aria-pressed="true">
+          All
+        </button>
+        <button class="filter-chip" data-type="feature" aria-pressed="false">
+          Feature
+        </button>
+        <button class="filter-chip" data-type="fix" aria-pressed="false">
+          Fix
+        </button>
+        <button class="filter-chip" data-type="refactor" aria-pressed="false">
+          Refactor
+        </button>
+        <button class="filter-chip" data-type="docs" aria-pressed="false">
+          Docs
+        </button>
+        <button class="filter-chip" data-type="chore" aria-pressed="false">
+          Chore
+        </button>
+        <button class="filter-chip" data-type="artifact" aria-pressed="false">
+          Artifact
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row" id="effortRow">
+      <span class="filter-row-label">Effort</span>
+      <div class="filter-chips" id="effortChips">
+        <button
+          class="filter-chip active"
+          data-effort="all"
+          aria-pressed="true"
+        >
+          All
+        </button>
+        <button class="filter-chip" data-effort="low" aria-pressed="false">
+          Low
+        </button>
+        <button class="filter-chip" data-effort="medium" aria-pressed="false">
+          Medium
+        </button>
+        <button class="filter-chip" data-effort="high" aria-pressed="false">
+          High
+        </button>
+      </div>
+    </div>
+
+    <div class="visible-count" id="visibleCount"></div>
+
+    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="add-save-artifact-skill.html"
+   data-status="completed" data-type="feature" data-effort="medium" data-title="add a save-artifact skill to social-media-tools">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+    <span class="effort-chip effort-medium">medium</span>
+  </div>
+  <div class="card-title">Add a save-artifact skill to social-media-tools</div>
+  <div class="card-meta">
+    <span class="card-date">2026-07-02</span>
+    <span class="card-file">add-save-artifact-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-dynamic-depth-and-mode-to-refine-prompt.html"
+   data-status="todo" data-type="feature" data-effort="medium" data-title="dynamic depth and execution mode for refine-prompt">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+    <span class="effort-chip effort-medium">medium</span>
+  </div>
+  <div class="card-title">Dynamic depth and execution mode for refine-prompt</div>
+  <div class="card-meta">
+    <span class="card-date">2026-07-01</span>
+    <span class="card-file">add-dynamic-depth-and-mode-to-refine-prompt.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-effort-level-to-plan-html.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add an effort level to implementation-plan html output">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add an effort level to implementation-plan HTML output</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-30</span>
+    <span class="card-file">add-effort-level-to-plan-html.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-plan-tts-playback.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="vocalize plans with a native listen control">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Vocalize plans with a native Listen control</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-29</span>
+    <span class="card-file">add-plan-tts-playback.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-prototype-generator-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a static-html prototype generator to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a static-HTML prototype generator to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-29</span>
+    <span class="card-file">add-prototype-generator-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="build-html-artifact-system.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="build artifact-forge — an independent html artifact system">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Build artifact-forge — an independent HTML artifact system</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-23</span>
+    <span class="card-file">build-html-artifact-system.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="extend-setup-sites-multi-host-publishing.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="extend setup-sites to publish to netlify, vercel, and cloudflare">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Extend setup-sites to publish to Netlify, Vercel, and Cloudflare</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-22</span>
+    <span class="card-file">extend-setup-sites-multi-host-publishing.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="make-write-guide-output-dynamic.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="make write-guide output dynamic">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Make write-guide output dynamic</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-19</span>
+    <span class="card-file">make-write-guide-output-dynamic.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="replace-plan-digest-with-extractor.html"
+   data-status="completed" data-type="refactor" data-effort="" data-title="replace the stored plan digest with a compute-on-read extractor">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-refactor">refactor</span>
+  </div>
+  <div class="card-title">Replace the stored plan digest with a compute-on-read extractor</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-19</span>
+    <span class="card-file">replace-plan-digest-with-extractor.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-ship-pages-skill.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add a ship-pages skill — one-command publish for plans &amp; media galleries">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a ship-pages skill — one-command publish for plans &amp; media galleries</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-18</span>
+    <span class="card-file">add-ship-pages-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-build-proposal-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add the build-proposal skill to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add the build-proposal skill to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-15</span>
+    <span class="card-file">add-build-proposal-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-md-plan-conversion-to-implementation-plan.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add markdown plan conversion to implementation-plan">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add markdown plan conversion to implementation-plan</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-12</span>
+    <span class="card-file">add-md-plan-conversion-to-implementation-plan.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="distribute-skills-via-skill-box-catalog.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="distribute skills via a skill-box catalog (option 3)">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Distribute skills via a skill-box catalog (Option 3)</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-12</span>
+    <span class="card-file">distribute-skills-via-skill-box-catalog.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="port-pdf-export-button-to-plan-agent.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="port the pdf export button to plan-agent plans">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Port the PDF Export Button to plan-agent Plans</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-12</span>
+    <span class="card-file">port-pdf-export-button-to-plan-agent.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="retrofit-responsive-plan-css.html"
+   data-status="completed" data-type="fix" data-effort="" data-title="retrofit responsive css into every html plan">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Retrofit responsive CSS into every HTML plan</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-12</span>
+    <span class="card-file">retrofit-responsive-plan-css.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-plans-index-merge-driver.html"
+   data-status="todo" data-type="fix" data-effort="" data-title="add merge driver for docs/plans/index.html">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Add merge driver for docs/plans/index.html</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-10</span>
+    <span class="card-file">add-plans-index-merge-driver.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-review-findings-walkthrough.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="walkthrough &amp; analysis of review-plan findings">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Walkthrough &amp; analysis of review-plan findings</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-10</span>
+    <span class="card-file">add-review-findings-walkthrough.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="embed-markdown-digest-in-html-plans.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="embed a machine-readable markdown digest in every html plan">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Embed a machine-readable markdown digest in every HTML plan</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-10</span>
+    <span class="card-file">embed-markdown-digest-in-html-plans.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="fix-ship-autonomous-skill-chaining.html"
+   data-status="todo" data-type="fix" data-effort="" data-title="fix ship-autonomous skill chaining (claude-code#43809)">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Fix ship-autonomous skill chaining (claude-code#43809)</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-10</span>
+    <span class="card-file">fix-ship-autonomous-skill-chaining.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="replace-pipeline-with-uml-activity-diagram.html"
+   data-status="todo" data-type="refactor" data-effort="" data-title="replace the pipeline flow with a uml activity diagram">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-refactor">refactor</span>
+  </div>
+  <div class="card-title">Replace the Pipeline Flow with a UML Activity Diagram</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-10</span>
+    <span class="card-file">replace-pipeline-with-uml-activity-diagram.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-share-react-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a share-react skill to social-media-tools">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a share-react skill to social-media-tools</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-09</span>
+    <span class="card-file">add-share-react-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="build-guides-html-in-ci.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="build browsable html for docs/guides in ci">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Build browsable HTML for docs/guides in CI</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-09</span>
+    <span class="card-file">build-guides-html-in-ci.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-multi-host-deploy-targets.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add multi-host deploy targets to docs-publisher">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add Multi-Host Deploy Targets to docs-publisher</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">add-multi-host-deploy-targets.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-research-agent-team-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: add research agent team to implementation-plan skill">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Add Research Agent Team to implementation-plan skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">add-research-agent-team-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-research-agent-team.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add research agent team to implementation-plan skill">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add Research Agent Team to implementation-plan skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">add-research-agent-team.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-review-plan-option-to-exit-step.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a &quot;review the plan&quot; option to the plan exit step">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a &quot;Review the plan&quot; option to the plan exit step</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">add-review-plan-option-to-exit-step.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="create-docs-publishing-skills.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="create docs publishing skills for plugin users">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Create Docs Publishing Skills for Plugin Users</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">create-docs-publishing-skills.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="publish-plugins-to-dist-repo-daily.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="publish plugin dist to agentics-kit daily">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Publish plugin dist to agentics-kit daily</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-08</span>
+    <span class="card-file">publish-plugins-to-dist-repo-daily.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-docs-landing-hub-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: add a docs landing hub linking the plans and social galleries">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Add a docs landing hub linking the Plans and Social galleries</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">add-docs-landing-hub-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-docs-landing-hub.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a docs landing hub linking the plans and social galleries">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a docs landing hub linking the Plans and Social galleries</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">add-docs-landing-hub.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-plan-review-team-skill-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="team review — add a plan-review agent team skill to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Team Review — Add a plan-review Agent Team skill to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">add-plan-review-team-skill-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="fix-review-plan-agent-frontmatter.html"
+   data-status="todo" data-type="fix" data-effort="" data-title="fix review-plan agent frontmatter and descriptions to match product-plans pattern">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Fix review-plan agent frontmatter and descriptions to match product-plans pattern</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">fix-review-plan-agent-frontmatter.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="fix-version-bump-ruleset-bypass.html"
+   data-status="todo" data-type="fix" data-effort="" data-title="fix auto-version-bump via ruleset bypass">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Fix auto-version-bump via ruleset bypass</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">fix-version-bump-ruleset-bypass.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="persist-checkbox-state-in-html-attributes-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: persist plan-html checkbox state in html attributes">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Persist plan-HTML checkbox state in HTML attributes</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">persist-checkbox-state-in-html-attributes-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="persist-checkbox-state-in-html-attributes.html"
+   data-status="completed" data-type="refactor" data-effort="" data-title="persist plan-html checkbox state in html attributes">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-refactor">refactor</span>
+  </div>
+  <div class="card-title">Persist plan-HTML checkbox state in HTML attributes</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">persist-checkbox-state-in-html-attributes.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="publish-plans-to-github-pages-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="review: publish html plans to github pages">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Review: Publish HTML plans to GitHub Pages</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">publish-plans-to-github-pages-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="publish-plans-to-github-pages.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="publish html plans to github pages">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Publish HTML plans to GitHub Pages</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-07</span>
+    <span class="card-file">publish-plans-to-github-pages.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-markdown-plan-conversion.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add markdown-source conversion to the implementation-plan skill">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add markdown-source conversion to the implementation-plan skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-06</span>
+    <span class="card-file">add-markdown-plan-conversion.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-pdf-export-to-html-plans.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add pdf export to html plans">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add PDF Export to HTML Plans</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-06</span>
+    <span class="card-file">add-pdf-export-to-html-plans.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-plan-review-team-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add a plan-review agent team skill to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add a plan-review Agent Team skill to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-06</span>
+    <span class="card-file">add-plan-review-team-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-tests-section-to-plans.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add tests section to implementation plans">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add Tests section to implementation plans</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-06</span>
+    <span class="card-file">add-tests-section-to-plans.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="publish-clean-main-from-develop-branch.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="publish a clean main branch from a develop workspace">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Publish a clean main branch from a develop workspace</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-06</span>
+    <span class="card-file">publish-clean-main-from-develop-branch.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-visual-components-to-plan-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-05</span>
+    <span class="card-file">add-visual-components-to-plan-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="build-clean-plugin-dist.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="publish a clean plugin distribution repo">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Publish a clean plugin distribution repo</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-05</span>
+    <span class="card-file">build-clean-plugin-dist.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="refine-social-copy-instructional.html"
+   data-status="completed" data-type="refactor" data-effort="" data-title="refine social-media-tools copy to teach, not just promote">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-refactor">refactor</span>
+  </div>
+  <div class="card-title">Refine social-media-tools copy to teach, not just promote</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-05</span>
+    <span class="card-file">refine-social-copy-instructional.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="clean-up-docs-and-plans.html"
+   data-status="in-progress" data-type="chore" data-effort="" data-title="clean up and make docs/plans manageable">
+  <div class="card-badges">
+    <span class="status-chip status-in-progress">in progress</span><span class="type-chip type-chore">chore</span>
+  </div>
+  <div class="card-title">Clean up and make docs/plans manageable</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-04</span>
+    <span class="card-file">clean-up-docs-and-plans.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="convert-keeper-plans-to-html.html"
+   data-status="todo" data-type="chore" data-effort="" data-title="convert 24 keeper markdown plans to html and set up retention routine">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-chore">chore</span>
+  </div>
+  <div class="card-title">Convert 24 keeper markdown plans to HTML and set up retention routine</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-04</span>
+    <span class="card-file">convert-keeper-plans-to-html.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="create-prompt-refiner-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="create refine-prompt skill">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Create refine-prompt skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-04</span>
+    <span class="card-file">create-prompt-refiner-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-codebase-explain-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add explain-codebase skill to social-media-tools">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add explain-codebase skill to social-media-tools</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-03</span>
+    <span class="card-file">add-codebase-explain-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-image-dialog-modal.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="open gallery images in a native dialog modal">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Open gallery images in a native dialog modal</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-03</span>
+    <span class="card-file">add-image-dialog-modal.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="enable-model-invocation-for-implementation-plan.html"
+   data-status="completed" data-type="chore" data-effort="" data-title="make implementation-plan model-invocable without colliding with plan mode">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-chore">chore</span>
+  </div>
+  <div class="card-title">Make implementation-plan model-invocable without colliding with Plan Mode</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-03</span>
+    <span class="card-file">enable-model-invocation-for-implementation-plan.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-image-link-media-library-gallery.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add &quot;view image&quot; link to media-library gallery cards">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add &quot;View image&quot; link to media-library gallery cards</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-02</span>
+    <span class="card-file">add-image-link-media-library-gallery.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="widen-social-card-templates-to-1024px.html"
+   data-status="completed" data-type="chore" data-effort="" data-title="widen social card templates to 1024px">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-chore">chore</span>
+  </div>
+  <div class="card-title">Widen Social Card Templates to 1024px</div>
+  <div class="card-meta">
+    <span class="card-date">2026-06-01</span>
+    <span class="card-file">widen-social-card-templates-to-1024px.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-issue-ingestion-to-planning-skill.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add issue ingestion to /plan-agent:planning">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add Issue Ingestion to /plan-agent:planning</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-31</span>
+    <span class="card-file">add-issue-ingestion-to-planning-skill.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-security-scrub-user-gate.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add user gate to security-scrub skill">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add User Gate to security-scrub Skill</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-31</span>
+    <span class="card-file">add-security-scrub-user-gate.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-hook-to-rebuild-plans-index.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add posttooluse hook to auto-rebuild the plans index">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add PostToolUse Hook to Auto-Rebuild the Plans Index</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">add-hook-to-rebuild-plans-index.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-plans-library-to-plan-agent.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add plans-library skill to plan-agent">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add plans-library Skill to plan-agent</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">add-plans-library-to-plan-agent.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-sample-widget.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add sample widget to dashboard">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add Sample Widget to Dashboard</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">add-sample-widget.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="create-plans-index-page.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="create plans index page">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Create Plans Index Page</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">create-plans-index-page.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="fix-planning-html-output.html"
+   data-status="completed" data-type="fix" data-effort="" data-title="fix planning skill html output">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-fix">fix</span>
+  </div>
+  <div class="card-title">Fix planning skill HTML output</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">fix-planning-html-output.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="sample-add-user-profile-page.html"
+   data-status="todo" data-type="feature" data-effort="" data-title="add user profile page with avatar upload">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add user profile page with avatar upload</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-30</span>
+    <span class="card-file">sample-add-user-profile-page.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-background-mode-social-skills.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="close background-mode gaps for social-media-tools skills">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Close background-mode gaps for social-media-tools skills</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-28</span>
+    <span class="card-file">add-background-mode-social-skills.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-reinvoke-prompt-to-plan-output.html"
+   data-status="completed" data-type="feature" data-effort="" data-title="add re-invoke prompt to plan output">
+  <div class="card-badges">
+    <span class="status-chip status-completed">completed</span><span class="type-chip type-feature">feature</span>
+  </div>
+  <div class="card-title">Add re-invoke prompt to plan output</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-28</span>
+    <span class="card-file">add-reinvoke-prompt-to-plan-output.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-rejection-remediation-prompt-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="add rejection remediation prompt to plan-review-agents">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Add rejection remediation prompt to plan-review-agents</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-18</span>
+    <span class="card-file">add-rejection-remediation-prompt-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="rename-plan-to-html-to-markdown-to-html-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="rename plan-to-html → markdown-to-html — panel review">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Rename plan-to-html → markdown-to-html — Panel Review</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-18</span>
+    <span class="card-file">rename-plan-to-html-to-markdown-to-html-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="add-html-output-to-plan-review-agents-review.html"
+   data-status="todo" data-type="untyped" data-effort="" data-title="emit self-contained html artifact from plan-review-agents">
+  <div class="card-badges">
+    <span class="status-chip status-todo">todo</span><span class="type-chip type-untyped">untyped</span>
+  </div>
+  <div class="card-title">Emit self-contained HTML artifact from plan-review-agents</div>
+  <div class="card-meta">
+    <span class="card-date">2026-05-17</span>
+    <span class="card-file">add-html-output-to-plan-review-agents-review.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="artifacts/implementation-plan-reference-2026-07-07.html"
+   data-status="" data-type="artifact" data-effort="" data-title="implementation-plan — feature reference">
+  <div class="card-badges">
+    <span class="type-chip type-artifact">artifact</span>
+  </div>
+  <div class="card-title">implementation-plan — Feature Reference</div>
+  <div class="card-meta">
+    <span class="card-date">2026-07-07</span>
+    <span class="card-file">artifacts/implementation-plan-reference-2026-07-07.html</span>
+  </div>
+</a>
+<a class="gallery-card" href="artifacts/session-recap-export-session-skill.html"
+   data-status="" data-type="artifact" data-effort="" data-title="session recap: export-session skill">
+  <div class="card-badges">
+    <span class="type-chip type-artifact">artifact</span>
+  </div>
+  <div class="card-title">Session Recap: export-session skill</div>
+  <div class="card-meta">
+    
+    <span class="card-file">artifacts/session-recap-export-session-skill.html</span>
+  </div>
+</a></div>
+
+    <div class="no-results" id="noResults">No items match your search.</div>
+
+    <div class="gallery-footer">
+      <span>68 items</span>
+      <span>Generated 2026-07-07 20:50</span>
+    </div>
+
+    <script>
+      var activeStatus = "all";
+      var activeType = "all";
+      var activeEffort = "all";
+      var searchText = "";
+      var grid = document.getElementById("galleryGrid");
+      var cards = grid.querySelectorAll(".gallery-card");
+      var noResults = document.getElementById("noResults");
+      var visibleCount = document.getElementById("visibleCount");
+
+      function applyFilters() {
+        var shown = 0;
+        for (var i = 0; i < cards.length; i++) {
+          var card = cards[i];
+          var status = card.getAttribute("data-status") || "";
+          var type = card.getAttribute("data-type") || "";
+          var effort = card.getAttribute("data-effort") || "";
+          var title = card.getAttribute("data-title") || "";
+          var matchStatus = activeStatus === "all" || status === activeStatus;
+          var matchType = activeType === "all" || type === activeType;
+          // Plans with no effort tag pass every effort filter.
+          var matchEffort =
+            activeEffort === "all" || effort === "" || effort === activeEffort;
+          var matchSearch = !searchText || title.indexOf(searchText) !== -1;
+          if (matchStatus && matchType && matchEffort && matchSearch) {
+            card.style.display = "";
+            shown++;
+          } else {
+            card.style.display = "none";
+          }
+        }
+        noResults.style.display = shown === 0 ? "block" : "none";
+        visibleCount.textContent =
+          shown === cards.length
+            ? ""
+            : "Showing " + shown + " of " + cards.length + " items";
+      }
+
+      function wireChips(containerId, prop) {
+        var chips = document
+          .getElementById(containerId)
+          .querySelectorAll(".filter-chip");
+        for (var i = 0; i < chips.length; i++) {
+          chips[i].addEventListener("click", function () {
+            var siblings = document
+              .getElementById(this.parentElement.id)
+              .querySelectorAll(".filter-chip");
+            for (var j = 0; j < siblings.length; j++) {
+              siblings[j].classList.remove("active");
+              siblings[j].setAttribute("aria-pressed", "false");
+            }
+            this.classList.add("active");
+            this.setAttribute("aria-pressed", "true");
+            var val = this.getAttribute("data-" + prop);
+            if (prop === "status") activeStatus = val;
+            else if (prop === "type") activeType = val;
+            else activeEffort = val;
+            applyFilters();
+          });
+        }
+      }
+
+      wireChips("statusChips", "status");
+      wireChips("typeChips", "type");
+      wireChips("effortChips", "effort");
+
+      document
+        .getElementById("searchBox")
+        .addEventListener("input", function () {
+          searchText = this.value.trim().toLowerCase();
+          applyFilters();
+        });
+
+      var gridBtn = document.getElementById("gridBtn");
+      var listBtn = document.getElementById("listBtn");
+      gridBtn.addEventListener("click", function () {
+        grid.classList.remove("list-view");
+        gridBtn.classList.add("active");
+        gridBtn.setAttribute("aria-pressed", "true");
+        listBtn.classList.remove("active");
+        listBtn.setAttribute("aria-pressed", "false");
+      });
+      listBtn.addEventListener("click", function () {
+        grid.classList.add("list-view");
+        listBtn.classList.add("active");
+        listBtn.setAttribute("aria-pressed", "true");
+        gridBtn.classList.remove("active");
+        gridBtn.setAttribute("aria-pressed", "false");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="plan-created" content="2026-06-07">
+<title>Review: Persist plan-HTML checkbox state in HTML attributes</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1f2937; --muted: #6b7280;
+    --border: #e5e7eb; --radius: 8px;
+    --accent: #4f46e5; --accent-bg: #eef2ff;
+    --green: #16a34a; --green-bg: #f0fdf4;
+    --yellow: #d97706; --yellow-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111827; --fg: #f3f4f6; --muted: #9ca3af;
+      --border: #374151; --accent: #818cf8; --accent-bg: #1e1b4b;
+      --green: #4ade80; --green-bg: #052e16;
+      --yellow: #fbbf24; --yellow-bg: #451a03;
+      --red: #f87171; --red-bg: #450a0a;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.6; padding: 2rem 1.5rem 4rem; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+  h2 { font-size: 1.1rem; margin: 2rem 0 .75rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: .95rem; margin: 1.25rem 0 .5rem; }
+  p, li { font-size: .88rem; }
+  ul { padding-left: 1.25rem; }
+  li { margin-bottom: .35rem; }
+  code { font-size: .82rem; background: var(--accent-bg); padding: .15em .35em; border-radius: 3px; }
+  .meta { font-size: .78rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .verdict { display: inline-block; padding: .25rem .75rem; border-radius: 4px; font-weight: 600; font-size: .8rem; margin-bottom: 1rem; }
+  .verdict-pass { background: var(--green-bg); color: var(--green); }
+  .severity-badge { display: inline-block; font-size: .7rem; font-weight: 600; padding: .1rem .4rem; border-radius: 3px; margin-left: .25rem; }
+  .sev-critical { background: var(--red-bg); color: var(--red); }
+  .sev-high { background: var(--red-bg); color: var(--red); }
+  .sev-medium { background: var(--yellow-bg); color: var(--yellow); }
+  .sev-low { background: var(--accent-bg); color: var(--accent); }
+  .resolved { text-decoration: line-through; opacity: .6; }
+  .resolved::after { content: " (resolved)"; font-style: italic; text-decoration: none; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; margin: .75rem 0; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--accent-bg); font-weight: 600; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: .75rem; color: var(--muted); }
+  .plan-back-nav { margin-bottom: 1rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted, #6b7280);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent, #2563eb); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="theme-default">
+<div class="plan-back-nav">
+  <a href="./index.html" class="plan-back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Plans
+  </a>
+</div>
+
+<h1>Plan Review: Persist plan-HTML checkbox state in HTML attributes</h1>
+<div class="meta">
+  Reviewed: 2026-06-08 00:04 UTC &middot; Reviewers: 7 (5 core + 2 UI) &middot; Source: <code>docs/plans/persist-checkbox-state-in-html-attributes.html</code>
+</div>
+<span class="verdict verdict-pass">Sound with revisions &mdash; approved</span>
+
+<h2>Executive Summary</h2>
+<p>All seven reviewers endorse the core architecture: replacing <code>localStorage</code> with agent-written HTML <code>checked</code> attributes as the single portable source of truth. The plan correctly identifies a structural violation (per-browser state masquerading as file state) and proposes a clean, minimal fix that aligns with the existing <code>.completed</code> class pattern already used for step state.</p>
+<p>The team unanimously flagged one self-referential inconsistency &mdash; the plan file itself still contained the <code>localStorage</code> code it proposes to remove &mdash; which has been fixed in this review pass. Secondary concerns around test path conventions, completion-checklist ambiguity, step ordering, and accessibility have also been addressed with inline edits to the source plan.</p>
+
+<h2>Role-by-Role Findings</h2>
+
+<h3>Architecture</h3>
+<p><strong>Fit:</strong> Architecturally sound &mdash; correctly identifies the single-source-of-truth violation and proposes a coherent resolution aligned with existing patterns.</p>
+<ul>
+  <li class="resolved">Plan&rsquo;s own script contained <code>localStorage</code> code <span class="severity-badge sev-low">low</span></li>
+  <li class="resolved">Completion-list checkbox persistence ambiguity <span class="severity-badge sev-medium">medium</span></li>
+  <li>Browser ticks being ephemeral not surfaced in acceptance criteria <span class="severity-badge sev-medium">medium</span> &mdash; documented in Context section; completion-list AC #7 added</li>
+  <li class="resolved">Step ordering dependencies implicit <span class="severity-badge sev-low">low</span></li>
+  <li>Shell test does not cover rendered DOM behavior <span class="severity-badge sev-low">low</span> &mdash; accepted: matches repo test convention</li>
+</ul>
+
+<h3>Completeness</h3>
+<p><strong>Completeness:</strong> Well-scoped and specific with exact functions, grep commands, and file paths named.</p>
+<ul>
+  <li class="resolved">Plan&rsquo;s own script had <code>localStorage</code> <span class="severity-badge sev-high">high</span></li>
+  <li>Test directories may not exist (<code>mkdir</code> not explicit) <span class="severity-badge sev-medium">medium</span> &mdash; implicit in file creation tooling</li>
+  <li class="resolved">Step 2 verify references fixture created in Step 4 <span class="severity-badge sev-medium">medium</span></li>
+  <li>SKILL.md update text not quoted verbatim <span class="severity-badge sev-low">low</span> &mdash; implementer can grep for context</li>
+</ul>
+
+<h3>Testability</h3>
+<p><strong>Test coverage:</strong> Clear objective-verification test and sub-tests, all consolidated in a single shell script appropriate for scope.</p>
+<ul>
+  <li>No browser-level test for progress bar rendering on first paint <span class="severity-badge sev-high">high</span> &mdash; accepted: shell-test convention; Playwright noted as future enhancement</li>
+  <li class="resolved">Plan file&rsquo;s own <code>localStorage</code> contradicts its objective <span class="severity-badge sev-medium">medium</span></li>
+  <li>AC #3 does not negate <code>sessionStorage</code>/<code>indexedDB</code> <span class="severity-badge sev-medium">medium</span> &mdash; noted; not introduced by this refactor</li>
+  <li>Fixture spec (how many criteria pre-checked) not documented in test <span class="severity-badge sev-low">low</span></li>
+</ul>
+
+<h3>Risk</h3>
+<p><strong>Risk level: low.</strong> No breaking API changes, no shared state, no concurrency hazards.</p>
+<ul>
+  <li class="resolved">Plan&rsquo;s own script contained <code>localStorage</code> <span class="severity-badge sev-medium">medium</span></li>
+  <li>Backfill next-step could orphan existing <code>localStorage</code> ticks with no migration path <span class="severity-badge sev-medium">medium</span> &mdash; scoped to next-step with warning</li>
+  <li>File System Access API next-step is Chromium-only <span class="severity-badge sev-low">low</span> &mdash; future scope with fallback noted</li>
+</ul>
+
+<h3>Conventions</h3>
+<p><strong>Fit:</strong> Follows established project patterns closely &mdash; kebab-case filename, correct placement, HTML plan format.</p>
+<ul>
+  <li class="resolved">Test path <code>tests/plan-agent/</code> introduced new plugin-scoped pattern <span class="severity-badge sev-low">low</span></li>
+  <li class="resolved">Fixture path diverged from concern-based naming <span class="severity-badge sev-low">low</span></li>
+  <li>Section comment in IIFE not yet renamed <span class="severity-badge sev-low">low</span> &mdash; fixed in this pass</li>
+</ul>
+
+<h3>UX</h3>
+<p><strong>User fit:</strong> Well-structured and readable for developer audiences.</p>
+<ul>
+  <li class="resolved">Plan&rsquo;s own JS used <code>localStorage</code> <span class="severity-badge sev-high">high</span></li>
+  <li class="resolved">Completion checklist disabled state unexplained <span class="severity-badge sev-medium">medium</span></li>
+  <li>No in-plan signal that browser ticks are ephemeral <span class="severity-badge sev-medium">medium</span> &mdash; Context section documents this</li>
+  <li>Sidebar nav disappears on mobile with no back-to-top <span class="severity-badge sev-low">low</span> &mdash; skeleton-level concern</li>
+</ul>
+
+<h3>Accessibility</h3>
+<p><strong>A11y compliance:</strong> Largely WCAG 2.1 AA compliant with solid foundational patterns.</p>
+<ul>
+  <li class="resolved"><code>prefers-reduced-motion</code> not gating <code>pulse-dot</code> animation <span class="severity-badge sev-medium">medium</span></li>
+  <li class="resolved">Completion checkboxes lack accessible disabled-state explanation <span class="severity-badge sev-medium">medium</span></li>
+  <li class="resolved">Status badge missing <code>aria-label</code> <span class="severity-badge sev-low">low</span></li>
+  <li>Checkbox touch targets 16px &lt; 24px WCAG 2.5.8 AA minimum <span class="severity-badge sev-medium">medium</span> &mdash; skeleton-level fix</li>
+  <li><code>aria-current=&quot;true&quot;</code> could be <code>&quot;location&quot;</code> for semantic precision <span class="severity-badge sev-low">low</span></li>
+  <li>Details/summary triangle characters not universally announced <span class="severity-badge sev-low">low</span> &mdash; skeleton-level fix</li>
+</ul>
+
+<h2>Agreements &amp; Conflicts</h2>
+
+<h3>Agreements (amplified)</h3>
+<table>
+  <tr><th>Finding</th><th>Reviewers</th><th>Status</th></tr>
+  <tr><td>Plan&rsquo;s own script had <code>localStorage</code></td><td>All 7</td><td>Resolved</td></tr>
+  <tr><td>Step ordering dependencies should be explicit</td><td>Architecture, Completeness, Testability, Risk</td><td>Resolved</td></tr>
+  <tr><td>Completion-list computed-only needs documentation</td><td>Architecture, UX, Accessibility</td><td>Resolved</td></tr>
+  <tr><td>Grep-only tests don&rsquo;t cover rendered behavior</td><td>Architecture, Testability, Risk</td><td>Accepted (convention)</td></tr>
+  <tr><td>Test paths should follow project conventions</td><td>Conventions, Completeness</td><td>Resolved</td></tr>
+</table>
+
+<h3>Conflicts</h3>
+<p>None. All recommendations are additive and compatible across reviewers.</p>
+
+<h2>Highest-Risk Issues</h2>
+<ol>
+  <li><strong class="resolved">Self-referential <code>localStorage</code> in plan script</strong> (7/7 reviewers) &mdash; removed <code>STORAGE_KEY</code>, <code>saveState()</code>, <code>restoreState()</code> from plan&rsquo;s own <code>&lt;script&gt;</code></li>
+  <li><strong>No browser-level test for first-paint rendering</strong> (Testability, Architecture, Risk) &mdash; accepted per shell-test convention; Playwright E2E noted as future enhancement</li>
+  <li><strong class="resolved">Completion-list persistence ambiguity</strong> (Architecture, UX, Accessibility) &mdash; AC #7 added; completion note with <code>aria-description</code> applied</li>
+  <li><strong class="resolved">Test paths diverge from project conventions</strong> (Conventions, Completeness) &mdash; paths corrected to concern-based naming</li>
+</ol>
+
+<h2>Edits Applied</h2>
+<table>
+  <tr><th>Target</th><th>Action</th><th>Change</th></tr>
+  <tr><td><code>&lt;script&gt;</code> IIFE</td><td>edit</td><td>Removed <code>STORAGE_KEY</code>, <code>saveState()</code>, <code>restoreState()</code>, <code>saveState()</code> call in listener, <code>restoreState()</code> invocation; relabeled section comment</td></tr>
+  <tr><td><code>.status-badge</code></td><td>edit</td><td>Added <code>aria-label=&quot;Plan status: todo&quot;</code></td></tr>
+  <tr><td><code>@keyframes pulse-dot</code></td><td>append</td><td>Added <code>@media (prefers-reduced-motion: reduce)</code> rule</td></tr>
+  <tr><td><code>#completion-list</code> items</td><td>edit</td><td>Added <code>aria-description</code> to cc1&ndash;cc3; added explanatory note paragraph</td></tr>
+  <tr><td><code>#criteria-list</code></td><td>append</td><td>Added AC #7: completion-checklist is computed-only</td></tr>
+  <tr><td><code>#progress-label</code></td><td>edit</td><td>Updated &ldquo;0 / 6 done&rdquo; &rarr; &ldquo;0 / 7 done&rdquo;</td></tr>
+  <tr><td>Test file paths (all occurrences)</td><td>edit</td><td><code>tests/plan-agent/</code> &rarr; <code>tests/</code>; <code>tests/fixtures/plan-agent/</code> &rarr; <code>tests/fixtures/checkbox-portability/</code></td></tr>
+  <tr><td>Steps section</td><td>insert</td><td>Added step ordering note before step list</td></tr>
+  <tr><td>Before <code>&lt;/main&gt;</code></td><td>append</td><td>Appended <code>&lt;details class=&quot;team-review&quot;&gt;</code> with full synthesis</td></tr>
+</table>
+
+<div class="footer">
+  Generated by plan-agent review-plan &middot; 7-reviewer Agent Team &middot; 2026-06-08
+</div>
+
+</body>
+</html>
