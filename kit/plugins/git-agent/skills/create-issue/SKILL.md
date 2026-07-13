@@ -2,7 +2,6 @@
 name: create-issue
 description: "Drafts and opens a GitHub or GitLab issue from any context source. Detects host from git remote and confirms before creating. Use when the user asks to file, open, or create an issue or ticket."
 allowed-tools: Bash(gh *), Bash(glab *), Bash(git *), Bash(node *), Bash(npm *), AskUserQuestion, Read, Grep, Glob, ToolSearch, ExitPlanMode
-disable-model-invocation: true
 argument-hint: "[bug|feature|selection|session|plan] [title, description, or plan path]"
 ---
 
@@ -53,7 +52,12 @@ Do not proceed past pre-flight if either check fails.
 
 ### Phase 3 — Resolve source and type
 
-Before any other parsing, strip `--no-open` from `$ARGUMENTS` to avoid it appearing in the issue title or description:
+Two activation paths:
+
+- **Command:** `/git-agent:create-issue [source] [title or description]` — `$ARGUMENTS` holds the source and title.
+- **Model (ambient):** activates when the user asks to file, open, or create an issue or ticket. `$ARGUMENTS` is empty; derive the equivalent argument text from the triggering message and recent conversation — the source keyword implied by intent (a reported defect → `bug`, a requested capability → `feature`, pasted code → `selection`, "this session" → `session`, a named plan file → `plan`) and the title/description the user supplied (e.g. "file a bug: login crashes on submit" yields `bug login crashes on submit`). Then apply the same parsing rules below to the derived text. Only fall back to `AskUserQuestion` if the triggering message gives neither a usable source nor title.
+
+Before any other parsing, strip `--no-open` from `$ARGUMENTS` (or the derived text) to avoid it appearing in the issue title or description:
 ```bash
 ARGS="${ARGUMENTS/--no-open/}"
 ARGS="${ARGS//  / }"  # collapse any double spaces left behind
