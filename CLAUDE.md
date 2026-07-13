@@ -63,10 +63,11 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 
 ## Reference Implementations
 
-11 plugins in the marketplace (`agentics-kit` v4.0.0):
+12 plugins in the marketplace (`agentics-kit` v4.0.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
+| `team-defaults` | Skills + Agents | Shared team defaults — `ts-commenter` and `css-generator` agents plus a `sync-rules` skill that installs bundled team rules (plan-mode, component-driven-ui, typescript-jsdoc, review-bot-loops) into `~/.claude/rules/` with per-file confirmation |
 | `memory-tools` | Skills | Auto-activated CLAUDE.md / project memory auditing; enforces optimization principle (keep only rules that change Claude's behavior) |
 | `code-review` | Skills + Agents + Commands | Auto-activated code review; `/code-review:fix-branch` autonomously reviews and applies fixes across the whole branch |
 | `plan-interview` | Commands + Skills | Stress-test plans with deep-grill interview; auto-routes product plans to panel review (Step 1.5 router); `--quick` flag bypasses routing |
