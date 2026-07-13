@@ -1,7 +1,6 @@
 ---
 name: ts-commenter
 description: TypeScript documentation specialist that generates comprehensive JSDoc comments optimized for AI assistant understanding and reduced token consumption
-tools: inherit
 model: sonnet
 ---
 
