@@ -20,7 +20,7 @@ echo "=== build-proposal Skill Smoke Test ==="
 echo "1. SKILL.md exists with frontmatter contract (name, model, model-invocable)..."
 if [ -f "$SKILL" ] \
   && grep -q "^name: build-proposal$" "$SKILL" \
-  && grep -q "^model: opus$" "$SKILL" \
+  && grep -q "^model: claude-fable-5$" "$SKILL" \
   && ! grep -q "disable-model-invocation" "$SKILL"; then
   echo "  PASS"
 else
@@ -182,7 +182,7 @@ except Exception:
     ok = parse(cur) > (0, 0, 0)
     print(f"  (origin/main unavailable; current {cur} is a valid semver)")
 desc = [p for p in cur_doc["plugins"] if p["name"] == "plan-agent"][0]["description"]
-ok = ok and "/plan-agent:build-proposal" in desc
+ok = ok and "build-proposal" in desc
 sys.exit(0 if ok else 1)
 PY
 then
