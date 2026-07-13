@@ -11,7 +11,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
 - **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
-- **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, `session`, or `plan` (a plan file becomes a tracked ticket). Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Manual invoke only — does not auto-activate on intent match.
+- **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, `session`, or `plan` (a plan file becomes a tracked ticket). Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Auto-activates on intent match.
 
 ### Subagents (background, fire-and-forget)
 
@@ -56,7 +56,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `pr-agent` | Manual invoke only — use `/git-agent:pr-agent` explicitly | "create a PR", "open a pull request", "make a PR", "push and create PR" |
 | `ship` | Manual invoke only — use `/git-agent:ship` explicitly | "ship it", "commit and create a PR", "ship my changes", "send it", "land my work" |
 | `ship-autonomous` | Auto-activated | "ship it autonomously", "ship and watch the PR", "ship and fix what breaks", "ship and autofix CI failures" |
-| `create-issue` | Manual invoke only — use `/git-agent:create-issue` explicitly | "file a bug", "open an issue", "create a feature ticket", "log this as an issue" |
+| `create-issue` | Auto-activated | "file a bug", "open an issue", "create a feature ticket", "log this as an issue" |
 
 ### Agents
 
@@ -169,7 +169,7 @@ Use `ship` if you don't want CI watching or autofix — it's simpler and stops a
 
 ### create-issue
 
-**Manual invoke only** — does not respond to natural-language intent matching. Invoke explicitly with `/git-agent:create-issue [source] [title or description]`.
+Auto-activates on intent match ("file a bug", "open an issue"), or invoke explicitly with `/git-agent:create-issue [source] [title or description]`.
 
 The skill will:
 1. Exit plan mode if active (Phase 0 — no-op when already off)

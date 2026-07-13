@@ -1,10 +1,17 @@
 # Changelog — git-agent
 
-## v3.12.1 — 2026-07-13 — Per-skill model pinning
+## v4.0.1 — 2026-07-13 — Per-skill model pinning
 
 ### Changed
 
 - Model frontmatter tuned to match each component's job: `branch-agent` fixed from `Haiku` to the documented lowercase `haiku` alias; `commit-agent` and the `agent-commit` background agent pinned to `haiku` (rigid conventional-commit format, high frequency); `pr-agent` and `create-issue` pinned to `sonnet` (outward-facing prose, matching `agent-pr`). `ship` and `ship-autonomous` deliberately inherit the session model — ship-autonomous's CI autofix step applies real code edits and should never run on a downgraded model. Overrides are turn-scoped and fall back to the session model if excluded by an org `availableModels` allowlist.
+
+## v4.0.0 — 2026-07-13 — create-issue auto-activates on intent match
+
+### Changed
+
+- **Breaking (activation behavior):** removed `disable-model-invocation: true` from the `create-issue` skill — it now auto-activates when user intent matches (e.g. "file a bug", "open an issue", "create a feature ticket") in addition to explicit `/git-agent:create-issue` invocation. The confirmation gate before issue creation is unchanged.
+- `create-issue` Phase 3 documents both activation paths: on ambient model invocation `$ARGUMENTS` is empty, so the source keyword and title are derived from the triggering message and recent conversation before falling back to `AskUserQuestion`.
 
 ## v3.12.0 — 2026-07-13 — create-issue accepts plan files as a source
 

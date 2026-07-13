@@ -13,6 +13,7 @@ fail() {
 
 # Check all 12 plugin dirs
 PLUGINS=(
+  team-defaults
   memory-tools
   code-review
   plan-interview
