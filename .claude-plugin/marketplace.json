@@ -12,6 +12,24 @@
   },
   "plugins": [
     {
+      "name": "team-defaults",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/team-defaults"
+      },
+      "version": "0.1.0",
+      "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
+      "category": "productivity",
+      "tags": [
+        "team",
+        "defaults",
+        "rules",
+        "conventions",
+        "onboarding"
+      ]
+    },
+    {
       "name": "memory-tools",
       "source": {
         "source": "git-subdir",

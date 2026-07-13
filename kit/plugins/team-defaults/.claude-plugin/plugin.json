@@ -1,0 +1,18 @@
+{
+  "name": "team-defaults",
+  "description": "Shared team defaults — code-documentation and design-token agents plus a sync-rules skill that installs the team's global rules (plan-mode, component-driven UI, JSDoc, review-bot loops) into ~/.claude/rules/.",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "team",
+    "defaults",
+    "rules",
+    "conventions",
+    "onboarding",
+    "configuration"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/team-defaults",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}
