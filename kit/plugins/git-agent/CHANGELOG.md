@@ -1,5 +1,11 @@
 # Changelog — git-agent
 
+## v4.0.0 — 2026-07-13 — create-issue auto-activates on intent match
+
+### Changed
+
+- **Breaking (activation behavior):** removed `disable-model-invocation: true` from the `create-issue` skill — it now auto-activates when user intent matches (e.g. "file a bug", "open an issue", "create a feature ticket") in addition to explicit `/git-agent:create-issue` invocation. The confirmation gate before issue creation is unchanged.
+
 ## v3.12.0 — 2026-07-13 — create-issue accepts plan files as a source
 
 ### Added

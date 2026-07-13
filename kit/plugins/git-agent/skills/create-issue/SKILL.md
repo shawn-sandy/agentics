@@ -2,7 +2,6 @@
 name: create-issue
 description: "Drafts and opens a GitHub or GitLab issue from any context source. Detects host from git remote and confirms before creating. Use when the user asks to file, open, or create an issue or ticket."
 allowed-tools: Bash(gh *), Bash(glab *), Bash(git *), Bash(node *), Bash(npm *), AskUserQuestion, Read, Grep, Glob, ToolSearch, ExitPlanMode
-disable-model-invocation: true
 argument-hint: "[bug|feature|selection|session|plan] [title, description, or plan path]"
 ---
 

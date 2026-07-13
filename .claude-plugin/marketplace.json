@@ -138,7 +138,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "3.12.0",
+      "version": "4.0.0",
       "description": "Automated git workflow \u2014 create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
