@@ -298,7 +298,7 @@ export function extractSections(html) {
  * frontmatter block (`key: value` lines only) whose fields are returned
  * separately as `metadata`; the digest's blockquote preamble is skipped.
  *
- * Returns { metadata, sections, progress }. Throws ParseError when a required
+ * Returns { metadata, sections, progress, nextSteps }. Throws ParseError when a required
  * section (title, Objective, Steps, Acceptance Criteria, Verification) is
  * missing or malformed; optional sections (Context, Files, Tests) come back
  * null when absent, matching extractSections().
@@ -313,6 +313,12 @@ export function extractSections(html) {
  *               one `- <item> — <reason>` bullet each, rendered into the
  *               #completion-report block (absent section → the default
  *               "No items to report" sentence).
+ *
+ * `nextSteps` carries an optional `## Next Steps` section, also kept out of
+ * `sections` for round-trip stability: `{ items: [{ summary, desc, prompt }],
+ * prose }` where each top-level `- ` bullet is an item (first line = summary,
+ * first fenced code block = paste-ready prompt, other lines = desc) and
+ * bullet-less content lands in `prose`. Null when the section is absent.
  */
 export function parseSpecMarkdown(md) {
   const fail = (reason) => {
@@ -465,6 +471,60 @@ export function parseSpecMarkdown(md) {
   const verification = block(chunks.Verification);
   if (!verification) fail('Verification section is empty');
 
+  // Optional `## Next Steps` — follow-ups rendered as collapsible cards with
+  // paste-ready prompts. Items are top-level `- ` bullets: the bullet's first
+  // line is the summary, an indented fenced code block inside the item is the
+  // prompt, and any other indented lines are description prose. Bullet-less
+  // content falls back to prose. Returned BESIDE `sections` (like `progress`)
+  // so the extract → digest → parse round trip stays byte-stable.
+  let nextSteps = null;
+  const nsKey = Object.keys(chunks).find((k) => /^Next Steps\b/.test(k));
+  if (nsKey !== undefined) {
+    const text = chunks[nsKey].replace(/^\n+|\n+$/g, '');
+    if (!text.trim()) fail('Next Steps section present but empty');
+    // Split into top-level bullets, masking fenced blocks so a prompt line
+    // that happens to start with "- " never starts a new item.
+    const rawItems = [];
+    const loose = [];
+    let buf = null;
+    let splitFenced = false;
+    for (const line of text.split('\n')) {
+      if (!splitFenced && /^- /.test(line)) {
+        buf = [line.slice(2)];
+        rawItems.push(buf);
+        continue;
+      }
+      if (/^\s*(```|~~~)/.test(line)) splitFenced = !splitFenced;
+      (buf || loose).push(line);
+    }
+    const items = rawItems.map((itemLines, i) => {
+      const summary = inline(itemLines[0]);
+      if (!summary) fail(`Next Steps item ${i + 1} has no summary line`);
+      const descLines = [];
+      const promptLines = [];
+      let inFence = false;
+      let promptDone = false;
+      for (const line of itemLines.slice(1)) {
+        if (/^\s*(```|~~~)/.test(line)) {
+          if (inFence) promptDone = true;
+          inFence = !inFence && !promptDone;
+          continue;
+        }
+        if (inFence) promptLines.push(line);
+        else descLines.push(line);
+      }
+      let prompt = null;
+      if (promptLines.length > 0) {
+        const indents = promptLines.filter((l) => l.trim()).map((l) => l.match(/^\s*/)[0].length);
+        const cut = indents.length ? Math.min(...indents) : 0;
+        prompt = promptLines.map((l) => l.slice(cut)).join('\n').replace(/\s+$/, '');
+      }
+      return { summary, desc: block(descLines.join('\n')), prompt };
+    });
+    const prose = block(loose.join('\n'));
+    nextSteps = { items, prose: prose || null };
+  }
+
   const report = [];
   if ('Completion Report' in chunks) {
     for (const item of listItems(chunks['Completion Report'])) {
@@ -480,6 +540,7 @@ export function parseSpecMarkdown(md) {
     metadata,
     sections: { title, objective, context, files, steps, tests, criteria, verification },
     progress: { steps: stepsDone, criteria: criteriaDone, report },
+    nextSteps,
   };
 }
 

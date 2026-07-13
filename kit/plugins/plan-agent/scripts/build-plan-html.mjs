@@ -143,12 +143,16 @@ function reportList(entries) {
 }
 
 /**
- * Render a parsed spec ({ metadata, sections, progress }) to the full HTML
- * document. `fileName`/`planPath` locate the output for the source rows and
- * prompts. `progress` (optional) carries per-step/per-criterion done state
- * and completion-report entries; omitted state renders as not done.
+ * Render a parsed spec ({ metadata, sections, progress, nextSteps }) to the
+ * full HTML document. `fileName`/`planPath` locate the output for the source
+ * rows; `mdPath` locates the Markdown spec — the implement/goal/workflow
+ * prompts reference IT (a spec is ~10× smaller than the rendered HTML, and
+ * progress updates are spec edits), falling back to `planPath` with `.html`
+ * swapped for `.md`. `progress` (optional) carries per-step/per-criterion
+ * done state and completion-report entries; omitted state renders as not
+ * done. `nextSteps` (optional) renders as the collapsible Next Steps cards.
  */
-export function renderPlanHtml({ metadata = {}, sections, progress }, { fileName, planPath, today, repo } = {}) {
+export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps }, { fileName, planPath, mdPath, today, repo } = {}) {
   const md = metadata;
   const s = sections;
   const stepsDone = (progress && progress.steps) || [];
@@ -166,12 +170,14 @@ export function renderPlanHtml({ metadata = {}, sections, progress }, { fileName
   const effort = ['low', 'medium', 'high'].includes(md.effort) ? md.effort : deriveEffort(s.steps.length, fileCount);
   const effortLabel = effort[0].toUpperCase() + effort.slice(1);
 
-  const implement = `Read and implement all steps in the plan at ${path} — ${s.title}`;
-  const goal = `Achieve this goal: ${s.title}. The plan at ${path} describes one approach — use it as reference, but optimize for the outcome`;
+  const specPath = mdPath || (/\.html$/i.test(path) ? path.replace(/\.html$/i, '.md') : `${path}.md`);
+
+  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}`;
+  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome`;
   const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
   const wantsWorkflow = md.workflow === 'true' || (md.workflow !== 'false' && fileCount >= 5 && dirCount >= 3);
   const workflow = wantsWorkflow
-    ? `Run a workflow to implement the plan at ${path} — ${s.title}. Brief subagents with the plan file at ${path}`
+    ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}`
     : '';
 
   const main = [];
@@ -183,6 +189,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress }, { fileName
     workflow: esc(workflow),
     file: esc(file),
     path: esc(path),
+    md: esc(specPath),
   }));
   const criteriaDoneCount = s.criteria.filter((_, i) => Boolean(criteriaDone[i])).length;
   main.push('', shell.progressBlock(criteriaDoneCount, s.criteria.length));
@@ -201,12 +208,25 @@ export function renderPlanHtml({ metadata = {}, sections, progress }, { fileName
     statusCompleted: status === 'completed',
     reportHtml: report.length > 0 ? reportList(report) : '',
   })));
+  if (nextSteps) {
+    const parts = [];
+    if (nextSteps.prose) parts.push(paragraphs(nextSteps.prose));
+    if (nextSteps.items.length > 0) {
+      parts.push(shell.nextStepsBlock(nextSteps.items.map((it) => ({
+        summary: esc(it.summary),
+        desc: it.desc ? esc(it.desc) : '',
+        prompt: it.prompt ? esc(it.prompt) : '',
+      }))));
+    }
+    main.push('', shell.sectionCard('next-steps', parts.join('\n')));
+  }
   main.push('', shell.footer({ created: esc(created), repo: esc(repoName) }));
 
   const navIds = shell.NAV_ENTRIES.map((e) => e.id).filter((id) => {
     if (id === 'context') return Boolean(s.context);
     if (id === 'files') return Boolean(s.files);
     if (id === 'tests') return Boolean(s.tests);
+    if (id === 'next-steps') return Boolean(nextSteps);
     return true;
   });
 
@@ -222,6 +242,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress }, { fileName
       repo: esc(repoName),
       file: esc(file),
       path: esc(path),
+      md: esc(specPath),
       implement: esc(implement),
       goal: esc(goal),
       workflow: esc(workflow),
@@ -312,6 +333,7 @@ function main() {
   const html = renderPlanHtml(parsed, {
     fileName: basename(outPath),
     planPath: parsed.metadata.path || relative(process.cwd(), resolve(outPath)),
+    mdPath: relative(process.cwd(), resolve(specPath)),
     repo: defaultRepo(),
     today: created || undefined,
   });

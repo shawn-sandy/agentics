@@ -1319,6 +1319,8 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\\.html$/, '.md');
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1326,10 +1328,11 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
-  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Set "status: completed" in the spec frontmatter once every step and criterion is checked.');
+  lines.push('5. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\\n');
 }
@@ -1538,6 +1541,7 @@ export const SECTION_CHROME = {
   criteria: { icon: 'ic-check-circle', heading: 'Definition of done', intro: 'The plan counts as done when every statement below is true — check each one off as you verify it.' },
   verification: { icon: 'ic-magnifying-glass', heading: 'Final check', intro: 'One last pass to confirm the whole change works end to end.' },
   completion: { icon: 'ic-clipboard-check', heading: 'Wrapping up', intro: 'Three gates that must all pass before this plan is marked completed.' },
+  'next-steps': { icon: 'ic-arrow-right-circle', heading: 'Next steps', intro: 'Follow-up ideas that came up along the way — none of them are required to finish this plan.' },
 };
 
 /* Sidebar nav entries in skeleton order; the renderer filters to the
@@ -1552,6 +1556,7 @@ export const NAV_ENTRIES = [
   { id: 'criteria', icon: 'ic-check-circle', label: 'Definition of done' },
   { id: 'verification', icon: 'ic-magnifying-glass', label: 'Final check' },
   { id: 'completion', icon: 'ic-clipboard-check', label: 'Wrapping up' },
+  { id: 'next-steps', icon: 'ic-arrow-right-circle', label: 'Next steps' },
 ];
 
 const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;
@@ -1559,7 +1564,7 @@ const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/><
 /* ── Template functions — args are pre-escaped HTML strings ────────── */
 
 /** <head> meta tags. `workflow` may be empty → tag omitted entirely. */
-export function metaTags({ status, effort, type, created, repo, file, path, implement, goal, workflow }) {
+export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow }) {
   const tags = [
     `<meta name="plan-status" content="${status}">`,
     `<meta name="plan-effort" content="${effort}">`,
@@ -1568,6 +1573,7 @@ export function metaTags({ status, effort, type, created, repo, file, path, impl
     `<meta name="plan-repo" content="${repo}">`,
     `<meta name="plan-file" content="${file}">`,
     `<meta name="plan-path" content="${path}">`,
+    `<meta name="plan-md" content="${md}">`,
     `<meta name="plan-implement" content="${implement}">`,
     `<meta name="plan-goal" content="${goal}">`,
   ];
@@ -1643,7 +1649,7 @@ export function implementRow(implement) {
 }
 
 /** More-ways drawer. `workflow` empty → row omitted, drawer kept. */
-export function moreWaysDrawer({ goal, workflow, file, path }) {
+export function moreWaysDrawer({ goal, workflow, file, path, md }) {
   const workflowRow = workflow
     ? `
         <div class="plan-workflow">
@@ -1682,6 +1688,12 @@ ${workflowRow}
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
           </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">${md}</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
         </div>
 
       </div>
@@ -1716,6 +1728,37 @@ export function sectionCard(id, body) {
       <p class="section-intro">${intro}</p>
 ${body}
     </section>`;
+}
+
+/** items: [{ summary, desc, prompt }] — pre-escaped HTML strings; `prompt`
+ * may be empty. Mirrors the legacy hand-written Next Steps markup: one
+ * collapsible details per follow-up, prompt in a <pre> with a copyPrompt()
+ * button. */
+export function nextStepsBlock(items) {
+  const rows = items
+    .map((it) => {
+      const desc = it.desc ? `\n            <p>${it.desc}</p>` : '';
+      if (!it.prompt) {
+        return `        <details class="next-step-item">
+          <summary>${it.summary}</summary>
+          <div class="next-step-prompt">${desc || `\n            <p>${it.summary}</p>`}
+          </div>
+        </details>`;
+      }
+      return `        <details class="next-step-item">
+          <summary>${it.summary}</summary>
+          <div class="next-step-prompt">${desc}
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>${it.prompt}</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>`;
+    })
+    .join('\n\n');
+  return `      <div class="next-steps-list">
+${rows}
+      </div>`;
 }
 
 export function fileTreeBlock(repo, rows) {

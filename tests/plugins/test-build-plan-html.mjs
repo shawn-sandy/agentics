@@ -217,17 +217,22 @@ ok('derived effort follows the skill thresholds', () => {
   assert.ok(big.includes('data-effort="high"'), '7-step spec renders high');
 });
 
-ok('implement and goal meta tags quote title and relative path verbatim', () => {
+ok('implement and goal meta tags reference the markdown spec path, not the HTML', () => {
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.html — Ship a sample feature">'
+      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature">'
     )
   );
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.html describes one approach — use it as reference, but optimize for the outcome">'
+      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome">'
     )
   );
+  assert.ok(sampleHtml.includes('<meta name="plan-md" content="docs/plans/sample.md">'), 'plan-md meta carries the spec path');
+  assert.ok(sampleHtml.includes('id="plan-md"'), 'drawer has the Spec source row');
+  // An explicit mdPath option wins over the .html → .md derivation.
+  const custom = renderPlanHtml(sampleParsed, { fileName: 'sample.html', planPath: 'docs/plans/sample.html', mdPath: 'specs/sample.md' });
+  assert.ok(custom.includes('plan at specs/sample.md — Ship a sample feature'));
 });
 
 ok('workflow meta tag omitted for small specs, present for wide ones', () => {
@@ -240,7 +245,62 @@ ok('workflow meta tag omitted for small specs, present for wide ones', () => {
     '## Files\n- a/one.mjs (new)\n- b/two.mjs (new)\n- c/three.mjs (new)\n- d/four.mjs (new)\n- e/five.mjs (new)\n\n## Steps'
   ));
   const wideHtml = renderPlanHtml(wide, { fileName: 'w.html', planPath: 'w.html' });
-  assert.ok(wideHtml.includes('<meta name="plan-workflow" content="Run a workflow to implement the plan at w.html'));
+  assert.ok(wideHtml.includes('<meta name="plan-workflow" content="Run a workflow to implement the plan at w.md'));
+});
+
+/* ── Unit: Next Steps section ─────────────────────────────────────── */
+
+const NEXT_STEPS_SPEC = `${SAMPLE_SPEC}
+## Next Steps
+
+Loose intro line before the items.
+
+- Add a follow-up feature
+  A short description of the follow-up.
+  \`\`\`text
+  In the repo, add the follow-up feature.
+  - Bump the version and update the CHANGELOG.
+  \`\`\`
+- A promptless wish-list item
+`;
+
+ok('parseSpecMarkdown parses Next Steps bullets into items beside sections', () => {
+  const { sections, nextSteps } = parseSpecMarkdown(NEXT_STEPS_SPEC);
+  assert.equal(nextSteps.prose, 'Loose intro line before the items.');
+  assert.equal(nextSteps.items.length, 2);
+  assert.deepEqual(nextSteps.items[0], {
+    summary: 'Add a follow-up feature',
+    desc: 'A short description of the follow-up.',
+    prompt: 'In the repo, add the follow-up feature.\n- Bump the version and update the CHANGELOG.',
+  });
+  assert.deepEqual(nextSteps.items[1], { summary: 'A promptless wish-list item', desc: '', prompt: null });
+  // Sections stay pure — the round-trip contract is untouched.
+  assert.deepEqual(sections, parseSpecMarkdown(SAMPLE_SPEC).sections);
+  assert.equal(parseSpecMarkdown(SAMPLE_SPEC).nextSteps, null);
+  // A "## Next Steps *(optional)*" heading variant still parses.
+  const suffixed = parseSpecMarkdown(NEXT_STEPS_SPEC.replace('## Next Steps', '## Next Steps *(optional)*'));
+  assert.equal(suffixed.nextSteps.items.length, 2);
+  // Bullet-less content falls back to prose.
+  const proseOnly = parseSpecMarkdown(`${SAMPLE_SPEC}\n## Next Steps\n\n### Phase 2\n\nJust prose, no bullets.\n`);
+  assert.deepEqual(proseOnly.nextSteps.items, []);
+  assert.ok(proseOnly.nextSteps.prose.includes('Just prose, no bullets.'));
+  assert.throws(() => parseSpecMarkdown(`${SAMPLE_SPEC}\n## Next Steps\n\n\n`), ParseError, 'empty section is a ParseError');
+});
+
+ok('Next Steps renders as collapsible cards with copy buttons and a nav entry', () => {
+  const parsed = parseSpecMarkdown(NEXT_STEPS_SPEC);
+  const html = renderPlanHtml(parsed, { fileName: 'ns.html', planPath: 'ns.html' });
+  assert.ok(html.includes('<section class="section-card card-next-steps" id="next-steps"'), 'section card rendered');
+  assert.ok(html.includes('<summary>Add a follow-up feature</summary>'), 'item summary rendered');
+  assert.ok(html.includes('<pre>In the repo, add the follow-up feature.\n- Bump the version and update the CHANGELOG.</pre>'), 'prompt rendered verbatim in a pre');
+  assert.ok(html.includes('onclick="copyPrompt(this)"'), 'copy-prompt button wired');
+  assert.ok(html.includes('<p>Loose intro line before the items.</p>'), 'loose prose rendered');
+  const links = [...html.matchAll(/<a href="#([a-z-]+)">/g)].map((m) => m[1]);
+  assert.ok(links.includes('next-steps'), 'nav includes next-steps');
+  // Content extraction is untouched by the extra section.
+  assert.deepEqual(extractSections(html), sampleParsed.sections);
+  // Specs without the section render neither the card nor the nav entry.
+  assert.ok(!sampleHtml.includes('card-next-steps'), 'no card without the section');
 });
 
 /* ── Unit: spec-carried progress state ────────────────────────────── */
@@ -314,7 +374,7 @@ ok('completion checklist and report are derived from spec state', () => {
 });
 
 ok('rendered output has every required plan-* meta tag and no unfilled placeholders', () => {
-  for (const name of ['status', 'effort', 'type', 'created', 'repo', 'file', 'path', 'implement', 'goal']) {
+  for (const name of ['status', 'effort', 'type', 'created', 'repo', 'file', 'path', 'md', 'implement', 'goal']) {
     assert.ok(sampleHtml.includes(`<meta name="plan-${name}" content="`), `plan-${name} present`);
   }
   const leftovers = sampleHtml.match(/\{[a-z][a-z0-9-]*\}/g);
@@ -350,6 +410,9 @@ ok('CLI renders a spec to the -o output file', () => {
   assert.ok(html.startsWith('<!DOCTYPE html>'));
   assert.deepEqual(extractSections(html), sampleParsed.sections);
   assert.ok(html.includes('<meta name="plan-file" content="cli-sample-out.html">'));
+  // The CLI wires the real spec path into plan-md and the prompts.
+  assert.match(html, /<meta name="plan-md" content="[^"]*cli-sample\.md">/);
+  assert.match(html, /Read and implement all steps in the plan at [^"]*cli-sample\.md/);
 });
 
 ok('CLI exits 1 with a helpful message on an unparseable spec', () => {

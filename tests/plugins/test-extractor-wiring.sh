@@ -30,8 +30,8 @@ else
   fail "skeleton still contains a #plan-digest / text/markdown block"
 fi
 
-echo "2. Skeleton buildImplementPrompt() is self-contained (reads the plan by path, no repo-local script)..."
-if grep -qF "Read the plan at ' + planPath" "$SKELETON" \
+echo "2. Skeleton buildImplementPrompt() is self-contained (reads the spec by path, no repo-local script)..."
+if grep -qF "Read the plan spec at ' + specPath" "$SKELETON" \
   && ! grep -q 'extract-plan-spec.mjs' "$SKELETON" \
   && ! grep -qF "$AWK_ONELINER" "$SKELETON"; then
   pass

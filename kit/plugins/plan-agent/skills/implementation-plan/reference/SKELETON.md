@@ -44,8 +44,17 @@ walk it as a user or caller would>
 
 ## Next Steps
 
-<markdown-only (not rendered into the HTML yet): follow-ups with
-self-contained paste-ready prompts; label blue-sky items as wish list>
+<optional — renders as collapsible follow-up cards with Copy-prompt buttons.
+Each top-level bullet is one card: first line = summary, indented fenced
+block = self-contained paste-ready prompt, other indented lines =
+description. Bullet-less prose renders as paragraphs. Label blue-sky items
+as wish list.>
+
+- <follow-up summary — one line>
+  <optional description of the follow-up>
+  ```text
+  <self-contained paste-ready prompt for this follow-up>
+  ```
 
 ## Unresolved Questions
 

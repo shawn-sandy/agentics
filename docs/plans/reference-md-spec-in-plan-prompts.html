@@ -1,23 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" data-status="{status}" data-effort="{effort-value}">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="{status}">
-<meta name="plan-effort" content="{effort-value}">
-<meta name="plan-type" content="{type}">
-<meta name="plan-created" content="{created}">
-<meta name="plan-repo" content="{repo-name}">
-<meta name="plan-file" content="{plan-filename}">
-<meta name="plan-path" content="{plan-path}">
-<meta name="plan-md" content="{plan-md-path}">
-<meta name="plan-implement" content="{implement-prompt}">
-<meta name="plan-goal" content="{goal-prompt}">
-<!-- Remove the next line entirely when {workflow-prompt} is empty -->
-<meta name="plan-workflow" content="{workflow-prompt}">
-<title>Plan: {title}</title>
+<meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-07-13">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="reference-md-spec-in-plan-prompts.html">
+<meta name="plan-path" content="docs/plans/reference-md-spec-in-plan-prompts.html">
+<meta name="plan-md" content="docs/plans/reference-md-spec-in-plan-prompts.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/reference-md-spec-in-plan-prompts.md — Reference the markdown spec in plan prompts and render Next Steps again">
+<meta name="plan-goal" content="Achieve this goal: Reference the markdown spec in plan prompts and render Next Steps again. The plan at docs/plans/reference-md-spec-in-plan-prompts.md describes one approach — use it as reference, but optimize for the outcome">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/reference-md-spec-in-plan-prompts.md — Reference the markdown spec in plan prompts and render Next Steps again. Brief subagents with the plan file at docs/plans/reference-md-spec-in-plan-prompts.md">
+<title>Plan: Reference the markdown spec in plan prompts and render Next Steps again</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────── */
   :root {
     --bg:         #ffffff;
     --surface:    #ffffff;
@@ -1240,7 +1239,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1295,7 +1293,6 @@ img, video { max-width: 100%; height: auto; }
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1306,38 +1303,25 @@ img, video { max-width: 100%; height: auto; }
     </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">{title}</h1>
+      <h1 class="plan-title">Reference the markdown spec in plan prompts and render Next Steps again</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="effort-badge" aria-label="Effort level">{effort}</span>
-        <span class="status-badge">{status}</span>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        {created}
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        {repo-name}
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        {type}
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg>
-        {effort} effort
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-07-13</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1345,12 +1329,7 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Resources section is kept; delete otherwise -->
-      <li><a href="#resources"><svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg> Resources</a></li>
-      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> How it fits together</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
       <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
@@ -1360,73 +1339,63 @@ img, video { max-width: 100%; height: auto; }
     </ul>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>{objective}</p>
+      <p>Point the derived implement/goal/workflow prompts at the plan&#39;s markdown spec instead of the rendered HTML (cutting ~90% of the tokens an implementing agent spends reading the plan), keep the HTML plan fully updated — steps checked and marked complete — via explicit spec-edit + re-render instructions, and render the `## Next Steps` section into the HTML plan as legacy plans had it.</p>
     </div>
 
-    <!-- ── At a glance (SIBLING of #objective — never nest it inside;
-         the extractor reads #objective's inner HTML) ─────────────── -->
     <section class="plan-glance" aria-labelledby="plan-glance-label">
       <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>{at-a-glance}</p>
+      <p>Implementing agents were being briefed with the 60–120 KB rendered HTML when the 5–10 KB markdown spec carries strictly more information — and the old copy-button prompt invited the HTML hand-edits the markdown-first architecture forbids. After this change every derived prompt points at the spec, agents tick progress in the spec and re-render, and the Next Steps follow-up cards render in the HTML again.</p>
     </section>
 
-    <!-- ── Implement prompt — the single visible call-to-action ──── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">{implement-prompt}</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/reference-md-spec-in-plan-prompts.md — Reference the markdown spec in plan prompts and render Next Steps again</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── More ways to run this plan (collapsed drawer — one flat
-         details, no nested details, never ship the open attribute) ── -->
     <details class="plan-more-ways">
       <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
       <div class="plan-more-ways-body">
 
-        <!-- Goal prompt row (outcome-driven — always present) -->
         <div class="plan-goal">
           <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
           <div class="plan-goal-inner">
-            <code id="goal-cmd" aria-label="Goal prompt">{goal-prompt}</code>
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Reference the markdown spec in plan prompts and render Next Steps again. The plan at docs/plans/reference-md-spec-in-plan-prompts.md describes one approach — use it as reference, but optimize for the outcome</code>
             <button class="copy-goal-btn" type="button"
                     onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
           </div>
         </div>
 
-        <!-- Workflow prompt row (remove this whole row when {workflow-prompt} is empty — keep the drawer) -->
         <div class="plan-workflow">
           <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
           <div class="plan-workflow-inner">
-            <code id="workflow-cmd" aria-label="Workflow prompt">{workflow-prompt}</code>
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/reference-md-spec-in-plan-prompts.md — Reference the markdown spec in plan prompts and render Next Steps again. Brief subagents with the plan file at docs/plans/reference-md-spec-in-plan-prompts.md</code>
             <button class="copy-workflow-btn" type="button"
                     onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
           </div>
         </div>
 
-        <!-- Plan source (file name + relative path, for docs & prompts) -->
         <div class="plan-source">
           <div class="plan-source-row">
             <span class="plan-source-label">File</span>
-            <code id="plan-file" aria-label="Plan file name">{plan-filename}</code>
+            <code id="plan-file" aria-label="Plan file name">reference-md-spec-in-plan-prompts.html</code>
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
           </div>
           <div class="plan-source-row">
             <span class="plan-source-label">Path</span>
-            <code id="plan-path" aria-label="Plan relative path">{plan-path}</code>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/reference-md-spec-in-plan-prompts.html</code>
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
           </div>
           <div class="plan-source-row">
             <span class="plan-source-label">Spec</span>
-            <code id="plan-md" aria-label="Plan spec markdown path">{plan-md-path}</code>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/reference-md-spec-in-plan-prompts.md</code>
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
           </div>
@@ -1435,79 +1404,28 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </details>
 
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / {criteria-count} done</span>
+        <span id="progress-label">7 / 7 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
-      <p>{context}</p>
+      <p>Since the markdown-first rewrite (2.18–2.20) the `.md` spec is the source of truth: all progress state is checkbox syntax in the spec, and hand-editing the rendered HTML is forbidden. But the three derived prompts still pointed at the `.html` file (10–20× the spec&#39;s size, mostly CSS/JS/SVG chrome), and the copy-button prompt told agents to read &quot;a self-contained HTML file&quot; and &quot;mark it done in the plan&quot; — inviting exactly the `checked`-attribute edits the architecture bans. The workflow prompt multiplied the waste by briefing every subagent with the HTML.</p>
+      <p>Separately, the markdown-first renderer skipped `## Next Steps`, a section legacy hand-written plans rendered as collapsible cards with paste-ready prompts — the CSS, icon, and `copyPrompt()` JS never left the shell, only the parsing and rendering wiring was missing.</p>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Resources — images, screenshots & reference links.
-         KEEP and fill when the plan was informed by screenshots, mockups,
-         diagrams, docs, issues, or other references worth citing so the
-         reader can illustrate and verify the work. DELETE this whole
-         section element AND its nav entry (the "#resources" link) when
-         the plan has no supporting resources.
-         • Images: use an https:// source URL or a relative asset path
-           committed alongside the plan (small screenshots may be inlined
-           as a data: URI). ALWAYS give descriptive alt text and a
-           <figcaption> that credits/links the source. Never rely on a
-           CDN for anything the page needs to render.
-         • Links: cite every doc, issue, or reference consulted, each with
-           a short note on why it matters. HTML-escape all URLs and text.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-resources" id="resources" aria-labelledby="h-resources">
-      <h2 id="h-resources">
-        <svg class="icon" aria-hidden="true"><use href="#ic-photo"/></svg>
-        Resources
-      </h2>
-      <p class="section-intro">Screenshots, mockups, and reference links that informed this plan.</p>
-
-      <!-- Images / screenshots — remove this block if unused -->
-      <div class="resource-grid">
-        {resource-figures}
-        <!-- Figure template (duplicate as needed):
-        <figure class="resource-figure">
-          <a href="https://example.com/full-image.png" target="_blank" rel="noopener noreferrer">
-            <img src="https://example.com/screenshot.png" alt="Descriptive alt text of what the screenshot shows" loading="lazy">
-          </a>
-          <figcaption>What this shows — <a href="https://example.com/source" target="_blank" rel="noopener noreferrer">source</a></figcaption>
-        </figure> -->
-      </div>
-
-      <!-- Reference links — remove this block if unused -->
-      <ul class="resource-links">
-        {resource-links}
-        <!-- Link template (duplicate as needed):
-        <li><a href="https://example.com/doc" target="_blank" rel="noopener noreferrer">Resource title</a> <span class="resource-note">why it matters to this plan</span></li> -->
-      </ul>
-    </section>
-
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Files file-tree.
-         KEEP and fill {file-tree-rows} when the plan touches files
-         (most multi-file plans). DELETE this whole section element and
-         its nav entry (the "#files" link) when not needed.
-         Badge classes: file-badge-new | file-badge-modified |
-         file-badge-deleted | file-badge-generated.
-         ════════════════════════════════════════════════════════════ -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
@@ -1515,75 +1433,42 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
-        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> {repo-name}/</div>
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          {file-tree-rows}
-          <!-- Row template (duplicate as needed):
-          <li><code>path/to/file.ext</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">what changes</span></li>
-          Nest a directory with the child list INSIDE the li:
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> dir/
-            <ul class="file-list">…</ul>
-          </li> -->
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">prompts use the spec path; plan-md meta; Next Steps card + nav filter; CLI passes the real spec path</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> scripts/lib/
+            <ul class="file-list">
+            <li><code>plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">parse ## Next Steps into a nextSteps key beside sections (round-trip stays byte-stable)</span></li>
+            <li><code>plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">next-steps chrome + nav entry, nextStepsBlock template, plan-md meta tag, Spec drawer row, markdown-first buildImplementPrompt</span></li>
+            </ul>
+          </li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical bundled copy</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/scripts/lib/
+            <ul class="file-list">
+            <li><code>plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical bundled copy</span></li>
+            <li><code>plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical bundled copy</span></li>
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/implementation-plan/reference/
+            <ul class="file-list">
+            <li><code>SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-md meta, Spec row, markdown-first copy-button JS</span></li>
+            <li><code>SKELETON.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Next Steps bullet/fence syntax</span></li>
+            </ul>
+          </li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/guidelines/section-catalog.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Next Steps catalog entry; removed from the markdown-only group</span></li>
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">spec-path prompts, plan-md meta, Next Steps cards documented</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.21.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 2.20.0 → 2.21.0</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
+            <ul class="file-list">
+            <li><code>test-build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">spec-path prompt pins, plan-md meta, Next Steps parse/render coverage</span></li>
+            <li><code>test-extractor-wiring.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">pins the new self-contained copy-button JS</span></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        How it fits together
-      </h2>
-      <p class="section-intro">A visual overview of the moving pieces and how they connect.</p>
-
-      <!-- Flow / pipeline — remove if unused -->
-      <div class="diagram-subheading">{diagram-heading}</div>
-      <div class="pipeline">
-        {diagram-nodes}
-        <!-- Node + arrow template (duplicate; drop the trailing arrow on the last node):
-        <div class="pipeline-node"><div class="pipeline-label">Stage</div><code>label</code><div class="pipeline-sub">detail</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div> -->
-      </div>
-
-      <!-- Comparison grid — remove if unused -->
-      <div class="diagram-subheading">{compare-heading}</div>
-      <div class="compare-grid">
-        {compare-columns}
-        <!-- Column template (use compare-col-add | compare-col-neutral | compare-col-remove):
-        <div class="compare-col-add"><div class="compare-header">Title</div><ul class="compare-list"><li>item</li></ul></div> -->
-      </div>
-
-      <!-- Bar chart — remove if unused. role="img" + aria-label restates the data for screen readers -->
-      <div class="diagram-subheading">{chart-heading}</div>
-      <div class="bar-chart" role="img" aria-label="{chart-aria-label}">
-        {chart-rows}
-        <!-- Row template (set --val to a percent; show the real value in .bar-value):
-        <div class="bar-row"><span class="bar-label">label</span><span class="bar-track"><span class="bar-fill" style="--val:72%"></span></span><span class="bar-value">72%</span></div> -->
-      </div>
-
-      <!-- Data table — remove if unused. Keep <caption> and scope="col" for accessibility -->
-      <div class="diagram-subheading">{table-heading}</div>
-      <table class="plan-table">
-        <caption>{table-caption}</caption>
-        <thead>
-          <tr>{table-head-cells}<!-- <th scope="col">Column</th> --></tr>
-        </thead>
-        <tbody>
-          {table-rows}
-          <!-- Row template: <tr><td>cell</td><td>cell</td></tr> -->
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
@@ -1592,69 +1477,125 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">{step-1-action}</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Parse `## Next Steps` in parseSpecMarkdown into a `nextSteps` key returned beside `sections` (bullets → summary/desc/prompt items, bullet-less content → prose).</span>
               </div>
-              <div class="step-why">{step-1-why}</div>
+              <div class="step-why">the extract → digest → parse round trip over committed plans must stay byte-stable, so the section travels like `progress` does — outside `sections`.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">{step-1-verify}</div>
+                <div class="verify-body">node tests/plugins/test-build-plan-html.mjs — the round-trip check still passes and the new Next Steps parse test passes.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <!-- Duplicate the block above for each additional step -->
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Render the Next Steps section card (collapsible details items with Copy-prompt buttons, matching the legacy markup) plus a filtered sidebar nav entry.</span>
+              </div>
+              <div class="step-why">legacy hand-written plans carried this section and the shell still ships its CSS, icon, and copyPrompt() JS — only wiring was missing.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">render a spec with a `## Next Steps` section and confirm the card, `&lt;pre&gt;` prompt, and nav entry appear; a spec without the section renders neither.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Point the implement, goal, and workflow prompts at the markdown spec path — new `mdPath` render option, CLI passes the real spec path, `.html` → `.md` fallback — and emit it as the `plan-md` meta tag plus a Spec drawer row.</span>
+              </div>
+              <div class="step-why">the spec is 10–20× smaller than the rendered HTML and is where progress updates land; the workflow prompt briefs every subagent with the file, so the saving multiplies.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">rendered head carries `plan-implement`/`plan-goal`/`plan-workflow` contents ending in `.md` and a `plan-md` meta tag.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Rewrite the copy-button buildImplementPrompt() to walk the markdown-first loop: read the spec, insert `[x]` step markers, flip criteria to `- [x]`, set `status: completed`, then re-render the sibling HTML — never hand-edit it.</span>
+              </div>
+              <div class="step-why">the old instructions predate markdown-first and invited HTML `checked`-attribute edits; the re-render step is what keeps the HTML plan checked and marked complete exactly as before.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">the rendered plan&#39;s JS contains the five-step instructions referencing the spec path, and tests/plugins/test-extractor-wiring.sh check 2 passes.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Mirror the shell changes into reference/SKELETON.html and document the new behavior in SKELETON.md, section-catalog.md, and SKILL.md.</span>
+              </div>
+              <div class="step-why">the skeleton is the versioned template the shell was extracted from and the docs are what authors follow — drift between them and the renderer is a defect.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">bash tests/plugins/test-humanized-skeleton.sh and bash tests/plugins/test-goal-prompt.sh pass; section-catalog.md documents the Next Steps syntax.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Sync the byte-identical bundled copies under kit/plugins/plan-agent/scripts/, update the pinned tests, and bump plan-agent to 2.21.0 with a CHANGELOG entry.</span>
+              </div>
+              <div class="step-why">a test enforces bundled-copy identity, the old prompt strings were pinned by tests, and marketplace versioning is manual per the repo rules.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">node tests/plugins/test-build-plan-html.mjs reports the byte-identity check passing and marketplace.json says 2.21.0.</div>
+              </details>
+            </div>
+          </div>
+        </div>
 
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
-      <div class="test-tier-label">{test-tier-label}</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">{objective-test-title}</span>
-        </div>
-        <div class="test-card-body">
-          {objective-test-body}
-        </div>
-      </div>
-
-      <!-- Tier 1 test sub-sections — omit entirely for Tier 2 plans -->
+      <div class="test-tier-label">Tier 1 — This plan changes application code</div>
+      <div class="objective-test-card">Objective: derived prompts reference the markdown spec and Next Steps renders. File: tests/plugins/test-build-plan-html.mjs; Type: unit + integration; Asserts: plan-implement/plan-goal/plan-workflow metas carry the `.md` spec path, plan-md meta and Spec row render, `## Next Steps` parses beside sections and renders as collapsible cards with copy buttons, and committed plans still round-trip; Run: node tests/plugins/test-build-plan-html.mjs</div>
       <div class="test-list">
-        {test-items}
-        <!-- Each test item uses this pattern:
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">{test-title}</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>{test-file-path}</code></p>
-            <p><strong>Targets:</strong> {test-targets}</p>
-            <p><strong>Key cases:</strong> {test-cases}</p>
-          </div>
-        </div>
-        Use test-badge-unit, test-badge-integration, or test-badge-e2e as appropriate.
-        For Tier 2, remove this entire .test-list container. -->
+        <div class="test-card">Integration: skeleton copy-button JS is markdown-first and self-contained. File: tests/plugins/test-extractor-wiring.sh; Targets: reference/SKELETON.html buildImplementPrompt(); Key cases: reads the spec by path, no repo-local script references</div>
+        <div class="test-card">Smoke: skeleton machine contract intact. File: tests/plugins/test-humanized-skeleton.sh; Targets: meta tags, ids, nav-label/heading parity; Key cases: all plan-* metas present, nav labels match section headings</div>
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
@@ -1663,51 +1604,68 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
-          <label for="ac1">{criterion-1}</label>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1">The plan-implement, plan-goal, and plan-workflow meta tags (and their visible rows) reference the plan&#39;s markdown spec path, not the `.html` path.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
-          <label for="ac2">{criterion-2}</label>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">Rendered plans expose the spec path as a `plan-md` meta tag and a Spec row in the More-ways drawer.</label>
         </li>
-        <!-- Add more <li> items as needed -->
+        <li>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">The copy-button implement prompt instructs spec edits (`[x]` markers, `- [x]` criteria, `status: completed`) followed by a re-render, so the HTML plan ends up checked and marked complete — and forbids hand-editing the HTML.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4">A spec&#39;s `## Next Steps` section renders into the HTML as collapsible cards with paste-ready prompts and Copy-prompt buttons, with a sidebar nav entry; specs without the section render neither.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5">The extract → digest → parse → render → re-extract round trip over committed plans still passes.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6">The bundled kit/plugins/plan-agent/scripts/ copies are byte-identical to scripts/.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7" checked>
+          <label for="ac7">plan-agent is 2.21.0 in marketplace.json with a matching CHANGELOG entry.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>{end-to-end-verification}</p>
+      <p>Render a spec containing a `## Next Steps` section with the bundled renderer and open the HTML: the Implement row and drawer prompts name the `.md` spec, the drawer shows File/Path/Spec rows, and the Next Steps card expands to a paste-ready prompt with a working Copy button. Run the full plugin test suite — node tests/plugins/test-build-plan-html.mjs plus the goal-prompt, extractor-wiring, and humanized-skeleton shell tests — and confirm every check passes, including the ≥10-plan round-trip and the bundled-copy identity check. Flip a criterion in a spec, re-render, and confirm the HTML checkbox state follows the spec.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1718,7 +1676,6 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
@@ -1726,65 +1683,43 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
-        <!-- Actionable next step -->
         <details class="next-step-item">
-          <summary>{next-step-1-label}</summary>
+          <summary>Extract Next Steps from legacy HTML plans so conversion keeps them</summary>
           <div class="next-step-prompt">
+            <p>extractSections() ignores the legacy `#next-steps` markup today, so re-deriving a spec from a pre-2.18 HTML plan drops its follow-ups.</p>
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>{next-step-1-prompt}</pre>
+            <pre>In the agentics repo, teach extractSections() in scripts/lib/plan-spec.mjs
+to read the legacy #next-steps section (details.next-step-item summary +
+pre prompt) into the nextSteps shape parseSpecMarkdown returns, and emit it
+from extract-plan-spec.mjs output so legacy-plan conversion preserves
+follow-ups. Keep sections round-trip byte-stable. Sync the bundled copies,
+bump the plan-agent minor version in .claude-plugin/marketplace.json, and
+add a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            {wish-1-label}
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Render Unresolved Questions and Resources too</summary>
           <div class="next-step-prompt">
-            <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>{wish-1-prompt}</pre>
+            <p>The renderer still skips the two remaining markdown-only sections; the skeleton already carries an Unresolved Questions shell.</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, extend parseSpecMarkdown and build-plan-html.mjs so
+## Unresolved Questions and ## Resources render into HTML plans (following
+the nextSteps-beside-sections pattern from 2.21.0), update
+section-catalog.md, sync the bundled plan-agent script copies, bump the
+plan-agent minor version, and add a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
 
-    <!-- ── Unresolved Questions (optional — omit entirely if none) ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>{question-1-label}</summary>
-              <div class="unresolved-prompt">
-                <pre>{question-1-prompt}</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
-
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-      Generated by plan-agent · {created} · {repo-name}
+      Generated by plan-agent · 2026-07-13 · agentics
     </footer>
 
   </main>

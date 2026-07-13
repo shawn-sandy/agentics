@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.21.0 — Prompts reference the Markdown spec; Next Steps renders again (2026-07-13)
+
+### Changed
+
+- **Implement/goal/workflow prompts reference the `.md` spec, not the rendered HTML** — the derived prompts (`plan-implement`, `plan-goal`, `plan-workflow` meta tags plus their visible rows) now point at the plan's Markdown spec path. An implementing agent reads the ~5–10 KB spec instead of the 60–120 KB rendered page (~90% fewer tokens per read; the workflow prompt briefs *every* subagent with the file, so the saving multiplies), and lands progress where it lives. The renderer CLI passes the real spec path; `renderPlanHtml()` accepts an `mdPath` option and falls back to `planPath` with `.html` swapped for `.md`.
+- **Copy-button prompt walks the markdown-first loop** — `buildImplementPrompt()` now instructs: read the spec (the HTML is a rendered view), tick `[x]` step markers and `- [x]` criteria bullets in the spec, set `status: completed` in the frontmatter, then re-render the sibling HTML so it shows every step and criterion complete — never hand-edit the HTML. This replaces the pre-markdown-first instructions that told agents to "mark it done in the plan" against the HTML file.
+
+### Added
+
+- **`## Next Steps` renders into the HTML plan again** — the section legacy hand-written plans carried (and the markdown-first renderer skipped) is back: each top-level `- ` bullet renders as a collapsible `details.next-step-item` card (summary line, optional description, paste-ready prompt in a `<pre>` with a `copyPrompt()` Copy-prompt button — the exact legacy markup, whose CSS/JS never left the shell); bullet-less content renders as paragraphs. Parsed by `parseSpecMarkdown()` into a `nextSteps` key kept beside `sections` (like `progress`) so the extract → digest → parse round trip stays byte-stable. Sidebar nav gains a filtered "Next steps" entry.
+- **`plan-md` meta tag + Spec drawer row** — rendered plans expose the spec path as `<meta name="plan-md">` and a third Spec row (`id="plan-md"`) in the More-ways drawer's plan-source block.
+- **Docs** — `section-catalog.md` gains a `## Next Steps` catalog entry (syntax + example) and drops it from the markdown-only group; `SKELETON.md` shows the bullet/fence syntax; SKILL.md documents the spec-path prompts, the `plan-md` meta tag, and the Next Steps cards.
+
 ## 2.20.0 — Markdown-first status and checkbox flows (Phase 3) (2026-07-12)
 
 ### Added
