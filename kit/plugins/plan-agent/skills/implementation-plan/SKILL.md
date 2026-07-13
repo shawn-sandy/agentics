@@ -381,6 +381,13 @@ EOF
      - `Yes — create an issue` — Run the `git-agent:create-issue` skill with this plan.
      - `No` — Skip issue creation.
 
+   **Skip the tracking-issue question entirely when the spec's frontmatter
+   already carries an `issue:` key** — the plan was seeded from an issue
+   (Step 0.5) or one was created in an earlier pass through this menu.
+   Creating another would duplicate the backlog item and overwrite the
+   existing link; ask only the next-step question and mention the linked
+   issue URL in one line instead.
+
    For the next-step question, **when a workflow prompt was generated**
    (frontmatter `workflow: true` or the renderer's heuristic fired — check
    for the `plan-workflow` meta tag in the rendered HTML), include the
