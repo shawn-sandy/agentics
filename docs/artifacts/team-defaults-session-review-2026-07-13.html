@@ -1,0 +1,227 @@
+<title>Session review: team-defaults plugin</title>
+<style>
+  :root {
+    --paper: #fafaf7;
+    --ink: #1f2622;
+    --muted: #5c6862;
+    --line: #dde3de;
+    --accent: #2f7d5b;
+    --accent-soft: #e7f1eb;
+    --chip-ok-bg: #e7f1eb;
+    --chip-ok-fg: #22604a;
+    --chip-warn-bg: #f5eddc;
+    --chip-warn-fg: #7a5c1e;
+    --code-bg: #f0f2ef;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: "Avenir Next", Avenir, "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141816;
+      --ink: #e6ebe7;
+      --muted: #97a29b;
+      --line: #2a332d;
+      --accent: #58b98c;
+      --accent-soft: #1c2b23;
+      --chip-ok-bg: #1c2b23;
+      --chip-ok-fg: #7fd3ab;
+      --chip-warn-bg: #2e2818;
+      --chip-warn-fg: #d9b969;
+      --code-bg: #1c211e;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #fafaf7; --ink: #1f2622; --muted: #5c6862; --line: #dde3de;
+    --accent: #2f7d5b; --accent-soft: #e7f1eb;
+    --chip-ok-bg: #e7f1eb; --chip-ok-fg: #22604a;
+    --chip-warn-bg: #f5eddc; --chip-warn-fg: #7a5c1e; --code-bg: #f0f2ef;
+  }
+  :root[data-theme="dark"] {
+    --paper: #141816; --ink: #e6ebe7; --muted: #97a29b; --line: #2a332d;
+    --accent: #58b98c; --accent-soft: #1c2b23;
+    --chip-ok-bg: #1c2b23; --chip-ok-fg: #7fd3ab;
+    --chip-warn-bg: #2e2818; --chip-warn-fg: #d9b969; --code-bg: #1c211e;
+  }
+
+  html { background: var(--paper); }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    line-height: 1.6;
+    margin: 0;
+    padding: 3rem 1.25rem 5rem;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+
+  header { border-bottom: 2px solid var(--ink); padding-bottom: 1.5rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.75rem;
+  }
+  h1 {
+    font-size: clamp(1.6rem, 4.5vw, 2.3rem);
+    font-weight: 600;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0 0 0.75rem;
+  }
+  .lede { color: var(--muted); font-size: 1.05rem; margin: 0; max-width: 40rem; }
+
+  .facts {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 2rem;
+    margin: 1.25rem 0 0; padding: 0; list-style: none;
+    font-family: var(--mono); font-size: 0.8rem;
+  }
+  .facts b { font-weight: 600; color: var(--muted); display: block; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .facts a { color: var(--accent); }
+
+  h2 {
+    font-size: 0.8rem; font-weight: 600;
+    letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--muted);
+    margin: 3rem 0 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  p { margin: 0 0 1rem; max-width: 42rem; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  code {
+    font-family: var(--mono); font-size: 0.85em;
+    background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 3px;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line);
+    padding: 0.9rem 1.1rem; overflow-x: auto; border-radius: 4px;
+    font-family: var(--mono); font-size: 0.83rem; line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+
+  .chip {
+    display: inline-block; font-family: var(--mono); font-size: 0.7rem;
+    padding: 0.15em 0.6em; border-radius: 999px; vertical-align: middle;
+    background: var(--chip-ok-bg); color: var(--chip-ok-fg);
+  }
+  .chip.warn { background: var(--chip-warn-bg); color: var(--chip-warn-fg); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  .table-wrap { overflow-x: auto; }
+  th {
+    text-align: left; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+    padding: 0.4rem 1rem 0.4rem 0; border-bottom: 1px solid var(--ink);
+  }
+  td { padding: 0.55rem 1rem 0.55rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-family: var(--mono); font-size: 0.82rem; white-space: nowrap; }
+
+  ol.timeline { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  ol.timeline li {
+    counter-increment: step;
+    display: grid; grid-template-columns: 2rem 1fr; gap: 0 1rem;
+    padding: 0.85rem 0; border-bottom: 1px solid var(--line);
+  }
+  ol.timeline li::before {
+    content: counter(step);
+    font-family: var(--mono); font-size: 0.8rem; color: var(--accent);
+    border: 1px solid var(--line); border-radius: 50%;
+    width: 1.6rem; height: 1.6rem; display: grid; place-items: center;
+    margin-top: 0.1rem;
+  }
+  ol.timeline b { font-weight: 600; }
+  ol.timeline .sub { color: var(--muted); font-size: 0.92rem; }
+
+  ul.checks { list-style: none; margin: 0; padding: 0; }
+  ul.checks li {
+    display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: baseline;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--line); font-size: 0.95rem;
+  }
+  ul.checks .how { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 0.9rem 1.1rem; border-radius: 0 4px 4px 0;
+    margin: 1rem 0;
+  }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 0.5rem; }
+
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.8rem; font-family: var(--mono); }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Session review · agentics marketplace</p>
+    <h1>team-defaults 0.1.0 — shared Claude Code defaults, shipped as a plugin</h1>
+    <p class="lede">Shawn's personal <code>~/.claude/</code> agents and global rules are now installable by the whole team through the agentics marketplace, replacing hand-copied dotfiles with a versioned plugin.</p>
+    <ul class="facts">
+      <li><b>Date</b>2026-07-13</li>
+      <li><b>PR</b><a href="https://github.com/shawn-sandy/agentics/pull/394">#394 (merged)</a></li>
+      <li><b>Merge commit</b>7f08e4c</li>
+      <li><b>Status</b><span class="chip">on main</span></li>
+    </ul>
+  </header>
+
+  <h2>Why</h2>
+  <p>The team was sharing Claude Code configuration by hand-copying files out of one person's home directory — no versioning, no updates, no way to know what changed. Since this repo already runs a plugin marketplace, the shareable pieces were packaged as a plugin: semver, a changelog, and a one-command install.</p>
+
+  <h2>What shipped</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Component</th><th>What it does</th></tr>
+    <tr><td>ts-commenter</td><td>Agent — TypeScript/JSDoc documentation specialist, optimized for AI-assistant comprehension. Auto-discovered on install.</td></tr>
+    <tr><td>css-generator</td><td>Agent — extracts design tokens from images into CSS custom properties and utility classes.</td></tr>
+    <tr><td>sync-rules</td><td>Skill — installs the bundled team rules into <code>~/.claude/rules/</code>. Diffs first, reports a sync plan, and asks per file before overwriting anything. Never touches rules it doesn't ship.</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:1rem">Bundled rules: <code>plan-mode.md</code> (plus the plan skeleton), <code>component-driven-ui.md</code>, <code>typescript-jsdoc.md</code>, and <code>review-bot-loops.md</code>.</p>
+
+  <h2>Deliberately excluded</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Left out</th><th>Reason</th></tr>
+    <tr><td>ticket-creator agent</td><td>Hardwired to the astro-basics project — not a default that applies everywhere.</td></tr>
+    <tr><td>Vendored skills</td><td>vercel-*, mcp-builder, playwright-cli, etc. are third-party; teams should install them from their original sources.</td></tr>
+    <tr><td>validate-plan-filename hook</td><td>Already ships with the plan-agent plugin; the bundled plan-mode rule now points there instead of a home-directory path.</td></tr>
+  </table>
+  </div>
+
+  <h2>Decisions a reviewer should know</h2>
+  <div class="callout">
+    <p><strong>Rules travel inside the skill, not as a plugin component.</strong> Claude Code plugins have no native "rules" type (only commands, skills, agents, hooks), so the rule files ship as the sync-rules skill's payload and are copied into place on demand — with confirmation, since the destination holds each person's own rules too.</p>
+    <p><strong>The payload lives at <code>skills/sync-rules/rules/</code>, not top-level <code>rules/</code>.</strong> The dist builder's KEEP allowlist was silently dropping a top-level <code>rules/</code> directory (5 files gone from the published build). Nesting under <code>skills/</code> ships everything with zero build-script changes.</p>
+  </div>
+
+  <h2>Verification</h2>
+  <ul class="checks">
+    <li>validate-plugin structure checks — 6/6 pass <span class="how">manifest, versioning, homepage, marketplace entry, components, allowed-tools</span></li>
+    <li>Dist build ships all 11 plugin files, 0 dropped <span class="how">node scripts/build-dist.mjs</span></li>
+    <li>Publish smoke test passes with the new roster <span class="how">tests/publish/smoke-clean-dist.sh</span></li>
+    <li>Plugin loads in a live headless session <span class="how">claude --plugin-dir ./kit/plugins/team-defaults</span></li>
+    <li>CI green at merge: CodeQL, claude-review, CodeRabbit <span class="how">merge state CLEAN</span></li>
+  </ul>
+
+  <h2>Review trail</h2>
+  <ol class="timeline">
+    <li><div><b>Codex flagged <code>tools: inherit</code> in the ts-commenter frontmatter</b> <span class="chip warn">P2 — valid</span><br><span class="sub">Correct catch: omitting <code>tools</code> is how a subagent inherits the parent's tools; <code>inherit</code> isn't a valid value. Fixed in 888e46c, thread replied to and resolved.</span></div></li>
+    <li><div><b>Copilot and CodeRabbit posted rate-limit notices, twice</b> <span class="chip warn">no findings</span><br><span class="sub">Quota/limit banners, not review feedback. Per the team's review-bot-loops rule, no action was taken and the PR merged once the substantive finding was fixed.</span></div></li>
+  </ol>
+
+  <h2>How to install</h2>
+  <pre><code>/plugin marketplace add shawn-sandy/agentics
+/plugin install team-defaults@agentics-kit</code></pre>
+  <p>Then say <em>"sync team rules"</em> in any session. The skill shows what's new, what's identical, and what conflicts with your local rules before writing a single file.</p>
+
+  <h2>Follow-ups</h2>
+  <ul>
+    <li>Confirm the publish-dist workflow has run on main so the distribution repo carries 0.1.0.</li>
+    <li>Housekeeping on Shawn's machine: delete the stray <code>.claude/worktrees/claude-config-sharing-480f6e/</code> folder (a mistyped-path placeholder created and caught during the session; deletion was permission-blocked).</li>
+  </ul>
+
+  <footer>Generated from the 2026-07-13 Claude Code session · repo shawn-sandy/agentics · branch claude/claude-config-sharing-480f4e (squash-merged, deleted)</footer>
+</main>
