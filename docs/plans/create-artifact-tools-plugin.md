@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: feature
 created: 2026-07-13
+modified: 2026-07-14
 issue: https://github.com/shawn-sandy/agentics/issues/392
 glance: Teams get live, shareable claude.ai pages for the three things they review most — code diffs, working sessions, and implementation plans — without leaving Claude Code. Done means each skill publishes (or falls back cleanly to local HTML), every published page passed a secret scrub, and a smoke test guards the plugin's structure and marketplace registration.
 ---

@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **13 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories are retained in the repository but are no longer installable via the marketplace. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -756,6 +756,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.6 | development | 1 command, 4 skills, 1 hook |
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.3 | development | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.10.1 | productivity | 1 command, 15 skills |
+| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.0.0 | development | 3 skills |
 
 ---
 

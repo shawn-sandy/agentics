@@ -80,7 +80,7 @@ scope** themselves for their other repos.
 
 The config is committed for `agentics` itself — pull `main` and start a fresh
 session. On first use, accept the trust/marketplace-add prompt if shown; after
-that the 12 plugins are enabled by default with no per-plugin install.
+that the 13 plugins are enabled by default with no per-plugin install.
 
 ### Enable in all your other repos (per person)
 

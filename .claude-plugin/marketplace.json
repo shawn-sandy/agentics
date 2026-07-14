@@ -293,6 +293,28 @@
         "conventions",
         "onboarding"
       ]
+    },
+    {
+      "name": "artifact-tools",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/artifact-tools"
+      },
+      "version": "1.0.0",
+      "description": "Publish diffs, sessions, and plans as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, and plan HTML republished to a stable URL — each scrubbed for secrets before publish, with a local-HTML fallback",
+      "category": "development",
+      "tags": [
+        "artifacts",
+        "publishing",
+        "diff-review",
+        "session-recap",
+        "plan-publishing",
+        "code-review",
+        "sharing",
+        "secret-scanning",
+        "claude-ai"
+      ]
     }
   ],
   "removed": [
