@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same URL across sessions.
 - Blocking `security-scrub` gate before every publish in `diff-artifact` and
   `session-artifact`; a `BLOCKED` verdict is a hard stop with no override.
+  `diff-artifact` gates twice — once on the raw diff, then again on the rendered
+  page, since annotations can quote file context the diff never contained.
+- `diff-artifact` measures the rendered page against the 16 MiB cap and demotes
+  files to summary rows until it fits — the file/hunk budget alone cannot bound
+  a single very large hunk.
+- `diff-artifact` keys its inbox copy by branch/PR/range rather than by date, so
+  a republish the next day still finds the recorded URL, and writes that copy
+  before publishing so the fallback exists even when publishing fails.
 - `artifact-url:` write-back on every skill, so a later session can republish to
   the same claude.ai page instead of minting a new one — as frontmatter in the
   `session-artifact` recap and the `plan-artifact` plan spec, and as an HTML

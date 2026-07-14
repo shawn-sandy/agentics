@@ -114,3 +114,12 @@ the edit. Edit the `.md` spec.
 before every publish. A `BLOCKED` verdict is a hard stop with no override. If the
 scrub skill is unavailable, the skills say so and ask before continuing — they
 never skip the gate silently.
+
+`diff-artifact` scrubs **twice**, and the second scan is the one that counts:
+the first covers the raw diff, but annotating a hunk can quote surrounding file
+context the diff never contained. So the finished page is rescanned immediately
+before publishing, which is what actually covers everything that ships.
+
+Neither gate catches local filesystem paths, since those aren't secrets. That's
+why the bundled `export_session.py` records only the transcript basename — an
+absolute path would leak the local username and repo layout into a shared page.

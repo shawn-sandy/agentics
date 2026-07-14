@@ -26,28 +26,41 @@ assert "version" not in m, "version key present — it overrides marketplace.jso
 EOF
 ok
 
-# 2. All three skills exist with the required frontmatter fields.
+# 2. All three skills validate against their real YAML frontmatter block.
+#    Parsing the opening block (not grepping the whole file) is what stops prose
+#    or a code sample further down from satisfying a frontmatter requirement.
 for skill in diff-artifact session-artifact plan-artifact; do
   f="$PLUGIN/skills/$skill/SKILL.md"
   [ -f "$f" ] || fail "$skill/SKILL.md missing"
-  grep -qE "^name: $skill$" "$f" || fail "$skill: frontmatter name missing or mismatched"
-  grep -qE "^description: " "$f" || fail "$skill: frontmatter description missing"
-  grep -qE "^allowed-tools: " "$f" || fail "$skill: allowed-tools missing"
-  # Deferred tools require ToolSearch, else a permission prompt breaks the run.
-  grep -qE "^allowed-tools:.*ToolSearch" "$f" || fail "$skill: ToolSearch missing from allowed-tools"
-  grep -qE "^allowed-tools:.*Artifact" "$f" || fail "$skill: Artifact missing from allowed-tools"
-  # A body that invokes another plugin's skill must declare Skill, else the
-  # call raises a permission prompt mid-run.
-  if grep -qE '`social-media-tools:' "$f"; then
-    grep -qE "^allowed-tools:.*(^|[ ,])Skill([ ,]|$)" "$f" \
-      || fail "$skill: body invokes a social-media-tools skill but Skill is not in allowed-tools"
-  fi
-  # Three-part description must fit the per-skill context budget.
-  python3 - "$f" "$skill" <<'EOF' || fail "description too long"
+  python3 - "$f" "$skill" <<'EOF' || fail "frontmatter validation failed"
 import re, sys
-body = open(sys.argv[1], encoding="utf-8").read()
-d = re.search(r'^description:\s*"?(.*?)"?\s*$', body, re.M).group(1)
-assert len(d) <= 200, f'{sys.argv[2]}: description is {len(d)} chars (max 200)'
+path, skill = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+
+# The frontmatter is the block delimited by the first two --- lines, and it must
+# open the file. Anything after it is body and cannot satisfy these checks.
+m = re.match(r'---\n(.*?)\n---\n(.*)$', text, re.S)
+assert m, f'{skill}: no opening YAML frontmatter block'
+fm, body = m.group(1), m.group(2)
+
+def field(name):
+    hit = re.search(rf'^{name}:[ \t]*(.*?)[ \t]*$', fm, re.M)
+    assert hit, f'{skill}: frontmatter is missing `{name}:`'
+    return hit.group(1).strip()
+
+assert field('name') == skill, f'{skill}: frontmatter name mismatch'
+
+desc = field('description').strip('"')
+assert desc, f'{skill}: empty description'
+assert len(desc) <= 200, f'{skill}: description is {len(desc)} chars (max 200)'
+
+tools = [t.strip() for t in field('allowed-tools').split(',') if t.strip()]
+# Deferred tools need ToolSearch, else the schema fetch prompts mid-run.
+for required in ('ToolSearch', 'Artifact'):
+    assert required in tools, f'{skill}: {required} missing from allowed-tools'
+# A body invoking another plugin's skill must declare Skill for the same reason.
+if re.search(r'`social-media-tools:', body):
+    assert 'Skill' in tools, f'{skill}: body invokes a social-media-tools skill but Skill is not in allowed-tools'
 EOF
   ok
 done
@@ -66,11 +79,38 @@ DIFF="$PLUGIN/skills/diff-artifact/SKILL.md"
 SESSION="$PLUGIN/skills/session-artifact/SKILL.md"
 PLAN="$PLUGIN/skills/plan-artifact/SKILL.md"
 
-# Blocking scrub gate before any publish.
+# Blocking scrub gate, asserted by ORDER rather than mere keyword presence —
+# a skill that published first and documented the gate afterwards would satisfy
+# a presence-only check while shipping unscanned content.
 for f in "$DIFF" "$SESSION"; do
-  grep -qF 'security-scrub' "$f" || fail "$(basename "$(dirname "$f")"): scrub skill not referenced"
-  grep -qF 'GATE RESULT: BLOCKED' "$f" || fail "$(basename "$(dirname "$f")"): BLOCKED gate not documented"
-  grep -qiE 'hard stop' "$f" || fail "$(basename "$(dirname "$f")"): scrub gate is not documented as blocking"
+  python3 - "$f" <<'EOF' || fail "scrub-gate ordering check failed"
+import re, sys
+path = sys.argv[1]
+skill = path.split('/')[-2]
+body = re.match(r'---\n.*?\n---\n(.*)$', open(path, encoding="utf-8").read(), re.S).group(1)
+lines = body.splitlines()
+
+def first(pattern):
+    for i, line in enumerate(lines):
+        if re.search(pattern, line):
+            return i
+    return None
+
+scrub   = first(r'security-scrub')
+blocked = first(r'GATE RESULT: BLOCKED')
+stop    = first(r'(?i)hard stop')
+publish = first(r'select:Artifact')     # the publish bootstrap
+
+assert scrub   is not None, f'{skill}: scrub skill not referenced'
+assert blocked is not None, f'{skill}: BLOCKED gate not documented'
+assert stop    is not None, f'{skill}: scrub gate not documented as blocking'
+assert publish is not None, f'{skill}: no Artifact publish bootstrap found'
+assert scrub < publish, (
+    f'{skill}: scrub gate (line {scrub+1}) must be documented BEFORE the publish '
+    f'step (line {publish+1}) — content would ship unscanned')
+assert blocked < publish, (
+    f'{skill}: BLOCKED verdict (line {blocked+1}) must precede publish (line {publish+1})')
+EOF
 done
 ok
 
@@ -80,8 +120,20 @@ grep -qF '16 MiB' "$DIFF" || fail "diff-artifact: artifact size cap not cited"
 grep -qiE 'sticky file sidebar' "$DIFF" || fail "diff-artifact: sticky sidebar requirement missing"
 grep -qF 'prefers-color-scheme' "$DIFF" || fail "diff-artifact: adaptive light/dark theme missing"
 grep -qiE 'severity legend' "$DIFF" || fail "diff-artifact: severity legend missing"
-grep -qiE 'falling back to branch mode|fall back to branch mode' "$DIFF" \
-  || fail "diff-artifact: PR-mode degradation missing"
+# PR degradation must EXECUTE the branch diff, not merely announce it, and must
+# detect a non-GitHub remote as well as a missing/unauthenticated gh.
+grep -qiE 'using branch mode|fall(ing)? back to branch mode' "$DIFF" \
+  || fail "diff-artifact: PR-mode degradation message missing"
+grep -qF 'git diff "${DEFAULT_BRANCH}...HEAD" > "$DIFF_FILE"' "$DIFF" \
+  || fail "diff-artifact: PR degradation must actually run the branch diff, not just report it"
+grep -qF 'git remote get-url origin' "$DIFF" \
+  || fail "diff-artifact: PR mode must detect a non-GitHub remote"
+# The rendered page must be size-checked and rescanned before publish.
+grep -qF '16 * 1024 * 1024' "$DIFF" \
+  || fail "diff-artifact: rendered 16 MiB cap not enforced by measurement"
+# Republish key must not be date-derived, or tomorrow's run misses the URL.
+grep -qE 'target=".claude/artifacts/diff-.*\$\(date' "$DIFF" \
+  && fail "diff-artifact: inbox key is date-derived — breaks cross-day republish"
 ok
 
 # All three document the fallback and the artifact-url republish mechanic.
@@ -110,7 +162,14 @@ ok
 [ -f "$PLUGIN/README.md" ] || fail "README.md missing"
 [ -f "$PLUGIN/CHANGELOG.md" ] || fail "CHANGELOG.md missing"
 grep -qF '1.0.0' "$PLUGIN/CHANGELOG.md" || fail "CHANGELOG has no 1.0.0 entry"
-grep -qF 'kit/plugins/artifact-tools' "$MANIFEST" || fail "homepage must point at the plugin directory"
+# Compare the homepage field itself — a bare grep for the path would also match
+# the repository/source fields and pass while homepage pointed elsewhere.
+python3 - "$MANIFEST" <<'EOF' || fail "homepage must be the plugin's own directory URL"
+import json, sys
+want = "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/artifact-tools"
+got = json.load(open(sys.argv[1])).get("homepage")
+assert got == want, f'homepage is {got!r}, expected {want!r}'
+EOF
 ok
 
 echo "PASS: artifact-tools smoke test ($checks checks)"

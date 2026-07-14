@@ -6,7 +6,11 @@ Prints the path of the written Markdown file.
 
 ponytail: deliberate copy of social-media-tools/skills/export-session/scripts/
 export_session.py — duplicated so artifact-tools installs standalone with no
-cross-plugin install-order dependency. Keep the two in sync when either changes.
+cross-plugin install-order dependency. Keep the two in sync when either changes,
+with one intentional divergence: `source` records only the transcript basename,
+never the absolute path. The original writes to local disk; this copy's output is
+published as an artifact, and an absolute path would leak the local username and
+repo layout into a shared page (the scrub gate matches secrets, not home paths).
 """
 import json
 import re
@@ -29,6 +33,11 @@ def text_of(content):
 
 
 def main():
+    """Read the transcript at argv[1], write a Markdown recap into argv[2].
+
+    Emits YAML frontmatter (session-id, date, source, type) followed by one
+    section per conversation turn, and prints the written path.
+    """
     if len(sys.argv) != 3:
         sys.exit(__doc__)
     src, outdir = Path(sys.argv[1]), Path(sys.argv[2])
@@ -82,7 +91,9 @@ def main():
         "---",
         f"session-id: {json.dumps(session_id)}",
         f"date: {date}",
-        f"source: {json.dumps(str(src))}",
+        # basename only — this recap gets published; an absolute path would leak
+        # the local username and repo layout. See the module docstring.
+        f"source: {json.dumps(src.name)}",
         "type: session-export",
         "---",
         "",

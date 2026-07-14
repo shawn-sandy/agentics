@@ -45,16 +45,30 @@ git diff "${DEFAULT_BRANCH}...HEAD"
 ```
 
 **PR-mode degradation.** PR mode needs both the `gh` CLI and a GitHub remote.
-If `gh` is missing, unauthenticated, or the remote is not GitHub, do not fail —
-say so plainly and fall back to branch mode:
+When either is missing, do not fail and do not merely report it — say so plainly
+and **actually produce the branch diff**. Every degradation path must still end
+with a diff on disk:
 
 ```bash
-if ! gh auth status >/dev/null 2>&1; then
-  echo "gh unavailable or not authenticated — falling back to branch mode"
+DIFF_FILE="<scratchpad>/diff.patch"
+
+use_pr=0
+if [ -n "${PR:-}" ]; then
+  if gh auth status >/dev/null 2>&1 &&
+     git remote get-url origin 2>/dev/null | grep -qi 'github\.com'; then
+    use_pr=1
+  else
+    echo "PR mode unavailable (gh missing/unauthenticated, or origin is not GitHub) — using branch mode"
+  fi
 fi
+
+if [ "$use_pr" = 1 ]; then
+  gh pr diff "$PR" > "$DIFF_FILE" || { echo "gh pr diff failed — using branch mode"; use_pr=0; }
+fi
+[ "$use_pr" = 1 ] || git diff "${DEFAULT_BRANCH}...HEAD" > "$DIFF_FILE"
 ```
 
-If the diff is empty, tell the user there is nothing to publish and stop.
+If `$DIFF_FILE` is empty, tell the user there is nothing to publish and stop.
 
 ## Step 2 — Scrub before anything else (blocking gate)
 
@@ -75,6 +89,11 @@ silently skip the gate — tell the user the scan could not run and ask via
 
 Read the changed files for context where the diff alone is ambiguous, then write
 one note per meaningful hunk. Each note gets a severity:
+
+> **Scrub coverage.** Step 2 scanned the *diff*. Reading surrounding file context
+> here can pull in text the diff never contained, so anything quoted from a file
+> is outside that scan. Quote sparingly, and note that Step 5 rescans the
+> rendered page — that second gate, not this one, is what covers annotations.
 
 | Severity | Meaning |
 |----------|---------|
@@ -110,37 +129,79 @@ Load the `artifact-design` skill first to calibrate design investment, then
 - Set a `<title>`; write the page content only (no `<!doctype>`/`<html>`/`<head>`
   /`<body>` — those are added at publish time).
 
-## Step 5 — Publish
+## Step 5 — Gate the rendered page (size, then scrub)
 
-`Artifact` is a deferred tool: use `ToolSearch` with `select:Artifact` first.
+Both checks run on the **rendered HTML**, not on the inputs.
 
-Publish with the scratch file path, a one-sentence `description`, and a stable
-`favicon` (use `🔍`). Keep the favicon identical across republishes of the same
-diff — users find the tab by its icon.
+**Size.** The file/hunk budget bounds how many hunks render, but a single
+generated file can carry one enormous hunk, so the budget alone does not enforce
+the cap. Measure the page and shrink it until it fits:
 
-## Step 6 — Record the URL, or fall back
+```bash
+CAP=$((16 * 1024 * 1024))   # 16 MiB rendered-artifact limit
+while [ "$(wc -c < "$SCRATCH_HTML")" -ge "$CAP" ]; do
+  # Demote the largest annotated file to a one-line summary row, re-render, re-measure.
+  echo "Page over 16 MiB — demoting the largest annotated file to a summary row"
+done
+```
 
-**On success:** save the page into the `.claude/artifacts/` inbox with the
-returned URL recorded as an HTML comment on the first line, so a later session
-can republish to the same page instead of minting a new one:
+Count every demotion here on top of the Step 3 budget, and report the total.
+
+**Scrub.** Rescan the finished page with `social-media-tools:security-scrub`.
+Step 2 covered the diff; this covers everything the page actually publishes —
+annotations, quoted file context, titles. Same verdicts, same blocking behaviour:
+`BLOCKED` is a hard stop with no override, `CANCELLED` stops, only `APPROVED`
+proceeds.
+
+## Step 6 — Save the durable copy
+
+Write the page to the `.claude/artifacts/` inbox **before publishing** — the
+scratchpad is temporary, so a page that only ever lived there is not a fallback.
+The URL is recorded later, only if a publish actually succeeds.
+
+Key the filename by what the diff *is*, never by date. A date in the key means
+tomorrow's run of the same branch misses today's `artifact-url:` and silently
+mints a second page:
 
 ```bash
 mkdir -p .claude/artifacts
-target=".claude/artifacts/diff-$(git rev-parse --abbrev-ref HEAD | tr '/' '-')-$(date +%F).html"
-{ echo "<!-- artifact-url: $URL -->"; cat "$SCRATCH_HTML"; } > "$target"
+# Deterministic key: pr-42 | range-abc123-def456 | branch-<slug>
+case "$MODE" in
+  pr)     key="pr-${PR}" ;;
+  range)  key="range-$(echo "$RANGE" | tr '.' '-')" ;;
+  *)      key="branch-$(git rev-parse --abbrev-ref HEAD | tr '/' '-')" ;;
+esac
+target=".claude/artifacts/diff-${key}.html"
+cp "$SCRATCH_HTML" "$target"
 ```
 
-Report the claude.ai URL and the local path.
+## Step 7 — Publish, then record the URL
+
+`Artifact` is a deferred tool: use `ToolSearch` with `select:Artifact` first.
+
+Before publishing, read `$target`'s first line: if it carries an
+`<!-- artifact-url: ... -->` comment from an earlier run, pass that URL to
+`Artifact`'s `url` parameter so the same page updates. Without it every session
+mints a new URL and the link you already shared goes stale.
+
+Publish `$target` with a one-sentence `description` and the favicon `🔍`, kept
+identical across republishes — users find the tab by its icon.
+
+**On success**, record the URL into the durable copy so later sessions find it:
+
+```bash
+tmp=$(mktemp)
+{ echo "<!-- artifact-url: $URL -->"; grep -v '^<!-- artifact-url:' "$target"; } > "$tmp"
+mv "$tmp" "$target"
+```
+
+Report the claude.ai URL, the local path, and how many files were summarized or
+demoted — a truncated review must never read as a complete one.
 
 **On publish failure** (no claude.ai login, or publishing unavailable): this is
 not an edge case — sharing beyond the author needs Team/Enterprise, so on Pro
-and Max the fallback *is* how the page reaches teammates. Keep the local HTML,
-say plainly that publishing did not happen and why, and offer
+and Max the fallback *is* how the page reaches teammates. `$target` already
+holds the page, with no `artifact-url:` line since nothing was published. Say
+plainly that publishing did not happen and why, give the path, and offer
 `social-media-tools:save-artifact` to publish it into the repo's GitHub Pages
-artifacts gallery instead.
-
-## Republishing
-
-If the inbox already holds a page for this branch with an `artifact-url:`
-comment, pass that URL to `Artifact`'s `url` parameter to update the same page.
-Without it, every session mints a new URL and the link you shared goes stale.
+artifacts gallery instead. Never report a URL that a publish did not return.
