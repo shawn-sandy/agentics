@@ -11,8 +11,9 @@ fail() {
 # Check dist/ exists
 [ -d "$ROOT/dist" ] || fail "dist/ directory does not exist"
 
-# Check all 12 plugin dirs
+# Check all 13 plugin dirs
 PLUGINS=(
+  artifact-tools
   team-defaults
   memory-tools
   code-review

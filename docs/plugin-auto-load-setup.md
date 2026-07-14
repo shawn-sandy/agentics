@@ -50,7 +50,8 @@ the durable, automatable mechanism is declarative settings — not a hook.
     "settings-sync@agentics-kit": true,
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
-    "issue-agent@agentics-kit": true
+    "team-defaults@agentics-kit": true,
+    "artifact-tools@agentics-kit": true
   }
 }
 ```
@@ -80,7 +81,7 @@ scope** themselves for their other repos.
 
 The config is committed for `agentics` itself — pull `main` and start a fresh
 session. On first use, accept the trust/marketplace-add prompt if shown; after
-that the 12 plugins are enabled by default with no per-plugin install.
+that the 13 plugins are enabled by default with no per-plugin install.
 
 ### Enable in all your other repos (per person)
 
@@ -111,7 +112,8 @@ that the 12 plugins are enabled by default with no per-plugin install.
 | `settings-sync` | Back up & restore Claude Code settings |
 | `social-media-tools` | Generate shareable social cards from code |
 | `plan-agent` | `/plan-agent:implementation-plan` workflow |
-| `issue-agent` | Create GitHub / GitLab issues from any context |
+| `team-defaults` | Shared team rules, documentation & design-token agents |
+| `artifact-tools` | Publish diffs, sessions & plans as claude.ai artifacts |
 
 ## Caveats
 

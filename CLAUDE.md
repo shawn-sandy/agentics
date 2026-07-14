@@ -63,10 +63,11 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 
 ## Reference Implementations
 
-12 plugins in the marketplace (`agentics-kit` v4.0.0):
+13 plugins in the marketplace (`agentics-kit` v4.0.0):
 
 | Plugin | Type | Notes |
 |--------|------|-------|
+| `artifact-tools` | Skills | Publish work as live claude.ai artifacts — `diff-artifact` builds an annotated diff walkthrough (branch, commit range, or PR) with a sticky file sidebar, per-hunk reviewer notes, severity labels, and a cap-and-summarize policy for the 16 MiB artifact cap; `session-artifact` writes a reviewer-first session recap (Summary, Decisions, Learnings, Files touched) using a bundled `export_session.py`; `plan-artifact` publishes plan HTML and republishes to the same URL via `artifact-url:` frontmatter. Blocking `security-scrub` gate before every publish; local-HTML fallback throughout |
 | `team-defaults` | Skills + Agents | Shared team defaults — `ts-commenter` and `css-generator` agents plus a `sync-rules` skill that installs bundled team rules (plan-mode, component-driven-ui, typescript-jsdoc, review-bot-loops) into `~/.claude/rules/` with per-file confirmation |
 | `memory-tools` | Skills | Auto-activated CLAUDE.md / project memory auditing; enforces optimization principle (keep only rules that change Claude's behavior) |
 | `code-review` | Skills + Agents + Commands | Auto-activated code review; `/code-review:fix-branch` autonomously reviews and applies fixes across the whole branch |

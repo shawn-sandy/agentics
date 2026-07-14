@@ -1,82 +1,84 @@
 {
-    "permissions": {
-        "allow": [
-            "Bash(tree:*)",
-            "Bash(git ls-files)",
-            "Bash(agent-browser:*)",
-            "Bash(git symbolic-ref refs/remotes/origin/HEAD *)",
-            "Bash(claude --version)"
-        ]
-    },
-    "plansDirectory": "docs/plans",
-    "extraKnownMarketplaces": {
-        "agentics-kit": {
-            "source": {
-                "source": "github",
-                "repo": "shawn-sandy/agentics"
-            }
-        }
-    },
-    "enabledPlugins": {
-        "memory-tools@agentics-kit": true,
-        "code-review@agentics-kit": true,
-        "plan-interview@agentics-kit": true,
-        "wcag-compliance-reviewer@agentics-kit": true,
-        "skill-reviewer@agentics-kit": true,
-        "code-testing-agent@agentics-kit": true,
-        "git-agent@agentics-kit": true,
-        "product-plans@agentics-kit": true,
-        "settings-sync@agentics-kit": true,
-        "social-media-tools@agentics-kit": true,
-        "plan-agent@agentics-kit": true
-    },
-    "hooks": {
-        "SessionStart": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/setup-merge-driver.sh\" && bash \"$TOPLEVEL/scripts/setup-merge-driver.sh\" >/dev/null 2>&1 || true"
-                    }
-                ]
-            },
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||') && test -n \"$DEFAULT_BRANCH\" && CURRENT=$(git branch --show-current 2>/dev/null) && if [ \"$CURRENT\" = \"$DEFAULT_BRANCH\" ]; then git pull --ff-only origin \"$DEFAULT_BRANCH\" 2>/dev/null; else git fetch origin \"$DEFAULT_BRANCH\":\"$DEFAULT_BRANCH\" 2>/dev/null; fi && echo \"OK: $DEFAULT_BRANCH is up to date with origin\" || true"
-                    }
-                ]
-            }
-        ],
-        "PostToolUse": [
-            {
-                "matcher": "Write|Edit",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "jq empty .claude-plugin/marketplace.json 2>&1 && echo 'OK: marketplace.json valid' || echo 'ERROR: marketplace.json has invalid JSON — fix before committing'"
-                    }
-                ]
-            },
-            {
-                "matcher": "Write|Edit",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "test -z \"$(git -C \"${PWD}\" ls-files --others --modified --exclude-standard docs/plans/ 2>/dev/null)\" || echo 'WARNING: Uncommitted plan files in docs/plans/ — commit alongside related changes (see .claude/rules/plan-hygiene.md)'"
-                    }
-                ]
-            },
-            {
-                "matcher": "Write|Edit",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "git status --porcelain .claude-plugin/marketplace.json 2>/dev/null | grep -q . && test -f scripts/check-version-bump.sh && VERSION_GUARD_NO_FETCH=1 bash scripts/check-version-bump.sh 2>&1 || true"
-                    }
-                ]
-            }
-        ]
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(git ls-files)",
+      "Bash(agent-browser:*)",
+      "Bash(git symbolic-ref refs/remotes/origin/HEAD *)",
+      "Bash(claude --version)"
+    ]
+  },
+  "plansDirectory": "docs/plans",
+  "extraKnownMarketplaces": {
+    "agentics-kit": {
+      "source": {
+        "source": "github",
+        "repo": "shawn-sandy/agentics"
+      }
     }
+  },
+  "enabledPlugins": {
+    "memory-tools@agentics-kit": true,
+    "code-review@agentics-kit": true,
+    "plan-interview@agentics-kit": true,
+    "wcag-compliance-reviewer@agentics-kit": true,
+    "skill-reviewer@agentics-kit": true,
+    "code-testing-agent@agentics-kit": true,
+    "git-agent@agentics-kit": true,
+    "product-plans@agentics-kit": true,
+    "settings-sync@agentics-kit": true,
+    "social-media-tools@agentics-kit": true,
+    "plan-agent@agentics-kit": true,
+    "team-defaults@agentics-kit": true,
+    "artifact-tools@agentics-kit": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/setup-merge-driver.sh\" && bash \"$TOPLEVEL/scripts/setup-merge-driver.sh\" >/dev/null 2>&1 || true"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||') && test -n \"$DEFAULT_BRANCH\" && CURRENT=$(git branch --show-current 2>/dev/null) && if [ \"$CURRENT\" = \"$DEFAULT_BRANCH\" ]; then git pull --ff-only origin \"$DEFAULT_BRANCH\" 2>/dev/null; else git fetch origin \"$DEFAULT_BRANCH\":\"$DEFAULT_BRANCH\" 2>/dev/null; fi && echo \"OK: $DEFAULT_BRANCH is up to date with origin\" || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq empty .claude-plugin/marketplace.json 2>&1 && echo 'OK: marketplace.json valid' || echo 'ERROR: marketplace.json has invalid JSON \u2014 fix before committing'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -z \"$(git -C \"${PWD}\" ls-files --others --modified --exclude-standard docs/plans/ 2>/dev/null)\" || echo 'WARNING: Uncommitted plan files in docs/plans/ \u2014 commit alongside related changes (see .claude/rules/plan-hygiene.md)'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --porcelain .claude-plugin/marketplace.json 2>/dev/null | grep -q . && test -f scripts/check-version-bump.sh && VERSION_GUARD_NO_FETCH=1 bash scripts/check-version-bump.sh 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
 }

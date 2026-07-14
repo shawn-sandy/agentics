@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **13 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories are retained in the repository but are no longer installable via the marketplace. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -82,7 +82,7 @@ The agentics project serves two purposes:
 
 | Purpose | What it contains |
 |---------|-----------------|
-| **Active Plugins** | 12 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
+| **Active Plugins** | 13 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
 | **Archived Plugins** | 6 removed plugins with source directories retained in `kit/plugins/` — loadable locally via `--plugin-dir` but not available via `/plugin install` |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
@@ -130,7 +130,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 11 plugins in marketplace (6 archived directories retained)
+│   └── plugins/                  # 13 plugins in marketplace (6 archived directories retained)
 │       ├── agent-creator/
 │       ├── agent-reviewer/
 │       ├── agentic-plugin-dev/
@@ -757,6 +757,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.17.0 | productivity | 1 command, 17 skills |
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 2.22.1 | productivity | 1 command, 9 skills, 8 agents, 4 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.1.0 | productivity | 1 skill, 2 agents |
+| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.0.0 | development | 3 skills |
 
 ---
 
