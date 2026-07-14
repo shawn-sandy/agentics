@@ -20,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Check README plugin table is in sync
+        run: node scripts/build-readme-table.mjs --check
       - name: Build dist
         run: node scripts/build-dist.mjs
       - name: Verify no leaks
