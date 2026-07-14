@@ -496,7 +496,7 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 #### `plan-agent` v2.9.0
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Turn a vague idea into a decision-complete proposal with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:refine-prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Turn a vague idea into a decision-complete proposal with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:write-prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -512,7 +512,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `build-proposal` | Turn a vague idea into a decision-complete proposal (`docs/proposals/<slug>.md`) — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Spawn a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, + UI-conditional UX and accessibility) to review a plan, synthesize findings, and apply improvements in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
-| `refine-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
+| `write-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) — command only |
 | `setup-sites` | Scaffold the GitHub Pages deploy pipeline (workflow, `.nojekyll`, landing hub, preview script) into any repo so `docs/` HTML publishes to a public URL — command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent |
 | `prototype` | Turn a completed HTML plan or a one-line idea into a runnable, framework-free static-HTML prototype under `docs/prototypes/` (inline JSON seed + per-prototype `localStorage`, escaped output, a11y baked in) — command (`/plan-agent:prototype <plan.html \| idea>`) or auto-activates on "prototype this plan / idea" intent |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
@@ -543,7 +543,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:review-plan docs/plans/add-dark-mode-toggle.html
 # /plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
 # /plan-agent:finalize-plan add-dark-mode-toggle.html
-# /plan-agent:refine-prompt
+# /plan-agent:write-prompt
 # "Browse my plans"
 ```
 

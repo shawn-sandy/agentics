@@ -259,8 +259,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "2.22.1",
-      "description": "Plan creation, review, and follow-through. implementation-plan authors a Markdown plan spec and renders it into a self-contained interactive HTML plan with copy-paste implement and goal prompts; review-plan runs a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, UX, accessibility) that improves the plan in place; finalize-plan verifies completion evidence and marks plans done; build-proposal turns a vague idea into a decision-complete proposal; refine-prompt builds prompts from Anthropic best practices; prototype turns a plan, idea, image, or Figma design into a runnable static-HTML prototype; setup-sites scaffolds GitHub Pages publishing; plans-library and plans-open browse the plan gallery. Accepts GitHub/GitLab issue URLs and .md plans as input; hooks enforce verb-target filenames and auto-rebuild the gallery index. Full feature detail in the plugin README and CHANGELOG.",
+      "version": "3.0.0",
+      "description": "Plan creation, review, and follow-through. implementation-plan authors a Markdown plan spec and renders it into a self-contained interactive HTML plan with copy-paste implement and goal prompts; review-plan runs a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, UX, accessibility) that improves the plan in place; finalize-plan verifies completion evidence and marks plans done; build-proposal turns a vague idea into a decision-complete proposal; write-prompt builds prompts from Anthropic best practices; prototype turns a plan, idea, image, or Figma design into a runnable static-HTML prototype; setup-sites scaffolds GitHub Pages publishing; plans-library and plans-open browse the plan gallery. Accepts GitHub/GitLab issue URLs and .md plans as input; hooks enforce verb-target filenames and auto-rebuild the gallery index. Full feature detail in the plugin README and CHANGELOG.",
       "category": "productivity",
       "tags": [
         "planning",

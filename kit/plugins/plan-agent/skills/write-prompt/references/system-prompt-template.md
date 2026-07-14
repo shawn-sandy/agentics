@@ -1,6 +1,6 @@
 # System Prompt Template
 
-Used by `refine-prompt` for **system** prompt type.
+Used by `write-prompt` for **system** prompt type.
 
 Techniques applied: Role assignment · XML structure (`<instructions>`, `<constraints>`) · Output format · Guardrails
 
