@@ -10,10 +10,10 @@
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="add-dynamic-depth-and-mode-to-refine-prompt.html">
 <meta name="plan-path" content="docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size refine-prompt output and add execution-mode classification">
-<meta name="plan-goal" content="Achieve this goal: Right-size refine-prompt output and add execution-mode classification. The plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html describes one approach — use it as reference, but optimize for the outcome">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size refine-prompt output and add execution-mode classification. Brief subagents with the plan file at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html">
-<title>Plan: Dynamic depth and execution mode for refine-prompt</title>
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size write-prompt output and add execution-mode classification">
+<meta name="plan-goal" content="Achieve this goal: Right-size write-prompt output and add execution-mode classification. The plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html describes one approach — use it as reference, but optimize for the outcome">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size write-prompt output and add execution-mode classification. Brief subagents with the plan file at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html">
+<title>Plan: Dynamic depth and execution mode for write-prompt</title>
 <style>
   /* ── Design tokens ─────────────────────────────────────────────── */
   :root {
@@ -1224,7 +1224,7 @@ img, video { max-width: 100%; height: auto; }
     </div>
     <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
-      <h1 class="plan-title">Dynamic depth and execution mode for refine-prompt</h1>
+      <h1 class="plan-title">Dynamic depth and execution mode for write-prompt</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
@@ -1280,13 +1280,13 @@ img, video { max-width: 100%; height: auto; }
     <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Teach refine-prompt to right-size its output — plain-prose prompts for simple asks, full XML scaffolding for complex ones — and to classify how each prompt should run: one-shot, loop, workflow, or goal, delivered ready to paste in that mode.</p>
+      <p>Teach write-prompt to right-size its output — plain-prose prompts for simple asks, full XML scaffolding for complex ones — and to classify how each prompt should run: one-shot, loop, workflow, or goal, delivered ready to paste in that mode.</p>
     </div>
 
     <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size refine-prompt output and add execution-mode classification</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size write-prompt output and add execution-mode classification</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1295,7 +1295,7 @@ img, video { max-width: 100%; height: auto; }
     <details class="plan-goal">
       <summary>Pursue as goal — optimize for the outcome</summary>
       <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Right-size refine-prompt output and add execution-mode classification. The plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html describes one approach — use it as reference, but optimize for the outcome</code>
+        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Right-size write-prompt output and add execution-mode classification. The plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html describes one approach — use it as reference, but optimize for the outcome</code>
         <button class="copy-goal-btn" type="button"
                 onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
       </div>
@@ -1305,7 +1305,7 @@ img, video { max-width: 100%; height: auto; }
     <details class="plan-workflow">
       <summary>Run as workflow — launch parallel subagents</summary>
       <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size refine-prompt output and add execution-mode classification. Brief subagents with the plan file at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html</code>
+        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html — Right-size write-prompt output and add execution-mode classification. Brief subagents with the plan file at docs/plans/add-dynamic-depth-and-mode-to-refine-prompt.html</code>
         <button class="copy-workflow-btn" type="button"
                 onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
       </div>
@@ -1346,7 +1346,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The <code>refine-prompt</code> skill (<code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code>) runs a fixed pipeline: classify into one of four prompt types, run a batched interview, apply the full XML technique matrix for that type, and fill a template from <code>references/</code>. There is no depth axis anywhere — a trivial ask like &quot;summarize this doc in 3 bullets&quot; gets <code>&lt;context&gt;</code>, <code>&lt;example&gt;</code>, and <code>&lt;thinking&gt;</code> scaffolding it does not need, because the technique matrix is keyed only on <em>type</em>, never on <em>complexity</em>. The skill has an escalation valve (&quot;go deeper?&quot;) but no de-escalation valve.</p>
+      <p>The <code>write-prompt</code> skill (<code>kit/plugins/plan-agent/skills/write-prompt/SKILL.md</code>) runs a fixed pipeline: classify into one of four prompt types, run a batched interview, apply the full XML technique matrix for that type, and fill a template from <code>references/</code>. There is no depth axis anywhere — a trivial ask like &quot;summarize this doc in 3 bullets&quot; gets <code>&lt;context&gt;</code>, <code>&lt;example&gt;</code>, and <code>&lt;thinking&gt;</code> scaffolding it does not need, because the technique matrix is keyed only on <em>type</em>, never on <em>complexity</em>. The skill has an escalation valve (&quot;go deeper?&quot;) but no de-escalation valve.</p>
       <p>Separately, the skill never considers <em>how</em> the finished prompt will run. A prompt meant to poll CI every ten minutes needs an interval and a <code>/loop</code> wrapper; a repo-wide audit prompt benefits from workflow orchestration; an autonomous objective needs a stated completion condition. Today all of these are delivered as bare one-shot text. An investigation on 2026-07-01 confirmed both gaps are fixable with edits to a single SKILL.md — the four templates stay untouched. Interview decisions locked in: the lite path always asks exactly one batched clarifying question; mode is judged by run-intent (not raw keywords) and announced only when non-one-shot, with a symmetric &quot;run as one-shot&quot; override; depth and mode are independent axes; existing saved prompts are not backfilled (that is a follow-up).</p>
     </section>
 
@@ -1359,15 +1359,15 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 2.12.0 → 2.13.0</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 3.0.0 → 3.1.0</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/
             <ul class="file-list">
-              <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.13.0 entry for depth + mode</span></li>
+              <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">3.1.0 entry for depth + mode</span></li>
               <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document lite/full and execution modes</span></li>
             </ul>
           </li>
-          <li><code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">depth axis, lite path, mode phase, delivery + save</span></li>
-          <li><code>tests/plugins/test-refine-prompt-dynamic.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">smoke test for dynamic-output markers</span></li>
+          <li><code>kit/plugins/plan-agent/skills/write-prompt/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">depth axis, lite path, mode phase, delivery + save</span></li>
+          <li><code>tests/plugins/test-write-prompt-dynamic.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">smoke test for dynamic-output markers</span></li>
         </ul>
       </div>
     </section>
@@ -1446,7 +1446,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the depth axis to Phase 1 (Classify) in <code>kit/plugins/plan-agent/skills/refine-prompt/SKILL.md</code> — after the type table, add a Depth rubric classifying <code>lite</code> vs <code>full</code> (lite: single clear action, no documents/examples/persona/edge-case handling needed, obvious output shape; full: everything else, or the user asks). Extend the one-line announcement to include the depth verdict and the escape hatch: &quot;say 'go full' for the structured version&quot; (and &quot;go lite&quot; for the reverse).</span>
+                <span class="step-chip-text">Add the depth axis to Phase 1 (Classify) in <code>kit/plugins/plan-agent/skills/write-prompt/SKILL.md</code> — after the type table, add a Depth rubric classifying <code>lite</code> vs <code>full</code> (lite: single clear action, no documents/examples/persona/edge-case handling needed, obvious output shape; full: everything else, or the user asks). Extend the one-line announcement to include the depth verdict and the escape hatch: &quot;say 'go full' for the structured version&quot; (and &quot;go lite&quot; for the reverse).</span>
               </div>
               <div class="step-why">The pipeline is keyed only on prompt type, so trivial asks get the full XML treatment; a depth verdict at classification time is the single routing decision everything downstream hangs off, and the announced escape hatch makes a misclassification cost the user two words.</div>
               <details class="step-verify-toggle">
@@ -1514,12 +1514,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write the smoke test <code>tests/plugins/test-refine-prompt-dynamic.sh</code> — a bash script following the pattern of <code>tests/plugins/test-goal-prompt.sh</code>, asserting SKILL.md contains: the depth rubric markers (<code>lite</code> and <code>full</code> in Phase 1), the escape-hatch phrase, the Phase 1.5 mode table with all four modes and the run-intent rule, the <code>/loop</code> wrapping instruction in Phase 6, and the <code>mode:</code> / <code>depth:</code> fields in the Phase 7 frontmatter template.</span>
+                <span class="step-chip-text">Write the smoke test <code>tests/plugins/test-write-prompt-dynamic.sh</code> — a bash script following the pattern of <code>tests/plugins/test-goal-prompt.sh</code>, asserting SKILL.md contains: the depth rubric markers (<code>lite</code> and <code>full</code> in Phase 1), the escape-hatch phrase, the Phase 1.5 mode table with all four modes and the run-intent rule, the <code>/loop</code> wrapping instruction in Phase 6, and the <code>mode:</code> / <code>depth:</code> fields in the Phase 7 frontmatter template.</span>
               </div>
               <div class="step-why">These are behaviour-bearing markdown instructions with no runtime of their own — a grep-based smoke test is the cheapest regression guard against a future edit silently dropping the routing (matching the align decision that a live eval is out of scope).</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>bash tests/plugins/test-refine-prompt-dynamic.sh</code> exits 0 against the edited SKILL.md, and exits non-zero when pointed at the pre-change SKILL.md (spot-check one assertion by temporarily reverting a marker).</div>
+                <div class="verify-body"><code>bash tests/plugins/test-write-prompt-dynamic.sh</code> exits 0 against the edited SKILL.md, and exits non-zero when pointed at the pre-change SKILL.md (spot-check one assertion by temporarily reverting a marker).</div>
               </details>
             </div>
           </div>
@@ -1531,12 +1531,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump the version and update docs — set plan-agent to <code>2.13.0</code> in <code>.claude-plugin/marketplace.json</code> (minor: new behaviour, no invocation change), add a 2.13.0 entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code>, and refresh the refine-prompt section of <code>kit/plugins/plan-agent/README.md</code> to describe depth-aware output and execution-mode classification. Leave the CLAUDE.md plugin-table line untouched — its description remains accurate.</span>
+                <span class="step-chip-text">Bump the version and update docs — set plan-agent to <code>3.1.0</code> in <code>.claude-plugin/marketplace.json</code> (minor: new behaviour, no invocation change), add a 3.1.0 entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code>, and refresh the write-prompt section of <code>kit/plugins/plan-agent/README.md</code> to describe depth-aware output and execution-mode classification. Leave the CLAUDE.md plugin-table line untouched — its description remains accurate.</span>
               </div>
               <div class="step-why">The marketplace version must exceed the value on main for the change to ship, and README/CHANGELOG are the project's contract for plugin changes; the CLAUDE.md line does not mention output shape, so editing it would be churn.</div>
               <details class="step-verify-toggle">
                 <summary>Verify</summary>
-                <div class="verify-body"><code>marketplace.json</code> parses (the settings hook auto-validates on edit) and reads <code>2.13.0</code> for plan-agent; CHANGELOG.md has the 2.13.0 entry; README's refine-prompt section names both behaviours; <code>git diff</code> shows no CLAUDE.md change.</div>
+                <div class="verify-body"><code>marketplace.json</code> parses (the settings hook auto-validates on edit) and reads <code>3.1.0</code> for plan-agent; CHANGELOG.md has the 3.1.0 entry; README's write-prompt section names both behaviours; <code>git diff</code> shows no CLAUDE.md change.</div>
               </details>
             </div>
           </div>
@@ -1557,13 +1557,13 @@ img, video { max-width: 100%; height: auto; }
       <div class="objective-test-card">
         <div class="test-card-header">
           <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">refine-prompt SKILL.md encodes dynamic depth and execution-mode routing</span>
+          <span class="test-card-title">write-prompt SKILL.md encodes dynamic depth and execution-mode routing</span>
         </div>
         <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/plugins/test-refine-prompt-dynamic.sh</code></p>
+          <p><strong>File:</strong> <code>tests/plugins/test-write-prompt-dynamic.sh</code></p>
           <p><strong>Type:</strong> smoke test (grep assertions, matching the <code>test-goal-prompt.sh</code> pattern)</p>
           <p><strong>Asserts:</strong> the shipped SKILL.md actually carries the plan's objective — the Phase 1 depth rubric (<code>lite</code>/<code>full</code>) with the &quot;go full&quot; escape hatch, the Phase 1.5 mode table (one-shot / loop / workflow / goal) with the run-intent rule and &quot;run as one-shot&quot; override, the <code>/loop</code> pre-wrapping in Phase 6, and the <code>mode:</code>/<code>depth:</code> fields in the Phase 7 save template.</p>
-          <p><strong>Run:</strong> <code>bash tests/plugins/test-refine-prompt-dynamic.sh</code></p>
+          <p><strong>Run:</strong> <code>bash tests/plugins/test-write-prompt-dynamic.sh</code></p>
         </div>
       </div>
     </section>
@@ -1577,7 +1577,7 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">Phase 1 of refine-prompt's SKILL.md classifies depth (lite | full) alongside type, and the announcement includes the "go full" / "go lite" escape hatch.</label>
+          <label for="ac1">Phase 1 of write-prompt's SKILL.md classifies depth (lite | full) alongside type, and the announcement includes the "go full" / "go lite" escape hatch.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
@@ -1597,11 +1597,11 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">plan-agent's version in .claude-plugin/marketplace.json reads 2.13.0, CHANGELOG.md has a matching entry, and README.md documents both new behaviours.</label>
+          <label for="ac6">plan-agent's version in .claude-plugin/marketplace.json reads 3.1.0, CHANGELOG.md has a matching entry, and README.md documents both new behaviours.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">bash tests/plugins/test-refine-prompt-dynamic.sh exits 0.</label>
+          <label for="ac7">bash tests/plugins/test-write-prompt-dynamic.sh exits 0.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1614,7 +1614,7 @@ img, video { max-width: 100%; height: auto; }
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
         Verification
       </h2>
-      <p>Run <code>bash tests/plugins/test-refine-prompt-dynamic.sh</code> and confirm exit 0. Then dry-run the routing by reading the edited SKILL.md top to bottom against two simulated invocations: <code>/plan-agent:refine-prompt summarize this doc in 3 bullets</code> must route lite/one-shot (one clarifying question, prose draft, no template read, no mode announcement), and <code>/plan-agent:refine-prompt watch CI every 10 minutes and report failures</code> must route loop (mode announced with the &quot;run as one-shot&quot; override, interval question added, delivery pre-wrapped in <code>/loop</code>, frontmatter carrying <code>mode: loop</code>). Finally confirm <code>.claude-plugin/marketplace.json</code> parses with plan-agent at 2.13.0 (higher than main's 2.12.0), the CHANGELOG entry exists, and the four template files under <code>references/</code> are byte-identical to before.</p>
+      <p>Run <code>bash tests/plugins/test-write-prompt-dynamic.sh</code> and confirm exit 0. Then dry-run the routing by reading the edited SKILL.md top to bottom against two simulated invocations: <code>/plan-agent:write-prompt summarize this doc in 3 bullets</code> must route lite/one-shot (one clarifying question, prose draft, no template read, no mode announcement), and <code>/plan-agent:write-prompt watch CI every 10 minutes and report failures</code> must route loop (mode announced with the &quot;run as one-shot&quot; override, interval question added, delivery pre-wrapped in <code>/loop</code>, frontmatter carrying <code>mode: loop</code>). Finally confirm <code>.claude-plugin/marketplace.json</code> parses with plan-agent at 3.1.0 (higher than main's 3.0.0), the CHANGELOG entry exists, and the four template files under <code>references/</code> are byte-identical to before.</p>
     </section>
 
     <!-- ── Completion Checklist (mandatory — always present) ──────── -->
@@ -1701,9 +1701,9 @@ img, video { max-width: 100%; height: auto; }
         <h3>Role-by-Role</h3>
         <p><strong>Architecture:</strong> Fit is sound — a single-file skill edit (SKILL.md) with two new phases (depth rubric in Phase 1, mode classification as Phase 1.5) inserted cleanly into the existing seven-phase structure. No component-boundary or layering concerns; the four reference templates are explicitly left untouched.</p>
         <p><strong>Completeness:</strong> Step coverage is thorough — depth axis, lite path, mode axis, delivery/save wiring, smoke test, and version/doc bump are all present with concrete before/after behavior. Gap found and fixed: no rule for how the depth and mode announcements compose when both are non-default; Step 3 now requires a single combined announcement in that case.</p>
-        <p><strong>Testability:</strong> The planned smoke test (<code>tests/plugins/test-refine-prompt-dynamic.sh</code>) follows the established <code>test-goal-prompt.sh</code> grep-assertion pattern and targets the correct markers (depth rubric, escape hatch, Phase 1.5 mode table, <code>/loop</code> wrapping, frontmatter fields). Tier 2 classification is correct — no application source files are touched, only skill instructions and metadata.</p>
+        <p><strong>Testability:</strong> The planned smoke test (<code>tests/plugins/test-write-prompt-dynamic.sh</code>) follows the established <code>test-goal-prompt.sh</code> grep-assertion pattern and targets the correct markers (depth rubric, escape hatch, Phase 1.5 mode table, <code>/loop</code> wrapping, frontmatter fields). Tier 2 classification is correct — no application source files are touched, only skill instructions and metadata.</p>
         <p><strong>Risk:</strong> Low. No breaking changes to invocation, no data migration, and the plan explicitly verifies the four templates stay byte-identical. The "no backfill of existing docs/prompts/ files" decision is stated as an intentional non-goal, not an oversight.</p>
-        <p><strong>Conventions:</strong> Version bump (2.12.0 → 2.13.0, correctly minor for new behavior), CHANGELOG entry format, and README update all match established project patterns exactly, including leaving the CLAUDE.md plugin table untouched with a stated rationale.</p>
+        <p><strong>Conventions:</strong> Version bump (3.0.0 → 3.1.0, correctly minor for new behavior), CHANGELOG entry format, and README update all match established project patterns exactly, including leaving the CLAUDE.md plugin table untouched with a stated rationale.</p>
 
         <h3>Agreements &amp; Conflicts</h3>
         <p>All five reviewers agreed the plan is low-risk and well-scoped for a Tier 2 documentation/metadata change. No conflicting recommendations arose between roles.</p>
