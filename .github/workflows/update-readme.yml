@@ -25,15 +25,16 @@ jobs:
             Steps:
             1. Read `.claude-plugin/marketplace.json` to get the current list of plugins, their versions, descriptions, and categories.
             2. Read the current README.md.
-            3. Update the following sections to match marketplace.json exactly:
+            3. Run `node scripts/build-readme-table.mjs` to regenerate the Plugin Reference Table.
+               Do NOT hand-edit that table — the script is the source of truth for it.
+            4. Update the following sections to match marketplace.json exactly:
                - Plugin version numbers in each plugin section heading (e.g., `code-review` v3.3.0)
-               - The Plugin Reference Table (versions, categories, component counts)
                - The marketplace install commands block (add any plugins missing from the list)
                - The plugin count in the Overview table
                - The agentics-kit version in the top badge line
-            4. Add a section for any plugin present in marketplace.json that has no section in the README, following the same format as existing plugin sections.
-            5. Do NOT remove any existing plugin sections or rewrite prose unless a plugin has been removed from marketplace.json.
-            6. Commit the changes with message: "docs: sync README with marketplace.json (weekly update)"
+            5. Add a section for any plugin present in marketplace.json that has no section in the README, following the same format as existing plugin sections.
+            6. Do NOT remove any existing plugin sections or rewrite prose unless a plugin has been removed from marketplace.json.
+            7. Commit the changes with message: "docs: sync README with marketplace.json (weekly update)"
 
             Only make changes if there is actually something to update. If everything is already current, make no commit.
           allowed_tools: "Read,Edit,Write,Bash"
