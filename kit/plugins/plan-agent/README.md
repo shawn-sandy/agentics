@@ -25,7 +25,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
-| `refine-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:refine-prompt [intent]` |
+| `write-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:write-prompt [intent]` |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
@@ -239,14 +239,14 @@ When invoked without arguments, prompts for the plan file. The skill:
 
 **Sweep mode (`--all`)** finds plans that are implemented but never marked completed. It scans the plans directory for every plan carrying a `<meta name="plan-status">` tag whose value is `todo` or `in-progress` (non-plan HTML without the tag is ignored), runs the cheap token-evidence scan on each, and presents a candidate table — plans with 80%+ evidence are flagged as "done but not marked". One multi-select prompt picks which plans to finalize (plus a single criteria mode for the whole batch); full per-criterion verification and the objective test then run only on the selected plans before the status writes.
 
-#### `refine-prompt` — Manual invoke only
+####  `write-prompt` — Manual invoke only
 
 Interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). Applies the right combination of techniques (clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting) based on the classified prompt type.
 
 ```
-/plan-agent:refine-prompt
-/plan-agent:refine-prompt system prompt for a customer support chatbot
-/plan-agent:refine-prompt refactor Python code task prompt
+/plan-agent:write-prompt
+/plan-agent:write-prompt system prompt for a customer support chatbot
+/plan-agent:write-prompt refactor Python code task prompt
 ```
 
 **Before / after** — a vague request in, a structured prompt out:
@@ -298,7 +298,7 @@ The skill runs a six-phase pipeline:
 | `creative` | Role assignment, tone/voice instructions, context/motivation, output format, positive framing |
 | `analytical` | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
 
-Invoke only via `/plan-agent:refine-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
+Invoke only via `/plan-agent:write-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
 
 #### `plans-open` — Auto-activates
 

@@ -27,6 +27,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ### Changed
 
+- **plan-agent `write-prompt`** — BREAKING: renamed the `refine-prompt` skill to `write-prompt`; invoke as `/plan-agent:write-prompt` (3.0.0)
 - **plan-agent `refine-prompt`** — BREAKING: renamed `craft-prompt` to `refine-prompt` (2.0.0, #306)
 - **social-media-tools card templates** — Added a `--card-width` CSS token to all card templates (#303)
 - **Skill frontmatter** — Optimized descriptions to the three-part format (short label + capability + trigger phrase, ≤200 chars) across plugins (#328); surfaced `write-guide` in discovery and backfilled version + changelog (#330)

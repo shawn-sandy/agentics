@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0 — Rename `refine-prompt` skill to `write-prompt` (2026-07-14)
+
+### Changed
+
+- **BREAKING: renamed the `refine-prompt` skill to `write-prompt`** — invoke it as `/plan-agent:write-prompt [intent]` instead of `/plan-agent:refine-prompt`. The skill directory moved from `skills/refine-prompt/` to `skills/write-prompt/`, and its internal template/reference paths, description, and title were updated to match. Behavior, phases, and reference templates are unchanged. Update any saved commands, aliases, or docs that referenced the old `/plan-agent:refine-prompt` invocation.
+
 ## 2.22.1 — Per-skill model pinning (2026-07-13)
 
 ### Changed
