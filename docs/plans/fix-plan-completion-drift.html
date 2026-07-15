@@ -1343,12 +1343,12 @@ img, video { max-width: 100%; height: auto; }
 
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Close the plan-completion gap by adding a PostToolUse hook to `plan-agent` that deterministically detects a plan spec whose steps and criteria are all checked while its `status` still says otherwise, and by unlocking `finalize-plan` so the model can act on that signal.</p>
+      <p>Close the plan-completion gap from both ends: make every prompt that starts an implementation require the plan be checked off, and add a PostToolUse hook that deterministically catches a plan whose steps and criteria are all checked while its `status` still says otherwise — then unlock `finalize-plan` so the model can act on that signal.</p>
     </div>
 
     <section class="plan-glance" aria-labelledby="plan-glance-label">
       <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>Plans get implemented and then quietly stay at &quot;todo&quot; forever, so the gallery lies about what shipped. The completion machinery already exists — it is just unreachable unless you happen to be standing in the right skill at the right moment. This wires a deterministic detector to it that fires the instant a plan contradicts itself.</p>
+      <p>Plans get implemented and then quietly stay at &quot;todo&quot; forever, so the gallery lies about what shipped. The completion machinery already exists — it is just unreachable unless you happen to be standing in the right skill at the right moment. This fixes both ends: the prompts now ask every agent to check the plan off, and a deterministic detector fires the instant one contradicts itself.</p>
     </section>
 
     <div class="plan-implement">
@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span id="progress-label">0 / 13 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1432,9 +1432,15 @@ img, video { max-width: 100%; height: auto; }
       <p>The design turns on a distinction that matters. The hook does **not** judge<br>whether the work is done — it cannot; acceptance criteria are prose. It detects<br>that *the document contradicts itself*, which is mechanical string-matching over<br>committed state. Resolving the contradiction is delegated to the skill that<br>already verifies against the codebase and asks the user. So nothing in this<br>chain asks the model to self-attest to completion.</p>
       <p>Against the four failure modes:</p>
       <p>| Failure mode | How this handles it |<br>|---|---|<br>| **Silent skip** (today&#39;s bug) | Solved for the dominant case. The renderer&#39;s implement-prompt already instructs the implementing agent to tick `[x]` markers and criteria as it goes; what gets forgotten is the final `status:` flip. That forgetting *is* the drift state, so the last tick trips the detector. |<br>| **False completion** | Structurally prevented. The hook writes nothing and decides nothing. `finalize-plan` inspects codebase evidence and gates on `AskUserQuestion` before any status write — behavior this plan does not alter. |<br>| **Noisy prompts** | Four conditions must hold simultaneously: the written file is a `# Plan:` spec inside the resolved `plansDirectory`, every step is `[x]`, every criterion is `- [x]`, and `status != completed`. The hook cannot fire in a session with no plan in play, because it only fires on writes to plan specs. |<br>| **Plugin-user gap** | Every behavioral change lands in `kit/plugins/plan-agent/**` and ships via the `git-subdir` source. Nothing depends on `~/.claude/rules/`, repo-local settings, or this repo&#39;s layout. |</p>
-      <p>**What this deliberately does not solve:** a session that implements a plan and<br>ticks *nothing*. With no write to the spec there is no hook event, and the plan<br>stays silently at `todo`. Closing that hole needs a `Stop` hook scanning the<br>transcript to distinguish &quot;implemented this plan&quot; from &quot;happened to read it&quot; —<br>which trades directly into the noise column and cannot make that distinction<br>reliably. It is named in Next Steps rather than smuggled in here. Partially<br>ticked plans (some steps `[x]`, not all) are likewise out of range by design:<br>that is a genuinely unfinished plan, and `status: in-progress` is accurate.</p>
+      <p>**What this deliberately does not solve:** a session that implements a plan and<br>ticks *nothing*. With no write to the spec there is no hook event, and the plan<br>stays silently at `todo`. Closing that hole *completely* needs a `Stop` hook<br>scanning the transcript to distinguish &quot;implemented this plan&quot; from &quot;happened to<br>read it&quot; — which trades directly into the noise column and cannot make that<br>distinction reliably. It is named in Next Steps rather than smuggled in here.<br>Partially ticked plans (some steps `[x]`, not all) are likewise out of range by<br>design: that is a genuinely unfinished plan, and `status: in-progress` is<br>accurate.</p>
+      <p>### Feeding the detector: the prompts must ask for ticks</p>
+      <p>A detector that only fires on ticks is worth nothing if the prompts never ask<br>for any. Three prompts start an implementation, and only one of them teaches<br>check-off:</p>
+      <p>| Prompt | Path | Instructs check-off today? |<br>|---|---|---|<br>| Implement | `copyCmd` → `buildImplementPrompt()` (`plan-shell.mjs:1306`) | **Yes** — five numbered instructions covering `[x]` step markers, `- [x]` criteria, `status: completed`, and re-render. |<br>| Goal | `copyGoal` (`plan-shell.mjs:1390`) + `plan-goal` meta | **No** — copies the bare one-liner&#39;s `textContent`. |<br>| Workflow | `copyWorkflow` (`plan-shell.mjs:1383`) + `plan-workflow` meta | **No** — copies the bare one-liner&#39;s `textContent`. |</p>
+      <p>The workflow gap is the worst of the three, because that prompt says &quot;Brief<br>subagents with the plan file&quot; — so every subagent is briefed with a plan and<br>never told to record anything. Nothing ticks, no spec write happens, and the<br>detector in Steps 1–2 never fires. This plan&#39;s own rendered HTML has the defect:<br>its `plan-workflow` meta tag tells subagents to implement it and says nothing<br>about completion.</p>
+      <p>Both the copy handlers *and* the meta-tag strings need fixing, because they are<br>different delivery paths: `implementation-plan/SKILL.md:482-483` sends the user<br>the workflow prompt read **from the `plan-workflow` meta tag**, not from the copy<br>button. Fixing only the button would leave the primary workflow path untouched.</p>
+      <p>Steps 6–8 close this. Together with the detector they narrow the never-ticked<br>hole to sessions that ignore the prompt entirely — without the Stop hook.</p>
       <p>### Risks</p>
-      <p>- **Exit-2 styling.** This plugin&#39;s hook convention is stderr + `sys.exit(2)`<br>(`hooks/validate-plan-filename.py:210-211`), which the UI renders as a<br>&quot;blocking error&quot; even though `PostToolUse` cannot block an already-run tool.<br>A completion nudge styled as an error is a cosmetic mismatch. Mitigation:<br>follow the established convention for consistency; the message text carries<br>the framing. Revisiting the delivery channel repo-wide is a Next Step.<br>- **Unlocking `finalize-plan` widens its activation surface.** Mitigated by its<br>narrow description and its own confirmation gate. Step 3 tightens the<br>description so it reads as a completion action rather than an ambient one.<br>- **The version bump reads the rule&#39;s spirit over its letter.** Decided during<br>the plan interview: `.claude/rules/marketplace.md` lists &quot;changing activation<br>behavior&quot; under MAJOR, and this plan changes it. It ships as `3.1.0` anyway,<br>because the clause targets changes that invalidate existing usage and this one<br>does not — the command still works, nothing an installed user does breaks. The<br>cost is that a user skimming version numbers sees a routine minor bump and may<br>not notice the skill can now fire on its own. Mitigation: Step 6 makes the<br>CHANGELOG entry state the activation change outright, since it is now the only<br>place that information surfaces.</p>
+      <p>- **Exit-2 styling.** This plugin&#39;s hook convention is stderr + `sys.exit(2)`<br>(`hooks/validate-plan-filename.py:210-211`), which the UI renders as a<br>&quot;blocking error&quot; even though `PostToolUse` cannot block an already-run tool.<br>A completion nudge styled as an error is a cosmetic mismatch. Mitigation:<br>follow the established convention for consistency; the message text carries<br>the framing. Revisiting the delivery channel repo-wide is a Next Step.<br>- **Unlocking `finalize-plan` widens its activation surface.** Mitigated by its<br>narrow description and its own confirmation gate. Step 3 tightens the<br>description so it reads as a completion action rather than an ambient one.<br>- **The goal prompt gets the full check-off, including per-step `[x]` markers.**<br>Decided during the plan interview, over the narrower alternative of criteria +<br>status only. The tension it creates is real and worth stating: the goal prompt<br>exists to tell an agent to *optimize for the outcome* and treat the plan as<br>reference, so an agent may legitimately achieve the objective without<br>following the plan&#39;s steps. Ticking those steps would then record work that<br>never happened — a false record, adjacent to the false-completion failure mode<br>this plan otherwise guards against. What keeps it honest is that the inherited<br>instruction is already conditional (&quot;after completing each step, mark it<br>done&quot;), so a bypassed step stays unticked. The consequence is that a<br>goal-driven agent which met every criterion by a different route cannot reach<br>`status: completed`, because not every step is `[x]`. Step 6 resolves that with<br>the mechanism the section catalog already provides: route the discrepancy to a<br>`## Completion Report` entry rather than a false tick. Re-open this if goal-run<br>plans start stalling at `in-progress` with clean criteria.<br>- **The version bump reads the rule&#39;s spirit over its letter.** Decided during<br>the plan interview: `.claude/rules/marketplace.md` lists &quot;changing activation<br>behavior&quot; under MAJOR, and this plan changes it. It ships as `3.1.0` anyway,<br>because the clause targets changes that invalidate existing usage and this one<br>does not — the command still works, nothing an installed user does breaks. The<br>cost is that a user skimming version numbers sees a routine minor bump and may<br>not notice the skill can now fire on its own. Mitigation: Step 9 makes the<br>CHANGELOG entry state the activation change outright, since it is now the only<br>place that information surfaces.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1450,6 +1456,9 @@ img, video { max-width: 100%; height: auto; }
           <li><code>`kit/plugins/plan-agent/hooks.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register it on `Write|Edit|MultiEdit`.</span></li>
           <li><code>`kit/plugins/plan-agent/skills/finalize-plan/SKILL.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">drop `disable-model-invocation`, retune the description.</span></li>
           <li><code>`kit/plugins/plan-agent/skills/implementation-plan/SKILL.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the detector on the `Exit` branch and in Step 6.</span></li>
+          <li><code>`kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">generalise `buildImplementPrompt()`; rewire `copyGoal` and `copyWorkflow` to it.</span></li>
+          <li><code>`kit/plugins/plan-agent/scripts/build-plan-html.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">carry the check-off clause into the `plan-goal` and `plan-workflow` meta tags.</span></li>
+          <li><code>`tests/plugins/test-build-plan-html.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">assert all three prompts instruct check-off. **Outside the plugin path by the same test convention as below.**</span></li>
           <li><code>`kit/plugins/plan-agent/CHANGELOG.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">release entry.</span></li>
           <li><code>`.claude-plugin/marketplace.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version bump. **Outside `kit/plugins/plan-agent/**` by necessity:** for relative-path plugins this repo sets `version` only in `marketplace.json`, never in `plugin.json` (per `.claude/rules/marketplace.md`). There is no in-plugin alternative.</span></li>
           <li><code>`tests/plugins/test-plan-completion-drift.sh`</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Tier 1 test. **Outside the plugin path by convention:** every plugin test in this repo lives under `tests/plugins/`; no plugin directory contains tests.</span></li>
@@ -1556,6 +1565,57 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
+                <span class="step-chip-text">In `kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`, generalise `buildImplementPrompt()` (`:1306`) into a shared builder that takes the source command element id (`implement-cmd` / `goal-cmd` / `workflow-cmd`), keeping its existing five instructions and live-DOM status line verbatim. Rewire `copyGoal` (`:1390`) and `copyWorkflow` (`:1383`) to call it instead of copying raw `textContent`. Keep `copyCmd`&#39;s output byte-identical to today&#39;s. Add one instruction that applies to every variant: if the objective was achieved without following a step, leave that step unticked and record it as a `## Completion Report` bullet in the spec rather than ticking it.</span>
+              </div>
+              <div class="step-why">all three prompts start an implementation, so all three must teach the check-off loop — one shared builder is also the only way they cannot drift apart again later; and the Completion Report clause is what stops the goal prompt&#39;s full check-off (see Risks) from turning a bypassed step into a false record.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">render any plan, then in the browser console confirm `copyGoal`/`copyWorkflow` produce text containing `[x]`, `status: completed`, and the Completion Report clause, and that `copyCmd`&#39;s output still matches a pre-change capture except for that one added clause.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">In `kit/plugins/plan-agent/scripts/build-plan-html.mjs`, extend the `goal` (`:176`) and `workflow` (`:180`) strings so the check-off requirement survives into the `plan-goal` and `plan-workflow` meta tags — append a clause instructing the agent to tick `[x]` step markers and `- [x]` criteria in the spec and set `status: completed` when done. For the workflow string, place it so it applies to the briefed subagents, not just the orchestrator.</span>
+              </div>
+              <div class="step-why">`implementation-plan/SKILL.md:482-483` hands the user the workflow prompt read from the **meta tag**, so a copy-handler-only fix would miss the primary workflow path entirely.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">re-render this plan and confirm `grep -o &#39;&lt;meta name=&quot;plan-workflow&quot;[^&gt;]*&gt;&#39; docs/plans/fix-plan-completion-drift.html` contains both `[x]` and `status: completed`; same for `plan-goal`.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add goal/workflow prompt coverage to `tests/plugins/test-build-plan-html.mjs`. Assert that the rendered `plan-goal` and `plan-workflow` meta tags each contain the check-off clause, that the shared builder is wired to all three copy handlers (`copyCmd`, `copyGoal`, `copyWorkflow` all reference it), and that a plan with `workflow: false` still emits a `plan-goal` tag carrying the clause.</span>
+              </div>
+              <div class="step-why">the whole detector chain is dead if a future edit quietly reverts a prompt to a bare one-liner, and that regression is invisible — nothing fails, plans just silently stop getting marked done again.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">`node tests/plugins/test-build-plan-html.mjs` exits 0 with the new assertions reported.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">9</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
                 <span class="step-chip-text">Add a `3.1.0` entry to `kit/plugins/plan-agent/CHANGELOG.md` above the `3.0.0` entry, dated 2026-07-15, with `### Added` (the drift-detector hook) and `### Changed` (`finalize-plan` is now model-invocable — state explicitly that the `/plan-agent:finalize-plan` command is unchanged and existing invocations keep working, and that the skill may now activate on its own when a plan finishes).</span>
               </div>
               <div class="step-why">the activation change is the only part an installed user can notice without reading the diff, so the CHANGELOG has to carry it even though the version number does not — a minor bump makes the entry the sole place a user learns the skill can now fire by itself.</div>
@@ -1569,7 +1629,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">7</div>
+            <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1598,6 +1658,7 @@ img, video { max-width: 100%; height: auto; }
       <div class="test-list">
         <div class="test-card">Unit: the noise contract in isolation. File: `tests/plugins/test-plan-completion-drift.sh`; Targets: `_is_plan_spec()` and the status/step/criteria parse in `detect-plan-completion-drift.py`; Key cases: non-plan `.md` inside the plans dir, `# Plan:` spec outside the plans dir, spec with zero criteria, spec with a `# schema:` frontmatter comment ahead of the title heading</div>
         <div class="test-card">Integration: hook registration resolves for a marketplace install, not just this checkout. File: `tests/plugins/test-plan-completion-drift.sh`; Targets: `hooks.json` + `detect-plan-completion-drift.py`; Key cases: the fifth `PostToolUse` entry exists, its command interpolates `${CLAUDE_PLUGIN_ROOT}`, and the referenced script path exists relative to the plugin root</div>
+        <div class="test-card">Integration: every prompt that starts an implementation instructs check-off, so the detector has something to detect. File: `tests/plugins/test-build-plan-html.mjs`; Targets: `build-plan-html.mjs` prompt strings + `plan-shell.mjs` copy handlers; Key cases: rendered `plan-goal` and `plan-workflow` meta tags each contain `[x]` and `status: completed`; `copyCmd`/`copyGoal`/`copyWorkflow` all route through the shared builder; a `workflow: false` plan still emits a compliant `plan-goal` tag</div>
       </div>
     </section>
 
@@ -1630,19 +1691,35 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">`hooks.json` registers the detector via `${CLAUDE_PLUGIN_ROOT}` and contains five `PostToolUse` entries.</label>
+          <label for="ac6">The `plan-goal` and `plan-workflow` meta tags of a freshly rendered plan each instruct the agent to tick `[x]` step markers and `- [x]` criteria and set `status: completed`.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`bash tests/plugins/test-plan-completion-drift.sh` passes.</label>
+          <label for="ac7">`copyCmd`, `copyGoal`, and `copyWorkflow` all produce their prompt from the one shared builder — no handler copies a bare `textContent` one-liner.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">`plan-agent` is at `3.1.0` in `.claude-plugin/marketplace.json` with a matching CHANGELOG entry that names the activation change.</label>
+          <label for="ac8">Every prompt variant tells the agent to record a bypassed step as a `## Completion Report` bullet rather than ticking it.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">Every behavioral change lives under `kit/plugins/plan-agent/**`; the only exceptions are `marketplace.json` and `tests/`, each justified in Files.</label>
+          <label for="ac9">`node tests/plugins/test-build-plan-html.mjs` passes with the new prompt assertions.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">`hooks.json` registers the detector via `${CLAUDE_PLUGIN_ROOT}` and contains five `PostToolUse` entries.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11">`bash tests/plugins/test-plan-completion-drift.sh` passes.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12">`plan-agent` is at `3.1.0` in `.claude-plugin/marketplace.json` with a matching CHANGELOG entry that names the activation change.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac13">
+          <label for="ac13">Every behavioral change lives under `kit/plugins/plan-agent/**`; the only exceptions are `marketplace.json` and `tests/`, each justified in Files.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1657,6 +1734,8 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
       <p>Walk the bug end-to-end as a plugin user would hit it, in a scratch copy of a<br>plan spec under the plans directory:</p>
       <p>1. Take any plan spec with `status: in-progress` and at least one unticked step.<br>Tick the remaining steps and criteria one at a time via `Edit`. Nothing fires<br>until the final tick — confirming the hook is silent on partial progress.<br>2. On the edit that completes the last step or criterion, the hook fires: the<br>session surfaces a message naming that spec and pointing at<br>`/plan-agent:finalize-plan`. This is the moment that silently did nothing<br>before.<br>3. Confirm the model can now act on it — that `finalize-plan` resolves without<br>the user typing the command, and that it still runs its own verification and<br>asks before writing `status`. A completion that was never verified must still<br>not happen.<br>4. Re-run the edit once `status: completed` is set. The hook stays silent —<br>the contradiction is gone, so the nudge is gone.<br>5. Edit an unrelated `.md` file and a source file in the same session. No hook<br>output. This is the noise contract holding.</p>
+      <p>Then verify the prompts actually feed the detector — the two halves are useless<br>apart:</p>
+      <p>6. Re-render this plan and read its own `plan-goal` and `plan-workflow` meta<br>tags. Both must now instruct `[x]` ticks, `- [x]` criteria, and<br>`status: completed`. Before this change the workflow tag briefed subagents to<br>implement the plan and said nothing about recording it.<br>7. Copy each of the three prompts from the rendered page. All three must carry<br>the check-off loop; before this change only the implement prompt did.<br>8. Close the loop end-to-end: paste the workflow prompt into a fresh session and<br>confirm the resulting run ticks the spec as it goes, which is what trips the<br>detector from step 2 above. A prompt that instructs check-off and a hook that<br>fires on check-off are one mechanism — this step is the only place that shows<br>them working as one.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
