@@ -10,6 +10,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PLUGIN="$ROOT/kit/plugins/artifact-tools"
 MARKET="$ROOT/.claude-plugin/marketplace.json"
+CHANGELOG="$PLUGIN/CHANGELOG.md"
 fail() { echo "FAIL: $1" >&2; exit 1; }
 checks=0
 ok() { checks=$((checks + 1)); }
@@ -148,36 +149,28 @@ for f in "$DIFF" "$SESSION" "$PLAN" "$PROMPT"; do
 done
 ok
 
-# 5. Marketplace registration, versioned in agreement with the CHANGELOG.
-#    Pinning a literal version here would fail every bump and teach the next
-#    author to edit the test until it passes. The real invariant is that the two
-#    places a version lives agree — bumping marketplace.json and forgetting the
-#    CHANGELOG entry (or vice versa) is the mistake worth catching.
+# 5. Marketplace registration, with the version tracking the CHANGELOG rather
+#    than a literal — a release bump is correct behaviour and must not fail this
+#    test; marketplace.json and the CHANGELOG drifting apart is the real defect.
 python3 -m json.tool "$MARKET" > /dev/null 2>&1 || fail "marketplace.json is not valid JSON"
-python3 - "$MARKET" "$PLUGIN/CHANGELOG.md" <<'EOF' || fail "marketplace: artifact-tools registration invalid"
+python3 - "$MARKET" "$CHANGELOG" <<'EOF' || fail "marketplace: artifact-tools registration is wrong"
 import json, re, sys
 plugins = json.load(open(sys.argv[1]))["plugins"]
 e = next((p for p in plugins if p["name"] == "artifact-tools"), None)
 assert e, "artifact-tools entry missing"
+heading = re.search(r"^## \[(\d+\.\d+\.\d+)\]", open(sys.argv[2]).read(), re.M)
+assert heading, "no '## [x.y.z]' release heading found in CHANGELOG.md"
+latest = heading.group(1)
+assert e["version"] == latest, f'version is {e["version"]!r}, CHANGELOG says {latest!r}'
 assert e["source"]["path"] == "kit/plugins/artifact-tools", "source path mismatch"
 assert e["category"] == "development", f'category is {e["category"]!r}'
-
-version = e["version"]
-assert re.fullmatch(r'\d+\.\d+\.\d+', version), f'version {version!r} is not semver X.Y.Z'
-
-# The newest CHANGELOG heading must name the version being shipped.
-headings = re.findall(r'^## \[(\d+\.\d+\.\d+)\]', open(sys.argv[2], encoding="utf-8").read(), re.M)
-assert headings, "CHANGELOG has no '## [X.Y.Z]' entries"
-assert headings[0] == version, (
-    f'marketplace version is {version!r} but the newest CHANGELOG entry is '
-    f'{headings[0]!r} — bump both or neither')
 EOF
 ok
 
 # 6. Docs exist (repo convention: README + CHANGELOG per plugin).
 [ -f "$PLUGIN/README.md" ] || fail "README.md missing"
 [ -f "$PLUGIN/CHANGELOG.md" ] || fail "CHANGELOG.md missing"
-# (The CHANGELOG's newest entry is checked against marketplace.json in step 5.)
+grep -qF '1.0.0' "$PLUGIN/CHANGELOG.md" || fail "CHANGELOG has no 1.0.0 entry"
 # Compare the homepage field itself — a bare grep for the path would also match
 # the repository/source fields and pass while homepage pointed elsewhere.
 python3 - "$MANIFEST" <<'EOF' || fail "homepage must be the plugin's own directory URL"

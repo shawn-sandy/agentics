@@ -1,5 +1,19 @@
 # Changelog — social-media-tools
 
+## v2.17.1 — 2026-07-15 — export-session: stop truncating session titles mid-word
+
+Ports the title fix from `artifact-tools` v1.1.0 into this plugin's copy of `export_session.py`. `title_of` and its self-check are byte-identical across the two copies; the pair's only differences remain the two divergences documented in the artifact-tools copy (`source` basename, `title:` frontmatter), both of which exist because that copy's output is published while this one's stays on local disk.
+
+### Fixed
+
+- **`export-session` no longer cuts the session title mid-word.** The title was an 80-character slice of the first user message, which severed whatever word straddled the boundary (e.g. `...the artifact-tool always gen`). Titles now trim on a word boundary via `textwrap.shorten(width=60, placeholder="...", break_on_hyphens=False)`, so only whole words survive.
+- **A first turn that is one oversized token (a URL, a path, a hash) is kept whole** rather than sliced mid-token. Width is a target; not cutting mid-word is the rule.
+- **The `Session export` placeholder title can no longer be emitted.** With no user turn, the title comes from the session's first turn instead.
+
+### Added
+
+- **`export_session.py --self-check`** — asserts `title_of` never emits a placeholder or a mid-word cut, across short, long, hyphenated, multi-line, oversized-token, and URL inputs.
+
 ## v2.17.0 — 2026-07-08 — save-artifact: save to `.claude/artifacts`, publish to the Artifacts gallery
 
 ### Changed
