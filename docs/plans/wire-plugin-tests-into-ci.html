@@ -1423,10 +1423,12 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
       <p>This closes [#408](https://github.com/shawn-sandy/agentics/issues/408) and its<br>blocker [#409](https://github.com/shawn-sandy/agentics/issues/409) in one<br>change, because #408 cannot land alone: enabling PR CI while two suites are<br>red on `main` would fail every incoming pull request on arrival.</p>
-      <p>The gap was proven on PR #405: a `marketplace.json` version bump broke<br>`tests/plugins/test-artifact-tools.sh`, yet all seven PR checks stayed green —<br>only a review bot running the file by hand caught it. Today the only workflow<br>touching `tests/` is `publish-dist.yml`, which runs a hand-picked 4 of the 19<br>suites on a nightly cron, never on pull requests. The other 15 run nowhere.</p>
+      <p>The gap was proven on PR #405: a `marketplace.json` version bump broke<br>`tests/plugins/test-artifact-tools.sh`, yet all seven PR checks stayed green —<br>only a review bot running the file by hand caught it.</p>
+      <p>PR #410 has since added `check-plugin-versions.yml`, the repo&#39;s first<br>`pull_request` test workflow — it runs `scripts/check-plugin-versions.mjs`<br>(which fails a PR when a plugin changed without its marketplace version going<br>up) plus that guard&#39;s own unit test under `tests/publish/`. It does not touch<br>`tests/plugins/`. So the gap this plan closes is unchanged: of the 19 suites in<br>`tests/plugins/`, four run on a nightly cron via `publish-dist.yml` and the<br>other 15 run nowhere. Both guards this plan fixes are still red on `main` —<br>re-confirmed after #410 landed.</p>
+      <p>Two things follow from #410 rather than being invented here. Its guard already<br>owns &quot;is this plugin&#39;s version right?&quot;, already reads `marketplace.json`, and<br>already exports `parseSemver`/`isHigher` — so the CHANGELOG-agreement invariant<br>belongs inside it rather than in a second script named one letter apart. And it<br>sets this repo&#39;s `pull_request` workflow conventions (`permissions: contents:<br>read`, `fetch-depth: 0`, node 20), which the new workflow follows.</p>
       <p>The two suites red on `main` are `test-build-proposal.sh` (check 12) and<br>`test-setup-sites.sh` (check 10). Each asserts the plan-agent version in<br>`marketplace.json` is strictly *above* `origin/main` — true only on a branch<br>that bumps plan-agent, false everywhere else including `main` itself. The fix<br>replaces that branch-dependent comparison with the invariant PRs #405 and<br>#407 independently converged on for artifact-tools: the marketplace version<br>must equal the newest release heading in the plugin&#39;s CHANGELOG. One format<br>trap: plan-agent&#39;s CHANGELOG headings are `## 3.0.0 — Title (date)`, not the<br>`## [1.2.0]` bracketed form artifact-tools uses, so the heading regex must<br>accept both. One preservation duty: each guard also asserts the plugin<br>description mentions its skill (`build-proposal` / `setup-sites`) — those<br>assertions stay.</p>
       <p>`publish-dist.yml` keeps its own pre-publish test steps untouched; it gates<br>publishing, not merging, and is out of scope here. That leaves four suites<br>running in both places (the nightly publish gate and the new PR gate) while<br>`tests/publish/` stays PR-invisible — deliberate, not an oversight.</p>
-      <p>**A workflow alone does not block anything.** A check that reports red still<br>lets a pull request merge unless it is marked required. This repo protects<br>`main` with two active rulesets (`main` and `main-branch`), and neither carries<br>a `required_status_checks` rule — they enforce only `deletion`,<br>`non_fast_forward`, `copilot_code_review`, and `pull_request`. Note the legacy<br>branch-protection API reports `main` as unprotected (`gh api<br>repos/shawn-sandy/agentics/branches/main/protection` returns 404), which is<br>misleading: rulesets supersede it, and adding classic branch protection here<br>would create a third, competing mechanism. Step 6 therefore adds the required<br>check to the existing ruleset.</p>
+      <p>**A workflow alone does not block anything.** A check that reports red still<br>lets a pull request merge unless it is marked required. This repo protects<br>`main` with two active rulesets (`main` and `main-branch`), and neither carries<br>a `required_status_checks` rule — they enforce only `deletion`,<br>`non_fast_forward`, `copilot_code_review`, and `pull_request`. Note the legacy<br>branch-protection API reports `main` as unprotected (`gh api<br>repos/shawn-sandy/agentics/branches/main/protection` returns 404), which is<br>misleading: rulesets supersede it, and adding classic branch protection here<br>would create a third, competing mechanism. Step 9 therefore adds the required<br>check to the existing ruleset.</p>
       <p>Two risks come with that gate. Open pull requests (#384 and #266 today) predate<br>the workflow file, so GitHub will never run it for them; once the check is<br>required they stick at &quot;Expected — waiting for status to be reported&quot; until<br>their authors merge `main` in. And enforcement is a repo setting, not a commit,<br>so the rollback for a misfiring check is an admin removing the ruleset rule —<br>not a revert of this work.</p>
       <p>One more property worth recording: `.claude-plugin/marketplace.json` has a<br>custom merge driver that keeps the higher semver, but GitHub&#39;s web merge button<br>does not run local merge drivers, and no driver covers `CHANGELOG.md` at all.<br>Concurrent version bumps therefore surface as visible conflicts rather than<br>silent bad merges. The CHANGELOG-agreement guard is less race-prone than the<br>`origin/main` comparison it replaces — but a careless conflict resolution can<br>still land a mismatch, which is caught only once the check is genuinely<br>required.</p>
     </section>
@@ -1440,12 +1442,13 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>scripts/check-changelog-version.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">shared helper asserting a plugin&#39;s marketplace version equals its newest CHANGELOG heading, accepting both heading forms</span></li>
+          <li><code>scripts/check-plugin-versions.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">extend #410&#39;s guard with an exported CHANGELOG-agreement check accepting both heading forms, plus a `--changelog &lt;plugin&gt;` entry point the suites call</span></li>
+          <li><code>tests/publish/test-check-plugin-versions.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">extend #410&#39;s unit test to cover the new export</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
             <ul class="file-list">
-            <li><code>test-build-proposal.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">replace the above-origin/main version check with a call to the shared helper, preserving the file&#39;s FAILURES-counter idiom and its build-proposal description assertion</span></li>
+            <li><code>test-build-proposal.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">replace the above-origin/main version check with a call to the shared guard, preserving the file&#39;s FAILURES-counter idiom and its build-proposal description assertion</span></li>
             <li><code>test-setup-sites.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same replacement, preserving the setup-sites description assertion</span></li>
-            <li><code>test-artifact-tools.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">swap its inline copy of the same invariant for the shared helper</span></li>
+            <li><code>test-artifact-tools.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">swap its inline copy of the same invariant for the shared guard</span></li>
             </ul>
           </li>
           <li><code>scripts/run-plugin-tests.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the run-all glob loop over an optional suite directory, invoked identically by CI and by hand</span></li>
@@ -1453,7 +1456,7 @@ img, video { max-width: 100%; height: auto; }
           <li><code>tests/plugins/test-plugin-ci-wiring.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective-verification test covering the workflow&#39;s shape and both guards&#39; pass and fail paths</span></li>
           <li><code>tests/fixtures/changelog-formats/</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">two minimal CHANGELOG fixtures, bracketed and unbracketed, proving both heading forms parse</span></li>
           <li><code>tests/fixtures/dummy-suites/</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">throwaway passing and failing suites the wiring test drives the runner over, so it never points the runner at its own directory</span></li>
-          <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add the plugin-tests.yml row to the CI/CD table</span></li>
+          <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add CI/CD table rows for both plugin-tests.yml and check-plugin-versions.yml (#410 shipped without one)</span></li>
         </ul>
       </div>
     </section>
@@ -1472,12 +1475,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write scripts/check-changelog-version.mjs taking a plugin name, reading its version from .claude-plugin/marketplace.json and the newest release heading from kit/plugins/&lt;name&gt;/CHANGELOG.md, and exiting non-zero when they disagree — with a heading regex accepting both the bracketed `## [1.2.0]` form artifact-tools uses and the unbracketed `## 3.0.0 — Title (date)` form plan-agent uses</span>
+                <span class="step-chip-text">Extend scripts/check-plugin-versions.mjs (from #410) with an exported `changelogAgrees(plugin, marketplaceDoc, changelogText)` asserting the plugin&#39;s marketplace version equals the newest release heading in kit/plugins/&lt;name&gt;/CHANGELOG.md — a heading regex accepting both the bracketed `## [1.2.0]` form artifact-tools uses and the unbracketed `## 3.0.0 — Title (date)` form plan-agent uses — plus a `--changelog &lt;plugin&gt;` CLI entry point exiting non-zero on disagreement, and extend tests/publish/test-check-plugin-versions.mjs to cover it</span>
               </div>
-              <div class="step-why">this invariant is about to exist in three suites, each with its own regex and its own special-casing of that format difference; one tested helper absorbs the variance instead of three copies drifting apart</div>
+              <div class="step-why">this invariant is about to exist in three suites, each with its own regex special-casing that format difference; #410&#39;s guard already owns version correctness, already reads marketplace.json, and already exports parseSemver/isHigher, so folding it in reuses that rather than adding a second script one letter away from the first</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`node scripts/check-changelog-version.mjs plan-agent` and `... artifact-tools` both exit 0 against the current tree, and each exits non-zero against the matching fixture in tests/fixtures/changelog-formats/ built to disagree.</div>
+                <div class="verify-body">`node scripts/check-plugin-versions.mjs --changelog plan-agent` and `... --changelog artifact-tools` both exit 0 against the current tree; each exits non-zero against the disagreeing fixture; and `node tests/publish/test-check-plugin-versions.mjs` passes with the new cases.</div>
               </details>
             </div>
           </div>
@@ -1506,7 +1509,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Replace check 12 in tests/plugins/test-build-proposal.sh and check 10 in tests/plugins/test-setup-sites.sh with a call to the shared helper, and swap test-artifact-tools.sh&#39;s inline copy for the same call — preserving each file&#39;s own idiom (the `echo &quot;N. ...&quot;` + FAILURES counter in the first two, `fail()`/`ok()` in artifact-tools) and every existing description assertion (`build-proposal`, `setup-sites`)</span>
+                <span class="step-chip-text">Replace check 12 in tests/plugins/test-build-proposal.sh and check 10 in tests/plugins/test-setup-sites.sh with a call to `node scripts/check-plugin-versions.mjs --changelog plan-agent`, and swap test-artifact-tools.sh&#39;s inline copy for the same call against artifact-tools — preserving each file&#39;s own idiom (the `echo &quot;N. ...&quot;` + FAILURES counter in the first two, `fail()`/`ok()` in artifact-tools) and every existing description assertion (`build-proposal`, `setup-sites`)</span>
               </div>
               <div class="step-why">the above-origin/main comparison is only true on branches that bump plan-agent, so both suites fail on main and on every unrelated PR; importing artifact-tools&#39; hard-exit style into counter-style files would silently change how their remaining checks report</div>
               <details class="step-verify-toggle">
@@ -1557,7 +1560,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add tests/fixtures/dummy-suites/ holding three throwaway suites — one passing `.sh`, one deliberately failing `.sh`, one passing `.mjs` — then add tests/plugins/test-plugin-ci-wiring.sh asserting the workflow exists with its `pull_request` trigger, job id `plugin-tests`, `permissions`, `timeout-minutes`, and `concurrency`; that it delegates to scripts/run-plugin-tests.sh rather than hand-listing suites; that `run-plugin-tests.sh tests/fixtures/dummy-suites` names the failing fixture, still runs and reports the other two, and exits non-zero; and that the shared helper exits non-zero on the disagreeing CHANGELOG fixture</span>
+                <span class="step-chip-text">Add tests/fixtures/dummy-suites/ holding three throwaway suites — one passing `.sh`, one deliberately failing `.sh`, one passing `.mjs` — then add tests/plugins/test-plugin-ci-wiring.sh asserting the workflow exists with its `pull_request` trigger, job id `plugin-tests`, `permissions`, `timeout-minutes`, and `concurrency`; that it delegates to scripts/run-plugin-tests.sh rather than hand-listing suites; that `run-plugin-tests.sh tests/fixtures/dummy-suites` names the failing fixture, still runs and reports the other two, and exits non-zero; and that the extended guard exits non-zero on the disagreeing CHANGELOG fixture</span>
               </div>
               <div class="step-why">the wiring test lives in `tests/plugins/`, so the runner executes it — pointing it at its own directory would make it invoke the runner that is invoking it, recursing until it hangs; a fixture directory gives the same behavioural proof (pickup by glob, failure named, run-all continues) with no self-reference, and a committed test is what stops a future edit silently dropping the trigger or weakening a guard to always-exit-0</div>
               <details class="step-verify-toggle">
@@ -1574,12 +1577,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the plugin-tests.yml row to README.md&#39;s CI/CD table (line ~1012), matching the existing `Workflow | Trigger | Purpose` shape</span>
+                <span class="step-chip-text">Add rows to README.md&#39;s CI/CD table (line ~1012) for both plugin-tests.yml and check-plugin-versions.yml, matching the existing `Workflow | Trigger | Purpose` shape</span>
               </div>
-              <div class="step-why">that table documents every workflow in .github/workflows/, and CLAUDE.md requires docs updated alongside the change — a workflow absent from it is the kind of drift the table exists to prevent</div>
+              <div class="step-why">that table documents every workflow in .github/workflows/, and CLAUDE.md requires docs updated alongside the change; #410 shipped its workflow without a row, so the table is already two short and adding only one would leave the drift half-fixed while looking done</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">the table lists plugin-tests.yml with its pull_request trigger, and the row count matches the number of files in .github/workflows/.</div>
+                <div class="verify-body">`grep -c &#39;| \`.*\.yml\` |&#39; README.md` equals the number of files in .github/workflows/, and both new rows name their pull_request trigger.</div>
               </details>
             </div>
           </div>
@@ -1628,11 +1631,11 @@ img, video { max-width: 100%; height: auto; }
         Tests
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
-      <div class="test-tier-label">Tier 1 — Steps create two executable scripts (scripts/check-changelog-version.mjs and scripts/run-plugin-tests.sh) that CI and three suites depend on</div>
+      <div class="test-tier-label">Tier 1 — Steps create scripts/run-plugin-tests.sh and extend #410&#39;s scripts/check-plugin-versions.mjs, both of which CI and three suites depend on</div>
       <div class="objective-test-card">Objective: every tests/plugins/ suite runs on a pull request and a failing one is reported without halting the rest. File: tests/plugins/test-plugin-ci-wiring.sh; Type: smoke; Asserts: plugin-tests.yml carries job id plugin-tests plus pull_request/permissions/timeout/concurrency and delegates to run-plugin-tests.sh with no hand-listed suites; the runner driven over tests/fixtures/dummy-suites/ picks up every fixture by glob, names the failing one, still reports the rest, and exits non-zero — proven against a fixture directory rather than tests/plugins/, which would recurse; Run: bash tests/plugins/test-plugin-ci-wiring.sh</div>
       <div class="test-list">
-        <div class="test-card">Unit: shared CHANGELOG-version helper. File: tests/plugins/test-changelog-version-helper.mjs; Targets: scripts/check-changelog-version.mjs; Key cases: bracketed `## [1.2.0]` heading agrees, unbracketed `## 3.0.0 — Title (date)` heading agrees, disagreeing version exits non-zero, missing CHANGELOG exits non-zero with a named reason</div>
-        <div class="test-card">Integration: rewritten guards call the shared helper. File: tests/plugins/test-plugin-ci-wiring.sh; Targets: test-build-proposal.sh, test-setup-sites.sh, test-artifact-tools.sh against the helper; Key cases: all three exit 0 on the clean tree, each exits non-zero against the disagreeing fixture, each preserves its own description assertion and check count</div>
+        <div class="test-card">Unit: CHANGELOG-agreement check. File: tests/publish/test-check-plugin-versions.mjs; Targets: the changelogAgrees export in scripts/check-plugin-versions.mjs, alongside #410&#39;s existing cases; Key cases: bracketed `## [1.2.0]` heading agrees, unbracketed `## 3.0.0 — Title (date)` heading agrees, disagreeing version exits non-zero, missing CHANGELOG exits non-zero with a named reason</div>
+        <div class="test-card">Integration: rewritten guards call the shared guard. File: tests/plugins/test-plugin-ci-wiring.sh; Targets: test-build-proposal.sh, test-setup-sites.sh, test-artifact-tools.sh against scripts/check-plugin-versions.mjs; Key cases: all three exit 0 on the clean tree, each exits non-zero against the disagreeing fixture, each preserves its own description assertion and check count</div>
       </div>
     </section>
 
@@ -1657,7 +1660,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">The shared helper parses both the bracketed and unbracketed CHANGELOG heading forms, each proven by a fixture</label>
+          <label for="ac4">The extended guard parses both the bracketed and unbracketed CHANGELOG heading forms, each proven by a fixture, and #410&#39;s existing guard cases still pass</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
@@ -1693,7 +1696,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac13">
-          <label for="ac13">README.md&#39;s CI/CD table has a plugin-tests.yml row</label>
+          <label for="ac13">README.md&#39;s CI/CD table has rows for plugin-tests.yml and check-plugin-versions.yml, and its row count matches the file count in .github/workflows/</label>
         </li>
         <li>
           <input type="checkbox" id="ac14">
@@ -1773,10 +1776,10 @@ Verify with a workflow_dispatch run.</pre>
         <details class="next-step-item">
           <summary>Extend the CHANGELOG-agreement invariant to every plugin</summary>
           <div class="next-step-prompt">
-            <p>Once scripts/check-changelog-version.mjs exists, only three plugins call it; the other ten have no version guard at all, and the helper is already parameterized by plugin name.</p>
+            <p>Once the CHANGELOG-agreement check lands in scripts/check-plugin-versions.mjs, only three plugins call it; the other ten have no CHANGELOG guard, and the check is already parameterized by plugin name.</p>
             <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>In the shawn-sandy/agentics repo, add tests/plugins/test-marketplace-changelog-sync.sh
-that calls scripts/check-changelog-version.mjs for every plugin entry in
+that calls scripts/check-plugin-versions.mjs --changelog for every plugin entry in
 .claude-plugin/marketplace.json that has a kit/plugins/&lt;name&gt;/CHANGELOG.md,
 reporting each plugin checked and failing if any disagree. The helper already
 accepts both the &quot;## X.Y.Z&quot; and &quot;## [X.Y.Z]&quot; heading forms. It will be picked
