@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 12 done</span>
+        <span id="progress-label">0 / 14 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1448,10 +1448,11 @@ img, video { max-width: 100%; height: auto; }
             <li><code>test-artifact-tools.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">swap its inline copy of the same invariant for the shared helper</span></li>
             </ul>
           </li>
-          <li><code>scripts/run-plugin-tests.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the run-all glob loop, invoked identically by CI and by hand</span></li>
-          <li><code>.github/workflows/plugin-tests.yml</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">PR-triggered workflow calling scripts/run-plugin-tests.sh</span></li>
+          <li><code>scripts/run-plugin-tests.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the run-all glob loop over an optional suite directory, invoked identically by CI and by hand</span></li>
+          <li><code>.github/workflows/plugin-tests.yml</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">PR-triggered workflow whose job id is plugin-tests, calling scripts/run-plugin-tests.sh</span></li>
           <li><code>tests/plugins/test-plugin-ci-wiring.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective-verification test covering the workflow&#39;s shape and both guards&#39; pass and fail paths</span></li>
           <li><code>tests/fixtures/changelog-formats/</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">two minimal CHANGELOG fixtures, bracketed and unbracketed, proving both heading forms parse</span></li>
+          <li><code>tests/fixtures/dummy-suites/</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">throwaway passing and failing suites the wiring test drives the runner over, so it never points the runner at its own directory</span></li>
           <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add the plugin-tests.yml row to the CI/CD table</span></li>
         </ul>
       </div>
@@ -1522,12 +1523,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write scripts/run-plugin-tests.sh running every `tests/plugins/*.sh` via bash and every `tests/plugins/*.mjs` via node, counting failures rather than stopping at the first, printing each failing suite by name, and exiting non-zero if any failed</span>
+                <span class="step-chip-text">Write scripts/run-plugin-tests.sh taking an optional suite directory (defaulting to `tests/plugins`) and running every `*.sh` in it via bash and every `*.mjs` via node, counting failures rather than stopping at the first, printing each failing suite by name, and exiting non-zero if any failed</span>
               </div>
-              <div class="step-why">CI and a developer must run the identical command or &quot;green locally&quot; stops predicting green in CI — and run-all reporting shows the full damage in one run instead of one failure per push</div>
+              <div class="step-why">CI and a developer must run the identical command or &quot;green locally&quot; stops predicting green in CI, and run-all reporting shows the full damage in one run instead of one failure per push — while the directory argument is what lets the wiring test drive the runner over a fixture directory instead of the one it lives in, which would otherwise recurse (see step 6)</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`bash scripts/run-plugin-tests.sh` exits 0 listing every suite as passing, and exits non-zero naming exactly the offender when a deliberately-failing dummy suite is dropped into tests/plugins/ (removed after).</div>
+                <div class="verify-body">`bash scripts/run-plugin-tests.sh` exits 0 listing every suite as passing, and `bash scripts/run-plugin-tests.sh tests/fixtures/dummy-suites` exits non-zero naming only the deliberately-failing fixture.</div>
               </details>
             </div>
           </div>
@@ -1539,12 +1540,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Create .github/workflows/plugin-tests.yml with `name: plugin-tests`, a `pull_request` trigger, `permissions: contents: read`, actions/checkout@v4, actions/setup-node@v4 (node 20, matching publish-dist.yml), `timeout-minutes: 20`, a `concurrency` group keyed to the PR ref with `cancel-in-progress: true`, and a single step invoking `bash scripts/run-plugin-tests.sh`</span>
+                <span class="step-chip-text">Create .github/workflows/plugin-tests.yml with a human-readable workflow `name: Plugin Tests`, **the single job&#39;s id set to `plugin-tests`**, a `pull_request` trigger, `permissions: contents: read`, actions/checkout@v4, actions/setup-node@v4 (node 20, matching publish-dist.yml), `timeout-minutes: 20`, a `concurrency` group keyed to the PR ref with `cancel-in-progress: true`, and one step invoking `bash scripts/run-plugin-tests.sh`</span>
               </div>
-              <div class="step-why">the explicit name is what makes the check appear as `plugin-tests` — the string step 7 marks required and Verification looks for — while every other workflow here declares its own least-privilege `permissions` block, and a read-only PR trigger against untrusted branches is the last place to inherit defaults; 20 minutes leaves headroom for a suite list designed to grow by glob</div>
+              <div class="step-why">the **job** id — not the workflow name — is what GitHub reports as the check, so the job id is what step 9 must mark required and Verification must look for; this repo proves it, since `claude-code-review.yml` is named `Claude Code Review` while the check it reports is `claude-review`, its job id. Every other workflow here also declares its own least-privilege `permissions` block, and a read-only PR trigger against untrusted branches is the last place to inherit defaults; 20 minutes leaves headroom for a suite list designed to grow by glob</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`actionlint .github/workflows/plugin-tests.yml` passes (fall back to a plain YAML parse if actionlint is unavailable), and the file contains no hand-listed suite paths.</div>
+                <div class="verify-body">`actionlint .github/workflows/plugin-tests.yml` passes (fall back to a plain YAML parse if actionlint is unavailable), the file contains no hand-listed suite paths, and after the first run the check appears in the PR&#39;s list literally as `plugin-tests` — confirm with `gh pr checks &lt;n&gt;` rather than assuming.</div>
               </details>
             </div>
           </div>
@@ -1556,12 +1557,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add tests/plugins/test-plugin-ci-wiring.sh asserting the workflow exists with its `pull_request` trigger, `name: plugin-tests`, `permissions`, `timeout-minutes`, and `concurrency`; that it delegates to scripts/run-plugin-tests.sh rather than hand-listing suites; that run-plugin-tests.sh picks up a temporary dummy suite dropped into tests/plugins/ and still reports a deliberately-failing one by name while running the rest; and that the shared helper exits non-zero on the disagreeing fixture</span>
+                <span class="step-chip-text">Add tests/fixtures/dummy-suites/ holding three throwaway suites — one passing `.sh`, one deliberately failing `.sh`, one passing `.mjs` — then add tests/plugins/test-plugin-ci-wiring.sh asserting the workflow exists with its `pull_request` trigger, job id `plugin-tests`, `permissions`, `timeout-minutes`, and `concurrency`; that it delegates to scripts/run-plugin-tests.sh rather than hand-listing suites; that `run-plugin-tests.sh tests/fixtures/dummy-suites` names the failing fixture, still runs and reports the other two, and exits non-zero; and that the shared helper exits non-zero on the disagreeing CHANGELOG fixture</span>
               </div>
-              <div class="step-why">every one of those is a stated acceptance criterion that would otherwise be proven once by hand and never again — a future edit could drop the trigger, weaken the guard to always-exit-0, or reintroduce a hand-maintained list, and nothing would notice</div>
+              <div class="step-why">the wiring test lives in `tests/plugins/`, so the runner executes it — pointing it at its own directory would make it invoke the runner that is invoking it, recursing until it hangs; a fixture directory gives the same behavioural proof (pickup by glob, failure named, run-all continues) with no self-reference, and a committed test is what stops a future edit silently dropping the trigger or weakening a guard to always-exit-0</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-plugin-ci-wiring.sh` exits 0, and it is picked up automatically by run-plugin-tests.sh since it lives in tests/plugins/.</div>
+                <div class="verify-body">`bash tests/plugins/test-plugin-ci-wiring.sh` exits 0 in under a few seconds, and `bash scripts/run-plugin-tests.sh` completes without hanging — the specific symptom recursion would produce.</div>
               </details>
             </div>
           </div>
@@ -1607,12 +1608,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">After the workflow has run green once on this pull request, add `plugin-tests` as a required status check to the existing `main` ruleset via `gh api repos/shawn-sandy/agentics/rulesets/13160559` (or ruleset 14869592 — confirm which is authoritative first), adding a `required_status_checks` rule; then merge `main` into the two open pull requests (#384, #266) so they can report the new check</span>
+                <span class="step-chip-text">After the workflow has run green once on this pull request, read the check&#39;s exact name from `gh pr checks &lt;n&gt;` and add **that string** as a required status check on the existing `main` ruleset via `gh api repos/shawn-sandy/agentics/rulesets/13160559` (or 14869592 — confirm which is authoritative first), adding a `required_status_checks` rule; then merge `main` into the two open pull requests (#384, #266) so they can report the new check</span>
               </div>
-              <div class="step-why">without this the objective is unmet — the workflow reports a badge and nothing blocks a merge; adding it only after a green run avoids blocking every PR on an unproven check, and the two open PRs predate the workflow file so GitHub will never run it for them, leaving them stuck at &quot;waiting for status to be reported&quot; until they sync</div>
+              <div class="step-why">without this the objective is unmet — the workflow reports a badge and nothing blocks a merge; requiring the name GitHub actually published, rather than the one the plan expects, is what avoids pinning every PR on a status that never arrives; adding it only after a green run avoids blocking on an unproven check; and the two open PRs predate the workflow file so GitHub will never run it for them until they sync</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`gh api repos/shawn-sandy/agentics/rulesets/13160559 --jq &#39;[.rules[].type]&#39;` includes `required_status_checks`, and a pull request with a deliberately failing suite shows a blocked merge button.</div>
+                <div class="verify-body">`gh api repos/shawn-sandy/agentics/rulesets/13160559 --jq &#39;[.rules[].type]&#39;` includes `required_status_checks`, the required context matches `gh pr checks` output exactly, and a pull request with a deliberately failing suite shows a blocked merge button.</div>
               </details>
             </div>
           </div>
@@ -1628,7 +1629,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — Steps create two executable scripts (scripts/check-changelog-version.mjs and scripts/run-plugin-tests.sh) that CI and three suites depend on</div>
-      <div class="objective-test-card">Objective: every tests/plugins/ suite runs on a pull request and a failing one is reported without halting the rest. File: tests/plugins/test-plugin-ci-wiring.sh; Type: smoke; Asserts: plugin-tests.yml carries name/pull_request/permissions/timeout/concurrency and delegates to run-plugin-tests.sh with no hand-listed suites; a dummy suite dropped into tests/plugins/ is picked up with no workflow edit; a deliberately-failing dummy is named while the remaining suites still run and the script exits non-zero; Run: bash tests/plugins/test-plugin-ci-wiring.sh</div>
+      <div class="objective-test-card">Objective: every tests/plugins/ suite runs on a pull request and a failing one is reported without halting the rest. File: tests/plugins/test-plugin-ci-wiring.sh; Type: smoke; Asserts: plugin-tests.yml carries job id plugin-tests plus pull_request/permissions/timeout/concurrency and delegates to run-plugin-tests.sh with no hand-listed suites; the runner driven over tests/fixtures/dummy-suites/ picks up every fixture by glob, names the failing one, still reports the rest, and exits non-zero — proven against a fixture directory rather than tests/plugins/, which would recurse; Run: bash tests/plugins/test-plugin-ci-wiring.sh</div>
       <div class="test-list">
         <div class="test-card">Unit: shared CHANGELOG-version helper. File: tests/plugins/test-changelog-version-helper.mjs; Targets: scripts/check-changelog-version.mjs; Key cases: bracketed `## [1.2.0]` heading agrees, unbracketed `## 3.0.0 — Title (date)` heading agrees, disagreeing version exits non-zero, missing CHANGELOG exits non-zero with a named reason</div>
         <div class="test-card">Integration: rewritten guards call the shared helper. File: tests/plugins/test-plugin-ci-wiring.sh; Targets: test-build-proposal.sh, test-setup-sites.sh, test-artifact-tools.sh against the helper; Key cases: all three exit 0 on the clean tree, each exits non-zero against the disagreeing fixture, each preserves its own description assertion and check count</div>
@@ -1668,27 +1669,35 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">.github/workflows/plugin-tests.yml declares name: plugin-tests, a pull_request trigger, permissions: contents: read, timeout-minutes, and a concurrency group with cancel-in-progress</label>
+          <label for="ac7">.github/workflows/plugin-tests.yml declares a pull_request trigger, permissions: contents: read, timeout-minutes, and a concurrency group with cancel-in-progress</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">The workflow delegates to scripts/run-plugin-tests.sh and contains no hand-listed suite paths</label>
+          <label for="ac8">The workflow&#39;s job id is plugin-tests, and `gh pr checks` on this PR reports a check named exactly `plugin-tests`</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">A deliberately-failing suite is reported by name while the remaining suites still run, and the script exits non-zero — asserted by a committed test</label>
+          <label for="ac9">The workflow delegates to scripts/run-plugin-tests.sh and contains no hand-listed suite paths</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
-          <label for="ac10">A file dropped into tests/plugins/ matching *.sh or *.mjs is executed with no workflow edit, asserted behaviourally rather than by grepping the YAML</label>
+          <label for="ac10">`bash scripts/run-plugin-tests.sh` completes without hanging — the wiring test never drives the runner over its own directory</label>
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11">README.md&#39;s CI/CD table has a plugin-tests.yml row</label>
+          <label for="ac11">A deliberately-failing suite is reported by name while the remaining suites still run, and the script exits non-zero — asserted by a committed test against tests/fixtures/dummy-suites/</label>
         </li>
         <li>
           <input type="checkbox" id="ac12">
-          <label for="ac12">`plugin-tests` is a required status check in the main ruleset, and a pull request with a failing suite shows a blocked merge button</label>
+          <label for="ac12">A file dropped into a suite directory matching *.sh or *.mjs is executed with no workflow edit, asserted behaviourally rather than by grepping the YAML</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac13">
+          <label for="ac13">README.md&#39;s CI/CD table has a plugin-tests.yml row</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac14">
+          <label for="ac14">The required status check on the main ruleset matches the published check name exactly, and a pull request with a failing suite shows a blocked merge button</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
