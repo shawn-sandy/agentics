@@ -14,8 +14,13 @@ claude.ai as a live artifact.
 
 A transcript is a log; a recap is a deliverable. This skill extracts the session's
 turns with a bundled script, writes them up in reviewer-first order, scrubs the
-result, saves it under `{plansDirectory}/sessions/`, and publishes the Markdown
-directly — Markdown sources render as styled pages at the lowest token cost.
+result, saves it under `{plansDirectory}/sessions/`, and publishes an HTML
+rendering of it.
+
+The `.md` is the committed record and the thing to edit; the HTML is the render
+that carries the `<title>`. Publishing the `.md` directly is cheaper and wrong —
+it yields a page titled after the filename with the frontmatter visible as body
+text (see `${CLAUDE_PLUGIN_ROOT}/references/titles.md`).
 
 The extractor is bundled rather than borrowed from `social-media-tools`, so this
 plugin works standalone with no install-order dependency.
@@ -94,14 +99,28 @@ curated prose.
 If `security-scrub` is unavailable, say the scan could not run and ask via
 `AskUserQuestion` before continuing — never skip the gate silently.
 
-## Step 5 — Publish and record the URL
+## Step 5 — Render the recap to HTML
+
+Render the recap you just wrote into one self-contained HTML file in the
+scratchpad. This is a render, not a rewrite — same recap, same sections, same
+order:
+
+- **`<title>`** — the frontmatter `title:`, verbatim. This is the whole reason
+  the step exists; a `.md` source cannot carry it.
+- **Drop the frontmatter block.** It is metadata for the `.md` record, not page
+  copy. Published as Markdown it renders as a visible heading of raw YAML.
+- Keep the `.md` under `{plansDirectory}/sessions/` as the committed record. The
+  HTML is disposable — a later republish re-renders it.
+
+## Step 6 — Publish and record the URL
 
 `Artifact` is a deferred tool: use `ToolSearch` with `select:Artifact` first.
-Publish the saved `.md` path with a one-sentence `description` and the favicon
+Publish the **HTML** path with a one-sentence `description` and the favicon
 `📋` (keep it stable across republishes).
 
-**On success**, write the returned URL back into the file's frontmatter as
-`artifact-url:` so a later session republishes to the same page:
+**On success**, write the returned URL back into the **`.md` record's**
+frontmatter as `artifact-url:` so a later session republishes to the same page.
+The HTML is disposable and cannot hold this:
 
 ```yaml
 ---
@@ -112,8 +131,11 @@ artifact-url: https://claude.ai/public/artifacts/...
 ---
 ```
 
-On a republish, read `artifact-url:` first and pass it to `Artifact`'s `url`
-parameter. Without it, a new session mints a new page and the shared link rots.
+On a republish, read `artifact-url:` from the `.md` first and pass it to
+`Artifact`'s `url` parameter. **This is required on every republish, not just
+cross-session ones** — a differing `file_path` always claims a new URL, and the
+re-rendered HTML lands on a fresh scratchpad path each run. Skip `url` and the
+shared link rots.
 
 **On publish failure**, the saved Markdown file *is* the deliverable — report its
 path plainly and note that publishing did not happen and why. Commit it and the

@@ -3,8 +3,12 @@
 The title names the artifact in the browser tab and in the user's gallery, for as
 long as the artifact exists. Read this before setting one.
 
-Set it as the page's `<title>` for HTML sources, or as frontmatter `title:` for
-Markdown sources.
+Set it as the page's `<title>`. That is the only mechanism — **a Markdown source
+cannot set its own title.** The renderer does not parse YAML frontmatter: it
+emits the block as visible body text, and with no `<title>` in the document the
+title falls back to the source's filename, extension included. A skill that
+controls its title therefore publishes HTML, and a `title:` frontmatter key is a
+value to carry into that `<title>`, never a title in itself.
 
 ## Rules
 
