@@ -116,9 +116,22 @@ Both modes:
 - **Theme-aware** — `@media (prefers-color-scheme: dark)` for the default
   signal, plus `:root[data-theme="dark"]` / `:root[data-theme="light"]`
   overrides so the viewer's theme toggle wins in both directions.
-- **Escape prompt text** — `&`, `<`, `>` become entities inside the `<pre>`. A
-  prompt containing XML tags (most of them do — `<context>`, `<instructions>`)
-  destroys the page unescaped.
+- **Escape every value read from the `.md`** — not just the prompt body. Prompts
+  are full of XML tags (`<context>`, `<instructions>`), and so are the titles and
+  intents describing them: a prompt titled `# Summarize <document>` breaks the
+  page from the `<title>`, the card heading, or a `data-type` attribute just as
+  surely as from the `<pre>`. Escape `&`, `<`, `>` in text, and additionally `"`
+  and `'` in anything interpolated into an attribute:
+
+  | Value | Lands in |
+  |-------|----------|
+  | H1 title | `<title>`, card heading |
+  | `intent` | card body text |
+  | `techniques`, `created` | metadata row |
+  | `type` | chip text **and** `data-type="…"` |
+  | prompt body | `<pre>` |
+
+  Escaping the body alone leaves the other five as injection points.
 - Set a `<title>`; write the page content only (no `<!doctype>`/`<html>`/`<head>`
   /`<body>` — those are added at publish time).
 
@@ -144,20 +157,40 @@ Copy from the DOM, not from a duplicated copy of the text:
 <script>
 document.querySelectorAll('[data-copy]').forEach(function (b) {
   b.addEventListener('click', function () {
-    navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent)
-      .then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });
+    var pre = document.getElementById(b.dataset.copy);
+    var ok = function () {
+      b.textContent = 'Copied';
+      setTimeout(function () { b.textContent = 'Copy'; }, 1500);
+    };
+    // Clipboard API missing or denied: select the text so Cmd/Ctrl-C still works.
+    var manual = function () {
+      var r = document.createRange();
+      r.selectNodeContents(pre);
+      var sel = getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      b.textContent = 'Selected — press Cmd/Ctrl-C';
+    };
+    if (!navigator.clipboard) { manual(); return; }
+    navigator.clipboard.writeText(pre.textContent).then(ok, manual);
   });
 });
 </script>
 ```
 
 `textContent` returns the entities already decoded, so the escaping from Step 5
-round-trips back to the exact source text. Two things break that guarantee:
+round-trips back to the exact source text. Three things break that guarantee:
 
 - **No newline after `<pre>`.** The HTML parser drops one immediately following
   the open tag, and the copied prompt loses its first line break.
 - **No prettifying the `<pre>`.** Indenting it to match surrounding markup
   indents every copied line with it.
+- **Never leave `writeText` unhandled.** It rejects on a denied permission, and
+  is absent outside a secure context — which is exactly the Step 7 fallback page
+  opened over `file://`. An unhandled rejection makes the button do nothing at
+  all, silently, on the one path where the page is the only deliverable. Hence
+  the rejection handler above: selecting the `<pre>` contents leaves the user one
+  keystroke from the same result, and copies the same verbatim text.
 
 ## Step 6 — Publish, then record the URL
 
