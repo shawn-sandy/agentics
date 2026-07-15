@@ -71,7 +71,11 @@ top-down and stops when they have what they need, so the answer goes first:
    session genuinely produced none, say so rather than omitting the heading.
 4. **Files touched** — paths with a one-line note on what changed in each.
 
-Keep the frontmatter the script wrote and add `title:`. Write the result to
+Keep the frontmatter the script wrote. It contains a fallback `title:` derived
+from the session's first turn — refine it against
+`${CLAUDE_PLUGIN_ROOT}/references/titles.md` (read it first). You have read the
+whole session by this point and the script had only one turn, so the subject you
+can name is better than the one it guessed. Write the result to
 `{plansDirectory}/sessions/` (read `plansDirectory` from `.claude/settings.json`,
 falling back to `docs/plans`). Saving it there — rather than the scratchpad —
 is what lets the `artifact-url:` be committed and survive for a later republish.

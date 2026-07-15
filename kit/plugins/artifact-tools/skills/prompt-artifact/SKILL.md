@@ -132,7 +132,11 @@ Both modes:
   | prompt body | `<pre>` |
 
   Escaping the body alone leaves the other five as injection points.
-- Set a `<title>`; write the page content only (no `<!doctype>`/`<html>`/`<head>`
+- **Set a `<title>` per `${CLAUDE_PLUGIN_ROOT}/references/titles.md`** — read it
+  first. A prompt's H1 is usually already a bare subject and can stand as the
+  title; the derived subject is the prompt's *goal*, not the text of the prompt
+  itself. In library mode the subject is the collection (`Prompt library`), not
+  any one prompt. Write the page content only (no `<!doctype>`/`<html>`/`<head>`
   /`<body>` — those are added at publish time).
 
 **Single mode** renders the H1 as the title, a metadata row (`type`,

@@ -66,6 +66,8 @@ artifact-tools/
 │   └── plugin.json
 ├── README.md
 ├── CHANGELOG.md
+├── references/
+│   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
     ├── diff-artifact/
     │   └── SKILL.md
