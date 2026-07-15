@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-// Fails a PR when a plugin's files changed but its marketplace.json version
-// did not go up. Guards the silent no-op: without a version bump the daily
-// publish-dist sync ships a byte-identical tree and nobody gets the update.
+// Fails a PR when a plugin changed but its marketplace.json version did not go
+// up. Guards the silent no-op: without a version bump the daily publish-dist
+// sync ships a byte-identical tree and nobody gets the update.
+//
+// "Changed" means either: a file under kit/plugins/<name>/ changed, or the
+// plugin's marketplace.json entry changed in any field but `version`.
 //
 // Usage:
 //   node scripts/check-plugin-versions.mjs        # BASE_REF env or 'main'
@@ -46,14 +49,46 @@ export function changedPlugins(changedPaths) {
   return names;
 }
 
+// Key order in JSON is insertion order, so two equivalent entries can stringify
+// differently. Canonicalize before comparing.
+function canonical(v) {
+  if (Array.isArray(v)) return v.map(canonical);
+  if (v && typeof v === 'object') {
+    return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical(v[k])]));
+  }
+  return v;
+}
+
+// A plugin's marketplace entry can change without any file under kit/plugins/
+// changing — an edited description, tags, or category. marketplace.md calls
+// those PATCH bumps, so they need guarding too. `version` is excluded from the
+// comparison: a version-only diff IS the bump, not a change demanding one.
+export function manifestChangedPlugins(currentManifest, baseManifest) {
+  const base = new Map((baseManifest.plugins ?? []).map((p) => [p.name, p]));
+  const names = new Set();
+  const withoutVersion = ({ version, ...rest }) => JSON.stringify(canonical(rest));
+
+  for (const cur of currentManifest.plugins ?? []) {
+    const prior = base.get(cur.name);
+    if (!prior) continue; // new plugin — nothing to compare against
+    if (withoutVersion(cur) !== withoutVersion(prior)) names.add(cur.name);
+  }
+  return names;
+}
+
 export function findViolations(changedPaths, currentManifest, baseManifest) {
   const byName = (manifest) =>
     new Map((manifest.plugins ?? []).map((p) => [p.name, p]));
   const current = byName(currentManifest);
   const base = byName(baseManifest);
 
+  const touched = new Set([
+    ...changedPlugins(changedPaths),
+    ...manifestChangedPlugins(currentManifest, baseManifest),
+  ]);
+
   const violations = [];
-  for (const name of [...changedPlugins(changedPaths)].sort()) {
+  for (const name of [...touched].sort()) {
     const cur = current.get(name);
     // Not in the manifest = not built, not shipped. Nothing to guard.
     if (!cur) continue;
