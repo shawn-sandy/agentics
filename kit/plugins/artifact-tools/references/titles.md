@@ -19,6 +19,8 @@ Markdown sources.
   - diff — the changed files and the theme they share
   - plan — the plan's objective
   - session — the work that actually got done
+  - prompt — what the prompt is *for*; its H1 usually already says so. The
+    library page's subject is the collection, not any one prompt.
 - **Stable across republishes.** The title is how the user finds their tab again.
   Change it only on a hard pivot in what the artifact covers.
 - **Never a placeholder.** `Untitled`, `Session export`, `Artifact`, or an empty

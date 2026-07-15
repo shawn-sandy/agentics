@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Objective smoke test for the artifact-tools plugin.
 # Asserts the plugin is complete, valid, and installable: manifest without a
-# version key, three skills with required frontmatter, the bundled transcript
+# version key, four skills with required frontmatter, the bundled transcript
 # extractor, marketplace registration agreeing with the CHANGELOG, and the
 # documented safety contracts (blocking scrub gate, cap-and-summarize,
 # fallback, artifact-url).
@@ -28,10 +28,10 @@ assert "version" not in m, "version key present — it overrides marketplace.jso
 EOF
 ok
 
-# 2. All three skills validate against their real YAML frontmatter block.
+# 2. All four skills validate against their real YAML frontmatter block.
 #    Parsing the opening block (not grepping the whole file) is what stops prose
 #    or a code sample further down from satisfying a frontmatter requirement.
-for skill in diff-artifact session-artifact plan-artifact; do
+for skill in diff-artifact session-artifact plan-artifact prompt-artifact; do
   f="$PLUGIN/skills/$skill/SKILL.md"
   [ -f "$f" ] || fail "$skill/SKILL.md missing"
   python3 - "$f" "$skill" <<'EOF' || fail "frontmatter validation failed"
@@ -80,11 +80,13 @@ ok
 DIFF="$PLUGIN/skills/diff-artifact/SKILL.md"
 SESSION="$PLUGIN/skills/session-artifact/SKILL.md"
 PLAN="$PLUGIN/skills/plan-artifact/SKILL.md"
+PROMPT="$PLUGIN/skills/prompt-artifact/SKILL.md"
 
 # Blocking scrub gate, asserted by ORDER rather than mere keyword presence —
 # a skill that published first and documented the gate afterwards would satisfy
 # a presence-only check while shipping unscanned content.
-for f in "$DIFF" "$SESSION"; do
+# (plan-artifact is excluded by design: it republishes prose already written.)
+for f in "$DIFF" "$SESSION" "$PROMPT"; do
   python3 - "$f" <<'EOF' || fail "scrub-gate ordering check failed"
 import re, sys
 path = sys.argv[1]
@@ -138,8 +140,8 @@ grep -qE 'target=".claude/artifacts/diff-.*\$\(date' "$DIFF" \
   && fail "diff-artifact: inbox key is date-derived — breaks cross-day republish"
 ok
 
-# All three document the fallback and the artifact-url republish mechanic.
-for f in "$DIFF" "$SESSION" "$PLAN"; do
+# All four document the fallback and the artifact-url republish mechanic.
+for f in "$DIFF" "$SESSION" "$PLAN" "$PROMPT"; do
   name="$(basename "$(dirname "$f")")"
   grep -qF 'artifact-url:' "$f" || fail "$name: artifact-url frontmatter write not documented"
   grep -qiE 'fallback|publish failure|publishing fails' "$f" || fail "$name: local fallback not documented"

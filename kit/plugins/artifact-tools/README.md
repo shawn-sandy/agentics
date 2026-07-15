@@ -1,8 +1,8 @@
 # artifact-tools
 
-Publish the three things teams review most — code diffs, working sessions, and
-implementation plans — as live claude.ai artifact pages, without leaving Claude
-Code.
+Publish the four things teams review most — code diffs, working sessions,
+implementation plans, and saved prompts — as live claude.ai artifact pages,
+without leaving Claude Code.
 
 ## Overview
 
@@ -11,11 +11,11 @@ URL that update in place on republish. This plugin adds the publish endpoints fo
 the work already happening in a session, plus the one generator nothing else in
 the kit provides: an annotated diff walkthrough.
 
-`diff-artifact` and `session-artifact` scrub for secrets before publishing — a
-publish is external sharing, and both carry raw code. (`plan-artifact` publishes
-prose you already wrote, so it has no scrub gate.) All three record the returned
-URL so later sessions republish to the *same* link, and all three fall back to
-local HTML when publishing is unavailable.
+`diff-artifact`, `session-artifact`, and `prompt-artifact` scrub for secrets
+before publishing — a publish is external sharing, and each carries raw code or
+raw prompt text. (`plan-artifact` publishes prose you already wrote, so it has no
+scrub gate.) All four record the returned URL so later sessions republish to the
+*same* link, and all four fall back to local HTML when publishing is unavailable.
 
 ## Features
 
@@ -24,9 +24,11 @@ local HTML when publishing is unavailable.
 | `diff-artifact` | An annotated diff walkthrough — branch, commit range, or PR — with a sticky file sidebar, per-hunk reviewer notes, and severity labels |
 | `session-artifact` | A reviewer-first session recap: Summary, Decisions (with rationale), Learnings, Files touched |
 | `plan-artifact` | A `plan-agent` HTML plan, republished to a stable URL as steps check off |
+| `prompt-artifact` | A prompt saved by `plan-agent:write-prompt` — one prompt, or the whole library with `--library` — behind a verbatim copy button |
 
 Skills activate automatically when your request matches — "publish this diff for
-review", "share a recap of this session", "publish this plan".
+review", "share a recap of this session", "publish this plan", "share this
+prompt".
 
 ## Installation
 
@@ -52,6 +54,8 @@ Publish the diff for PR #42               → diff-artifact (PR mode)
 Publish a walkthrough of abc123..def456   → diff-artifact (range mode)
 Share a recap of this session             → session-artifact
 Publish docs/plans/add-dark-mode.html     → plan-artifact
+Share docs/prompts/task-refactor.md       → prompt-artifact (single)
+Publish my prompt library --library       → prompt-artifact (library mode)
 ```
 
 ## Plugin Structure
@@ -62,6 +66,8 @@ artifact-tools/
 │   └── plugin.json
 ├── README.md
 ├── CHANGELOG.md
+├── references/
+│   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
     ├── diff-artifact/
     │   └── SKILL.md
@@ -69,7 +75,9 @@ artifact-tools/
     │   ├── SKILL.md
     │   └── scripts/
     │       └── export_session.py
-    └── plan-artifact/
+    ├── plan-artifact/
+    │   └── SKILL.md
+    └── prompt-artifact/
         └── SKILL.md
 ```
 
@@ -108,12 +116,37 @@ back into the spec.
 Never hand-edit the plan HTML — it is generated, and the next rebuild overwrites
 the edit. Edit the `.md` spec.
 
+### prompt-artifact
+
+Publishes prompts saved by `plan-agent:write-prompt`, resolving the prompts
+directory exactly the way that skill does (`promptsDirectory` from settings, then
+`{git-root}/docs/prompts`, then cwd-relative) — a divergence here would publish
+from the wrong place.
+
+Default mode publishes one prompt and records `artifact-url:` in its frontmatter.
+`--library` publishes one filterable gallery of every saved prompt and tracks its
+URL in a `.artifact-url` sidecar in the prompts directory, since a gallery has no
+source `.md` to hold frontmatter. **Commit the sidecar** — ignoring it gives every
+clone its own gallery URL, which is exactly the link-rot the stable-URL design
+exists to prevent.
+
+The copy button is the point of the page. It copies from `pre.textContent`, which
+returns the HTML-escaped prompt with its entities already decoded — a verified
+byte-for-byte round-trip back to the source text. Two things silently break it:
+a newline directly after `<pre>` (the parser eats it, costing the first line
+break) and indenting the `<pre>` to match surrounding markup (which indents every
+copied line).
+
 ## Security
 
-`diff-artifact` and `session-artifact` run `social-media-tools:security-scrub`
-before every publish. A `BLOCKED` verdict is a hard stop with no override. If the
-scrub skill is unavailable, the skills say so and ask before continuing — they
-never skip the gate silently.
+`diff-artifact`, `session-artifact`, and `prompt-artifact` run
+`social-media-tools:security-scrub` before every publish. A `BLOCKED` verdict is a
+hard stop with no override. If the scrub skill is unavailable, the skills say so
+and ask before continuing — they never skip the gate silently.
+
+In `prompt-artifact`'s library mode a finding in **any** prompt stops the whole
+publish rather than dropping that one card. A gallery that silently omits work
+would read as complete, and the leak would stay on disk unfixed.
 
 `diff-artifact` scrubs **twice**, and the second scan is the one that counts:
 the first covers the raw diff, but annotating a hunk can quote surrounding file

@@ -5,6 +5,23 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-15
+
+### Added
+
+- `prompt-artifact` — publishes prompts saved by `plan-agent:write-prompt` as
+  claude.ai artifacts, in two modes. Default (single) publishes one prompt `.md`,
+  resolved from an argument or picked via `AskUserQuestion`, and records the
+  returned URL in the file's `artifact-url:` frontmatter. `--library` publishes
+  one gallery covering every saved prompt — a card per prompt with type chips,
+  `<details>` bodies, and `type` filter chips following the `plans-library`
+  idiom — tracking its URL in a committed `$PROMPTS_DIR/.artifact-url` sidecar,
+  since a gallery has no source `.md` to hold frontmatter. Both modes gate on
+  `social-media-tools:security-scrub` (a finding in any prompt stops the whole
+  library publish), render a verbatim copy-to-clipboard button per prompt, and
+  fall back to `.claude/artifacts/` when publishing is unavailable. Titles follow
+  `references/titles.md`, as the other three skills do.
+
 ## [1.1.0] - 2026-07-15
 
 ### Added

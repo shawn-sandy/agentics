@@ -1,6 +1,6 @@
 {
   "name": "artifact-tools",
-  "description": "Publish diffs, sessions, and plans as live claude.ai artifact pages — an annotated diff walkthrough, a reviewer-first session recap, and plan HTML — with a blocking secret-scrub gate on diff and session artifacts, a local-HTML fallback, and stable URLs across sessions",
+  "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages — an annotated diff walkthrough, a reviewer-first session recap, plan HTML, and saved prompts published singly or as a filterable library — with a blocking secret-scrub gate, a local-HTML fallback, and stable URLs across sessions",
   "author": {
     "name": "Agentics Project"
   },
@@ -11,6 +11,7 @@
     "diff-review",
     "session-recap",
     "plan-publishing",
+    "prompt-publishing",
     "sharing",
     "claude-ai"
   ],
