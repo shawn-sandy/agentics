@@ -1,0 +1,195 @@
+---
+status: todo
+type: fix
+created: 2026-07-15
+issue: https://github.com/shawn-sandy/agentics/issues/408
+effort: high
+glance: A red smoke test sat under an all-green PR because nothing runs tests/plugins/ on pull requests — this wires every suite into PR CI and makes the check actually block a merge, after first fixing the two suites that are red on main by construction.
+---
+
+# Plan: Wire tests/plugins/ into PR CI and fix the version guards blocking it
+
+## Objective
+
+Make every suite in `tests/plugins/` run on every pull request and actually
+block a merge when it fails — which takes both a new workflow and a required
+status check in the repo's branch ruleset — and fix the two plan-agent version
+guards that fail on a clean `main`, which currently make that wiring
+impossible.
+
+## Context
+
+This closes [#408](https://github.com/shawn-sandy/agentics/issues/408) and its
+blocker [#409](https://github.com/shawn-sandy/agentics/issues/409) in one
+change, because #408 cannot land alone: enabling PR CI while two suites are
+red on `main` would fail every incoming pull request on arrival.
+
+The gap was proven on PR #405: a `marketplace.json` version bump broke
+`tests/plugins/test-artifact-tools.sh`, yet all seven PR checks stayed green —
+only a review bot running the file by hand caught it.
+
+PR #410 has since added `check-plugin-versions.yml`, the repo's first
+`pull_request` test workflow — it runs `scripts/check-plugin-versions.mjs`
+(which fails a PR when a plugin changed without its marketplace version going
+up) plus that guard's own unit test under `tests/publish/`. It does not touch
+`tests/plugins/`. So the gap this plan closes is unchanged: of the 19 suites in
+`tests/plugins/`, four run on a nightly cron via `publish-dist.yml` and the
+other 15 run nowhere. Both guards this plan fixes are still red on `main` —
+re-confirmed after #410 landed.
+
+Two things follow from #410 rather than being invented here. Its guard already
+owns "is this plugin's version right?", already reads `marketplace.json`, and
+already exports `parseSemver`/`isHigher` — so the CHANGELOG-agreement invariant
+belongs inside it rather than in a second script named one letter apart. And it
+sets this repo's `pull_request` workflow conventions (`permissions: contents:
+read`, `fetch-depth: 0`, node 20), which the new workflow follows.
+
+The two suites red on `main` are `test-build-proposal.sh` (check 12) and
+`test-setup-sites.sh` (check 10). Each asserts the plan-agent version in
+`marketplace.json` is strictly *above* `origin/main` — true only on a branch
+that bumps plan-agent, false everywhere else including `main` itself. The fix
+replaces that branch-dependent comparison with the invariant PRs #405 and
+#407 independently converged on for artifact-tools: the marketplace version
+must equal the newest release heading in the plugin's CHANGELOG. One format
+trap: plan-agent's CHANGELOG headings are `## 3.0.0 — Title (date)`, not the
+`## [1.2.0]` bracketed form artifact-tools uses, so the heading regex must
+accept both. One preservation duty: each guard also asserts the plugin
+description mentions its skill (`build-proposal` / `setup-sites`) — those
+assertions stay.
+
+`publish-dist.yml` keeps its own pre-publish test steps untouched; it gates
+publishing, not merging, and is out of scope here. That leaves four suites
+running in both places (the nightly publish gate and the new PR gate) while
+`tests/publish/` stays PR-invisible — deliberate, not an oversight.
+
+**A workflow alone does not block anything.** A check that reports red still
+lets a pull request merge unless it is marked required. This repo protects
+`main` with two active rulesets (`main` and `main-branch`), and neither carries
+a `required_status_checks` rule — they enforce only `deletion`,
+`non_fast_forward`, `copilot_code_review`, and `pull_request`. Note the legacy
+branch-protection API reports `main` as unprotected (`gh api
+repos/shawn-sandy/agentics/branches/main/protection` returns 404), which is
+misleading: rulesets supersede it, and adding classic branch protection here
+would create a third, competing mechanism. Step 9 therefore adds the required
+check to the existing ruleset.
+
+Two risks come with that gate. Open pull requests (#384 and #266 today) predate
+the workflow file, so GitHub will never run it for them; once the check is
+required they stick at "Expected — waiting for status to be reported" until
+their authors merge `main` in. And enforcement is a repo setting, not a commit,
+so the rollback for a misfiring check is an admin removing the ruleset rule —
+not a revert of this work.
+
+One more property worth recording: `.claude-plugin/marketplace.json` has a
+custom merge driver that keeps the higher semver, but GitHub's web merge button
+does not run local merge drivers, and no driver covers `CHANGELOG.md` at all.
+Concurrent version bumps therefore surface as visible conflicts rather than
+silent bad merges. The CHANGELOG-agreement guard is less race-prone than the
+`origin/main` comparison it replaces — but a careless conflict resolution can
+still land a mismatch, which is caught only once the check is genuinely
+required.
+
+## Files
+
+- scripts/check-plugin-versions.mjs (modified) — extend #410's guard with an exported CHANGELOG-agreement check accepting both heading forms, plus a `--changelog <plugin>` entry point the suites call
+- tests/publish/test-check-plugin-versions.mjs (modified) — extend #410's unit test to cover the new export
+- tests/plugins/test-build-proposal.sh (modified) — replace the above-origin/main version check with a call to the shared guard, preserving the file's FAILURES-counter idiom and its build-proposal description assertion
+- tests/plugins/test-setup-sites.sh (modified) — same replacement, preserving the setup-sites description assertion
+- tests/plugins/test-artifact-tools.sh (modified) — swap its inline copy of the same invariant for the shared guard
+- scripts/run-plugin-tests.sh (new) — the run-all glob loop over an optional suite directory, invoked identically by CI and by hand
+- .github/workflows/plugin-tests.yml (new) — PR-triggered workflow whose job id is plugin-tests, calling scripts/run-plugin-tests.sh
+- tests/plugins/test-plugin-ci-wiring.sh (new) — objective-verification test covering the workflow's shape and both guards' pass and fail paths
+- tests/fixtures/changelog-formats/ (new) — two minimal CHANGELOG fixtures, bracketed and unbracketed, proving both heading forms parse
+- tests/fixtures/dummy-suites/ (new) — throwaway passing and failing suites the wiring test drives the runner over, so it never points the runner at its own directory
+- README.md (modified) — add CI/CD table rows for both plugin-tests.yml and check-plugin-versions.yml (#410 shipped without one)
+
+## Steps
+
+1. Extend scripts/check-plugin-versions.mjs (from #410) with an exported `changelogAgrees(plugin, marketplaceDoc, changelogText)` asserting the plugin's marketplace version equals the newest release heading in kit/plugins/<name>/CHANGELOG.md — a heading regex accepting both the bracketed `## [1.2.0]` form artifact-tools uses and the unbracketed `## 3.0.0 — Title (date)` form plan-agent uses — plus a `--changelog <plugin>` CLI entry point exiting non-zero on disagreement, and extend tests/publish/test-check-plugin-versions.mjs to cover it Why: this invariant is about to exist in three suites, each with its own regex special-casing that format difference; #410's guard already owns version correctness, already reads marketplace.json, and already exports parseSemver/isHigher, so folding it in reuses that rather than adding a second script one letter away from the first Verify: `node scripts/check-plugin-versions.mjs --changelog plan-agent` and `... --changelog artifact-tools` both exit 0 against the current tree; each exits non-zero against the disagreeing fixture; and `node tests/publish/test-check-plugin-versions.mjs` passes with the new cases.
+2. Add tests/fixtures/changelog-formats/ containing one minimal CHANGELOG in each heading form, plus the marketplace snippets they pair with — one pair agreeing, one pair disagreeing Why: only the unbracketed form is exercised by the two guards this plan touches, so the bracketed branch of the shared regex would ship with no coverage at all; fixtures also give the negative path something stable to assert against without mutating tracked files Verify: `ls tests/fixtures/changelog-formats/` shows both forms, and the helper reports agreement for the agreeing pair and disagreement for the other.
+3. Replace check 12 in tests/plugins/test-build-proposal.sh and check 10 in tests/plugins/test-setup-sites.sh with a call to `node scripts/check-plugin-versions.mjs --changelog plan-agent`, and swap test-artifact-tools.sh's inline copy for the same call against artifact-tools — preserving each file's own idiom (the `echo "N. ..."` + FAILURES counter in the first two, `fail()`/`ok()` in artifact-tools) and every existing description assertion (`build-proposal`, `setup-sites`) Why: the above-origin/main comparison is only true on branches that bump plan-agent, so both suites fail on main and on every unrelated PR; importing artifact-tools' hard-exit style into counter-style files would silently change how their remaining checks report Verify: all three suites exit 0 on the clean tree, `git grep -l "origin/main" tests/plugins/` returns nothing, and each suite's check count is unchanged from before the edit.
+4. Write scripts/run-plugin-tests.sh taking an optional suite directory (defaulting to `tests/plugins`) and running every `*.sh` in it via bash and every `*.mjs` via node, counting failures rather than stopping at the first, printing each failing suite by name, and exiting non-zero if any failed Why: CI and a developer must run the identical command or "green locally" stops predicting green in CI, and run-all reporting shows the full damage in one run instead of one failure per push — while the directory argument is what lets the wiring test drive the runner over a fixture directory instead of the one it lives in, which would otherwise recurse (see step 6) Verify: `bash scripts/run-plugin-tests.sh` exits 0 listing every suite as passing, and `bash scripts/run-plugin-tests.sh tests/fixtures/dummy-suites` exits non-zero naming only the deliberately-failing fixture.
+5. Create .github/workflows/plugin-tests.yml with a human-readable workflow `name: Plugin Tests`, **the single job's id set to `plugin-tests`**, a `pull_request` trigger, `permissions: contents: read`, actions/checkout@v4, actions/setup-node@v4 (node 20, matching publish-dist.yml), `timeout-minutes: 20`, a `concurrency` group keyed to the PR ref with `cancel-in-progress: true`, and one step invoking `bash scripts/run-plugin-tests.sh` Why: the **job** id — not the workflow name — is what GitHub reports as the check, so the job id is what step 9 must mark required and Verification must look for; this repo proves it, since `claude-code-review.yml` is named `Claude Code Review` while the check it reports is `claude-review`, its job id. Every other workflow here also declares its own least-privilege `permissions` block, and a read-only PR trigger against untrusted branches is the last place to inherit defaults; 20 minutes leaves headroom for a suite list designed to grow by glob Verify: `actionlint .github/workflows/plugin-tests.yml` passes (fall back to a plain YAML parse if actionlint is unavailable), the file contains no hand-listed suite paths, and after the first run the check appears in the PR's list literally as `plugin-tests` — confirm with `gh pr checks <n>` rather than assuming.
+6. Add tests/fixtures/dummy-suites/ holding three throwaway suites — one passing `.sh`, one deliberately failing `.sh`, one passing `.mjs` — then add tests/plugins/test-plugin-ci-wiring.sh asserting the workflow exists with its `pull_request` trigger, job id `plugin-tests`, `permissions`, `timeout-minutes`, and `concurrency`; that it delegates to scripts/run-plugin-tests.sh rather than hand-listing suites; that `run-plugin-tests.sh tests/fixtures/dummy-suites` names the failing fixture, still runs and reports the other two, and exits non-zero; and that the extended guard exits non-zero on the disagreeing CHANGELOG fixture Why: the wiring test lives in `tests/plugins/`, so the runner executes it — pointing it at its own directory would make it invoke the runner that is invoking it, recursing until it hangs; a fixture directory gives the same behavioural proof (pickup by glob, failure named, run-all continues) with no self-reference, and a committed test is what stops a future edit silently dropping the trigger or weakening a guard to always-exit-0 Verify: `bash tests/plugins/test-plugin-ci-wiring.sh` exits 0 in under a few seconds, and `bash scripts/run-plugin-tests.sh` completes without hanging — the specific symptom recursion would produce.
+7. Add rows to README.md's CI/CD table (line ~1012) for both plugin-tests.yml and check-plugin-versions.yml, matching the existing `Workflow | Trigger | Purpose` shape Why: that table documents every workflow in .github/workflows/, and CLAUDE.md requires docs updated alongside the change; #410 shipped its workflow without a row, so the table is already two short and adding only one would leave the drift half-fixed while looking done Verify: `grep -c '| \`.*\.yml\` |' README.md` equals the number of files in .github/workflows/, and both new rows name their pull_request trigger.
+8. Run `bash scripts/run-plugin-tests.sh` and confirm all 21 suites (19 existing, plus the wiring test, plus any added here) exit 0 Why: this is the exact command CI will run, so a green sweep here is what keeps the workflow's first outing from painting the PR red on arrival Verify: the script exits 0 and its summary names every suite as passing.
+9. After the workflow has run green once on this pull request, read the check's exact name from `gh pr checks <n>` and add **that string** as a required status check on the existing `main` ruleset via `gh api repos/shawn-sandy/agentics/rulesets/13160559` (or 14869592 — confirm which is authoritative first), adding a `required_status_checks` rule; then merge `main` into the two open pull requests (#384, #266) so they can report the new check Why: without this the objective is unmet — the workflow reports a badge and nothing blocks a merge; requiring the name GitHub actually published, rather than the one the plan expects, is what avoids pinning every PR on a status that never arrives; adding it only after a green run avoids blocking on an unproven check; and the two open PRs predate the workflow file so GitHub will never run it for them until they sync Verify: `gh api repos/shawn-sandy/agentics/rulesets/13160559 --jq '[.rules[].type]'` includes `required_status_checks`, the required context matches `gh pr checks` output exactly, and a pull request with a deliberately failing suite shows a blocked merge button.
+
+## Tests
+
+Tier 1 — Steps create scripts/run-plugin-tests.sh and extend #410's scripts/check-plugin-versions.mjs, both of which CI and three suites depend on
+- Objective: every tests/plugins/ suite runs on a pull request and a failing one is reported without halting the rest. File: tests/plugins/test-plugin-ci-wiring.sh; Type: smoke; Asserts: plugin-tests.yml carries job id plugin-tests plus pull_request/permissions/timeout/concurrency and delegates to run-plugin-tests.sh with no hand-listed suites; the runner driven over tests/fixtures/dummy-suites/ picks up every fixture by glob, names the failing one, still reports the rest, and exits non-zero — proven against a fixture directory rather than tests/plugins/, which would recurse; Run: bash tests/plugins/test-plugin-ci-wiring.sh
+- Unit: CHANGELOG-agreement check. File: tests/publish/test-check-plugin-versions.mjs; Targets: the changelogAgrees export in scripts/check-plugin-versions.mjs, alongside #410's existing cases; Key cases: bracketed `## [1.2.0]` heading agrees, unbracketed `## 3.0.0 — Title (date)` heading agrees, disagreeing version exits non-zero, missing CHANGELOG exits non-zero with a named reason
+- Integration: rewritten guards call the shared guard. File: tests/plugins/test-plugin-ci-wiring.sh; Targets: test-build-proposal.sh, test-setup-sites.sh, test-artifact-tools.sh against scripts/check-plugin-versions.mjs; Key cases: all three exit 0 on the clean tree, each exits non-zero against the disagreeing fixture, each preserves its own description assertion and check count
+
+## Acceptance Criteria
+
+- [ ] `bash tests/plugins/test-build-proposal.sh` exits 0 on a clean checkout of main
+- [ ] `bash tests/plugins/test-setup-sites.sh` exits 0 on a clean checkout of main
+- [ ] All three guards exit non-zero against a fixture whose marketplace version disagrees with its newest CHANGELOG heading, asserted by a committed test rather than a manual mutation
+- [ ] The extended guard parses both the bracketed and unbracketed CHANGELOG heading forms, each proven by a fixture, and #410's existing guard cases still pass
+- [ ] All three guards still assert their plugin description mentions build-proposal / setup-sites, and each suite's check count is unchanged
+- [ ] `git grep -l "origin/main" tests/plugins/` returns nothing
+- [ ] .github/workflows/plugin-tests.yml declares a pull_request trigger, permissions: contents: read, timeout-minutes, and a concurrency group with cancel-in-progress
+- [ ] The workflow's job id is plugin-tests, and `gh pr checks` on this PR reports a check named exactly `plugin-tests`
+- [ ] The workflow delegates to scripts/run-plugin-tests.sh and contains no hand-listed suite paths
+- [ ] `bash scripts/run-plugin-tests.sh` completes without hanging — the wiring test never drives the runner over its own directory
+- [ ] A deliberately-failing suite is reported by name while the remaining suites still run, and the script exits non-zero — asserted by a committed test against tests/fixtures/dummy-suites/
+- [ ] A file dropped into a suite directory matching *.sh or *.mjs is executed with no workflow edit, asserted behaviourally rather than by grepping the YAML
+- [ ] README.md's CI/CD table has rows for plugin-tests.yml and check-plugin-versions.yml, and its row count matches the file count in .github/workflows/
+- [ ] The required status check on the main ruleset matches the published check name exactly, and a pull request with a failing suite shows a blocked merge button
+
+## Verification
+
+Open a pull request containing this change and confirm a check named
+`plugin-tests` appears in its check list and concludes green — that single
+observation proves the trigger fires, the runner script finds every suite, and
+all of them pass on a GitHub runner rather than only on a laptop.
+
+Then prove the gate actually gates, which is the part a green check cannot
+show. With `plugin-tests` marked required on the `main` ruleset, push a commit
+that deliberately breaks one suite and confirm two things on the pull request:
+the check goes red naming that suite, and the merge button is blocked rather
+than merely decorated. Revert the commit and confirm the button unblocks. A
+plan that stopped at "the check is green" would have shipped a badge, not a
+gate.
+
+Finally, confirm `git grep -l "origin/main" tests/plugins/` returns nothing —
+the branch-dependent comparison is gone, so no suite needs fetch history to
+pass — and run `bash scripts/run-plugin-tests.sh` locally to confirm it reports
+the same result CI did, since a divergence between those two is what makes a
+green local run stop meaning anything.
+
+## Next Steps
+
+- Migrate publish-dist.yml's hand-picked test list to the same glob
+  The nightly publish gate still lists 4 suites by hand; now that a glob pattern is proven in plugin-tests.yml, the same loop would keep the publish gate in sync automatically.
+  ```text
+  In the shawn-sandy/agentics repo, edit .github/workflows/publish-dist.yml:
+  replace the four hand-listed tests/plugins/ steps (test-prototype-portability.sh,
+  test-build-prototypes-index.sh, test-prototype-persistence.mjs,
+  test-save-artifact.sh) with the same glob loops used in
+  .github/workflows/plugin-tests.yml (for t in tests/plugins/*.sh; do bash "$t" || exit 1; done
+  and the node equivalent for *.mjs). Keep the tests/publish/ steps unchanged.
+  Verify with a workflow_dispatch run.
+  ```
+- Extend the CHANGELOG-agreement invariant to every plugin
+  Once the CHANGELOG-agreement check lands in scripts/check-plugin-versions.mjs, only three plugins call it; the other ten have no CHANGELOG guard, and the check is already parameterized by plugin name.
+  ```text
+  In the shawn-sandy/agentics repo, add tests/plugins/test-marketplace-changelog-sync.sh
+  that calls scripts/check-plugin-versions.mjs --changelog for every plugin entry in
+  .claude-plugin/marketplace.json that has a kit/plugins/<name>/CHANGELOG.md,
+  reporting each plugin checked and failing if any disagree. The helper already
+  accepts both the "## X.Y.Z" and "## [X.Y.Z]" heading forms. It will be picked
+  up automatically by scripts/run-plugin-tests.sh with no workflow edit.
+  ```
+- Add a CI-vs-local drift guard for the runner script
+  scripts/run-plugin-tests.sh only keeps its CI/local parity promise while the workflow actually calls it and nothing else; today that is asserted by one grep in the wiring test.
+  ```text
+  In the shawn-sandy/agentics repo, strengthen tests/plugins/test-plugin-ci-wiring.sh
+  so it parses .github/workflows/plugin-tests.yml and asserts that every run: step
+  in the job invokes scripts/run-plugin-tests.sh and that no step contains an
+  inline bash/node loop over tests/plugins/. This prevents a future edit from
+  reintroducing suite-running logic in the YAML that diverges from what
+  developers run locally.
+  ```
