@@ -5,6 +5,37 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-15
+
+### Added
+
+- `references/titles.md` — shared artifact-title rules, read by all three skills
+  at the point each one sets or checks a title. Titles are bare subjects in
+  sentence case, around 60 characters, derived from the artifact's content rather
+  than the user's phrasing, stable across republishes, and never placeholders.
+- `session-artifact` — the extractor now writes a `title:` frontmatter field, so
+  a readable title survives even if the recap step does not refine it.
+
+### Fixed
+
+- `session-artifact` — the extractor derived its title by slicing the first user
+  message to 80 characters, producing mid-word truncations such as
+  "ensure that the plugins in the artifact-tool always gen". Titles are now
+  trimmed on a word boundary. The `Session export` placeholder is gone: with no
+  user turn, the title comes from the session's first turn instead.
+- `session-artifact` — a first turn that is one oversized token (a URL, a path, a
+  hash) is now kept whole rather than sliced mid-token. Width is a target; not
+  cutting mid-word is the rule.
+
+### Changed
+
+- `diff-artifact`, `plan-artifact`, `session-artifact` — ad-hoc title guidance in
+  each skill replaced by a pointer to `references/titles.md`. `plan-artifact`
+  checks the subject of the title `plan-agent` generated and routes any fix
+  through the `.md` spec, since hand-edits to plan HTML are overwritten on the
+  next rebuild. The renderer's hardcoded `Plan: ` prefix is unreachable from the
+  spec, so the check exempts it rather than demanding an impossible fix.
+
 ## [1.0.0] - 2026-07-14
 
 ### Added

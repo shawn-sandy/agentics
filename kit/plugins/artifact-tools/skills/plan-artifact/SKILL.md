@@ -61,8 +61,21 @@ rebuilds. Two flows follow from whether it is present:
 `Artifact` is a deferred tool: use `ToolSearch` with `select:Artifact` first.
 
 Publish the plan `.html` with a one-sentence `description` and the favicon `📄`.
-Keep the favicon and `<title>` stable across republishes — the title names the
-artifact in the gallery and the favicon is how users find the tab.
+
+Before publishing, check the plan's title against
+`${CLAUDE_PLUGIN_ROOT}/references/titles.md` — read it first. The plan HTML
+arrives with its title already rendered, so this is a check, not an authoring
+step.
+
+Check the **subject only**. `plan-agent`'s renderer hardcodes a `Plan: ` prefix
+(`plan-shell.mjs`, `page()`), which no spec edit can reach — never fail the check
+on that prefix and never try to strip it. The subject after it comes from the
+spec and *is* fixable: if the subject fails the rules, fix the **`.md` spec's
+title and rebuild**, since per Step 1 a hand-edit to the HTML is overwritten
+without warning.
+
+Keep the title and favicon stable across republishes — they are how users find
+the tab again.
 
 On a **first publish**, `Edit` the spec's frontmatter to add the returned
 `artifact-url:`. This is the step that makes every future republish hit the same

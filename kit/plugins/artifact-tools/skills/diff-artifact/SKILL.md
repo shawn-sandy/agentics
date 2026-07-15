@@ -126,8 +126,11 @@ Load the `artifact-design` skill first to calibrate design investment, then
 - **Adaptive theme** — `@media (prefers-color-scheme: dark)` for both palettes.
 - **Escape diff content** — `&`, `<`, `>` in code become entities. An unescaped
   diff of HTML silently destroys the page.
-- Set a `<title>`; write the page content only (no `<!doctype>`/`<html>`/`<head>`
-  /`<body>` — those are added at publish time).
+- **Title** — read `${CLAUDE_PLUGIN_ROOT}/references/titles.md` and set the
+  `<title>` by its rules. The diff is in context here; the subject is the theme
+  the changed files share, never the user's phrasing of the request.
+- Write the page content only (no `<!doctype>`/`<html>`/`<head>`/`<body>` — those
+  are added at publish time).
 
 ## Step 5 — Gate the rendered page (size, then scrub)
 
