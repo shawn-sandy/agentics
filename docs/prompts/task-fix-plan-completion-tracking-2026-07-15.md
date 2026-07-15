@@ -46,7 +46,7 @@ Before proposing anything, work through this in order:
 
 Investigate the completion gap described above, then produce an implementation plan for the fix by invoking `/plan-agent:implementation-plan`.
 
-Do not write the fix. Do not edit skills, hooks, or plans. The deliverable is the plan document.
+Do not write or apply the fix. Do not modify any existing skill, hook, or plan. Creating the new plan document is the only write this task authorizes — it is the deliverable.
 
 The plan must:
 - State the diagnosed root cause with file and line citations, not a hypothesis.
