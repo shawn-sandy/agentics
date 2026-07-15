@@ -5,6 +5,30 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-07-15
+
+### Fixed
+
+- `references/titles.md` claimed a Markdown artifact's title could be set with a
+  `title:` frontmatter key. It cannot. The renderer does not parse frontmatter —
+  it emits the YAML as a visible heading of body text — and with no `<title>` in
+  the document the title falls back to the source filename, extension included.
+  Every title rule in the file was satisfiable and the title was still wrong, so
+  the guidance now states the one mechanism that works: an HTML `<title>`.
+
+- `session-artifact` published the recap `.md` directly, which made it the only
+  skill subject to the above: recaps shipped titled `<slug>.md` with their
+  frontmatter rendered on the page. It now publishes an HTML render carrying the
+  `<title>`, while the `.md` under `{plansDirectory}/sessions/` stays the
+  committed record and the home of `artifact-url:`. `diff-artifact`,
+  `plan-artifact`, and `prompt-artifact` already published HTML and were never
+  affected.
+
+- `session-artifact`'s republish note implied `url` mattered only across
+  sessions. Because the render lands on a new scratchpad path every run and a
+  differing `file_path` always claims a new URL, `url` is required on every
+  republish; the step now says so.
+
 ## [1.2.0] - 2026-07-15
 
 ### Added

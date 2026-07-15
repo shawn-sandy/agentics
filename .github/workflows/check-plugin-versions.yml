@@ -1,0 +1,25 @@
+name: Check plugin versions
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Guard plugin versions
+        run: node scripts/check-plugin-versions.mjs
+        env:
+          BASE_REF: ${{ github.base_ref }}
+      - name: Unit-test the guard
+        run: node tests/publish/test-check-plugin-versions.mjs
