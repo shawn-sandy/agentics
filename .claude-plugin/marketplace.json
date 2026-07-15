@@ -301,7 +301,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.0.0",
+      "version": "1.1.0",
       "description": "Publish diffs, sessions, and plans as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, and plan HTML republished to a stable URL — with a blocking secret-scrub gate on diff and session artifacts, and a local-HTML fallback",
       "category": "development",
       "tags": [
