@@ -62,11 +62,17 @@ rebuilds. Two flows follow from whether it is present:
 
 Publish the plan `.html` with a one-sentence `description` and the favicon `📄`.
 
-Before publishing, check the generated `<title>` against
+Before publishing, check the plan's title against
 `${CLAUDE_PLUGIN_ROOT}/references/titles.md` — read it first. The plan HTML
-arrives with a title already baked in by `plan-agent`, so this is a check, not an
-authoring step. If it fails the rules, fix the **`.md` spec's title and rebuild**
-— per Step 1, hand-editing the HTML is overwritten without warning.
+arrives with its title already rendered, so this is a check, not an authoring
+step.
+
+Check the **subject only**. `plan-agent`'s renderer hardcodes a `Plan: ` prefix
+(`plan-shell.mjs`, `page()`), which no spec edit can reach — never fail the check
+on that prefix and never try to strip it. The subject after it comes from the
+spec and *is* fixable: if the subject fails the rules, fix the **`.md` spec's
+title and rebuild**, since per Step 1 a hand-edit to the HTML is overwritten
+without warning.
 
 Keep the title and favicon stable across republishes — they are how users find
 the tab again.

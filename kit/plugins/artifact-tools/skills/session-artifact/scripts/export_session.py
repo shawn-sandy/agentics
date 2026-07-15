@@ -37,9 +37,11 @@ def title_of(text, width=TITLE_WIDTH):
     # dangling "double-...", which is the mid-word cut this function exists to avoid.
     line = textwrap.shorten(text, width=width, placeholder="...", break_on_hyphens=False)
     if line == "...":
-        # A single unbreakable word longer than width collapses to the
-        # placeholder alone. A hard cut is the only option that says anything.
-        line = " ".join(text.split())[: width - 3] + "..."
+        # shorten collapses to the placeholder alone when the first token is
+        # itself longer than width — a URL, a path, a hash. Keep that token whole
+        # and let it run past width: half a URL is neither readable nor usable,
+        # and "never cut mid-word" is the rule while width is only a target.
+        line = " ".join(text.split()).split(" ")[0]
     return line
 
 
@@ -144,24 +146,35 @@ def _self_check():
         "readable and relevant title for generated artifacts"
     )
     hyphenated = "Rebuilt the plans gallery index and fixed the double-encoded entities."
+    url = "https://github.com/shawn-sandy/agentics/blob/main/kit/plugins/artifact-tools/x.md"
+    huge = "Supercalifragilisticexpialidociousandthensomemorelettersthatneverendhere"
     for src in (
         "Fix the login redirect",
         long_req,
         hyphenated,
         "  multi\nline\n   input here  ",
-        "Supercalifragilisticexpialidociousandthensomemorelettersthatneverendhere",
+        huge,
+        url,
+        f"{url} please publish this one",
     ):
         got = title_of(src)
         assert got not in ("", "...", "Untitled", "Session export"), f"placeholder: {got!r}"
-        assert len(got) <= TITLE_WIDTH, f"over {TITLE_WIDTH}: {got!r}"
         assert "\n" not in got, f"multiline: {got!r}"
-        if got.endswith("...") and len(src.split()) > 1:
+        words = " ".join(src.split()).split(" ")
+        if got.endswith("..."):
             # the kept text must be a whole-word prefix of the collapsed source
-            stem, words = got[:-3], " ".join(src.split()).split(" ")
             prefixes = {" ".join(words[:i]) for i in range(1, len(words) + 1)}
-            assert stem in prefixes, f"mid-word cut: {got!r}"
+            assert got[:-3] in prefixes, f"mid-word cut: {got!r}"
+            assert len(got) <= TITLE_WIDTH, f"over {TITLE_WIDTH}: {got!r}"
+        else:
+            # untruncated: either it fit, or it is one oversized whole token
+            assert len(got) <= TITLE_WIDTH or got == words[0], f"over {TITLE_WIDTH}: {got!r}"
     assert title_of("Fix the login redirect") == "Fix the login redirect"
     assert title_of(hyphenated) == "Rebuilt the plans gallery index and fixed the..."
+    # oversized lone tokens survive intact rather than being sliced mid-token
+    assert title_of(url) == url
+    assert title_of(f"{url} please publish this one") == url
+    assert title_of(huge) == huge
     print("title_of: all checks passed")
 
 

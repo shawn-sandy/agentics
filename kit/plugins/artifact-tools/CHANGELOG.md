@@ -23,13 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "ensure that the plugins in the artifact-tool always gen". Titles are now
   trimmed on a word boundary. The `Session export` placeholder is gone: with no
   user turn, the title comes from the session's first turn instead.
+- `session-artifact` — a first turn that is one oversized token (a URL, a path, a
+  hash) is now kept whole rather than sliced mid-token. Width is a target; not
+  cutting mid-word is the rule.
 
 ### Changed
 
 - `diff-artifact`, `plan-artifact`, `session-artifact` — ad-hoc title guidance in
   each skill replaced by a pointer to `references/titles.md`. `plan-artifact`
-  checks the title `plan-agent` generated and routes any fix through the `.md`
-  spec, since hand-edits to plan HTML are overwritten on the next rebuild.
+  checks the subject of the title `plan-agent` generated and routes any fix
+  through the `.md` spec, since hand-edits to plan HTML are overwritten on the
+  next rebuild. The renderer's hardcoded `Plan: ` prefix is unreachable from the
+  spec, so the check exempts it rather than demanding an impossible fix.
 
 ## [1.0.0] - 2026-07-14
 

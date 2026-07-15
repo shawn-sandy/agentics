@@ -24,3 +24,6 @@ Markdown sources.
 - **Never a placeholder.** `Untitled`, `Session export`, `Artifact`, or an empty
   title are all failures. With no subject in reach, name the most specific
   concrete thing the content touches.
+- **When another tool renders the title, these rules cover the part you control.**
+  A prefix baked into a generator and unreachable from its source — plan HTML's
+  `Plan: ` is the one live case — is out of scope. Check the subject after it.
