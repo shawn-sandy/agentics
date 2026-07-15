@@ -2,13 +2,15 @@
 # Objective smoke test for the artifact-tools plugin.
 # Asserts the plugin is complete, valid, and installable: manifest without a
 # version key, three skills with required frontmatter, the bundled transcript
-# extractor, marketplace registration at 1.0.0, and the documented safety
-# contracts (blocking scrub gate, cap-and-summarize, fallback, artifact-url).
+# extractor, marketplace registration agreeing with the CHANGELOG, and the
+# documented safety contracts (blocking scrub gate, cap-and-summarize,
+# fallback, artifact-url).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PLUGIN="$ROOT/kit/plugins/artifact-tools"
 MARKET="$ROOT/.claude-plugin/marketplace.json"
+CHANGELOG="$PLUGIN/CHANGELOG.md"
 fail() { echo "FAIL: $1" >&2; exit 1; }
 checks=0
 ok() { checks=$((checks + 1)); }
@@ -145,14 +147,19 @@ for f in "$DIFF" "$SESSION" "$PLAN"; do
 done
 ok
 
-# 5. Marketplace registration at 1.0.0.
+# 5. Marketplace registration, with the version tracking the CHANGELOG rather
+#    than a literal — a release bump is correct behaviour and must not fail this
+#    test; marketplace.json and the CHANGELOG drifting apart is the real defect.
 python3 -m json.tool "$MARKET" > /dev/null 2>&1 || fail "marketplace.json is not valid JSON"
-python3 - "$MARKET" <<'EOF' || fail "marketplace: artifact-tools not registered at 1.0.0"
-import json, sys
+python3 - "$MARKET" "$CHANGELOG" <<'EOF' || fail "marketplace: artifact-tools registration is wrong"
+import json, re, sys
 plugins = json.load(open(sys.argv[1]))["plugins"]
 e = next((p for p in plugins if p["name"] == "artifact-tools"), None)
 assert e, "artifact-tools entry missing"
-assert e["version"] == "1.0.0", f'version is {e["version"]!r}, expected 1.0.0'
+heading = re.search(r"^## \[(\d+\.\d+\.\d+)\]", open(sys.argv[2]).read(), re.M)
+assert heading, "no '## [x.y.z]' release heading found in CHANGELOG.md"
+latest = heading.group(1)
+assert e["version"] == latest, f'version is {e["version"]!r}, CHANGELOG says {latest!r}'
 assert e["source"]["path"] == "kit/plugins/artifact-tools", "source path mismatch"
 assert e["category"] == "development", f'category is {e["category"]!r}'
 EOF
