@@ -1,5 +1,12 @@
 # Changelog — git-agent
 
+## v4.2.0 — 2026-07-16 — `/git-agent:autonomous-pr` command
+
+### Added
+
+- **`/git-agent:autonomous-pr <objective>`** — chains `plan-agent:implementation-plan` → implement (via `code-testing-agent:tdd-loop` where testable) → `git-agent:ship-autonomous`, then `git-agent:create-issue` for out-of-scope findings. One invocation carries a feature request from objective to a PR awaiting your merge approval.
+- The command is the **front half only** — planning and implementation. Everything from verification onward is `ship-autonomous`'s job: it already runs the tests and previews both themes (Step 2.5), opens and watches the PR (Steps 3–7), and gates the merge behind `AskUserQuestion` (Step 8). The command reimplements none of it, and `tests/plugins/test-autonomous-pr.sh` pins that: it fails if the command file grows its own `preview_start` verification phase or its own merge invocation.
+
 ## v4.1.0 — 2026-07-16 — ship-autonomous verifies before committing and gates the merge
 
 ### Added

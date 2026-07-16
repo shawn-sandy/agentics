@@ -46,6 +46,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `/git-agent:commit-bg [hint]` | Dispatch `agent-commit` in the background — stage and commit while you keep working. Optional hint sets commit message context. |
 | `/git-agent:pr-bg [hint]` | Dispatch `agent-pr` in the background — push and open a GitHub PR while you keep working. Optional hint sets PR title/body context. |
 | `/git-agent:ship-bg [hint]` | Dispatch `agent-ship` in the background — full commit + push + PR pipeline end-to-end. Optional hint sets commit/PR context. |
+| `/git-agent:autonomous-pr <objective>` | Drive a feature request from objective to a PR awaiting your approval: plans it, implements it (via `tdd-loop` where testable), then hands off to `ship-autonomous`, which verifies, opens the PR, watches CI, and gates the merge. Files out-of-scope findings as issues. |
 
 ### Skills
 
