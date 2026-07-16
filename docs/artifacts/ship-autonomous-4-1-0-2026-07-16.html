@@ -1,0 +1,625 @@
+<title>ship-autonomous 4.1.0 — what changed</title>
+
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #F2F2EF;
+    --panel: #FBFBF9;
+    --rule: #DCDBD3;
+    --ink: #22201C;
+    --ink-soft: #56534B;
+    --ink-faint: #86827A;
+    --accent: #9C4F1B;
+    --accent-soft: #F0E2D6;
+    --stop: #9E2B24;
+    --stop-soft: #F3DEDA;
+    --go: #33633F;
+    --go-soft: #DEE9DD;
+    --shadow: 0 1px 2px rgba(34, 32, 28, .06), 0 8px 24px -16px rgba(34, 32, 28, .22);
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ground: #1A1917;
+      --panel: #222120;
+      --rule: #383632;
+      --ink: #EDEBE5;
+      --ink-soft: #ADA99F;
+      --ink-faint: #7C7870;
+      --accent: #D98B4F;
+      --accent-soft: #3A2A1D;
+      --stop: #DE7A6E;
+      --stop-soft: #3B2320;
+      --go: #7FB287;
+      --go-soft: #22301F;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #1A1917;
+    --panel: #222120;
+    --rule: #383632;
+    --ink: #EDEBE5;
+    --ink-soft: #ADA99F;
+    --ink-faint: #7C7870;
+    --accent: #D98B4F;
+    --accent-soft: #3A2A1D;
+    --stop: #DE7A6E;
+    --stop-soft: #3B2320;
+    --go: #7FB287;
+    --go-soft: #22301F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --ground: #F2F2EF;
+    --panel: #FBFBF9;
+    --rule: #DCDBD3;
+    --ink: #22201C;
+    --ink-soft: #56534B;
+    --ink-faint: #86827A;
+    --accent: #9C4F1B;
+    --accent-soft: #F0E2D6;
+    --stop: #9E2B24;
+    --stop-soft: #F3DEDA;
+    --go: #33633F;
+    --go-soft: #DEE9DD;
+    --shadow: 0 1px 2px rgba(34, 32, 28, .06), 0 8px 24px -16px rgba(34, 32, 28, .22);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1.1rem, 4vw, 2rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  /* ---- masthead ---- */
+
+  .masthead { display: flex; flex-direction: column; gap: .9rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: baseline;
+  }
+  .eyebrow .ver { color: var(--accent); }
+  .eyebrow .sep { opacity: .4; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5.5vw, 2.9rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 40rem;
+    text-wrap: pretty;
+  }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  /* ---- sections ---- */
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    padding-bottom: .6rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: .78rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  p { max-width: 40rem; text-wrap: pretty; }
+  p + p { margin-top: -.35rem; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: .1em .35em;
+    border-radius: 3px;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ---- the pipeline ---- */
+
+  .pipe {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 0 .9rem;
+    padding: .8rem 1rem .8rem .7rem;
+    border-left: 3px solid transparent;
+  }
+  .step + .step { border-top: 1px solid var(--rule); }
+
+  .step .num {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    padding-top: .15rem;
+    text-align: right;
+  }
+
+  .step .body { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+
+  .step .name {
+    font-weight: 600;
+    font-size: .97rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .step .note {
+    font-size: .88rem;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+  }
+
+  .step.is-new {
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent-soft) 55%, var(--panel));
+  }
+  .step.is-new .num { color: var(--accent); font-weight: 600; }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: .63rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .16em .45em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .tag-new { background: var(--accent); color: var(--panel); }
+  .tag-stop { background: var(--stop-soft); color: var(--stop); }
+  .tag-ask { background: var(--accent-soft); color: var(--accent); border: 1px solid currentColor; }
+
+  /* ---- gate cards ---- */
+
+  .gate {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--panel);
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+    box-shadow: var(--shadow);
+  }
+  .gate-head {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: .8rem;
+    letter-spacing: .04em;
+    color: var(--ink-faint);
+  }
+  .gate-head b { color: var(--ink); font-weight: 600; }
+  .gate p { font-size: .93rem; margin: 0; }
+
+  .rulebox {
+    border-left: 3px solid var(--stop);
+    background: var(--stop-soft);
+    padding: .8rem 1rem;
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .rulebox .lede {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--stop);
+  }
+  .rulebox p { font-size: .93rem; }
+
+  /* ---- compare: two columns of behaviour ---- */
+
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+  }
+  .col {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+  .col h4 {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .col.go h4 { color: var(--go); }
+  .col.stop h4 { color: var(--stop); }
+  .col ul { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .col li {
+    font-size: .9rem;
+    color: var(--ink-soft);
+    padding-left: 1.05rem;
+    position: relative;
+    text-wrap: pretty;
+  }
+  .col li::before {
+    position: absolute;
+    left: 0;
+    top: -.02em;
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+  .col.go li::before { content: "+"; color: var(--go); }
+  .col.stop li::before { content: "\00d7"; color: var(--stop); }
+
+  /* ---- ledger ---- */
+
+  .ledger { border-collapse: collapse; width: 100%; font-size: .89rem; }
+  .ledger caption {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-bottom: .6rem;
+  }
+  .ledger th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    padding: 0 .8rem .45rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .ledger td {
+    padding: .55rem .8rem .55rem 0;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+  .ledger td:first-child { font-family: var(--mono); font-size: .82rem; color: var(--ink); white-space: nowrap; }
+  .scroller { overflow-x: auto; }
+
+  footer {
+    font-size: .85rem;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+    padding-top: 1.1rem;
+    text-wrap: pretty;
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>git-agent</span>
+      <span class="sep">/</span>
+      <span>ship-autonomous</span>
+      <span class="sep">/</span>
+      <span class="ver">4.0.1 &rarr; 4.1.0</span>
+    </div>
+    <h1>Two new gates in the ship pipeline</h1>
+    <p class="standfirst">
+      You asked for a skill that verifies, tests, previews, ships, and merges. Six of those
+      already existed in <strong>ship-autonomous</strong>. Rather than fork the pipeline into a
+      second skill that would drift, I added the three missing pieces to it: a
+      <strong>verification gate before the commit</strong>, a <strong>merge gate after green</strong>,
+      and a <strong>separate approval for deleting the branch</strong>.
+    </p>
+  </header>
+
+  <section>
+    <h2>The pipeline, with the new steps in place</h2>
+    <p>
+      The numbering is load-bearing — the skill runs these in strict order, and steps 6&ndash;8 are
+      the standing policy it applies each time a PR event wakes the session. The two highlighted
+      rows are new.
+    </p>
+
+    <div class="pipe">
+      <div class="step">
+        <div class="num">0</div>
+        <div class="body">
+          <div class="name">Exit plan mode</div>
+          <div class="note">Committing and pushing are mutations; they can't run inside plan mode.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">1</div>
+        <div class="body">
+          <div class="name">Pre-flight guards <span class="tag tag-stop">stop</span></div>
+          <div class="note">Clean tree, detached HEAD, uncommitted plan files, <code>gh</code> auth.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div class="body">
+          <div class="name">Branch</div>
+          <div class="note">Branches off <code>origin/HEAD</code> only if you're sitting on the default branch.</div>
+        </div>
+      </div>
+
+      <div class="step is-new">
+        <div class="num">2.5</div>
+        <div class="body">
+          <div class="name">
+            Verify
+            <span class="tag tag-new">new</span>
+            <span class="tag tag-stop">stop</span>
+          </div>
+          <div class="note">Run the tests. Preview both themes if there's anything to look at. Stop on red.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">3</div>
+        <div class="body">
+          <div class="name">Commit</div>
+          <div class="note">Delegates to <code>commit-agent</code>. A failing pre-commit hook stops the run — never <code>--no-verify</code>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div class="body">
+          <div class="name">Open PR</div>
+          <div class="note">Delegates to <code>pr-agent</code>; captures the PR URL for everything downstream.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">5</div>
+        <div class="body">
+          <div class="name">Watch CI</div>
+          <div class="note">Subscribes to PR events and ends the turn. Falls back to polling where the GitHub MCP server isn't available.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">6</div>
+        <div class="body">
+          <div class="name">Autofix <span class="tag tag-ask">asks</span></div>
+          <div class="note">Fixes lint, typecheck, and peer-dep failures only. Three attempts per check, then it asks you.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">7</div>
+        <div class="body">
+          <div class="name">Green</div>
+          <div class="note">Marks the PR ready, comments, reports back.</div>
+        </div>
+      </div>
+
+      <div class="step is-new">
+        <div class="num">8</div>
+        <div class="body">
+          <div class="name">
+            Merge
+            <span class="tag tag-new">new</span>
+            <span class="tag tag-ask">asks</span>
+          </div>
+          <div class="note">Re-confirms green, asks before merging, then asks <em>again</em> before deleting the branch.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 2.5 — verify before committing</h2>
+    <p>
+      This runs before the commit rather than after the PR opens, so a red test suite never
+      becomes a public branch. Two parts, and the second one is conditional.
+    </p>
+
+    <div class="gate">
+      <div class="gate-head"><b>Tests</b> <span>&mdash; unconditional</span></div>
+      <p>
+        Detects the project's <code>test*</code> script from <code>package.json</code> and runs the
+        first match. Failure means the failing output verbatim and a full stop — no committing a
+        red tree, no interpreting the failure as someone else's problem. No test script at all is
+        reported out loud and the run continues.
+      </p>
+    </div>
+
+    <div class="gate">
+      <div class="gate-head"><b>Browser preview</b> <span>&mdash; only when there's something to see</span></div>
+      <p>
+        Starts the dev server from <code>.claude/launch.json</code>, reads console and server logs
+        for errors, then screenshots the page at <code>colorScheme: light</code> and
+        <code>colorScheme: dark</code>. Theme-specific breakage gets fixed before the commit, not
+        after review catches it.
+      </p>
+      <p>
+        The condition matters: this step is skipped unless the change is actually observable in a
+        browser. Your verification rule says not to start a server that can't prove anything, so a
+        docs-only or plugin-only ship goes straight to the commit.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 8 — merge, and the branch-deletion rule</h2>
+    <p>
+      Merging is outward-facing and hard to undo, so it gets a re-check and an explicit ask. Checks
+      can turn red between the last event and the merge, which is why the green state is confirmed
+      again immediately beforehand rather than trusted from Step 7.
+    </p>
+
+    <div class="rulebox">
+      <div class="lede">The rule that needed writing down</div>
+      <p>
+        <strong>&ldquo;Merge it&rdquo; never authorizes <code>--delete-branch</code>.</strong>
+        Branch deletion is a second, separate approval. If you don't clearly say yes, the branch
+        stays.
+      </p>
+      <p>
+        This is in your global rules already, but a rule that lives only in judgment gets skipped
+        under momentum — right after a merge succeeds is exactly when cleanup feels implied. Naming
+        it as a step makes it a thing the skill has to do, not a thing it has to remember.
+      </p>
+    </div>
+
+    <p>
+      One more line went in at the end: a re-fired bot review on an already-approved PR isn't new
+      information. After one substantive fix pass, only merge-blocking findings get actioned — the
+      rest surfaces to you as a choice between merging and polishing.
+    </p>
+  </section>
+
+  <section>
+    <h2>What it will and won't do on its own</h2>
+    <div class="compare">
+      <div class="col go">
+        <h4>Acts without asking</h4>
+        <ul>
+          <li>Runs tests and previews both themes</li>
+          <li>Branches, commits, pushes, opens the PR</li>
+          <li>Fixes lint, typecheck, and peer-dep CI failures</li>
+          <li>Applies review comments that are clear, safe, and in scope</li>
+          <li>Marks the PR ready once CI is green</li>
+        </ul>
+      </div>
+      <div class="col stop">
+        <h4>Stops and asks</h4>
+        <ul>
+          <li>Any test failure, or a failing pre-commit hook</li>
+          <li>A CI failure outside the allowlist, or a 4th attempt at the same check</li>
+          <li>An ambiguous or architecturally significant review comment</li>
+          <li>The merge itself</li>
+          <li>Deleting the branch — separately, after the merge</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What I skipped</h2>
+    <p>
+      Your request opened with &ldquo;authors the change.&rdquo; That isn't in the skill. A skill
+      can't generically author arbitrary work — a step that says <em>write the code</em> is prose,
+      not behavior, and it would trigger on every session that merely mentions shipping. The
+      pipeline starts where there's a dirty working tree to ship, which is where the authoring has
+      already happened.
+    </p>
+    <p>
+      Say the word if you want a scaffolding step in front of it, but I'd expect it to earn its
+      keep as a separate skill rather than a preamble to this one.
+    </p>
+  </section>
+
+  <section>
+    <h2>Files touched</h2>
+    <div class="scroller">
+      <table class="ledger">
+        <caption>Uncommitted, in the worktree</caption>
+        <thead>
+          <tr><th>Path</th><th>Change</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>skills/ship-autonomous/SKILL.md</td>
+            <td>Added Steps 2.5 and 8, the bot-loop policy note, and the <code>mcp__Claude_Browser__*</code> preview tools to <code>allowed-tools</code>. Description now names verification and the gated merge.</td>
+          </tr>
+          <tr>
+            <td>.claude-plugin/marketplace.json</td>
+            <td><code>git-agent</code> bumped 4.0.1 &rarr; 4.1.0. Minor: new behavior, nothing removed or renamed.</td>
+          </tr>
+          <tr>
+            <td>kit/plugins/git-agent/CHANGELOG.md</td>
+            <td>4.1.0 entry under Added and Changed.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Step numbering stops at 2.5 rather than renumbering 3&ndash;8 on purpose — the file
+      cross-references its own step numbers, and a renumber would bury the actual change under a
+      rename diff.
+    </p>
+  </section>
+
+  <footer>
+    Nothing is committed. The changes sit in the <code>claude-config-sharing-480f4e</code> worktree
+    on <code>claude/skill-authoring-workflow-b12d4f</code>, ready to branch and commit when you are.
+  </footer>
+
+</div>

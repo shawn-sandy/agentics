@@ -1,5 +1,26 @@
 # Changelog — git-agent
 
+## v4.1.0 — 2026-07-16 — ship-autonomous verifies before committing and gates the merge
+
+### Added
+
+- **Step 2.5 (Verify)** — runs the project's `test*` script before committing and stops on failure rather than shipping a red tree. When the change is observable in a browser, previews it via `.claude/launch.json`, checks console and server logs, and screenshots both light and dark themes.
+- **Step 8 (Merge)** — re-confirms every check is green immediately before merging, re-fetches the live review decision and unresolved-thread count (an approval or change request may have landed since the last event), then gates the merge itself behind `AskUserQuestion`. The merge pins `--match-head-commit <headRefOid>` so commits arriving after verification cause the merge to fail rather than silently land unreviewed. Branch deletion requires a **separate** explicit approval: a merge approval never authorizes `--delete-branch`.
+- Closing policy note: a re-fired bot review on an already-approved PR is not new information — after one substantive fix pass, only merge-blocking findings are actioned.
+
+### Changed
+
+- `allowed-tools` gained the `mcp__Claude_Browser__*` preview tools used by Step 2.5.
+
+### Fixed
+
+- **Step 5 fallback polling was broken (pre-existing, since v3.x).** `gh pr checks --json name,state,conclusion,workflowName` errors out with `Unknown JSON field` — `gh pr checks` exposes `state`/`workflow`, not `conclusion`/`workflowName` (those belong to `gh run list`). Local runs without the GitHub MCP server could never read CI status. Now queries `name,state,workflow,link` and reads `state`. Prose in Steps 5 and 7 updated from "conclusions" to "states".
+- Step 8's green re-check used the same invalid `conclusion` field; corrected to `name,state,link`.
+- Step 8 suggested `gh pr branch-delete`, which is not a `gh` subcommand — cleanup would have failed after an otherwise successful merge. Replaced with `git push origin --delete <branch>` and an optional local `git branch -d`.
+- Step 2.5's test-script selector matched `^test`, so a `test:watch` or `test:dev` script could be selected and hang the pipeline forever. Now prefers the exact `test` script and excludes persistent variants (`watch`, `dev`, `ui`, `serve`) when falling back.
+- Step 2.5's browser preview checked console and server logs but only treated theme breakage as blocking; console/server errors now block and must be fixed and re-checked before the pipeline continues.
+- README described the local fallback as stopping once CI is green, contradicting Step 8, which routes fallback mode through merge approval. Corrected.
+
 ## v4.0.1 — 2026-07-13 — Per-skill model pinning
 
 ### Changed

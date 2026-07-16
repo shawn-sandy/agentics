@@ -1,14 +1,14 @@
 ---
 name: ship-autonomous
-description: "Runs the full ship pipeline with CI polling and bounded autofix. Chains commit, PR, CI poll, and autofix in one supervised flow. Use when the user asks to autonomously ship or watch CI."
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
+description: "Runs the full ship pipeline with verification, CI polling, and bounded autofix. Chains tests, browser preview, commit, PR, CI poll, autofix, and gated merge. Use when the user asks to autonomously ship or watch CI."
+allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode, mcp__Claude_Browser__preview_start, mcp__Claude_Browser__preview_logs, mcp__Claude_Browser__read_console_messages, mcp__Claude_Browser__resize_window, mcp__Claude_Browser__computer
 ---
 
 Autonomously branch, commit, and open a PR, then subscribe to the PR's activity
 events and autofix failures as they arrive — keeping the user posted throughout.
 
 Run Steps 0–5 in strict order. **Step 5 subscribes to PR events and ends the
-turn.** Steps 6–7 are the standing policy the session follows each time a PR
+turn.** Steps 6–8 are the standing policy the session follows each time a PR
 event wakes it; they are not a synchronous loop you run inside one turn.
 
 ---
@@ -94,6 +94,41 @@ If already on a feature branch, continue without creating a new branch.
 
 ---
 
+## Step 2.5: Verify Before Committing
+
+**Tests.** Prefer the exact `test` script; it is the one that runs once and
+exits:
+
+```
+jq -r '.scripts | keys[] | select(. == "test")' package.json 2>/dev/null
+```
+
+If there is no exact `test` script, fall back to a single-run variant, excluding
+persistent ones (`watch`, `dev`, `ui`, `serve`) that never terminate:
+
+```
+jq -r '.scripts | keys[] | select(startswith("test")) | select(test("watch|dev|ui|serve") | not)' package.json 2>/dev/null
+```
+
+Run the first match. If tests fail, report the failing output verbatim and
+**STOP** — do not commit a red tree. If neither query matches, say so and
+continue — never start a watch-mode script, which would hang the pipeline
+forever.
+
+**Browser preview.** Only if the change is observable in a browser (it renders,
+serves, or logs something the dev server exercises). Skip otherwise — a server
+that can't prove anything is wasted time.
+
+1. `preview_start` with the `name` from `.claude/launch.json`.
+2. Check `read_console_messages` and `preview_logs`. **Any console or server
+   error blocks the pipeline** — fix it and re-run both checks until they are
+   clear before going on. A broken page proves nothing.
+3. `resize_window` with `colorScheme: light`, then `colorScheme: dark` —
+   screenshot each. Report any theme-specific breakage and fix before
+   continuing.
+
+---
+
 ## Step 3: Commit
 
 Invoke the existing **`git-agent:commit-agent`** skill. It stages all changes,
@@ -149,10 +184,15 @@ without the GitHub MCP server), poll synchronously instead:
 
 ```
 gh pr checks <pr-url> --watch --fail-fast=false
-gh pr checks <pr-url> --json name,state,conclusion,workflowName
+gh pr checks <pr-url> --json name,state,workflow,link
 ```
 
-Parse with `jq`. If all conclusions are `SUCCESS`/`SKIPPED`, go to Step 7. If
+`gh pr checks` reports check status in `state`; it has no `conclusion` or
+`workflowName` field (its JSON fields are `bucket`, `completedAt`,
+`description`, `event`, `link`, `name`, `startedAt`, `state`, `workflow`). Do
+not confuse it with `gh run list`, which does use `conclusion`.
+
+Parse with `jq`. If all states are `SUCCESS`/`SKIPPED`, go to Step 7. If
 any is `FAILURE`, handle it via Step 6 then re-poll (max 3 fix attempts per
 check). If any is `CANCELLED`/`TIMED_OUT`, escalate via AskUserQuestion.
 
@@ -243,14 +283,16 @@ again — stop here and wait. In fallback mode, return to the Step 5 poll.
 
 ## Step 7: Green / Done
 
-When all checks are green (all conclusions `SUCCESS` or `SKIPPED`):
+When all checks are green (every `state` is `SUCCESS` or `SKIPPED`):
 
 1. Mark the PR ready if it was opened as draft: `gh pr ready <pr-url>`.
 2. Comment: `gh pr comment <pr-url> --body "CI is green — ready for review."`
 3. Update the TodoWrite checklist and post a final status update to the user
    with the PR URL.
 
-In **fallback (polling) mode**, you are done — **STOP**.
+Then go to Step 8.
+
+In **fallback (polling) mode**, you are done after Step 8 — **STOP**.
 
 In **subscription mode**, keep the subscription active so later review comments
 are still handled per Step 6. Call `mcp__github__unsubscribe_pr_activity` (with
@@ -258,6 +300,67 @@ are still handled per Step 6. Call `mcp__github__unsubscribe_pr_activity` (with
 or closes, or when the user asks you to stop watching.
 
 ---
+
+## Step 8: Merge (only on green, only with approval)
+
+**Never merge on anything but green.** Re-confirm every check is `SUCCESS` or
+`SKIPPED` immediately before merging (`state` is the field that carries this —
+`gh pr checks` has no `conclusion`):
+
+```
+gh pr checks <pr-url> --json name,state,link
+```
+
+If any check is failing, pending, or unresolved, return to Step 6 — do not
+merge.
+
+**Also fetch the current review state**, not a remembered one — an approval or a
+change request may have landed since the last event:
+
+```
+gh pr view <pr-url> --json reviewDecision,headRefOid
+gh api graphql -f query='{ repository(owner: "<owner>", name: "<repo>") {
+  pullRequest(number: <n>) { reviewThreads(first: 50) { nodes { isResolved } } } } }'
+```
+
+A `CHANGES_REQUESTED` decision or any unresolved thread blocks the merge —
+return to Step 6.
+
+Merging is outward-facing and hard to undo. Use **AskUserQuestion** to confirm
+before merging, showing the PR URL, the check summary, the review decision, and
+the count of unresolved threads.
+
+On approval, pin the merge to the exact commit you verified — passing
+`headRefOid` as `--match-head-commit` makes the merge fail rather than silently
+land commits that arrived after your checks:
+
+```
+gh pr merge <pr-url> --squash --match-head-commit <headRefOid>
+```
+
+If it fails because the head moved, re-run the checks above and ask again — a
+new commit is unverified work, and prior approval does not extend to it.
+
+**Branch deletion requires its own explicit approval.** "Merge it" does not
+authorize `--delete-branch` — never pass that flag on the strength of a merge
+approval. After a successful merge, ask separately whether to delete the branch,
+and only on a clear yes run:
+
+```
+git push origin --delete <branch>
+git branch -d <branch>        # local copy, only if it is checked out locally
+```
+
+If the user does not clearly say yes, leave the branch in place.
+
+Then post the merge URL and **STOP**.
+
+---
+
+**A re-fired bot review on an already-approved PR is not new information.** After
+one pass of substantive fixes, act only on findings that explicitly block merge.
+When the verdict is "approve with minor suggestions" or "ready to merge", say so
+and offer the merge — do not keep polishing.
 
 **Beyond this policy, do not analyze unrelated code, run extra tests, or suggest
 follow-up tasks. Act only on the PR events you receive.**

@@ -10,7 +10,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 - **commit-agent** — Stages all changes, writes a conventional commit message, and commits. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
-- **ship-autonomous** — Supervised full pipeline: branches (if on default), commits, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
+- **ship-autonomous** — Supervised full pipeline: branches (if on default), runs the tests and previews both themes before committing, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist, before merging, and again before deleting the branch. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
 - **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, `session`, or `plan` (a plan file becomes a tracked ticket). Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Auto-activates on intent match.
 
 ### Subagents (background, fire-and-forget)
@@ -154,16 +154,20 @@ The skill will:
 1. Exit plan mode (Step 0) — no-op when already off
 2. Guard: check for clean tree, uncommitted plan files, detached HEAD, `gh` auth
 3. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
-4. Commit via `commit-agent` (stages, conventional message, commits)
-5. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
-6. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
-7. On each event: refresh a live TodoWrite status checklist and post a concise update, then
+4. Verify (Step 2.5): run the project's `test*` script and **stop on failure** rather than committing a red tree; when the change is observable in a browser, preview it via `.claude/launch.json`, check console/server logs, and screenshot both light and dark themes. Skipped entirely when there's nothing a dev server could prove
+5. Commit via `commit-agent` (stages, conventional message, commits)
+6. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
+7. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
+8. On each event: refresh a live TodoWrite status checklist and post a concise update, then
    - **CI failure** → classify and autofix allow-listed classes (`lint`, `typecheck`, `peer-deps`), ≤3 attempts per check; commit + push the fix (which triggers the next CI run)
    - **Review comment** → apply clear, in-scope changes (commit, push, reply); ask first if ambiguous or architectural
    - **Anything outside the safe allowlist, or ambiguous** → ask via `AskUserQuestion` instead of guessing
-8. When all checks are green: marks the PR ready, posts "CI is green — ready for review.", and sends a final status update with the PR URL. Keeps watching for later review comments until the PR merges/closes or you say stop (then unsubscribes)
+9. When all checks are green: marks the PR ready, posts "CI is green — ready for review.", and sends a final status update with the PR URL. Keeps watching for later review comments until the PR merges/closes or you say stop (then unsubscribes)
+10. Merge (Step 8): re-confirms every check is green immediately before merging, then **asks before merging**. Deleting the branch needs its own separate approval — a merge approval never authorizes `--delete-branch`
 
-**Environment:** event subscription requires a remote execution environment (Claude Code on the web or GitHub Actions). Run locally without the GitHub MCP server, the skill falls back to synchronous CI polling (`gh pr checks --watch`) with the same ≤3-attempt autofix, and stops once CI is green.
+A re-fired bot review on an already-approved PR isn't treated as new information: after one substantive fix pass, only merge-blocking findings are actioned.
+
+**Environment:** event subscription requires a remote execution environment (Claude Code on the web or GitHub Actions). Run locally without the GitHub MCP server, the skill falls back to synchronous CI polling (`gh pr checks --watch`) with the same ≤3-attempt autofix. Once CI is green it still goes through Step 8's merge approval, then stops — after the merge, or immediately if you decline.
 
 Use `ship` if you don't want CI watching or autofix — it's simpler and stops after PR creation.
 
