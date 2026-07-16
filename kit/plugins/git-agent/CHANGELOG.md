@@ -1,5 +1,17 @@
 # Changelog — git-agent
 
+## v4.1.0 — 2026-07-16 — ship-autonomous verifies before committing and gates the merge
+
+### Added
+
+- **Step 2.5 (Verify)** — runs the project's `test*` script before committing and stops on failure rather than shipping a red tree. When the change is observable in a browser, previews it via `.claude/launch.json`, checks console and server logs, and screenshots both light and dark themes.
+- **Step 8 (Merge)** — re-confirms every check is green immediately before merging, then gates the merge itself behind `AskUserQuestion`. Branch deletion requires a **separate** explicit approval: a merge approval never authorizes `--delete-branch`.
+- Closing policy note: a re-fired bot review on an already-approved PR is not new information — after one substantive fix pass, only merge-blocking findings are actioned.
+
+### Changed
+
+- `allowed-tools` gained the `mcp__Claude_Browser__*` preview tools used by Step 2.5.
+
 ## v4.0.1 — 2026-07-13 — Per-skill model pinning
 
 ### Changed

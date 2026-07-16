@@ -1,14 +1,14 @@
 ---
 name: ship-autonomous
-description: "Runs the full ship pipeline with CI polling and bounded autofix. Chains commit, PR, CI poll, and autofix in one supervised flow. Use when the user asks to autonomously ship or watch CI."
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode
+description: "Runs the full ship pipeline with verification, CI polling, and bounded autofix. Chains tests, browser preview, commit, PR, CI poll, autofix, and gated merge. Use when the user asks to autonomously ship or watch CI."
+allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode, mcp__Claude_Browser__preview_start, mcp__Claude_Browser__preview_logs, mcp__Claude_Browser__read_console_messages, mcp__Claude_Browser__resize_window, mcp__Claude_Browser__computer
 ---
 
 Autonomously branch, commit, and open a PR, then subscribe to the PR's activity
 events and autofix failures as they arrive — keeping the user posted throughout.
 
 Run Steps 0–5 in strict order. **Step 5 subscribes to PR events and ends the
-turn.** Steps 6–7 are the standing policy the session follows each time a PR
+turn.** Steps 6–8 are the standing policy the session follows each time a PR
 event wakes it; they are not a synchronous loop you run inside one turn.
 
 ---
@@ -91,6 +91,30 @@ arguments. It will auto-generate a `<type>/<scope>-<desc>` slug from the
 working tree and branch from `origin/HEAD --no-track`.
 
 If already on a feature branch, continue without creating a new branch.
+
+---
+
+## Step 2.5: Verify Before Committing
+
+**Tests.** Detect and run the project's test command:
+
+```
+jq -r '.scripts | to_entries[] | select(.key | test("^test")) | .key' package.json 2>/dev/null
+```
+
+Run the first match. If tests fail, report the failing output verbatim and
+**STOP** — do not commit a red tree. If no test script exists, say so and
+continue.
+
+**Browser preview.** Only if the change is observable in a browser (it renders,
+serves, or logs something the dev server exercises). Skip otherwise — a server
+that can't prove anything is wasted time.
+
+1. `preview_start` with the `name` from `.claude/launch.json`.
+2. Check `read_console_messages` and `preview_logs` for errors.
+3. `resize_window` with `colorScheme: light`, then `colorScheme: dark` —
+   screenshot each. Report any theme-specific breakage and fix before
+   continuing.
 
 ---
 
@@ -250,7 +274,9 @@ When all checks are green (all conclusions `SUCCESS` or `SKIPPED`):
 3. Update the TodoWrite checklist and post a final status update to the user
    with the PR URL.
 
-In **fallback (polling) mode**, you are done — **STOP**.
+Then go to Step 8.
+
+In **fallback (polling) mode**, you are done after Step 8 — **STOP**.
 
 In **subscription mode**, keep the subscription active so later review comments
 are still handled per Step 6. Call `mcp__github__unsubscribe_pr_activity` (with
@@ -258,6 +284,43 @@ are still handled per Step 6. Call `mcp__github__unsubscribe_pr_activity` (with
 or closes, or when the user asks you to stop watching.
 
 ---
+
+## Step 8: Merge (only on green, only with approval)
+
+**Never merge on anything but green.** Re-confirm every check is `SUCCESS` or
+`SKIPPED` immediately before merging:
+
+```
+gh pr checks <pr-url> --json name,state,conclusion
+```
+
+If any check is failing, pending, or unresolved, return to Step 6 — do not
+merge.
+
+Merging is outward-facing and hard to reverse. Use **AskUserQuestion** to
+confirm before merging, showing the PR URL, the check summary, and any
+unresolved review threads.
+
+On approval:
+
+```
+gh pr merge <pr-url> --squash
+```
+
+**Branch deletion requires its own explicit approval.** "Merge it" does not
+authorize `--delete-branch` — never pass that flag on the strength of a merge
+approval. After a successful merge, ask separately whether to delete the branch,
+and only then run `gh pr branch-delete` / `git push origin --delete <branch>`.
+If the user does not clearly say yes, leave the branch in place.
+
+Then post the merge URL and **STOP**.
+
+---
+
+**A re-fired bot review on an already-approved PR is not new information.** After
+one pass of substantive fixes, act only on findings that explicitly block merge.
+When the verdict is "approve with minor suggestions" or "ready to merge", say so
+and offer the merge — do not keep polishing.
 
 **Beyond this policy, do not analyze unrelated code, run extra tests, or suggest
 follow-up tasks. Act only on the PR events you receive.**
