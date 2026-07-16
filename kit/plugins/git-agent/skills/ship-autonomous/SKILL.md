@@ -96,15 +96,24 @@ If already on a feature branch, continue without creating a new branch.
 
 ## Step 2.5: Verify Before Committing
 
-**Tests.** Detect and run the project's test command:
+**Tests.** Prefer the exact `test` script; it is the one that runs once and
+exits:
 
 ```
-jq -r '.scripts | to_entries[] | select(.key | test("^test")) | .key' package.json 2>/dev/null
+jq -r '.scripts | keys[] | select(. == "test")' package.json 2>/dev/null
+```
+
+If there is no exact `test` script, fall back to a single-run variant, excluding
+persistent ones (`watch`, `dev`, `ui`, `serve`) that never terminate:
+
+```
+jq -r '.scripts | keys[] | select(startswith("test")) | select(test("watch|dev|ui|serve") | not)' package.json 2>/dev/null
 ```
 
 Run the first match. If tests fail, report the failing output verbatim and
-**STOP** — do not commit a red tree. If no test script exists, say so and
-continue.
+**STOP** — do not commit a red tree. If neither query matches, say so and
+continue — never start a watch-mode script, which would hang the pipeline
+forever.
 
 **Browser preview.** Only if the change is observable in a browser (it renders,
 serves, or logs something the dev server exercises). Skip otherwise — a server
@@ -173,10 +182,15 @@ without the GitHub MCP server), poll synchronously instead:
 
 ```
 gh pr checks <pr-url> --watch --fail-fast=false
-gh pr checks <pr-url> --json name,state,conclusion,workflowName
+gh pr checks <pr-url> --json name,state,workflow,link
 ```
 
-Parse with `jq`. If all conclusions are `SUCCESS`/`SKIPPED`, go to Step 7. If
+`gh pr checks` reports check status in `state`; it has no `conclusion` or
+`workflowName` field (its JSON fields are `bucket`, `completedAt`,
+`description`, `event`, `link`, `name`, `startedAt`, `state`, `workflow`). Do
+not confuse it with `gh run list`, which does use `conclusion`.
+
+Parse with `jq`. If all states are `SUCCESS`/`SKIPPED`, go to Step 7. If
 any is `FAILURE`, handle it via Step 6 then re-poll (max 3 fix attempts per
 check). If any is `CANCELLED`/`TIMED_OUT`, escalate via AskUserQuestion.
 
@@ -267,7 +281,7 @@ again — stop here and wait. In fallback mode, return to the Step 5 poll.
 
 ## Step 7: Green / Done
 
-When all checks are green (all conclusions `SUCCESS` or `SKIPPED`):
+When all checks are green (every `state` is `SUCCESS` or `SKIPPED`):
 
 1. Mark the PR ready if it was opened as draft: `gh pr ready <pr-url>`.
 2. Comment: `gh pr comment <pr-url> --body "CI is green — ready for review."`
@@ -288,10 +302,11 @@ or closes, or when the user asks you to stop watching.
 ## Step 8: Merge (only on green, only with approval)
 
 **Never merge on anything but green.** Re-confirm every check is `SUCCESS` or
-`SKIPPED` immediately before merging:
+`SKIPPED` immediately before merging (`state` is the field that carries this —
+`gh pr checks` has no `conclusion`):
 
 ```
-gh pr checks <pr-url> --json name,state,conclusion
+gh pr checks <pr-url> --json name,state,link
 ```
 
 If any check is failing, pending, or unresolved, return to Step 6 — do not
@@ -310,7 +325,13 @@ gh pr merge <pr-url> --squash
 **Branch deletion requires its own explicit approval.** "Merge it" does not
 authorize `--delete-branch` — never pass that flag on the strength of a merge
 approval. After a successful merge, ask separately whether to delete the branch,
-and only then run `gh pr branch-delete` / `git push origin --delete <branch>`.
+and only on a clear yes run:
+
+```
+git push origin --delete <branch>
+git branch -d <branch>        # local copy, only if it is checked out locally
+```
+
 If the user does not clearly say yes, leave the branch in place.
 
 Then post the merge URL and **STOP**.

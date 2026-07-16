@@ -12,6 +12,13 @@
 
 - `allowed-tools` gained the `mcp__Claude_Browser__*` preview tools used by Step 2.5.
 
+### Fixed
+
+- **Step 5 fallback polling was broken (pre-existing, since v3.x).** `gh pr checks --json name,state,conclusion,workflowName` errors out with `Unknown JSON field` — `gh pr checks` exposes `state`/`workflow`, not `conclusion`/`workflowName` (those belong to `gh run list`). Local runs without the GitHub MCP server could never read CI status. Now queries `name,state,workflow,link` and reads `state`. Prose in Steps 5 and 7 updated from "conclusions" to "states".
+- Step 8's green re-check used the same invalid `conclusion` field; corrected to `name,state,link`.
+- Step 8 suggested `gh pr branch-delete`, which is not a `gh` subcommand — cleanup would have failed after an otherwise successful merge. Replaced with `git push origin --delete <branch>` and an optional local `git branch -d`.
+- Step 2.5's test-script selector matched `^test`, so a `test:watch` or `test:dev` script could be selected and hang the pipeline forever. Now prefers the exact `test` script and excludes persistent variants (`watch`, `dev`, `ui`, `serve`) when falling back.
+
 ## v4.0.1 — 2026-07-13 — Per-skill model pinning
 
 ### Changed
