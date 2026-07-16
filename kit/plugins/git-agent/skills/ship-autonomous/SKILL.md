@@ -120,7 +120,9 @@ serves, or logs something the dev server exercises). Skip otherwise — a server
 that can't prove anything is wasted time.
 
 1. `preview_start` with the `name` from `.claude/launch.json`.
-2. Check `read_console_messages` and `preview_logs` for errors.
+2. Check `read_console_messages` and `preview_logs`. **Any console or server
+   error blocks the pipeline** — fix it and re-run both checks until they are
+   clear before going on. A broken page proves nothing.
 3. `resize_window` with `colorScheme: light`, then `colorScheme: dark` —
    screenshot each. Report any theme-specific breakage and fix before
    continuing.
@@ -312,15 +314,32 @@ gh pr checks <pr-url> --json name,state,link
 If any check is failing, pending, or unresolved, return to Step 6 — do not
 merge.
 
-Merging is outward-facing and hard to reverse. Use **AskUserQuestion** to
-confirm before merging, showing the PR URL, the check summary, and any
-unresolved review threads.
-
-On approval:
+**Also fetch the current review state**, not a remembered one — an approval or a
+change request may have landed since the last event:
 
 ```
-gh pr merge <pr-url> --squash
+gh pr view <pr-url> --json reviewDecision,headRefOid
+gh api graphql -f query='{ repository(owner: "<owner>", name: "<repo>") {
+  pullRequest(number: <n>) { reviewThreads(first: 50) { nodes { isResolved } } } } }'
 ```
+
+A `CHANGES_REQUESTED` decision or any unresolved thread blocks the merge —
+return to Step 6.
+
+Merging is outward-facing and hard to undo. Use **AskUserQuestion** to confirm
+before merging, showing the PR URL, the check summary, the review decision, and
+the count of unresolved threads.
+
+On approval, pin the merge to the exact commit you verified — passing
+`headRefOid` as `--match-head-commit` makes the merge fail rather than silently
+land commits that arrived after your checks:
+
+```
+gh pr merge <pr-url> --squash --match-head-commit <headRefOid>
+```
+
+If it fails because the head moved, re-run the checks above and ask again — a
+new commit is unverified work, and prior approval does not extend to it.
 
 **Branch deletion requires its own explicit approval.** "Merge it" does not
 authorize `--delete-branch` — never pass that flag on the strength of a merge

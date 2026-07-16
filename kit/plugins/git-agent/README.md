@@ -167,7 +167,7 @@ The skill will:
 
 A re-fired bot review on an already-approved PR isn't treated as new information: after one substantive fix pass, only merge-blocking findings are actioned.
 
-**Environment:** event subscription requires a remote execution environment (Claude Code on the web or GitHub Actions). Run locally without the GitHub MCP server, the skill falls back to synchronous CI polling (`gh pr checks --watch`) with the same ≤3-attempt autofix, and stops once CI is green.
+**Environment:** event subscription requires a remote execution environment (Claude Code on the web or GitHub Actions). Run locally without the GitHub MCP server, the skill falls back to synchronous CI polling (`gh pr checks --watch`) with the same ≤3-attempt autofix. Once CI is green it still goes through Step 8's merge approval, then stops — after the merge, or immediately if you decline.
 
 Use `ship` if you don't want CI watching or autofix — it's simpler and stops after PR creation.
 
