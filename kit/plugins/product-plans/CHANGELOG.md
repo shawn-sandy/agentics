@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.4.11 — 2026-07-17 — Repoint plan-interview cross-references to plan-agent
+
+### Changed
+
+- `plan-interview` merged into `plan-agent` 4.0.0. Repointed the README comparison table, the `plan-review-agents` SKILL handoffs, and the interview-artifact attribution from `plan-interview`/`plan-interview:deep-grill` to `plan-agent`/`plan-agent:deep-grill`. Description no longer names the removed plugin. No behavior change.
+
 ## v3.4.10 — 2026-06-20 — Standardize plans-directory resolution (Claude settings precedence)
 
 ### Fixed
