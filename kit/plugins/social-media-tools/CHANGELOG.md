@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.17.5 — 2026-07-17 — Repoint write-guide plan-docs handoff to plan-agent
+
+### Changed
+
+- `plan-interview` merged into `plan-agent` 4.0.0. `write-guide` now hands plan-completion documentation to `plan-agent:documenting-plans` (was `plan-interview:documenting-plans`) in both `SKILL.md` and `references/exemplars.md`. No behavior change.
+
 ## v2.17.4 — 2026-07-17 — digest: stop pointing users at a command that does not exist
 
 ### Fixed

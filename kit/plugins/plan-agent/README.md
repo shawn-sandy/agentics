@@ -35,7 +35,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
 | `build-prototypes-index` | Child of `dispatch` | Regenerates the prototypes gallery for `docs/prototypes/` writes |
 
-**Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
+**Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper reviews, use the `review-plan` Agent Team. Note: `plan-agent:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
 ## Installation
 
@@ -557,10 +557,19 @@ The scan always excludes `index.html` itself and the `docs/plans/archive/` subdi
 
 PostToolUse hook that fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. Calls `build-index.sh` (bundled at `hooks/build-index.sh`) to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
 
-### Optional: `plan-interview` pairing
+### Merged from `plan-interview` (v4.0.0)
 
-The built-in Step 5b Interview runs a lightweight stress-test during plan creation. For deeper standalone reviews (multi-round interviews with product-plan routing, plan-name validation, and HTML artifact generation), install the `plan-interview` plugin:
+As of v4.0.0, `plan-agent` absorbs the former `plan-interview` plugin — there is no separate install. The stress-test surface is covered by the built-in **Step 5b Interview** during plan creation and the **`review-plan`** Agent Team for deeper reviews. The unique capabilities `plan-interview` carried are now first-class plan-agent skills and commands:
 
-```
-/plugin install plan-interview@agentics-kit
-```
+| Was | Now |
+|-----|-----|
+| `/plan-interview:documenting-plans` | `/plan-agent:documenting-plans` (+ `plan-documenter` batch agent) |
+| `/plan-interview:markdown-to-html` | `/plan-agent:markdown-to-html` |
+| `/plan-interview:plan-status` | `/plan-agent:plan-status` (`.md`/YAML plans; single file or `--all` bulk) |
+| `/plan-interview:update-plan-status` | `/plan-agent:plan-status <dir> --all` (folded into `plan-status`) |
+| `/plan-interview:plan-maintenance` | `/plan-agent:plan-maintenance` |
+| `/plan-interview:deep-grill` | `/plan-agent:deep-grill` |
+| ExitPlanMode stress-test nudge | `hooks.json` `ExitPlanMode` PostToolUse matcher |
+| `/plan-interview:plan-interview`, `plan-to-html`, `plan-hygiene`, `review-rename-plans` | dropped — covered by the built-in interview, `review-plan`, `markdown-to-html`, and the `validate-plan-filename` hook |
+
+If you previously had `plan-interview@agentics-kit` installed, uninstall it and ensure `plan-agent` is at v4.0.0 or later.

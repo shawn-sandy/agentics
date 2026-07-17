@@ -11,7 +11,7 @@ allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSea
 
 ## When not to use
 
-- **Not a code reviewer.** For code, use `code-review`. For conversational plan stress-testing, use `plan-interview`.
+- **Not a code reviewer.** For code, use `code-review`. For conversational plan stress-testing, use the built-in Step 5b interview.
 - **Requires Agent Teams.** Hard-stops if the feature flag is unset or Claude Code is below v2.1.32.
 
 ## Background mode

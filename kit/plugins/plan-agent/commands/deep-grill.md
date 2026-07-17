@@ -10,5 +10,5 @@ Delegates immediately to the `deep-grill` skill; it handles all steps and
 reporting. Do not emit any other output.
 
 ```
-Skill(skill: "plan-interview:deep-grill", args: "$ARGUMENTS")
+Skill(skill: "plan-agent:deep-grill", args: "$ARGUMENTS")
 ```

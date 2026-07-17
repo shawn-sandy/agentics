@@ -51,7 +51,7 @@ Do not invoke for these — redirect instead:
 - **Blog posts** — use the `share-blog` skill instead.
 - **Status reports, leadership updates, incident comms** — use the `internal-comms` skill instead.
 - **Single-paragraph notes or commit messages** — too small for a guide; write the note inline.
-- **Plan-completion docs** — a change-recap guide tells the story of a change for readers; generating the canonical documentation for a completed plan file belongs to `plan-interview:documenting-plans`.
+- **Plan-completion docs** — a change-recap guide tells the story of a change for readers; generating the canonical documentation for a completed plan file belongs to `plan-agent:documenting-plans`.
 
 If the request is ambiguous between a guide and one of the above, ask before drafting.
 

@@ -82,18 +82,18 @@ if (existsSync(PLUGIN_SAMPLE)) {
 
 // ── Plugin README transforms ───────────────────────────────────────────────
 
-const PLAN_INTERVIEW_README = join(DIST, 'kit', 'plugins', 'plan-interview', 'README.md');
+const PLAN_AGENT_README = join(DIST, 'kit', 'plugins', 'plan-agent', 'README.md');
 
-if (existsSync(PLAN_INTERVIEW_README)) {
-  const pluginReadme = readFileSync(PLAN_INTERVIEW_README, 'utf8');
+if (existsSync(PLAN_AGENT_README)) {
+  const pluginReadme = readFileSync(PLAN_AGENT_README, 'utf8');
 
-  check('plugin README: marketplace add uses agentics-kit',
-    pluginReadme.includes('/plugin marketplace add shawn-sandy/agentics-kit'));
+  check('plugin README: install uses agentics-kit',
+    pluginReadme.includes('/plugin install plan-agent@agentics-kit'));
 
   check('plugin README: no marketplace add pointing to plain agentics',
     !/\/plugin marketplace add shawn-sandy\/agentics(?!-kit)/.test(pluginReadme));
 } else {
-  console.log('SKIP: plan-interview README not found in dist');
+  console.log('SKIP: plan-agent README not found in dist');
 }
 
 // ── Summary ────────────────────────────────────────────────────────────────

@@ -20,7 +20,6 @@
   "enabledPlugins": {
     "memory-tools@agentics-kit": true,
     "code-review@agentics-kit": true,
-    "plan-interview@agentics-kit": true,
     "wcag-compliance-reviewer@agentics-kit": true,
     "skill-reviewer@agentics-kit": true,
     "code-testing-agent@agentics-kit": true,

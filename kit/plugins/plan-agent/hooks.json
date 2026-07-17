@@ -10,6 +10,15 @@
             "timeout": 60
           }
         ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Plan mode exited. You may want to stress-test this plan before implementing it — run the plan-agent built-in Step 5b interview (or the review-plan team) to surface gaps, risks, and trade-offs.'"
+          }
+        ]
       }
     ]
   }

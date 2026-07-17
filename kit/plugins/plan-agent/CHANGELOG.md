@@ -1,5 +1,31 @@
 # Changelog
 
+## 4.0.0 — Merge `plan-interview` into `plan-agent` (2026-07-17)
+
+**BREAKING:** the standalone `plan-interview` plugin is de-registered and deleted (source recoverable from git history). Its unique capabilities are now first-class `plan-agent` skills, commands, an agent, and a hook. The redundant overlap — the multi-round interview skill, product-plan routing, and HTML artifact generation — is **dropped** in favor of plan-agent's built-in Step 5b interview and the `review-plan` Agent Team.
+
+If you had `plan-interview@agentics-kit` installed, uninstall it and ensure `plan-agent` is at 4.0.0 or later. Command and skill invocations move namespace as follows:
+
+| `plan-interview:*` (old) | `plan-agent:*` (new) | Notes |
+|--------------------------|----------------------|-------|
+| `documenting-plans` | `documenting-plans` | skill + command + `plan-documenter` batch agent carried over |
+| `markdown-to-html` | `markdown-to-html` | skill + command + assets/reference/scripts carried over |
+| `plan-status` | `plan-status` | single-file behavior unchanged |
+| `update-plan-status` | `plan-status <dir> --all` | bulk mode folded into `plan-status` as a directory/`--all`/`--force` flag; standalone command removed |
+| `plan-maintenance` | `plan-maintenance` | command carried over |
+| `deep-grill` | `deep-grill` | skill + command carried over (node-by-node decision walk, distinct from the `review-plan` team) |
+| ExitPlanMode nudge hook | `hooks.json` `ExitPlanMode` PostToolUse matcher | reworded to point at the built-in Step 5b interview / `review-plan` |
+| `plan-interview` (skill) | — | dropped; use the built-in Step 5b interview or `review-plan` |
+| `plan-to-html` | — | dropped; `markdown-to-html` is the successor |
+| `plan-hygiene` | — | dropped; the `validate-plan-filename` hook covers filename hygiene |
+| `review-rename-plans` | — | dropped; the `validate-plan-filename` hook covers renames |
+
+### Added
+
+- **`documenting-plans`, `markdown-to-html`, `plan-status`, and `deep-grill` skills** plus the **`plan-maintenance`** and matching commands and the **`plan-documenter`** agent, all carried over from `plan-interview` with namespaces and intra-plugin links repointed to `plan-agent`.
+- **Bulk plan-status** — `update-plan-status`'s directory batch mode is folded into `plan-status` as an `--all` / directory-argument path with summary-first bulk approval, six-group triage, and a hybrid write strategy.
+- **ExitPlanMode nudge hook** — a new `PostToolUse` matcher in `hooks.json` reminds you to stress-test a freshly exited plan via the built-in interview or `review-plan`.
+
 ## 3.2.0 — Scope the reviewer agents and collapse the hooks into one dispatcher (2026-07-17)
 
 ### Fixed

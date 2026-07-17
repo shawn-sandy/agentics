@@ -18,8 +18,7 @@ Follow these steps exactly.
 
 Only runs on completed plans that are 30+ days old (based on `created` or
 `modified` date in frontmatter). Use plan-status to set status before running.
-Use plan-interview to stress-test the plan first, or review-rename-plans to
-rename the plan file.
+Use review-plan or the built-in interview to stress-test the plan first.
 
 ## Table of Contents
 
@@ -88,7 +87,7 @@ delimiters, treat both `status` and dates as absent.
 
   > "Plan status is `<value>`. Running plan-status first to verify completion."
 
-  Then invoke the `plan-interview:plan-status` skill via the `Skill` tool,
+  Then invoke the `plan-agent:plan-status` skill via the `Skill` tool,
   passing the resolved plan path as the argument. Wait for it to complete.
 
   After `plan-status` finishes, re-read the plan file's frontmatter.
@@ -96,7 +95,7 @@ delimiters, treat both `status` and dates as absent.
   - If still not `completed`, stop and tell the user:
 
     > "Plan not yet completed (status: `<x>`). Documentation should only be
-    > generated for completed plans. Run `plan-interview` or continue
+    > generated for completed plans. Complete or continue
     > implementation first."
 
 **Age check (only reached when status is `completed`):**
@@ -130,7 +129,7 @@ Read the plan file and extract:
   - Named identifiers: PascalCase, camelCase, or kebab-case words matching
     command/skill naming patterns
 
-  Examples: `` `kit/plugins/plan-interview/SKILL.md` ``, `` `plan-status` ``,
+  Examples: `` `kit/plugins/plan-agent/SKILL.md` ``, `` `plan-status` ``,
   `` `documenting-plans` ``
 
 Also extract any explicit file lists from `## Files to Create` and
@@ -140,9 +139,9 @@ Also extract any explicit file lists from `## Files to Create` and
 
 Slug = plan filename without the `.md` extension, verbatim.
 
-Example: `docs/plans/add-documenting-plans-skill-to-plan-interview.md` → slug
-`add-documenting-plans-skill-to-plan-interview` → output
-`docs/add-documenting-plans-skill-to-plan-interview.md`.
+Example: `docs/plans/add-documenting-plans-skill-to-plan-agent.md` → slug
+`add-documenting-plans-skill-to-plan-agent` → output
+`docs/add-documenting-plans-skill-to-plan-agent.md`.
 
 Confirm via `AskUserQuestion`:
 
@@ -308,7 +307,7 @@ usage example (if one exists in plan or code).>
 
 | SHA       | Date       | Subject                                              |
 | --------- | ---------- | ---------------------------------------------------- |
-| `abc1234` | 2026-03-29 | feat(plan-interview): add update-plan-status command |
+| `abc1234` | 2026-03-29 | feat(plan-agent): add update-plan-status command |
 
 <Populate from Step 6 git log output. Up to 20 rows. If result was capped at 20,
 append: "_Showing 20 of N commits — run `git log` for the full history._">
@@ -344,7 +343,7 @@ Output a summary table:
 ## Examples
 
 ```
-/plan-interview:documenting-plans                                              # auto-detects from IDE or settings
-/plan-interview:documenting-plans docs/plans/add-branch-agent-skill.md        # specific plan file
-/plan-interview:documenting-plans ~/.claude/plans/my-feature.md               # absolute path
+/plan-agent:documenting-plans                                              # auto-detects from IDE or settings
+/plan-agent:documenting-plans docs/plans/add-branch-agent-skill.md        # specific plan file
+/plan-agent:documenting-plans ~/.claude/plans/my-feature.md               # absolute path
 ```

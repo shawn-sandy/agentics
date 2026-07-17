@@ -15,7 +15,7 @@ and a selectable color theme. All styles and scripts are inline — no external 
 Invoke the markdown-to-html skill, forwarding all arguments:
 
 ```
-Skill(skill: "plan-interview:markdown-to-html", args: "$ARGUMENTS")
+Skill(skill: "plan-agent:markdown-to-html", args: "$ARGUMENTS")
 ```
 
 The skill handles all steps — file resolution, mode detection, theme selection,
@@ -32,20 +32,20 @@ section diagram. Works at any plan lifecycle stage (todo, in-progress, or comple
 ## Usage
 
 ```bash
-/plan-interview:markdown-to-html                                                      # auto-detects from IDE or settings
-/plan-interview:markdown-to-html docs/plans/add-auth.md                              # specific plan file
-/plan-interview:markdown-to-html README.md --mode=doc                                # force doc mode for any markdown
-/plan-interview:markdown-to-html docs/plans/add-auth.md --theme=developer            # pre-select theme, still prompts for browser-open
-/plan-interview:markdown-to-html docs/plans/add-auth.md --theme=developer --no-open  # batch-safe: no prompts
-/plan-interview:markdown-to-html docs/plans/add-auth.md --background                  # fully non-interactive: default theme, auto-overwrite
-/plan-interview:markdown-to-html docs/plans/add-auth.md --async --theme=developer    # background agent, no prompts
-/plan-interview:markdown-to-html --list-themes                                        # print available themes and stop
+/plan-agent:markdown-to-html                                                      # auto-detects from IDE or settings
+/plan-agent:markdown-to-html docs/plans/add-auth.md                              # specific plan file
+/plan-agent:markdown-to-html README.md --mode=doc                                # force doc mode for any markdown
+/plan-agent:markdown-to-html docs/plans/add-auth.md --theme=developer            # pre-select theme, still prompts for browser-open
+/plan-agent:markdown-to-html docs/plans/add-auth.md --theme=developer --no-open  # batch-safe: no prompts
+/plan-agent:markdown-to-html docs/plans/add-auth.md --background                  # fully non-interactive: default theme, auto-overwrite
+/plan-agent:markdown-to-html docs/plans/add-auth.md --async --theme=developer    # background agent, no prompts
+/plan-agent:markdown-to-html --list-themes                                        # print available themes and stop
 ```
 
 ## Arguments
 
 `[file-path]` — path to a `.md` or `.markdown` file. Omit to auto-detect using the
-same priority order as other plan-interview commands (IDE open file → settings
+same priority order as other plan-agent commands (IDE open file → settings
 `plansDirectory` (project-local → project → global) → `${PWD}/docs/plans/`).
 
 **Flags:**
@@ -73,12 +73,6 @@ Writes `<basename>.html` to the same directory as the source file. Plan-mode out
 - Visual progress bar (updates dynamically as steps are checked)
 - SVG section diagram (when ≥2 sections present)
 - Print-friendly styles for PDF export
-
-## Migration from plan-to-html
-
-The `plan-to-html` skill has been renamed to `markdown-to-html`. The old
-`/plan-interview:plan-to-html` command is deprecated and delegates here — it will be
-removed in a future major release. Update invocations to use `markdown-to-html` directly.
 
 ## Follow the skill instructions
 
