@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">0 / 10 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1425,8 +1425,9 @@ img, video { max-width: 100%; height: auto; }
       <p>`.claude-plugin/marketplace.json` lists 13 plugins. `kit/plugins/` contains 19 directories. The six extras — `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, `react-perf-analyzer` — were removed from the marketplace on 2026-05-29 (see the removed-plugins table in `.claude/rules/marketplace.md`) and their source was retained &quot;for reference&quot;.</p>
       <p>Retention has a cost that was not visible when the decision was made. De-registering a plugin stops *distribution*; it does not stop *loading*. `CLAUDE.local.md` documents the local-testing command as `claude $(ls ~/devbox/agentics/kit/plugins/ | xargs -I{} echo --plugin-dir ~/devbox/agentics/kit/plugins/{})`, which reads directories, not the manifest, so all 19 load. The result was observed live in a session on 2026-07-16: the agent list contained both `0.1.0:agent-creator` and `plugin-dev:agent-creator`, both `0.1.0:skill-reviewer` and the real `skill-reviewer`, plus `code-simplifier:code-simplifier`. The dead plugins are loading under duplicate names and competing with the live ones for skill-description budget in every session.</p>
       <p>Git history is the reference these directories were kept to be. The six total 5,454 lines across 40 files.</p>
-      <p>Nothing in the surviving code depends on them. A repo-wide grep for the six names, excluding their own directories, returns documentation only: `README.md:9` (a v4.0.0 note asserting the directories &quot;are retained in the repository&quot; — deletion makes this false), `README.md:134-146` (the tree diagram), `README.md:779-781` (the removed-plugins migration table, which must survive because it tells users what to install instead), and `CHANGELOG.md` (historical entries, left untouched — changelogs record what happened).</p>
-      <p>Separately, the description-budget picture is smaller than a first pass suggests, and the budget itself is easy to get wrong. `check-description.md` warns at 160 chars, but `optimizing-skill-frontmatter/SKILL.md:18` calls 160 a &quot;legacy target&quot; and sets the real budget at 200 total with the first sentence under 80. Measured against the real rule, 8 files fail: `team-defaults/sync-rules` (258 total, 87 first), `plan-agent/prototype` (246, 85), `social-media-tools/save-artifact` (231), `plan-agent/finalize-plan` (224), `git-agent/ship-autonomous` (214), `social-media-tools/export-session` (207), `social-media-tools/share-code` (first sentence 81), and `plan-agent/build-proposal` (195 chars in one unbroken sentence with no three-part structure). One of these, `marketplace-builder`, this plan deletes.</p>
+      <p>One surviving plugin does depend on a dead one, and it must be migrated before anything is deleted. `kit/plugins/code-review/commands/fix-branch.md:119` reads &quot;If `$CHANGED_FILES` contains any `**/agents/*.md`, invoke `agent-reviewer:reviewing-agents` for each and merge findings&quot;, and `kit/plugins/code-review/README.md:89` advertises that delegation. `code-review` is a live marketplace plugin. Deleting `agent-reviewer` without migrating it means `/code-review:fix-branch` hits a missing skill on any branch that touches an agent file — and the companion plan `fix-plugin-component-defects` modifies seven agent files, so this deletion would remove the tool that reviews that plan&#39;s own work. `agent-reviewer` was removed in v4.0.0 on the grounds that it overlaps with `skill-reviewer`, which makes `skill-reviewer` the migration target the removal note itself implies.</p>
+      <p>Aside from that one live caller, the remaining references are documentation: `README.md:9` (a v4.0.0 note asserting the directories &quot;are retained in the repository&quot; — deletion makes this false), `README.md:134-146` (the tree diagram), `README.md:779-781` (the removed-plugins migration table, which must survive because it tells users what to install instead), and `CHANGELOG.md` (historical entries, left untouched — changelogs record what happened).</p>
+      <p>Separately, the description-budget picture is smaller than a first pass suggests, and the budget itself is easy to get wrong. `check-description.md` warns at 160 chars, but `optimizing-skill-frontmatter/SKILL.md:18` calls 160 a &quot;legacy target&quot; and sets the real budget at 200 total with the first sentence under 80. Measured against the real rule, 8 files fail: `team-defaults/sync-rules` (258 total, 87 first), `plan-agent/prototype` (246, 85), `social-media-tools/save-artifact` (231), `plan-agent/finalize-plan` (224), `git-agent/ship-autonomous` (214), `social-media-tools/export-session` (207), `social-media-tools/share-code` (first sentence 81), and `plan-agent/build-proposal` (195 chars in one unbroken sentence with no three-part structure). All eight belong to surviving plugins — none is in a directory this plan deletes, so the deletion does not shrink this set. (`marketplace-builder`&#39;s `building-marketplaces` description appeared to fail under the earlier, wrong 160-char reading; at the real 200/80 rule it passes, and the plugin is deleted for unrelated reasons.)</p>
       <p>These must not be hand-edited. `skill-reviewer:optimizing-skill-frontmatter` exists to rewrite `description:` to the three-part format and set `disable-model-invocation` correctly in the same pass, judging write-heavy workflow against read-only advisory per file. Hand-editing would reproduce that judgment worse and leave the tool unexercised against its own repo.</p>
     </section>
 
@@ -1439,6 +1440,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
+          <li><code>`kit/plugins/code-review/commands/fix-branch.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">line 119 delegates agent review to skill-reviewer, not the deleted agent-reviewer</span></li>
+          <li><code>`kit/plugins/code-review/README.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">line 89 advertises the same delegation</span></li>
           <li><code>`kit/plugins/agent-creator/`</code> <span class="file-badge file-badge-deleted">deleted</span> <span class="file-note">5 files, 613 lines</span></li>
           <li><code>`kit/plugins/agent-reviewer/`</code> <span class="file-badge file-badge-deleted">deleted</span> <span class="file-note">6 files, 1,208 lines</span></li>
           <li><code>`kit/plugins/agentic-plugin-dev/`</code> <span class="file-badge file-badge-deleted">deleted</span> <span class="file-note">10 files, 1,026 lines</span></li>
@@ -1474,12 +1477,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Delete the six directories with `git rm -r kit/plugins/{agent-creator,agent-reviewer,agentic-plugin-dev,code-simplifier,marketplace-builder,react-perf-analyzer}`.</span>
+                <span class="step-chip-text">Migrate `code-review` off `agent-reviewer` before deleting anything: change `kit/plugins/code-review/commands/fix-branch.md:119` so that changed `**/agents/*.md` files are reviewed by `skill-reviewer` rather than `agent-reviewer:reviewing-agents`, and update the delegation sentence at `kit/plugins/code-review/README.md:89` to match.</span>
               </div>
-              <div class="step-why">de-registered plugins still load through `--plugin-dir`, colliding by name with live plugins and consuming description budget in every session, and git history preserves them so nothing is actually lost.</div>
+              <div class="step-why">`code-review` is a live marketplace plugin invoking a dead one, so deleting `agent-reviewer` first makes `/code-review:fix-branch` hit a missing skill on any branch touching an agent file — including the `fix-plugin-component-defects` plan, which modifies seven — and `skill-reviewer` is the stated replacement in v4.0.0&#39;s own removal note.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`ls kit/plugins | wc -l` returns 14 (13 plugins plus `README.md`), and every remaining directory name appears in `.claude-plugin/marketplace.json`.</div>
+                <div class="verify-body">`grep -rn &#39;agent-reviewer&#39; kit/plugins/code-review/` returns nothing, and running `/code-review:fix-branch` on a branch with a modified agent file completes and reports findings rather than erroring on a missing skill.</div>
               </details>
             </div>
           </div>
@@ -1488,6 +1491,23 @@ img, video { max-width: 100%; height: auto; }
         <div class="step-card">
           <div class="step-card-header">
             <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Delete the six directories with `git rm -r kit/plugins/{agent-creator,agent-reviewer,agentic-plugin-dev,code-simplifier,marketplace-builder,react-perf-analyzer}`.</span>
+              </div>
+              <div class="step-why">de-registered plugins still load through `--plugin-dir`, colliding by name with live plugins and consuming description budget in every session, and git history preserves them so nothing is actually lost — but only after step 1, since until then a live plugin still calls one of them.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">`ls kit/plugins | wc -l` returns 14 (13 plugins plus `README.md`), every remaining directory name appears in `.claude-plugin/marketplace.json`, and a repo-wide grep for the six names returns only `CHANGELOG.md` and the README migration table.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1504,7 +1524,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">3</div>
+            <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1521,7 +1541,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">4</div>
+            <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1538,13 +1558,13 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">5</div>
+            <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Run `/skill-reviewer:optimizing-skill-frontmatter` over the 8 failing files (7 after step 1 deletes `marketplace-builder`), letting the skill decide both the rewritten description and the `disable-model-invocation` value per file rather than pre-deciding either.</span>
+                <span class="step-chip-text">Run `/skill-reviewer:optimizing-skill-frontmatter` over all eight failing files — `team-defaults/sync-rules`, `plan-agent/prototype`, `plan-agent/finalize-plan`, `plan-agent/build-proposal`, `social-media-tools/save-artifact`, `social-media-tools/export-session`, `social-media-tools/share-code`, and `git-agent/ship-autonomous` — letting the skill decide both the rewritten description and the `disable-model-invocation` value per file rather than pre-deciding either.</span>
               </div>
-              <div class="step-why">the repo ships this tool precisely for this judgment, hand-editing reproduces it worse and leaves the tool untested against its own corpus, and `build-proposal` needs restructuring rather than trimming since it is one 195-char sentence with no three-part shape.</div>
+              <div class="step-why">all eight belong to surviving plugins, so the deletion in step 2 does not reduce this set and treating any as already-handled would leave a real failure in place and make the acceptance criterion unreachable; the repo ships this tool precisely for this judgment, and `build-proposal` needs restructuring rather than trimming since it is one 195-char sentence with no three-part shape.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
                 <div class="verify-body">`/skill-reviewer:check-description` across all remaining SKILL.md files reports no file above 200 total or 80 for its first sentence.</div>
@@ -1555,7 +1575,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">6</div>
+            <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1572,7 +1592,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">7</div>
+            <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1613,35 +1633,43 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">`kit/plugins/` contains exactly 13 plugin directories plus `README.md`</label>
+          <label for="ac1">`/code-review:fix-branch` reviews changed agent files without invoking the deleted `agent-reviewer`</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">No file outside `CHANGELOG.md` and the README migration table references any of the six deleted plugins</label>
+          <label for="ac2">`kit/plugins/` contains exactly 13 plugin directories plus `README.md`</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">`README.md` no longer claims the removed directories are retained</label>
+          <label for="ac3">No file outside `CHANGELOG.md` and the README migration table references any of the six deleted plugins</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">`.claude/rules/marketplace.md` keeps its do-not-re-add table but no longer promises retained directories</label>
+          <label for="ac4">All eight over-budget descriptions are fixed — none was in a deleted directory, so none is skipped</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">Every remaining SKILL.md passes the 200-total and 80-first-sentence description rule</label>
+          <label for="ac5">`README.md` no longer claims the removed directories are retained</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">`skill-reviewer` states one budget number, not two</label>
+          <label for="ac6">`.claude/rules/marketplace.md` keeps its do-not-re-add table but no longer promises retained directories</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`node scripts/check-plugin-versions.mjs` exits 0</label>
+          <label for="ac7">Every remaining SKILL.md passes the 200-total and 80-first-sentence description rule</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">`tests/plugins/test-no-orphan-plugin-dirs.sh` exists and passes</label>
+          <label for="ac8">`skill-reviewer` states one budget number, not two</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">`node scripts/check-plugin-versions.mjs` exits 0</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">`tests/plugins/test-no-orphan-plugin-dirs.sh` exists and passes</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

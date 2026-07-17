@@ -1469,10 +1469,12 @@ img, video { max-width: 100%; height: auto; }
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> `kit/plugins/plan-agent/hooks/
             <ul class="file-list">
             <li><code>hooks.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">gate on path before spawning</span></li>
-            <li><code>build-index.sh`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">resolve templates via CLAUDE_PLUGIN_ROOT</span></li>
-            <li><code>validate-plan-filename.py`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">match MultiEdit</span></li>
+            <li><code>build-index.sh`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">resolve templates via CLAUDE_PLUGIN_ROOT; bundled hook copy</span></li>
             </ul>
           </li>
+          <li><code>`scripts/build-plans-index.sh`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same change; the workflow copy, byte-identical today</span></li>
+          <li><code>`docs/plans/build-index.sh`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same change; the rebuild-hook fallback, byte-identical today</span></li>
+          <li><code>`kit/plugins/plan-agent/hooks/validate-plan-filename.py`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">match MultiEdit</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> `tests/plugins/
             <ul class="file-list">
             <li><code>test-agent-frontmatter.sh`</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the objective-verification test</span></li>
@@ -1600,12 +1602,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Replace `find_templates_dir()` in `kit/plugins/plan-agent/hooks/build-index.sh:36` with a direct resolution against `$CLAUDE_PLUGIN_ROOT/templates`.</span>
+                <span class="step-chip-text">Replace `find_templates_dir()` with a direct resolution against `$CLAUDE_PLUGIN_ROOT/templates` in all three copies of the index builder in lockstep — `kit/plugins/plan-agent/hooks/build-index.sh:36` (the bundled hook), `scripts/build-plans-index.sh` (the workflow copy), and `docs/plans/build-index.sh` (the rebuild-hook fallback) — confirming first that they are still byte-identical and treating any divergence as a finding to report rather than silently reconcile.</span>
               </div>
-              <div class="step-why">it currently walks all of `~/.claude/plugins` and the project root on every plan write, which is unbounded work whose cost scales with how many plugins the user has installed and how large their repo is, and `$CLAUDE_PLUGIN_ROOT` is the supported way to find plugin-relative paths.</div>
+              <div class="step-why">it currently walks all of `~/.claude/plugins` and the project root on every plan write, which is unbounded work scaling with the user&#39;s installed-plugin count and repo size, and `$CLAUDE_PLUGIN_ROOT` is the supported way to resolve plugin-relative paths — but the three copies are byte-identical today (all md5 `0258e397`), so fixing only the bundled hook would leave CI and fallback installations running the defect while the copies silently diverge, which is worse than the original problem because divergence hides it.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">the index still rebuilds correctly on a plan write, and the hook performs no directory walk (confirm by inspection and by timing a plan write in a repo with many installed plugins).</div>
+                <div class="verify-body">`md5 kit/plugins/plan-agent/hooks/build-index.sh scripts/build-plans-index.sh docs/plans/build-index.sh` reports one identical hash across all three, none contains `find_templates_dir`, the index still rebuilds on a plan write, and `bash docs/plans/build-index.sh` still succeeds standalone.</div>
               </details>
             </div>
           </div>
@@ -1686,7 +1688,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">`build-index.sh` resolves templates without walking the filesystem</label>
+          <label for="ac9">All three copies of `build-index.sh` resolve templates without walking the filesystem, and remain byte-identical to each other</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">

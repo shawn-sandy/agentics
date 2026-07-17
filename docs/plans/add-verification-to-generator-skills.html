@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1476,12 +1476,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a render assertion to the four `artifact-tools` skills by appending a step after each publish that fetches the returned artifact URL with `WebFetch` and asserts the page contains an expected marker (the plan title, the diff&#39;s first filename, the session date), reporting the failure with the URL on mismatch rather than reporting success.</span>
+                <span class="step-chip-text">Add a render assertion to the four `artifact-tools` skills by appending a step after each publish that fetches the returned artifact URL with `WebFetch` and asserts the page contains an expected marker (the plan title, the diff&#39;s first filename, the session date), reporting the failure with the URL on mismatch rather than reporting success — and add `WebFetch` to each of the four skills&#39; `allowed-tools:` frontmatter, which none currently declares.</span>
               </div>
-              <div class="step-why">these publish to an outward-facing URL and are the only skills here whose output the user cannot see locally, and `WebFetch` can already read `claude.ai/code/artifact/{uuid}` URLs via the user&#39;s login, so the check needs no new dependency.</div>
+              <div class="step-why">these publish to an outward-facing URL and are the only skills here whose output the user cannot see locally, and `WebFetch` can already read `claude.ai/code/artifact/{uuid}` URLs via the user&#39;s login, so the check needs no new dependency — but `.claude/rules/plugin-patterns.md:50` requires every tool a skill uses to be declared, and an undeclared `WebFetch` would stall the new check on a permission prompt at exactly the moment these skills are most likely running unattended.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">publishing a known-good plan through `plan-artifact` reports the fetched marker, and publishing HTML whose body is a single empty `div` makes the skill report failure instead of success.</div>
+                <div class="verify-body">`grep -l WebFetch kit/plugins/artifact-tools/skills/*/SKILL.md` lists all four; publishing a known-good plan through `plan-artifact` reports the fetched marker with no permission prompt; and publishing HTML whose body is a single empty `div` makes the skill report failure instead of success.</div>
               </details>
             </div>
           </div>
@@ -1582,7 +1582,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — This plan changes application code (it modifies SKILL.md workflow files and adds executable suites)</div>
-      <div class="objective-test-card">Objective: each of the eight skills this plan touches contains a check step that runs after its write or publish step, which is the plan&#39;s stated objective, so the gap cannot silently reopen. File: `tests/plugins/test-generator-skills-verify-output.sh`; Type: smoke; Asserts: every touched SKILL.md has a post-write assertion, and `plans-open` is recorded as intentionally exempt; Run: `bash tests/plugins/test-generator-skills-verify-output.sh`</div>
+      <div class="objective-test-card">Objective: each of the eight skills this plan touches contains a check step that runs after its write or publish step, which is the plan&#39;s stated objective, so the gap cannot silently reopen. File: `tests/plugins/test-generator-skills-verify-output.sh`; Type: smoke; Asserts: every touched SKILL.md has a post-write assertion, each of the four artifact-tools skills declares `WebFetch` in `allowed-tools:`, and `plans-open` is recorded as intentionally exempt; Run: `bash tests/plugins/test-generator-skills-verify-output.sh`</div>
       <div class="test-list">
         <div class="test-card">Unit: the card-count assertion from step 2, in isolation. File: `tests/plugins/test-index-card-count.mjs`; Targets: the count comparison logic; Key cases: an index with N cards from N sources passes, an index with N-1 cards from N sources fails, an empty source directory produces an empty index and passes</div>
         <div class="test-card">Integration: the memory guard against fixture CLAUDE.md files. File: `tests/plugins/test-memory-doctor-guard.sh`; Targets: `agentic-memory-doctor`; Key cases: valid frontmatter is rewritten and diffed, malformed frontmatter is reported and the file is left untouched</div>
@@ -1603,31 +1603,35 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">`plans-library` and `media-library` assert card count against source count</label>
+          <label for="ac2">Each of the four declares `WebFetch` in `allowed-tools:`, so the new check cannot stall on a permission prompt</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">`plans-open` carries a note explaining why it has no check of its own</label>
+          <label for="ac3">`plans-library` and `media-library` assert card count against source count</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">Both `memory-tools` skills diff and parse-check their output before reporting success</label>
+          <label for="ac4">`plans-open` carries a note explaining why it has no check of its own</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">Every new check is exercised by a suite that proves it fails on bad output</label>
+          <label for="ac5">Both `memory-tools` skills diff and parse-check their output before reporting success</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">All new suites live in `tests/plugins/` and follow existing conventions</label>
+          <label for="ac6">Every new check is exercised by a suite that proves it fails on bad output</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">No CI workflow file is modified by this plan</label>
+          <label for="ac7">All new suites live in `tests/plugins/` and follow existing conventions</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">`node scripts/check-plugin-versions.mjs` exits 0</label>
+          <label for="ac8">No CI workflow file is modified by this plan</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">`node scripts/check-plugin-versions.mjs` exits 0</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
