@@ -1,6 +1,6 @@
 ---
 name: share-code
-description: "Generates platform-aware social copy and a dark-mode card image for code changes. Detects from git, picks a template, and screenshots via Playwright. Use when asked to post or share a code change."
+description: "Generates social copy and a dark-mode card image for code changes. Detects changes from git, picks a template, and screenshots via Playwright. Use when asked to share a code change."
 allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob
 ---
 

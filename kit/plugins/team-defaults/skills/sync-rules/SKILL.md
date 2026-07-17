@@ -1,6 +1,6 @@
 ---
 name: sync-rules
-description: Installs the team's shared rule files into ~/.claude/rules/ with per-file confirmation. Copies plan-mode, component-driven-ui, typescript-jsdoc, and review-bot-loops rules plus the plan skeleton. Use when the user asks to sync, install, or update team rules.
+description: "Installs the team's shared rule files into ~/.claude/rules/. Copies the bundled plan-mode, UI, JSDoc, and review rules with per-file confirmation. Use when asked to sync team rules."
 allowed-tools: Bash, Read, AskUserQuestion
 ---
 

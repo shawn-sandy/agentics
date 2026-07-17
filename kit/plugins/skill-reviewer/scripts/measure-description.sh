@@ -3,10 +3,14 @@
 # Called by the PostToolUse hook and the /skill-reviewer:check-description command.
 #
 # Usage: measure-description.sh <path-to-SKILL.md>
+#
+# Budget: 200 chars total (the rule enforced here; see optimizing-skill-frontmatter/SKILL.md).
+# 160 is a conservative legacy target that stays safe at ~50 skills installed — it is
+# advisory only and is not enforced.
 # Exit 0 in all measurable cases; non-zero only for unreadable file.
 # Output (stdout, one line):
-#   OK: SKILL.md description is N chars (<=160) in <path>
-#   WARNING: SKILL.md description is N chars (>160) in <path> — run /skill-reviewer:optimizing-skill-frontmatter to trim
+#   OK: SKILL.md description is N chars (<=200) in <path>
+#   WARNING: SKILL.md description is N chars (>200) in <path> — run /skill-reviewer:optimizing-skill-frontmatter to trim
 #   WARNING: multi-line description detected in <path> — measurement may be approximate; run /skill-reviewer:optimizing-skill-frontmatter
 #   ERROR: SKILL.md has no description: frontmatter in <path> — required by Claude Code
 
@@ -51,8 +55,8 @@ fi
 
 len="${#val}"
 
-if [ "$len" -gt 160 ]; then
-  printf 'WARNING: SKILL.md description is %d chars (>160) in %s — run /skill-reviewer:optimizing-skill-frontmatter to trim\n' "$len" "$file"
+if [ "$len" -gt 200 ]; then
+  printf 'WARNING: SKILL.md description is %d chars (>200 budget) in %s — run /skill-reviewer:optimizing-skill-frontmatter to trim\n' "$len" "$file"
 else
-  printf 'OK: SKILL.md description is %d chars (<=160) in %s\n' "$len" "$file"
+  printf 'OK: SKILL.md description is %d chars (<=200 budget) in %s\n' "$len" "$file"
 fi

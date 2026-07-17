@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: chore
 created: 2026-07-16
+modified: 2026-07-16
 repo-name: agentics
 effort: low
 glance: Six plugins were dropped from the marketplace in v4.0.0 but their directories stayed on disk, and because the local loader reads directories instead of the manifest, they still load and now collide by name with the real plugins. This deletes them, corrects the docs that promise they are retained, and runs skill-reviewer over the survivors instead of hand-editing frontmatter.
@@ -67,16 +68,16 @@ Tier 1 — This plan changes application code (it deletes plugin source director
 
 ## Acceptance Criteria
 
-- [ ] `/code-review:fix-branch` reviews changed agent files without invoking the deleted `agent-reviewer`
-- [ ] `kit/plugins/` contains exactly 13 plugin directories plus `README.md`
-- [ ] No file outside `CHANGELOG.md` and the README migration table references any of the six deleted plugins
-- [ ] All eight over-budget descriptions are fixed — none was in a deleted directory, so none is skipped
-- [ ] `README.md` no longer claims the removed directories are retained
-- [ ] `.claude/rules/marketplace.md` keeps its do-not-re-add table but no longer promises retained directories
-- [ ] Every remaining SKILL.md passes the 200-total and 80-first-sentence description rule
-- [ ] `skill-reviewer` states one budget number, not two
-- [ ] `node scripts/check-plugin-versions.mjs` exits 0
-- [ ] `tests/plugins/test-no-orphan-plugin-dirs.sh` exists and passes
+- [x] `/code-review:fix-branch` reviews changed agent files without invoking the deleted `agent-reviewer`
+- [x] `kit/plugins/` contains exactly 13 plugin directories plus `README.md`
+- [x] No file outside `CHANGELOG.md` and the README migration table references any of the six deleted plugins
+- [x] All eight over-budget descriptions are fixed — none was in a deleted directory, so none is skipped
+- [x] `README.md` no longer claims the removed directories are retained
+- [x] `.claude/rules/marketplace.md` keeps its do-not-re-add table but no longer promises retained directories
+- [x] Every remaining SKILL.md passes the 200-total and 80-first-sentence description rule
+- [x] `skill-reviewer` states one budget number, not two
+- [x] `node scripts/check-plugin-versions.mjs` exits 0
+- [x] `tests/plugins/test-no-orphan-plugin-dirs.sh` exists and passes
 
 ## Verification
 

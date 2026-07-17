@@ -1,7 +1,7 @@
 ---
 name: build-proposal
 model: claude-fable-5
-description: "Turns a vague idea into a decision-complete proposal — researches web + codebase, separates facts from decisions — use when the user floats an idea, asks should-we, or wants to compare and align."
+description: "Turns a vague idea into a decision-complete proposal. Researches web and codebase, separating established facts from open decisions. Use when the user floats an idea or asks should-we."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent
 argument-hint: "<idea> [--dir <path>] [--tier 0|1|2]"
 ---

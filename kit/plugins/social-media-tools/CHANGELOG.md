@@ -1,5 +1,13 @@
 # Changelog — social-media-tools
 
+## v2.17.2 — 2026-07-16 — Trim skill descriptions to budget
+
+### Fixed
+
+- `skills/save-artifact` (231 chars), `skills/export-session` (207), `skills/share-code` (81-char first sentence): descriptions brought within the 200-char total and 80-char first-sentence budget.
+
+---
+
 ## v2.17.1 — 2026-07-15 — export-session: stop truncating session titles mid-word
 
 Ports the title fix from `artifact-tools` v1.1.0 into this plugin's copy of `export_session.py`. `title_of` and its self-check are byte-identical across the two copies; the pair's only differences remain the two divergences documented in the artifact-tools copy (`source` basename, `title:` frontmatter), both of which exist because that copy's output is published while this one's stays on local disk.

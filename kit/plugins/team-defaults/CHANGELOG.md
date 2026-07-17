@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-07-16 — Trim sync-rules description to budget
+
+### Fixed
+
+- `skills/sync-rules/SKILL.md`: description reduced from 258 chars — the worst offender in the repo — to within the 200-char total and 80-char first-sentence budget.
+
 ## 0.1.0 — 2026-07-13
 
 - Initial release.

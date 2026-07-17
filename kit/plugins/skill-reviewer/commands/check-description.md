@@ -1,11 +1,11 @@
 ---
-description: Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 160-char budget.
+description: Measure description-frontmatter length for one or more SKILL.md files and warn if any exceed the 200-char budget.
 allowed-tools: Bash, Glob, AskUserQuestion
 ---
 
 # Check SKILL.md description length
 
-Measure the `description:` frontmatter length for one or more SKILL.md files by running the shared `measure-description.sh` script. Reports `OK:`, `WARNING:` (over 160-char budget), `WARNING:` (multi-line), or `ERROR:` (missing) for each file.
+Measure the `description:` frontmatter length for one or more SKILL.md files by running the shared `measure-description.sh` script. Reports `OK:`, `WARNING:` (over the 200-char budget), `WARNING:` (multi-line), or `ERROR:` (missing) for each file.
 
 ## Resolve target files
 

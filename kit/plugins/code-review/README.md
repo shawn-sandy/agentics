@@ -86,7 +86,7 @@ Reviews every file changed on the current branch vs the default remote branch. C
 /code-review:fix-branch develop
 ```
 
-**What it checks:** repo rules (`.claude/rules/*.md`), project conventions (`CLAUDE.md`/`CLAUDE.local.md`), frontmatter validation (SKILL.md, plugin.json, marketplace.json), and plan verification sections for any modified `docs/plans/` files. For `SKILL.md` and agent definition files, it delegates review to the `skill-reviewer` and `agent-reviewer` plugins and merges their findings.
+**What it checks:** repo rules (`.claude/rules/*.md`), project conventions (`CLAUDE.md`/`CLAUDE.local.md`), frontmatter validation (SKILL.md, plugin.json, marketplace.json), and plan verification sections for any modified `docs/plans/` files. For `SKILL.md` and agent definition files, it delegates review to the `skill-reviewer` plugin and merges its findings.
 
 **What it does not do:** no logic/security/performance review — use `code-review-agent` for that. No commit or PR — use `/git-agent:commit-agent` and `/git-agent:pr-agent` after reviewing the diff.
 

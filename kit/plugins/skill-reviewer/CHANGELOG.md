@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.7 — 2026-07-16 — State one description budget, not two
+
+### Fixed
+
+- `scripts/measure-description.sh`, `commands/check-description.md`: the enforced threshold is now 200 chars, matching the rule in `optimizing-skill-frontmatter`. It previously warned at 160 while the rule said 200, which made compliant skills look like failures. 160 remains documented as a conservative advisory target for ~50 installed skills.
+
+---
+
 ## v2.2.5 — 2026-06-05 — Use portable paths for asset references
 
 ### Fixed
