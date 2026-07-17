@@ -750,7 +750,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.10 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.17.2 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 3.0.1 | productivity | 1 command, 9 skills, 8 agents, 4 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 3.1.1 | productivity | 1 command, 9 skills, 8 agents, 4 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.1.1 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.2.1 | development | 4 skills |
 
