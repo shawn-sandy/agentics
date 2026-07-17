@@ -119,7 +119,7 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "10. marketplace.json is valid JSON and registers plan-agent above origin/main (dynamic)..."
+echo "10. marketplace.json is valid JSON and registers plan-agent at or above origin/main (dynamic)..."
 if python3 - "$MARKETPLACE" "$ROOT" <<'PY'
 import json, subprocess, sys
 cur_doc = json.load(open(sys.argv[1]))
@@ -129,14 +129,17 @@ def ver(doc):
 def parse(v):
     return tuple(int(x) for x in v.split("."))
 cur = ver(cur_doc)
+# `>=`, not `>`: demanding a bump belongs to check-plugin-versions.mjs, which asks
+# only when the plugin actually changed. This suite runs on every branch, so `>`
+# failed on any branch cut after a plan-agent release, where cur == base.
 try:
     base_raw = subprocess.check_output(
         ["git", "-C", root, "show", "origin/main:.claude-plugin/marketplace.json"],
         stderr=subprocess.DEVNULL,
     )
     base = ver(json.loads(base_raw))
-    ok = parse(cur) > parse(base)
-    print(f"  (current {cur} > origin/main {base}: {ok})")
+    ok = parse(cur) >= parse(base)
+    print(f"  (current {cur} >= origin/main {base}: {ok})")
 except Exception:
     ok = parse(cur) > (0, 0, 0)
     print(f"  (origin/main unavailable; current {cur} is a valid semver)")
@@ -147,7 +150,7 @@ PY
 then
   echo "  PASS"
 else
-  echo "  FAIL: invalid JSON, plan-agent not above origin/main, or description omits setup-sites"
+  echo "  FAIL: invalid JSON, plan-agent regressed below origin/main, or description omits setup-sites"
   FAILURES=$((FAILURES + 1))
 fi
 
