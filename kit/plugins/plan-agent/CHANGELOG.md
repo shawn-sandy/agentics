@@ -1,11 +1,18 @@
 # Changelog
 
-## 3.0.1 — Trim skill descriptions to budget (2026-07-16)
+## 3.1.1 — Trim skill descriptions to budget (2026-07-16)
 
 ### Fixed
 
 - `skills/prototype` (246 chars) and `skills/finalize-plan` (224) — descriptions brought within the 200-char total and 80-char first-sentence budget.
 - `skills/build-proposal` — description restructured into the three-part format; it was a single 195-char sentence with no short first sentence, blowing the 80-char limit.
+
+## 3.1.0 — Plan prompts require objective verification (2026-07-16)
+
+### Changed
+
+- **Implement, goal, and workflow prompts now end with an explicit verification instruction** — every generated plan's copy-paste prompt tells the implementing agent to verify the objective is met and every acceptance criterion and check passes before reporting done.
+- **The implement button's rich prompt gained a verification step** — it now instructs the agent to run the plan's Verification and Tests sections end-to-end and confirm the objective works in the running application (fixing and re-verifying on failure) before setting `status: completed`.
 
 ## 3.0.0 — Rename `refine-prompt` skill to `write-prompt` (2026-07-14)
 
