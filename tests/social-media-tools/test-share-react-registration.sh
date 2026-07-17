@@ -12,7 +12,10 @@ FAILURES=0
 
 echo "=== share-react Registration Test ==="
 
-echo "1. marketplace.json: social-media-tools version == 2.11.0..."
+echo "1. marketplace.json: social-media-tools version is valid semver >= 2.11.0..."
+# 2.11.0 is the release that introduced share-react — a marketplace entry below
+# that floor cannot be registering this skill. Never pin an exact version here:
+# every bump would re-break the check.
 VERSION=$(python3 - "$MARKETPLACE" <<'PYEOF'
 import json
 import sys
@@ -25,10 +28,19 @@ for plugin in data.get("plugins", []):
         break
 PYEOF
 )
-if [ "$VERSION" = "2.11.0" ]; then
-  echo "  PASS"
+if python3 - "$VERSION" <<'PYEOF'
+import re
+import sys
+
+v = sys.argv[1]
+if not re.fullmatch(r"\d+\.\d+\.\d+", v):
+    sys.exit(1)
+sys.exit(0 if tuple(map(int, v.split("."))) >= (2, 11, 0) else 1)
+PYEOF
+then
+  echo "  PASS ($VERSION)"
 else
-  echo "  FAIL: expected 2.11.0, got '$VERSION'"
+  echo "  FAIL: expected valid semver >= 2.11.0, got '$VERSION'"
   FAILURES=$((FAILURES + 1))
 fi
 
