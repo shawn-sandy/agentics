@@ -31,10 +31,10 @@ capabilities plan-agent lacks entirely.
 
 Carry over: `documenting-plans` (skill + command + `plan-documenter` agent),
 `plan-maintenance` (command), `markdown-to-html` (skill + command + assets),
-`plan-status` (skill + command, as legacy `.md` support), and the ExitPlanMode
-nudge hook. Drop: `plan-interview`, `plan-to-html`, `plan-hygiene`,
-`review-rename-plans`. `deep-grill` is the one open decision (see Unresolved
-Questions).
+`plan-status` (skill + command, as legacy `.md` support), `deep-grill` (skill +
+command — kept for its node-by-node decision walk, a distinct mode from the
+review-plan team), and the ExitPlanMode nudge hook. Drop: `plan-interview`,
+`plan-to-html`, `plan-hygiene`, `review-rename-plans`.
 
 ## Files
 
@@ -52,7 +52,7 @@ Questions).
 
 ## Steps
 
-1. Copy the carry-over components from plan-interview into plan-agent preserving directory shape: skills documenting-plans, markdown-to-html (with its assets, reference, scripts), and plan-status; commands documenting-plans.md, plan-maintenance.md, markdown-to-html.md, plan-status.md, update-plan-status.md; and agents/plan-documenter.md. Why: these have no plan-agent counterpart and decision 3 ports only unique capability. Verify: `ls kit/plugins/plan-agent/skills/` shows documenting-plans, markdown-to-html, and plan-status, and the agent plus commands exist under plan-agent.
+1. Copy the carry-over components from plan-interview into plan-agent preserving directory shape: skills documenting-plans, markdown-to-html (with its assets, reference, scripts), plan-status, and deep-grill; commands documenting-plans.md, plan-maintenance.md, markdown-to-html.md, plan-status.md, update-plan-status.md, deep-grill.md; and agents/plan-documenter.md. Why: these have no plan-agent counterpart and decision 3 ports only unique capability — deep-grill is kept for its node-by-node decision walk, a mode the review-plan team does not cover. Verify: `ls kit/plugins/plan-agent/skills/` shows documenting-plans, markdown-to-html, plan-status, and deep-grill, and the agent plus commands exist under plan-agent.
 
 2. Rewrite every `plan-interview:` namespace reference and intra-plugin path in the copied files to `plan-agent:` — skill bodies, command bodies, the plan-documenter agent, and cross-links between the moved skills. Why: invocations and internal links must resolve under the new plugin namespace. Verify: `grep -rn "plan-interview:" kit/plugins/plan-agent/` returns nothing except the intentional CHANGELOG migration note.
 
@@ -133,9 +133,3 @@ Questions).
   Draft a short migration note for anyone who had plan-interview@agentics-kit installed: it merged into plan-agent 4.0.0. List the /plan-interview:* → /plan-agent:* command mapping, note that plan-interview, plan-to-html, plan-hygiene, and review-rename-plans were dropped (plan-agent's built-in interview, review-plan team, and validate-plan-filename hook cover them), and tell users to uninstall plan-interview and ensure plan-agent >= 4.0.0.
   ```
 
-## Unresolved Questions
-
-- Keep or drop `deep-grill`?:
-  ```text
-  Decide whether to carry the plan-interview deep-grill skill (node-by-node conversational decision walk) into plan-agent, or drop it under decision 3. It overlaps the review-plan Agent Team in intent but differs in mode. Read kit/plugins/plan-interview/skills/deep-grill/SKILL.md and the plan-agent review-plan and built-in Step 5b interview, then recommend keep (port skill + command, rename namespace) or drop (rely on the review team), with a one-paragraph rationale. Default if unresolved: carry it over, since it is unique and the port is reversible.
-  ```
