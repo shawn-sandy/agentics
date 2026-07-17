@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.17.3 — 2026-07-16 — share-react registration test: stop pinning the marketplace version
+
+### Fixed
+
+- **`tests/social-media-tools/test-share-react-registration.sh` check 1 no longer hard-pins the version to `2.11.0`.** It asserted equality against a moving value, so every release since 2.11.0 has re-broken it — a test that trains people to ignore a red suite. It now asserts the entry is valid semver and `>= 2.11.0`, the release that introduced `share-react`; that floor is permanent, so bumps can't rot it. Guarding the bump itself stays with `scripts/check-plugin-versions.mjs`, which compares against `origin/main`.
+
 ## v2.17.2 — 2026-07-16 — Trim skill descriptions to budget
 
 ### Fixed
