@@ -133,23 +133,29 @@ Echo the resolved objective and effective flags after Step 0.
 `build-plan-html.mjs` computes everything derivable from the spec:
 
 - **Implement prompt** —
-  `Read and implement all steps in the plan at <filepath> — <objective>`,
-  rendered as the single visible call-to-action
+  `Read and implement all steps in the plan at <filepath> — <objective>.
+  Before reporting done, verify the objective is met and every acceptance
+  criterion and check passes`, rendered as the single visible call-to-action
   row and the `plan-implement` meta tag. `<filepath>` is the **markdown
   spec's** relative path, not the HTML's — an implementing agent reads the
   ~5–10 KB spec instead of the 60–120 KB rendered page, and updates
   progress where it lives. Its Copy button copies a fuller action-oriented
   prompt built from live DOM state that walks the agent through the
   markdown-first loop: tick `[x]` step markers and `- [x]` criteria in the
-  spec, set `status: completed`, then re-render the sibling HTML so it shows
+  spec, run the plan's Verification and Tests end-to-end to confirm the
+  objective actually works, set `status: completed`, then re-render the sibling HTML so it shows
   every step and criterion complete — never hand-edit the HTML.
 - **Goal prompt** — always present: `Achieve this goal: <objective>. The
   plan at <filepath> describes one approach — use it as reference, but
-  optimize for the outcome` (same spec `<filepath>`). Emitted as the
+  optimize for the outcome. Before reporting done, verify the outcome is
+  achieved and every check in the plan passes` (same spec `<filepath>`).
+  Emitted as the
   `plan-goal` meta tag and the "Pursue as goal" drawer row with its
   `copyGoal(this)` copy button.
 - **Workflow prompt** — `Run a workflow to implement the plan at <filepath>
-  — <objective>. Brief subagents with the plan file at <filepath>` (same
+  — <objective>. Brief subagents with the plan file at <filepath>. Before
+  reporting done, verify the objective is met and every acceptance criterion
+  and check passes` (same
   spec `<filepath>` — every subagent briefed with the compact spec). Emitted
   (row + `plan-workflow` meta tag) only when frontmatter says
   `workflow: true` or the heuristic fires (5+ files across 3+ top-level

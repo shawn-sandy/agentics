@@ -172,12 +172,12 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
 
   const specPath = mdPath || (/\.html$/i.test(path) ? path.replace(/\.html$/i, '.md') : `${path}.md`);
 
-  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}`;
-  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome`;
+  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. Before reporting done, verify the objective is met and every acceptance criterion and check passes`;
+  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome. Before reporting done, verify the outcome is achieved and every check in the plan passes`;
   const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
   const wantsWorkflow = md.workflow === 'true' || (md.workflow !== 'false' && fileCount >= 5 && dirCount >= 3);
   const workflow = wantsWorkflow
-    ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}`
+    ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Before reporting done, verify the objective is met and every acceptance criterion and check passes`
     : '';
 
   const main = [];

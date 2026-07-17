@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.0 — Plan prompts require objective verification (2026-07-16)
+
+### Changed
+
+- **Implement, goal, and workflow prompts now end with an explicit verification instruction** — every generated plan's copy-paste prompt tells the implementing agent to verify the objective is met and every acceptance criterion and check passes before reporting done.
+- **The implement button's rich prompt gained a verification step** — it now instructs the agent to run the plan's Verification and Tests sections end-to-end and confirm the objective works in the running application (fixing and re-verifying on failure) before setting `status: completed`.
+
 ## 3.0.0 — Rename `refine-prompt` skill to `write-prompt` (2026-07-14)
 
 ### Changed

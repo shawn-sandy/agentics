@@ -220,12 +220,12 @@ ok('derived effort follows the skill thresholds', () => {
 ok('implement and goal meta tags reference the markdown spec path, not the HTML', () => {
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature">'
+      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature. Before reporting done, verify the objective is met and every acceptance criterion and check passes">'
     )
   );
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome">'
+      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome. Before reporting done, verify the outcome is achieved and every check in the plan passes">'
     )
   );
   assert.ok(sampleHtml.includes('<meta name="plan-md" content="docs/plans/sample.md">'), 'plan-md meta carries the spec path');
