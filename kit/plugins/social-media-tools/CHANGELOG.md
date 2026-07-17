@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.17.4 — 2026-07-17 — digest: stop pointing users at a command that does not exist
+
+### Fixed
+
+- **`commands/digest.md` told the user to run `/social-media-tools:share-code`, which is not a command** — `share-code` is skill-only, so the instruction was a dead end at the exact moment the digest finished its work and handed off. It now tells the user to trigger the skill by pasting a `code-share prompt` from the digest into the chat.
+
 ## v2.17.3 — 2026-07-16 — share-react registration test: stop pinning the marketplace version
 
 ### Fixed

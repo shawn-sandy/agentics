@@ -9,4 +9,4 @@ paths:
 - Focus on context that enhances understanding for AI coding assistants
 - Minimize token usage while maintaining clarity
 - Prioritize comments that explain the "why" behind complex logic, business rules, and non-obvious decisions
-- Use the code-comments agent when available for TypeScript/JavaScript code
+- Use the ts-commenter agent when available for TypeScript/JavaScript code

@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-testability
 description: Reviews implementation plans for testability — ensuring changes are covered by real application tests and acceptance criteria are verifiable.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

@@ -1,7 +1,8 @@
 ---
 name: css-generator
 description: Extracts design tokens from images and converts them into CSS custom properties and utility classes compatible with the project's SCSS architecture.
-tools: Read, WebFetch, Write, MultiEdit, Bash
+tools: Read, Write, Edit, Bash, WebFetch
+model: sonnet
 color: green
 ---
 

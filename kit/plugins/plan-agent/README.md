@@ -30,9 +30,10 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
-| `validate-plan-filename` | Hook (`PostToolUse`) | Fires automatically on every `Write`/`Edit` — validates plan filenames |
-| `rebuild-plans-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to non-index `.html` plans — auto-regenerates gallery |
-| `build-prototypes-index` | Hook (`PostToolUse`) | Fires on `Write`/`Edit`/`MultiEdit` to `docs/prototypes/` — auto-regenerates the prototypes gallery |
+| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the three below only for plan/prototype writes |
+| `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
+| `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
+| `build-prototypes-index` | Child of `dispatch` | Regenerates the prototypes gallery for `docs/prototypes/` writes |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper standalone reviews, install `plan-interview` separately. Note: `plan-interview:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
@@ -354,11 +355,17 @@ HTML plans with `<meta name="plan-status" content="completed">` are skipped (no 
 
 #### Gallery index rebuild (automatic)
 
-The `rebuild-plans-index` hook fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.html` `.html` file inside the configured plans directory. It calls `build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
+`rebuild-plans-index` runs when `dispatch.py` sees a write to a non-`index.html` `.html` file inside the configured plans directory. It calls `build-index.sh` to regenerate the gallery index automatically. Always exits 0 so index-rebuild failures never block plan writes.
 
 #### Prototypes gallery rebuild (automatic)
 
-The `build-prototypes-index` hook fires on every `Write`/`Edit`/`MultiEdit` and self-gates on the written path: it only rebuilds when the write targeted `docs/prototypes/`, leaving the plans gallery untouched. It calls `build-prototypes-index.sh` to regenerate `docs/prototypes/index.html` (newest-first, escaped). Always exits 0.
+`build-prototypes-index` runs when `dispatch.py` sees a write under `docs/prototypes/`, leaving the plans gallery untouched. It calls `build-prototypes-index.sh` to regenerate `docs/prototypes/index.html` (newest-first, escaped). Always exits 0.
+
+#### Hook dispatch
+
+`hooks.json` registers exactly one PostToolUse hook: `hooks/dispatch.py`. Registering the four hooks separately spawned four interpreters on *every* file edit in *every* session, purely so each could discover the file was not a plan and exit. The `matcher` field is a tool-name regex and cannot express a path condition, so the gate lives in `dispatch.py`: it reads the payload once, does one cheap path check, and for the common case exits without spawning anything.
+
+The children remain independently runnable and testable — each re-applies its own filter — so `python3 hooks/validate-plan-filename.py < payload.json` still works standalone. The children share the dispatcher's single 60s budget (they run sequentially), rather than each holding an independent one as before.
 
 ### Plans directory resolution
 
@@ -451,10 +458,11 @@ plan-agent/
       hub.html              — Parameterized landing-hub template (setup-sites)
       serve-docs.sh         — Local docs/ preview server (setup-sites)
   hooks/
-    validate-plan-filename.py  — PostToolUse filename enforcement script
-    rebuild-plans-index.py     — PostToolUse gallery index auto-rebuild
+    dispatch.py                — The one registered PostToolUse hook; path-gates, then fans out
+    validate-plan-filename.py  — Filename enforcement script (child of dispatch)
+    rebuild-plans-index.py     — Gallery index auto-rebuild (child of dispatch)
     build-index.sh             — Shell entry point for gallery rebuild
-  hooks.json                — Hook registration (Write|Edit and Write|Edit|MultiEdit matchers)
+  hooks.json                — Hook registration (one PostToolUse entry: dispatch.py)
   README.md
   CHANGELOG.md
 ```

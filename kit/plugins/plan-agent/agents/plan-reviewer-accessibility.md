@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-accessibility
 description: Reviews UI implementation plans for WCAG 2.1 AA compliance, semantic HTML, keyboard navigation, and screen reader support. Use only for plans that touch React, Vue, UI components, or user-facing flows.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

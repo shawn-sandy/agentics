@@ -47,8 +47,8 @@ Mark each todo `status: "completed"` as you finish that step.
 
 Use the first match from this priority order:
 
-1. **User message**: If a file path appears in the user's message, use it
-   directly.
+1. **Argument**: If a file path appears in `$ARGUMENTS` or the user's message,
+   use it directly.
 2. **Currently open file**: If no path was given, check whether a `.md` file is
    currently open in the IDE. If it looks like a plan (contains headings like
    `## Implementation`, `## Plan`, `## Steps`, `## Context`, or `## Summary`),
@@ -91,7 +91,12 @@ it from frontmatter).
 
 Read the plan file and parse its YAML frontmatter if present.
 
-- If a `status` field already exists, surface the current value to the user and
+- If the existing `status` is `artifact` (legacy format), inform the user:
+  _"This plan uses the legacy `artifact` status. It will be normalized to
+  `status: completed`."_ Treat the status as `completed` for the remainder of
+  the flow and continue to Step 5 so the content type is classified.
+- If a `status` field already exists (and is not the legacy `artifact`),
+  surface the current value to the user and
   ask via `AskUserQuestion`: _"This plan already has status `[value]`. Would
   you like to re-analyze the codebase or keep the current status?"_
   - If the user chooses to keep it, skip Steps 4–5 and go directly to Step 6

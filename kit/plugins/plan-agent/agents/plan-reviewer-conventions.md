@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-conventions
 description: Reviews implementation plans for adherence to project conventions, code style, naming patterns, and organizational consistency.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

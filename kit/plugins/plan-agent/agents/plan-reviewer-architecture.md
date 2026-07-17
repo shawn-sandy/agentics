@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-architecture
 description: Reviews implementation plans for architectural soundness, design pattern fit, and system integration coherence.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

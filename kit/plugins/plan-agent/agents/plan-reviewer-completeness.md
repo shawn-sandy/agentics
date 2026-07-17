@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-completeness
 description: Reviews implementation plans for completeness — ensuring no steps are vague, no critical files are omitted, and the path from plan to done is unbroken.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

@@ -2,7 +2,12 @@
 """
 PostToolUse hook: enforce plan-agent `/plan-agent:implementation-plan` (Step 4) verb-target kebab-case filenames.
 
-Fires on every Write/Edit. Ignores anything outside the configured plans
+Invoked by hooks/dispatch.py, which is registered on Write/Edit/MultiEdit and
+only calls this script for paths under the plans directory. (MultiEdit used to
+bypass this gate: this script was registered directly on `Write|Edit` only.)
+Still safe to run standalone — it re-applies its own filter below.
+
+Ignores anything outside the configured plans
 directory (reads `plansDirectory` from the project's .claude/settings.json
 first, then falls back to ~/.claude/settings.json, then to `docs/plans`) and
 plans whose frontmatter carries `status: completed`.

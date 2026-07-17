@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.2.0 — Scope the reviewer agents and collapse the hooks into one dispatcher (2026-07-17)
+
+### Fixed
+
+- **The seven `plan-reviewer-*` agents were running with full tool access.** Each declared `allowed-tools: Read, Glob, Grep, Bash` — but `allowed-tools:` is the *skills* key. On an agent it is not recognised, so the restriction was silently discarded and seven agents whose whole job is to read a plan and report findings held Write, Edit, and unrestricted Bash against the repo. They now declare `tools: Read, Glob, Grep, Bash(git *)`, matching the `product-plans` reviewer cluster, which used the correct key and was correctly scoped all along. The file always *looked* right; only the live agent registry showed the difference.
+- **`MultiEdit` bypassed the plan-filename gate.** `validate-plan-filename.py` was registered on `Write|Edit` only, so a badly-named plan written via `MultiEdit` slipped through. It is now reached on `Write|Edit|MultiEdit`.
+- **Every file edit in every session spawned four hook processes** purely to discover the file was not a plan. The four `PostToolUse` entries are now a single `hooks/dispatch.py`, which checks the path against the plans directory before invoking any hook.
+- **`build-index.sh` no longer walks the filesystem to find its templates.** `find_templates_dir()` searched all of `~/.claude/plugins` plus the project root on every plan write — unbounded work scaling with installed-plugin count and repo size. Templates now resolve against `$CLAUDE_PLUGIN_ROOT/templates` when running as a hook, then a fixed list of candidates anchored to the script's own location, and finally a fixed-depth glob of the installed plugin cache (`~/.claude/plugins/cache/*/plan-agent/*/templates`, newest version wins) — so a project that installed `plan-agent` rather than vendoring it still finds the real template when running the script standalone, instead of silently degrading to the inline fallback gallery. No filesystem walk on any path. Applied in lockstep to all three byte-identical copies: the bundled hook, `scripts/build-plans-index.sh`, and `docs/plans/build-index.sh`.
+
+### Added
+
+- **`hooks/dispatch.py`** — a single path-gated entry point for the plan hooks. The individual hook scripts still re-apply their own filters, so each remains safe to run standalone. The children share the dispatcher's one 60s `hooks.json` budget via a common deadline, since they now run sequentially in a single process rather than each holding an independent timeout; a child that would overrun is skipped with a note on stderr rather than letting the harness kill the dispatcher mid-fan-out. The path gate filters on extension only for plan writes — `build-prototypes-index.sh` gates on path alone, so filtering prototypes by extension would drop writes it would have acted on.
+
 ## 3.1.1 — Trim skill descriptions to budget (2026-07-16)
 
 ### Fixed

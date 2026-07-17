@@ -6,11 +6,17 @@ set -eu
 
 PROJECT_ROOT="${1:-$(pwd)}"
 
-python3 - "$PROJECT_ROOT" <<'EOF'
-import json, os, re, sys, html
+# Directory holding this script. Used to resolve the plan-agent templates when
+# CLAUDE_PLUGIN_ROOT is unset (i.e. run standalone by CI or by hand, not as a
+# plugin hook). Bounded: a fixed set of candidate paths, never a filesystem walk.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+python3 - "$PROJECT_ROOT" "$SCRIPT_DIR" <<'EOF'
+import glob, json, os, re, sys, html
 from datetime import datetime
 
 project_root = sys.argv[1]
+script_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(os.path.abspath(__file__))
 os.chdir(project_root)
 
 # ── Resolve plans directory ────────────────────────────────────────────────────
@@ -33,28 +39,48 @@ if not os.path.isdir(plans_dir):
     sys.exit(0)
 
 # ── Locate plugin templates directory ─────────────────────────────────────────
-def find_templates_dir():
-    plugin_root = os.path.expanduser('~/.claude/plugins')
+# CLAUDE_PLUGIN_ROOT is set only when this runs as a plugin hook. The three
+# copies of this script are byte-identical, and two of them (scripts/ and
+# docs/plans/) run standalone where it is unset — so fall back to a fixed,
+# bounded list of candidates resolved from this script's own location and the
+# project root. No filesystem walk: each candidate is a single isdir() check.
+def resolve_templates_dir():
+    plugin_root = os.environ.get('CLAUDE_PLUGIN_ROOT', '').strip()
     candidates = []
-    for base in (plugin_root, project_root):
-        if not os.path.isdir(base):
-            continue
-        for dirpath, dirnames, _ in os.walk(base):
-            dirnames[:] = [d for d in dirnames if not d.startswith('.')]
-            if os.path.basename(dirpath) == 'templates' and 'plan-agent' in dirpath:
-                candidates.append(dirpath)
-    def version_key(p):
-        import re
-        m = re.search(r'/(\d+\.\d+\.\d+)/', p)
-        return tuple(int(x) for x in m.group(1).split('.')) if m else (0, 0, 0)
-    candidates.sort(key=version_key, reverse=True)
-    # Prefer a project-local template (a repo that vendors plan-agent is
-    # authoritative over the installed cache); else fall back to the cache.
-    root = os.path.abspath(project_root) + os.sep
-    local = [c for c in candidates if os.path.abspath(c).startswith(root)]
-    return (local or candidates)[0] if candidates else ''
+    if plugin_root:
+        candidates.append(os.path.join(plugin_root, 'templates'))
+    vendored = os.path.join('kit', 'plugins', 'plan-agent', 'templates')
+    candidates += [
+        # Bundled hook: <plugin>/hooks/build-index.sh → <plugin>/templates
+        os.path.join(script_dir, os.pardir, 'templates'),
+        # scripts/build-plans-index.sh → repo root
+        os.path.join(script_dir, os.pardir, vendored),
+        # docs/plans/build-index.sh → repo root
+        os.path.join(script_dir, os.pardir, os.pardir, vendored),
+        # Explicitly-passed project root that vendors plan-agent
+        os.path.join(os.path.abspath(project_root), vendored),
+    ]
+    for path in candidates:
+        if os.path.isdir(path):
+            return os.path.abspath(path)
 
-templates_dir = find_templates_dir()
+    # Last resort: the installed plugin cache. A consumer project that installed
+    # plan-agent normally (rather than vendoring it) and runs this script by hand
+    # or in CI has no CLAUDE_PLUGIN_ROOT and nothing to anchor to — without this
+    # it would silently fall back to the bare inline gallery. Fixed-depth glob
+    # over one known layout, not a filesystem walk: newest version wins.
+    cached = glob.glob(os.path.expanduser(
+        '~/.claude/plugins/cache/*/plan-agent/*/templates'
+    ))
+    def version_key(p):
+        m = re.search(r'/(\d+)\.(\d+)\.(\d+)/templates/?$', p)
+        return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
+    for path in sorted(cached, key=version_key, reverse=True):
+        if os.path.isdir(path):
+            return os.path.abspath(path)
+    return ''
+
+templates_dir = resolve_templates_dir()
 
 # ── Collect and sort plan files ────────────────────────────────────────────────
 plan_files = []

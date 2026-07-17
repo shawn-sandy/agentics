@@ -1,6 +1,7 @@
 ---
 name: ts-commenter
-description: TypeScript documentation specialist that generates comprehensive JSDoc comments optimized for AI assistant understanding and reduced token consumption
+description: Use when the user asks to add, improve, or standardize JSDoc comments on TypeScript files — including requests to document a module, annotate exported functions or types, or make a codebase easier for an AI assistant to read. Generates JSDoc optimized for AI assistant understanding and reduced token consumption. Not for non-TypeScript languages or prose documentation.
+tools: Read, Edit, Glob, Grep
 model: sonnet
 ---
 
