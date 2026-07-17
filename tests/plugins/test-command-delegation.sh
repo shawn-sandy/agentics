@@ -2,11 +2,12 @@
 # Asserts that commands delegate to their skills rather than restating them,
 # and that every slash reference in the marketplace resolves to something real.
 #
-# Check 1 — delegation. deep-grill, plan-status, documenting-plans, and
-# plan-interview each duplicated their same-named skill's entire workflow. The
-# copies had already drifted 20, 153, 383, and 397 lines apart, so the same name
-# produced different behaviour depending on whether the user typed the command
-# or triggered the skill. A thin delegator has one behaviour by construction.
+# Check 1 — delegation. deep-grill, plan-status, and documenting-plans each
+# duplicated their same-named skill's entire workflow. The copies had already
+# drifted 20, 153, and 383 lines apart, so the same name produced different
+# behaviour depending on whether the user typed the command or triggered the
+# skill. A thin delegator has one behaviour by construction. (These commands
+# now live under plan-agent after plan-interview was merged into it in 4.0.0.)
 #
 # Check 2 — reference resolution. An instruction naming a slash command that
 # does not exist is a dead end at the exact moment a workflow hands off.
@@ -34,10 +35,9 @@ failures = []
 # when it is collapsed to a delegator.
 MAX_LINES = 15
 DELEGATORS = {
-    "plan-interview/commands/deep-grill.md": "plan-interview:deep-grill",
-    "plan-interview/commands/plan-status.md": "plan-interview:plan-status",
-    "plan-interview/commands/documenting-plans.md": "plan-interview:documenting-plans",
-    "plan-interview/commands/plan-interview.md": "plan-interview:plan-interview",
+    "plan-agent/commands/deep-grill.md": "plan-agent:deep-grill",
+    "plan-agent/commands/plan-status.md": "plan-agent:plan-status",
+    "plan-agent/commands/documenting-plans.md": "plan-agent:documenting-plans",
 }
 
 for rel, skill in DELEGATORS.items():

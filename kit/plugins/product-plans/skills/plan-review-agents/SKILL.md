@@ -18,9 +18,9 @@ next to the source plan as a shareable, browser-openable companion.
 ## When not to use
 
 - **Not a code reviewer.** For code, use `code-review`. For conversational
-  plan stress-testing without a panel, use `plan-interview`. For quick
+  plan stress-testing without a panel, use `plan-agent`. For quick
   single-agent technical validation of an implementation plan before coding,
-  use `plan-interview:plan-interview` instead.
+  use `plan-agent` instead.
 - **Requires Agent Teams.** Hard-stops if `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
   is not set or Claude Code is below v2.1.32. See Step 3.
 
@@ -273,9 +273,9 @@ re-synthesize from reviewer outputs; do **not** read external CSS. Apply
 2. Extract the basename (filename only, no directory) and the directory.
 3. Strip the `.md` extension to get `plan_stem`. Do not apply any further
    normalization — use the raw stem exactly as derived from the filename so it
-   matches what `plan-interview` used when it wrote `<plan_stem>-interview.html`.
+   matches what `plan-agent` used when it wrote `<plan_stem>-interview.html`.
 4. Check whether `<plan_dir>/<plan_stem>-interview.html` already exists
-   (a prior `plan-interview` run creates this file):
+   (a prior `plan-agent` run creates this file):
    ```bash
    test -f "<plan_dir>/<plan_stem>-interview.html" && echo "exists"
    ```
@@ -295,7 +295,7 @@ JS provides scroll-spy active-state in the TOC only (progressive enhancement).
 When writing to an existing `*-interview.html` file (case 4 above): read the
 existing file, locate the `</body>` tag, and inject the synthesized review HTML
 as a new `<section id="panel-review">` block immediately before `</body>` rather
-than overwriting the entire file. This preserves the plan-interview step timeline
+than overwriting the entire file. This preserves the interview step timeline
 and adds the panel findings as a new section below it.
 
 Otherwise (no prior interview HTML): `Write` the full artifact to the derived
@@ -326,15 +326,15 @@ in an inconsistent state.
 
 ---
 
-**When to use this skill vs. `plan-interview`:**
+**When to use this skill vs. `plan-agent`:**
 
 | Situation | Use |
 |-----------|-----|
-| Quick single-agent technical gap check before coding | `plan-interview:plan-interview` |
+| Quick single-agent technical gap check before coding | `plan-agent` |
 | Product plan, PRD, or feature proposal | `plan-review-agents` (this skill) |
 | Comprehensive PM / UX / Security / A11y review | `plan-review-agents` (this skill) |
-| Walk every decision branch interactively | `plan-interview:deep-grill` |
+| Walk every decision branch interactively | `plan-agent:deep-grill` |
 
 If the resolved plan looks like a technical implementation plan (contains `## Steps`,
 `## Files to Create/Modify`, file paths, or code identifiers but no product-level
-signals), consider suggesting `plan-interview:plan-interview` to the user instead.
+signals), consider suggesting `plan-agent` to the user instead.

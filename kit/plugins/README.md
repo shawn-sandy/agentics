@@ -12,12 +12,12 @@ A skill-only plugin that activates automatically when the user asks to review co
 
 **Use case:** Understanding skill-only plugins, automatic activation patterns
 
-### plan-interview
-A plugin combining a command and a skill for the same underlying capability.
+### plan-agent
+A plugin combining commands and skills for the same underlying capabilities (plan creation, review, documentation, and maintenance). Absorbed the former `plan-interview` plugin in v4.0.0.
 
 **Components:**
-- Command: `/plan-interview:plan-interview [plan-file-path]` - Explicit plan interview invocation
-- Skill: `plan-interview` - Auto-activates on stress-test/validate/interview requests
+- Command: `/plan-agent:deep-grill [plan-file-path]` - Walk each plan decision branch node-by-node
+- Skill: `plan-status` - Auto-activates on check/update plan-status requests (single file or `--all` bulk)
 
 **Use case:** Understanding command + skill co-location for the same feature
 
@@ -89,7 +89,7 @@ Before testing plugins, verify your setup:
 3. **List available plugins:**
    ```bash
    ls -la kit/plugins/
-   # Should show code-review/, plan-interview/, git-agent/, etc.
+   # Should show code-review/, plan-agent/, git-agent/, etc.
    ```
 
 ### Using --plugin-dir
@@ -108,11 +108,11 @@ claude --plugin-dir /full/path/to/agentics/kit/plugins/code-review
 ```
 
 ```bash
-# Test plan-interview plugin (has both a command and a skill)
-claude --plugin-dir ./kit/plugins/plan-interview
+# Test plan-agent plugin (has both commands and skills)
+claude --plugin-dir ./kit/plugins/plan-agent
 
 # Invoke the command explicitly:
-# /plan-interview:plan-interview docs/plans/my-plan.md
+# /plan-agent:deep-grill docs/plans/my-plan.md
 # Or ask: "Stress-test this plan before I start coding" (skill activates)
 ```
 
@@ -121,7 +121,7 @@ claude --plugin-dir ./kit/plugins/plan-interview
 Load multiple plugins simultaneously:
 
 ```bash
-claude --plugin-dir ./kit/plugins/code-review --plugin-dir ./kit/plugins/plan-interview
+claude --plugin-dir ./kit/plugins/code-review --plugin-dir ./kit/plugins/plan-agent
 ```
 
 ### Troubleshooting
@@ -142,7 +142,7 @@ claude --plugin-dir ./kit/plugins/code-review --plugin-dir ./kit/plugins/plan-in
 
 **Solutions:**
 - Verify the plugin loaded successfully (check Claude's startup output)
-- Check command file exists: `ls -la kit/plugins/plan-interview/commands/`
+- Check command file exists: `ls -la kit/plugins/plan-agent/commands/`
 - Ensure command file has `.md` extension
 - Verify YAML frontmatter has `description` field
 - Try restarting Claude with `--plugin-dir` flag

@@ -11,11 +11,11 @@ improvements directly to the source plan.
 |-----------|-----|
 | Product plan, PRD, or feature proposal | **`product-plans`** (this plugin) |
 | Comprehensive PM / UX / Security / A11y review | **`product-plans`** (this plugin) |
-| Technical implementation plan (code, files, APIs) | [`plan-interview`](../plan-interview/README.md) |
-| Quick pre-coding gap check (single agent, fast) | [`plan-interview`](../plan-interview/README.md) |
-| Walk every decision branch interactively | [`plan-interview:deep-grill`](../plan-interview/README.md) |
+| Technical implementation plan (code, files, APIs) | [`plan-agent`](../plan-agent/README.md) |
+| Quick pre-coding gap check (single agent, fast) | [`plan-agent`](../plan-agent/README.md) |
+| Walk every decision branch interactively | [`plan-agent:deep-grill`](../plan-agent/README.md) |
 
-`product-plans` runs six specialist agents in parallel and is optimised for product-level documents with PM, UX, security, and accessibility concerns. `plan-interview` is a single-agent, interactive Q&A interview optimised for technical implementation plans and is faster to run.
+`product-plans` runs six specialist agents in parallel and is optimised for product-level documents with PM, UX, security, and accessibility concerns. `plan-agent` authors and reviews technical implementation plans and carries a built-in single-agent interview (Step 5b) plus `deep-grill` for a node-by-node decision walk.
 
 ## Overview
 
@@ -105,7 +105,7 @@ Trigger phrases include: "review or improve a product plan", "cross-functional
 panel review", "multi-role critique", "PM/Dev/UX/Frontend/Accessibility/Security
 team review of a product plan, PRD, or feature proposal".
 
-For technical implementation plans, use `plan-interview:plan-interview` instead.
+For technical implementation plans, use `plan-agent` instead.
 
 Example prompts:
 
@@ -231,7 +231,7 @@ product-plans/
 Auto-activates when the user asks to improve, optimize, or update a product
 plan, PRD, or feature proposal — or asks for a cross-functional panel review,
 multi-role critique, or PM/Dev/UX/Frontend/Accessibility/Security team review.
-For technical implementation plans, use `plan-interview:plan-interview` instead.
+For technical implementation plans, use `plan-agent` instead.
 
 Triggers include: "improve this product plan", "optimize this PRD",
 "update this proposal based on expert feedback", "cross-functional panel

@@ -58,7 +58,7 @@ find "$PLANS_DIR" -maxdepth 1 -name "*.html" ! -name "index.html" -print0 \
 - **Spec mode** — `<stem>.md` exists and its first markdown heading (after any YAML frontmatter block) is `# Plan:`. The spec is what you edit; `<stem>.html` is regenerated from it in Step 5.
 - **Legacy mode** — no such spec (or the `.md` beside the plan is not a spec). Edit `<stem>.html` attributes directly, as before the markdown-first pipeline.
 
-If the user passed a `.md` file that is not a plan spec (no `# Plan:` heading), say so and **STOP** — old-style markdown plans are `plan-interview:plan-status` territory, not finalize-plan's.
+If the user passed a `.md` file that is not a plan spec (no `# Plan:` heading), say so and **STOP** — old-style markdown plans are `plan-agent:plan-status` territory, not finalize-plan's.
 
 Announce: `"Reviewing plan for completion: <resolved-path> (<spec|legacy> mode)"`
 

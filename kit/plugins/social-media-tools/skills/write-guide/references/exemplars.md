@@ -128,7 +128,7 @@ carries a usage discipline.
 
 No exemplar file yet — this archetype exists because change recaps are chronological: before/after
 is the organizing axis, not rule/mechanism. (For generating the canonical documentation of a
-completed plan file, use `plan-interview:documenting-plans` instead — this archetype is for
+completed plan file, use `plan-agent:documenting-plans` instead — this archetype is for
 telling the story of a change to readers.)
 
 **Suggested section set.** The change in one sentence (§1) → what it was before, verbatim (§2:

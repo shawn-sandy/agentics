@@ -10,5 +10,5 @@ Delegates immediately to the `plan-status` skill; it handles all steps and
 reporting. Do not emit any other output.
 
 ```
-Skill(skill: "plan-interview:plan-status", args: "$ARGUMENTS")
+Skill(skill: "plan-agent:plan-status", args: "$ARGUMENTS")
 ```

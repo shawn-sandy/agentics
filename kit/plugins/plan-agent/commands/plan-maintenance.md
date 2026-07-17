@@ -295,10 +295,10 @@ git add <plansDir>/README.md && git commit -m "docs(plans): regenerate plans ind
 ## Examples
 
 ```
-/plan-interview:plan-maintenance                     # runs --all (variants → archive → index)
-/plan-interview:plan-maintenance --archive           # archive only
-/plan-interview:plan-maintenance --index             # regenerate index only
-/plan-interview:plan-maintenance --variants          # variant review only
-/plan-interview:plan-maintenance --all --background  # full cycle, rendering in background
-/plan-interview:plan-maintenance --archive --background  # archive in background
+/plan-agent:plan-maintenance                     # runs --all (variants → archive → index)
+/plan-agent:plan-maintenance --archive           # archive only
+/plan-agent:plan-maintenance --index             # regenerate index only
+/plan-agent:plan-maintenance --variants          # variant review only
+/plan-agent:plan-maintenance --all --background  # full cycle, rendering in background
+/plan-agent:plan-maintenance --archive --background  # archive in background
 ```

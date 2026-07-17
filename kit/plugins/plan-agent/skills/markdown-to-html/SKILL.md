@@ -153,7 +153,7 @@ Now that theme is known, spawn a background agent and stop:
 - `subagent_type`: `"general-purpose"`
 - `run_in_background`: `true`
 - `description`: `"markdown-to-html background conversion"`
-- `prompt`: `"Invoke Skill(skill: \"plan-interview:markdown-to-html\", args:
+- `prompt`: `"Invoke Skill(skill: \"plan-agent:markdown-to-html\", args:
   \"/actual/path/to/file.md --theme=<theme> --no-open --background\") to convert
   the file to HTML non-interactively."` — substitute real path and theme.
 
@@ -253,12 +253,12 @@ Written to docs/plans/add-auth.html (mode: plan, theme: developer)
 ## Examples
 
 ```text
-/plan-interview:markdown-to-html                                                      # auto-detects from IDE or settings
-/plan-interview:markdown-to-html docs/plans/add-auth.md                              # specific plan file
-/plan-interview:markdown-to-html README.md --mode=doc                                # force doc mode
-/plan-interview:markdown-to-html docs/plans/add-auth.md --theme=developer            # pre-select theme
-/plan-interview:markdown-to-html docs/plans/add-auth.md --theme=developer --no-open  # batch-safe, no prompts
-/plan-interview:markdown-to-html docs/plans/add-auth.md --background                 # fully non-interactive
-/plan-interview:markdown-to-html docs/plans/add-auth.md --async --theme=developer    # background agent, no prompts
-/plan-interview:markdown-to-html --list-themes                                        # print available themes and stop
+/plan-agent:markdown-to-html                                                      # auto-detects from IDE or settings
+/plan-agent:markdown-to-html docs/plans/add-auth.md                              # specific plan file
+/plan-agent:markdown-to-html README.md --mode=doc                                # force doc mode
+/plan-agent:markdown-to-html docs/plans/add-auth.md --theme=developer            # pre-select theme
+/plan-agent:markdown-to-html docs/plans/add-auth.md --theme=developer --no-open  # batch-safe, no prompts
+/plan-agent:markdown-to-html docs/plans/add-auth.md --background                 # fully non-interactive
+/plan-agent:markdown-to-html docs/plans/add-auth.md --async --theme=developer    # background agent, no prompts
+/plan-agent:markdown-to-html --list-themes                                        # print available themes and stop
 ```

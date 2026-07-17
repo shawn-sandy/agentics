@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: refactor
 created: 2026-07-17
+modified: 2026-07-17
 issue: https://github.com/shawn-sandy/agentics/issues/423
 effort: high
 workflow: true
@@ -101,15 +102,22 @@ review-plan team), and the ExitPlanMode nudge hook. Drop: `plan-interview`,
 
 ## Acceptance Criteria
 
-- [ ] `plan-agent` is version `4.0.0` in `marketplace.json`; `plan-interview` is absent.
-- [ ] `kit/plugins/plan-agent/` contains the `documenting-plans`, `markdown-to-html`, and `plan-status` skills, the `plan-documenter` agent, the `plan-maintenance`/`documenting-plans`/`markdown-to-html`/`plan-status` commands, and the ExitPlanMode nudge hook.
-- [ ] No `plan-interview:` namespace or path reference remains anywhere under `kit/plugins/plan-agent/` (except the CHANGELOG migration note).
-- [ ] `kit/plugins/plan-interview/` no longer exists.
-- [ ] `.claude/rules/marketplace.md` Removed Plugins table has the plan-interview row.
-- [ ] `CLAUDE.md` shows 12 plugins with no plan-interview row.
-- [ ] `.claude/settings.json` `enabledPlugins` no longer lists plan-interview.
-- [ ] `bash tests/publish/smoke-clean-dist.sh` and `node tests/publish/test-dist-transforms.mjs` pass.
-- [ ] The dropped components (`plan-interview`, `plan-to-html`, `plan-hygiene`, `review-rename-plans`) were not carried into plan-agent.
+- [x] `plan-agent` is version `4.0.0` in `marketplace.json`; `plan-interview` is absent. _(verified: marketplace lists 12 plugins, plan-agent 4.0.0, no plan-interview.)_
+- [x] `kit/plugins/plan-agent/` contains the `documenting-plans`, `markdown-to-html`, and `plan-status` skills (plus `deep-grill`), the `plan-documenter` agent, the `plan-maintenance`/`documenting-plans`/`markdown-to-html`/`plan-status`/`deep-grill` commands, and the ExitPlanMode nudge hook. _(verified: `ls` + `hooks.json` ExitPlanMode matcher present.)_
+- [x] No `plan-interview:` namespace or path reference remains anywhere under `kit/plugins/plan-agent/` except migration notes. _(verified: skills/commands/agents/hooks are clean; the only remaining mentions are the CHANGELOG 4.0.0 migration note and the README migration map — both are old→new documentation, not live handoffs.)_
+- [x] `kit/plugins/plan-interview/` no longer exists. _(verified: directory removed.)_
+- [x] `.claude/rules/marketplace.md` Removed Plugins table has the plan-interview row. _(verified.)_
+- [x] `CLAUDE.md` shows 12 plugins with no plan-interview row. _(verified: 12 table rows; only a folded "absorbed from the former plan-interview" note remains.)_
+- [x] `.claude/settings.json` `enabledPlugins` no longer lists plan-interview. _(verified.)_
+- [x] `bash tests/publish/smoke-clean-dist.sh` and `node tests/publish/test-dist-transforms.mjs` pass. _(verified: 14/14 transforms pass against a fresh 12-plugin dist; full plugin + publish suites green.)_
+- [x] The dropped components (`plan-interview`, `plan-to-html`, `plan-hygiene`, `review-rename-plans`) were not carried into plan-agent. _(verified.)_
+
+## Finalization notes (2026-07-17)
+
+Executed and verified end-to-end. Two deviations from the reference plan, both optimizing for the outcome:
+
+1. **Scope beyond the plan's listed files.** The plan's step 11 named three test files, but `tests/plugins/test-command-delegation.sh` also hard-referenced the moved command paths (would have failed "missing") and live cross-references to the moved skills existed in `kit/plugins/README.md`, `product-plans/` (README + `plan-review-agents` SKILL), and `social-media-tools/` (`write-guide`). All were repointed to `plan-agent`; historical CHANGELOG entries were left intact as accurate history.
+2. **Test assertion repointed, not deleted.** `test-dist-transforms.mjs` asserted a `marketplace add` line unique to plan-interview's README; plan-agent (like other surviving plugins) installs via `/plugin install <name>@agentics-kit`, so the assertion was repointed to that line rather than dropped.
 
 ## Verification
 

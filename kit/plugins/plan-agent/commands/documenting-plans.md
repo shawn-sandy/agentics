@@ -10,5 +10,5 @@ Delegates immediately to the `documenting-plans` skill; it handles all steps and
 reporting. Do not emit any other output.
 
 ```
-Skill(skill: "plan-interview:documenting-plans", args: "$ARGUMENTS")
+Skill(skill: "plan-agent:documenting-plans", args: "$ARGUMENTS")
 ```
