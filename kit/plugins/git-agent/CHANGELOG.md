@@ -1,5 +1,13 @@
 # Changelog — git-agent
 
+## v4.1.1 — 2026-07-16 — Trim ship-autonomous description to budget
+
+### Fixed
+
+- `skills/ship-autonomous/SKILL.md`: description reduced from 214 chars to within the 200-char budget, so it no longer trips `/skill-reviewer:check-description`.
+
+---
+
 ## v4.1.0 — 2026-07-16 — ship-autonomous verifies before committing and gates the merge
 
 ### Added

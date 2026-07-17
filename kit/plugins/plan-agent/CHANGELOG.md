@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.1 — Trim skill descriptions to budget (2026-07-16)
+
+### Fixed
+
+- `skills/prototype` (246 chars) and `skills/finalize-plan` (224) — descriptions brought within the 200-char total and 80-char first-sentence budget.
+- `skills/build-proposal` — description restructured into the three-part format; it was a single 195-char sentence with no short first sentence, blowing the 80-char limit.
+
 ## 3.0.0 — Rename `refine-prompt` skill to `write-prompt` (2026-07-14)
 
 ### Changed

@@ -1,6 +1,6 @@
 ---
 name: ship-autonomous
-description: "Runs the full ship pipeline with verification, CI polling, and bounded autofix. Chains tests, browser preview, commit, PR, CI poll, autofix, and gated merge. Use when the user asks to autonomously ship or watch CI."
+description: "Runs the full ship pipeline with verification, CI polling, and bounded autofix. Chains tests, preview, commit, PR, CI poll, and gated merge. Use when asked to autonomously ship or watch CI."
 allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Bash(jq *), Skill, Read, Edit, Grep, Glob, TodoWrite, AskUserQuestion, ToolSearch, ExitPlanMode, mcp__Claude_Browser__preview_start, mcp__Claude_Browser__preview_logs, mcp__Claude_Browser__read_console_messages, mcp__Claude_Browser__resize_window, mcp__Claude_Browser__computer
 ---
 

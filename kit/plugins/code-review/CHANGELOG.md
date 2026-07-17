@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.3.3 — 2026-07-16 — Delegate agent-file review to skill-reviewer
+
+### Fixed
+
+- `commands/fix-branch.md`, `README.md`: changed `**/agents/*.md` files are now reviewed by `skill-reviewer:reviewing-skills`. The previous target, `agent-reviewer:reviewing-agents`, belonged to a plugin de-registered in v4.0.0 and now deleted, so `/code-review:fix-branch` would have hit a missing skill on any branch touching an agent file.
+
+---
+
 ## v3.3.2 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed

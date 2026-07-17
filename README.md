@@ -6,7 +6,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 
 **Marketplace:** `agentics-kit` v4.0.0 · **13 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
-> **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories are retained in the repository but are no longer installable via the marketplace. See [CHANGELOG.md](./CHANGELOG.md) for details.
+> **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories have been removed from the repository and are recoverable from git history at the commit preceding their deletion. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
 > **Built for Claude, with Claude Code:** These plugins depend on the underlying Claude Code runtime, its agents, and its API — they are not standalone tools and will not work outside the Claude Code environment.
 
@@ -83,7 +83,6 @@ The agentics project serves two purposes:
 | Purpose | What it contains |
 |---------|-----------------|
 | **Active Plugins** | 13 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
-| **Archived Plugins** | 6 removed plugins with source directories retained in `kit/plugins/` — loadable locally via `--plugin-dir` but not available via `/plugin install` |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
 Every plugin in this repo is a working, production-quality tool you can install and use immediately.
@@ -130,23 +129,19 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 13 plugins in marketplace (6 archived directories retained)
-│       ├── agent-creator/
-│       ├── agent-reviewer/
-│       ├── agentic-plugin-dev/
+│   └── plugins/                  # 13 plugins in marketplace
+│       ├── artifact-tools/
 │       ├── code-review/
-│       ├── code-simplifier/
 │       ├── code-testing-agent/
 │       ├── git-agent/
-│       ├── marketplace-builder/
 │       ├── memory-tools/
 │       ├── plan-agent/
 │       ├── plan-interview/
 │       ├── product-plans/
-│       ├── react-perf-analyzer/
 │       ├── settings-sync/
 │       ├── skill-reviewer/
 │       ├── social-media-tools/
+│       ├── team-defaults/
 │       └── wcag-compliance-reviewer/
 ├── tests/
 │   └── fixtures/                 # Validation test fixtures
@@ -746,18 +741,18 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.3 | development | 2 skills |
-| [code-review](./kit/plugins/code-review/README.md) | 3.3.2 | development | 1 command, 1 skill, 1 agent |
+| [code-review](./kit/plugins/code-review/README.md) | 3.3.3 | development | 1 command, 1 skill, 1 agent |
 | [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.8 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.6 | development | 1 command, 4 skills, 1 hook |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.7 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.0.1 | development | 3 commands, 6 skills, 3 agents |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.1.1 | development | 3 commands, 6 skills, 3 agents |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.10 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.17.0 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 2.22.1 | productivity | 1 command, 9 skills, 8 agents, 4 hooks |
-| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.1.0 | productivity | 1 skill, 2 agents |
-| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.0.0 | development | 3 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.17.2 | productivity | 1 command, 17 skills |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 3.0.1 | productivity | 1 command, 9 skills, 8 agents, 4 hooks |
+| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.1.1 | productivity | 1 skill, 2 agents |
+| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.2.1 | development | 4 skills |
 
 ---
 
@@ -776,22 +771,21 @@ claude --plugin-dir ./kit/plugins/<plugin-name>
 | Plugin | Last Version | Removed | Reason | Replacement |
 |--------|-------------|---------|--------|-------------|
 | `issue-agent` | 0.2.4 | 2026-06-16 | Absorbed into `git-agent` v3.11.0 to reduce plugin count | `/plugin install git-agent@agentics-kit` then `/git-agent:create-issue` |
-| [`agent-creator`](./kit/plugins/agent-creator) | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | Use `agentic-plugin-dev` (also archived; see below) |
-| [`agent-reviewer`](./kit/plugins/agent-reviewer) | 1.0.2 | 2026-05-29 | Overlaps with `skill-reviewer` | `/plugin install skill-reviewer@agentics-kit` |
-| [`marketplace-builder`](./kit/plugins/marketplace-builder) | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | Use `agentic-plugin-dev` (also archived; see below) |
-| [`react-perf-analyzer`](./kit/plugins/react-perf-analyzer) | 1.3.1 | 2026-05-29 | Too specialized for React-only projects | `/plugin install code-review@agentics-kit` |
-| [`agentic-plugin-dev`](./kit/plugins/agentic-plugin-dev) | 1.2.2 | 2026-05-29 | Functionality consolidated into existing skills | `/plugin install skill-reviewer@agentics-kit` |
-| [`code-simplifier`](./kit/plugins/code-simplifier) | 1.0.2 | 2026-05-29 | Structural analysis covered by `code-review` | `/plugin install code-review@agentics-kit` |
+| `agent-creator` | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | No replacement — removed from the marketplace |
+| `agent-reviewer` | 1.0.2 | 2026-05-29 | Overlaps with `skill-reviewer` | `/plugin install skill-reviewer@agentics-kit` |
+| `marketplace-builder` | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | No replacement — removed from the marketplace |
+| `react-perf-analyzer` | 1.3.1 | 2026-05-29 | Too specialized for React-only projects | `/plugin install code-review@agentics-kit` |
+| `agentic-plugin-dev` | 1.2.2 | 2026-05-29 | Functionality consolidated into existing skills | `/plugin install skill-reviewer@agentics-kit` |
+| `code-simplifier` | 1.0.2 | 2026-05-29 | Structural analysis covered by `code-review` | `/plugin install code-review@agentics-kit` |
 
-**To load a removed plugin locally:**
+**To recover a removed plugin's source:**
+
+Their directories are no longer in the working tree. Restore one from git history if you need it for reference:
 
 ```bash
-# Example — load agent-creator for local use
-claude --plugin-dir ./kit/plugins/agent-creator
-
-# Load multiple, mixing active marketplace plugins with archived ones
-claude --plugin-dir ./kit/plugins/code-review \
-       --plugin-dir ./kit/plugins/agent-creator
+# Find the commit that deleted it, then restore that path from its parent
+git log --diff-filter=D --oneline -- kit/plugins/agent-creator
+git checkout <commit>^ -- kit/plugins/agent-creator
 ```
 
 > Re-registering any of these plugins in `marketplace.json` requires explicit confirmation — see the [Removed Plugins registry](./.claude/rules/marketplace.md) for the removal rationale before proceeding.

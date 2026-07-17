@@ -1,6 +1,6 @@
 ---
 name: export-session
-description: Exports a Claude Code session transcript to Markdown in the plans directory. Converts session JSONL into readable reference material. Use when the user asks to export, save, or archive a session as Markdown.
+description: "Exports a Claude Code session transcript to Markdown. Converts session JSONL into readable reference material in the plans directory. Use when asked to export or archive a session."
 allowed-tools: Bash, Read
 ---
 

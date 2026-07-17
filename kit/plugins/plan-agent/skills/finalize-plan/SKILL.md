@@ -1,7 +1,7 @@
 ---
 name: finalize-plan
 model: sonnet
-description: "Marks a plan as completed. Inspects codebase evidence, confirms with the user, ticks acceptance criteria in the Markdown spec, and re-renders the HTML; --all sweeps done-but-unmarked plans. Use via /plan-agent:finalize-plan."
+description: "Marks a plan as completed. Verifies codebase evidence, ticks acceptance criteria, and re-renders the HTML; --all sweeps unmarked plans. Use via /plan-agent:finalize-plan."
 disable-model-invocation: true
 argument-hint: "[plan-file.md|.html] [--all] [--dir <path>]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile

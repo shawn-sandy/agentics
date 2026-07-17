@@ -116,7 +116,7 @@ Execute only **read-only** shell commands found in those sections (e.g. `jq`, `g
   Skill("skill-reviewer:reviewing-skills", <path>)
   ```
   Merge the skill's findings into the master list. Tag each delegated finding with its severity using the rubric in Step 3.
-- If `$CHANGED_FILES` contains any `**/agents/*.md`, invoke `agent-reviewer:reviewing-agents` for each and merge findings.
+- If `$CHANGED_FILES` contains any `**/agents/*.md`, invoke `skill-reviewer:reviewing-skills` for each and merge findings.
 
 ---
 

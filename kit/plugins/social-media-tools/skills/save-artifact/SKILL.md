@@ -1,6 +1,6 @@
 ---
 name: save-artifact
-description: "Saves an HTML Artifact page to the local artifacts inbox for sharing. Copies a chosen .html into .claude/artifacts with a dated name, then publishes it to the deployed artifacts gallery. Use when asked to save or share an artifact."
+description: "Saves an HTML Artifact page to the local artifacts inbox. Copies a chosen .html into .claude/artifacts with a dated name, then publishes it. Use when asked to save or share an artifact."
 allowed-tools: Bash, Read, Write, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
