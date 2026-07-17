@@ -760,12 +760,13 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 The following plugins have been removed from the `agentics-kit` marketplace as of v4.0.0. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
 
-Their source directories are retained in the repository as reference implementations. You can still load any of them locally with `--plugin-dir`:
+Their source directories have been removed from the repository. De-registering a plugin stops distribution but not loading — a directory left under `kit/plugins/` still loads via `--plugin-dir`, collides by name with a live plugin, and consumes skill-description budget in every session. Git history is the reference, so the source is recoverable:
 
 ```bash
 git clone https://github.com/shawn-sandy/agentics.git
 cd agentics
-claude --plugin-dir ./kit/plugins/<plugin-name>
+git log --diff-filter=D --oneline -- kit/plugins/<plugin-name>
+git checkout <commit>^ -- kit/plugins/<plugin-name>
 ```
 
 | Plugin | Last Version | Removed | Reason | Replacement |

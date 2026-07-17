@@ -41,7 +41,11 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "3. description is <=200 chars and three-part (>=2 ' — ' separators)..."
+echo "3. description is three-part: <=200 total, first sentence <=80, has a 'Use when' trigger..."
+# Three-part per .claude/rules/plugin-patterns.md and optimizing-skill-frontmatter:
+# "[Short description (<=80 chars).] [Capability statement.] Use when ...".
+# The parts are sentences, not em-dash clauses — an em-dash-separated run-on has
+# no short first sentence and gets truncated to nothing useful at ~100 skills.
 if python3 - "$SKILL" <<'PY'
 import re, sys
 txt = open(sys.argv[1]).read()
@@ -49,12 +53,14 @@ m = re.search(r'^description:\s*"(.*)"\s*$', txt, re.M)
 if not m:
     sys.exit(1)
 d = m.group(1)
-sys.exit(0 if len(d) <= 200 and d.count(" — ") >= 2 else 1)
+s = re.search(r"(?<=[.!?])\s", d)
+first = len(d[: s.start()] if s else d)
+sys.exit(0 if len(d) <= 200 and first <= 80 and "use when" in d.lower() else 1)
 PY
 then
   echo "  PASS"
 else
-  echo "  FAIL: description >200 chars or not three-part (need >=2 ' — ' separators)"
+  echo "  FAIL: description must be <=200 total, first sentence <=80, and contain a 'Use when' trigger"
   FAILURES=$((FAILURES + 1))
 fi
 
