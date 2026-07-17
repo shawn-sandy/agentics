@@ -1423,7 +1423,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
       <p>The marketplace ships two planning plugins that already operate as one system<br>split by file format. The decision-complete proposal at<br>[docs/proposals/merge-plan-interview-into-plan-agent.md](../proposals/merge-plan-interview-into-plan-agent.md)<br>locks three decisions: **(1)** full merge into `plan-agent` v4.0.0, **(2)**<br>de-register + delete `plan-interview` (recoverable from git history, matching<br>the six prior removals in `.claude/rules/marketplace.md`), and **(3)**<br>plan-agent wins every overlap seam — drop the redundant version, port only<br>capabilities plan-agent lacks entirely.</p>
-      <p>Carry over: `documenting-plans` (skill + command + `plan-documenter` agent),<br>`plan-maintenance` (command), `markdown-to-html` (skill + command + assets),<br>`plan-status` (skill + command, as legacy `.md` support), and the ExitPlanMode<br>nudge hook. Drop: `plan-interview`, `plan-to-html`, `plan-hygiene`,<br>`review-rename-plans`. `deep-grill` is the one open decision (see Unresolved<br>Questions).</p>
+      <p>Carry over: `documenting-plans` (skill + command + `plan-documenter` agent),<br>`plan-maintenance` (command), `markdown-to-html` (skill + command + assets),<br>`plan-status` (skill + command, as legacy `.md` support), `deep-grill` (skill +<br>command — kept for its node-by-node decision walk, a distinct mode from the<br>review-plan team), and the ExitPlanMode nudge hook. Drop: `plan-interview`,<br>`plan-to-html`, `plan-hygiene`, `review-rename-plans`.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1472,12 +1472,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Copy the carry-over components from plan-interview into plan-agent preserving directory shape: skills documenting-plans, markdown-to-html (with its assets, reference, scripts), and plan-status; commands documenting-plans.md, plan-maintenance.md, markdown-to-html.md, plan-status.md, update-plan-status.md; and agents/plan-documenter.md.</span>
+                <span class="step-chip-text">Copy the carry-over components from plan-interview into plan-agent preserving directory shape: skills documenting-plans, markdown-to-html (with its assets, reference, scripts), plan-status, and deep-grill; commands documenting-plans.md, plan-maintenance.md, markdown-to-html.md, plan-status.md, update-plan-status.md, deep-grill.md; and agents/plan-documenter.md.</span>
               </div>
-              <div class="step-why">these have no plan-agent counterpart and decision 3 ports only unique capability.</div>
+              <div class="step-why">these have no plan-agent counterpart and decision 3 ports only unique capability — deep-grill is kept for its node-by-node decision walk, a mode the review-plan team does not cover.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`ls kit/plugins/plan-agent/skills/` shows documenting-plans, markdown-to-html, and plan-status, and the agent plus commands exist under plan-agent.</div>
+                <div class="verify-body">`ls kit/plugins/plan-agent/skills/` shows documenting-plans, markdown-to-html, plan-status, and deep-grill, and the agent plus commands exist under plan-agent.</div>
               </details>
             </div>
           </div>
