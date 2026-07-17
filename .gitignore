@@ -61,3 +61,7 @@ docs/media/social/gap-preview-*
 
 # Build output
 dist/
+
+# Python bytecode from plugin hooks (generated when a hook runs)
+__pycache__/
+*.pyc

@@ -46,4 +46,4 @@ Options:
 - "Yes — I'll copy a `code-share prompt` from the digest and run it"  
 - "No — I'm done for now"
 
-Do not invoke `share-code` automatically regardless of the user's answer. The user must run the `/social-media-tools:share-code` command themselves.
+Do not invoke `share-code` automatically regardless of the user's answer. The user must trigger the `share-code` skill themselves by pasting a `code-share prompt` from the digest into the chat.

@@ -46,7 +46,7 @@ claude --plugin-dir ./kit/plugins/team-defaults
 team-defaults/
 ├── .claude-plugin/plugin.json
 ├── agents/
-│   ├── code-comments.md     (ts-commenter)
+│   ├── ts-commenter.md
 │   └── css-generator.md
 └── skills/
     └── sync-rules/

@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-ux
 description: Reviews UI implementation plans for user experience fitness, interaction design clarity, and flow coherence. Use only for plans that touch React, Vue, UI components, or user-facing flows.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

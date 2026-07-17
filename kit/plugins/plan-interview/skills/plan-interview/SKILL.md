@@ -61,8 +61,8 @@ Mark each todo `status: "completed"` as you finish that step.
 
 Use the first match from this priority order:
 
-1. **User message**: If a file path appears in the user's message, treat it as
-   the plan file path and read it directly.
+1. **Argument**: If a file path appears in `$ARGUMENTS` or the user's message,
+   treat it as the plan file path and read it directly.
 2. **Currently open file**: If no path was given, check whether a `.md` file is
    currently open or selected in the IDE (provided via context). If it exists
    and its content looks like a plan (contains headings like
@@ -297,10 +297,13 @@ the skill's frontmatter.
    known Claude tool names (match as whole words or within backticks):
 
    ```
-   Read, Write, Edit, MultiEdit, Glob, Grep, Bash, AskUserQuestion,
+   Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion,
    TodoWrite, Agent, WebFetch, WebSearch, NotebookRead, NotebookEdit,
    ToolSearch, ExitPlanMode
    ```
+
+   Do not add `MultiEdit` to this list — it was retired from Claude Code, so
+   recommending it grants nothing and silently degrades whatever depends on it.
 
    Also detect filtered patterns such as `Bash(git *)` or `Bash(gh *)`.
 

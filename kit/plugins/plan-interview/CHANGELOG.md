@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.0.0 — 2026-07-17 — Commands delegate to their skills instead of restating them
+
+> **Major, not minor.** No command was removed or renamed, but `/plan-interview:plan-status` and `/plan-interview:documenting-plans` now behave differently for existing users — see *Behaviour changes* below. `marketplace.md` classifies a change in activation behaviour as MAJOR, and collapsing a command onto its skill is exactly that when the two had drifted apart.
+
+### Changed
+
+- **`deep-grill`, `plan-status`, `documenting-plans`, and `plan-interview` are now thin delegators.** Each command restated its same-named skill's entire workflow instead of invoking it, and the copies had drifted 20, 153, 383, and 397 lines apart respectively — so the same name produced different behaviour depending on whether the user typed the command or triggered the skill, with no way to tell which they had invoked. Each is now frontmatter plus a single `Skill(...)` call, the shape `plan-to-html.md` already used. `argument-hint` values are preserved and invocation is unchanged; the behaviour you get is now the skill's, always.
+- **`plan-status`'s description now advertises the skill's type taxonomy.** It read `(standard, artifact)` — the command copy's taxonomy. The delegated skill classifies as `(feature, fix, refactor, docs, chore)`, matching the repo's `plan-mode.md` convention, so the old description advertised behaviour that no longer exists. This is the one command whose description changed; the other three are byte-preserved.
+- **`deep-grill`, `plan-status`, `documenting-plans`, and `plan-interview` skills resolve their path from `$ARGUMENTS` or the user's message.** Previously the skills read only "a path in the user's message" while their command copies read `$ARGUMENTS` — the concrete divergence that made command and skill behave differently on the same input.
+
+### Behaviour changes (read before upgrading)
+
+Collapsing each command onto its skill means you now always get the skill's behaviour. Where the two genuinely disagreed, the skill wins — these are the cases where that is user-visible:
+
+- **`/plan-interview:plan-status` no longer asks you to classify a completed plan as `standard` or `artifact`.** The command prompted for that taxonomy; the skill instead infers `feature|fix|refactor|docs|chore` from the filename and body, which is the taxonomy `plan-mode.md` documents and the one the rest of the repo uses. No plan in this repo carries `type: artifact`, and the legacy `status: artifact` normalization is preserved (see above), so nothing is stranded. `update-plan-status.md` still uses the older taxonomy and is left unreconciled.
+- **`/plan-interview:documenting-plans` now refuses plans less than 30 days old.** The skill gates on age ("only runs on completed plans that are 30+ days old"); the command never did. The refusal is explicit, not silent — it tells you why and stops. If you need docs for a fresh plan, invoke the skill's steps directly.
+
+### Added
+
+- **`plan-status` normalizes the legacy `artifact` status.** A plan carrying `status: artifact` is now surfaced to the user, treated as `completed`, and reclassified — behaviour that lived only in the command copy and would have been lost in the collapse.
+
 ## v2.2.8 — 2026-06-20 — Standardize plans-directory resolution (Claude settings precedence)
 
 ### Fixed

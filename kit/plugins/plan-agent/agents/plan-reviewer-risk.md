@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer-risk
 description: Reviews implementation plans for risks and failure modes — identifying breaking changes, data loss, concurrency issues, and dependency hazards.
-allowed-tools: Read, Glob, Grep, Bash
+tools: Read, Glob, Grep, Bash(git *)
 model: sonnet
 ---
 

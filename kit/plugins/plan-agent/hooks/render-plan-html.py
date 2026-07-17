@@ -3,9 +3,11 @@
 PostToolUse hook: re-render a plan's sibling HTML after its Markdown spec is
 written.
 
-Fires on every Write/Edit/MultiEdit. Triggers only when the written file is a
-Markdown plan spec (first heading is "# Plan:") inside the configured plans
-directory. Renders <stem>.html next to the spec via build-plan-html.mjs —
+Invoked by hooks/dispatch.py (registered on Write/Edit/MultiEdit), which only
+calls this script for paths under the plans directory. Triggers only when the
+written file is a Markdown plan spec (first heading is "# Plan:") inside the
+configured plans directory. Renders <stem>.html next to the spec via
+build-plan-html.mjs —
 preferring the copy bundled with this plugin ($CLAUDE_PLUGIN_ROOT/scripts/),
 falling back to the consumer project's scripts/build-plan-html.mjs; when
 neither exists the hook silently skips. After a successful render it rebuilds

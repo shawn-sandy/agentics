@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0 — 2026-07-17 — Scope both agents and make ts-commenter findable
+
+### Changed
+
+- **`agents/code-comments.md` renamed to `agents/ts-commenter.md`** to match its `name: ts-commenter` field. The registered agent name is unchanged — it was already `ts-commenter` — so invocation is unaffected; only the file was hard to locate.
+- **`ts-commenter`'s description now leads with a trigger.** It was a capability blurb ("TypeScript documentation specialist that generates...") with no WHEN, so the agent would not reliably activate. It now states when to use it, which is the difference between an agent that exists and one that gets used.
+
+### Fixed
+
+- **`ts-commenter` declared no `tools:` at all**, so a JSDoc writer inherited Bash, WebFetch, and Agent. It is now scoped to `Read, Edit, Glob, Grep`.
+- **`css-generator` declared `MultiEdit`, a tool that no longer exists in Claude Code** — a phantom grant that silently degraded any behaviour depending on it. Its tool list is now `Read, Write, Edit, Bash, WebFetch`, and it declares an explicit `model: sonnet` rather than leaving tier selection to inheritance.
+- `skills/sync-rules/rules/typescript-jsdoc.md` referred to the agent as `code-comments`; it now names `ts-commenter`.
+
 ## 0.1.1 — 2026-07-16 — Trim sync-rules description to budget
 
 ### Fixed
