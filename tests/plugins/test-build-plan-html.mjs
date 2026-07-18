@@ -220,12 +220,12 @@ ok('derived effort follows the skill thresholds', () => {
 ok('implement and goal meta tags reference the markdown spec path, not the HTML', () => {
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature. Before reporting done, verify the objective is met and every acceptance criterion and check passes">'
+      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature. Then verify before reporting done:'
     )
   );
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome. Before reporting done, verify the outcome is achieved and every check in the plan passes">'
+      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome. Then verify before reporting done:'
     )
   );
   assert.ok(sampleHtml.includes('<meta name="plan-md" content="docs/plans/sample.md">'), 'plan-md meta carries the spec path');
@@ -246,6 +246,28 @@ ok('workflow meta tag omitted for small specs, present for wide ones', () => {
   ));
   const wideHtml = renderPlanHtml(wide, { fileName: 'w.html', planPath: 'w.html' });
   assert.ok(wideHtml.includes('<meta name="plan-workflow" content="Run a workflow to implement the plan at w.md'));
+});
+
+ok('every prompt carries the verify-then-mark-completed gate', () => {
+  // An agent handed any of these prompts must run the checks AND record the
+  // result in the spec — a plan left at status: todo is not "done".
+  const wide = parseSpecMarkdown(SAMPLE_SPEC.replace(
+    /## Files[\s\S]*?## Steps/,
+    '## Files\n- a/one.mjs (new)\n- b/two.mjs (new)\n- c/three.mjs (new)\n- d/four.mjs (new)\n- e/five.mjs (new)\n\n## Steps'
+  ));
+  const html = renderPlanHtml(wide, { fileName: 'w.html', planPath: 'w.html' });
+  const prompts = ['plan-implement', 'plan-goal', 'plan-workflow'].map((name) => {
+    const m = html.match(new RegExp(`<meta name="${name}" content="([^"]*)"`));
+    assert.ok(m, `${name} meta tag is present`);
+    return m[1];
+  });
+  for (const p of prompts) {
+    assert.match(p, /run the objective test&#39;s Run command/, 'names the runnable check');
+    assert.match(p, /walk the Verification section/, 'names end-to-end verification');
+    assert.match(p, /confirm every acceptance criterion holds/, 'names the criteria check');
+    assert.match(p, /set status: completed/, 'marks the plan completed');
+    assert.match(p, /leave status: in-progress/, 'has a failure path that does not mark done');
+  }
 });
 
 /* ── Unit: Next Steps section ─────────────────────────────────────── */

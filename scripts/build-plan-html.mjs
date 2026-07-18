@@ -172,12 +172,16 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
 
   const specPath = mdPath || (/\.html$/i.test(path) ? path.replace(/\.html$/i, '.md') : `${path}.md`);
 
-  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. Before reporting done, verify the objective is met and every acceptance criterion and check passes`;
-  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome. Before reporting done, verify the outcome is achieved and every check in the plan passes`;
+  // Every prompt ends with the same gate: verify, then record completion in the
+  // spec. Without it an agent reports "done" on a plan still marked todo.
+  const verifyTail = `Then verify before reporting done: run the objective test's Run command from the plan's Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.`;
+
+  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. ${verifyTail}`;
+  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome. ${verifyTail}`;
   const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
   const wantsWorkflow = md.workflow === 'true' || (md.workflow !== 'false' && fileCount >= 5 && dirCount >= 3);
   const workflow = wantsWorkflow
-    ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Before reporting done, verify the objective is met and every acceptance criterion and check passes`
+    ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Reserve a final verification phase for the lead agent, not a subagent. ${verifyTail}`
     : '';
 
   const main = [];

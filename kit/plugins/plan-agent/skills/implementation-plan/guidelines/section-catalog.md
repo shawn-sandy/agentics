@@ -59,6 +59,10 @@ as `checked` attribute edits in the HTML.
 Prose (one or more paragraphs) describing the end-to-end confirmation that
 the whole change achieved the objective. Rendered under "Final check".
 
+Must name at least one check someone else could re-run: a command with its
+expected result, or a specific observable end state (file contents, rendered
+output, HTTP response). "Confirm it works" is not a verification.
+
 ## Optional sections (include when they earn their place)
 
 ### `## Context`
@@ -105,7 +109,12 @@ Tier 1 — This plan changes application code
 Tier rules: **Tier 1** when any step creates, modifies, or deletes
 application source files — include the objective test plus whichever of
 unit/integration/E2E apply (never empty stubs). **Tier 2** when steps only
-touch docs, plans, or non-runtime metadata — the objective test alone. Keep
+touch docs, plans, or non-runtime metadata — the objective test alone, whose
+**Run** is a plain shell command that exits non-zero when the objective is
+not met (`grep -q '<expected text>' <file>`, `test -f <path>`, a script) —
+there is no test runner, but there is still a command. Every objective test
+carries a **Run** command, both tiers; a plan with no runnable completion
+check is not finished being planned. Keep
 the tier line's `Tier 1 — ` / `Tier 2 — ` prefix; tooling matches on it.
 Judge the tier by what the steps actually do, not the `type:` frontmatter.
 
@@ -119,7 +128,10 @@ is the self-contained paste-ready prompt, and any other indented lines are
 description prose. Bullet-less content (or lines before the first bullet)
 renders as plain paragraphs. Label blue-sky items as wish list. Prompts must
 be self-contained — name the repo, files, version bump, and CHANGELOG so the
-follow-up can run in a fresh session.
+follow-up can run in a fresh session. Each prompt ends with its own
+verification instruction: the command to run or state to confirm before
+reporting done. These prompts run in a fresh session with no plan behind
+them, so the check has to travel inside the prompt.
 
 ```markdown
 ## Next Steps

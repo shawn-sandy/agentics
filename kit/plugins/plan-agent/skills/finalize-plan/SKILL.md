@@ -171,7 +171,12 @@ Locate the objective-verification test and extract its **Run** field — the tes
 - If a **Run** command is present, execute it and capture the exit status:
   - Exit 0 → objective test = `pass`
   - Non-zero → objective test = `fail`
-- If no objective test or no **Run** command is found → objective test = `n/a`.
+- If no objective test or no **Run** command is found (older plans predate the
+  always-runnable rule), derive one from the plan's Objective and Verification
+  sections — a test-runner invocation for code plans, a plain shell command
+  (`grep -q '<expected>' <file>`, `test -f <path>`) for docs/metadata plans —
+  and run it. Report it as derived so the user can see what was checked. Only
+  when no objective can be reduced to a command → objective test = `n/a`.
 
 Do not auto-fix here — `finalize-plan` only inspects and confirms. Carry the result into Step 4 so the user sees it before deciding whether to mark the plan completed.
 
