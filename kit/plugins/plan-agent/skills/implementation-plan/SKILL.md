@@ -132,10 +132,17 @@ Echo the resolved objective and effective flags after Step 0.
 
 `build-plan-html.mjs` computes everything derivable from the spec:
 
+- **Verification gate (shared by all three prompts)** — every generated
+  prompt ends with the same tail: run the objective test's **Run** command,
+  walk the Verification section, confirm every acceptance criterion, then
+  mark completion in the spec (`[x]` step markers, `- [x]` criteria,
+  `status: completed`) and re-render. A failed check leaves
+  `status: in-progress` and names the failing check. A prompt that says
+  "implement this" without the gate lets an agent report done on a plan
+  still marked `todo` — never emit one.
 - **Implement prompt** —
-  `Read and implement all steps in the plan at <filepath> — <objective>.
-  Before reporting done, verify the objective is met and every acceptance
-  criterion and check passes`, rendered as the single visible call-to-action
+  `Read and implement all steps in the plan at <filepath> — <objective>.`
+  plus the verification gate, rendered as the single visible call-to-action
   row and the `plan-implement` meta tag. `<filepath>` is the **markdown
   spec's** relative path, not the HTML's — an implementing agent reads the
   ~5–10 KB spec instead of the 60–120 KB rendered page, and updates
@@ -147,15 +154,14 @@ Echo the resolved objective and effective flags after Step 0.
   every step and criterion complete — never hand-edit the HTML.
 - **Goal prompt** — always present: `Achieve this goal: <objective>. The
   plan at <filepath> describes one approach — use it as reference, but
-  optimize for the outcome. Before reporting done, verify the outcome is
-  achieved and every check in the plan passes` (same spec `<filepath>`).
-  Emitted as the
+  optimize for the outcome.` plus the verification gate (same spec
+  `<filepath>`). Emitted as the
   `plan-goal` meta tag and the "Pursue as goal" drawer row with its
   `copyGoal(this)` copy button.
 - **Workflow prompt** — `Run a workflow to implement the plan at <filepath>
-  — <objective>. Brief subagents with the plan file at <filepath>. Before
-  reporting done, verify the objective is met and every acceptance criterion
-  and check passes` (same
+  — <objective>. Brief subagents with the plan file at <filepath>. Reserve a
+  final verification phase for the lead agent, not a subagent.` plus the
+  verification gate (same
   spec `<filepath>` — every subagent briefed with the compact spec). Emitted
   (row + `plan-workflow` meta tag) only when frontmatter says
   `workflow: true` or the heuristic fires (5+ files across 3+ top-level
@@ -449,9 +455,12 @@ EOF
    2. Run the objective-verification test via its authored **Run** command;
       run the other test entries via the project's test runner against
       their **File** paths (they carry no per-card run command). No
-      detectable runner → run only the objective test and say so. Tier 2
-      with nothing runnable → walk the Verification section and confirm end
-      state by inspection.
+      detectable runner → run only the objective test and say so. The
+      objective test's **Run** command always exists and always runs — Tier
+      2 included, where it is a plain shell command (`grep -q`, `test -f`).
+      If the spec somehow has no **Run**, author one now against the
+      objective, re-render, then run it; never fall back to inspection
+      alone.
    3. Confirm the objective test passes and every verification step holds.
    4. **On failure — fix and re-verify (bounded loop):** diagnose, fix the
       source files, re-run from sub-step 2, up to 3 times. Still failing →

@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.1.0 — Verification gate in every generated prompt (2026-07-18)
+
+- The implement, goal, and workflow prompts now share one verification tail: run the objective test's **Run** command, walk the Verification section, confirm every acceptance criterion, then mark completion in the spec (`[x]` steps, `- [x]` criteria, `status: completed`) and re-render. A failed check leaves `status: in-progress` and names what failed.
+- Workflow prompts reserve the final verification phase for the lead agent rather than a subagent.
+- Authored `## Next Steps` prompts must carry their own verification instruction — they run in a fresh session with no plan behind them.
+- The Copy-button prompt now names the objective test's **Run** command explicitly and refuses to mark the plan done on a failing check; `reference/SKELETON.html` was stale against `plan-shell.mjs` and is re-synced.
+- New renderer test asserts all three prompts carry the verify-then-mark-completed gate.
+
+## 4.0.1 — Always-runnable completion check (2026-07-18)
+
+- Every objective-verification test now carries a **Run** command in both tiers. Tier 2 (docs/metadata) plans use a plain shell command (`grep -q`, `test -f`) instead of a test runner, so there is no longer a "nothing runnable" case.
+- `implementation-plan`'s end-to-end gate no longer falls back to inspection-only for Tier 2 — a missing **Run** is authored on the spot, re-rendered, and run.
+- `## Verification` must name a re-runnable command or a specific observable end state; "confirm it works" is rejected.
+- `finalize-plan` derives and runs an objective check for older plans that lack one, reporting it as derived, instead of silently recording `n/a`.
+
 ## 4.0.0 — Merge `plan-interview` into `plan-agent` (2026-07-17)
 
 **BREAKING:** the standalone `plan-interview` plugin is de-registered and deleted (source recoverable from git history). Its unique capabilities are now first-class `plan-agent` skills, commands, an agent, and a hook. The redundant overlap — the multi-round interview skill, product-plan routing, and HTML artifact generation — is **dropped** in favor of plan-agent's built-in Step 5b interview and the `review-plan` Agent Team.
