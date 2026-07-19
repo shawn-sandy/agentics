@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.18.0 — 2026-07-19 — media-library: assert card count against source count
+
+### Added
+
+- **`media-library` now checks its own output.** After writing `docs/media/social/index.html` it confirms the file parses and its card count matches the number of card files scanned. The gallery is rebuilt from a directory scan, and its failure mode is silent card loss — an index that writes successfully with cards missing. On a mismatch it reports the index path, the card count, and the source count, then stops instead of opening a gallery it cannot vouch for.
+
 ## v2.17.5 — 2026-07-17 — Repoint write-guide plan-docs handoff to plan-agent
 
 ### Changed

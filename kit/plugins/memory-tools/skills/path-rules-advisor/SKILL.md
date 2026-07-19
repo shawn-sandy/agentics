@@ -1,7 +1,7 @@
 ---
 name: path-rules-advisor
 description: "Creates path-specific rule files in .claude/rules/. Analyzes project structure and generates scoped rules for file types or directories. Use when the user wants to add path-specific rules."
-allowed-tools: AskUserQuestion, Edit, Glob, Read, Write
+allowed-tools: AskUserQuestion, Bash(git *), Bash(python3 *), Edit, Glob, Read, Write
 ---
 
 Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by the user's message.
@@ -15,6 +15,8 @@ Does not create or overwrite global memory entries — use agentic-memory-doctor
 - [Mode A — Argument provided](#mode-a--argument-provided)
 - [Mode B — No argument (analysis mode)](#mode-b--no-argument-analysis-mode)
 - [Rule file format](#rule-file-format)
+- [Verify the write](#verify-the-write)
+- [Verification gate](#verification-gate)
 - [Notes](#notes)
 
 ---
@@ -99,7 +101,9 @@ paths:
 
 Ask: "Should I write this to `.claude/rules/<filename>`?"
 
-Wait for explicit confirmation. Do not write the file until confirmed. After writing, confirm the file path to the user.
+Wait for explicit confirmation. Do not write the file until confirmed. Apply the
+[verification gate](#verification-gate) to any file being overwritten before writing. After writing,
+run [Verify the write](#verify-the-write) on the new file, then confirm the file path to the user.
 
 ---
 
@@ -186,7 +190,9 @@ For each rule file the user approves:
 3. Expand the extracted content into 3–5 well-formed rule bullets
 4. Write `.claude/rules/<name>.md` with `paths:` frontmatter
 
-Show each file in a code block before writing. Confirm after each write.
+Show each file in a code block before writing. Apply the
+[verification gate](#verification-gate) to CLAUDE.md and to any rule file being overwritten before
+writing. After each write, run [Verify the write](#verify-the-write) on that file, then confirm.
 
 **Step 7 — Offer to update CLAUDE.md**
 
@@ -199,6 +205,8 @@ If confirmed, replace the extracted section in CLAUDE.md with:
 ```markdown
 # See .claude/rules/<name>.md
 ```
+
+Then run [Verify the write](#verify-the-write) on CLAUDE.md.
 
 If the user declines, leave CLAUDE.md unchanged.
 
@@ -237,6 +245,53 @@ This expands to match multiple extensions or directories in a single rule.
 - Use double quotes around glob patterns in the YAML frontmatter
 - Title should be human-readable and describe the scope (e.g., "API Endpoint Rules", "Test File Standards")
 - Rules must be concrete and actionable — not summaries or vague guidance
+
+---
+
+## Verify the write
+
+Run this immediately after every file write (Mode A Step 7, Mode B Steps 6 and 7). Show the
+resulting diff, then assert the file still parses with valid frontmatter and a non-empty body.
+
+```bash
+TARGET="<path just written>"
+if git ls-files --error-unmatch "$TARGET" >/dev/null 2>&1; then
+  git --no-pager diff -- "$TARGET"
+else
+  git --no-pager diff --no-index -- /dev/null "$TARGET" || true
+fi
+python3 - "$TARGET" <<'EOF'
+import sys
+path = sys.argv[1]
+text = open(path, encoding='utf-8').read()
+body = text
+if text.startswith('---\n'):
+    end = text.find('\n---', 3)
+    if end == -1:
+        sys.exit(f"MALFORMED: {path} opens a frontmatter block that is never closed")
+    for n, line in enumerate(text[4:end].splitlines(), 2):
+        s = line.strip()
+        if s and not s.startswith(('#', '- ')) and ':' not in s:
+            sys.exit(f"MALFORMED: {path} line {n}: expected a YAML key/value, got {s!r}")
+    body = text[end + 4:]
+if not body.strip():
+    sys.exit(f"EMPTY: {path} has no body content")
+print(f"OK: {path} parses, {len(body.strip().splitlines())} body lines")
+EOF
+```
+
+Rule files must always clear this check — a rule file with no `paths:` frontmatter or no bullets
+loads as dead weight in every future session.
+
+If the command exits non-zero, **STOP**. Report the failure with the file path and the printed
+reason, tell the user to restore from their backup (`git checkout -- <path>` where the file is
+tracked), and do not attempt a second write.
+
+### Verification gate
+
+Run the same parse check on the *input* before any write. If the CLAUDE.md resolved in Mode B
+Step 1, or an existing rule file being overwritten, opens with a `---` block that is unterminated
+or contains a non key/value line, REPORT rather than write.
 
 ---
 

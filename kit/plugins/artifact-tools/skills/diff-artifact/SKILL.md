@@ -1,7 +1,7 @@
 ---
 name: diff-artifact
 description: "Publishes an annotated diff walkthrough as a claude.ai artifact. Scrubs for secrets, then builds a self-contained page with per-hunk reviewer notes. Use when asked to publish or share a diff."
-allowed-tools: Bash, Read, Write, Skill, Artifact, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash, Read, Write, Skill, Artifact, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # diff-artifact
@@ -208,3 +208,15 @@ holds the page, with no `artifact-url:` line since nothing was published. Say
 plainly that publishing did not happen and why, give the path, and offer
 `social-media-tools:save-artifact` to publish it into the repo's GitHub Pages
 artifacts gallery instead. Never report a URL that a publish did not return.
+
+## Step 8 — Verify the page rendered
+
+Runs only after a successful publish. `WebFetch` is a deferred tool: use
+`ToolSearch` with `select:WebFetch` first.
+
+Fetch the returned URL and confirm the fetched page contains the first changed
+filename from the diff. A returned URL is not evidence the page rendered — a
+blank artifact returns a URL too.
+
+If that filename is absent, report the failure **with the URL** so the user can
+open it, and do not report the publish as successful.

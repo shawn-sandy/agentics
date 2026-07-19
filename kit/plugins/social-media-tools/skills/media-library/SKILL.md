@@ -102,7 +102,38 @@ If no directory is found: output "Templates not found. Install the plugin or loa
 
 ---
 
-## Step 4 — Open in browser
+## Step 4 — Verify the index
+
+Confirm the written file parses as HTML and renders one card per scanned file. `SOURCE_COUNT` is the number of lines in `$MEDIA_FILES` (Step 1); `CARD_COUNT` is the number of `class="gallery-card"` anchors in the written index.
+
+```bash
+SOURCE_COUNT=$(printf '%s\n' "$MEDIA_FILES" | grep -c . )
+python3 - "$MEDIA_DIR/index.html" "$SOURCE_COUNT" <<'EOF'
+import sys
+from html.parser import HTMLParser
+
+path, expected = sys.argv[1], int(sys.argv[2])
+html = open(path, encoding='utf-8').read()
+
+class Counter(HTMLParser):
+    cards = 0
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a' and 'gallery-card' in dict(attrs).get('class', '').split():
+            self.cards += 1
+
+c = Counter()
+c.feed(html)  # raises on unparseable markup
+print(f"OK: {c.cards} cards from {expected} files" if c.cards == expected
+      else f"MISMATCH: index has {c.cards} cards but {expected} files were scanned")
+sys.exit(0 if c.cards == expected else 1)
+EOF
+```
+
+If the command exits non-zero, report the mismatch to the user — naming the index path, the card count, and the source count — and **STOP** instead of opening the gallery.
+
+---
+
+## Step 5 — Open in browser
 
 ```bash
 GALLERY_PATH=$(realpath "docs/media/social/index.html" 2>/dev/null || echo "${PWD}/docs/media/social/index.html")
@@ -113,7 +144,7 @@ Tell the user: "Media library generated at `docs/media/social/index.html` with {
 
 ---
 
-## Step 5 — Optional follow-up
+## Step 6 — Optional follow-up
 
 If the user asks to view copy text from a specific card after seeing the library:
 
@@ -138,6 +169,6 @@ If the user asks to view copy text from a specific card after seeing the library
 
 ---
 
-## Step 6 — Stop
+## Step 7 — Stop
 
 **STOP.** Do not invoke any other skills or run git commands after delivering.

@@ -164,7 +164,38 @@ GENERATED_AT=$(date '+%Y-%m-%d %H:%M')
 
 ---
 
-## Step 6 — Open in browser
+## Step 6 — Verify the index
+
+Confirm the written file parses as HTML and renders one card per scanned plan. `SOURCE_COUNT` is the number of lines in `$PLAN_FILES` (Step 3); `CARD_COUNT` is the number of `class="gallery-card"` anchors in the written index.
+
+```bash
+SOURCE_COUNT=$(printf '%s\n' "$PLAN_FILES" | grep -c . )
+python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT" <<'EOF'
+import sys
+from html.parser import HTMLParser
+
+path, expected = sys.argv[1], int(sys.argv[2])
+html = open(path, encoding='utf-8').read()
+
+class Counter(HTMLParser):
+    cards = 0
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a' and 'gallery-card' in dict(attrs).get('class', '').split():
+            self.cards += 1
+
+c = Counter()
+c.feed(html)  # raises on unparseable markup
+print(f"OK: {c.cards} cards from {expected} plans" if c.cards == expected
+      else f"MISMATCH: index has {c.cards} cards but {expected} plans were scanned")
+sys.exit(0 if c.cards == expected else 1)
+EOF
+```
+
+If the command exits non-zero, report the mismatch to the user — naming the index path, the card count, and the source count — and **STOP** instead of opening the gallery.
+
+---
+
+## Step 7 — Open in browser
 
 ```bash
 GALLERY_PATH=$(realpath "$PLANS_DIR/index.html" 2>/dev/null || echo "$PLANS_DIR/index.html")
@@ -176,6 +207,6 @@ Tell the user:
 
 ---
 
-## Step 7 — Stop
+## Step 8 — Stop
 
 **STOP.** Do not run git commands or invoke other skills after delivering the gallery.

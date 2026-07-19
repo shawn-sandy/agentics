@@ -5,6 +5,24 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-19
+
+### Added
+
+- All four skills now fetch their published artifact URL back and assert an
+  expected marker before reporting success — the plan title (`plan-artifact`),
+  the diff's first changed filename (`diff-artifact`), the recap `<title>`
+  (`session-artifact`), and the prompt H1 or every card title in library mode
+  (`prompt-artifact`). A returned URL was never evidence the page rendered: a
+  blank artifact returns one too, and publishing is outward-facing and hard to
+  reverse. On a missing marker the skill reports the failure with the URL
+  instead of reporting success.
+
+- `WebFetch` added to each of the four skills' `allowed-tools:`, alongside a
+  note to load it via `ToolSearch` with `select:WebFetch`. None declared it, and
+  an undeclared tool would stall the new check on a permission prompt exactly
+  when these skills tend to run unattended.
+
 ## [1.2.1] - 2026-07-15
 
 ### Fixed
