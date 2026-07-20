@@ -115,6 +115,17 @@ Run the first match. If tests fail, report the failing output verbatim and
 continue — never start a watch-mode script, which would hang the pipeline
 forever.
 
+**Lint.** Detect a lint script:
+
+```
+jq -r '.scripts | keys[] | select(test("^lint")) | select(test("fix|watch") | not)' package.json 2>/dev/null
+```
+
+Run the first match. If lint fails, report the failing output verbatim and
+**STOP** — catching it here saves a full CI round-trip through Step 6b. Do not
+auto-apply `--fix` at this stage; the user has not seen the diff yet. If no
+lint script exists, say so and continue.
+
 **Browser preview.** Only if the change is observable in a browser (it renders,
 serves, or logs something the dev server exercises). Skip otherwise — a server
 that can't prove anything is wasted time.
@@ -272,6 +283,15 @@ via `gh` noting the commit that addresses it.
 If the comment is ambiguous, architecturally significant, or open to multiple
 interpretations: use **AskUserQuestion** with enough context that the user can
 answer without scrolling back. Do not guess.
+
+If the finding is **wrong** — it misreads the code, describes state that no
+longer exists, or repeats something already declined on this PR: do not push a
+no-op fix to silence it. Reply once on the thread with the specific reason
+(`gh pr comment` for a top-level review, `gh api` on the review-comment id for
+an inline thread), resolve the thread, and move on. Keep the reply to a
+sentence or two — a re-firing bot will not remember it next round. If the same
+bot raises the same refuted finding again, skip it silently rather than
+replying twice.
 
 ### 6d: Commit and let the next event drive
 

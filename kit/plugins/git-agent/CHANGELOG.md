@@ -1,5 +1,15 @@
 # Changelog — git-agent
 
+## v4.2.0 — 2026-07-20 — Test Plan in PR bodies, lint gate, refuted-finding replies
+
+### Added
+
+- **`## Test Plan` section in PR bodies** (`pr-agent`, `ship`) — a checklist of the commands a reviewer runs to verify the change. Boxes may only be checked for work actually verified in-session; an unchecked box is honest, a false checkmark is not.
+- **Lint gate in `ship-autonomous` Step 2.5** — runs the project's first non-`fix`, non-`watch` `lint*` script alongside the test suite and stops on failure, catching lint locally instead of a full CI round-trip later in Step 6b. No auto-`--fix` at this stage: the user has not seen the diff yet.
+- **Refuted-finding path in `ship-autonomous` §6c** — a review comment that misreads the code, describes stale state, or repeats a declined finding is answered with one short reply on the thread and resolved, not silenced with a no-op commit. A repeat of the same refuted finding is skipped silently.
+
+---
+
 ## v4.1.1 — 2026-07-16 — Trim ship-autonomous description to budget
 
 ### Fixed
