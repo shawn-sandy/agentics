@@ -24,14 +24,14 @@ This plugin provides two auto-activated skills. Invoke them by describing what y
 
 | Skill | Activation | Allowed Tools |
 |-------|-----------|---------------|
-| `memory-tools:agentic-memory-doctor` | Auto — triggers when user asks to "audit", "optimize", "review", "clean up", or "diagnose" a CLAUDE.md or project memory file; also activates when user reports Claude ignoring instructions | `AskUserQuestion`, `Glob`, `Grep`, `Read`, `Write` |
+| `memory-tools:agentic-memory-management` | Auto — triggers when user asks to "audit", "optimize", "review", "clean up", or "diagnose" a CLAUDE.md or project memory file; also activates when user reports Claude ignoring instructions | `AskUserQuestion`, `Glob`, `Grep`, `Read`, `Write` |
 | `memory-tools:path-rules-advisor` | Auto — triggers when user wants to create path-specific rules, add rules for file types or directories, or organize `.claude/rules/` | `AskUserQuestion`, `Edit`, `Glob`, `Read`, `Write` |
 
 Both skills are auto-activated — there is no manual slash command. Just describe your intent.
 
 ---
 
-### agentic-memory-doctor
+### agentic-memory-management
 
 Audits a CLAUDE.md file against a 6-dimension scoring rubric and optionally rewrites it.
 
@@ -79,7 +79,7 @@ Analyze my project and suggest what should go in .claude/rules/
 Organize my Claude rules into scoped files
 ```
 
-**Does not cover:** Creating or overwriting CLAUDE.md or global memory entries — use `agentic-memory-doctor` for that.
+**Does not cover:** Creating or overwriting CLAUDE.md or global memory entries — use `agentic-memory-management` for that.
 
 ---
 
@@ -94,7 +94,7 @@ kit/plugins/memory-tools/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
-│   ├── agentic-memory-doctor/
+│   ├── agentic-memory-management/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── audit-steps.md
@@ -108,14 +108,15 @@ This is a skills-only plugin — no commands or agents.
 
 ## Version History
 
-Current version: **3.1.1**
+Current version: **4.0.0**
 
 ### Breaking Changes
 
-- **v3.0.0** — Primary skill renamed from `memory-doctor` to `agentic-memory-doctor`. Update any `@import` references:
-  - Old: `@<plugin-dir>/skills/memory-doctor/SKILL.md`
-  - New: `@<plugin-dir>/skills/agentic-memory-doctor/SKILL.md`
-  - Find stale references: `grep -rn 'skills/memory-doctor/SKILL.md' .`
+- **v4.0.0** — Primary skill renamed from `agentic-memory-doctor` to `agentic-memory-management`. Update any `@import` references:
+  - Old: `@<plugin-dir>/skills/agentic-memory-doctor/SKILL.md`
+  - New: `@<plugin-dir>/skills/agentic-memory-management/SKILL.md`
+  - Find stale live references: `git grep -n 'skills/agentic-memory-doctor/SKILL.md' -- ':!kit/plugins/memory-tools/README.md' ':!**/CHANGELOG.md' ':!docs/'`
+- **v3.0.0** — Primary skill renamed from `memory-doctor` to `agentic-memory-doctor`.
 - **v2.0.0** — Plugin renamed from `claude-md-optimizer` to `memory-tools`. Reinstall required.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.

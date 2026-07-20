@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Integration test for the memory-tools write guard (plan step 4).
-# Extracts the parse check that agentic-memory-doctor and path-rules-advisor
+# Extracts the parse check that agentic-memory-management and path-rules-advisor
 # ship in their SKILL.md and runs it against fixture CLAUDE.md files in a temp
 # dir — never a real CLAUDE.md. Covers both directions: valid frontmatter is
 # rewritten and diffed, malformed frontmatter is reported and the file is left
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-DOCTOR="$ROOT/kit/plugins/memory-tools/skills/agentic-memory-doctor/SKILL.md"
+DOCTOR="$ROOT/kit/plugins/memory-tools/skills/agentic-memory-management/SKILL.md"
 ADVISOR="$ROOT/kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md"
 FAILURES=0
 
@@ -21,7 +21,7 @@ echo "=== memory-tools write guard integration test ==="
 
 echo "1. Both skills document a post-write verification..."
 MISSING=""
-[ -f "$DOCTOR" ] || MISSING="$MISSING agentic-memory-doctor/SKILL.md"
+[ -f "$DOCTOR" ] || MISSING="$MISSING agentic-memory-management/SKILL.md"
 [ -f "$ADVISOR" ] || MISSING="$MISSING path-rules-advisor/SKILL.md"
 grep -qF 'Verify the write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:heading"
 grep -qF 'Verify the write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:heading"

@@ -1,5 +1,5 @@
 ---
-name: agentic-memory-doctor
+name: agentic-memory-management
 description: "Audits and optimizes CLAUDE.md project memory files. Checks adherence to Claude Code best practices and produces actionable fixes. Use when the user asks to audit, optimize, or diagnose a CLAUDE.md."
 allowed-tools: AskUserQuestion, Bash(git *), Bash(python3 *), Glob, Grep, Read, Write
 ---
@@ -174,7 +174,7 @@ paths:
 (replace `<plugin-dir>` with the path passed to `--plugin-dir` when loading this plugin):
 
 ```md
-@<plugin-dir>/skills/agentic-memory-doctor/SKILL.md
+@<plugin-dir>/skills/agentic-memory-management/SKILL.md
 ```
 ---
 
