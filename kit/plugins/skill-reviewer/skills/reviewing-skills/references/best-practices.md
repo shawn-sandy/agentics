@@ -236,7 +236,7 @@ When a skill grows too large or serves multiple related purposes, split it into 
 ```
 plugins/memory-tools/
 ├── skills/
-│   ├── agentic-memory-doctor/   ← Skill 1: audit CLAUDE.md files
+│   ├── agentic-memory-management/   ← Skill 1: audit CLAUDE.md files
 │   │   └── SKILL.md
 │   └── path-rules-advisor/      ← Skill 2: create .claude/rules/ files
 │       └── SKILL.md

@@ -8,7 +8,7 @@ Analyze the project and CLAUDE.md to recommend and create path-specific rule fil
 
 ## When not to use
 
-Does not create or overwrite global memory entries — use agentic-memory-doctor for that.
+Does not create or overwrite global memory entries — use agentic-memory-management for that.
 
 ## Table of Contents
 
@@ -113,7 +113,7 @@ Use this mode when the user provides no argument.
 
 **Step 1 — Resolve the CLAUDE.md target**
 
-Use the same priority order as the `agentic-memory-doctor` skill:
+Use the same priority order as the `agentic-memory-management` skill:
 
 1. `CLAUDE.md` in the current working directory
 2. `.claude/CLAUDE.md` in the current working directory

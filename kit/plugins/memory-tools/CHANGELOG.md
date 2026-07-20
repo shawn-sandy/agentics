@@ -1,5 +1,14 @@
 # Changelog
 
+## v4.0.0 — 2026-07-20 — Rename `agentic-memory-doctor` to `agentic-memory-management`
+
+### Changed
+
+- **Breaking:** skill renamed from `agentic-memory-doctor` to `agentic-memory-management`. New invocation: `memory-tools:agentic-memory-management`.
+- `@import` references to `skills/agentic-memory-doctor/SKILL.md` must be updated to `skills/agentic-memory-management/SKILL.md`.
+
+---
+
 ## v3.2.0 — 2026-07-19 — Verify the write before reporting success
 
 ### Added

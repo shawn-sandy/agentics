@@ -25,7 +25,7 @@ A plugin combining commands and skills for the same underlying capabilities (pla
 A skill-only plugin that audits and optimizes CLAUDE.md project memory files.
 
 **Components:**
-- Skill: `agentic-memory-doctor` - Audit CLAUDE.md / project memory files against best practices
+- Skill: `agentic-memory-management` - Audit CLAUDE.md / project memory files against best practices
 - Skill: `path-rules-advisor` - Create path-specific rule files in `.claude/rules/`
 
 **Use case:** Understanding skills with broad activation criteria and multi-step output

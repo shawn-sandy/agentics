@@ -682,7 +682,7 @@ Audit and optimize CLAUDE.md project memory files against Claude Code best pract
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `agentic-memory-doctor` | Audit, optimize, or diagnose a CLAUDE.md or project memory file — also activates when Claude appears to be ignoring project instructions |
+| `agentic-memory-management` | Audit, optimize, or diagnose a CLAUDE.md or project memory file — also activates when Claude appears to be ignoring project instructions |
 | `path-rules-advisor` | Create path-specific rules, add rules for file types or directories, or organize Claude rules in `.claude/rules/` |
 
 ```bash
