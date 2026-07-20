@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.8 — 2026-07-20 — Refresh the skill-splitting example
+
+### Fixed
+
+- `reviewing-skills/references/best-practices.md`: the multi-skill directory example named `agentic-memory-doctor`, which no longer exists — renamed to `agentic-memory-management` to match memory-tools v4.0.0.
+
+---
+
 ## v2.2.7 — 2026-07-16 — State one description budget, not two
 
 ### Fixed
