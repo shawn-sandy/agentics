@@ -1,5 +1,21 @@
 # Changelog — git-agent
 
+## v4.3.0 — 2026-07-20 — ship self-reviews the diff before pushing
+
+### Added
+
+- **Step 4.5 (Self-Review Before Push)** in `skills/ship/SKILL.md` and `agents/agent-ship.md` — diffs the whole branch against its base and critiques it as a hostile reviewer before Step 5 pushes. Checks four regression classes that CI review bots repeatedly caught after the fact: dropped accessibility attributes, double-escaping in generated output, string parsing/truncation edge cases, and responsive/desktop layout regressions. Findings are fixed and folded into the Step 4 commit via `git commit --amend --no-edit`; the check re-runs once, never loops, and never blocks the ship.
+  - `ship` (foreground): on by default — pass `--no-review` to skip.
+  - `agent-ship` (background): always runs, and is **report-only** — it never edits files. Background git agents have denied `Write`/`Edit`/`NotebookEdit` since v3.5.0 so an unattended agent cannot rewrite source, and Step 4.5 upholds that rather than weakening it. Every finding is surfaced in the report returned to the parent session, so nothing ships silently; acting on a finding is the parent session's call. The step also explicitly forbids routing around the deny list via `Bash` (`sed -i`, heredoc rewrites, `git apply`).
+- `tests/plugins/test-ship-self-review.sh` — 22 checks covering step ordering, the four regression classes, the non-blocking guarantee, the fix-vs-report asymmetry between skill and agent, and the deny-list invariant across all three `git-agent` background agents.
+
+### Changed
+
+- `skills/ship/SKILL.md`: `allowed-tools` gains `Edit` so self-review findings can be fixed in place. This is safe in the foreground, where the user sees the edits before the push.
+- `agents/agent-ship.md`: the Step 8 close-out now reports self-review findings alongside the PR/MR URL. `tools` is deliberately unchanged — adding `Edit` there would have been inert (`disallowedTools` overrides it) and misleading.
+
+---
+
 ## v4.2.0 — 2026-07-20 — Test Plan in PR bodies, lint gate, refuted-finding replies
 
 ### Added

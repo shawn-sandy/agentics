@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Edit, Grep, Glob, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -102,6 +102,50 @@ Output the commit hash and message on success.
 **If a pre-commit hook fails:** report the hook's output verbatim and **STOP**.
 Do not retry. Do not use `--no-verify`. Do not modify the staged files. Let the
 user fix the issue.
+
+## Step 4.5: Self-Review Before Push
+
+Runs by default. Skip this step entirely if the user passed `--no-review`.
+
+Resolve `<base>` using the procedure in **Step 7: Detect Base Branch**, then run:
+
+```
+git diff <base>...HEAD
+```
+
+If no base branch resolves, output "Skipping self-review: cannot resolve a base
+branch." and continue to Step 5. Reuse the resolved `<base>` in Step 7 rather
+than detecting it twice.
+
+Critique the diff as a hostile reviewer would. Check specifically for:
+
+1. **Dropped accessibility attributes** — removed `aria-*`, `role`, `alt`, or
+   live-region markup that the previous version had.
+2. **Double-escaping or encoding changes** in generated output — HTML entities
+   escaped twice, or raw text now passing through an escape it did not before.
+3. **Edge cases in string parsing or truncation** — off-by-one slices, splitting
+   on a character that occurs inside the data (e.g. hyphens), unhandled empty
+   input.
+4. **Responsive or desktop regressions** in image or layout changes — a
+   breakpoint, `srcset`, width, or height silently changed or halved.
+
+Report findings as a short list. For each one, state the file, the line, and
+what breaks.
+
+**If findings exist:** fix them, then fold the fixes into the commit from
+Step 4:
+
+```
+git add -A && git commit --amend --no-edit
+```
+
+The Step 4 commit is not yet pushed, so amending is safe. Re-run the checks
+against the amended diff once. Do not loop a third time — report anything still
+outstanding and continue to Step 5.
+
+**If no findings:** output "Self-review: no findings." and continue.
+
+This step never blocks the ship. It fixes what it can and reports the rest.
 
 ## Step 5: Push
 
