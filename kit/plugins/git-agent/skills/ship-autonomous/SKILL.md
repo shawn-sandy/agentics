@@ -118,8 +118,12 @@ forever.
 **Lint.** Detect a lint script:
 
 ```
-jq -r '.scripts | keys[] | select(test("^lint")) | select(test("fix|watch") | not)' package.json 2>/dev/null
+jq -r '.scripts | to_entries[] | select(.key | test("^lint")) | select(.key + " " + .value | test("--fix|watch") | not) | .key' package.json 2>/dev/null
 ```
+
+The filter reads each script's **command**, not just its name — a script named
+plainly `lint` whose value is `eslint --fix .` would otherwise rewrite the
+working tree at exactly the stage that forbids it.
 
 Run the first match. If lint fails, report the failing output verbatim and
 **STOP** — catching it here saves a full CI round-trip through Step 6b. Do not
@@ -302,9 +306,16 @@ the finding marked "handled". Check which form it took:
 gh pr view <pr-url> --json reviewDecision
 ```
 
-If the decision is `CHANGES_REQUESTED`, post the refutation, then **escalate
-via AskUserQuestion** — the options are dismissing the review
-(`gh api -X PUT repos/<owner>/<repo>/pulls/<n>/reviews/<review-id>/dismissals
+If the decision is `CHANGES_REQUESTED`, post the refutation, then identify the
+review that raised it:
+
+```
+gh api repos/<owner>/<repo>/pulls/<n>/reviews --jq '.[] | select(.state=="CHANGES_REQUESTED") | {id, user: .user.login}'
+```
+
+Then **escalate via AskUserQuestion** — the options are dismissing that review
+by its `id` (`gh api -X PUT
+repos/<owner>/<repo>/pulls/<n>/reviews/<review-id>/dismissals
 -f message="<reason>" -f event=DISMISS`, which needs write access and is a
 visible act on someone else's review) or asking the reviewer to re-review.
 Never dismiss a review on your own initiative, and never merge around a
