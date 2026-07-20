@@ -126,7 +126,8 @@ Echo the resolved objective and effective flags after Step 0.
   not advice. If the objective sounds like "fix X", write a plan for *how*
   to fix X.
 - The plan is the deliverable. Implementation is a separate, user-initiated
-  step (Step 8 lifts this constraint only when the user chooses it).
+  step: Step 8's `Implement now` hands off to the `build` skill, which owns
+  every source-file write. This constraint is never lifted here.
 
 ## What the renderer derives (never author these)
 
@@ -426,73 +427,19 @@ EOF
    call fails to resolve), say so in one line and continue with the
    next-step choice — never block on it.
 
-   **If the user chooses `Implement now`:** Lift the Scope Constraint for
-   this session only. Set the spec's `status:` to `in-progress`, then work
-   through each step sequentially — apply the changes, verify each step,
-   and mark progress in the spec as you go (insert the `[x]` marker after
-   each finished step's number; the re-render flips the card and chip).
+   **If the user chooses `Implement now`:** Invoke
+   `Skill(skill: "plan-agent:build", args: "<spec path>")` with the markdown
+   spec's relative path. That skill owns the implementation loop and its
+   three gates — acceptance criteria, end-to-end verification, completion
+   checklist — and marks progress in the spec. Do not duplicate its steps
+   here, and do not implement any part of the plan in this skill: the Scope
+   Constraint above stays in force, because the writing now happens in
+   `build`.
 
-   **Acceptance criteria gate (mandatory — after all steps, before marking
-   `completed`):**
-   1. Read each criterion from the spec's `## Acceptance Criteria` bullets.
-   2. Verify each one — run the relevant command or inspect the changed
-      files.
-   3. Check a criterion off by flipping its bullet to `- [x]` only after
-      confirming it; flip back to `- [ ]` to undo. Markdown edits in the
-      spec — never `checked` attributes in the HTML, a JS toggle, or
-      browser-only persistence.
-   4. If any criterion cannot be verified, list the unverified items via
-      `AskUserQuestion` ("Mark them as done anyway?" — `Yes, check them
-      off` / `No, leave unchecked`).
-   5. Only set `status: completed` after every criterion is checked;
-      otherwise set `in-progress` and note what remains open. The
-      re-render stamps the status into all three HTML representations.
-
-   **End-to-end verification gate (mandatory — after the criteria gate):**
-   confirms the *objective* works end-to-end, not just that criteria are
-   met.
-   1. Read the plan's Verification section and Tests section.
-   2. Run the objective-verification test via its authored **Run** command;
-      run the other test entries via the project's test runner against
-      their **File** paths (they carry no per-card run command). No
-      detectable runner → run only the objective test and say so. The
-      objective test's **Run** command always exists and always runs — Tier
-      2 included, where it is a plain shell command (`grep -q`, `test -f`).
-      If the spec somehow has no **Run**, author one now against the
-      objective, re-render, then run it; never fall back to inspection
-      alone.
-   3. Confirm the objective test passes and every verification step holds.
-   4. **On failure — fix and re-verify (bounded loop):** diagnose, fix the
-      source files, re-run from sub-step 2, up to 3 times. Still failing →
-      STOP and ask via `AskUserQuestion` ("End-to-end verification is still
-      failing after 3 fix attempts: <summary>. How do you want to
-      proceed?") with `Keep trying` / `Mark in-progress and stop` / `Mark
-      completed anyway`. Set status only per the chosen option; for either
-      "Mark" option add a Completion Report entry naming the failing check
-      and reason.
-   5. Proceed only once verification holds — or the user explicitly chose
-      to proceed anyway. Report the outcome briefly.
-
-   **Completion checklist gate (mandatory — before committing):**
-   1. Verify in the spec: (a) every step carries its `[x]` marker, (b)
-      every acceptance criterion is `- [x]`, (c) the frontmatter says
-      `status: completed`.
-   2. Re-render and confirm the derived state: all `.step-card` elements
-      completed, all criteria inputs `checked`, the three status
-      representations `completed`, cc1–cc3 checked and the
-      `completion-checklist` div carrying `all-complete`. The renderer
-      computes all of this from (a)–(c) — if something is missing, fix the
-      spec, never the HTML.
-   3. Any condition unmet → keep `status: in-progress` and write a
-      `## Completion Report` section in the spec (after
-      `## Acceptance Criteria`): one `- <exact step/criterion> — <reason>`
-      bullet per gap — never a generic "some steps incomplete". The
-      renderer turns it into the report list; when everything is resolved,
-      remove the section and the default "No items to report" sentence
-      returns.
-
-   Commit the source changes together with the updated spec and HTML when
-   implementation finishes.
+   `build` ships in this same plugin, so a resolution failure means a broken
+   skill reference, not a missing dependency — report it as an error rather
+   than degrading silently, then emit the implement prompt (`plan-implement`
+   meta tag) so the user can still proceed by pasting it.
 
    **If the user chooses `Run as workflow`:** Output the workflow prompt
    (from the `plan-workflow` meta tag) for the user to paste — the word

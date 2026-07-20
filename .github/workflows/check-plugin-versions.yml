@@ -23,3 +23,8 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
       - name: Unit-test the guard
         run: node tests/publish/test-check-plugin-versions.mjs
+      # Pre-merge gate. publish-dist.yml also runs this, but that workflow is
+      # schedule/dispatch-only, so on its own it catches a regression the
+      # morning after the merge rather than at review time.
+      - name: Test build skill ships and owns the implementation gates
+        run: bash tests/plugins/test-build-skill.sh

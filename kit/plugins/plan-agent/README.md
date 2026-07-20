@@ -22,6 +22,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent |
+| `build` | Skill | Command (`/plan-agent:build [<plan>]`) or auto-activates on "implement / build this plan" intent — implements an existing plan and runs its gates |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
@@ -335,6 +336,20 @@ prototype this plan
 
 Given a plan path it extracts the data model directly; given a raw idea it runs a 3-question interview (entity, action, success signal). Given an **image** it reads the mockup/screenshot and infers the model from the UI shown; given a **Figma URL** it loads the Figma MCP tools to read a screenshot + layer metadata and infers the same way (asking for a screenshot if no Figma MCP server is connected). It then echoes the derived model back for confirmation and writes `docs/prototypes/<verb-target>.html`.
 
+#### `build` — Command or auto-activate
+
+Implements a plan that already exists. `implementation-plan` authors the plan and stops; `build` picks it up — in the same session or three days later — walks its steps, ticks the markdown spec, re-renders the HTML, and runs the three completion gates. `status: completed` is written only after end-to-end verification passes, and the skill stops without committing.
+
+```
+/plan-agent:build docs/plans/add-fitness-tracker.md
+/plan-agent:build add-fitness-tracker.html
+/plan-agent:build --dir tmp/plans
+/plan-agent:build
+implement the plan at docs/plans/add-fitness-tracker.md
+```
+
+With no argument it picks the newest `todo` / `in-progress` spec in the plans directory (skipping `archive/`) and asks when the choice is ambiguous. `--dir <path>` overrides the plans directory; an explicit path is honored as given, so plans outside the default root resolve without it. Before writing anything it checks preconditions: an already-`completed` plan prompts rather than being silently redone, `[x]` steps are resumed past rather than reapplied, and a dirty working tree is surfaced first.
+
 ### Hooks
 
 #### Filename validation (automatic)
@@ -426,6 +441,8 @@ plan-agent/
       reference/
         SKELETON.html       — Legacy full-plan HTML template (kept for reference/tests)
         SKELETON.md         — Markdown plan-spec starter (the format build-plan-html.mjs parses)
+    build/
+      SKILL.md              — Implements an existing plan: steps, spec ticks, three gates, re-render
     build-proposal/
       SKILL.md              — Idea→proposal loop (Tier gate, 8 steps, artifact resolver)
       references/
@@ -475,10 +492,31 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 
 - **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
-- **Implement-now gates** (Step 8) — when implementing in-session, three sequential gates run before completion: an **acceptance-criteria gate** (verify and check off each criterion), an **end-to-end verification gate** (run the plan's objective-verification test + walk the Verification section; on failure, fix and re-verify up to 3 times), and a **completion-checklist gate** (confirm step TODOs, criteria, and status)
+- **Implement-now handoff** (Step 8) — `Implement now` delegates to the `build` skill, which owns the implementation loop and its three gates. `implementation-plan` itself never writes source files; its Scope Constraint is never lifted
 - **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `scripts/build-plan-html.mjs`; the renderer owns all presentation (CSS, JS, meta tags, derived implement/goal/workflow prompts, effort level, file-tree) *and* all progress state: `- [x]` criteria bullets, `[x]` step markers, and an optional `## Completion Report` section render as checked boxes, completed step cards, the derived completion checklist, and the report list — status/checkbox changes are Markdown edits plus a re-render, never HTML surgery
 - **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
 - **Spec starter** — `reference/SKELETON.md` is the copyable spec skeleton in the exact format the renderer parses
+
+### `build` Skill
+
+Command-invocable via `/plan-agent:build [<plan>]` and model-invocable on
+"implement the plan at …" intent. It is the **downstream** layer to
+`implementation-plan`: that skill decides *how* and stops; `build` executes it.
+
+- **Input** — a `.md` spec or `.html` plan path (resolved as given, then by
+  basename under the plans directory), or no argument at all, in which case it
+  picks the newest `todo` / `in-progress` spec and asks when ambiguous.
+  Argument-less discovery never descends into `archive/`; an explicitly passed
+  path is honored as given, archived or not
+- **Preconditions** — refuses to silently redo a `completed` plan, resumes from
+  the first unmarked step, and surfaces a dirty working tree before writing
+- **Three gates** — an **acceptance-criteria gate** (verify and check off each
+  criterion), an **end-to-end verification gate** (run the objective test and
+  walk the Verification section; on failure, fix and re-verify up to 3 times),
+  and a **completion-checklist gate** (steps, criteria, and status agree).
+  `status: completed` is written only after end-to-end verification passes
+- **Handoff** — stops without committing; the source changes, updated spec, and
+  re-rendered HTML are left in the working tree
 
 ### `build-proposal` Skill
 

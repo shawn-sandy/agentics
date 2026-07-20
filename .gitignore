@@ -16,7 +16,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dist/
-build/
+# Anchored: this ignores root JS build output only. Unanchored `build/` matched
+# any directory named build at any depth and silently swallowed
+# kit/plugins/plan-agent/skills/build/.
+/build/
 *.tsbuildinfo
 
 # Environment variables
