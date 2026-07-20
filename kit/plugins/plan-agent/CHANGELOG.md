@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.3.0 — `build` skill: implement a plan on its own (2026-07-20)
+
+- New `build` skill (`/plan-agent:build [<plan>]`) implements an existing plan end-to-end: resolves the plan (argument, or the newest `todo`/`in-progress` spec), walks the steps, ticks the spec, and runs the acceptance-criteria, end-to-end-verification, and completion-checklist gates. It re-renders after every batch of spec edits, not only at the end, so the gallery never shows a stale status mid-run.
+- Implementing no longer requires being inside `implementation-plan`'s Step 8 menu. A plan written three days ago is now buildable with one command instead of a copy-pasted prompt.
+- `implementation-plan` Step 8 `Implement now` delegates to the new skill instead of carrying its own copy of the loop — the gates moved out of `implementation-plan` rather than being copied into `build`. (`finalize-plan` still applies equivalent completion rules to plans implemented outside this skill; the two are cross-referenced and must be changed together.) `implementation-plan`'s Scope Constraint is no longer lifted at all: every source-file write now happens in `build`.
+- `status: completed` is written only after the end-to-end verification gate passes, not when the last acceptance criterion is checked — a plan no longer advertises itself as complete for the duration of the fix loop.
+- `build` resolves an explicit plan path as given before falling back to basename lookup, so plans under `--dir` or an absolute path resolve; discovery skips `archive/` and asks when the newest plan is ambiguous.
+- Preconditions before any write: refuses to silently re-implement a `completed` plan, resumes from the first unmarked step, and surfaces a dirty working tree. It no longer commits on its own.
+- Fixed in `.gitignore`: the unanchored `build/` pattern (for root JS build output) matched the new skill directory at any depth and would have shipped a 4.3.0 release advertising a command whose file was never committed. Now anchored to `/build/`, with a `tests/plugins/test-build-skill.sh` check that fails if the skill is ever untracked again — wired into `check-plugin-versions.yml` so it gates pull requests, not just the nightly publish.
+
 ## 4.2.0 — Card-count check on the plans gallery (2026-07-19)
 
 - `plans-library` now asserts, after writing `docs/plans/index.html`, that the file parses and its card count equals the number of plan files scanned. The failure mode it catches is silent card loss — an index that writes successfully with half the plans missing.

@@ -489,9 +489,9 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 ---
 
-#### `plan-agent` v2.9.0
+#### `plan-agent` v4.3.0
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with built-in structured interview, an end-to-end self-verification gate, and a mandatory acceptance-criteria gate during implementation. Turn a vague idea into a decision-complete proposal with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:write-prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:write-prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -504,6 +504,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — also auto-activates on plan-document intent |
+| `build` | Implement a plan that already exists via `/plan-agent:build [<plan>]` — walks its steps, ticks the spec, re-renders, and runs the acceptance-criteria, end-to-end-verification, and completion-checklist gates; also auto-activates on "implement the plan at …" intent |
 | `build-proposal` | Turn a vague idea into a decision-complete proposal (`docs/proposals/<slug>.md`) — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Spawn a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, + UI-conditional UX and accessibility) to review a plan, synthesize findings, and apply improvements in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
@@ -740,19 +741,18 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.1.3 | development | 2 skills |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.2.0 | development | 2 skills |
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.3 | development | 1 command, 1 skill, 1 agent |
-| [plan-interview](./kit/plugins/plan-interview/README.md) | 2.2.8 | development | 10 commands, 6 skills, 1 agent, 1 hook |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.7 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.1.1 | development | 3 commands, 6 skills, 3 agents |
-| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.10 | productivity | 1 command, 1 skill, 7 agents |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.3.0 | development | 3 commands, 6 skills, 3 agents |
+| [product-plans](./kit/plugins/product-plans/README.md) | 3.4.11 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.17.2 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 3.1.1 | productivity | 1 command, 9 skills, 8 agents, 4 hooks |
-| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.1.1 | productivity | 1 skill, 2 agents |
-| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.2.1 | development | 4 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.18.0 | productivity | 1 command, 17 skills |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 4.3.0 | productivity | 6 commands, 14 skills, 9 agents, 2 hooks |
+| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.0 | productivity | 1 skill, 2 agents |
+| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.3.0 | development | 4 skills |
 
 ---
 

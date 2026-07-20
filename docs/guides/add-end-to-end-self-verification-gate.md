@@ -33,6 +33,8 @@ Neither gate ever *executed* the holistic end-to-end verification or ran the obj
 
 ## How it works
 
+> **Superseded as of plan-agent 4.3.0.** The three gates below no longer live in `implementation-plan` Step 8 — they moved verbatim into the `build` skill (`kit/plugins/plan-agent/skills/build/SKILL.md`), and Step 8's **Implement now** now delegates to it. The gate *behavior* described here is still accurate; only the file that owns it changed. Edit `build/SKILL.md` to change gate behavior — re-inlining any gate into `implementation-plan` fails `tests/plugins/test-build-skill.sh`.
+
 When the user chooses **Implement now** in Step 8, Claude works through the steps, then runs three sequential gates before marking the plan complete:
 
 1. **Acceptance-criteria gate** (unchanged) — verifies and checks off each criterion in `#criteria-list`.

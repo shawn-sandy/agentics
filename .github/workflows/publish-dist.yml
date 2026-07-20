@@ -40,6 +40,8 @@ jobs:
         run: bash tests/plugins/test-save-artifact.sh
       - name: Test artifact title mechanism
         run: node tests/plugins/test-artifact-titles.mjs
+      - name: Test build skill ships and owns the implementation gates
+        run: bash tests/plugins/test-build-skill.sh
       - name: Publish to agentics-kit
         run: node scripts/build-dist.mjs --publish
         env:
