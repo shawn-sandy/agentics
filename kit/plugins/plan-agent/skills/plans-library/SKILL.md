@@ -166,10 +166,12 @@ GENERATED_AT=$(date '+%Y-%m-%d %H:%M')
 
 ## Step 6 — Verify the index
 
-Confirm the written file parses as HTML and renders one card per scanned plan. `SOURCE_COUNT` is the number of lines in `$PLAN_FILES` (Step 3); `CARD_COUNT` is the number of `class="gallery-card"` anchors in the written index.
+Confirm the written index is complete and renders one card per plan that Step 4 actually parsed.
+
+Set `SOURCE_COUNT` to the number of entries Step 4 emitted — **not** the raw line count of `$PLAN_FILES`. Step 4 skips any plan it cannot read, so comparing against the raw file list reports a mismatch for a file that was deliberately skipped. If Step 4 skipped anything, name those files when reporting.
 
 ```bash
-SOURCE_COUNT=$(printf '%s\n' "$PLAN_FILES" | grep -c . )
+SOURCE_COUNT=<number of entries parsed in Step 4>
 python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT" <<'EOF'
 import sys
 from html.parser import HTMLParser
@@ -184,14 +186,16 @@ class Counter(HTMLParser):
             self.cards += 1
 
 c = Counter()
-c.feed(html)  # raises on unparseable markup
+c.feed(html)
+if not html.rstrip().endswith('</html>'):
+    sys.exit(f"TRUNCATED: {path} does not end with </html>")
 print(f"OK: {c.cards} cards from {expected} plans" if c.cards == expected
-      else f"MISMATCH: index has {c.cards} cards but {expected} plans were scanned")
+      else f"MISMATCH: index has {c.cards} cards but {expected} plans were parsed")
 sys.exit(0 if c.cards == expected else 1)
 EOF
 ```
 
-If the command exits non-zero, report the mismatch to the user — naming the index path, the card count, and the source count — and **STOP** instead of opening the gallery.
+If the command exits non-zero, report the failure to the user — naming the index path, the card count, the parsed count, and any plans Step 4 skipped — and **STOP** instead of opening the gallery.
 
 ---
 

@@ -18,10 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reverse. On a missing marker the skill reports the failure with the URL
   instead of reporting success.
 
-- `WebFetch` added to each of the four skills' `allowed-tools:`, alongside a
-  note to load it via `ToolSearch` with `select:WebFetch`. None declared it, and
-  an undeclared tool would stall the new check on a permission prompt exactly
-  when these skills tend to run unattended.
+- `WebFetch` added to each of the four skills' `allowed-tools:`, loaded via
+  `ToolSearch` with `select:WebFetch`. An undeclared tool would stall the new
+  check on a permission prompt.
 
 ## [1.2.1] - 2026-07-15
 

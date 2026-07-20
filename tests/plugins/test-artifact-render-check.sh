@@ -4,12 +4,18 @@ set -euo pipefail
 # E2E test for the publish / fetch-back / assert flow that plan-artifact's
 # "Step 4 — Verify the page rendered" describes.
 #
-# Real publishing is not available in a test harness — there is no claude.ai
-# login, no artifact URL, and no WebFetch. So the fetched page is stood in for
-# by local fixture HTML written to a temp dir, and the skill's assertion is
-# reimplemented here as render_check(): does the marker appear in the page's
-# rendered body text? That is the same question WebFetch answers after a
-# publish; only the transport is mocked.
+# SCOPE — read this before trusting a green run. The skill's step is prose for
+# the model, not code, so there is nothing to extract and execute. Both the
+# transport AND the assertion are stood in for here: fixture HTML replaces the
+# fetched page, and render_check() below is this test's own model of what the
+# step asks for. Assertions 4-7 therefore exercise render_check(), not the
+# skill. Only assertions 1-3 bind to the shipped SKILL.md, and they bind to its
+# structure and semantics rather than its exact wording.
+#
+# What that means in practice: this suite proves the assertion LOGIC is sound
+# and catches the blank-page case. It cannot prove the model performs it. The
+# plan's manual step — publish a real plan, open the URL in light and dark
+# themes — remains the only end-to-end proof, and is still outstanding.
 #
 # The marker is looked for in body text only, never in the raw source or the
 # <title> tag — an artifact whose body is a single empty div still ships a
@@ -90,30 +96,47 @@ if grep -q '^allowed-tools:.*WebFetch' "$SKILL"; then pass
 else fail "WebFetch missing from allowed-tools: — the check would stall on a permission prompt"; fi
 
 echo "2. SKILL.md carries a post-publish verify step..."
-if grep -q '^## Step 4 — Verify the page rendered' "$SKILL"; then pass
-else fail "no '## Step 4 — Verify the page rendered' heading in plan-artifact SKILL.md"; fi
+if grep -qiE '^## Step [0-9]+ — (Verify|Confirm|Check) .*render' "$SKILL"; then pass
+else fail "no 'Verify the page rendered' step heading in plan-artifact SKILL.md"; fi
 
 echo "3. Verify step reports failure with the URL instead of reporting success..."
-if grep -q 'do not report the publish as successful' "$SKILL" \
-   && grep -q 'report the failure \*\*with the URL\*\*' "$SKILL"; then pass
+if grep -qiE 'do not report|not report .* as success' "$SKILL" \
+   && grep -qiE 'report the failure[^.]*URL|URL[^.]*so the user can open' "$SKILL"; then pass
 else fail "verify step does not require reporting the failure with the URL"; fi
 
-echo "4. A published plan's marker is found in the fetched page..."
+echo "4. Verify step actually inspects the page rather than opting out..."
+if grep -A12 -iE '^## Step [0-9]+ — (Verify|Confirm|Check) .*render' "$SKILL" | grep -qi 'skip this step'; then
+  fail "verify step tells the model to skip it"
+elif grep -A12 -iE '^## Step [0-9]+ — (Verify|Confirm|Check) .*render' "$SKILL" \
+     | grep -qiE '\b(fetch|retrieve|confirm|compare|assert)\w*\b'; then
+  pass
+else
+  fail "verify step never instructs the model to fetch or confirm anything"
+fi
+
+echo "5. A published plan's marker is found in the fetched page..."
 if OUT="$(render_check "$TMP/published.html" "$MARKER")" && [ "${OUT#OK:}" != "$OUT" ]; then pass
 else fail "render check did not confirm the marker on a good page: ${OUT:-<no output>}"; fi
 
-echo "5. An empty-body artifact is reported as a failure, not a success..."
+echo "6. An empty-body artifact is reported as a failure, not a success..."
 set +e
 OUT="$(render_check "$TMP/empty-body.html" "$MARKER")"; RC=$?
 set -e
 if [ "$RC" -ne 0 ] && [ "${OUT#BLANK:}" != "$OUT" ]; then pass
 else fail "empty-body artifact passed the render check (rc=$RC, out=${OUT:-<none>})"; fi
 
-echo "6. Naive source grep would have passed the empty artifact (why body text matters)..."
-if grep -q "$MARKER" "$TMP/empty-body.html"; then pass
-else fail "fixture is wrong: the empty artifact should still contain the marker in its source"; fi
+echo "7. The render check inspects rendered text, not page source..."
+# A naive source grep passes on the blank artifact because the marker survives in
+# <title>. The render check must disagree. If it ever degrades into a source
+# grep the two will agree and this assertion fails.
+set +e
+grep -q "$MARKER" "$TMP/empty-body.html"; NAIVE_RC=$?
+render_check "$TMP/empty-body.html" "$MARKER" >/dev/null; CHECK_RC=$?
+set -e
+if [ "$NAIVE_RC" -eq 0 ] && [ "$CHECK_RC" -ne 0 ]; then pass
+else fail "source grep (rc=$NAIVE_RC) and render check (rc=$CHECK_RC) agree on the blank artifact — the check is not reading rendered text"; fi
 
-echo "7. A page that rendered someone else's plan is reported as a failure..."
+echo "8. A page that rendered someone else's plan is reported as a failure..."
 set +e
 OUT="$(render_check "$TMP/published.html" "Some other plan title")"; RC=$?
 set -e

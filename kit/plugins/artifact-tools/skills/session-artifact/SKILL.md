@@ -147,11 +147,9 @@ Runs only after a successful publish. `WebFetch` is a deferred tool: use
 `ToolSearch` with `select:WebFetch` first.
 
 Fetch the returned URL and confirm the fetched page contains the recap `title:`
-from the `.md` record's frontmatter — Step 5 puts it in the `<title>`, so it is
-the one marker guaranteed to render. Do not assert on the session `date:`; Step 5
-drops the frontmatter block, so the date reaches the page only if the recap body
-happens to mention it. A returned URL is not evidence the page rendered — a blank
-artifact returns a URL too.
+from the `.md` record's frontmatter — not the `date:`, which Step 5 drops with
+the rest of the frontmatter block. A returned URL is not evidence the page
+rendered: a blank artifact returns a URL too.
 
 If the title is absent, report the failure **with the URL** so the user can open
 it, and do not report the publish as successful.

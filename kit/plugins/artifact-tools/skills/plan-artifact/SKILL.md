@@ -83,7 +83,7 @@ link — skip it and the next session silently mints a new page.
 
 ## Step 4 — Verify the page rendered
 
-`WebFetch` is a deferred tool: use `ToolSearch` with `select:WebFetch` first.
+Runs only after a successful publish. `WebFetch` is a deferred tool: use `ToolSearch` with `select:WebFetch` first.
 
 Fetch the returned URL and confirm the fetched page contains the plan's title.
 A returned URL is not evidence the page rendered — a blank artifact returns a

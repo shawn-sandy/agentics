@@ -254,7 +254,7 @@ Run this immediately after every file write (Mode A Step 7, Mode B Steps 6 and 7
 resulting diff, then assert the file still parses with valid frontmatter and a non-empty body.
 
 ```bash
-TARGET="<path just written>"
+TARGET=<substitute the path just written — not a literal>
 if git ls-files --error-unmatch "$TARGET" >/dev/null 2>&1; then
   git --no-pager diff -- "$TARGET"
 else
@@ -270,8 +270,12 @@ if text.startswith('---\n'):
     if end == -1:
         sys.exit(f"MALFORMED: {path} opens a frontmatter block that is never closed")
     for n, line in enumerate(text[4:end].splitlines(), 2):
+        # Indented lines are nested values or block-scalar continuations, which
+        # carry no colon of their own. Only top-level keys are checked.
+        if not line.strip() or line[:1] in (' ', '\t'):
+            continue
         s = line.strip()
-        if s and not s.startswith(('#', '- ')) and ':' not in s:
+        if not s.startswith(('#', '- ')) and ':' not in s:
             sys.exit(f"MALFORMED: {path} line {n}: expected a YAML key/value, got {s!r}")
     body = text[end + 4:]
 if not body.strip():

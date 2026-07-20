@@ -38,7 +38,16 @@ MISSING=""
 for f in "$DOCTOR" "$ADVISOR"; do
   NAME=$(basename "$(dirname "$f")")
   TOOLS=$(grep -m1 '^allowed-tools:' "$f")
-  for CMD in 'git --no-pager diff -- "$TARGET"' 'python3 - "$TARGET"'; do
+  # Commands are extracted from the shipped bash block, not hardcoded here, so a
+  # third command added to the guard is covered automatically.
+  CMDS=$(awk '/^```bash$/,/^```$/' "$f" \
+    | grep -oE '^[[:space:]]*(git|python3|node|jq|sed|awk)[^|;&]*' \
+    | sed 's/^[[:space:]]*//' | sort -u)
+  if [ "$(printf '%s' "$CMDS" | grep -c .)" -lt 2 ]; then
+    MISSING="$MISSING $NAME:[extracted-no-commands]"
+  fi
+  while IFS= read -r CMD; do
+    [ -n "$CMD" ] || continue
     COVERED=""
     while IFS= read -r PAT; do
       [ -n "$PAT" ] || continue
@@ -47,7 +56,9 @@ for f in "$DOCTOR" "$ADVISOR"; do
 $(echo "$TOOLS" | grep -oE 'Bash\([^)]*\)' | sed -e 's/^Bash(//' -e 's/)$//' -e 's/:\*$/*/')
 EOF
     [ -n "$COVERED" ] || MISSING="$MISSING $NAME:[${CMD%% *}]"
-  done
+  done <<EOF
+$CMDS
+EOF
 done
 if [ -z "$MISSING" ]; then pass; else fail "allowed-tools does not cover:$MISSING"; fi
 
@@ -139,13 +150,22 @@ printf -- '---\nname: fixture\n---\n\n' > "$TMP/emptybody.md"
 OUT="$(python3 "$TMP/check.py" "$TMP/emptybody.md" 2>&1 || true)"
 if printf '%s' "$OUT" | grep -qF 'EMPTY'; then pass; else fail "expected an EMPTY report, got: $OUT"; fi
 
-echo "9. A frontmatter-less file with a body still passes..."
+echo "9. Block scalars and nested values are not reported as malformed..."
+printf -- '---\ndescription: >\n  folded text continuing here\npaths:\n  - "src/**"\n---\n\n# Project\n' > "$TMP/blockscalar.md"
+OUT="$(python3 "$TMP/check.py" "$TMP/blockscalar.md" 2>&1 || true)"
+if python3 "$TMP/check.py" "$TMP/blockscalar.md" >/dev/null 2>&1; then
+  pass "folded scalar + nested list"
+else
+  fail "valid YAML block scalar reported as malformed: $OUT"
+fi
+
+echo "10. A frontmatter-less file with a body still passes..."
 printf -- '# Project\n\n- Rule\n' > "$TMP/nofm.md"
 if python3 "$TMP/check.py" "$TMP/nofm.md" >/dev/null 2>&1; then pass; else fail "check rejected a valid frontmatter-less file"; fi
 
 echo
 if [ "$FAILURES" -eq 0 ]; then
-  echo "PASS: memory-tools write guard (9 checks)"
+  echo "PASS: memory-tools write guard (10 checks)"
 else
   echo "FAIL: $FAILURES check(s) failed"
   exit 1

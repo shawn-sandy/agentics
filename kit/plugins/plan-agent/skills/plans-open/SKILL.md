@@ -8,7 +8,7 @@ allowed-tools: Bash
 
 Open the existing `index.html` gallery directly — no file scanning, no template substitution, no write operations. If `index.html` does not exist, prompt the user to run `/plan-agent:plans-library` first.
 
-> OUTPUT-CHECK-EXEMPT: this skill generates no output — its output check lives in `plan-agent:plans-library`, which writes the gallery and asserts the card count.
+> This skill generates no output, so it has no output check of its own. The card-count check lives in `plan-agent:plans-library`, which writes the gallery.
 
 ---
 

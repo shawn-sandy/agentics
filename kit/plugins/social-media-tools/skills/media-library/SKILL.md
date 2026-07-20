@@ -104,10 +104,12 @@ If no directory is found: output "Templates not found. Install the plugin or loa
 
 ## Step 4 — Verify the index
 
-Confirm the written file parses as HTML and renders one card per scanned file. `SOURCE_COUNT` is the number of lines in `$MEDIA_FILES` (Step 1); `CARD_COUNT` is the number of `class="gallery-card"` anchors in the written index.
+Confirm the written index is complete and renders one card per file that Step 2 actually parsed.
+
+Set `SOURCE_COUNT` to the number of cards Step 2 emitted — **not** the raw line count of `$MEDIA_FILES` — so a file that was deliberately skipped is not reported as a missing card.
 
 ```bash
-SOURCE_COUNT=$(printf '%s\n' "$MEDIA_FILES" | grep -c . )
+SOURCE_COUNT=<number of cards emitted in Step 2>
 python3 - "$MEDIA_DIR/index.html" "$SOURCE_COUNT" <<'EOF'
 import sys
 from html.parser import HTMLParser
@@ -122,14 +124,16 @@ class Counter(HTMLParser):
             self.cards += 1
 
 c = Counter()
-c.feed(html)  # raises on unparseable markup
+c.feed(html)
+if not html.rstrip().endswith('</html>'):
+    sys.exit(f"TRUNCATED: {path} does not end with </html>")
 print(f"OK: {c.cards} cards from {expected} files" if c.cards == expected
-      else f"MISMATCH: index has {c.cards} cards but {expected} files were scanned")
+      else f"MISMATCH: index has {c.cards} cards but {expected} files were parsed")
 sys.exit(0 if c.cards == expected else 1)
 EOF
 ```
 
-If the command exits non-zero, report the mismatch to the user — naming the index path, the card count, and the source count — and **STOP** instead of opening the gallery.
+If the command exits non-zero, report the failure to the user — naming the index path, the card count, and the parsed count — and **STOP** instead of opening the gallery.
 
 ---
 

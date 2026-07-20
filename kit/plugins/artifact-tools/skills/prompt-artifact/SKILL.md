@@ -231,7 +231,7 @@ goes stale.
 
 ## Step 7 — Verify the page rendered
 
-`WebFetch` is a deferred tool: use `ToolSearch` with `select:WebFetch` first.
+Runs only after a successful publish. `WebFetch` is a deferred tool: use `ToolSearch` with `select:WebFetch` first.
 
 Fetch the returned URL and confirm the fetched page contains the prompt's H1
 title (single mode) or every published prompt's title (library mode). A returned

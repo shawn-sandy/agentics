@@ -8,7 +8,7 @@
 // The python block is extracted from the SKILL.md heredocs and executed as-is —
 // no reimplementation, so the test fails if a skill's logic drifts.
 
-import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -16,6 +16,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TMP = mkdtempSync(join(tmpdir(), 'index-card-count-'));
+// Every sibling suite cleans up after itself; this one leaked a dir per run.
+process.on('exit', () => rmSync(TMP, { recursive: true, force: true }));
 
 const SKILLS = [
   {
@@ -78,12 +80,22 @@ function runCheck(script, html, expected) {
   return { status: r.status, out: `${r.stdout}${r.stderr}` };
 }
 
-// The SOURCE_COUNT shell expression, run for real rather than assumed.
-function sourceCount(listValue) {
-  const r = spawnSync('bash', ['-c', `printf '%s\\n' "$1" | grep -c .`, 'bash', listValue], {
-    encoding: 'utf8',
-  });
-  return Number(r.stdout.trim());
+// SOURCE_COUNT must be the number of entries the generation step PARSED, not the
+// raw file list: those steps skip files they cannot read, and comparing against
+// the raw count reports a mismatch for a file that was deliberately skipped.
+function assertParsedCountSemantics(skill) {
+  const body = readFileSync(join(ROOT, skill.path), 'utf8');
+  const rawCount = new RegExp(`SOURCE_COUNT=\\$\\(printf[^\\n]*\\$${skill.listVar}`);
+  check(
+    `${skill.name}: SOURCE_COUNT is not the raw ${skill.listVar} line count`,
+    !rawCount.test(body),
+    'skill still derives SOURCE_COUNT from the unfiltered file list',
+  );
+  check(
+    `${skill.name}: SOURCE_COUNT is documented as the parsed/emitted count`,
+    /SOURCE_COUNT=<number of (entries|cards)/.test(body),
+    'skill does not tell the model to substitute the parsed count',
+  );
 }
 
 console.log('=== index card-count assertion ===\n');
@@ -105,12 +117,34 @@ for (const skill of SKILLS) {
     short.out.trim(),
   );
 
+  // Negative: a truncated write. HTMLParser is non-strict and never raises, so
+  // "it parsed" proves nothing — the check looks for the closing </html> that a
+  // half-written file lacks, which is the real failure mode for generated HTML.
+  const full = indexHtml(7);
+  const truncated = full.slice(0, full.indexOf('</body>'));
+  const cut = runCheck(script, truncated, 7);
+  check(`${skill.name}: a truncated index exits non-zero`, cut.status === 1, cut.out.trim());
+  check(
+    `${skill.name}: names truncation rather than a card mismatch`,
+    /TRUNCATED/.test(cut.out),
+    cut.out.trim(),
+  );
+
+  // Control: the truncated file still has all 7 cards, so only the closing-tag
+  // check can be what rejected it.
+  check(
+    `${skill.name}: the truncated fixture still contains every card`,
+    (truncated.match(/class="gallery-card /g) || []).length === 7,
+  );
+
   // Negative: a duplicated card is a mismatch too, not just a missing one.
   const over = runCheck(script, indexHtml(8), 7);
   check(`${skill.name}: 8 cards from 7 sources exits non-zero`, over.status === 1, over.out.trim());
 
   // Empty source directory: an empty index is correct, not a failure.
-  const emptyCount = sourceCount('');
+  assertParsedCountSemantics(skill);
+
+  const emptyCount = 0;
   check(`${skill.name}: empty ${skill.listVar} counts as 0 sources`, emptyCount === 0, `got ${emptyCount}`);
   const empty = runCheck(script, indexHtml(0), emptyCount);
   check(`${skill.name}: empty index from 0 sources exits 0`, empty.status === 0, empty.out.trim());
