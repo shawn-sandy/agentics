@@ -293,6 +293,23 @@ sentence or two — a re-firing bot will not remember it next round. If the same
 bot raises the same refuted finding again, skip it silently rather than
 replying twice.
 
+**A refuted finding submitted as a formal `CHANGES_REQUESTED` review is not
+cleared by replying or resolving the thread.** The review decision still reads
+`CHANGES_REQUESTED`, which Step 8 blocks on — leaving the PR unmergeable and
+the finding marked "handled". Check which form it took:
+
+```
+gh pr view <pr-url> --json reviewDecision
+```
+
+If the decision is `CHANGES_REQUESTED`, post the refutation, then **escalate
+via AskUserQuestion** — the options are dismissing the review
+(`gh api -X PUT repos/<owner>/<repo>/pulls/<n>/reviews/<review-id>/dismissals
+-f message="<reason>" -f event=DISMISS`, which needs write access and is a
+visible act on someone else's review) or asking the reviewer to re-review.
+Never dismiss a review on your own initiative, and never merge around a
+standing change request.
+
 ### 6d: Commit and let the next event drive
 
 After any fix: commit via **`git-agent:commit-agent`**, then `git push`. In
