@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.2.0 — 2026-07-19 — Verify the write before reporting success
+
+### Added
+
+- `agentic-memory-doctor`: new Step 7 runs after the write — shows `git diff` for the audited file, then asserts it still parses with valid frontmatter (where present) and a non-empty body. A pre-write gate refuses to overwrite a file whose own frontmatter is malformed, reporting the offending line instead.
+- `path-rules-advisor`: same diff-back and parse check after writing a rules file.
+- Both skills rewrite the files that configure every future session, so a corrupted CLAUDE.md or rules file degrades every later conversation silently and outlives the session that caused it.
+- `allowed-tools` extended with `Bash(git diff:*)` and `Bash(python3:*)` for the new check.
+
+---
+
 ## v3.1.3 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed

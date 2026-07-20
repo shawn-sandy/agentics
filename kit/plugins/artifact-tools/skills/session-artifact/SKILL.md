@@ -1,7 +1,7 @@
 ---
 name: session-artifact
 description: "Publishes a session recap as a claude.ai artifact. Extracts transcript turns into a Summary, Decisions, and Learnings recap, scrubs it, then publishes. Use when asked to share a session recap."
-allowed-tools: Bash, Read, Write, Edit, Skill, Artifact, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash, Read, Write, Edit, Skill, Artifact, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # session-artifact
@@ -140,3 +140,16 @@ shared link rots.
 **On publish failure**, the saved Markdown file *is* the deliverable — report its
 path plainly and note that publishing did not happen and why. Commit it and the
 recap still reaches the team.
+
+## Step 7 — Verify the page rendered
+
+Runs only after a successful publish. `WebFetch` is a deferred tool: use
+`ToolSearch` with `select:WebFetch` first.
+
+Fetch the returned URL and confirm the fetched page contains the recap `title:`
+from the `.md` record's frontmatter — not the `date:`, which Step 5 drops with
+the rest of the frontmatter block. A returned URL is not evidence the page
+rendered: a blank artifact returns a URL too.
+
+If the title is absent, report the failure **with the URL** so the user can open
+it, and do not report the publish as successful.

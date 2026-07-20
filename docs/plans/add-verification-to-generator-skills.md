@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: feature
 created: 2026-07-16
+modified: 2026-07-19
 repo-name: agentics
 effort: medium
 glance: Nine skills generate HTML or publish it to a live URL and then report success without ever looking at the output, so a blank artifact is indistinguishable from a good one from inside the session that made it. This gives each one a check it can run, and covers every check with a suite that proves it fails on bad output.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.2.0 — Card-count check on the plans gallery (2026-07-19)
+
+- `plans-library` now asserts, after writing `docs/plans/index.html`, that the file parses and its card count equals the number of plan files scanned. The failure mode it catches is silent card loss — an index that writes successfully with half the plans missing.
+- On a mismatch the skill reports the index path, the card count, and the source count, then stops instead of opening a gallery it cannot vouch for.
+- `plans-open` carries a one-line note recording that its output check lives in `plans-library`. It opens an existing gallery and generates nothing, so a check of its own would be theater; naming it stops a future audit from re-flagging it.
+
 ## 4.1.0 — Verification gate in every generated prompt (2026-07-18)
 
 - The implement, goal, and workflow prompts now share one verification tail: run the objective test's **Run** command, walk the Verification section, confirm every acceptance criterion, then mark completion in the spec (`[x]` steps, `- [x]` criteria, `status: completed`) and re-render. A failed check leaves `status: in-progress` and names what failed.

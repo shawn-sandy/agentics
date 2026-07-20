@@ -1,7 +1,7 @@
 ---
 name: prompt-artifact
 description: "Publishes saved prompts as claude.ai artifacts. Copies raw prompt text verbatim; publishes one prompt or the whole filterable library. Use when asked to publish or share a prompt."
-allowed-tools: Bash, Read, Write, Edit, Glob, Skill, Artifact, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash, Read, Write, Edit, Glob, Skill, Artifact, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # prompt-artifact
@@ -190,7 +190,7 @@ round-trips back to the exact source text. Three things break that guarantee:
 - **No prettifying the `<pre>`.** Indenting it to match surrounding markup
   indents every copied line with it.
 - **Never leave `writeText` unhandled.** It rejects on a denied permission, and
-  is absent outside a secure context — which is exactly the Step 7 fallback page
+  is absent outside a secure context — which is exactly the Step 8 fallback page
   opened over `file://`. An unhandled rejection makes the button do nothing at
   all, silently, on the one path where the page is the only deliverable. Hence
   the rejection handler above: selecting the `<pre>` contents leaves the user one
@@ -229,7 +229,19 @@ Skipping the record step is the quiet failure mode in both modes: the publish
 looks fine, and the *next* session mints a second page while the link you shared
 goes stale.
 
-## Step 7 — Fallback
+## Step 7 — Verify the page rendered
+
+Runs only after a successful publish. `WebFetch` is a deferred tool: use `ToolSearch` with `select:WebFetch` first.
+
+Fetch the returned URL and confirm the fetched page contains the prompt's H1
+title (single mode) or every published prompt's title (library mode). A returned
+URL is not evidence the page rendered — a blank artifact returns a URL too, and
+in library mode a page missing a card is the failure this catches.
+
+If a title is absent, report the failure **with the URL** so the user can open
+it, and do not report the publish as successful.
+
+## Step 8 — Fallback
 
 If publishing fails (no claude.ai login, or publishing unavailable), the scratchpad
 copy is not a deliverable — it is temporary. Write the page to `.claude/artifacts/`

@@ -164,7 +164,42 @@ GENERATED_AT=$(date '+%Y-%m-%d %H:%M')
 
 ---
 
-## Step 6 — Open in browser
+## Step 6 — Verify the index
+
+Confirm the written index is complete and renders one card per plan that Step 4 actually parsed.
+
+Set `SOURCE_COUNT` to the number of entries Step 4 emitted — **not** the raw line count of `$PLAN_FILES`. Step 4 skips any plan it cannot read, so comparing against the raw file list reports a mismatch for a file that was deliberately skipped. If Step 4 skipped anything, name those files when reporting.
+
+```bash
+SOURCE_COUNT=<number of entries parsed in Step 4>
+python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT" <<'EOF'
+import sys
+from html.parser import HTMLParser
+
+path, expected = sys.argv[1], int(sys.argv[2])
+html = open(path, encoding='utf-8').read()
+
+class Counter(HTMLParser):
+    cards = 0
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a' and 'gallery-card' in dict(attrs).get('class', '').split():
+            self.cards += 1
+
+c = Counter()
+c.feed(html)
+if not html.rstrip().endswith('</html>'):
+    sys.exit(f"TRUNCATED: {path} does not end with </html>")
+print(f"OK: {c.cards} cards from {expected} plans" if c.cards == expected
+      else f"MISMATCH: index has {c.cards} cards but {expected} plans were parsed")
+sys.exit(0 if c.cards == expected else 1)
+EOF
+```
+
+If the command exits non-zero, report the failure to the user — naming the index path, the card count, the parsed count, and any plans Step 4 skipped — and **STOP** instead of opening the gallery.
+
+---
+
+## Step 7 — Open in browser
 
 ```bash
 GALLERY_PATH=$(realpath "$PLANS_DIR/index.html" 2>/dev/null || echo "$PLANS_DIR/index.html")
@@ -176,6 +211,6 @@ Tell the user:
 
 ---
 
-## Step 7 — Stop
+## Step 8 — Stop
 
 **STOP.** Do not run git commands or invoke other skills after delivering the gallery.

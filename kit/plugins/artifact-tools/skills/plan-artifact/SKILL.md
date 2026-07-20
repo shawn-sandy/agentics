@@ -1,7 +1,7 @@
 ---
 name: plan-artifact
 description: "Publishes an implementation plan as a claude.ai artifact. Republishes to the same URL across sessions so viewers watch steps check off live. Use when asked to publish or share a plan."
-allowed-tools: Read, Edit, Glob, Skill, Artifact, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Read, Edit, Glob, Skill, Artifact, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # plan-artifact
@@ -81,7 +81,18 @@ On a **first publish**, `Edit` the spec's frontmatter to add the returned
 `artifact-url:`. This is the step that makes every future republish hit the same
 link — skip it and the next session silently mints a new page.
 
-## Step 4 — The live-update loop
+## Step 4 — Verify the page rendered
+
+Runs only after a successful publish. `WebFetch` is a deferred tool: use `ToolSearch` with `select:WebFetch` first.
+
+Fetch the returned URL and confirm the fetched page contains the plan's title.
+A returned URL is not evidence the page rendered — a blank artifact returns a
+URL too.
+
+If the title is absent, report the failure **with the URL** so the user can open
+it, and do not report the publish as successful.
+
+## Step 5 — The live-update loop
 
 This is what makes plan publishing worth doing:
 
@@ -93,7 +104,7 @@ This is what makes plan publishing worth doing:
 Tell the user this explicitly on first publish, so they know to republish after
 progress edits rather than re-sharing a new link.
 
-## Step 5 — Fallback
+## Step 6 — Fallback
 
 If publishing fails (no claude.ai login, or publishing unavailable), the plan
 HTML on disk is unchanged and remains the deliverable. Say plainly that

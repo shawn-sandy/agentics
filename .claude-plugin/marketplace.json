@@ -18,7 +18,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/memory-tools"
       },
-      "version": "3.1.3",
+      "version": "3.2.0",
       "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
       "category": "development",
       "tags": [
@@ -196,7 +196,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.17.5",
+      "version": "2.18.0",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -241,7 +241,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "4.1.0",
+      "version": "4.2.0",
       "description": "Plan creation, review, follow-through, documentation, and maintenance. implementation-plan authors a Markdown plan spec and renders it into a self-contained interactive HTML plan with copy-paste implement and goal prompts; review-plan runs a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, UX, accessibility) that improves the plan in place; finalize-plan verifies completion evidence and marks plans done; deep-grill walks each decision branch node-by-node; build-proposal turns a vague idea into a decision-complete proposal; write-prompt builds prompts from Anthropic best practices; prototype turns a plan, idea, image, or Figma design into a runnable static-HTML prototype; documenting-plans generates developer docs from completed plans; markdown-to-html converts any markdown or plan to a rich standalone HTML document; plan-status writes lifecycle status for a single plan or a whole directory in bulk; plan-maintenance archives completed plans and regenerates the index; setup-sites scaffolds GitHub Pages publishing; plans-library and plans-open browse the plan gallery. Absorbs the former plan-interview plugin (4.0.0). Accepts GitHub/GitLab issue URLs and .md plans as input; hooks enforce verb-target filenames, nudge a post-plan-mode stress-test, and auto-rebuild the gallery index. Full feature detail in the plugin README and CHANGELOG.",
       "category": "productivity",
       "tags": [
@@ -289,7 +289,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.2.1",
+      "version": "1.3.0",
       "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, and saved prompts published singly or as a filterable library with verbatim copy buttons — with a blocking secret-scrub gate and a local-HTML fallback",
       "category": "development",
       "tags": [
