@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1463,7 +1463,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Create `kit/plugins/git-agent/skills/merge/SKILL.md` with frontmatter matching sibling skills (`name: merge`, three-part description ≤200 chars with trigger phrases like &quot;merge?&quot; and &quot;is this ready to merge&quot;, `allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode`). Logic from the retired memory note: run `gh pr view --json state,mergeable,statusCheckRollup` (or `gh pr list` when no PR for the branch); if the PR is MERGEABLE and required checks pass, run a local lint gate before merging — detect the project&#39;s first non-`fix`, non-`watch` `lint*` script (the `ship-autonomous` Step 2.5 precedent) and run it; no script found → skip with a one-line note; lint fails → do not merge, print the failures and ask (never auto-`--fix` — fixed files would change the PR head). Lint green → run `gh pr merge` — never `--delete-branch`. If checks are pending, failing, or anything is ambiguous, print the status summary and ask before acting. Include a Step 0 ExitPlanMode self-bootstrap like sibling skills.</span>
+                <span class="step-chip-text">Create `kit/plugins/git-agent/skills/merge/SKILL.md` with frontmatter matching sibling skills (`name: merge`, three-part description ≤200 chars with trigger phrases like &quot;merge?&quot; and &quot;is this ready to merge&quot;, `allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode`). Logic from the retired memory note: run `gh pr view --json state,mergeable,statusCheckRollup` (or `gh pr list` when no PR for the branch); if the PR is MERGEABLE and required checks pass, run a local lint gate before merging — detect the project&#39;s first non-`fix`, non-`watch` `lint*` script (the `ship-autonomous` Step 2.5 precedent) and run it; no script found → skip with a one-line note; lint fails → do not merge, print the failures and ask (never auto-`--fix` — fixed files would change the PR head). Lint green → show the check summary, review decision, and unresolved-thread count, and ask for explicit merge approval via `AskUserQuestion` (green checks alone never authorize a merge — the `ship-autonomous` Step 8 precedent). On approval, pin the merge to the verified commit: `gh pr merge --squash --match-head-commit &lt;headRefOid&gt;` — non-interactive, and it fails rather than landing commits that arrived after verification. Never `--delete-branch`; branch deletion needs its own separate yes. If checks are pending, failing, or anything is ambiguous, print the status summary and ask before acting. Include a Step 0 ExitPlanMode self-bootstrap like sibling skills.</span>
               </div>
               <div class="step-why">the skill is the single reviewable home for the behavior, replacing prose in a private memory file.</div>
               <details class="step-verify-toggle">
@@ -1497,7 +1497,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add `tests/plugins/test-merge-shorthand.sh` following the existing `tests/plugins/test-*.sh` conventions: assert the hook script fires on `merge?` (and ` merge? ` with whitespace), stays silent on prompts merely containing &quot;merge&quot;, asserts hooks.json is valid JSON referencing the script, and greps SKILL.md for the readiness-check contract (MERGEABLE gate, lint gate before merge with no auto-fix, no `--delete-branch`, ask-when-not-ready).</span>
+                <span class="step-chip-text">Add `tests/plugins/test-merge-shorthand.sh` following the existing `tests/plugins/test-*.sh` conventions: assert the hook script fires on `merge?`, ` merge? ` (surrounding whitespace), and `MERGE?` (case-insensitive), and stays silent on every near-miss — `merge` (no `?`), `please merge?`, `merge? now`, and prose containing &quot;merge?&quot; mid-sentence — asserts hooks.json is valid JSON referencing the script, and greps SKILL.md for the readiness-check contract (MERGEABLE gate, lint gate before merge with no auto-fix, no `--delete-branch`, ask-when-not-ready).</span>
               </div>
               <div class="step-why">the whole point of formalizing is verifiability — the test pins the trigger and the safety rules.</div>
               <details class="step-verify-toggle">
@@ -1554,7 +1554,7 @@ img, video { max-width: 100%; height: auto; }
       <div class="test-tier-label">Tier 1 — This plan changes application code (plugin skills, hooks, and manifest are the shipped product of this repo)</div>
       <div class="objective-test-card">Objective: typing `merge?` deterministically routes to the merge skill, and the skill&#39;s contract (readiness gate, no branch deletion, ask-when-not-ready) is pinned. File: tests/plugins/test-merge-shorthand.sh; Type: smoke; Asserts: hook emits routing context on `merge?` and stays silent otherwise, hooks.json wiring is valid, SKILL.md carries the MERGEABLE gate and forbids --delete-branch; Run: bash tests/plugins/test-merge-shorthand.sh</div>
       <div class="test-list">
-        <div class="test-card">Unit: hook regex boundaries. File: tests/plugins/test-merge-shorthand.sh; Targets: hooks/merge-shorthand.py; Key cases: exact `merge?`, surrounding whitespace, uppercase `MERGE?`, negative cases (`merge`, `can you merge this?`, prose containing &quot;merge?&quot;)</div>
+        <div class="test-card">Unit: hook regex boundaries. File: tests/plugins/test-merge-shorthand.sh; Targets: hooks/merge-shorthand.py; Key cases: exact `merge?`, surrounding whitespace, uppercase `MERGE?`; negative cases `merge`, `please merge?`, `merge? now`, `can you merge this?`, and prose containing &quot;merge?&quot; mid-sentence</div>
       </div>
     </section>
 
@@ -1575,27 +1575,31 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">`echo &#39;{&quot;prompt&quot;:&quot;merge?&quot;}&#39; | python3 kit/plugins/git-agent/hooks/merge-shorthand.py` emits routing context; a prompt merely containing &quot;merge&quot; emits nothing</label>
+          <label for="ac3">The skill asks for explicit merge approval even when everything is green, and merges with `--match-head-commit &lt;headRefOid&gt;`</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">`kit/plugins/git-agent/hooks.json` is valid JSON wiring the script via `${CLAUDE_PLUGIN_ROOT}` under `UserPromptSubmit`</label>
+          <label for="ac4">`echo &#39;{&quot;prompt&quot;:&quot;merge?&quot;}&#39; | python3 kit/plugins/git-agent/hooks/merge-shorthand.py` emits routing context; a prompt merely containing &quot;merge&quot; emits nothing</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">`bash tests/plugins/test-merge-shorthand.sh` exits 0</label>
+          <label for="ac5">`kit/plugins/git-agent/hooks.json` is valid JSON wiring the script via `${CLAUDE_PLUGIN_ROOT}` under `UserPromptSubmit`</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">`marketplace.json` shows git-agent `4.4.0` and `BASE_REF=main node scripts/check-plugin-versions.mjs` passes</label>
+          <label for="ac6">`bash tests/plugins/test-merge-shorthand.sh` exits 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">CHANGELOG.md, README.md, and the CLAUDE.md plugin table document the new skill and shorthand</label>
+          <label for="ac7">`marketplace.json` shows git-agent `4.4.0` and `BASE_REF=main node scripts/check-plugin-versions.mjs` passes</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">The `feedback_merge_behavior` memory note is reduced to a pointer at `git-agent:merge`</label>
+          <label for="ac8">CHANGELOG.md, README.md, and the CLAUDE.md plugin table document the new skill and shorthand</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">The `feedback_merge_behavior` memory note is reduced to a pointer at `git-agent:merge`</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

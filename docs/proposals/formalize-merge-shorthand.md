@@ -26,7 +26,7 @@ Side-by-side:
 |---|---|---|
 | Trigger | Model recall, best-effort | `UserPromptSubmit` hook regex on `merge?` — deterministic |
 | Logic location | Prose in `~/.claude/projects/.../memory/` | `kit/plugins/git-agent/skills/merge/SKILL.md` |
-| Explicit invocation | None | `/git-agent:merge` (skills are slash-invocable) |
+| Activation | None | Skill auto-activates on merge-readiness intent; the hook additionally routes the exact `merge?` prompt to it |
 | Portability | This machine only | Ships with the marketplace plugin |
 | Verifiable | No | Yes — hook fires on exact match; skill testable via `tests/plugins/` |
 
@@ -42,9 +42,12 @@ Side-by-side:
 ## Recommended shape (input to the execution plan)
 
 - `kit/plugins/git-agent/skills/merge/SKILL.md` — logic from the memory note:
-  `gh pr list` / `gh pr view --json state,mergeable,statusCheckRollup`; if
-  MERGEABLE and required checks pass → `gh pr merge` (no `--delete-branch`,
-  per the user's git-safety rule); otherwise surface status and ask.
+  `gh pr list` / `gh pr view --json state,mergeable,statusCheckRollup,headRefOid`;
+  if MERGEABLE and required checks pass → run the project's lint script, then
+  ask for explicit merge approval and merge with
+  `gh pr merge --squash --match-head-commit <headRefOid>` (no
+  `--delete-branch`, per the user's git-safety rule); otherwise surface status
+  and ask. Green checks never authorize a merge on their own.
 - `kit/plugins/git-agent/hooks.json` — new file (git-agent has no hooks yet;
   precedent: `kit/plugins/plan-agent/hooks.json`). A `UserPromptSubmit` entry
   whose script exits silently unless the prompt is `merge?` (anchored regex,
@@ -54,8 +57,10 @@ Side-by-side:
   hook = MINOR), plus a `CHANGELOG.md` entry.
 - Retire the memory note once the skill ships (delete or convert to a pointer)
   so the two sources cannot drift.
-- Smoke test under `tests/plugins/` asserting the hook script fires on
-  `merge?` and stays silent on ordinary prompts containing the word "merge".
+- Smoke test under `tests/plugins/` asserting the hook script fires on exact
+  `merge?` (plus surrounding whitespace and `MERGE?`) and stays silent on every
+  near-miss: `merge`, `please merge?`, `merge? now`, and prose containing
+  "merge?" mid-sentence.
 
 ## Open questions
 
