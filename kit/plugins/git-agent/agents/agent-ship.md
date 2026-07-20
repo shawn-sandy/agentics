@@ -9,7 +9,7 @@ description: >
   or "fire off a ship". Mirrors the ship skill but runs as a background
   subagent. Skip if the user wants step-by-step control — dispatch
   agent-commit and agent-pr individually instead.
-tools: Bash, Read, Edit, Grep, Glob, ToolSearch, ExitPlanMode
+tools: Bash, Read, Grep, Glob, ToolSearch, ExitPlanMode
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet
 maxTurns: 20
@@ -127,17 +127,13 @@ Critique the diff as a hostile reviewer would. Check specifically for:
 3. **Edge cases in string parsing or truncation** — off-by-one slices, splitting on a character that occurs inside the data (e.g. hyphens), unhandled empty input.
 4. **Responsive or desktop regressions** in image or layout changes — a breakpoint, `srcset`, width, or height silently changed or halved.
 
-**If findings exist:** fix them, then fold the fixes into the commit from Step 4:
+**This step is report-only. Do not fix anything.** You run unattended with no user watching, and `disallowedTools` denies `Write`, `Edit`, and `NotebookEdit` by design — a background ship agent must never rewrite source. Do not attempt to edit files, and do not route around the restriction with `Bash` (no `sed -i`, no heredoc rewrites, no `git apply`). If a finding warrants a code change, that is the parent session's call, not yours.
 
-```
-git add -A && git commit --amend --no-edit
-```
+This step never blocks the ship. It reports; the ship proceeds either way.
 
-The Step 4 commit is not yet pushed, so amending is safe. Re-run the checks against the amended diff once. Do not loop a third time.
+**Report every finding in the final summary**, each with file, line, and what breaks. The parent session cannot see this step's reasoning, so an unreported finding is a silently shipped regression. If there are none, report "Self-review: no findings."
 
-This step never blocks the ship. It fixes what it can and reports the rest.
-
-**Report every finding in the final summary** — both what was fixed and what was left outstanding. The parent session cannot see this step's reasoning, so an unreported finding is a silently shipped regression.
+The foreground `ship` skill does fix findings before pushing, because a user is present to see the edits. That asymmetry is deliberate — do not mirror the skill's amend step here.
 
 ### Step 5: Push
 

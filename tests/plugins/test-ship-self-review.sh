@@ -143,20 +143,20 @@ for term in "accessibility" "escaping" "truncation" "Responsive"; do
   fi
 done
 
-echo "16. Fixes fold into the Step 4 commit via amend..."
-if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "commit --amend --no-edit"; then
+echo "16. Background self-review is report-only (does NOT amend)..."
+if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "report-only" &&
+   ! grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "commit --amend"; then
   echo "  PASS"
 else
-  echo "  FAIL: 'git commit --amend --no-edit' not found in agent Step 4.5"
+  echo "  FAIL: agent Step 4.5 must be report-only — it cannot edit files (see check 19)"
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "17. Re-check is bounded and non-blocking..."
-if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "Do not loop a third time" &&
-   grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "never blocks the ship"; then
+echo "17. Non-blocking guarantee present..."
+if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "never blocks the ship"; then
   echo "  PASS"
 else
-  echo "  FAIL: loop bound or non-blocking guarantee missing"
+  echo "  FAIL: non-blocking guarantee missing"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -168,11 +168,44 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "19. tools includes Edit (needed to apply fixes)..."
-if grep -m1 "^tools:" "$AGENT" | grep -q "Edit"; then
+# Checks 19-21 guard the effective permission, not just the allow line.
+# `disallowedTools` overrides `tools`, so asserting `tools:` contains Edit
+# would pass while the agent is still denied Edit at runtime.
+echo "19. Edit is effectively DENIED (disallowedTools wins over tools)..."
+if grep -m1 "^disallowedTools:" "$AGENT" | grep -q "Edit"; then
   echo "  PASS"
 else
-  echo "  FAIL: 'Edit' missing from agent tools"
+  echo "  FAIL: background ship agents must deny Edit — safety invariant since v3.5.0"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "20. tools does not falsely advertise Edit..."
+if grep -m1 "^tools:" "$AGENT" | grep -q "Edit"; then
+  echo "  FAIL: 'tools' lists Edit but 'disallowedTools' denies it — misleading"
+  FAILURES=$((FAILURES + 1))
+else
+  echo "  PASS"
+fi
+
+echo "21. Step 4.5 forbids routing around the deny list via Bash..."
+if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "sed -i"; then
+  echo "  PASS"
+else
+  echo "  FAIL: no explicit prohibition on Bash-based file rewriting"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "22. Deny-list invariant holds across all git-agent background agents..."
+BG_FAIL=0
+for a in "$ROOT"/kit/plugins/git-agent/agents/agent-*.md; do
+  if ! grep -m1 "^disallowedTools:" "$a" | grep -q "Edit"; then
+    echo "  FAIL: $(basename "$a") does not deny Edit"
+    BG_FAIL=1
+  fi
+done
+if [ "$BG_FAIL" -eq 0 ]; then
+  echo "  PASS"
+else
   FAILURES=$((FAILURES + 1))
 fi
 
