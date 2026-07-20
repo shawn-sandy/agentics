@@ -9,7 +9,7 @@ description: >
   or "fire off a ship". Mirrors the ship skill but runs as a background
   subagent. Skip if the user wants step-by-step control — dispatch
   agent-commit and agent-pr individually instead.
-tools: Bash, Read, Grep, Glob, ToolSearch, ExitPlanMode
+tools: Bash, Read, Edit, Grep, Glob, ToolSearch, ExitPlanMode
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet
 maxTurns: 20
@@ -108,6 +108,37 @@ Report the commit hash and message on success.
 
 **If a pre-commit hook fails:** report the hook's output verbatim and **STOP**. Do not retry. Do not use `--no-verify`. Do not modify the staged files. Let the parent session surface the failure to the user.
 
+### Step 4.5: Self-Review Before Push
+
+Always runs. There is no user to prompt in a background ship, so there is no opt-out.
+
+Resolve `<base>` using the procedure in **Step 7: Detect Base Branch**, then run:
+
+```
+git diff <base>...HEAD
+```
+
+If no base branch resolves, note "Skipping self-review: cannot resolve a base branch." in the final report and continue to Step 5.
+
+Critique the diff as a hostile reviewer would. Check specifically for:
+
+1. **Dropped accessibility attributes** — removed `aria-*`, `role`, `alt`, or live-region markup that the previous version had.
+2. **Double-escaping or encoding changes** in generated output — HTML entities escaped twice, or raw text now passing through an escape it did not before.
+3. **Edge cases in string parsing or truncation** — off-by-one slices, splitting on a character that occurs inside the data (e.g. hyphens), unhandled empty input.
+4. **Responsive or desktop regressions** in image or layout changes — a breakpoint, `srcset`, width, or height silently changed or halved.
+
+**If findings exist:** fix them, then fold the fixes into the commit from Step 4:
+
+```
+git add -A && git commit --amend --no-edit
+```
+
+The Step 4 commit is not yet pushed, so amending is safe. Re-run the checks against the amended diff once. Do not loop a third time.
+
+This step never blocks the ship. It fixes what it can and reports the rest.
+
+**Report every finding in the final summary** — both what was fixed and what was left outstanding. The parent session cannot see this step's reasoning, so an unreported finding is a silently shipped regression.
+
 ### Step 5: Push
 
 Run:
@@ -204,7 +235,7 @@ For GitLab, run:
 glab mr create --title "<title>" --description "<body>"
 ```
 
-Report the PR/MR URL and **STOP**.
+Report the PR/MR URL, followed by the Step 4.5 self-review findings — what was fixed and what remains outstanding, or "Self-review: no findings." — and **STOP**.
 
 ---
 
