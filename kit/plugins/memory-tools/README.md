@@ -115,7 +115,7 @@ Current version: **4.0.0**
 - **v4.0.0** — Primary skill renamed from `agentic-memory-doctor` to `agentic-memory-management`. Update any `@import` references:
   - Old: `@<plugin-dir>/skills/agentic-memory-doctor/SKILL.md`
   - New: `@<plugin-dir>/skills/agentic-memory-management/SKILL.md`
-  - Find stale references: `grep -rn 'skills/agentic-memory-doctor/SKILL.md' .`
+  - Find stale live references: `git grep -n 'skills/agentic-memory-doctor/SKILL.md' -- ':!kit/plugins/memory-tools/README.md' ':!**/CHANGELOG.md' ':!docs/'`
 - **v3.0.0** — Primary skill renamed from `memory-doctor` to `agentic-memory-doctor`.
 - **v2.0.0** — Plugin renamed from `claude-md-optimizer` to `memory-tools`. Reinstall required.
 

@@ -674,7 +674,7 @@ claude --plugin-dir ./kit/plugins/skill-reviewer
 
 ---
 
-#### `memory-tools` v3.1.3
+#### `memory-tools` v4.0.0
 
 Audit and optimize CLAUDE.md project memory files against Claude Code best practices.
 
@@ -741,10 +741,10 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 3.2.0 | development | 2 skills |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.0.0 | development | 2 skills |
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.3 | development | 1 command, 1 skill, 1 agent |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.7 | development | 1 command, 4 skills, 1 hook |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.8 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
 | [git-agent](./kit/plugins/git-agent/README.md) | 4.3.0 | development | 3 commands, 6 skills, 3 agents |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.11 | productivity | 1 command, 1 skill, 7 agents |
