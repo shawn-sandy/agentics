@@ -115,6 +115,21 @@ Run the first match. If tests fail, report the failing output verbatim and
 continue — never start a watch-mode script, which would hang the pipeline
 forever.
 
+**Lint.** Detect a lint script:
+
+```
+jq -r '.scripts | to_entries[] | select(.key | test("^lint")) | select(.key + " " + .value | test("--fix|watch") | not) | .key' package.json 2>/dev/null
+```
+
+The filter reads each script's **command**, not just its name — a script named
+plainly `lint` whose value is `eslint --fix .` would otherwise rewrite the
+working tree at exactly the stage that forbids it.
+
+Run the first match. If lint fails, report the failing output verbatim and
+**STOP** — catching it here saves a full CI round-trip through Step 6b. Do not
+auto-apply `--fix` at this stage; the user has not seen the diff yet. If no
+lint script exists, say so and continue.
+
 **Browser preview.** Only if the change is observable in a browser (it renders,
 serves, or logs something the dev server exercises). Skip otherwise — a server
 that can't prove anything is wasted time.
@@ -272,6 +287,39 @@ via `gh` noting the commit that addresses it.
 If the comment is ambiguous, architecturally significant, or open to multiple
 interpretations: use **AskUserQuestion** with enough context that the user can
 answer without scrolling back. Do not guess.
+
+If the finding is **wrong** — it misreads the code, describes state that no
+longer exists, or repeats something already declined on this PR: do not push a
+no-op fix to silence it. Reply once on the thread with the specific reason
+(`gh pr comment` for a top-level review, `gh api` on the review-comment id for
+an inline thread), resolve the thread, and move on. Keep the reply to a
+sentence or two — a re-firing bot will not remember it next round. If the same
+bot raises the same refuted finding again, skip it silently rather than
+replying twice.
+
+**A refuted finding submitted as a formal `CHANGES_REQUESTED` review is not
+cleared by replying or resolving the thread.** The review decision still reads
+`CHANGES_REQUESTED`, which Step 8 blocks on — leaving the PR unmergeable and
+the finding marked "handled". Check which form it took:
+
+```
+gh pr view <pr-url> --json reviewDecision
+```
+
+If the decision is `CHANGES_REQUESTED`, post the refutation, then identify the
+review that raised it:
+
+```
+gh api repos/<owner>/<repo>/pulls/<n>/reviews --jq '.[] | select(.state=="CHANGES_REQUESTED") | {id, user: .user.login}'
+```
+
+Then **escalate via AskUserQuestion** — the options are dismissing that review
+by its `id` (`gh api -X PUT
+repos/<owner>/<repo>/pulls/<n>/reviews/<review-id>/dismissals
+-f message="<reason>" -f event=DISMISS`, which needs write access and is a
+visible act on someone else's review) or asking the reviewer to re-review.
+Never dismiss a review on your own initiative, and never merge around a
+standing change request.
 
 ### 6d: Commit and let the next event drive
 

@@ -187,9 +187,18 @@ mood.
 ## Changes
 <brief description of what changed and why>
 
+## Test Plan
+- [ ] <command or check a reviewer runs to verify this>
+
 ## Linked Issues
 Closes <url>
 ```
+
+**Test Plan rules:** this skill does not run tests, so list what a reviewer
+should run (the project's test/lint commands, plus any manual step for
+user-facing changes). If a check was actually run earlier in this session,
+mark it `[x]` and name the result. **Never mark a box that was not verified** —
+an unchecked box is honest, a false checkmark is not.
 
 Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
 
