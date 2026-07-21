@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.3.1 — Condense the marketplace description (2026-07-21)
+
+### Changed
+
+- **Marketplace description trimmed from 1,704 to 635 characters** (-63%). It had grown into a per-skill feature tour against a ~250-character average for the other 12 plugins; the per-command detail it carried is already documented here and in the README. All 14 skill names are retained — `test-build-skill.sh` check 9 treats the description as the discoverability surface for `/plugin` search and asserts every `skills/` directory appears by name, so shortening it is a copy-edit, never a delisting.
+- **`CLAUDE.md` plugin-table row condensed** from 2,306 to 1,121 characters, bringing it in line with the other long rows instead of 2.5× the next-longest. Cut less aggressively than the marketplace copy on purpose: `CLAUDE.md` loads into context every session, so command names and behavioral constraints (`implementation-plan` never writes source files) earn their tokens where per-command mechanism prose does not.
+
+No behavior changes — description and metadata only.
+
 ## 4.3.0 — `build` skill: implement a plan on its own (2026-07-20)
 
 - New `build` skill (`/plan-agent:build [<plan>]`) implements an existing plan end-to-end: resolves the plan (argument, or the newest `todo`/`in-progress` spec), walks the steps, ticks the spec, and runs the acceptance-criteria, end-to-end-verification, and completion-checklist gates. It re-renders after every batch of spec edits, not only at the end, so the gallery never shows a stale status mid-run.
