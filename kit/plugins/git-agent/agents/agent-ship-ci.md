@@ -103,13 +103,19 @@ autofix; uncommitted work in the tree would be swept in silently.
 single command timeout. Bound each wait and loop:
 
 ```
-timeout 540 gh pr checks <pr-url> --watch --fail-fast=false; true
+gh pr checks <pr-url> --watch --fail-fast=false 2>&1 | tail -15; true
 gh pr checks <pr-url> --json name,state,workflow,link
 ```
 
-The `timeout ... ; true` form is deliberate: a timed-out watch is not an error,
-it just means checks are still running. Read the real state from the second
-command every time.
+Bound the first command by setting the **Bash tool's own `timeout` parameter**
+to `540000` (540s). Do **not** wrap it in a shell `timeout` command — that is
+GNU coreutils and is absent on stock macOS, where `timeout 540 gh ...` dies with
+`command not found` and the watch never runs at all. The tool-level timeout is
+the portable mechanism and needs no dependency.
+
+The trailing `; true` is deliberate: a timed-out or interrupted watch is not an
+error, it just means checks are still running. Read the real state from the
+second command every time — never from the watch output.
 
 Repeat this pair at most **5 times** (~45 minutes total). If checks are still
 pending after the 5th round, report "CI still running after ~45 minutes" with
@@ -145,7 +151,13 @@ Classify on log content:
 | `peer-deps` | `peer dep`, `ERESOLVE`, `incompatible peer` | Autofix (Step 4) |
 | `typecheck` | `TS`, `TypeScript`, `error TS`, `tsc` | **Report only** — the fix is a source edit |
 | `test` | failing assertions, test runner output | **Report only** |
+| `bot-infra` | `rate limited`, quota/throttle text, or a failing check with an empty `workflow` and `link` | **Report only** — never "fix" |
 | anything else | any other content | **Report only** |
+
+`bot-infra` is called out because external review bots (CodeRabbit and similar)
+report a red check when they are merely throttled. There is no code defect to
+fix, and pushing a commit to clear it just burns another CI round. Report it and
+move on.
 
 For every report-only class, capture the check name and the first ~20 lines of
 its failing log for the Step 6 report. Do not attempt the fix, and do not

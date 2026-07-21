@@ -19,7 +19,9 @@ Background git agents have denied `Write`/`Edit`/`NotebookEdit` since v3.5.0, an
 - **Applied** — `lint` (only via a `--fix` script the project already defines) and `peer-deps` (lockfile reinstall, with the diff verified lockfile-only and reverted if it is not). These are the project's own tooling rewriting its own output via `Bash`, not model-authored edits.
 - **Reported only** — `typecheck`, test failures, and everything unrecognized. Their fixes are source edits, which an unattended agent must not author.
 
-One attempt per check, not three: these fixers are deterministic, so a second identical run cannot succeed where the first failed. `--watch` is bounded by `timeout 540` and looped at most 5 times (~45 min) so a long CI run cannot exceed a single command timeout.
+One attempt per check, not three: these fixers are deterministic, so a second identical run cannot succeed where the first failed. `gh pr checks --watch` is bounded by the **Bash tool's own `timeout` parameter** (540s) and looped at most 5 times (~45 min) so a long CI run cannot exceed a single command timeout. It deliberately does not shell out to `timeout` — that is GNU coreutils and absent on stock macOS, where `timeout 540 gh ...` fails with `command not found` and the watch never runs. This was caught live on macOS while shipping the agent's own PR.
+
+Throttled external review bots (CodeRabbit and similar report a red check when merely rate-limited, with an empty `workflow` and `link`) are classified `bot-infra` and are report-only. There is no defect to fix, and pushing a commit to clear one just burns another CI round. Also caught live on the agent's own PR.
 
 ---
 

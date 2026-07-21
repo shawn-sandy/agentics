@@ -68,13 +68,26 @@ if grep -q "do not append the flag yourself" "$AGENT"; then pass; else fail "mus
 echo "13. peer-deps reinstall verifies the diff is lockfile-only..."
 if grep -q "git checkout -- ." "$AGENT"; then pass; else fail "must revert a reinstall that touches source"; fi
 
-echo "14. --watch is bounded so it cannot exceed a command timeout..."
-if grep -q "timeout 540 gh pr checks" "$AGENT"; then pass; else fail "gh pr checks --watch must be wrapped in a timeout"; fi
+echo "14. --watch is bounded via the Bash tool timeout, not shell \`timeout\`..."
+# `timeout` is GNU coreutils and absent on stock macOS — using it means the
+# watch never runs at all. Caught live on macOS during the shipping run.
+if grep -q "Bash tool's own \`timeout\` parameter" "$AGENT" && ! grep -qE '^\s*timeout [0-9]+ gh' "$AGENT"; then
+  pass
+else
+  fail "must bound --watch with the Bash tool timeout and must not shell out to \`timeout\`"
+fi
 
-echo "15. uses gh pr checks 'state', never the nonexistent 'conclusion' field..."
+echo "15. throttled review bots are report-only, not autofixed..."
+if grep -q '`bot-infra`' "$AGENT" && grep -qi "rate limited" "$AGENT"; then
+  pass
+else
+  fail "must classify throttled review bots as report-only"
+fi
+
+echo "16. uses gh pr checks 'state', never the nonexistent 'conclusion' field..."
 if grep -q "has no \`conclusion\`" "$AGENT"; then pass; else fail "must warn that gh pr checks has no conclusion field"; fi
 
-echo "16. command dispatches the right subagent in the background..."
+echo "17. command dispatches the right subagent in the background..."
 if grep -q 'subagent_type: "git-agent:agent-ship-ci"' "$CMD" && grep -q "run_in_background: true" "$CMD"; then
   pass
 else
