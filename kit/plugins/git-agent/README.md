@@ -49,7 +49,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `/git-agent:pr-bg [hint]` | Dispatch `agent-pr` in the background — push and open a GitHub PR while you keep working. Optional hint sets PR title/body context. |
 | `/git-agent:ship-bg [hint]` | Dispatch `agent-ship` in the background — full commit + push + PR pipeline end-to-end. Optional hint sets commit/PR context. |
 | `/git-agent:ship-ci-bg [pr]` | Dispatch `agent-ship-ci` in the background — watch an existing PR's checks, autofix lint/peer-deps, report. Optional argument names the PR; otherwise resolved from the current branch. |
-| `/git-agent:merge-bg [pr]` | Dispatch `agent-merge` in the background — run the PR readiness gate and squash-merge if fully green, report otherwise. Running the command is the approval for that one merge. |
+| `/git-agent:merge-bg [pr]` | Dispatch `agent-merge` in the background — run the PR readiness gate and squash-merge if fully green, report otherwise. The optional argument is the **PR to merge** (URL or number), not a summary hint; without it the PR is resolved from the current branch. Running the command is the approval for that one merge. |
 
 ### Skills
 
@@ -251,9 +251,9 @@ Mirrors `ship`: guards → stage → commit → push → check for existing PR/M
 
 #### agent-merge
 
-Dispatched via `/git-agent:merge-bg [pr]` or directly by an orchestrator.
+Dispatched via `/git-agent:merge-bg [pr]` or directly by an orchestrator. The optional argument names the PR to act on and wins over the checked-out branch; only without it is the PR resolved from the current branch.
 
-Mirrors `merge` Steps 1–4: find the PR → readiness gate (`--required` checks, `mergeable`, `reviewDecision`, unresolved threads) → lint gate → re-check → `gh pr merge --squash --match-head-commit`. The skill's `AskUserQuestion` approval has no background equivalent, so the dispatch itself authorizes exactly one squash merge of a fully green PR; every other branch is a stop-and-report. Never passes `--delete-branch`.
+Mirrors `merge` Steps 1–4: find the PR → readiness gate (`--required` checks, `mergeable`, `reviewDecision`, unresolved threads) → lint gate → re-check → `gh pr merge --squash --match-head-commit`. The skill's `AskUserQuestion` approval has no background equivalent, so the dispatch itself authorizes exactly one squash merge of a fully green PR; every other branch is a stop-and-report. The lint gate runs only when the working tree is clean and `HEAD` matches the PR's `headRefOid` — otherwise it is skipped and reported as skipped, since lint passing on uncommitted local edits says nothing about the commit being merged. Never passes `--delete-branch`.
 
 ### Caveat: working-tree snapshot
 
@@ -269,7 +269,7 @@ These slash commands give you a one-line way to fire off the background agents w
 - `/git-agent:ship-ci-bg [pr]` — dispatches `agent-ship-ci` in the background.
 - `/git-agent:merge-bg [pr]` — dispatches `agent-merge` in the background.
 
-Each command invokes the corresponding agent with `run_in_background: true` and returns control immediately; you'll be notified automatically when the agent completes. The optional argument is passed to the agent as a hint for the commit message or PR summary.
+Each command invokes the corresponding agent with `run_in_background: true` and returns control immediately; you'll be notified automatically when the agent completes. For `commit-bg`, `pr-bg`, and `ship-bg` the optional argument is a hint for the commit message or PR summary; for `ship-ci-bg` and `merge-bg` it names the PR to act on.
 
 Example:
 

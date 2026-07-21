@@ -13,6 +13,13 @@ The `merge` skill ends in an `AskUserQuestion` approval prompt, and a background
 
 It never passes `--delete-branch` (or GitLab's `-d`), never marks a draft ready, never replies to or resolves reviews, and upholds the background-agent deny list (`Write`/`Edit`/`NotebookEdit`) asserted by `tests/plugins/test-ship-self-review.sh`.
 
+### Two background-specific divergences from the skill
+
+The `merge` skill assumes the foreground invariants that the working tree *is* the PR head and that the checked-out branch *is* the PR. Neither holds for a background agent, so:
+
+- **The PR argument wins over the branch.** `/git-agent:merge-bg 123` acts on PR 123 even when another branch is checked out. Only an argument-less dispatch resolves the PR from the current branch. The argument is a PR target, not a summary hint like `commit-bg`'s.
+- **The lint gate is guarded.** It runs only when the working tree is clean *and* `HEAD` equals the PR's `headRefOid`; otherwise it is skipped and reported as skipped. The parent session keeps editing after dispatch, so lint passing in a drifted tree says nothing about the commit `--match-head-commit` will merge — reporting that as a passed gate would be a false green.
+
 ## v4.5.0 — 2026-07-20 — background CI watcher
 
 ### Added

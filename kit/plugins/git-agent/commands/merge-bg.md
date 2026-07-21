@@ -17,9 +17,10 @@ check to run while they keep working — do not wait for it to finish.
    - `description: "Background merge"`
    - `prompt`: A brief self-contained instruction telling the agent to run the
      merge readiness gate and squash-merge only if everything is green,
-     reporting otherwise. If `$ARGUMENTS` is non-empty, pass it through as the
-     PR to check (e.g. "Check PR <ARGUMENTS>"). Otherwise tell it to resolve
-     the PR from the current branch. The agent already has its full workflow
+     reporting otherwise. If `$ARGUMENTS` is non-empty it is the **PR to act
+     on**, not a summary hint — pass it through as such (e.g. "Check PR
+     <ARGUMENTS>") and say it takes precedence over the checked-out branch.
+     Otherwise tell it to resolve the PR from the current branch. The agent already has its full workflow
      in its frontmatter — keep the prompt brief.
 
 2. As soon as the agent is dispatched, return control with a single-line

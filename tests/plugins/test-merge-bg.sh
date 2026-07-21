@@ -26,10 +26,16 @@ for f in "$AGENT" "$CMD"; do
 done
 
 check "agent runs in background" grep -q "^background: true" "$AGENT"
-check "agent denies Edit" grep -q "^disallowedTools:.*Edit" "$AGENT"
+check "agent denies Write" grep -q "^disallowedTools:.*Write" "$AGENT"
+check "agent denies Edit" grep -q "^disallowedTools:.*\bEdit" "$AGENT"
+check "agent denies NotebookEdit" grep -q "^disallowedTools:.*NotebookEdit" "$AGENT"
 check "agent refuses --delete-branch" grep -q -- "--delete-branch" "$AGENT"
-check "agent pins the merge to the verified head" grep -q -- "--match-head-commit" "$AGENT"
-check "agent merges with squash only" grep -q -- "--squash" "$AGENT"
+check "agent merges with a head-pinned squash" \
+  grep -qF 'gh pr merge <pr-url> --squash --match-head-commit <headRefOid>' "$AGENT"
+check "agent prefers the dispatched PR over the current branch" \
+  grep -q "dispatch prompt names" "$AGENT"
+check "agent guards the lint gate against a drifted tree" \
+  grep -q "headRefOid" "$AGENT"
 check "agent replaces the skill's approval prompt" grep -q "AskUserQuestion.*does not apply" "$AGENT"
 check "agent stops rather than guessing when not green" grep -qF "**report and STOP**" "$AGENT"
 check "command dispatches agent-merge" grep -q "git-agent:agent-merge" "$CMD"
