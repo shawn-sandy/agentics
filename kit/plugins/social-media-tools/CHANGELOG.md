@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.18.1 — 2026-07-21 — Document `share-explanation` in the plugin README
+
+### Fixed
+
+- **`share-explanation` was missing from the README.** The skill shipped but appeared in none of the README's three listings (component table, activation table, directory tree), so it was undiscoverable from the docs. Added to all three. Docs only — no behavior change.
+
 ## v2.18.0 — 2026-07-19 — media-library: assert card count against source count
 
 ### Added
