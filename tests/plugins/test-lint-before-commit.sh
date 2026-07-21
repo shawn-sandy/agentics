@@ -135,7 +135,76 @@ rmdir "$REPO/node_modules" && touch "$REPO/.pnp.cjs"
 fire "git commit -m 'x'" "$REPO"
 check_rc 2 "Yarn PnP (.pnp.cjs, no node_modules) — gate still active"
 
-echo "10. hooks.json wires the script under PreToolUse without losing the merge hook..."
+echo "10. The typecheck gate blocks independently of lint..."
+# lint passes, typecheck fails — without this the second gate could regress
+# unnoticed, since every other fixture only exercises scripts.lint.
+REPO=$(make_repo typecheck '{"scripts":{"lint":"true","typecheck":"echo TYPES_BROKE >&2; exit 1"}}')
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "blocks on failing typecheck"
+if printf '%s' "$OUT" | grep -q "TYPES_BROKE"; then echo "  PASS: typecheck output is fed back"
+else echo "  FAIL: typecheck output missing from block message"; FAILURES=$((FAILURES + 1)); fi
+if printf '%s' "$OUT" | grep -q '`typecheck` failed'; then echo "  PASS: block message names the failing script"
+else echo "  FAIL: block message does not name typecheck"; FAILURES=$((FAILURES + 1)); fi
+
+echo "11. \`git -C <path>\` lints the repo being committed, not the cwd..."
+# The commit targets OTHER; linting cwd would check the wrong package — letting
+# a real failure through and blocking on an unrelated one.
+OUTER=$(make_repo outer_c "$PASSING")
+OTHER=$(make_repo other_c "$FAILING")
+fire "git -C '$OTHER' commit -m 'x'" "$OUTER"
+check_rc 2 "absolute -C path picks up the target repo's failing lint"
+
+# Reversed: failing lint in cwd, passing in the -C target. A hook still reading
+# cwd would block here, which is the same bug wearing the opposite mask.
+OUTER=$(make_repo outer_c2 "$FAILING")
+OTHER=$(make_repo other_c2 "$PASSING")
+fire "git -C '$OTHER' commit -m 'x'" "$OUTER"
+check_rc 0 "cwd's failing lint does not block a commit aimed elsewhere"
+
+# Relative -C resolves against the payload cwd.
+PARENT=$(make_repo parent_c "$PASSING")
+mkdir -p "$PARENT/sub" && git -C "$PARENT/sub" init -q
+printf '%s' "$FAILING" > "$PARENT/sub/package.json" && mkdir -p "$PARENT/sub/node_modules"
+fire "git -C sub commit -m 'x'" "$PARENT"
+check_rc 2 "relative -C path resolves against cwd"
+
+echo "12. Bun repos select the bun runner for both lockfile formats..."
+# bun.lock is the default since Bun 1.2; bun.lockb is legacy. Missing either
+# silently falls back to `npm run`. `bun` may not be installed on this machine,
+# so assert on runner selection directly rather than on a real run.
+for lock in bun.lock bun.lockb; do
+  if python3 - "$ROOT" "$lock" <<'PY'
+import importlib.util, os, sys, tempfile
+spec = importlib.util.spec_from_file_location(
+    "hook", os.path.join(sys.argv[1], "kit/plugins/git-agent/hooks/lint-before-commit.py"))
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+with tempfile.TemporaryDirectory() as d:
+    open(os.path.join(d, sys.argv[2]), "w").close()
+    sys.exit(0 if mod.runner(d) == ["bun", "run"] else 1)
+PY
+  then echo "  PASS: $lock selects bun"
+  else echo "  FAIL: $lock falls back to npm"; FAILURES=$((FAILURES + 1)); fi
+done
+
+echo "13. Per-check timeouts fit inside the declared hook timeout..."
+# Two checks run sequentially; if 2 x PER_CHECK_TIMEOUT exceeds the hooks.json
+# timeout, the host kills the gate mid-run and the commit slips through.
+if python3 - "$ROOT" <<'PY'
+import importlib.util, json, os, sys
+root = sys.argv[1]
+spec = importlib.util.spec_from_file_location(
+    "hook", os.path.join(root, "kit/plugins/git-agent/hooks/lint-before-commit.py"))
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+cfg = json.load(open(os.path.join(root, "kit/plugins/git-agent/hooks.json")))["hooks"]
+declared = [h.get("timeout", 0) for e in cfg["PreToolUse"] for h in e["hooks"]
+            if "lint-before-commit.py" in h.get("command", "")]
+budget = len(mod.SCRIPTS) * mod.PER_CHECK_TIMEOUT
+sys.exit(0 if declared and budget <= declared[0] else 1)
+PY
+then echo "  PASS: combined check budget fits the hook timeout"
+else echo "  FAIL: checks can outlast the hook timeout"; FAILURES=$((FAILURES + 1)); fi
+
+echo "14. hooks.json wires the script under PreToolUse without losing the merge hook..."
 if python3 -m json.tool "$HOOKS_JSON" >/dev/null; then echo "  PASS: valid JSON"
 else echo "  FAIL: invalid JSON"; FAILURES=$((FAILURES + 1)); fi
 # Parse rather than grep: a grep would pass even if the command were registered

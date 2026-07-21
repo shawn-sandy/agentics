@@ -12,7 +12,9 @@
 
 ### Detection and scope
 
-package.json only: `scripts.lint`, then `scripts.typecheck` if present. The package manager comes from the lockfile (`pnpm-lock.yaml`, `yarn.lock`, `bun.lockb`, else `npm`). A repo with no package.json, no matching script, or a missing runner is a silent no-op — the gate never strands a commit in a repo it does not understand.
+package.json only: `scripts.lint`, then `scripts.typecheck` if present. The package manager comes from the lockfile (`pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `bun.lockb`, else `npm`) — both Bun formats are recognized, since `bun.lock` became the default in Bun 1.2 and `bun.lockb` is legacy. A repo with no package.json, no matching script, or a missing runner is a silent no-op — the gate never strands a commit in a repo it does not understand.
+
+Each check gets 90s, so both together stay inside the 200s hook timeout declared in `hooks.json`. A test asserts that relationship rather than trusting the two numbers to stay in sync.
 
 ### Only a check that ran may block
 
@@ -26,7 +28,11 @@ Create `.claude/no-lint-gate` at the repo root to disable it. The block message 
 
 ### Matching
 
-Only real commits trigger it: `git commit`, `git commit --amend`, `git -C path commit`, and `git add -A && git commit` all match, while `git log --grep commit` and `git commit-tree` do not. Covered by `tests/plugins/test-lint-before-commit.sh`.
+Only real commits trigger it: `git commit`, `git commit --amend`, `git -C path commit`, and `git add -A && git commit` all match, while `git log --grep commit` and `git commit-tree` do not.
+
+`-C <path>` retargets the lint root, because that flag moves the commit to another repo — linting the payload's `cwd` there would check the wrong package, letting a real failure through while blocking on an unrelated one. Absolute and relative paths both resolve. `-c` is left alone; it sets config, not a directory.
+
+Covered by `tests/plugins/test-lint-before-commit.sh` (38 checks).
 
 ## v4.6.0 — 2026-07-21 — background merge
 
