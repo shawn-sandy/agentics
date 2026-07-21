@@ -215,7 +215,8 @@ This repo ships these keys in **project scope** (`.claude/settings.json`). On fi
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
     "team-defaults@agentics-kit": true,
-    "artifact-tools@agentics-kit": true
+    "artifact-tools@agentics-kit": true,
+    "content-tools@agentics-kit": true
   }
 }
 ```
