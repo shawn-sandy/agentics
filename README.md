@@ -224,7 +224,7 @@ This repo ships these keys in **project scope** (`.claude/settings.json`). On fi
 
 > **Heads-up on first run and web sessions:** the marketplace add is gated by a one-time trust/consent prompt. In a non-interactive context (such as a fresh Claude Code on the web session that can't answer prompts or run `/plugin`), the kit may not load until that prompt is accepted. If a session doesn't pick up the plugins, accept the trust prompt or run `/plugin marketplace add shawn-sandy/agentics` once.
 
-See the full team setup guide — including scope choices and caveats — in [docs/plugin-auto-load-setup.md](./docs/plugin-auto-load-setup.md).
+See the full team setup guide — including scope choices and caveats — in [docs/plugin-auto-load-setup.md](https://github.com/shawn-sandy/agentics/blob/main/docs/plugin-auto-load-setup.md).
 
 ### Load Locally for Testing
 
@@ -849,7 +849,7 @@ git log --diff-filter=D --oneline -- kit/plugins/agent-creator
 git checkout <commit>^ -- kit/plugins/agent-creator
 ```
 
-> Re-registering any of these plugins in `marketplace.json` requires explicit confirmation — see the [Removed Plugins registry](./.claude/rules/marketplace.md) for the removal rationale before proceeding.
+> Re-registering any of these plugins in `marketplace.json` requires explicit confirmation — see the [Removed Plugins registry](https://github.com/shawn-sandy/agentics/blob/main/.claude/rules/marketplace.md) for the removal rationale before proceeding.
 
 ---
 
