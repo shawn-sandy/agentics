@@ -11,7 +11,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
 - **ship-autonomous** — Supervised full pipeline: branches (if on default), runs the tests and previews both themes before committing, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist, before merging, and again before deleting the branch. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
-- **merge** — Checks the current branch's PR for merge readiness (MERGEABLE, required checks green, no `CHANGES_REQUESTED`, no unresolved threads), runs the project's lint script, then asks for explicit approval before merging with `gh pr merge --squash --match-head-commit`. Never auto-`--fix`es lint, never passes `--delete-branch`. Anything pending, failing, or ambiguous → prints the status summary and asks. Typing `merge?` triggers it deterministically via the bundled `UserPromptSubmit` hook. Auto-activates on intent match.
+- **merge** — Checks the current branch's PR for merge readiness (MERGEABLE, required checks successful or skipped, no `CHANGES_REQUESTED`, no unresolved threads), runs the project's lint script, then asks for explicit approval before merging with `gh pr merge --squash --match-head-commit`. Never auto-`--fix`es lint, never passes `--delete-branch`. Anything pending, failing, or ambiguous → prints the status summary and asks. Typing `merge?` triggers it deterministically via the bundled `UserPromptSubmit` hook. Auto-activates on intent match.
 - **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, `session`, or `plan` (a plan file becomes a tracked ticket). Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Auto-activates on intent match.
 
 ### Subagents (background, fire-and-forget)
@@ -266,8 +266,8 @@ Example:
 
 ## Requirements
 
-- `pr-agent`, `ship`, `ship-autonomous`, `merge`, `agent-pr`, `agent-ship`, and `create-issue` all require the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`)
-- GitLab support (`agent-ship`, `create-issue` on GitLab repos) additionally requires `glab` installed and authenticated
+- `pr-agent`, `ship`, `ship-autonomous`, `merge`, `agent-pr`, `agent-ship`, and `create-issue` all require the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`) when the remote is GitHub
+- GitLab support (`merge`, `agent-ship`, `create-issue` on GitLab repos) requires `glab` installed and authenticated instead
 
 ## Plugin Structure
 

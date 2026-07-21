@@ -111,6 +111,9 @@ check_skill "MERGEABLE" "MERGEABLE readiness gate"
 check_skill "--match-head-commit" "merge pinned to verified head commit"
 check_skill "AskUserQuestion" "explicit approval before merging"
 check_skill 'test("^lint")' "lint gate detection"
+check_skill "Run the first match" "lint gate actually executes the script"
+check_skill "--required" "blocking gate uses required checks only"
+check_skill "--remove-source-branch" "GitLab branch deletion forbidden"
 check_skill "Never auto-apply" "no auto --fix"
 check_skill "Never pass \`--delete-branch\`" "branch deletion forbidden"
 # Distinctive phrasing, not the substring "and ask" — that appears in several
@@ -125,19 +128,22 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "8. Every --delete-branch mention is a prohibition..."
-DB_LINES=$(grep -c -- '--delete-branch' "$SKILL" || true)
-DB_ALLOWED=$(grep -- '--delete-branch' "$SKILL" | grep -c -i 'never' || true)
-if [ "$DB_LINES" -gt 0 ] && [ "$DB_LINES" -eq "$DB_ALLOWED" ]; then
-  echo "  PASS: $DB_LINES mention(s), all prohibitions"
-else
-  echo "  FAIL: $DB_LINES --delete-branch mention(s), only $DB_ALLOWED are prohibitions"
-  FAILURES=$((FAILURES + 1))
-fi
+echo "8. Every branch-deletion flag is only ever mentioned as a prohibition..."
+for flag in '--delete-branch' '--remove-source-branch'; do
+  total=$(grep -c -- "$flag" "$SKILL" || true)
+  banned=$(grep -- "$flag" "$SKILL" | grep -c -i 'never' || true)
+  if [ "$total" -gt 0 ] && [ "$total" -eq "$banned" ]; then
+    echo "  PASS: $flag — $total mention(s), all prohibitions"
+  else
+    echo "  FAIL: $flag — $total mention(s), only $banned are prohibitions"
+    FAILURES=$((FAILURES + 1))
+  fi
+done
 
 echo "9. allowed-tools covers the tools the steps actually use..."
 FM=$(sed -n '/^allowed-tools:/p' "$SKILL")
-for tool in "AskUserQuestion" "Bash(jq \*)" "ToolSearch" "ExitPlanMode"; do
+for tool in "AskUserQuestion" "Bash(git \*)" "Bash(gh \*)" "Bash(glab \*)" \
+            "Bash(jq \*)" "ToolSearch" "ExitPlanMode"; do
   if printf '%s' "$FM" | grep -qF -- "${tool//\\/}"; then
     echo "  PASS: declares ${tool//\\/}"
   else

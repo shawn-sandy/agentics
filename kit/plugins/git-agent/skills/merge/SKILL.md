@@ -55,13 +55,14 @@ mixes node types — a `CheckRun` carries `status` + `conclusion` (a pending run
 normalizes all of them onto one `state` field:
 
 ```
-gh pr checks <pr-url> --json name,state,link
+gh pr checks <pr-url> --required --json name,state,link   # the blocking gate
+gh pr checks <pr-url> --json name,state,link              # everything, for the summary
 ```
 
 Merge only when **all** of these hold:
 
 - `mergeable` is `MERGEABLE` (not `CONFLICTING`, not `UNKNOWN`)
-- every check is `SUCCESS` or `SKIPPED`
+- every **required** check is `SUCCESS` or `SKIPPED`
 - `reviewDecision` is not `CHANGES_REQUESTED`
 - no unresolved review threads:
 
@@ -75,9 +76,11 @@ Fill `<owner>`, `<repo>`, and `<n>` from `gh repo view --json owner,name` and
 the PR number — never from a guess. If `hasNextPage` is true, the thread list is
 truncated: say so and ask rather than reporting a count you cannot trust.
 
-`gh pr checks` reports every check, not just the required ones, and the API
-exposes no required/optional flag. Do not decide unilaterally that a pending
-check is optional — if a check is pending or failing, surface it by name and ask.
+`--required` is what branch protection actually enforces, so it — not the full
+list — decides whether the merge is blocked. Never infer required-ness yourself
+from a check's name. A non-required check that is pending or failing does not
+block, but **always name it in the Step 4 summary** so the user approves with
+the full picture rather than a filtered one.
 
 If any of these fails — checks pending, checks failing, conflicts, changes
 requested, unresolved threads, or anything ambiguous — print the status summary
@@ -100,9 +103,16 @@ The filter reads each script's **command**, not just its name — a script named
 `lint` whose value is `eslint --fix .` would rewrite the working tree and change
 the PR head out from under the verified commit.
 
+**Run the first match** with the project's package manager — detect it from the
+lockfile (`pnpm-lock.yaml` → `pnpm`, `yarn.lock` → `yarn`, otherwise `npm`) and
+run `<pm> run <script>`. Listing the candidate scripts is not the gate; actually
+executing one is.
+
 - No match → note in one line that no lint script was found and continue.
-- Lint fails → print the failing output verbatim, **do not merge**, and ask.
+- Non-zero exit → print the failing output verbatim, **do not merge**, and ask.
   Never auto-apply `--fix`: fixed files would change the head commit.
+- If the detection command itself errors (no `package.json`, no `jq`), treat it
+  as "no lint script" and say which — never let a broken probe read as green.
 
 ## Step 4: Re-check, ask, then merge
 
@@ -140,6 +150,18 @@ Print the merge result and the PR URL, then **STOP**.
 
 ## GitLab
 
-With a `glab` remote, substitute `glab mr view`/`glab mr merge` and apply the
-same gates: pipeline green, no unresolved discussions, explicit approval, no
-branch deletion.
+With a `glab` remote, substitute the equivalent commands and apply the same
+gates — pipeline green, no unresolved discussions, explicit approval:
+
+```
+glab mr view <id>              # state, pipeline status, commit
+glab mr view <id> --unresolved # unresolved discussions only
+glab mr merge <id>
+```
+
+`glab mr view` has no flag that prints approval state; query the API or open
+`--web` rather than assuming approval.
+
+**Never pass `-d` / `--remove-source-branch`** — that is GitLab's branch
+deletion. Like its GitHub counterpart it needs its own explicit yes, never the
+merge approval.
