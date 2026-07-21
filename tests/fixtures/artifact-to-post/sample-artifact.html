@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  Fixture for tests/plugins/test-artifact-to-post.sh.
+
+  Deliberately hostile. Every ladder rung and every MDX hazard appears exactly
+  once, marked with a data-rung attribute so the test can find them. Do not
+  "clean up" the prose below — the unescaped constructs are the point.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sample Artifact</title>
+  <style>
+    body { font-family: system-ui; }        /* unscopable — must be dropped */
+    details { border: 1px solid #ccc; }
+    summary { cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <!-- rung 1: plain prose and a table, straight to Markdown -->
+  <section data-rung="1">
+    <h1>Sample Artifact</h1>
+    <p>
+      The parser returns Array&lt;string&gt; when the row has more than one
+      value, and the record arrives shaped like { id } so the caller can
+      destructure it. A generic <code>&lt;T&gt;</code> is threaded through.
+      See &lt;https://example.com/docs&gt; for the full signature.
+    </p>
+    <table>
+      <thead><tr><th>Rung</th><th>Form</th></tr></thead>
+      <tbody><tr><td>1</td><td>Native Markdown</td></tr></tbody>
+    </table>
+  </section>
+
+  <!-- rung 2: interactivity with no JS -->
+  <section data-rung="2">
+    <details>
+      <summary>Show the numbers</summary>
+      <p>Median 42ms, p99 310ms.</p>
+    </details>
+    <label for="threshold">Threshold</label>
+    <input type="range" id="threshold" min="0" max="100" value="50" />
+  </section>
+
+  <!-- rung 3: interactivity backed by the artifact's own script -->
+  <section data-rung="3">
+    <output id="total" class="total">0</output>
+    <button id="bump">Add one</button>
+    <script>
+      let n = 0;
+      document.getElementById('bump').addEventListener('click', () => {
+        n += 1;
+        document.getElementById('total').textContent = String(n);
+      });
+    </script>
+  </section>
+
+  <!-- rung 4: canvas rendering, cannot be ported -->
+  <section data-rung="4">
+    <canvas id="plot" width="400" height="200"></canvas>
+    <script>
+      const ctx = document.getElementById('plot').getContext('2d');
+      ctx.fillRect(10, 10, 80, 80);
+    </script>
+  </section>
+
+  <!-- fenced region: the same constructs, which must survive UNTOUCHED -->
+  <section data-rung="1">
+    <pre><code class="language-ts">function parse&lt;T&gt;(row: string): Array&lt;string&gt; {
+  const { id } = JSON.parse(row);
+  return [id];
+}
+</code></pre>
+  </section>
+
+</body>
+</html>
