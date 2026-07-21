@@ -82,6 +82,12 @@ from a check's name. A non-required check that is pending or failing does not
 block, but **always name it in the Step 4 summary** so the user approves with
 the full picture rather than a filtered one.
 
+When a repo has no branch protection, `--required` exits non-zero with
+"no required checks reported" — that means *nothing is enforced*, not *nothing
+passed*. Do not read it as a failure. In that case there is no automated gate at
+all, so say so plainly in the Step 4 summary and let the full check list and the
+user's judgement carry the decision.
+
 If any of these fails — checks pending, checks failing, conflicts, changes
 requested, unresolved threads, or anything ambiguous — print the status summary
 (checks, review decision, unresolved-thread count) **and ask what to do**. Do
