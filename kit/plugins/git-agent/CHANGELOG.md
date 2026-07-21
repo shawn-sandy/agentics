@@ -1,5 +1,33 @@
 # Changelog — git-agent
 
+## v4.7.0 — 2026-07-21 — lint gate before commit
+
+### Added
+
+- **`hooks/lint-before-commit.py`** — a `PreToolUse` hook on `Bash` that runs the host repo's lint script before any `git commit` lands. Exit 2 blocks the commit and feeds the lint output back to Claude, which fixes and retries without a user round-trip.
+
+### Why a hook and not a skill step
+
+`commit-agent` ends with an explicit "do not run tests, analyze coverage, check for issues" instruction, and the background `agent-commit` repeats it — a lint step added there would contradict that contract and could still be skipped, since a skill instruction is advisory. A hook is executed by the harness, so it covers `commit-agent`, `agent-commit`, `ship`, and hand-written `git commit` calls alike, and cannot be reasoned around.
+
+### Detection and scope
+
+package.json only: `scripts.lint`, then `scripts.typecheck` if present. The package manager comes from the lockfile (`pnpm-lock.yaml`, `yarn.lock`, `bun.lockb`, else `npm`). A repo with no package.json, no matching script, or a missing runner is a silent no-op — the gate never strands a commit in a repo it does not understand.
+
+### Only a check that ran may block
+
+A check that *could not run* is never treated as a failure. Two guards enforce this: the hook skips entirely when dependencies are not installed (no `node_modules` and no `.pnp.cjs` — the fresh-clone-before-`npm install` case), and it skips any script exiting `127`, the shell's command-not-found code that npm, pnpm, and yarn all pass straight through. A real lint failure exits `1`. Without these, a fresh clone would refuse to commit and blame the code.
+
+`.pnp.cjs` is checked because Yarn PnP resolves binaries without ever creating `node_modules`; reading that as an unbuilt repo would silently drop the gate.
+
+### Escape hatch
+
+Create `.claude/no-lint-gate` at the repo root to disable it. The block message names this path, so nobody has to find it in the docs.
+
+### Matching
+
+Only real commits trigger it: `git commit`, `git commit --amend`, `git -C path commit`, and `git add -A && git commit` all match, while `git log --grep commit` and `git commit-tree` do not. Covered by `tests/plugins/test-lint-before-commit.sh`.
+
 ## v4.6.0 — 2026-07-21 — background merge
 
 ### Added
