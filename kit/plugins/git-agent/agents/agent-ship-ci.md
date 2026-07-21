@@ -136,12 +136,30 @@ Parse with `jq`:
 
 ### Step 3: Classify Each Failure
 
-Fetch the failing log:
+Fetch the failing log **for this PR only**. Take the run id from the failing
+check's own `link`, which Step 2 already gave you — it points at the exact job:
 
 ```
-gh run list --json databaseId,conclusion,workflowName --jq '.[] | select(.conclusion=="failure") | .databaseId' | head -1
+gh pr checks <pr-url> --json name,state,link --jq '.[] | select(.state=="FAILURE") | .link'
+```
+
+Each link has the form
+`https://github.com/<owner>/<repo>/actions/runs/<run-id>/job/<job-id>`. Extract
+`<run-id>` from it, then:
+
+```
 gh run view <run-id> --log-failed
 ```
+
+**Do not use `gh run list | head -1` to find the run.** It lists recent runs
+across the whole repository, so an unrelated branch's failure can be picked up
+instead — the agent would then classify the wrong log and apply a lint or
+lockfile autofix that has nothing to do with this PR, while the actual failing
+check goes unread. Always derive the run from the PR's own failing check.
+
+If a failing check has an empty `link` (external status checks such as review
+bots report no run), there is no log to fetch — classify it as `bot-infra` and
+report it.
 
 Classify on log content:
 
@@ -189,12 +207,25 @@ Run `pnpm install` / `yarn install` / `npm install`, then verify the blast
 radius:
 
 ```
-git diff --name-only
+git status --porcelain
 ```
 
-If anything other than the lockfile changed, run `git checkout -- .` to discard
-it, then **report only**. A reinstall that touches source is not the fix you
-were authorized to make.
+Use `git status --porcelain`, **not `git diff --name-only`** — `git diff` shows
+only tracked files, and an install can drop *untracked* artifacts (`.pnp.cjs`,
+install state, an unignored `node_modules`). Step 5 stages with `git add -A`, so
+anything untracked and unignored would be swept into the commit despite passing
+a tracked-files-only check.
+
+If anything other than the lockfile appears — tracked or untracked — discard the
+whole reinstall and **report only**:
+
+```
+git checkout -- .
+git clean -fd -- <the untracked paths the install added>
+```
+
+Name the paths explicitly in `git clean`; never run it bare. A reinstall that
+touches more than the lockfile is not the fix you were authorized to make.
 
 ### Step 5: Commit and Push the Autofix
 
@@ -228,9 +259,20 @@ Return one report to the parent session containing:
 - The PR URL and its final per-check state table.
 - Each autofix attempted, and whether the re-run cleared it.
 - Each report-only failure: check name, class, and the first ~20 lines of log.
-- Whether any reviews or unresolved review threads exist on the PR
-  (`gh pr view <pr-url> --json reviewDecision`) — stated as a fact, not acted
-  on.
+- Whether any reviews or unresolved review threads exist on the PR — stated as
+  a fact, not acted on. These are **two separate queries**, and you need both:
+
+  ```
+  gh pr view <pr-url> --json reviewDecision
+  gh api graphql -f query='{ repository(owner: "<owner>", name: "<repo>") {
+    pullRequest(number: <n>) { reviewThreads(first: 50) { nodes { isResolved } } } } }'
+  ```
+
+  `reviewDecision` carries only the summary verdict (`APPROVED`,
+  `CHANGES_REQUESTED`, or empty). It does **not** report thread resolution, so
+  it reads empty on a PR that has unresolved comment threads waiting. Reporting
+  it alone would tell the parent session a PR is clear when it is not. Only the
+  GraphQL `reviewThreads { isResolved }` query answers that.
 - If everything is green: say so plainly, name the PR URL, and state that the
   merge decision is the parent session's.
 

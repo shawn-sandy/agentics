@@ -84,6 +84,34 @@ else
   fail "must classify throttled review bots as report-only"
 fi
 
+echo "15b. failing log is scoped to this PR, not picked repo-wide..."
+# `gh run list | head -1` returns the newest failure across the whole repo, so
+# an unrelated branch's failure could be classified and "fixed" on this PR.
+# The negative check anchors to column 0 so it rejects a real command line in a
+# fenced block without tripping on the prose warning that quotes the bad form.
+if grep -q 'select(.state=="FAILURE") | .link' "$AGENT" && ! grep -qE '^gh run list' "$AGENT"; then
+  pass
+else
+  fail "must derive the run id from the PR's failing check link, not gh run list | head -1"
+fi
+
+echo "15c. peer-deps blast radius includes untracked files..."
+# Step 5 stages with `git add -A`, so a tracked-files-only check would let an
+# untracked install artifact ride along into the commit.
+if grep -q "not \`git diff --name-only\`" "$AGENT" && grep -q "git status --porcelain" "$AGENT"; then
+  pass
+else
+  fail "blast-radius check must use git status --porcelain (untracked files count)"
+fi
+
+echo "15d. report queries reviewThreads, not reviewDecision alone..."
+# reviewDecision reads empty on a PR that has unresolved threads waiting.
+if grep -q "reviewThreads(first: 50)" "$AGENT" && grep -q "isResolved" "$AGENT"; then
+  pass
+else
+  fail "unresolved-thread reporting needs the GraphQL reviewThreads query"
+fi
+
 echo "16. uses gh pr checks 'state', never the nonexistent 'conclusion' field..."
 if grep -q "has no \`conclusion\`" "$AGENT"; then pass; else fail "must warn that gh pr checks has no conclusion field"; fi
 
