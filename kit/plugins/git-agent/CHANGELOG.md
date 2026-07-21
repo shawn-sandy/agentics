@@ -1,5 +1,20 @@
 # Changelog — git-agent
 
+## v4.4.0 — 2026-07-20 — `merge?` shorthand as a skill + prompt hook
+
+### Added
+
+- **`skills/merge/SKILL.md`** — merge-readiness skill, explicitly invocable as `/git-agent:merge`. Finds the branch's PR, gates on `MERGEABLE` + green required checks + no `CHANGES_REQUESTED` + no unresolved review threads, runs the project's first non-`--fix`, non-`watch` `lint*` script (the `ship-autonomous` Step 2.5 precedent), then **re-runs the readiness queries** and asks for explicit approval via `AskUserQuestion` before `gh pr merge --squash --match-head-commit <headRefOid>`. Never auto-applies `--fix` (it would change the PR head), never passes `--delete-branch`, and never silently retries a rejected `--squash` as `--merge`/`--rebase`. Anything pending, failing, or ambiguous → status summary and a question.
+  - The blocking gate uses `gh pr checks --required` — what branch protection actually enforces — while the full list still feeds the approval summary, so a pending optional check is surfaced without deadlocking a mergeable PR.
+  - Checks are read via `gh pr checks --json name,state`, not `statusCheckRollup`: rollup nodes are heterogeneous (`CheckRun` carries `status`+`conclusion`, `StatusContext` carries `state`), so a single "is it SUCCESS" test reads an in-progress run as green. Same reasoning `ship-autonomous` Step 8 already documents.
+  - Review threads are fetched with `totalCount`/`pageInfo`; a truncated page is reported as unknown rather than counted as zero.
+- **`hooks/merge-shorthand.py` + `hooks.json`** — `UserPromptSubmit` hook that routes the literal prompt `merge?` (anchored, case-insensitive, whitespace-tolerant) to the merge skill. Silent on every other prompt, so ordinary sentences containing "merge" are untouched. First hook wiring in `git-agent`; mirrors `plan-agent/hooks.json`.
+- `tests/plugins/test-merge-shorthand.sh` — pins the hook's trigger boundary (3 firing cases, 5 near-miss silences), the hooks.json wiring, and the skill's safety contract (MERGEABLE gate, lint gate with no auto-fix, explicit approval, `--match-head-commit`, no `--delete-branch`).
+
+Replaces a private per-machine memory note with a shipped, reviewable, tested behavior.
+
+---
+
 ## v4.3.0 — 2026-07-20 — ship self-reviews the diff before pushing
 
 ### Added
