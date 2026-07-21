@@ -20,6 +20,12 @@ MARKET="$ROOT/.claude-plugin/marketplace.json"
 FIXTURE="$ROOT/tests/fixtures/artifact-to-post/sample-artifact.html"
 fail() { echo "FAIL: $1" >&2; exit 1; }
 
+# First line number matching regex $1 in file $2; empty string when absent.
+# `-m1` (not `| head -1`) avoids a SIGPIPE that `pipefail` would turn fatal, and
+# the trailing `|| true` keeps a no-match from aborting under `set -e` before
+# the caller's own `fail` message can run.
+line_of() { grep -n -m1 -- "$1" "$2" 2>/dev/null | cut -d: -f1 || true; }
+
 # 1. Plugin manifest: exists, valid, and carries NO version key (a plugin.json
 #    version silently overrides the marketplace value for relative-path plugins).
 [ -f "$MANIFEST" ] || fail "plugin.json missing at $MANIFEST"
@@ -53,12 +59,13 @@ total="${budget%% *}"
 
 # 4. The prose rewrite is ordered BEFORE the MDX-safety pass. The rewrite is
 #    what introduces the hazards, so a pass that ran first validates dead text.
-rewrite_line=$(grep -n '^## Phase 5 — Prose rewrite' "$SKILL" | cut -d: -f1)
-safety_line=$(grep -n '^## Phase 6 — MDX-safety pass' "$SKILL" | cut -d: -f1)
+rewrite_line=$(line_of '^## Phase 5 — Prose rewrite' "$SKILL")
+safety_line=$(line_of '^## Phase 6 — MDX-safety pass' "$SKILL")
 [ -n "$rewrite_line" ] || fail "no prose-rewrite phase in SKILL.md"
 [ -n "$safety_line" ] || fail "no MDX-safety phase in SKILL.md"
 [ "$rewrite_line" -lt "$safety_line" ] || fail "safety pass is ordered before the prose rewrite"
-grep -q 'after' "$SKILL" || fail "ordering rationale missing"
+# The rationale itself, not the word "after" — which matches any English prose.
+grep -qF 'Runs **after** Phase 5, deliberately.' "$SKILL" || fail "ordering rationale missing"
 
 # 5. Config-driven: no hardcoded site literals in the skill body.
 for lit in 'src/content/posts' 'astro build' 'localhost:4321'; do
@@ -75,9 +82,12 @@ grep -qE '^allowed-tools:.*WebFetch' "$SKILL" && fail "WebFetch must not be an a
 
 # 7. Security scrub is a blocking gate that fails loudly when unavailable.
 grep -qF 'security-scrub' "$SKILL" || fail "security-scrub gate missing"
-scrub_line=$(grep -n 'security-scrub' "$SKILL" | head -1 | cut -d: -f1)
-write_line=$(grep -n '^## Phase 8 — Write the post' "$SKILL" | cut -d: -f1)
+scrub_line=$(line_of 'security-scrub' "$SKILL")
+write_line=$(line_of '^## Phase 8 — Write the post' "$SKILL")
+[ -n "$write_line" ] || fail "no write phase in SKILL.md"
 [ "$scrub_line" -lt "$write_line" ] || fail "security scrub runs after the write step"
+# A .md source must not tunnel past the scrub and config phases.
+grep -qF 'It skips nothing else.' "$SKILL" || fail "Markdown source may bypass the scrub/config phases"
 grep -qE 'not (installed|available)' "$SKILL" || fail "no loud failure path when social-media-tools is absent"
 # Observed in a real run: the agent announced the scrub was unavailable, then
 # self-reviewed and wrote the post anyway. Loud is not the contract — stopping is.
@@ -87,7 +97,7 @@ grep -qF 'write nothing and end the turn' "$SKILL" || fail "scrub gate warns but
 #     interactivity_ceiling: 3 as forbidding rung 4 and DELETED the canvas block.
 grep -qF 'Rung 4 is never capped' "$MDX_REF" || fail "ceiling wrongly caps rung 4"
 grep -qF 'Never drop a block' "$MDX_REF" || fail "no-content-loss rule missing"
-grep -qF 'no block is ever dropped' "$SKILL" || fail "SKILL.md does not forbid dropping blocks"
+grep -qiF 'no block is ever dropped' "$SKILL" || fail "SKILL.md does not forbid dropping blocks"
 
 # 7c. Phase 0 must use the launch message's base directory, not a filesystem
 #     hunt — real runs burned turns on `find` and hit sandbox denials.
@@ -96,17 +106,22 @@ grep -qF 'Do not `find` or `Glob` for them' "$SKILL" || fail "Phase 0 does not f
 
 # 8. References document the ladder and the JSX rules.
 [ -f "$MDX_REF" ] || fail "references/mdx-safety.md missing"
-for rung in 'Rung 1' 'Rung 2' 'Rung 3' 'Rung 4'; do
-  grep -qF "### $rung" "$MDX_REF" || fail "mdx-safety.md missing $rung"
-done
 prev=0
 for rung in 1 2 3 4; do
-  line=$(grep -n "^### Rung $rung" "$MDX_REF" | cut -d: -f1)
+  # Anchored, same pattern as the ordering check — an unanchored existence test
+  # would pass on an indented heading and then abort the ordering loop silently.
+  line=$(line_of "^### Rung $rung" "$MDX_REF")
+  [ -n "$line" ] || fail "mdx-safety.md missing Rung $rung"
   [ "$line" -gt "$prev" ] || fail "ladder rungs are out of order at rung $rung"
   prev="$line"
 done
-grep -qF 'className' "$MDX_REF" || fail "class -> className rule missing from mdx-safety.md"
-grep -qF 'htmlFor' "$MDX_REF" || fail "for -> htmlFor rule missing from mdx-safety.md"
+# Astro's JSX runtime passes attributes through verbatim: `htmlFor` is NOT mapped
+# and silently breaks label/input association. Confirmed against Astro's
+# addAttribute() in packages/astro/src/runtime/server/render/util.ts.
+grep -qF '`for`, not `htmlFor`' "$MDX_REF" || fail "Astro attribute rule missing (htmlFor breaks labels)"
+grep -qF '`class`, not `className`' "$MDX_REF" || fail "Astro class rule missing from mdx-safety.md"
+grep -qF 'React-based MDX pipelines' "$MDX_REF" || fail "React-runtime attribute list missing"
+grep -qF 'jsxImportSource' "$MDX_REF" || fail "runtime-detection rationale missing"
 for hazard in 'Array<string>' '{ id }' '<T>'; do
   grep -qF "$hazard" "$MDX_REF" || fail "canonical hazard not documented: $hazard"
 done
@@ -139,12 +154,21 @@ python3 - "$FIXTURE" <<'PY' || fail "escaping guard failed"
 import html, re, sys
 
 src = open(sys.argv[1]).read()
-raw_prose = re.search(r'<p>(.*?)</p>', src, re.S).group(1)
-prose = html.unescape(re.sub(r'<[^>]+>', '', raw_prose)).strip()
+# Every paragraph, not just the first — otherwise inserting a benign lead
+# paragraph makes this whole guard pass while escaping nothing.
+paras = [html.unescape(re.sub(r'<[^>]+>', '', p)).strip()
+         for p in re.findall(r'<p>(.*?)</p>', src, re.S)]
+prose = "\n\n".join(p for p in paras if p)
 fence = html.unescape(re.search(r'<pre><code[^>]*>(.*?)</code></pre>', src, re.S).group(1))
 doc = prose + "\n\n```ts\n" + fence + "```\n"
 
 HAZARD = re.compile(r'(?<!\\)[{}]|<[A-Za-z][^>\s]*>')
+
+# Pre-condition: the prose must actually be hostile going in. Without this the
+# guard passes vacuously on benign text and reports green having escaped nothing.
+for required in ('Array<string>', '{ id }', '<T>', '<https://example.com/docs>'):
+    assert required in prose, f"fixture prose lost its hazard: {required!r}"
+assert HAZARD.search(prose), "fixture prose has no hazard to escape"
 
 def escape_prose(text):
     """Escape braces, wrap <word...> in a code span. Inline code spans skipped."""

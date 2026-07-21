@@ -42,3 +42,62 @@ this skill consumes.
 /plugin marketplace add shawn-sandy/agentics
 /plugin install content-tools@agentics-kit
 ```
+
+Local testing:
+
+```bash
+claude --plugin-dir ./kit/plugins/content-tools
+```
+
+## Usage
+
+The skill auto-activates on a natural request — there is no slash command.
+
+```text
+Turn this artifact into a blog post
+Turn ./docs/notes.md into a draft post
+Convert .claude/artifacts/dashboard-2026-07-20.html into a post for the site
+```
+
+First run in a repo with no `CONTENT.md` asks once, then offers to write the
+config so later runs are silent. Output is always a draft — the publish gate at
+the end defaults to no.
+
+## Plugin Structure
+
+```
+content-tools/
+├── .claude-plugin/
+│   └── plugin.json
+├── README.md
+├── CHANGELOG.md
+├── references/
+│   ├── content-config.md     # CONTENT.md schema + prerequisite checks
+│   └── mdx-safety.md         # fidelity ladder + MDX/JSX rules
+└── skills/
+    └── artifact-to-post/
+        └── SKILL.md
+```
+
+## Components
+
+### Skill: `artifact-to-post`
+
+Auto-activating. Runs eleven phases: locate assets, resolve the source,
+security scrub (blocking), config and prerequisites, extract, prose rewrite,
+MDX-safety pass, screenshots, write, verify, publish gate.
+
+A Markdown source skips extraction and screenshots only — the scrub, the config
+checks, and the safety pass still run.
+
+### Reference: `references/mdx-safety.md`
+
+Loaded on demand. The four-rung fidelity ladder, and the escaping rules that
+decide whether the post builds. Also carries a per-Astro-version table
+recording whether inline `<script>` in MDX is actually bundled.
+
+### Reference: `references/content-config.md`
+
+The `CONTENT.md` schema — ten settings plus `interactivity_ceiling` — and the
+two prerequisite checks the skill runs against the target repo without ever
+auto-installing anything.

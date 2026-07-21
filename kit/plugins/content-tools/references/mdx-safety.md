@@ -118,16 +118,48 @@ failure the pass was written to prevent. Do not reorder these steps.
 
 ### In HTML emitted at rungs 2–3
 
-That HTML lands in a JSX parser:
+That HTML lands in a JSX parser — but **which** JSX runtime decides the
+attribute names, and the two runtimes disagree. Check the target first:
+`@astrojs/mdx` in `package.json` means Astro's runtime; Next.js,
+`@mdx-js/react`, or plain `@mdx-js/mdx` means React's.
 
-- `class` → `className`
-- `for` → `htmlFor`
+These four are parser-level and apply to **every** runtime:
+
 - all void tags self-closed: `<br />`, `<img … />`, `<input … />`, `<hr />`
-- `style` as an object, not a string: `style={{ color: 'red' }}`
 - `<!-- comment -->` → `{/* comment */}`
-- `tabindex` → `tabIndex`, `colspan` → `colSpan`, `readonly` → `readOnly`
 - CSS and script bodies go inside a template literal expression —
   `<style>{\`…\`}</style>` — so braces in the CSS are not read as JSX
+- expression braces in attribute values are JSX, not text
+
+#### Astro (`@astrojs/mdx`) — the default target
+
+Astro compiles MDX with `jsxImportSource: 'astro'` and serializes intrinsic
+elements straight to HTML. Attribute names pass through **verbatim**, except a
+short special-case list. So keep the artifact's own HTML attributes:
+
+- **`for`, not `htmlFor`.** This is the one that actually breaks a page.
+  `htmlFor` is not mapped — it renders literally as `htmlFor="…"`, the browser
+  ignores it, and the label/input association is silently lost. No build error,
+  no console warning.
+- **`class`, not `className`.** Both work (Astro rewrites `className` → `class`),
+  but `class` is the native form and matches what you pasted from the artifact.
+- **`style` as a string** — `style="color: red"`. An object works too (Astro
+  kebab-cases the keys), but the string form is already in the artifact.
+- **`tabindex`, `colspan`, `readonly`** — lowercase HTML spellings. The camelCase
+  variants happen to survive (HTML attribute names are case-insensitive), so
+  converting them is pointless churn.
+
+The rule of thumb for Astro: **change nothing you don't have to.** Only the four
+parser-level rules above are mandatory.
+
+#### React-based MDX pipelines
+
+If the target is Next.js, `@mdx-js/react`, or `@mdx-js/mdx` on the React
+runtime, the opposite holds and these become required:
+
+- `class` → `className`, `for` → `htmlFor`
+- `tabindex` → `tabIndex`, `colspan` → `colSpan`, `readonly` → `readOnly`
+- `style` as an object, not a string: `style={{ color: 'red' }}`
 
 ## Observed rung-3 behavior by Astro version
 

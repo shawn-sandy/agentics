@@ -1,7 +1,7 @@
 ---
 name: artifact-to-post
 description: "Converts an HTML artifact or Markdown file into a draft post for a static site. Scopes CSS to keep interactive blocks alive and escapes prose for MDX. Use when asked to turn an artifact into a post."
-allowed-tools: AskUserQuestion, Read, Write, Edit, Bash, Glob, Grep, Skill, ToolSearch, ExitPlanMode, SendUserFile
+allowed-tools: AskUserQuestion, Read, Write, Edit, Bash, Glob, Grep, Skill, ToolSearch, ExitPlanMode
 ---
 
 # artifact-to-post
@@ -36,12 +36,18 @@ Read `content-config.md` now; read `mdx-safety.md` before Phase 4.
 |--------|------|
 | Local `.html` file | Full extraction path (Phases 4–7) |
 | Pasted HTML | Write it to a scratch `.html`, then the full extraction path |
-| Local `.md` file | **Skips extraction entirely** — go straight to Phase 5 |
+| Local `.md` file | **Skips Phase 4 and Phase 7 only** — see below |
 | A `claude.ai` artifact URL | **Refuse** — see below |
 
-A `.md` source is already Markdown. Do not re-extract it, do not re-classify its
-blocks, do not touch its fenced code. It needs frontmatter synthesis (Phase 8)
-and the safety pass (Phase 6), nothing else.
+A `.md` source is already Markdown, so it skips **extraction** (Phase 4) and
+**screenshots** (Phase 7): do not re-extract it, do not re-classify its blocks,
+do not touch its fenced code.
+
+It skips nothing else. Every source type still runs the security scrub
+(Phase 2), the config and prerequisite checks (Phase 3), the prose rewrite
+(Phase 5), the safety pass (Phase 6), and the write and gates (Phases 8–10) —
+in that order. A Markdown file is just as likely to carry a pasted token as an
+artifact is, and it needs `posts_dir` and the draft flag exactly as much.
 
 **claude.ai URLs are refused.** `WebFetch` cannot read authenticated or private
 URLs, so attempting one produces a confident wrong result. Reply with one line
@@ -95,14 +101,17 @@ Read the HTML yourself and write the Markdown. There is no converter script — 
 parser's output would be rewritten by hand in the next phase anyway.
 
 Classify each block against the ladder in `references/mdx-safety.md`, taking the
-highest rung that holds, then cap every classification at
-`interactivity_ceiling`. A capped rung-3 block becomes rung 4, never rung 2 with
-a dead script.
+highest rung that holds.
 
-The ceiling caps rungs 2–3 only. Rung 4 is always available, and
-**no block is ever dropped** — a block that can't be ported becomes a
-screenshot, not a deletion. `interactivity_ceiling: 3` permits scripts; it does
-not forbid images.
+Then apply `interactivity_ceiling`, which limits **how interactive an embed may
+be** — it constrains rungs 2 and 3, and nothing else. A block whose natural rung
+exceeds the ceiling falls to rung 4 (a screenshot), never to rung 2 with a dead
+script.
+
+Rung 4 is the fallback, not the top of the ladder — it is the *least*
+interactive outcome, so the ceiling can never forbid it. `interactivity_ceiling:
+3` permits scripts; it does not forbid images. **No block is ever dropped**: a
+block that can't be ported becomes a screenshot, not a deletion.
 
 Scoped blocks (rungs 2–3) get a wrapper container and the artifact's CSS
 prefixed to that container's selector. Drop `html`, `body`, `:root`, and `*`
@@ -127,9 +136,14 @@ Do not reorder these phases.
 
 Apply section (b) of `references/mdx-safety.md`: escape `{` and `}` in prose,
 neutralize `<word…>` sequences and bare autolinks, and leave fenced blocks and
-inline code spans untouched. Apply the JSX attribute rules (`class` →
-`className`, `for` → `htmlFor`, self-closed void tags, object `style`) to all
-HTML emitted at rungs 2–3.
+inline code spans untouched.
+
+For HTML emitted at rungs 2–3, apply the parser-level rules (self-closed void
+tags, JSX comments, template-literal `<style>`/`<script>` bodies) — then the
+attribute rules **for the runtime this site actually uses**. On Astro, keep
+`class` and `for` as they are: `htmlFor` is not mapped and silently breaks the
+label/input association. React-based pipelines need the opposite. The reference
+has both lists; pick by what is in `package.json`.
 
 Skip the whole pass when `extension` is `.md` — plain Markdown has no JSX parser
 to offend, and escaping it would be a visible bug.

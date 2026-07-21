@@ -41,9 +41,13 @@ next run is silent. Never guess a posts directory.
 | `build_command` | The authoritative build gate | `npm run build` |
 | `interactivity_ceiling` | Highest ladder rung allowed (1–4) | `3` |
 
-Nine settings plus the ceiling. `extension` and `interactivity_ceiling` interact:
-a `.md` site cannot host rung 2–3 JSX, so `.md` implies a ceiling of 1 unless the
-site documents otherwise.
+Ten settings plus the ceiling.
+
+`extension` and `interactivity_ceiling` interact, but less than you'd think.
+Markdown renderers pass raw HTML through, so a `.md` site can still host rung 2
+(`<details>`, range inputs — plain HTML, no JSX). What `.md` rules out is rung 3
+on sites that strip `<script>`, so default `.md` to a ceiling of 2 and confirm
+rung 3 against the site rather than assuming either way.
 
 `draft_flag` carries both the key and the unpublished value, because sites
 disagree on the sense of it — `draft: true` and `published: false` mean the same
@@ -81,9 +85,15 @@ build.
 
 ### 1. `@astrojs/mdx` present
 
+Run this from the target repo's root — resolve it with `git rev-parse
+--show-toplevel`, don't assume `$PWD` is the site:
+
 ```bash
-grep -q '"@astrojs/mdx"' package.json
+[ -f package.json ] && grep -q '"@astrojs/mdx"' package.json
 ```
+
+No `package.json` at all means this is not a Node site; say so and stop rather
+than reporting a missing dependency.
 
 On failure, report verbatim:
 
@@ -92,10 +102,19 @@ On failure, report verbatim:
 
 ### 2. Content-collection glob includes `.mdx`
 
-Check the collection loader in `src/content.config.ts` (or `src/content/config.ts`)
-for a pattern that admits `.mdx` — typically `"**/*.{md,mdx}"`.
+Only applies to the **glob-loader** collection API. Open
+`src/content.config.ts` (or `src/content/config.ts`) and look for
+`loader: glob({ pattern: … })` on the target collection:
 
-On failure, report verbatim:
+- **A `loader: glob(...)` exists** → its pattern must admit `.mdx`, typically
+  `"**/*.{md,mdx}"`. A pattern that matches only `.md` fails this check.
+- **No loader (legacy `defineCollection({ schema })`)** → the check does not
+  apply. The legacy API picks up `.mdx` automatically. **Pass, and say nothing.**
+  Reporting a missing glob here sends the user to widen a pattern that doesn't
+  exist.
+- **No content config file at all** → pass; the site isn't using collections.
+
+On a real failure (a glob that excludes `.mdx`), report verbatim:
 
 > The content collection for `<posts_dir>` does not match `.mdx` files. Widen the
 > loader glob to `"**/*.{md,mdx}"`. Stopping — nothing was written.

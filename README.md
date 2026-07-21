@@ -133,6 +133,7 @@ agentics/
 │       ├── artifact-tools/
 │       ├── code-review/
 │       ├── code-testing-agent/
+│       ├── content-tools/
 │       ├── git-agent/
 │       ├── memory-tools/
 │       ├── plan-agent/
@@ -753,6 +754,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 4.3.0 | productivity | 6 commands, 14 skills, 9 agents, 2 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.0 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.3.0 | development | 4 skills |
+| [content-tools](./kit/plugins/content-tools/README.md) | 1.0.0 | documentation | 1 skill |
 
 ---
 
