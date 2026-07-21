@@ -120,8 +120,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.3.0",
-      "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship plus auto-linking plan issue references in PR descriptions",
+      "version": "4.4.0",
+      "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, merge them behind a readiness gate (green checks, lint, explicit approval) via the merge skill and its `merge?` prompt-hook shorthand, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
         "git",
