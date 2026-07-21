@@ -41,7 +41,7 @@ A skill-only plugin that reviews code for WCAG 2.2 Level AA accessibility compli
 **Use case:** Accessibility auditing, compliance checking
 
 ### skill-reviewer
-A multi-skill plugin for reviewing, planning, and testing Claude Code skills.
+A multi-skill plugin for reviewing, planning, and optimizing Claude Code skills.
 
 **Components:**
 - Skill: `reviewing-skills` - Audit SKILL.md files across 5 dimensions with scoring

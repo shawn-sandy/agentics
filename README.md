@@ -497,6 +497,10 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `validate-plan-filename` | `PostToolUse` (Write/Edit) | Enforces verb-target kebab-case filenames on plan files |
 | `rebuild-plans-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the plans gallery index when plans change |
 | `build-prototypes-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the prototypes gallery index when `docs/prototypes/` changes |
+| `render-plan-html` | `PostToolUse` (Write/Edit/MultiEdit) | Re-renders a plan's HTML after its source changes |
+| Stress-test nudge | `PostToolUse` (ExitPlanMode) | Suggests running the Step 5b interview or the `review-plan` team before implementing |
+
+> All four Write/Edit hooks are registered through a single `hooks/dispatch.py` entry rather than four matchers, which is why the reference table counts two registrations.
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
@@ -528,7 +532,7 @@ Automated git workflow — create branches, commit with conventional messages, c
 | `/git-agent:commit-bg` | Fire off the agent-commit subagent in the background to stage and commit the working tree, then return control immediately |
 | `/git-agent:pr-bg` | Fire off the agent-pr subagent in the background to push the current branch and open a GitHub PR, then return control immediately |
 | `/git-agent:ship-bg` | Fire off the agent-ship subagent in the background to commit, push, and open a PR/MR end-to-end, then return control immediately |
-| `/git-agent:ship-ci-bg` | Watch CI on an already-open PR in the background and report the outcome without blocking the session |
+| `/git-agent:ship-ci-bg` | Watch CI on an already-open PR in the background, apply at most one deterministic autofix per failure class (which it commits and pushes), and report — without blocking the session |
 | `/git-agent:merge-bg` | Squash-merge one fully green PR in the background — dispatching the command *is* the approval; anything ambiguous comes back as a report instead of a merge |
 
 **Skills:**
@@ -550,7 +554,7 @@ Automated git workflow — create branches, commit with conventional messages, c
 | `agent-commit` | Background git commit agent — stages all working-tree changes and creates a conventional commit message without user interaction |
 | `agent-pr` | Background pull-request creation agent — pushes the current branch if needed and opens a GitHub pull request with an auto-generated summary |
 | `agent-ship` | Background end-to-end ship agent — stages, commits, pushes, and opens a pull/merge request in one autonomous flow |
-| `agent-ship-ci` | Background CI watcher — polls checks on an open PR and reports pass/fail without holding the session |
+| `agent-ship-ci` | Background CI watcher — polls checks on an open PR until they settle, applies deterministic autofixes as their own commits (refusing to run on a dirty tree), and reports pass/fail |
 | `agent-merge` | Background merge agent — squash-merges a single green PR, or returns a report when readiness is ambiguous |
 
 **Hooks:**
@@ -619,9 +623,13 @@ claude --plugin-dir ./kit/plugins/wcag-compliance-reviewer
 
 ---
 
+### Plugin Development
+
+---
+
 #### `skill-reviewer`
 
-Review and plan Claude Code skills, and run tests for changed files — audit SKILL.md files, scaffold new skills, and verify test coverage.
+Review, plan, and optimize Claude Code skills — audit SKILL.md files across five quality dimensions, scaffold new skills, and get `allowed-tools` frontmatter recommended or patched.
 
 **Commands:**
 
