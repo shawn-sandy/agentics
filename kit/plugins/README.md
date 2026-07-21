@@ -4,6 +4,8 @@ This directory contains example plugins for testing the agentics marketplace API
 
 ## Available Plugins
 
+> Not a catalog. The plugins below are the ones worth reading as **structural references** — one per pattern. For the full list of all 13 marketplace plugins with versions and components, see the [Plugin Reference Table](../../README.md#plugin-reference-table).
+
 ### code-review
 A skill-only plugin that activates automatically when the user asks to review code.
 
@@ -39,12 +41,12 @@ A skill-only plugin that reviews code for WCAG 2.2 Level AA accessibility compli
 **Use case:** Accessibility auditing, compliance checking
 
 ### skill-reviewer
-A multi-skill plugin for reviewing, planning, and testing Claude Code skills.
+A multi-skill plugin for reviewing, planning, and optimizing Claude Code skills.
 
 **Components:**
 - Skill: `reviewing-skills` - Audit SKILL.md files across 5 dimensions with scoring
 - Skill: `planning-skills` - Guide workflow for designing and scaffolding new skills
-- Skill: `running-tests` - Detect changed files, find related tests, run them, report results
+- Skill: `auditing-allowed-tools` - Recommend or patch a skill's `allowed-tools` frontmatter
 
 **Use case:** Plugin authoring quality assurance, skill development workflow
 
@@ -59,13 +61,17 @@ A multi-skill plugin that analyzes code and suggests targeted tests, reviews exi
 **Use case:** Test-driven development, test quality improvement
 
 ### git-agent
-A skill-only plugin for automated git commit and PR creation.
+The four-component plugin — commands, skills, agents, and a hook in one package.
 
 **Components:**
 - Skill: `commit-agent` - Stage changes and create conventional commits
 - Skill: `pr-agent` - Push branch and create pull requests via `gh`
+- Skill: `merge` - Check PR readiness (`MERGEABLE`, green checks, lint gate) and merge only with explicit approval
+- Command: `/git-agent:merge-bg` - Dispatch `agent-merge` to squash-merge one green PR in the background
+- Agent: `agent-merge` - Background merge subagent, reports back instead of merging when readiness is ambiguous
+- Hook: `merge-shorthand` (`UserPromptSubmit`) - Routes a bare `merge?` prompt to the `merge` skill deterministically
 
-**Use case:** Streamlined git workflows, automated PR creation
+**Use case:** Streamlined git workflows; the reference for hook-based deterministic routing when intent matching is too fuzzy for a one-word prompt
 
 ## Testing Plugins Locally
 

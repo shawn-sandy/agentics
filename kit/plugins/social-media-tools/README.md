@@ -32,6 +32,7 @@ No path in this plugin auto-posts — human review is always required before any
 | `share-init` | Skill | Analyze the project and generate a `SOCIAL.md` config with default platform, tone (including Instructional / Educational), hashtags, focus areas, and audience |
 | `security-scrub` | Skill | Scan any code or diff for secrets, credentials, and sensitive data (sub-step utility) |
 | `write-guide` | Skill | Write a long-form internal developer guide (system, rule, how-to, concept, change recap, or saved memory) to `docs/`, assembled from a section library with five non-binding archetype starting points, verifying every URL and on-disk fact before it lands |
+| `share-explanation` | Skill | Explain how a project file, component, or concept works — reads the source, synthesizes the underlying principles, and generates a card + copy |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 
 ## Installation
@@ -75,6 +76,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | `share-init` | Automatic | Set up social sharing preferences, create a SOCIAL.md, configure sharing defaults |
 | `security-scrub` | Automatic | Check for secrets, review a diff for leaks, scrub this file for sensitive data |
 | `write-guide` | Automatic | Write a guide on X, document this rule, deep-dive X, explain X as a guide, capture this session's lessons as a guide |
+| `share-explanation` | Automatic | Explain how X works, how does this component work, break down this concept |
 | `save-artifact` | Automatic | Save or share an artifact, save this HTML page, stash the artifact I just built |
 
 ### Discover what's worth sharing
@@ -198,6 +200,8 @@ social-media-tools/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       └── variables.md               ← redirects to plugin-root references/
+│   ├── share-explanation/
+│   │   └── SKILL.md                       ← explain how a file, component, or concept works
 │   ├── share-github/
 │   │   └── SKILL.md
 │   ├── share-init/

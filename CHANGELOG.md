@@ -8,10 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ## [Unreleased]
 
-> Marketplace (`agentics-kit`) remains at v4.0.0; the changes below are unreleased plugin and infrastructure work since that release. Current plugin versions: memory-tools 3.1.3, code-review 3.3.2, plan-interview 2.2.7, wcag-compliance-reviewer 1.2.3, skill-reviewer 2.2.6, code-testing-agent 3.4.4, git-agent 3.11.0, product-plans 3.4.9, settings-sync 1.0.2, social-media-tools 2.12.1, plan-agent 2.7.0.
+> Marketplace (`agentics-kit`) remains at v4.0.0; the changes below are unreleased plugin and infrastructure work since that release. Current plugin versions: memory-tools 4.0.0, code-review 3.3.3, wcag-compliance-reviewer 1.2.3, skill-reviewer 2.2.8, code-testing-agent 3.4.4, git-agent 4.6.0, product-plans 3.4.11, settings-sync 1.0.2, social-media-tools 2.18.1, plan-agent 4.3.1, team-defaults 0.2.0, artifact-tools 1.3.0, content-tools 1.0.0. The live list is the [Plugin Reference Table](./README.md#plugin-reference-table).
 
 ### Added
 
+- **content-tools plugin (1.0.0)** — New `documentation` plugin whose `artifact-to-post` skill converts a local HTML artifact, pasted HTML, or a Markdown file into a **draft** static-site post (Astro first). Each block takes the highest rung of a fidelity ladder that holds, artifact CSS is prefixed to a wrapper so it cannot collide with site tokens, and an MDX-safety pass runs after the prose rewrite. Blocking `security-scrub` gate before any write (#440)
+- **git-agent `merge` skill + `merge?` hook (4.5.0)** — Checks PR readiness (`MERGEABLE`, green checks, lint gate) and merges only with explicit approval, never passing `--delete-branch`. A `UserPromptSubmit` hook routes a bare `merge?` prompt to the skill deterministically (#441)
+- **git-agent `/merge-bg` (4.6.0)** — Background squash merge of one fully green PR via the new `agent-merge` subagent; dispatching the command is the approval, and anything ambiguous comes back as a report instead of a merge (#444)
+- **git-agent `/ship-ci-bg` (4.5.0)** — Background CI watcher (`agent-ship-ci`) that polls checks on an open PR and reports the outcome without holding the session (#442)
+- **plan-agent `build` skill (4.1.0)** — Implements a plan that already exists: walks the steps, ticks the spec, re-renders, and owns the acceptance-criteria, end-to-end-verification, and completion-checklist gates. Step 8's `Implement now` delegates here (#435)
+- **Runnable output checks** — Every HTML-generating and publishing skill now ends in a runnable check on its own output (#431), and every plan carries a runnable completion check (#428)
+- **git-agent PR hardening** — PR test plan, lint gate, refuted-finding replies (#433), and a self-review of the diff before pushing in `ship` (#434)
 - **Distribution pipeline** — Daily publish pipeline that mirrors plugins to the `agentics-kit` distribution repo, including URL transformation (`agentics` → `agentics-kit`), root-file copying, and CI hardening (#293, #294, #295)
 - **plan-agent `setup-sites`** — Scaffolds the GitHub Pages deploy pipeline (workflow, `.nojekyll`, hub, preview script) into any repo so `docs/` HTML publishes to a public URL (2.7.0, #333)
 - **plan-agent `build-proposal`** — Turns a vague idea into a decision-complete `docs/proposals/<slug>.md` via an 8-step research→decide loop and right-sizing gate, then hands off to implementation-plan (2.5.0, #329)
@@ -27,6 +34,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ### Changed
 
+- **plan-agent 4.0.0** — BREAKING: absorbed the `plan-interview` plugin. `documenting-plans`, `markdown-to-html`, `plan-status`, `plan-maintenance`, `deep-grill`, and the ExitPlanMode stress-test nudge now ship under `plan-agent`; invoke them as `/plan-agent:<name>`. `plan-interview` is de-registered from the marketplace and recoverable from git history (#426)
+- **memory-tools 4.0.0** — BREAKING: renamed the `agentic-memory-doctor` skill to `agentic-memory-management`. Update `@import` paths from `skills/agentic-memory-doctor/SKILL.md` to `skills/agentic-memory-management/SKILL.md` (#438)
+- **Plugin scoping** — Reviewer agents scoped, commands collapsed onto their skills, and hooks gated (#422)
 - **plan-agent `write-prompt`** — BREAKING: renamed the `refine-prompt` skill to `write-prompt`; invoke as `/plan-agent:write-prompt` (3.0.0)
 - **plan-agent `refine-prompt`** — BREAKING: renamed `craft-prompt` to `refine-prompt` (2.0.0, #306)
 - **social-media-tools card templates** — Added a `--card-width` CSS token to all card templates (#303)
