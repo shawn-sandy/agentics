@@ -28,3 +28,8 @@ jobs:
       # morning after the merge rather than at review time.
       - name: Test build skill ships and owns the implementation gates
         run: bash tests/plugins/test-build-skill.sh
+      # Same rationale: the merge? hook fires on every prompt and the merge
+      # skill ends in an irreversible squash-merge, so its trigger boundary and
+      # safety gates are checked at review time, not the next morning.
+      - name: Test merge? shorthand hook and merge skill contract
+        run: bash tests/plugins/test-merge-shorthand.sh

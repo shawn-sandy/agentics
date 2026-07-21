@@ -1,12 +1,12 @@
 # Changelog — git-agent
 
-## v4.4.0 — 2026-07-20 — background CI watcher
+## v4.5.0 — 2026-07-20 — background CI watcher
 
 ### Added
 
 - **`agents/agent-ship-ci.md`** — a background subagent that watches an already-open PR's checks, applies at most one deterministic autofix per failing check, and reports. It is the unattended, truncated half of the `ship-autonomous` skill, not a background wrapper around it.
 - **`commands/ship-ci-bg.md`** — `/git-agent:ship-ci-bg [pr]` dispatches it and returns control immediately.
-- `tests/plugins/test-ship-ci-agent.sh` — 16 checks covering the deny-list invariant, the never-merge / never-review / never-ready guarantees, the existing-PR precondition, the one-attempt autofix cap, the lockfile-only revert, and the bounded `--watch`.
+- `tests/plugins/test-ship-ci-agent.sh` — 20 checks covering the deny-list invariant, the never-merge / never-review / never-ready guarantees, the existing-PR precondition, the one-attempt autofix cap, the lockfile-only revert, and the bounded `--watch`.
 
 ### Why it is not `ship-autonomous` in a subagent
 
@@ -22,6 +22,30 @@ Background git agents have denied `Write`/`Edit`/`NotebookEdit` since v3.5.0, an
 One attempt per check, not three: these fixers are deterministic, so a second identical run cannot succeed where the first failed. `gh pr checks --watch` is bounded by the **Bash tool's own `timeout` parameter** (540s) and looped at most 5 times (~45 min) so a long CI run cannot exceed a single command timeout. It deliberately does not shell out to `timeout` — that is GNU coreutils and absent on stock macOS, where `timeout 540 gh ...` fails with `command not found` and the watch never runs. This was caught live on macOS while shipping the agent's own PR.
 
 Throttled external review bots (CodeRabbit and similar report a red check when merely rate-limited, with an empty `workflow` and `link`) are classified `bot-infra` and are report-only. There is no defect to fix, and pushing a commit to clear one just burns another CI round. Also caught live on the agent's own PR.
+
+### Fixed before merge
+
+Three P2 findings from review on the agent's own PR, all of them inherited or blast-radius bugs rather than typos:
+
+- **Failing logs are scoped to this PR.** Step 3 originally used `gh run list | head -1`, copied from `ship-autonomous`, which lists runs repo-wide — an unrelated branch's failure could be classified and "fixed" on this PR while the real failing check went unread. The run id now comes from the failing check's own `link`. A link-less failing check (external status bots report no run) is classified `bot-infra`.
+- **The peer-deps blast-radius check sees untracked files.** `git diff --name-only` covers only tracked files, but Step 5 stages with `git add -A`, so an untracked install artifact (`.pnp.cjs`, install state, an unignored `node_modules`) would ride along into the commit despite passing the check. Now `git status --porcelain`, with a path-scoped `git clean` on discard — never a bare one.
+- **The report queries review threads, not just `reviewDecision`.** `reviewDecision` carries only the summary verdict and reads empty on a PR with unresolved threads waiting, so reporting it alone would tell the parent session a PR is clear when it is not. The report now also runs the GraphQL `reviewThreads { isResolved }` query. This reproduced on the agent's own PR: `reviewDecision` was empty while three threads sat unresolved.
+
+---
+
+## v4.4.0 — 2026-07-20 — `merge?` shorthand as a skill + prompt hook
+
+### Added
+
+- **`skills/merge/SKILL.md`** — merge-readiness skill, explicitly invocable as `/git-agent:merge`. Finds the branch's PR, gates on `MERGEABLE` + green required checks + no `CHANGES_REQUESTED` + no unresolved review threads, runs the project's first non-`--fix`, non-`watch` `lint*` script (the `ship-autonomous` Step 2.5 precedent), then **re-runs the readiness queries** and asks for explicit approval via `AskUserQuestion` before `gh pr merge --squash --match-head-commit <headRefOid>`. Never auto-applies `--fix` (it would change the PR head), never passes `--delete-branch`, and never silently retries a rejected `--squash` as `--merge`/`--rebase`. Anything pending, failing, or ambiguous → status summary and a question.
+  - The blocking gate uses `gh pr checks --required` — what branch protection actually enforces — while the full list still feeds the approval summary, so a pending optional check is surfaced without deadlocking a mergeable PR.
+  - Checks are read via `gh pr checks --json name,state`, not `statusCheckRollup`: rollup nodes are heterogeneous (`CheckRun` carries `status`+`conclusion`, `StatusContext` carries `state`), so a single "is it SUCCESS" test reads an in-progress run as green. Same reasoning `ship-autonomous` Step 8 already documents.
+  - Review threads are fetched with `totalCount`/`pageInfo`; a truncated page is reported as unknown rather than counted as zero.
+- **`hooks/merge-shorthand.py` + `hooks.json`** — `UserPromptSubmit` hook that routes the literal prompt `merge?` (anchored, case-insensitive, whitespace-tolerant) to the merge skill. Silent on every other prompt, so ordinary sentences containing "merge" are untouched. First hook wiring in `git-agent`; mirrors `plan-agent/hooks.json`.
+- `tests/plugins/test-merge-shorthand.sh` — pins the hook's trigger boundary (3 firing cases, 5 near-miss silences), the hooks.json wiring, and the skill's safety contract (MERGEABLE gate, lint gate with no auto-fix, explicit approval, `--match-head-commit`, no `--delete-branch`).
+
+Replaces a private per-machine memory note with a shipped, reviewable, tested behavior.
+
 
 ---
 

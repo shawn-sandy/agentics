@@ -15,7 +15,7 @@ assert() {
   label="$1"
   file="$2"
   expected_prefix="$3"
-  expected_count="$4"  # optional: numeric char count that must appear in output
+  expected_count="$4"  # optional: char count; matched as "is N chars" so the budget text can't satisfy it
 
   actual=$("$SCRIPT" "$file" 2>&1)
 
@@ -24,7 +24,7 @@ assert() {
 
   count_ok=1
   if [ -n "$expected_count" ]; then
-    echo "$actual" | grep -q "${expected_count}" || count_ok=0
+    echo "$actual" | grep -q "is ${expected_count} chars" || count_ok=0
   fi
 
   if [ "$prefix_ok" -eq 1 ] && [ "$count_ok" -eq 1 ]; then
@@ -43,9 +43,9 @@ echo "=== measure-description.sh test harness ==="
 echo "Script: $SCRIPT"
 echo ""
 
-assert "boundary OK (160 chars)"       "$FIXTURES/desc-160.md"      "OK:"      "160"
-assert "one over budget (161 chars)"   "$FIXTURES/desc-161.md"      "WARNING:" "161"
-assert "well over budget (200 chars)"  "$FIXTURES/desc-200.md"      "WARNING:" "200"
+assert "under budget (160 chars)"      "$FIXTURES/desc-160.md"      "OK:"      "160"
+assert "boundary OK (200 chars)"       "$FIXTURES/desc-200.md"      "OK:"      "200"
+assert "one over budget (201 chars)"   "$FIXTURES/desc-201.md"      "WARNING:" "201"
 assert "missing description"           "$FIXTURES/desc-missing.md"  "ERROR:"
 assert "multi-line description"        "$FIXTURES/desc-multiline.md" "WARNING:"
 

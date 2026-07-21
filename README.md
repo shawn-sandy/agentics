@@ -747,7 +747,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.2.3 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.2.8 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.4.4 | testing | 5 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.3.0 | development | 3 commands, 6 skills, 3 agents |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.4.0 | development | 3 commands, 7 skills, 3 agents, 1 hook |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.11 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.18.0 | productivity | 1 command, 17 skills |
