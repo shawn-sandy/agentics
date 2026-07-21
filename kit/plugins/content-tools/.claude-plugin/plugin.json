@@ -1,0 +1,18 @@
+{
+  "name": "content-tools",
+  "description": "Turn work products — HTML artifacts and Markdown files — into draft posts for a static site, preserving interactivity through a per-block fidelity ladder and guarding output against MDX's JSX parsing rules",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mdx",
+    "astro",
+    "static-site",
+    "content-publishing",
+    "artifact",
+    "blog"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/content-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

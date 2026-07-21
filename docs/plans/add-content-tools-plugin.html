@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="in-progress" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="in-progress">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-07-20">
@@ -1631,51 +1631,51 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">`kit/plugins/content-tools/` exists with a `plugin.json` carrying no `version` key, a README, and a CHANGELOG</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">`content-tools` is registered in `marketplace.json` at `1.0.0` with a documentation category and specific tags</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">`skills/artifact-to-post/SKILL.md` exists with valid frontmatter, a three-part description ≤200 chars, and declared `allowed-tools`</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The skill accepts both `.html` and `.md` sources, and a Markdown source skips extraction entirely</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">A claude.ai artifact URL is refused with a pointer to `save-artifact` — no `WebFetch` attempt on an authenticated URL</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">The security scrub runs as a blocking gate before anything is written, and stops loudly rather than silently skipping when `social-media-tools` is absent</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">`references/mdx-safety.md` documents all four ladder rungs in order and the JSX rules including `class`→`className`</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">The skill escapes `{`, `}`, and `&lt;word…&gt;` in prose while leaving fenced and inline code untouched, and the pass runs after the prose rewrite</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">Every site-specific value — posts directory, extension, frontmatter keys, draft flag, images directory, preview URL, build command, interactivity ceiling — comes from `CONTENT.md`, never a literal</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">Missing `@astrojs/mdx` or an `.mdx`-less collection glob is reported with the exact fix and never auto-installed</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">Output defaults to unpublished; the publish gate shows slug and URL, defaults to no, and preserves the unpublished flag when declined</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12">`bash tests/plugins/test-artifact-to-post.sh` and `bash tests/plugins/test-no-orphan-plugin-dirs.sh` both exit 0</label>
         </li>
         <li>
@@ -1683,7 +1683,7 @@ img, video { max-width: 100%; height: auto; }
           <label for="ac13">A real artifact converts and the target site&#39;s build command exits 0, with rung-2/rung-3 blocks still interactive and no style leakage</label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
+          <input type="checkbox" id="ac14" checked>
           <label for="ac14">`BASE_REF=main node scripts/check-plugin-versions.mjs` passes and `CLAUDE.md` lists content-tools</label>
         </li>
       </ul>

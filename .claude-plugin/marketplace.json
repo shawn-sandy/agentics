@@ -304,6 +304,25 @@
         "secret-scanning",
         "claude-ai"
       ]
+    },
+    {
+      "name": "content-tools",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/content-tools"
+      },
+      "version": "1.0.0",
+      "description": "Turn work products into publishable site content — the artifact-to-post skill converts a local HTML artifact, pasted HTML, or a Markdown file into a draft MDX post for a static site, keeping interactive blocks interactive by scoping their CSS instead of screenshotting them, and guarding prose against MDX's JSX parsing rules",
+      "category": "documentation",
+      "tags": [
+        "mdx",
+        "astro",
+        "static-site",
+        "content-publishing",
+        "artifact-conversion",
+        "blog-drafting"
+      ]
     }
   ],
   "removed": [

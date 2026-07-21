@@ -1,5 +1,6 @@
 ---
-status: todo
+status: in-progress
+modified: 2026-07-20
 type: feature
 created: 2026-07-20
 glance: Artifacts and Markdown files die in the session that made them. This plan creates a content-tools plugin whose first skill converts either into a draft MDX post for an Astro site — keeping interactive blocks interactive by scoping their CSS instead of flattening everything to screenshots.
@@ -97,20 +98,20 @@ Tier 1 — This plan creates files under `kit/plugins/`, which are the shipped p
 
 ## Acceptance Criteria
 
-- [ ] `kit/plugins/content-tools/` exists with a `plugin.json` carrying no `version` key, a README, and a CHANGELOG
-- [ ] `content-tools` is registered in `marketplace.json` at `1.0.0` with a documentation category and specific tags
-- [ ] `skills/artifact-to-post/SKILL.md` exists with valid frontmatter, a three-part description ≤200 chars, and declared `allowed-tools`
-- [ ] The skill accepts both `.html` and `.md` sources, and a Markdown source skips extraction entirely
-- [ ] A claude.ai artifact URL is refused with a pointer to `save-artifact` — no `WebFetch` attempt on an authenticated URL
-- [ ] The security scrub runs as a blocking gate before anything is written, and stops loudly rather than silently skipping when `social-media-tools` is absent
-- [ ] `references/mdx-safety.md` documents all four ladder rungs in order and the JSX rules including `class`→`className`
-- [ ] The skill escapes `{`, `}`, and `<word…>` in prose while leaving fenced and inline code untouched, and the pass runs after the prose rewrite
-- [ ] Every site-specific value — posts directory, extension, frontmatter keys, draft flag, images directory, preview URL, build command, interactivity ceiling — comes from `CONTENT.md`, never a literal
-- [ ] Missing `@astrojs/mdx` or an `.mdx`-less collection glob is reported with the exact fix and never auto-installed
-- [ ] Output defaults to unpublished; the publish gate shows slug and URL, defaults to no, and preserves the unpublished flag when declined
-- [ ] `bash tests/plugins/test-artifact-to-post.sh` and `bash tests/plugins/test-no-orphan-plugin-dirs.sh` both exit 0
+- [x] `kit/plugins/content-tools/` exists with a `plugin.json` carrying no `version` key, a README, and a CHANGELOG
+- [x] `content-tools` is registered in `marketplace.json` at `1.0.0` with a documentation category and specific tags
+- [x] `skills/artifact-to-post/SKILL.md` exists with valid frontmatter, a three-part description ≤200 chars, and declared `allowed-tools`
+- [x] The skill accepts both `.html` and `.md` sources, and a Markdown source skips extraction entirely
+- [x] A claude.ai artifact URL is refused with a pointer to `save-artifact` — no `WebFetch` attempt on an authenticated URL
+- [x] The security scrub runs as a blocking gate before anything is written, and stops loudly rather than silently skipping when `social-media-tools` is absent
+- [x] `references/mdx-safety.md` documents all four ladder rungs in order and the JSX rules including `class`→`className`
+- [x] The skill escapes `{`, `}`, and `<word…>` in prose while leaving fenced and inline code untouched, and the pass runs after the prose rewrite
+- [x] Every site-specific value — posts directory, extension, frontmatter keys, draft flag, images directory, preview URL, build command, interactivity ceiling — comes from `CONTENT.md`, never a literal
+- [x] Missing `@astrojs/mdx` or an `.mdx`-less collection glob is reported with the exact fix and never auto-installed
+- [x] Output defaults to unpublished; the publish gate shows slug and URL, defaults to no, and preserves the unpublished flag when declined
+- [x] `bash tests/plugins/test-artifact-to-post.sh` and `bash tests/plugins/test-no-orphan-plugin-dirs.sh` both exit 0
 - [ ] A real artifact converts and the target site's build command exits 0, with rung-2/rung-3 blocks still interactive and no style leakage
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` passes and `CLAUDE.md` lists content-tools
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` passes and `CLAUDE.md` lists content-tools
 
 ## Verification
 
