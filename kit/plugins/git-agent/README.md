@@ -49,6 +49,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `/git-agent:pr-bg [hint]` | Dispatch `agent-pr` in the background — push and open a GitHub PR while you keep working. Optional hint sets PR title/body context. |
 | `/git-agent:ship-bg [hint]` | Dispatch `agent-ship` in the background — full commit + push + PR pipeline end-to-end. Optional hint sets commit/PR context. |
 | `/git-agent:ship-ci-bg [pr]` | Dispatch `agent-ship-ci` in the background — watch an existing PR's checks, autofix lint/peer-deps, report. Optional argument names the PR; otherwise resolved from the current branch. |
+| `/git-agent:merge-bg [pr]` | Dispatch `agent-merge` in the background — run the PR readiness gate and squash-merge if fully green, report otherwise. Running the command is the approval for that one merge. |
 
 ### Skills
 
@@ -72,6 +73,7 @@ Agents are background subagents dispatched via the corresponding slash commands 
 | `agent-pr` | `/git-agent:pr-bg` or `Agent` tool with `subagent_type: agent-pr` | Pushes the current branch if needed and opens a GitHub PR with an auto-generated summary. Reports the PR URL on completion. |
 | `agent-ship` | `/git-agent:ship-bg` or `Agent` tool with `subagent_type: agent-ship` | Stages, commits, pushes, and opens a PR/MR end-to-end (GitHub via `gh`, GitLab via `glab`). Reports the PR/MR URL on completion. |
 | `agent-ship-ci` | `/git-agent:ship-ci-bg` or `Agent` tool with `subagent_type: agent-ship-ci` | Watches an existing PR's checks (GitHub only), applies one deterministic autofix per failing check, and reports the final check states. Never merges, never replies to reviews, never edits source. |
+| `agent-merge` | `/git-agent:merge-bg` or `Agent` tool with `subagent_type: agent-merge` | Runs the `merge` skill's readiness gate and squash-merges only a fully green PR; anything pending, failing, conflicting, or ambiguous is reported instead. Never passes `--delete-branch`, never edits source. |
 
 ---
 
@@ -247,18 +249,25 @@ Dispatched via `/git-agent:ship-bg [hint]` or directly by an orchestrator.
 
 Mirrors `ship`: guards → stage → commit → push → check for existing PR/MR → create PR/MR (GitHub via `gh`, GitLab via `glab`). Reports the PR/MR URL on completion.
 
+#### agent-merge
+
+Dispatched via `/git-agent:merge-bg [pr]` or directly by an orchestrator.
+
+Mirrors `merge` Steps 1–4: find the PR → readiness gate (`--required` checks, `mergeable`, `reviewDecision`, unresolved threads) → lint gate → re-check → `gh pr merge --squash --match-head-commit`. The skill's `AskUserQuestion` approval has no background equivalent, so the dispatch itself authorizes exactly one squash merge of a fully green PR; every other branch is a stop-and-report. Never passes `--delete-branch`.
+
 ### Caveat: working-tree snapshot
 
 Background agents commit, push, and ship whatever is in the working tree at the moment they start running. If you keep editing files in the main session after dispatching an agent, those edits **may or may not** be included depending on timing. This is the inherent fire-and-forget tradeoff. If you need a guaranteed snapshot, use the synchronous skill instead.
 
 ## Slash commands (explicit background dispatch)
 
-Three slash commands give you a one-line way to fire off the background agents without waiting for natural-language matching:
+These slash commands give you a one-line way to fire off the background agents without waiting for natural-language matching:
 
 - `/git-agent:commit-bg [hint]` — dispatches `agent-commit` in the background.
 - `/git-agent:pr-bg [hint]` — dispatches `agent-pr` in the background.
 - `/git-agent:ship-bg [hint]` — dispatches `agent-ship` in the background.
 - `/git-agent:ship-ci-bg [pr]` — dispatches `agent-ship-ci` in the background.
+- `/git-agent:merge-bg [pr]` — dispatches `agent-merge` in the background.
 
 Each command invokes the corresponding agent with `run_in_background: true` and returns control immediately; you'll be notified automatically when the agent completes. The optional argument is passed to the agent as a hint for the commit message or PR summary.
 
@@ -288,8 +297,10 @@ plugins/git-agent/
 │   └── merge-shorthand.py        # Routes the literal prompt `merge?` to skills/merge
 ├── commands/
 │   ├── commit-bg.md
+│   ├── merge-bg.md
 │   ├── pr-bg.md
-│   └── ship-bg.md
+│   ├── ship-bg.md
+│   └── ship-ci-bg.md
 ├── scripts/
 │   └── extract-plan-issues.sh    # Extracts plan-issue meta tags for PR descriptions
 ├── skills/

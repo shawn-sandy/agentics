@@ -1,5 +1,18 @@
 # Changelog — git-agent
 
+## v4.6.0 — 2026-07-21 — background merge
+
+### Added
+
+- **`agents/agent-merge.md`** — a background subagent that runs the `merge` skill's readiness gate (PR lookup, `gh pr checks --required`, `mergeable`, `reviewDecision`, unresolved review threads, lint) and squash-merges only when everything is unambiguously green.
+- **`commands/merge-bg.md`** — `/git-agent:merge-bg [pr]` dispatches it and returns control immediately.
+
+### What the dispatch authorizes
+
+The `merge` skill ends in an `AskUserQuestion` approval prompt, and a background subagent has no user to ask. Running `/git-agent:merge-bg` is therefore the approval — for **one squash merge of a fully green PR**, and nothing else. Every branch the skill routes to "ask" becomes a stop-and-report instead: pending or failing checks, `CONFLICTING`/`UNKNOWN` mergeable state, `CHANGES_REQUESTED`, unresolved review threads, a truncated thread list, a failing lint gate, or a head commit that moved between verification and merge (`--match-head-commit` still pins it). If squash merges are disallowed the agent reports the allowed methods rather than silently switching method — the approval was for a squash.
+
+It never passes `--delete-branch` (or GitLab's `-d`), never marks a draft ready, never replies to or resolves reviews, and upholds the background-agent deny list (`Write`/`Edit`/`NotebookEdit`) asserted by `tests/plugins/test-ship-self-review.sh`.
+
 ## v4.5.0 — 2026-07-20 — background CI watcher
 
 ### Added
