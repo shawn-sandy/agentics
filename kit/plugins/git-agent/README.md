@@ -20,6 +20,7 @@ For workflows where you want git operations to run in the background while you k
 - **agent-commit** — Background version of `commit-agent`.
 - **agent-pr** — Background version of `pr-agent`.
 - **agent-ship** — Background version of `ship` (full commit + push + PR pipeline).
+- **agent-ship-ci** — Watches an already-open PR's checks, applies deterministic autofixes, reports. The unattended, truncated half of `ship-autonomous` — it never merges and never edits source.
 
 There is no `agent-branch` — branch creation is synchronous by design (you need to be on the new branch before continuing).
 
@@ -46,6 +47,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `/git-agent:commit-bg [hint]` | Dispatch `agent-commit` in the background — stage and commit while you keep working. Optional hint sets commit message context. |
 | `/git-agent:pr-bg [hint]` | Dispatch `agent-pr` in the background — push and open a GitHub PR while you keep working. Optional hint sets PR title/body context. |
 | `/git-agent:ship-bg [hint]` | Dispatch `agent-ship` in the background — full commit + push + PR pipeline end-to-end. Optional hint sets commit/PR context. |
+| `/git-agent:ship-ci-bg [pr]` | Dispatch `agent-ship-ci` in the background — watch an existing PR's checks, autofix lint/peer-deps, report. Optional argument names the PR; otherwise resolved from the current branch. |
 
 ### Skills
 
@@ -67,6 +69,7 @@ Agents are background subagents dispatched via the corresponding slash commands 
 | `agent-commit` | `/git-agent:commit-bg` or `Agent` tool with `subagent_type: agent-commit` | Stages all working-tree changes and creates a conventional commit. Reports the commit hash on completion. |
 | `agent-pr` | `/git-agent:pr-bg` or `Agent` tool with `subagent_type: agent-pr` | Pushes the current branch if needed and opens a GitHub PR with an auto-generated summary. Reports the PR URL on completion. |
 | `agent-ship` | `/git-agent:ship-bg` or `Agent` tool with `subagent_type: agent-ship` | Stages, commits, pushes, and opens a PR/MR end-to-end (GitHub via `gh`, GitLab via `glab`). Reports the PR/MR URL on completion. |
+| `agent-ship-ci` | `/git-agent:ship-ci-bg` or `Agent` tool with `subagent_type: agent-ship-ci` | Watches an existing PR's checks (GitHub only), applies one deterministic autofix per failing check, and reports the final check states. Never merges, never replies to reviews, never edits source. |
 
 ---
 
@@ -253,6 +256,7 @@ Three slash commands give you a one-line way to fire off the background agents w
 - `/git-agent:commit-bg [hint]` — dispatches `agent-commit` in the background.
 - `/git-agent:pr-bg [hint]` — dispatches `agent-pr` in the background.
 - `/git-agent:ship-bg [hint]` — dispatches `agent-ship` in the background.
+- `/git-agent:ship-ci-bg [pr]` — dispatches `agent-ship-ci` in the background.
 
 Each command invokes the corresponding agent with `run_in_background: true` and returns control immediately; you'll be notified automatically when the agent completes. The optional argument is passed to the agent as a hint for the commit message or PR summary.
 

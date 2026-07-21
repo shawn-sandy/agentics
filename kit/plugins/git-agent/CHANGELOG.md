@@ -1,5 +1,28 @@
 # Changelog — git-agent
 
+## v4.4.0 — 2026-07-20 — background CI watcher
+
+### Added
+
+- **`agents/agent-ship-ci.md`** — a background subagent that watches an already-open PR's checks, applies at most one deterministic autofix per failing check, and reports. It is the unattended, truncated half of the `ship-autonomous` skill, not a background wrapper around it.
+- **`commands/ship-ci-bg.md`** — `/git-agent:ship-ci-bg [pr]` dispatches it and returns control immediately.
+- `tests/plugins/test-ship-ci-agent.sh` — 16 checks covering the deny-list invariant, the never-merge / never-review / never-ready guarantees, the existing-PR precondition, the one-attempt autofix cap, the lockfile-only revert, and the bounded `--watch`.
+
+### Why it is not `ship-autonomous` in a subagent
+
+`ship-autonomous` is built around `mcp__github__subscribe_pr_activity`: Step 5 ends the turn and the session is woken by PR webhooks. A subagent runs once to completion and can never be re-woken, so wrapping the skill would silently downgrade it to the polling fallback. Its escalation points — unrecognized CI failure, ambiguous review comment, `CHANGES_REQUESTED`, and the merge gate — are all `AskUserQuestion`, and a subagent has no user to ask. `agent-ship-ci` therefore drops every step that needs a human instead of guessing at it: it never merges, never marks a draft ready, never deletes a branch, and never replies to, resolves, or dismisses a review. It reports and stops; the merge decision stays with the parent session.
+
+### Autofix scope and the deny-list invariant
+
+Background git agents have denied `Write`/`Edit`/`NotebookEdit` since v3.5.0, and `tests/plugins/test-ship-self-review.sh` asserts that across every `agents/agent-*.md`. `agent-ship-ci` upholds it. That splits the `ship-autonomous` autofix allowlist in two:
+
+- **Applied** — `lint` (only via a `--fix` script the project already defines) and `peer-deps` (lockfile reinstall, with the diff verified lockfile-only and reverted if it is not). These are the project's own tooling rewriting its own output via `Bash`, not model-authored edits.
+- **Reported only** — `typecheck`, test failures, and everything unrecognized. Their fixes are source edits, which an unattended agent must not author.
+
+One attempt per check, not three: these fixers are deterministic, so a second identical run cannot succeed where the first failed. `--watch` is bounded by `timeout 540` and looped at most 5 times (~45 min) so a long CI run cannot exceed a single command timeout.
+
+---
+
 ## v4.3.0 — 2026-07-20 — ship self-reviews the diff before pushing
 
 ### Added
