@@ -18,8 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when empty; optional session ID or `.jsonl` path via `$ARGUMENTS`). The
   rendered HTML is filed in the shared artifacts gallery — `.claude/artifacts/`
   inbox, published to `docs/artifacts/` via `social-media-tools:save-artifact`,
-  degrading to an unpublished inbox copy when that skill is absent — rather than
-  living only in the plans tree. Otherwise nothing downstream changes —
+  degrading to a collision-safe unpublished inbox copy when that skill is absent
+  — rather than living only in the plans tree. The recap's republish key is
+  `product-artifact-url:`, deliberately not the `artifact-url:` that
+  `session-artifact` uses: both share one record per session, so a shared key
+  would republish the product recap over an existing reviewer recap's page.
+  Otherwise nothing downstream changes —
   extraction, the blocking scrub gate, the saved `.md`, the HTML render,
   publishing, and the marker check all stay the skill's. A wrapper rather than a
   fifth skill so the scrub gate is never duplicated.

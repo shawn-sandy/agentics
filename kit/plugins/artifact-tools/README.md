@@ -126,10 +126,15 @@ optional session ID or `.jsonl` path.
 
 The rendered HTML is filed where every other saved artifact lives: the
 `.claude/artifacts/` inbox, published into the committed `docs/artifacts/`
-gallery via `social-media-tools:save-artifact` (best-effort — without that skill
-the copy still lands in the inbox, just unpublished). The `.md` stays under
-`{plansDirectory}/sessions/`; its `artifact-url:` frontmatter is the republish
-key, not a duplicate of the deliverable.
+gallery via `social-media-tools:save-artifact`. Without that skill the command
+copies the page into the inbox itself under a collision-safe name (hence `Bash`
+in its `allowed-tools`) and reports it as saved but unpublished.
+
+The `.md` record under `{plansDirectory}/sessions/` is shared with
+`session-artifact`, but the republish key is not: `session-doc` reads and writes
+`product-artifact-url:` while the reviewer recap keeps `artifact-url:`. One
+record, two stable URLs — without the split, publishing a product recap would
+overwrite the reviewer recap's page for the same session.
 
 ### plan-artifact
 

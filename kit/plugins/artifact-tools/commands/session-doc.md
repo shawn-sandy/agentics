@@ -2,6 +2,7 @@
 description: Publish a session recap written for the product team and stakeholders — features, fixes, decisions, and plan details
 allowed-tools:
   - Skill
+  - Bash
 ---
 
 # Session Doc
@@ -43,14 +44,34 @@ Run the `artifact-tools:session-artifact` skill with these framing overrides:
   Skill(skill: "social-media-tools:save-artifact", args: "<path to the rendered HTML>")
   ```
 
-  If that skill is not installed, copy the HTML to `.claude/artifacts/` yourself
-  under `session-doc-$(date +%F).html` and say it was saved but not published to
-  the gallery. Either way, report the gallery path alongside the artifact URL.
+  If that skill is not installed, copy the HTML into the inbox yourself, picking
+  a free name the way `save-artifact` does — a same-day second recap must not
+  overwrite the first:
+
+  ```bash
+  mkdir -p .claude/artifacts
+  target=".claude/artifacts/session-doc-$(date +%F).html"
+  n=2
+  while [ -e "$target" ]; do
+    target=".claude/artifacts/session-doc-$(date +%F)-${n}.html"
+    n=$((n + 1))
+  done
+  cp "<rendered HTML>" "$target" && echo "Saved → $target (not published to the gallery)"
+  ```
+
+  Either way, report the gallery path alongside the artifact URL.
 - **Extra input:** `$ARGUMENTS` — a session ID or `.jsonl` path if given,
   otherwise use the newest transcript for this project.
 
 Everything else follows the skill unchanged: transcript extraction, the blocking
 `security-scrub` gate, the HTML render, publishing, and the post-publish marker
-check. The `.md` record stays under `{plansDirectory}/sessions/` — its
-`artifact-url:` frontmatter is what lets a later run republish to the same URL,
-so it is a lookup key, not a second copy of the deliverable.
+check.
+
+**Use `product-artifact-url:`, not `artifact-url:`, as this recap's republish
+key.** Both commands share one record under `{plansDirectory}/sessions/` —
+`export_session.py` names it `<date>-<slug>-<session-id[:8]>.md`, deterministic
+per session — so reusing `artifact-url:` would republish the product recap over
+a reviewer recap already published from the same transcript, silently mutating
+that page. Read `product-artifact-url:` before publishing and write it back
+after; leave any `artifact-url:` in the file untouched. The two audiences get
+two stable URLs from one record.
