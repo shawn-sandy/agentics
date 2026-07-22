@@ -54,4 +54,42 @@ if out3="$(cd "$proj" && run_save "$tmp/does-not-exist.html" 2>/dev/null)"; then
   fail "expected non-zero exit when source is missing (got: $out3)"
 fi
 
-echo "PASS: save-artifact smoke test (4 checks)"
+# 5. URL source branch is documented and permitted.
+# Patterns match on the facts the branch depends on, not on prose wording — a
+# copy-edit should not fail these, but dropping the behavior must.
+grep -qF 'claude.ai/code/artifact/' "$SKILL" || fail "artifact URL source not documented"
+grep -qE '^allowed-tools:.*\bWebFetch\b' "$SKILL" || fail "WebFetch missing from allowed-tools"
+grep -qi 'curl' "$SKILL" || fail "shell fetch (curl) is not addressed for the URL branch"
+grep -qiE '403|SPA shell' "$SKILL" || fail "reason a shell fetch fails is not stated"
+
+# 6. The URL branch documents each transform the saved file depends on.
+# Asserted against SKILL.md — the skill IS the shipped artifact, so a check that
+# only exercised a local shell helper would pass even after the skill lost the
+# instruction it is meant to guard.
+grep -qF '[Artifact' "$SKILL" || fail "response header format not documented"
+grep -qiE 'discard|strip|drop' "$SKILL" || fail "header/runtime removal not documented"
+grep -qF 'frame-runtime' "$SKILL" || fail "claude.ai frame-runtime block is not stripped — saved page would not be self-contained"
+grep -qiF '<!doctype' "$SKILL" || fail "missing-<!doctype failure signal not documented"
+
+# 7. Publishing is gated on a secrets scrub — docs/artifacts/ is served publicly.
+# Presence is not enough: a scrub documented *after* the copy would protect
+# nothing, so assert it precedes both the copy and the publish command.
+grep -qF 'security-scrub' "$SKILL" || fail "no security-scrub gate before publishing to a public tree"
+# Anchor on the executable commands, not prose: build-artifacts-index.sh is also
+# named in the Overview, which would make any scrub placement look "before" it.
+scrub_line=$(grep -nF 'security-scrub' "$SKILL" | head -1 | cut -d: -f1)
+for after in 'cp "$SRC"' 'bash "$BUILD_ARTIFACTS"'; do
+  later=$(grep -nF "$after" "$SKILL" | head -1 | cut -d: -f1)
+  [ -n "$later" ] || fail "expected the command '$after' in the skill; check 7 ordering cannot be verified"
+  [ "$scrub_line" -lt "$later" ] || fail "security-scrub (line $scrub_line) must precede '$after' (line $later)"
+done
+
+# 8. The scrub is a real gate: the skill branches on security-scrub's documented
+# GATE RESULT contract and fails closed, rather than merely mentioning findings.
+grep -qF 'GATE RESULT' "$SKILL" || fail "scrub result is not read — gate cannot fail closed"
+for verdict in BLOCKED CANCELLED APPROVED; do
+  grep -qF "$verdict" "$SKILL" || fail "scrub gate does not handle GATE RESULT: $verdict"
+done
+grep -qE '^allowed-tools:.*\bSkill\b' "$SKILL" || fail "Skill missing from allowed-tools — the scrub gate cannot be invoked"
+
+echo "PASS: save-artifact smoke test (8 checks)"

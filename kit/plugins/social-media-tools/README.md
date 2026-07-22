@@ -77,7 +77,7 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 | `security-scrub` | Automatic | Check for secrets, review a diff for leaks, scrub this file for sensitive data |
 | `write-guide` | Automatic | Write a guide on X, document this rule, deep-dive X, explain X as a guide, capture this session's lessons as a guide |
 | `share-explanation` | Automatic | Explain how X works, how does this component work, break down this concept |
-| `save-artifact` | Automatic | Save or share an artifact, save this HTML page, stash the artifact I just built |
+| `save-artifact` | Automatic | Save or share an artifact, save this claude.ai artifact URL, save this HTML page, stash the artifact I just built |
 
 ### Discover what's worth sharing
 

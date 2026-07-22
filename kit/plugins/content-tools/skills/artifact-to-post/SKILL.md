@@ -49,13 +49,15 @@ It skips nothing else. Every source type still runs the security scrub
 in that order. A Markdown file is just as likely to carry a pasted token as an
 artifact is, and it needs `posts_dir` and the draft flag exactly as much.
 
-**claude.ai URLs are refused.** `WebFetch` cannot read authenticated or private
-URLs, so attempting one produces a confident wrong result. Reply with one line
-and stop:
+**claude.ai URLs are refused.** This skill takes a file, and a published
+artifact needs fetching, scrubbing, and saving first — which is exactly what
+`social-media-tools:save-artifact` does, URL and all. Hand it off rather than
+fetching here, so the scrub and the saved local copy both happen. Reply with one
+line and stop:
 
-> I can't fetch a published claude.ai artifact — that URL needs your session.
-> Save it locally first with `social-media-tools:save-artifact`, then point me
-> at the `.html`.
+> I work from a saved file. Give that URL to `social-media-tools:save-artifact`
+> first — it fetches and scrubs the artifact — then point me at the `.html` it
+> writes.
 
 If no source was given, `Glob` for candidates (`.claude/artifacts/*.html`,
 `*.html`, `*.md`) and ask via `AskUserQuestion`. Never guess.

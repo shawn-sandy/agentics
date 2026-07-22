@@ -196,7 +196,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.18.1",
+      "version": "2.19.0",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -312,7 +312,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/content-tools"
       },
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Turn work products into publishable site content — the artifact-to-post skill converts a local HTML artifact, pasted HTML, or a Markdown file into a draft MDX post for a static site, keeping interactive blocks interactive by scoping their CSS instead of screenshotting them, and guarding prose against MDX's JSX parsing rules",
       "category": "documentation",
       "tags": [
