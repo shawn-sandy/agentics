@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.19.0 — 2026-07-22 — save-artifact: accept a claude.ai artifact URL as the source
+
+### Added
+
+- **`save-artifact` now saves from a `https://claude.ai/code/artifact/<uuid>` URL**, not just a local file or an in-chat artifact. Previously an artifact that existed only at its published URL — a page from an earlier session, or one shared by the gallery — could not be pulled back down; the skill had no source to copy. The new first branch of Step 1 fetches the URL with `WebFetch` (which carries the claude.ai login and returns the page's raw HTML), strips the one-line `[Artifact …]` header, and writes the document to the scratchpad under a `<title>`-derived slug, which then feeds the existing dated-copy and gallery-publish steps unchanged. `curl` is explicitly ruled out — it returns the SPA shell or a Cloudflare 403. A fetch with no `<!doctype` (deleted artifact, not owned by this account, wrong URL shape) stops the skill instead of saving a partial page. `WebFetch` added to `allowed-tools`.
+
 ## v2.18.1 — 2026-07-21 — Document `share-explanation` in the plugin README
 
 ### Fixed

@@ -1,7 +1,7 @@
 ---
 name: save-artifact
-description: "Saves an HTML Artifact page to the local artifacts inbox. Copies a chosen .html into .claude/artifacts with a dated name, then publishes it. Use when asked to save or share an artifact."
-allowed-tools: Bash, Read, Write, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
+description: "Saves an HTML Artifact page to the local artifacts inbox. Copies a local .html or fetches a claude.ai artifact URL into .claude/artifacts, then publishes it. Use when asked to save an artifact."
+allowed-tools: Bash, Read, Write, Glob, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # save-artifact
@@ -33,13 +33,23 @@ with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
 The source is the `.html` file to save. Resolve it in this order:
 
-1. **Explicit path** — if the user gave a path to an `.html` file, use it.
-2. **In-chat artifact** — if the artifact was just generated in this
+1. **Artifact URL** — if the user gave a `https://claude.ai/code/artifact/<uuid>`
+   URL, fetch it with `WebFetch`, prompt: *"Return the page's raw HTML
+   verbatim."* Do **not** use `curl` — it gets the SPA shell or a Cloudflare
+   403; only `WebFetch` carries the claude.ai login. The response begins with a
+   one-line `[Artifact <uuid> "<title>" — ...]` header; discard that line and
+   `Write` everything from `<!doctype` onward to
+   `<scratchpad>/<slug>.html`, where `<slug>` is the page's `<title>`
+   kebab-cased. Use that file as `$SRC`. If the fetch returns no `<!doctype`
+   (artifact deleted, not owned by this account, or wrong URL shape), say so
+   and stop — do not save a partial page.
+2. **Explicit path** — if the user gave a path to an `.html` file, use it.
+3. **In-chat artifact** — if the artifact was just generated in this
    conversation and does not exist on disk (the common "stash the artifact I
    just built" case), materialize it first: `Write` the artifact's full HTML
    to a temporary file (e.g. `<scratchpad>/<slug>.html`) and use that file as
    the source.
-3. **Ask** — otherwise, look for candidate `.html` files with
+4. **Ask** — otherwise, look for candidate `.html` files with
    `Glob` (e.g. `docs/**/*.html`, `*.html`) and ask the user which to save via
    `AskUserQuestion`. Never guess silently.
 
