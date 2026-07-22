@@ -55,24 +55,23 @@ if out3="$(cd "$proj" && run_save "$tmp/does-not-exist.html" 2>/dev/null)"; then
 fi
 
 # 5. URL source branch is documented and permitted.
+# Patterns match on the facts the branch depends on, not on prose wording — a
+# copy-edit should not fail these, but dropping the behavior must.
 grep -qF 'claude.ai/code/artifact/' "$SKILL" || fail "artifact URL source not documented"
 grep -qE '^allowed-tools:.*\bWebFetch\b' "$SKILL" || fail "WebFetch missing from allowed-tools"
-grep -qF 'not** use `curl`' "$SKILL" || fail "curl is not ruled out for the URL fetch"
+grep -qi 'curl' "$SKILL" || fail "shell fetch (curl) is not addressed for the URL branch"
+grep -qiE '403|SPA shell' "$SKILL" || fail "reason a shell fetch fails is not stated"
 
-# 6. Header strip: a WebFetch response keeps the document, drops the [Artifact ...] line.
-strip_header() { sed -n '/<!doctype/I,$p'; }
-resp=$'[Artifact abc-123 "Demo Page" — owned by you; raw HTML follows]\n<!doctype html><title>Demo Page</title><body>x</body></html>'
-stripped="$(printf '%s' "$resp" | strip_header)"
-case "$stripped" in
-  '<!doctype'*) : ;;
-  *) fail "header strip did not start the document at <!doctype (got: ${stripped:0:40})" ;;
-esac
-case "$stripped" in
-  *'[Artifact'*) fail "header line survived the strip" ;;
-esac
-case "$stripped" in
-  *'<title>Demo Page</title>'*) : ;;
-  *) fail "document body lost during strip" ;;
-esac
+# 6. The URL branch documents each transform the saved file depends on.
+# Asserted against SKILL.md — the skill IS the shipped artifact, so a check that
+# only exercised a local shell helper would pass even after the skill lost the
+# instruction it is meant to guard.
+grep -qF '[Artifact' "$SKILL" || fail "response header format not documented"
+grep -qiE 'discard|strip|drop' "$SKILL" || fail "header/runtime removal not documented"
+grep -qF 'frame-runtime' "$SKILL" || fail "claude.ai frame-runtime block is not stripped — saved page would not be self-contained"
+grep -qiF '<!doctype' "$SKILL" || fail "missing-<!doctype failure signal not documented"
 
-echo "PASS: save-artifact smoke test (6 checks)"
+# 7. Publishing is gated on a secrets scrub — docs/artifacts/ is served publicly.
+grep -qF 'security-scrub' "$SKILL" || fail "no security-scrub gate before publishing to a public tree"
+
+echo "PASS: save-artifact smoke test (7 checks)"

@@ -36,13 +36,16 @@ assert m.get('name')=='content-tools', 'plugin.json name is not content-tools'
 assert 'version' not in m, 'plugin.json must not carry a version key'
 " || fail "plugin.json invalid"
 
-# 2. Registered in marketplace.json at 1.0.0 with a documentation category.
+# 2. Registered in marketplace.json with a semver version and a documentation
+#    category. The version is not pinned to a literal: every release bumps it, so
+#    a pin turns this red on correct changes. Enforcing the bump itself belongs to
+#    scripts/check-plugin-versions.mjs, which compares against origin/main.
 python3 -c "
-import json
+import json, re
 p=[x for x in json.load(open('$MARKET'))['plugins'] if x['name']=='content-tools']
 assert p, 'content-tools not registered in marketplace.json'
 e=p[0]
-assert e['version']=='1.0.0', 'expected version 1.0.0, got '+e['version']
+assert re.fullmatch(r'\d+\.\d+\.\d+', e.get('version','')), 'expected an X.Y.Z version, got '+repr(e.get('version'))
 assert e['category']=='documentation', 'expected documentation category'
 assert e['source']['path']=='kit/plugins/content-tools', 'wrong source path'
 assert 'mdx' in e['tags'] and 'astro' in e['tags'], 'expected specific tags'

@@ -1,6 +1,6 @@
 ---
 name: save-artifact
-description: "Saves an HTML Artifact page to the local artifacts inbox. Copies a local .html or fetches a claude.ai artifact URL into .claude/artifacts, then publishes it. Use when asked to save an artifact."
+description: "Saves an HTML Artifact page to the local artifacts inbox. Copies a local .html or fetches a claude.ai artifact URL, scrubs, then publishes. Use when asked to save or share an artifact or its URL."
 allowed-tools: Bash, Read, Write, Glob, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
@@ -35,14 +35,30 @@ The source is the `.html` file to save. Resolve it in this order:
 
 1. **Artifact URL** — if the user gave a `https://claude.ai/code/artifact/<uuid>`
    URL, fetch it with `WebFetch`, prompt: *"Return the page's raw HTML
-   verbatim."* Do **not** use `curl` — it gets the SPA shell or a Cloudflare
-   403; only `WebFetch` carries the claude.ai login. The response begins with a
-   one-line `[Artifact <uuid> "<title>" — ...]` header; discard that line and
-   `Write` everything from `<!doctype` onward to
-   `<scratchpad>/<slug>.html`, where `<slug>` is the page's `<title>`
-   kebab-cased. Use that file as `$SRC`. If the fetch returns no `<!doctype`
-   (artifact deleted, not owned by this account, or wrong URL shape), say so
-   and stop — do not save a partial page.
+   verbatim."* Use `WebFetch` and nothing else — a shell fetch such as `curl`
+   gets the SPA shell or a Cloudflare 403, because only `WebFetch` carries the
+   claude.ai login. Then:
+
+   - The response opens with a one-line `[Artifact <uuid> "<title>" — ...]`
+     header. Discard it, but keep the `<uuid>` and `<title>` — both are used
+     for the filename below.
+   - Drop the `<!-- frame-runtime -->…<!-- /frame-runtime -->` block in
+     `<head>`. It is claude.ai's iframe plumbing, not part of the artifact, and
+     it `import`s `/_runtime/*.js` paths that resolve on claude.ai and nowhere
+     else. Removing it is what makes the saved copy self-contained; keeping it
+     would also mean transcribing ~25 KB of minified script by hand.
+   - `Write` what remains — from `<!doctype` through `</html>` — to
+     `<scratchpad>/<slug>.html`. `<slug>` is the `<title>` kebab-cased; if the
+     page has no `<title>`, or the title is generic enough to collide (`report`,
+     `untitled`, `demo`), append the first 8 characters of the `<uuid>` so two
+     saved artifacts stay distinguishable in the gallery.
+
+   Use that file as `$SRC`. **A failed fetch does not look like an error.** For
+   a deleted or unshared artifact you get a plain sentence
+   (`artifact not found — it may have been deleted...`), and for a malformed URL
+   `WebFetch` silently falls back to ordinary page-summary mode and answers in
+   prose. Neither contains `<!doctype`. Treat the absence of `<!doctype` as the
+   failure signal, say what happened, and stop — never save a partial page.
 2. **Explicit path** — if the user gave a path to an `.html` file, use it.
 3. **In-chat artifact** — if the artifact was just generated in this
    conversation and does not exist on disk (the common "stash the artifact I
@@ -55,6 +71,18 @@ The source is the `.html` file to save. Resolve it in this order:
 
 Store the resolved path as `$SRC`. If `$SRC` does not exist, tell the user and
 stop.
+
+## Step 1b — Security scrub (blocking gate)
+
+Before copying anything, invoke the `social-media-tools:security-scrub` skill on
+`$SRC`. Step 4 publishes into `docs/artifacts/`, which the user commits and
+GitHub Pages serves publicly — a secret in the page becomes a public secret.
+
+This gate matters most for the URL branch: a fetched artifact is remote content,
+and it need not be the user's own (claude.ai artifacts can be shared with an
+account), so nobody in this session has necessarily read the page before it is
+published. If the scrub reports findings, show them and stop. Do not save or
+publish until the user resolves them or explicitly says to proceed anyway.
 
 ## Step 2 — Resolve the destination
 
