@@ -72,6 +72,24 @@ grep -qF 'frame-runtime' "$SKILL" || fail "claude.ai frame-runtime block is not 
 grep -qiF '<!doctype' "$SKILL" || fail "missing-<!doctype failure signal not documented"
 
 # 7. Publishing is gated on a secrets scrub — docs/artifacts/ is served publicly.
+# Presence is not enough: a scrub documented *after* the copy would protect
+# nothing, so assert it precedes both the copy and the publish command.
 grep -qF 'security-scrub' "$SKILL" || fail "no security-scrub gate before publishing to a public tree"
+# Anchor on the executable commands, not prose: build-artifacts-index.sh is also
+# named in the Overview, which would make any scrub placement look "before" it.
+scrub_line=$(grep -nF 'security-scrub' "$SKILL" | head -1 | cut -d: -f1)
+for after in 'cp "$SRC"' 'bash "$BUILD_ARTIFACTS"'; do
+  later=$(grep -nF "$after" "$SKILL" | head -1 | cut -d: -f1)
+  [ -n "$later" ] || fail "expected the command '$after' in the skill; check 7 ordering cannot be verified"
+  [ "$scrub_line" -lt "$later" ] || fail "security-scrub (line $scrub_line) must precede '$after' (line $later)"
+done
 
-echo "PASS: save-artifact smoke test (7 checks)"
+# 8. The scrub is a real gate: the skill branches on security-scrub's documented
+# GATE RESULT contract and fails closed, rather than merely mentioning findings.
+grep -qF 'GATE RESULT' "$SKILL" || fail "scrub result is not read — gate cannot fail closed"
+for verdict in BLOCKED CANCELLED APPROVED; do
+  grep -qF "$verdict" "$SKILL" || fail "scrub gate does not handle GATE RESULT: $verdict"
+done
+grep -qE '^allowed-tools:.*\bSkill\b' "$SKILL" || fail "Skill missing from allowed-tools — the scrub gate cannot be invoked"
+
+echo "PASS: save-artifact smoke test (8 checks)"

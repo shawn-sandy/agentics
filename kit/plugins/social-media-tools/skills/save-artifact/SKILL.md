@@ -1,7 +1,7 @@
 ---
 name: save-artifact
 description: "Saves an HTML Artifact page to the local artifacts inbox. Copies a local .html or fetches a claude.ai artifact URL, scrubs, then publishes. Use when asked to save or share an artifact or its URL."
-allowed-tools: Bash, Read, Write, Glob, WebFetch, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash, Read, Write, Glob, WebFetch, Skill, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
 
 # save-artifact
@@ -74,15 +74,26 @@ stop.
 
 ## Step 1b — Security scrub (blocking gate)
 
-Before copying anything, invoke the `social-media-tools:security-scrub` skill on
-`$SRC`. Step 4 publishes into `docs/artifacts/`, which the user commits and
-GitHub Pages serves publicly — a secret in the page becomes a public secret.
+Before copying anything, run the scrub on `$SRC`. Step 4 publishes into
+`docs/artifacts/`, which the user commits and GitHub Pages serves publicly — a
+secret in the page becomes a public secret.
+
+```
+Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at $SRC for secrets before saving and publishing.")
+```
+
+Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
+
+- `GATE RESULT: BLOCKED` or `GATE RESULT: CANCELLED` → **STOP.** Do not copy,
+  do not publish.
+- `GATE RESULT: APPROVED` → proceed to Step 2.
+- Missing or unrecognized `GATE RESULT` → **STOP** and report an error (treat as
+  gate failure). Never fall through to the copy on an unread result.
 
 This gate matters most for the URL branch: a fetched artifact is remote content,
 and it need not be the user's own (claude.ai artifacts can be shared with an
 account), so nobody in this session has necessarily read the page before it is
-published. If the scrub reports findings, show them and stop. Do not save or
-publish until the user resolves them or explicitly says to proceed anyway.
+published.
 
 ## Step 2 — Resolve the destination
 
