@@ -1,3 +1,9 @@
+---
+paths:
+  - "kit/plugins/**"
+  - ".claude-plugin/**"
+---
+
 # Marketplace Configuration
 
 ## Registering a Plugin
