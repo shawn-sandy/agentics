@@ -30,6 +30,10 @@ Skills activate automatically when your request matches — "publish this diff f
 review", "share a recap of this session", "publish this plan", "share this
 prompt".
 
+| Command | What it does |
+|---------|--------------|
+| `/artifact-tools:session-doc [session-id\|path]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details |
+
 ## Installation
 
 ```bash
@@ -56,6 +60,7 @@ Share a recap of this session             → session-artifact
 Publish docs/plans/add-dark-mode.html     → plan-artifact
 Share docs/prompts/task-refactor.md       → prompt-artifact (single)
 Publish my prompt library --library       → prompt-artifact (library mode)
+/artifact-tools:session-doc               → recap for product + stakeholders
 ```
 
 ## Plugin Structure
@@ -66,6 +71,8 @@ artifact-tools/
 │   └── plugin.json
 ├── README.md
 ├── CHANGELOG.md
+├── commands/
+│   └── session-doc.md     # product-team framing over session-artifact
 ├── references/
 │   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
@@ -105,6 +112,24 @@ source).
 
 The extractor is a deliberate copy of the `social-media-tools` original so this
 plugin installs standalone. Keep the two in sync when either changes.
+
+### session-doc (command)
+
+`/artifact-tools:session-doc` is a thin framing layer over `session-artifact` for
+when the reader is a PM, designer, support lead, or exec rather than a code
+reviewer. It asks for prose any non-engineer can follow, and replaces the recap's Learnings section with a release-note shape:
+Features, Bug fixes, Decisions, Logic and behavior changes, Implementation plan
+details, Known gaps and follow-ups. Empty sections are dropped rather than
+printed as bare headings. Everything downstream — extraction, the scrub gate, the
+HTML render, publishing, the marker check — is the skill's, unchanged. Takes an
+optional session ID or `.jsonl` path.
+
+The rendered HTML is filed where every other saved artifact lives: the
+`.claude/artifacts/` inbox, published into the committed `docs/artifacts/`
+gallery via `social-media-tools:save-artifact` (best-effort — without that skill
+the copy still lands in the inbox, just unpublished). The `.md` stays under
+`{plansDirectory}/sessions/`; its `artifact-url:` frontmatter is the republish
+key, not a duplicate of the deliverable.
 
 ### plan-artifact
 

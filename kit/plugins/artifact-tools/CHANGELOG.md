@@ -5,6 +5,25 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-22
+
+### Added
+
+- `/artifact-tools:session-doc` — publishes a session recap aimed at the product
+  team and non-engineering stakeholders rather than at code reviewers. It runs
+  the existing `session-artifact` skill with three framing overrides
+  (non-engineer audience, acronyms spelled out; Learnings replaced by a
+  release-note section set — Features, Bug fixes, Decisions, Logic and behavior
+  changes, Implementation plan details, Known gaps and follow-ups, each dropped
+  when empty; optional session ID or `.jsonl` path via `$ARGUMENTS`). The
+  rendered HTML is filed in the shared artifacts gallery — `.claude/artifacts/`
+  inbox, published to `docs/artifacts/` via `social-media-tools:save-artifact`,
+  degrading to an unpublished inbox copy when that skill is absent — rather than
+  living only in the plans tree. Otherwise nothing downstream changes —
+  extraction, the blocking scrub gate, the saved `.md`, the HTML render,
+  publishing, and the marker check all stay the skill's. A wrapper rather than a
+  fifth skill so the scrub gate is never duplicated.
+
 ## [1.3.0] - 2026-07-19
 
 ### Added
