@@ -213,4 +213,29 @@ for rel, key in owners.items():
 EOF
 ok
 
+# 8. Every PR-mode command guards its gh calls behind the preflight.
+# `gh pr view` on a repo without gh or a GitHub remote spews shell errors into
+# the transcript instead of falling back to session mode, so the guard is what
+# makes the fallback a decision rather than an accident.
+python3 - "$PLUGIN" <<'EOF' || fail "a PR-mode command calls gh without the preflight guard"
+import pathlib, sys
+root = pathlib.Path(sys.argv[1])
+found = 0
+for path in sorted((root / "commands").glob("*.md")):
+    text = path.read_text()
+    if "gh pr view" not in text:
+        continue          # not a PR-mode command; nothing to guard
+    found += 1
+    rel = path.name
+    assert "gh auth status" in text, f"{rel}: calls gh pr view with no auth preflight"
+    assert "git remote get-url origin" in text, f"{rel}: never checks for a GitHub remote"
+    assert "PR_MODE_UNAVAILABLE" in text, f"{rel}: no fallback branch when the preflight fails"
+    # The guard must come before the first gh pr view, or it guards nothing.
+    assert text.index("gh auth status") < text.index("gh pr view"), (
+        f"{rel}: preflight appears after the first gh pr view"
+    )
+assert found >= 2, f"expected product-doc and team-recap to be PR-mode commands, found {found}"
+EOF
+ok
+
 echo "PASS: artifact-tools smoke test ($checks checks)"

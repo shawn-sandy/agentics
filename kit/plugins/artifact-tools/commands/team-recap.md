@@ -1,5 +1,5 @@
 ---
-description: Publish a detailed, visual recap of this session for the whole team — diagrams, before/after, decisions, and open items, readable by engineers and non-engineers alike
+description: Publish a detailed, visual recap of this session or a pull request for the whole team — diagrams, before/after, decisions, and open items, readable by engineers and non-engineers alike
 allowed-tools:
   - Skill
   - Bash
@@ -7,16 +7,77 @@ allowed-tools:
 
 # Team Recap
 
-Write an artifact explaining what changed in this session, for **everyone on the
-team** — the engineer who will touch this code next and the teammate who only
-needs to know what moved.
+Write an artifact explaining what changed in this session — or in a pull request
+— for **everyone on the team**: the engineer who will touch this code next and
+the teammate who only needs to know what moved.
 
 Run the `artifact-tools:session-artifact` skill with the framing overrides below.
 Everything not listed stays the skill's: transcript location, extraction, the
 blocking `security-scrub` gate, publishing, and the post-publish marker check.
 
-`$ARGUMENTS` is optional — a session ID or a `.jsonl` path, passed straight
-through to the skill. With no argument it recaps the newest session.
+## Source
+
+Pick the first mode `$ARGUMENTS` matches. Both modes produce the same document
+from the same downstream pipeline; only the raw material differs.
+
+| Mode | Trigger | Raw material |
+|------|---------|--------------|
+| **Session** (default) | no argument, a session ID, or a `.jsonl` path | the session transcript, per the skill |
+| **PR** | `#455`, a PR URL, or `--pr <n>` | the pull request, gathered below |
+
+In **PR mode**, skip the skill's transcript-location and extraction steps and
+hand it the PR brief as the source instead.
+
+Preflight first — run this alone and read its output. PR mode needs both `gh`
+and a GitHub remote, and an unguarded `gh` call emits shell errors instead of
+degrading:
+
+```bash
+if gh auth status >/dev/null 2>&1 &&
+   git remote get-url origin 2>/dev/null | grep -qi 'github\.com'; then
+  echo "PR_MODE_OK"
+else
+  echo "PR_MODE_UNAVAILABLE"
+fi
+```
+
+On `PR_MODE_UNAVAILABLE`, say which piece is missing and continue in session
+mode — do not run the block below. On `PR_MODE_OK`, gather the PR into one brief
+in the scratchpad:
+
+```bash
+PR=<number-or-url>
+BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
+HEAD=$(gh pr view "$PR" --json headRefName --jq .headRefName)
+git fetch -q origin "$BASE" "$HEAD" 2>/dev/null
+
+gh pr view "$PR" --json number,title,body,url,author,state,mergedAt,labels
+gh pr diff "$PR" --name-only                              # no --stat flag exists
+git log --format='%s%n%b%n---' "origin/$BASE".."origin/$HEAD"
+gh pr view "$PR" --json comments,reviews \
+  --jq '{comments: [.comments[].body], reviews: [.reviews[] | {state, body}]}'
+```
+
+If the PR number itself is bad, `gh pr view` fails on the first line and `$BASE`
+is empty — report that and stop rather than gathering a partial brief.
+
+Read the sections below out of that material: **What changed** from the commit
+subjects and the changed-file list, **Decisions** from the PR body and review
+discussion, **Open items** from unresolved review threads and anything the PR
+body defers, **Files touched** from `gh pr diff --name-only`. Prefer the commit
+bodies over the diff — they say *why*, which is the thing a diff never carries.
+Draw a diagram only where the diff shows structure or flow actually moved.
+
+Bot review comments arrive as HTML-commented boilerplate; take the finding and
+drop the scaffolding. A resolved finding belongs in Decisions (what was changed
+and why), not in Open items.
+
+A PR carries no record of what was tried and abandoned, so **Learnings** is
+usually empty in PR mode — say so under the heading rather than mining the diff
+for something that looks like a lesson.
+
+Falling back to session mode is deliberate, not a failure path — a recap of the
+work in hand still beats no recap.
 
 ## Audience
 
@@ -52,8 +113,8 @@ anyway), then build with these constraints:
 
 ## Sections
 
-In this order. Omit any section the session produced nothing for rather than
-printing an empty heading.
+In this order. Omit any section the source produced nothing for rather than
+printing an empty heading. In PR mode, read "session" below as "pull request".
 
 1. **At a glance** — a compact stat strip: changes shipped, files touched,
    decisions made, open items. Then two or three sentences on where the session
@@ -124,10 +185,11 @@ overwrite the first:
 
 ```bash
 mkdir -p .claude/artifacts
-target=".claude/artifacts/team-recap-$(date +%F).html"
+stem="team-recap"           # PR mode: "pr-<number>-recap"
+target=".claude/artifacts/${stem}-$(date +%F).html"
 n=2
 while [ -e "$target" ]; do
-  target=".claude/artifacts/team-recap-$(date +%F)-${n}.html"
+  target=".claude/artifacts/${stem}-$(date +%F)-${n}.html"
   n=$((n + 1))
 done
 cp "<standalone HTML>" "$target" && echo "Saved → $target (not published to the gallery)"
@@ -145,10 +207,32 @@ the gallery is committed and served publicly, so the gate stays theirs.
 
 ## Republish key
 
-The recap's URL lives in the skill's session record under
-`{plansDirectory}/sessions/`, keyed `team-artifact-url:`. Read it before
-publishing, pass it to `Artifact`'s `url` parameter, and write it back after.
+The recap needs a record that survives the session, because that record is what
+holds the published URL — without it, a second run mints a new link and the one
+you shared goes stale. Both modes keep theirs under `{plansDirectory}/sessions/`,
+under the same key:
+
+| Mode | Record | Key |
+|------|--------|-----|
+| Session | the skill's `<verb>-<target>-session.md` | `team-artifact-url:` |
+| PR | `pr-<number>.md` | `team-artifact-url:` |
+
+In session mode, find that record the way the skill does — by its frontmatter,
+not by rebuilding its name:
+
+```bash
+grep -rl 'session-id: "<session-id>"' <plansDirectory>/sessions/ 2>/dev/null
+```
+
+Read the key before publishing, pass it to `Artifact`'s `url` parameter, and
+write it back after.
 
 **Never write `artifact-url:` or `product-artifact-url:`.** All three commands
-share one record per session — the filename is deterministic — so reusing another
-command's key republishes this page over the recap that key belongs to.
+share one record — per session in session mode, per PR number in PR mode — so
+reusing another command's key republishes this page over the recap that key
+belongs to. `product-doc` in PR mode writes `product-artifact-url:` into the same
+`pr-<number>.md`; the two keys sit side by side and neither touches the other.
+
+PR mode's record is keyed on the PR number, so re-running against the same PR
+updates the same page as the PR evolves — which is the point: the link you send
+the team on day one still shows the merged state on day five.

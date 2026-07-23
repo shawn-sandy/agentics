@@ -33,7 +33,7 @@ prompt".
 | Command | What it does |
 |---------|--------------|
 | `/artifact-tools:product-doc [session-id\|path\|#PR]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details. Sources from the session transcript, or from a pull request when given `#453` or a PR URL |
-| `/artifact-tools:team-recap [session-id\|path]` | Runs `session-artifact` as a detailed, visual recap for the whole team — an at-a-glance stat strip, change cards, mermaid diagrams of what moved, a before/after table, decisions with rejected options, open items, and a glossary. Readable by engineers and non-engineers in one pass |
+| `/artifact-tools:team-recap [session-id\|path\|#PR]` | Runs `session-artifact` as a detailed, visual recap for the whole team — an at-a-glance stat strip, change cards, mermaid diagrams of what moved, a before/after table, decisions with rejected options, open items, and a glossary. Sources from the session transcript, or from a pull request when given `#455` or a PR URL. Readable by engineers and non-engineers in one pass |
 
 ## Installation
 
@@ -165,11 +165,20 @@ the artifact CSP blocks external scripts and assets outright, so there is no
 chart library to reach for. Each diagram must earn its place: draw one only
 where structure or flow actually changed, and caption what to look at.
 
+Sources match `product-doc`'s. With no argument (or a session ID or `.jsonl`
+path) it reads the session transcript; with `#455`, a PR URL, or `--pr 455` it
+reads the pull request instead — `gh pr view`, the changed-file list, the commit
+bodies, and the review discussion. Without `gh` or a GitHub remote it says so and
+falls back to session mode. Learnings is usually empty in PR mode: a diff records
+what shipped, never what was tried and abandoned.
+
 Filing works exactly as it does for `product-doc` — the `.claude/artifacts/`
 inbox and the `docs/artifacts/` gallery via `social-media-tools:save-artifact`,
 with a collision-safe local copy when that skill is absent. Its republish key is
 `team-artifact-url:`, distinct from both `artifact-url:` and
-`product-artifact-url:`, because all three commands share one record per session.
+`product-artifact-url:`, because all three commands share one record — per
+session in session mode, per PR number in PR mode. Re-running against the same PR
+therefore updates the same page as the PR evolves.
 
 ### plan-artifact
 

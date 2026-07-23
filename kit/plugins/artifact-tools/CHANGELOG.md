@@ -5,6 +5,24 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-07-23
+
+### Added
+
+- `/artifact-tools:team-recap` accepts a pull request as its source — `#455`, a
+  PR URL, or `--pr 455` — alongside the existing session modes, using the same
+  contract `product-doc` already ships: a preflight that requires both `gh` and a
+  GitHub remote and falls back to session mode (naming the missing piece) rather
+  than emitting shell errors, then `gh pr view`, the changed-file list, the
+  commit bodies, and the review discussion gathered into one brief. Commit bodies
+  are preferred over the diff because they carry the *why*. Diagrams are drawn
+  only where the diff shows structure or flow actually moved, and Learnings is
+  expected to be empty — a PR records what shipped, never what was tried and
+  abandoned. PR mode files under the stem `pr-<number>-recap` and keeps its
+  republish URL in `pr-<number>.md` under `team-artifact-url:`, so re-running
+  against the same PR updates the same page as it evolves. That record is shared
+  with `product-doc`'s `product-artifact-url:`; the two keys sit side by side.
+
 ## [1.5.0] - 2026-07-23
 
 ### Added
