@@ -15,7 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (non-engineer audience, acronyms spelled out; Learnings replaced by a
   release-note section set — Features, Bug fixes, Decisions, Logic and behavior
   changes, Implementation plan details, Known gaps and follow-ups, each dropped
-  when empty; optional session ID or `.jsonl` path via `$ARGUMENTS`). The
+  when empty). Two sources feed the same document: the session transcript by
+  default, or a pull request when given `#453`, a PR URL, or `--pr 453` — read
+  from `gh pr view`, the diffstat, the commit bodies, and the review discussion,
+  falling back to session mode when `gh` or a GitHub remote is missing. PR mode
+  keeps its own `pr-<number>.md` record, so re-running against a PR updates the
+  same page as that PR evolves. The
   rendered HTML is filed in the shared artifacts gallery — `.claude/artifacts/`
   inbox, published to `docs/artifacts/` via `social-media-tools:save-artifact`,
   degrading to a collision-safe unpublished inbox copy when that skill is absent
