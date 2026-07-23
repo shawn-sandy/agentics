@@ -24,6 +24,23 @@ Run the `artifact-tools:session-artifact` skill with these framing overrides:
   Gather the PR into one brief in the scratchpad and hand that to the skill as
   the source:
 
+  Preflight first — run this alone and read its output. PR mode needs both `gh`
+  and a GitHub remote, and an unguarded `gh` call emits shell errors instead of
+  degrading:
+
+  ```bash
+  if gh auth status >/dev/null 2>&1 &&
+     git remote get-url origin 2>/dev/null | grep -qi 'github\.com'; then
+    echo "PR_MODE_OK"
+  else
+    echo "PR_MODE_UNAVAILABLE"
+  fi
+  ```
+
+  On `PR_MODE_UNAVAILABLE`, say which piece is missing and continue in session
+  mode — do not run the block below. On `PR_MODE_OK`, gather the PR into one
+  brief in the scratchpad and hand that to the skill as the source:
+
   ```bash
   PR=<number-or-url>
   BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
@@ -37,6 +54,9 @@ Run the `artifact-tools:session-artifact` skill with these framing overrides:
     --jq '{comments: [.comments[].body], reviews: [.reviews[] | {state, body}]}'
   ```
 
+  If the PR number itself is bad, `gh pr view` fails on the first line and
+  `$BASE` is empty — report that and stop rather than gathering a partial brief.
+
   Read the sections below out of that material: **Features** and **Bug fixes**
   from the commit subjects and the changed-file list, **Decisions** from the PR
   body and review discussion, **Known gaps** from unresolved review threads and
@@ -47,9 +67,8 @@ Run the `artifact-tools:session-artifact` skill with these framing overrides:
   drop the scaffolding. A resolved finding belongs in Decisions (what was
   changed and why), not in Known gaps.
 
-  PR mode needs `gh` and a GitHub remote. If either is missing, say so plainly
-  and fall back to session mode rather than failing — a recap of the work in
-  hand still beats no recap.
+  Falling back is deliberate, not a failure path — a recap of the work in hand
+  still beats no recap.
 
 - **Audience:** the product team and any non-engineering stakeholder — PM,
   design, support, sales, leadership. Explain *what changed and why it matters*;
