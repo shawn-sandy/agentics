@@ -229,6 +229,12 @@ for path in sorted((root / "commands").glob("*.md")):
     rel = path.name
     assert "gh auth status" in text, f"{rel}: calls gh pr view with no auth preflight"
     assert "git remote get-url origin" in text, f"{rel}: never checks for a GitHub remote"
+    # The remote lookup alone is not the contract -- any remote would pass it.
+    # The preflight must filter that URL for github.com, or PR mode fires gh at
+    # a GitLab/Bitbucket origin instead of falling back to session mode.
+    assert "github" in text[text.index("git remote get-url origin"):text.index("PR_MODE_UNAVAILABLE")], (
+        f"{rel}: preflight retrieves the origin but never filters it for github.com"
+    )
     assert "PR_MODE_UNAVAILABLE" in text, f"{rel}: no fallback branch when the preflight fails"
     # The guard must come before the first gh pr view, or it guards nothing.
     assert text.index("gh auth status") < text.index("gh pr view"), (
