@@ -39,14 +39,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `/artifact-tools:team-recap` now files the *published* page into the gallery
-  rather than the HTML it rendered. Publishing injects the mermaid runtime, so a
-  copy of the local source showed its diagrams as plain text; the command fetches
-  the artifact back and strips the claude.ai `frame-runtime` block instead. It
-  also warns that the bundled diagram library trips the scrub's MEDIUM patterns
-  (minified grammar tables read as `Token:`/`secret:` assignments) and says to
-  surface that as library-internal while still leaving the gate call to the user,
-  since the gallery is committed and publicly served.
+- `/artifact-tools:team-recap` files its own rendered HTML into the gallery,
+  wrapped into a standalone document (the render targets an artifact frame that
+  supplies `<!doctype>`/`<head>`/`<body>`). Filing the *published* page instead
+  gives diagrams that render offline, but only by committing the multi-megabyte
+  mermaid runtime that publishing injects — which repo static analysis reads as
+  first-party source; on this repo that produced eight high-severity CodeQL
+  alerts, none in the recap. The filed page's diagram blocks show as text, with a
+  footer line pointing at the artifact URL where they render. The fetch-back path
+  is kept as an opt-in the user has to ask for, with its costs stated up front,
+  including a scrub that reports MEDIUM matches from the library's minified
+  grammar tables.
 
 ## [1.4.0] - 2026-07-22
 

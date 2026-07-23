@@ -81,18 +81,24 @@ printing an empty heading.
 Same gallery as every other saved artifact. Publish with the favicon `🧭`, kept
 stable across republishes.
 
-**File the published page, not the HTML you rendered.** Publishing injects the
-mermaid runtime; your source file does not carry it, so a copy of it shows the
-diagrams as plain text. Once the publish succeeds, fetch the artifact URL back
-with `WebFetch`, strip the `<!-- frame-runtime -->…<!-- /frame-runtime -->`
-block (claude.ai iframe plumbing that resolves nowhere else), and write what
-remains to the scratchpad. That file is what gets filed.
+**File the HTML you rendered, not the published page fetched back.** Fetching
+the published page yields a copy whose diagrams render offline, because
+publishing injects the mermaid runtime — but that runtime is a multi-megabyte
+minified library, and once committed, repo static analysis reads it as
+first-party source. On this repo that meant eight high-severity CodeQL alerts,
+none of them in the recap. Not worth it for one gallery copy.
 
-Hand it to `social-media-tools:save-artifact`, which owns the dated filename,
-the collision suffix, and the gallery index rebuild:
+So the filed page is your own rendered HTML, wrapped into a standalone document
+(add `<!doctype html>`, `<html>`, `<head>` with the `<title>` and a viewport
+meta, `<body>`) — the render targets an artifact frame that supplies those. Its
+two mermaid blocks show as plain text; add one line to the footer pointing at
+the artifact URL, where they render.
+
+Hand that file to `social-media-tools:save-artifact`, which owns the dated
+filename, the collision suffix, and the gallery index rebuild:
 
 ```
-Skill(skill: "social-media-tools:save-artifact", args: "<path to the fetched page>")
+Skill(skill: "social-media-tools:save-artifact", args: "<path to the standalone HTML>")
 ```
 
 If that skill is not installed, copy it into the inbox yourself, picking a free
@@ -107,23 +113,19 @@ while [ -e "$target" ]; do
   target=".claude/artifacts/team-recap-$(date +%F)-${n}.html"
   n=$((n + 1))
 done
-cp "<fetched page>" "$target" && echo "Saved → $target (not published to the gallery)"
+cp "<standalone HTML>" "$target" && echo "Saved → $target (not published to the gallery)"
 ```
 
 Either way, report the gallery path alongside the artifact URL.
 
-Two things about that fetched page, both consequences of the bundled diagram
-library it carries:
-
-- It trips the scrub's MEDIUM patterns — minified grammar tables are full of
-  `Token:` and `secret:` lookalikes. Say plainly that the matches are
-  library-internal and none are in the recap, then let the user decide. The
-  gallery is committed and served publicly, so the gate stays theirs.
-- It is several megabytes, and static analysis on the repo will read it as
-  first-party source. Expect security scanners to raise findings against the
-  library. Say so before filing, and offer filing the small rendered source
-  instead — diagrams degrade to text in the local copy, and the live artifact
-  URL remains the full view.
+If the user asks for a gallery copy whose diagrams render offline, fetch the
+published page instead and strip the `<!-- frame-runtime -->…<!-- /frame-runtime -->`
+block first (claude.ai iframe plumbing that resolves nowhere else). Tell them
+what it costs before doing it: a multi-megabyte committed file, scanner findings
+against the bundled library, and a scrub that reports MEDIUM matches — minified
+grammar tables are full of `Token:` and `secret:` lookalikes. Say plainly that
+those matches are library-internal and none are in the recap, then let them
+decide. The gallery is committed and served publicly, so the gate stays theirs.
 
 ## Republish key
 
