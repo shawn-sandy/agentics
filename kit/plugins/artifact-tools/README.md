@@ -33,6 +33,7 @@ prompt".
 | Command | What it does |
 |---------|--------------|
 | `/artifact-tools:product-doc [session-id\|path\|#PR]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details. Sources from the session transcript, or from a pull request when given `#453` or a PR URL |
+| `/artifact-tools:team-recap [session-id\|path]` | Runs `session-artifact` as a detailed, visual recap for the whole team — an at-a-glance stat strip, change cards, mermaid diagrams of what moved, a before/after table, decisions with rejected options, open items, and a glossary. Readable by engineers and non-engineers in one pass |
 
 ## Installation
 
@@ -62,6 +63,7 @@ Share docs/prompts/task-refactor.md       → prompt-artifact (single)
 Publish my prompt library --library       → prompt-artifact (library mode)
 /artifact-tools:product-doc               → recap for product + stakeholders
 /artifact-tools:product-doc #453          → same recap, sourced from a PR
+/artifact-tools:team-recap                → visual recap for the whole team
 ```
 
 ## Plugin Structure
@@ -73,7 +75,8 @@ artifact-tools/
 ├── README.md
 ├── CHANGELOG.md
 ├── commands/
-│   └── product-doc.md     # product-team framing over session-artifact
+│   ├── product-doc.md     # product-team framing over session-artifact
+│   └── team-recap.md      # whole-team visual framing over session-artifact
 ├── references/
 │   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
@@ -145,6 +148,28 @@ reviewer recap, and reusing it would republish the product recap over that page.
 `product-doc` reads and writes `product-artifact-url:` instead. Re-running
 against the same PR therefore updates the same page as the PR evolves, so a link
 sent on day one still shows the merged state on day five.
+
+### team-recap (command)
+
+`/artifact-tools:team-recap` is the third framing over `session-artifact`, for
+when the reader is the whole team at once — the engineer picking this up next and
+the teammate who only needs to know what moved. Where `product-doc` writes
+stakeholder prose and `session-artifact` writes a reviewer's checklist, this one
+writes a page you can skim: an at-a-glance stat strip, one card per change,
+mermaid diagrams for anything whose shape changed, a before/after table of
+changed rules and defaults, decisions with the options that lost, learnings,
+open items, files touched, and a glossary of every internal term used.
+
+Diagrams are `<pre class="mermaid">` blocks, which artifacts render natively —
+the artifact CSP blocks external scripts and assets outright, so there is no
+chart library to reach for. Each diagram must earn its place: draw one only
+where structure or flow actually changed, and caption what to look at.
+
+Filing works exactly as it does for `product-doc` — the `.claude/artifacts/`
+inbox and the `docs/artifacts/` gallery via `social-media-tools:save-artifact`,
+with a collision-safe local copy when that skill is absent. Its republish key is
+`team-artifact-url:`, distinct from both `artifact-url:` and
+`product-artifact-url:`, because all three commands share one record per session.
 
 ### plan-artifact
 

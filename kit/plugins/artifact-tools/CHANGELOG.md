@@ -5,6 +5,48 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-23
+
+### Added
+
+- `/artifact-tools:team-recap` — publishes a detailed, visual session recap for
+  the whole team, engineers and non-engineers in one document. A third framing
+  wrapper over `session-artifact` alongside `product-doc`: an at-a-glance stat
+  strip, one card per change, mermaid diagrams for anything whose structure or
+  flow changed, a before/after table of changed rules and defaults, decisions
+  with the options that were rejected, learnings, open items, files touched, and
+  a glossary of internal terms. Diagrams are `<pre class="mermaid">` blocks —
+  rendered natively by artifacts, and the only option available, since the
+  artifact CSP blocks external scripts and assets. Filing matches `product-doc`
+  (the `.claude/artifacts/` inbox and the `docs/artifacts/` gallery via
+  `social-media-tools:save-artifact`, with a collision-safe local copy as
+  fallback). Its republish key is `team-artifact-url:`, distinct from
+  `artifact-url:` and `product-artifact-url:` because all three commands share
+  one session record. A wrapper rather than a new skill so the blocking scrub
+  gate is never duplicated.
+
+### Changed
+
+- `session-artifact` no longer reuses the extractor's `<date>-<slug>-<id>.md`
+  filename for the committed session record. That name carries the session id,
+  which repos enforcing a `verb-target` plan-filename convention reject — the
+  write lands and a hook then blocks, forcing a mid-run rename. The record is
+  now named after the work (`add-team-recap-command-session.md`), and an
+  existing one is found by grepping `session-id:` in its frontmatter rather than
+  by reconstructing the filename an earlier run chose. Applies to all three
+  recap writers, which share the record.
+
+### Fixed
+
+- `/artifact-tools:team-recap` now files the *published* page into the gallery
+  rather than the HTML it rendered. Publishing injects the mermaid runtime, so a
+  copy of the local source showed its diagrams as plain text; the command fetches
+  the artifact back and strips the claude.ai `frame-runtime` block instead. It
+  also warns that the bundled diagram library trips the scrub's MEDIUM patterns
+  (minified grammar tables read as `Token:`/`secret:` assignments) and says to
+  surface that as library-internal while still leaving the gate call to the user,
+  since the gallery is committed and publicly served.
+
 ## [1.4.0] - 2026-07-22
 
 ### Added

@@ -181,4 +181,25 @@ assert got == want, f'homepage is {got!r}, expected {want!r}'
 EOF
 ok
 
+# 7. Republish keys are distinct across the session-record writers.
+# session-artifact, product-doc, and team-recap all key off the SAME per-session
+# record file, so a shared key silently republishes one page over another's URL.
+python3 - "$PLUGIN" <<'EOF' || fail "republish keys collide across artifact-tools commands"
+import pathlib, sys
+root = pathlib.Path(sys.argv[1])
+# Each writer and the key it must own. Cross-mentions are expected (every file
+# warns about the others), so this only asserts each file declares its own key
+# and no two share one -- which is what a copy-pasted wrapper gets wrong.
+owners = {
+    "skills/session-artifact/SKILL.md": "artifact-url",
+    "commands/product-doc.md": "product-artifact-url",
+    "commands/team-recap.md": "team-artifact-url",
+}
+assert len(set(owners.values())) == len(owners), "two writers share a republish key"
+for rel, key in owners.items():
+    text = (root / rel).read_text()
+    assert f"{key}:" in text, f"{rel}: never declares its republish key {key!r}"
+EOF
+ok
+
 echo "PASS: artifact-tools smoke test ($checks checks)"
