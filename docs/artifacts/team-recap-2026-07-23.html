@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why ship-autonomous falls back to CI polling locally</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #f4f6f7;
+    --surface: #ffffff;
+    --surface-2: #eef1f3;
+    --ink: #1b2026;
+    --muted: #59636d;
+    --line: #dfe4e8;
+    --local: #a56e1e;      /* brass — local / polling */
+    --local-soft: #f4ead6;
+    --cloud: #35618f;      /* blue — cloud / subscription */
+    --cloud-soft: #dfe9f3;
+    --good: #3f7d55;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14171b;
+      --surface: #1c2127;
+      --surface-2: #222932;
+      --ink: #e8eaed;
+      --muted: #99a2ac;
+      --line: #2b323a;
+      --local: #cc9450;
+      --local-soft: #33291a;
+      --cloud: #6ea0d4;
+      --cloud-soft: #1a2733;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #f4f6f7; --surface: #ffffff; --surface-2: #eef1f3; --ink: #1b2026;
+    --muted: #59636d; --line: #dfe4e8; --local: #a56e1e; --local-soft: #f4ead6;
+    --cloud: #35618f; --cloud-soft: #dfe9f3;
+  }
+  :root[data-theme="dark"] {
+    --paper: #14171b; --surface: #1c2127; --surface-2: #222932; --ink: #e8eaed;
+    --muted: #99a2ac; --line: #2b323a; --local: #cc9450; --local-soft: #33291a;
+    --cloud: #6ea0d4; --cloud-soft: #1a2733;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.1rem, 4vw, 2rem) 5rem; }
+  .col { max-width: 65ch; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(1.7rem, 4.6vw, 2.55rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 0.9rem;
+  }
+  h2 {
+    font-size: clamp(1.25rem, 3vw, 1.55rem);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 0.4rem;
+  }
+  h3 { font-size: 1.05rem; margin: 0 0 0.35rem; letter-spacing: -0.005em; }
+  p { margin: 0 0 1rem; }
+  a { color: var(--cloud); }
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    padding: 0.12em 0.4em;
+    border-radius: 4px;
+    word-break: break-word;
+  }
+  .lede { font-size: 1.08rem; color: var(--ink); }
+
+  section { margin-top: clamp(2.6rem, 6vw, 4rem); }
+  .section-head { border-top: 2px solid var(--ink); padding-top: 0.8rem; margin-bottom: 1.4rem; }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.6rem 0 0.5rem;
+  }
+  .stat { background: var(--surface); padding: 1rem 1.05rem; }
+  .stat .num {
+    font-family: var(--mono);
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .lbl {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    vertical-align: middle;
+  }
+  .tag.local { color: var(--local); background: var(--local-soft); border-color: transparent; }
+  .tag.cloud { color: var(--cloud); background: var(--cloud-soft); border-color: transparent; }
+
+  /* ---- change cards ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1.3rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card .kicker {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--line);
+    font-size: 0.9rem;
+  }
+  .meta div { min-width: 0; }
+  .meta .k {
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  /* ---- diagrams ---- */
+  figure { margin: 0 0 1.6rem; }
+  .mermaid-diagram {
+    background: #fbfcfd;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1.2rem 1rem;
+    overflow-x: auto;
+  }
+  .mermaid-diagram pre.mermaid { background: none; margin: 0; text-align: center; }
+  .mermaid-diagram svg { max-width: 100%; height: auto; }
+  figcaption {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.6rem;
+    padding-left: 0.2rem;
+  }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  /* ---- tables ---- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.94rem; }
+  th, td { text-align: left; padding: 0.75rem 0.95rem; vertical-align: top; border-bottom: 1px solid var(--line); }
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.assume { color: var(--muted); }
+  td.reality { color: var(--ink); }
+
+  /* ---- decisions / learnings ---- */
+  .decision { margin-bottom: 1.5rem; }
+  .decision h3 { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+  .rej {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--muted);
+    border-radius: 0 6px 6px 0;
+    padding: 0.55rem 0.9rem;
+    margin: 0.5rem 0 0;
+    font-size: 0.92rem;
+  }
+  .rej .lbl { font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  ul.notes { padding-left: 0; list-style: none; margin: 0; }
+  ul.notes li {
+    position: relative;
+    padding-left: 1.4rem;
+    margin-bottom: 0.85rem;
+  }
+  ul.notes li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--local);
+    font-family: var(--mono);
+  }
+
+  dl.glossary { margin: 0; display: grid; gap: 0.1rem; }
+  dl.glossary div { padding: 0.7rem 0; border-bottom: 1px solid var(--line); }
+  dl.glossary dt { font-family: var(--mono); font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+  dl.glossary dd { margin: 0.2rem 0 0; font-size: 0.93rem; color: var(--muted); }
+
+  .foot { margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.04em; }
+</style>
+
+<div class="wrap">
+
+  <header class="col">
+    <p class="eyebrow">Team recap · Diagnostic session · 2026-07-23</p>
+    <h1>Why ship-autonomous falls back to CI polling locally</h1>
+    <p class="lede">Someone ran our automated "ship" workflow on their own laptop and saw a message: <em>falling back to synchronous CI polling</em>. Nothing broke — that fallback is by design. This recap explains why it happens, and answers the follow-up: no, polling does not cost the tokens you'd expect.</p>
+  </header>
+
+  <!-- 1 · AT A GLANCE -->
+  <section>
+    <div class="stats" aria-label="Session at a glance">
+      <div class="stat"><div class="num">2</div><div class="lbl">Findings documented</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">Code changes</div></div>
+      <div class="stat"><div class="num">1</div><div class="lbl">File read</div></div>
+      <div class="stat"><div class="num">1</div><div class="lbl">Open item</div></div>
+    </div>
+    <div class="col">
+      <p>This was a <b>diagnostic session</b>, not a coding one — no files in the repository changed. The deliverable is the understanding itself: two things the whole team can now rely on instead of re-deriving. First, the live-update path the workflow prefers only exists in cloud environments, so a laptop correctly uses the polling fallback. Second, that fallback's "waiting" is free in token terms — the cost, when there is one, comes from output volume, not from time spent waiting.</p>
+    </div>
+  </section>
+
+  <!-- 2 · WHAT CHANGED -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">What changed</p><h2>Nothing in the repo — two things we now understand</h2></div>
+    <div class="col">
+      <p>Both items below document how existing behavior works. Read the color code once and it holds for the rest of the page: <span class="tag local">local · polling</span> and <span class="tag cloud">cloud · subscription</span>.</p>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Finding 1</div>
+      <h3>Local runs poll CI; only cloud runs get live updates</h3>
+      <p>The workflow's preferred path is to <b>subscribe</b> to pull-request events and react as they arrive. That needs a tool that exists only in remote environments — Claude Code on the web, or a GitHub Action. On a laptop the tool is simply absent, so the workflow does the correct thing: it <b>polls</b> the checks until they finish. The message you saw is that switch happening, not a failure.</p>
+      <div class="meta">
+        <div><span class="k">Who it affects</span> Anyone running the ship workflow locally</div>
+        <div><span class="k">How to reach it</span> <code>/git-agent:ship-autonomous</code></div>
+        <div><span class="k">Want live updates?</span> Run it from Claude Code on the web or a GitHub Action</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Finding 2</div>
+      <h3>Polling does not burn tokens the way it sounds like it would</h3>
+      <p>"Polling" sounds like the model checking over and over. It isn't. The workflow waits inside a <b>single blocking command</b>, and the model does no thinking — and spends no tokens — while that command waits for CI. Cost appears only from the text the command finally prints, and from any fix-and-recheck loops. Waiting ten minutes costs the same as waiting thirty seconds.</p>
+      <div class="meta">
+        <div><span class="k">Who it affects</span> Anyone weighing the cost of shipping locally</div>
+        <div><span class="k">When it applies</span> Every local CI watch — no action needed</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · HOW IT WORKS NOW -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">How it works now</p><h2>The two paths, and why waiting is free</h2></div>
+
+    <figure>
+      <div class="mermaid-diagram">
+<svg id="claude-mermaid-0" width="586" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="1006" viewBox="0 0 586 1006" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:-apple-system,"system-ui","Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:-apple-system,"system-ui","Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:-apple-system,"system-ui","Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#ebe8e4;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(20, 23, 27);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(20, 23, 27);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(20, 23, 27);fill:rgb(20, 23, 27);}#claude-mermaid-0 .labelBkg{background-color:rgba(20, 23, 27, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system,"system-ui","Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(20, 23, 27);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(20, 23, 27);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(20, 23, 27);fill:rgb(20, 23, 27);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M293,86L293,90.167C293,94.333,293,102.667,293,110.333C293,118,293,125,293,128.5L293,132" id="claude-mermaid-0-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6MjkzLCJ5Ijo4Nn0seyJ4IjoyOTMsInkiOjExMX0seyJ4IjoyOTMsInkiOjEzNn1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M230.187,351.187L214.822,369.822C199.458,388.458,168.729,425.729,153.364,451.864C138,478,138,493,138,500.5L138,508" id="claude-mermaid-0-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MjMwLjE4NjU4ODkyMTI4MjgsInkiOjM1MS4xODY1ODg5MjEyODI4fSx7IngiOjEzOCwieSI6NDYzfSx7IngiOjEzOCwieSI6NTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,566L138,570.167C138,574.333,138,582.667,138,592.333C138,602,138,613,138,618.5L138,624" id="claude-mermaid-0-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6MTM4LCJ5Ijo1NjZ9LHsieCI6MTM4LCJ5Ijo1OTF9LHsieCI6MTM4LCJ5Ijo2Mjh9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,706L138,712.167C138,718.333,138,730.667,138,740.333C138,750,138,757,138,760.5L138,764" id="claude-mermaid-0-L_D_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_E_0" data-points="W3sieCI6MTM4LCJ5Ijo3MDZ9LHsieCI6MTM4LCJ5Ijo3NDN9LHsieCI6MTM4LCJ5Ijo3Njh9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M355.813,351.187L371.178,369.822C386.542,388.458,417.271,425.729,432.636,451.864C448,478,448,493,448,500.5L448,508" id="claude-mermaid-0-L_B_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_F_0" data-points="W3sieCI6MzU1LjgxMzQxMTA3ODcxNzIsInkiOjM1MS4xODY1ODg5MjEyODI4fSx7IngiOjQ0OCwieSI6NDYzfSx7IngiOjQ0OCwieSI6NTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M448,566L448,570.167C448,574.333,448,582.667,448,590.333C448,598,448,605,448,608.5L448,612" id="claude-mermaid-0-L_F_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_G_0" data-points="W3sieCI6NDQ4LCJ5Ijo1NjZ9LHsieCI6NDQ4LCJ5Ijo1OTF9LHsieCI6NDQ4LCJ5Ijo2MTZ9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M448,718L448,722.167C448,726.333,448,734.667,448,746.333C448,758,448,773,448,780.5L448,788" id="claude-mermaid-0-L_G_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_H_0" data-points="W3sieCI6NDQ4LCJ5Ijo3MTh9LHsieCI6NDQ4LCJ5Ijo3NDN9LHsieCI6NDQ4LCJ5Ijo3OTJ9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,870L138,874.167C138,878.333,138,886.667,147.475,894.746C156.95,902.824,175.9,910.649,185.375,914.561L194.85,918.473" id="claude-mermaid-0-L_E_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_I_0" data-points="W3sieCI6MTM4LCJ5Ijo4NzB9LHsieCI6MTM4LCJ5Ijo4OTV9LHsieCI6MTk4LjU0Njg3NSwieSI6OTIwfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M448,846L448,854.167C448,862.333,448,878.667,438.525,890.746C429.05,902.824,410.1,910.649,400.625,914.561L391.15,918.473" id="claude-mermaid-0-L_H_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_I_0" data-points="W3sieCI6NDQ4LCJ5Ijo4NDZ9LHsieCI6NDQ4LCJ5Ijo4OTV9LHsieCI6Mzg3LjQ1MzEyNSwieSI6OTIwfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(138, 463)"><g class="label" data-id="L_B_C_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>Yes: cloud (web / GitHub Action)</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_D_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_D_E_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(448, 463)"><g class="label" data-id="L_B_F_0" transform="translate(-62.9765625, -12)"><foreignObject width="125.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>No: local terminal</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_G_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_E_I_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_H_I_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A-0" data-look="classic" transform="translate(293, 47)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Step 5: PR is open, CI is running</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B-1" data-look="classic" transform="translate(293, 275)"><polygon points="139,0 278,-139 139,-278 0,-139" class="label-container" transform="translate(-138.5, 139)"></polygon><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Is the subscribe toolavailable here?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-3" data-look="classic" transform="translate(138, 539)"><rect class="basic label-container" style="" x="-113.9765625" y="-27" width="227.953125" height="54"></rect><g class="label" style="" transform="translate(-83.9765625, -12)"><rect></rect><foreignObject width="167.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Subscribe to PR events</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D-5" data-look="classic" transform="translate(138, 667)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>End the turn — nothing waits</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-E-7" data-look="classic" transform="translate(138, 819)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>A CI event wakes the sessionwhen something changes</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-F-9" data-look="classic" transform="translate(448, 539)"><rect class="basic label-container" style="" x="-97.2890625" y="-27" width="194.578125" height="54"></rect><g class="label" style="" transform="translate(-67.2890625, -12)"><rect></rect><foreignObject width="134.578125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Fall back to polling</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-11" data-look="classic" transform="translate(448, 667)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>One blocking commandwaits until CI settles</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-H-13" data-look="classic" transform="translate(448, 819)"><rect class="basic label-container" style="" x="-118.3984375" y="-27" width="236.796875" height="54"></rect><g class="label" style="" transform="translate(-88.3984375, -12)"><rect></rect><foreignObject width="176.796875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>All results return at once</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-I-15" data-look="classic" transform="translate(293, 959)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Fix failures, then merge when green</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <figcaption><b>Follow the branch.</b> The left path exists only in the cloud; a laptop always takes the right path. Same destination, different way of waiting.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="mermaid-diagram">
+<svg id="claude-mermaid-1" width="874.5" xmlns="http://www.w3.org/2000/svg" height="621" viewBox="-50 -10 874.5 621" role="graphics-document document" aria-roledescription="sequence"><g><rect x="535" y="535" fill="#eaeaea" stroke="#666" width="150" height="65" name="S" rx="3" ry="3" class="actor actor-bottom"></rect><text x="610" y="567.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="610" dy="0">Shell / CI</tspan></text></g><g><rect x="0" y="535" fill="#eaeaea" stroke="#666" width="182" height="65" name="M" rx="3" ry="3" class="actor actor-bottom"></rect><text x="91" y="567.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="91" dy="0">Model (billed per turn)</tspan></text></g><g><line id="actor1" x1="610" y1="65" x2="610" y2="535" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="S" data-et="life-line" data-id="S"></line><g id="root-1" data-et="participant" data-type="participant" data-id="S"><rect x="535" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="S" rx="3" ry="3" class="actor actor-top"></rect><text x="610" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="610" dy="0">Shell / CI</tspan></text></g></g><g><line id="actor0" x1="91" y1="65" x2="91" y2="535" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="M" data-et="life-line" data-id="M"></line><g id="root-0" data-et="participant" data-type="participant" data-id="M"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="182" height="65" name="M" rx="3" ry="3" class="actor actor-top"></rect><text x="91" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="91" dy="0">Model (billed per turn)</tspan></text></g></g><style>#claude-mermaid-1{font-family:-apple-system,"system-ui","Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-1 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-1 .marker.cross{stroke:#a8adb8;}#claude-mermaid-1 svg{font-family:-apple-system,"system-ui","Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .actor{stroke:#9aa4b8;fill:#262b34;stroke-width:1;}#claude-mermaid-1 rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 rect.note[data-look="neo"]{stroke:hsl(52.6829268293, 60%, 93.9215686275%);fill:#fff5ad;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 text.actor&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .actor-line{stroke:#9aa4b8;}#claude-mermaid-1 .innerArc{stroke-width:1.5;stroke-dasharray:none;}#claude-mermaid-1 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#f2f3f5;}#claude-mermaid-1 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#f2f3f5;}#claude-mermaid-1 [id$="-arrowhead"] path{fill:#f2f3f5;stroke:#f2f3f5;}#claude-mermaid-1 .sequenceNumber{fill:#575247;}#claude-mermaid-1 [id$="-sequencenumber"]{fill:#f2f3f5;}#claude-mermaid-1 [id$="-crosshead"] path{fill:#f2f3f5;stroke:#f2f3f5;}#claude-mermaid-1 .messageText{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .labelBox{stroke:#9aa4b8;fill:#262b34;filter:none;}#claude-mermaid-1 .labelText,#claude-mermaid-1 .labelText&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .loopText,#claude-mermaid-1 .loopText&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .sectionTitle,#claude-mermaid-1 .sectionTitle&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#9aa4b8;fill:#9aa4b8;}#claude-mermaid-1 .note{stroke:hsl(52.6829268293, 60%, 93.9215686275%);fill:#fff5ad;}#claude-mermaid-1 .noteText,#claude-mermaid-1 .noteText&gt;tspan{fill:#333;stroke:none;font-weight:normal;}#claude-mermaid-1 .activation0{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-1 .activation1{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-1 .activation2{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-1 .actorPopupMenu{position:absolute;}#claude-mermaid-1 .actorPopupMenuPanel{position:absolute;fill:#262b34;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#claude-mermaid-1 .actor-man circle,#claude-mermaid-1 line{fill:#262b34;stroke-width:2px;}#claude-mermaid-1 g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#9aa4b8;}#claude-mermaid-1 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g></g><defs><symbol id="claude-mermaid-1-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"></path></symbol></defs><defs><symbol id="claude-mermaid-1-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"></path></symbol></defs><defs><symbol id="claude-mermaid-1-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"></path></symbol></defs><defs><marker id="claude-mermaid-1-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker id="claude-mermaid-1-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><defs><marker id="claude-mermaid-1-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker id="claude-mermaid-1-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"></circle></marker></defs><defs><marker id="claude-mermaid-1-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-1-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-1-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><defs><marker id="claude-mermaid-1-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><g data-et="note" data-id="i0"><rect x="66" y="75" fill="#EDF2AE" stroke="#666" width="569" height="38" class="note"></rect><text x="351" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="351">Polling mode — local</tspan></text></g><g data-et="note" data-id="i4"><rect x="66" y="291" fill="#EDF2AE" stroke="#666" width="569" height="38" class="note"></rect><text x="351" y="296" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="351">Subscription mode — cloud</tspan></text></g><g data-et="note" data-id="i8"><rect x="116" y="477" fill="#EDF2AE" stroke="#666" width="469" height="38" class="note"></rect><text x="351" y="482" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="351">each event is a fresh turnthat re-reads the whole conversation</tspan></text></g><text x="349" y="128" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">start one blocking watch command</text><line x1="92" y1="159" x2="606" y2="159" class="messageLine0" data-et="message" data-id="i1" data-from="M" data-to="S" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="611" y="174" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">CI runs for minutes — model idle, zero tokens</text><path d="M 611,205 C 671,195 671,235 611,225" class="messageLine1" data-et="message" data-id="i2" data-from="S" data-to="S" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></path><text x="352" y="250" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">return every result in one output</text><line x1="609" y1="281" x2="95" y2="281" class="messageLine0" data-et="message" data-id="i3" data-from="S" data-to="M" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="349" y="344" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">subscribe, then end the turn</text><line x1="92" y1="375" x2="606" y2="375" class="messageLine0" data-et="message" data-id="i5" data-from="M" data-to="S" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="352" y="390" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">event — a check finished</text><line x1="609" y1="421" x2="95" y2="421" class="messageLine0" data-et="message" data-id="i6" data-from="S" data-to="M" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="352" y="436" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">event — a review comment</text><line x1="609" y1="467" x2="95" y2="467" class="messageLine0" data-et="message" data-id="i7" data-from="S" data-to="M" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line></svg>
+      </div>
+      <figcaption><b>Watch what costs tokens.</b> Polling holds one command open (the idle stretch is free); subscription wakes once per event, and every wake re-reads the conversation. Time is not the cost — turns are.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 · BEFORE AND AFTER -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">Assumption vs. reality</p><h2>What people expect, and what actually happens</h2></div>
+    <div class="col"><p>Nothing changed in code, so the useful "before/after" here is the gap between the common assumption and how the workflow really behaves.</p></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>What you might assume</th><th>What actually happens</th></tr></thead>
+        <tbody>
+          <tr><td class="assume">The fallback message means something failed</td><td class="reality">Expected. The cloud-only live-update tool is absent on a laptop, so the safe fallback runs.</td></tr>
+          <tr><td class="assume">Polling means checking over and over, burning tokens</td><td class="reality">The wait is one blocking command. The model is idle and bills nothing while CI runs.</td></tr>
+          <tr><td class="assume">A 10-minute CI wait costs more than a 30-second one</td><td class="reality">Same cost. Waiting is free; only the returned output is billed, once.</td></tr>
+          <tr><td class="assume">Subscription mode is always cheaper</td><td class="reality">Only for chatty PRs. For a quiet PR that goes green once, polling is cheaper — one turn, then done.</td></tr>
+          <tr><td class="assume">It keeps handling review comments after merge time, locally</td><td class="reality">No. Locally it stops after merging. The keep-watching behavior needs subscription mode.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5 · DECISIONS -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">Decisions</p><h2>What we concluded, and what we ruled out</h2></div>
+    <div class="col">
+
+      <div class="decision">
+        <h3>Treat the fallback as correct, not a bug</h3>
+        <p>Polling is a complete path to the same outcome — watch CI, fix failures, merge when green. The only local losses are cosmetic (the turn stays busy) and post-merge (no ongoing comment handling).</p>
+        <p class="rej"><span class="lbl">Rejected · warn or block harder locally</span><br>Adds friction to a workflow that already does the right thing.</p>
+        <p class="rej"><span class="lbl">Rejected · require running remotely</span><br>Removes a real capability (local shipping) to solve a non-problem.</p>
+      </div>
+
+      <div class="decision">
+        <h3>Leave the watch command as-is</h3>
+        <p>The single blocking watch command is the simplest thing that waits until CI settles, and its cost is fine for normal runs.</p>
+        <p class="rej"><span class="lbl">Rejected · swap in a sleep-then-check loop</span><br>It would shrink the printed output but add model turns, and today's output isn't big enough to justify the change. Kept as an option if watch output ever bloats a session — see Open items.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6 · LEARNINGS -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">Learnings</p><h2>Gotchas worth keeping</h2></div>
+    <div class="col">
+      <ul class="notes">
+        <li><b>"Available on lookup" is not "present here."</b> The workflow looks the subscribe tool up at runtime; the lookup returns nothing locally because the environment doesn't host it. Loadable-on-demand and actually-available are different things.</li>
+        <li><b>Blocking waits are free in token terms.</b> Cost tracks model turns, not wall-clock time. One command that blocks for ten minutes is still one turn.</li>
+        <li><b>The real token driver is re-reading context.</b> Every turn re-sends the whole conversation as input, so many cheap wake-ups (subscription on a chatty PR) can total more than one big wait (polling).</li>
+        <li><b>Only ship-autonomous hits this.</b> The commit and PR skills finish immediately, so they never reach for the subscribe tool. The split only shows where the workflow watches CI over time.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 7 · OPEN ITEMS -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">Open items</p><h2>One optional, unadopted idea</h2></div>
+    <div class="col">
+      <div class="card">
+        <div class="kicker">Deferred · not adopted</div>
+        <h3>Trim watch output with a sleep-then-check loop</h3>
+        <p>If the watch command's repeated status tables ever noticeably bloat a session's context, replace the single blocking <code>--watch</code> with a short loop that sleeps and then asks for the compact JSON status. Trade-off: a couple more model turns for a much smaller output footprint. Only worth doing if the bloat is actually observed.</p>
+        <div class="meta"><div><span class="k">Where</span> <code>ship-autonomous/SKILL.md</code> Step 5 (≈ lines 195–211)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · FILES TOUCHED -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">Files touched</p><h2>Read only, plus what this session produced</h2></div>
+    <div class="col">
+      <h3>Read (no changes)</h3>
+      <ul class="notes">
+        <li><code>kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</code> — traced the Step 5 subscribe-or-poll branch and the fix-and-recheck loop.</li>
+      </ul>
+      <h3>Produced by this session</h3>
+      <ul class="notes">
+        <li><code>docs/plans/sessions/document-ship-autonomous-ci-polling-session.md</code> — this committed recap record.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 · GLOSSARY -->
+  <section>
+    <div class="section-head col"><p class="eyebrow">Glossary</p><h2>Terms, one line each</h2></div>
+    <div class="col">
+      <dl class="glossary">
+        <div><dt>ship-autonomous</dt><dd>The automated "ship" workflow: commits, opens a pull request, watches CI, fixes some failures, and merges when everything is green.</dd></div>
+        <div><dt>CI (Continuous Integration)</dt><dd>The automated checks — tests, linting, type checks — that run against a pull request.</dd></div>
+        <div><dt>PR (Pull Request)</dt><dd>A proposed set of changes submitted for review and merge.</dd></div>
+        <div><dt>Subscription mode</dt><dd>The preferred path: subscribe to PR events and let them wake the session. Cloud-only.</dd></div>
+        <div><dt>Polling mode</dt><dd>The fallback path: run one blocking command that waits until CI finishes, then read the results. Used locally.</dd></div>
+        <div><dt>Deferred tool</dt><dd>A tool whose full definition loads on demand rather than at startup — loadable only if the current environment actually hosts it.</dd></div>
+        <div><dt>ToolSearch</dt><dd>How the workflow looks a deferred tool up at runtime; it returns nothing when the tool isn't present.</dd></div>
+        <div><dt>MCP (Model Context Protocol)</dt><dd>The plug-in system that supplies extra tools — like GitHub event subscription — to a session.</dd></div>
+        <div><dt>Inference turn</dt><dd>One round of the model thinking and responding; the unit that actually costs tokens.</dd></div>
+        <div><dt>Context re-billing</dt><dd>Every turn re-sends the whole conversation as input, so more turns means more repeated cost.</dd></div>
+        <div><dt>gh pr checks --watch</dt><dd>The GitHub CLI command that blocks and prints CI status until every check finishes.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <p class="foot">Session d76058d4 · recap generated 2026-07-23 · source: ship-autonomous/SKILL.md</p>
+
+</div>
+
+</body>
+</html>
