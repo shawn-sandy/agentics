@@ -5,7 +5,7 @@ allowed-tools:
   - Bash
 ---
 
-# Session Doc
+# Product Doc
 
 Write an artifact documenting this session — or a pull request — for the product
 team and stakeholders to review.
@@ -90,7 +90,7 @@ Run the `artifact-tools:session-artifact` skill with these framing overrides:
 
   ```bash
   mkdir -p .claude/artifacts
-  stem="session-doc"          # PR mode: "pr-<number>-doc"
+  stem="product-doc"          # PR mode: "pr-<number>-doc"
   target=".claude/artifacts/${stem}-$(date +%F).html"
   n=2
   while [ -e "$target" ]; do

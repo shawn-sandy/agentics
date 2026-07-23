@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `/artifact-tools:session-doc` — publishes a session recap aimed at the product
+- `/artifact-tools:product-doc` — publishes a session recap aimed at the product
   team and non-engineering stakeholders rather than at code reviewers. It runs
   the existing `session-artifact` skill with three framing overrides
   (non-engineer audience, acronyms spelled out; Learnings replaced by a
@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changes, Implementation plan details, Known gaps and follow-ups, each dropped
   when empty). Two sources feed the same document: the session transcript by
   default, or a pull request when given `#453`, a PR URL, or `--pr 453` — read
-  from `gh pr view`, the diffstat, the commit bodies, and the review discussion,
+  from `gh pr view`, the changed-file list, the commit bodies, and the review
+  discussion,
   falling back to session mode when `gh` or a GitHub remote is missing. PR mode
   keeps its own `pr-<number>.md` record, so re-running against a PR updates the
   same page as that PR evolves. The

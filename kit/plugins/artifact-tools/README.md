@@ -32,7 +32,7 @@ prompt".
 
 | Command | What it does |
 |---------|--------------|
-| `/artifact-tools:session-doc [session-id\|path\|#PR]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details. Sources from the session transcript, or from a pull request when given `#453` or a PR URL |
+| `/artifact-tools:product-doc [session-id\|path\|#PR]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details. Sources from the session transcript, or from a pull request when given `#453` or a PR URL |
 
 ## Installation
 
@@ -60,8 +60,8 @@ Share a recap of this session             → session-artifact
 Publish docs/plans/add-dark-mode.html     → plan-artifact
 Share docs/prompts/task-refactor.md       → prompt-artifact (single)
 Publish my prompt library --library       → prompt-artifact (library mode)
-/artifact-tools:session-doc               → recap for product + stakeholders
-/artifact-tools:session-doc #453          → same recap, sourced from a PR
+/artifact-tools:product-doc               → recap for product + stakeholders
+/artifact-tools:product-doc #453          → same recap, sourced from a PR
 ```
 
 ## Plugin Structure
@@ -73,7 +73,7 @@ artifact-tools/
 ├── README.md
 ├── CHANGELOG.md
 ├── commands/
-│   └── session-doc.md     # product-team framing over session-artifact
+│   └── product-doc.md     # product-team framing over session-artifact
 ├── references/
 │   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
@@ -114,9 +114,9 @@ source).
 The extractor is a deliberate copy of the `social-media-tools` original so this
 plugin installs standalone. Keep the two in sync when either changes.
 
-### session-doc (command)
+### product-doc (command)
 
-`/artifact-tools:session-doc` is a thin framing layer over `session-artifact` for
+`/artifact-tools:product-doc` is a thin framing layer over `session-artifact` for
 when the reader is a PM, designer, support lead, or exec rather than a code
 reviewer. It asks for prose any non-engineer can follow, and replaces the recap's Learnings section with a release-note shape:
 Features, Bug fixes, Decisions, Logic and behavior changes, Implementation plan
@@ -126,8 +126,8 @@ render, publishing, the marker check — is the skill's, unchanged.
 
 Two sources feed the same document. With no argument (or a session ID or
 `.jsonl` path) it reads the session transcript. With `#453`, a PR URL, or
-`--pr 453` it reads the pull request instead — `gh pr view`, the diffstat,
-the commit bodies, and the review discussion — preferring commit bodies over
+`--pr 453` it reads the pull request instead — `gh pr view`, the changed-file
+list, the commit bodies, and the review discussion — preferring commit bodies over
 the diff, since those carry the *why* a stakeholder needs. Without `gh` or a
 GitHub remote, PR mode says so and falls back to session mode rather than
 failing.
@@ -142,7 +142,7 @@ Both modes keep a record under `{plansDirectory}/sessions/` to hold the
 published URL: session mode shares `session-artifact`'s record, PR mode gets its
 own `pr-<number>.md`. Neither writes `artifact-url:` — that key belongs to the
 reviewer recap, and reusing it would republish the product recap over that page.
-`session-doc` reads and writes `product-artifact-url:` instead. Re-running
+`product-doc` reads and writes `product-artifact-url:` instead. Re-running
 against the same PR therefore updates the same page as the PR evolves, so a link
 sent on day one still shows the merged state on day five.
 
