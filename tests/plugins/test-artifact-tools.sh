@@ -181,4 +181,36 @@ assert got == want, f'homepage is {got!r}, expected {want!r}'
 EOF
 ok
 
+# 7. Republish keys are distinct across the session-record writers.
+# session-artifact, product-doc, and team-recap all key off the SAME per-session
+# record file, so a shared key silently republishes one page over another's URL.
+python3 - "$PLUGIN" <<'EOF' || fail "republish keys collide across artifact-tools commands"
+import pathlib, sys
+root = pathlib.Path(sys.argv[1])
+# Each writer and the key it must own. Two assertions, both against file
+# content -- comparing the literals in this map to each other would prove
+# nothing, since this map is the test's own input.
+owners = {
+    "skills/session-artifact/SKILL.md": "artifact-url",
+    "commands/product-doc.md": "product-artifact-url",
+    "commands/team-recap.md": "team-artifact-url",
+}
+for rel, key in owners.items():
+    text = (root / rel).read_text()
+    # 1. The writer declares the key it owns.
+    assert f"{key}:" in text, f"{rel}: never declares its republish key {key!r}"
+    # 2. Every OTHER writer's key appears only under a don't-write warning. A
+    #    wrapper copied from a sibling keeps the sibling's key as its own and
+    #    fails here, which is the bug worth catching: all three write to one
+    #    record, so a duplicated key republishes over that page's URL.
+    warned = [ln for ln in text.splitlines() if "Never write" in ln or "never write" in ln]
+    for rel2, other in owners.items():
+        if rel2 == rel or f"{other}:" not in text:
+            continue
+        assert any(other in ln for ln in warned), (
+            f"{rel}: mentions {other!r} but never warns against writing it"
+        )
+EOF
+ok
+
 echo "PASS: artifact-tools smoke test ($checks checks)"

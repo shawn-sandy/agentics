@@ -5,6 +5,58 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-23
+
+### Added
+
+- `/artifact-tools:team-recap` — publishes a detailed, visual session recap for
+  the whole team, engineers and non-engineers in one document. A third framing
+  wrapper over `session-artifact` alongside `product-doc`: an at-a-glance stat
+  strip, one card per change, mermaid diagrams for anything whose structure or
+  flow changed, a before/after table of changed rules and defaults, decisions
+  with the options that were rejected, learnings, open items, files touched, and
+  a glossary of internal terms. Diagrams are `<pre class="mermaid">` blocks —
+  rendered natively by artifacts, and the only option available, since the
+  artifact CSP blocks external scripts and assets. Filing matches `product-doc`
+  (the `.claude/artifacts/` inbox and the `docs/artifacts/` gallery via
+  `social-media-tools:save-artifact`, with a collision-safe local copy as
+  fallback). Its republish key is `team-artifact-url:`, distinct from
+  `artifact-url:` and `product-artifact-url:` because all three commands share
+  one session record. A wrapper rather than a new skill so the blocking scrub
+  gate is never duplicated.
+
+### Changed
+
+- `session-artifact` no longer reuses the extractor's `<date>-<slug>-<id>.md`
+  filename for the committed session record. That name carries the session id,
+  which repos enforcing a `verb-target` plan-filename convention reject — the
+  write lands and a hook then blocks, forcing a mid-run rename. The record is
+  now named after the work (`add-team-recap-command-session.md`), and an
+  existing one is found by grepping `session-id:` in its frontmatter rather than
+  by reconstructing the filename an earlier run chose. Applies to all three
+  recap writers, which share the record; `product-doc`'s republish-key table was
+  updated to match and now points at the same frontmatter lookup.
+
+### Fixed
+
+- `/artifact-tools:team-recap` files a gallery copy whose diagrams render and
+  which still ships zero JavaScript, by inlining mermaid's *rendered SVG* rather
+  than the runtime that produces it. Filing the published page fetched back also
+  gives working diagrams, but only by committing the multi-megabyte minified
+  mermaid library that publishing injects — which repo static analysis reads as
+  first-party source; on this repo that produced eight high-severity CodeQL
+  alerts, none of them in the recap. The command now documents the capture: strip
+  the claude.ai `frame-runtime` block, serve the page over `127.0.0.1` (`file://`
+  is blocked), read the rendered `svg` elements out of the browser pane and POST
+  them back same-origin rather than through the transcript, then swap each
+  `<pre class="mermaid">` block for its SVG and wrap the result into a standalone
+  document. The captured diagram carries mermaid's baked-in palette and cannot
+  follow the viewer's theme, so its container gets a fixed light card that reads
+  correctly on both grounds. Falling back to plain-text diagram blocks is the
+  documented behaviour when no browser is available; the fetch-back path is an
+  opt-in with its costs stated first, including a scrub that reports MEDIUM
+  matches from the library's grammar tables.
+
 ## [1.4.0] - 2026-07-22
 
 ### Added

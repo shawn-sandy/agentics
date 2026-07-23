@@ -132,8 +132,15 @@ you shared goes stale. Both modes keep theirs under `{plansDirectory}/sessions/`
 
 | Mode | Record | Key |
 |------|--------|-----|
-| Session | the skill's `<date>-<slug>-<session-id[:8]>.md` | `product-artifact-url:` |
+| Session | the skill's `<verb>-<target>-session.md` | `product-artifact-url:` |
 | PR | `pr-<number>.md` | `product-artifact-url:` |
+
+In session mode, find that record the way the skill does — by its frontmatter,
+not by rebuilding its name:
+
+```bash
+grep -rl 'session-id: "<session-id>"' <plansDirectory>/sessions/ 2>/dev/null
+```
 
 **Never write `artifact-url:`.** In session mode that key already belongs to the
 reviewer-first recap `session-artifact` publishes from the same record — the

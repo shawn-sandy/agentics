@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team recap command for artifact-tools</title>
+<style>*{box-sizing:border-box}body{margin:0}</style>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #f7f8f6;
+    --panel: #ffffff;
+    --edge: #dde1dc;
+    --edge-soft: #e9ece8;
+    --ink: #1c221f;
+    --ink-soft: #4d564f;
+    --ink-faint: #77817a;
+    --accent: #1f6f6b;
+    --accent-soft: #e2efed;
+    --good: #3f6b35;
+    --warn: #8a6117;
+    --shadow: 0 1px 2px rgba(28, 34, 31, .05), 0 6px 20px -12px rgba(28, 34, 31, .18);
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #141816;
+      --panel: #1b201e;
+      --edge: #2f3733;
+      --edge-soft: #262d2a;
+      --ink: #e6eae7;
+      --ink-soft: #a8b2ac;
+      --ink-faint: #7d8781;
+      --accent: #6fc4bd;
+      --accent-soft: #1f2f2d;
+      --good: #8fc07f;
+      --warn: #d3a851;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -14px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #141816;
+    --panel: #1b201e;
+    --edge: #2f3733;
+    --edge-soft: #262d2a;
+    --ink: #e6eae7;
+    --ink-soft: #a8b2ac;
+    --ink-faint: #7d8781;
+    --accent: #6fc4bd;
+    --accent-soft: #1f2f2d;
+    --good: #8fc07f;
+    --warn: #d3a851;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -14px rgba(0, 0, 0, .7);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #f7f8f6;
+    --panel: #ffffff;
+    --edge: #dde1dc;
+    --edge-soft: #e9ece8;
+    --ink: #1c221f;
+    --ink-soft: #4d564f;
+    --ink-faint: #77817a;
+    --accent: #1f6f6b;
+    --accent-soft: #e2efed;
+    --good: #3f6b35;
+    --warn: #8a6117;
+    --shadow: 0 1px 2px rgba(28, 34, 31, .05), 0 6px 20px -12px rgba(28, 34, 31, .18);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1.1rem, 5vw, 2rem) 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: .9rem; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 6vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .dek { color: var(--ink-soft); font-size: 1.06rem; max-width: 38rem; }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: .76rem;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.1rem;
+    padding-top: .45rem;
+    border-top: 1px solid var(--edge);
+  }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 1px;
+    background: var(--edge);
+    border: 1px solid var(--edge);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat { background: var(--panel); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .25rem; }
+
+  .stat b {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -.02em;
+  }
+
+  .stat span {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---- sections ---- */
+  section { display: flex; flex-direction: column; gap: 1.15rem; }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--edge);
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-size: 1.32rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  p { margin: 0; }
+  section > p, .card > p, .item > p { max-width: 40rem; }
+
+  strong { font-weight: 600; }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---- change cards ---- */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 3px;
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+    box-shadow: var(--shadow);
+  }
+
+  .tag {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .22rem .5rem;
+    border-radius: 2px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .tag.internal { background: transparent; color: var(--ink-faint); border: 1px solid var(--edge); }
+
+  .field { display: flex; flex-direction: column; gap: .15rem; }
+
+  .field dt {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .field dd { margin: 0; }
+
+  /* ---- code + diagrams ---- */
+  pre, code, .path { font-family: var(--mono); }
+
+  code {
+    font-size: .87em;
+    background: var(--edge-soft);
+    padding: .1em .34em;
+    border-radius: 2px;
+  }
+
+  pre.block {
+    background: var(--edge-soft);
+    border: 1px solid var(--edge);
+    border-radius: 3px;
+    padding: .9rem 1.1rem;
+    font-size: .84rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  pre.block code { background: none; padding: 0; font-size: inherit; }
+
+  .figure { display: flex; flex-direction: column; gap: .6rem; }
+
+  .figure > .diagram {
+    background: #fdfdfc;
+    border: 1px solid var(--edge);
+    border-radius: 3px;
+    padding: 1.25rem .5rem;
+    overflow-x: auto;
+  }
+  .figure > .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+
+  figcaption, .caption {
+    font-size: .88rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    max-width: 38rem;
+  }
+
+  /* ---- table ---- */
+  .scroll { overflow-x: auto; border: 1px solid var(--edge); border-radius: 3px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; background: var(--panel); }
+
+  th, td { text-align: left; padding: .72rem .95rem; border-bottom: 1px solid var(--edge-soft); vertical-align: top; }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--edge-soft);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td.was { color: var(--ink-faint); }
+
+  /* ---- list items ---- */
+  .items { display: flex; flex-direction: column; gap: 1.15rem; }
+  .item { display: flex; flex-direction: column; gap: .35rem; }
+
+  .item h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .rejected {
+    font-size: .93rem;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--edge);
+    padding-left: .8rem;
+    max-width: 39rem;
+  }
+
+  .open {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-left: 3px solid var(--warn);
+    border-radius: 3px;
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .files { display: flex; flex-direction: column; gap: 1.4rem; }
+
+  .files h4 {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 .55rem;
+  }
+
+  .files ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+
+  .files li { font-size: .95rem; }
+
+  .files .path { font-size: .84rem; color: var(--ink); word-break: break-all; }
+
+  .files .why { color: var(--ink-soft); display: block; }
+
+  .new { color: var(--good); font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+
+  /* ---- glossary ---- */
+  .glossary { display: flex; flex-direction: column; gap: 0; }
+
+  .glossary div {
+    display: grid;
+    grid-template-columns: minmax(9rem, 12rem) 1fr;
+    gap: .25rem 1.5rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--edge-soft);
+    font-size: .95rem;
+  }
+
+  .glossary dt { font-weight: 600; }
+  .glossary dd { margin: 0; color: var(--ink-soft); }
+
+  @media (max-width: 34rem) {
+    .glossary div { grid-template-columns: 1fr; gap: .1rem; }
+  }
+
+  .end {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--edge);
+    padding-top: 1rem;
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="kicker">Session recap &middot; artifact-tools</div>
+    <h1>Team recap command for artifact-tools</h1>
+    <p class="dek">
+      The plugin can now turn a working session into a visual page the whole team can
+      read &mdash; the engineer picking the work up next, and the teammate who only
+      needs to know what moved.
+    </p>
+    <div class="meta">
+      <span>23 July 2026</span>
+      <span>artifact-tools 1.4.0 &rarr; 1.5.0</span>
+      <span>branch: claude/plugin-session-change-summaries</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>At a glance</h2>
+    <div class="stats">
+      <div class="stat"><b>1</b><span>New command</span></div>
+      <div class="stat"><b>5</b><span>Files touched</span></div>
+      <div class="stat"><b>4</b><span>Decisions</span></div>
+      <div class="stat"><b>1</b><span>Open item</span></div>
+    </div>
+    <p>
+      <code>/artifact-tools:team-recap</code> joins the plugin as a third way to write up
+      a session. It ships as a thin wrapper over the existing recap machinery rather than
+      as a new component, so the plugin&rsquo;s blocking secret scan stays in exactly one
+      place. A new test guards against a failure the wrapper pattern invites: three
+      commands writing to one file, and a copied one quietly publishing over another&rsquo;s
+      page.
+    </p>
+  </section>
+
+  <section>
+    <h2>What changed</h2>
+
+    <article class="card">
+      <span class="tag">For everyone</span>
+      <h3>A session recap the whole team can read</h3>
+      <p>
+        The plugin already had two framings: one written for code reviewers, one for
+        product and stakeholders. Neither targets a mixed audience, and neither asks for
+        anything visual. The new command does both &mdash; one page carrying a stat strip,
+        a card per change, diagrams of anything whose shape changed, a before-and-after
+        table, decisions with the options that lost, learnings, open items, files touched,
+        and a glossary of every internal term it uses.
+      </p>
+      <dl class="field">
+        <dt>How to reach it</dt>
+        <dd>
+<pre class="block"><code>/artifact-tools:team-recap                 # the newest session
+/artifact-tools:team-recap &lt;session-id&gt;    # a specific one</code></pre>
+        </dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <span class="tag internal">For maintainers</span>
+      <h3>A guard against overwriting a page that was already shared</h3>
+      <p>
+        The plugin&rsquo;s smoke test gained a twelfth check: each of the three recap
+        writers must declare its own distinct republish key. Adding a fourth by copying
+        an existing one now fails the test instead of silently taking over another
+        recap&rsquo;s published link &mdash; a bug that stays invisible until someone opens
+        a link you sent last week and finds the wrong document.
+      </p>
+    </article>
+  </section>
+
+  <section>
+    <h2>How it works now</h2>
+
+    <figure class="figure">
+      <div class="diagram"><svg id="claude-mermaid-0" width="889.234375" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="872.8515625" viewBox="0 0 889.234375 872.8515625" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#ebe7e9;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(20, 24, 22);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(20, 24, 22);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(20, 24, 22);fill:rgb(20, 24, 22);}#claude-mermaid-0 .labelBkg{background-color:rgba(20, 24, 22, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(20, 24, 22);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(20, 24, 22);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(20, 24, 22);fill:rgb(20, 24, 22);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M444.617,62L444.617,66.167C444.617,70.333,444.617,78.667,444.617,86.333C444.617,94,444.617,101,444.617,104.5L444.617,108" id="claude-mermaid-0-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6NDQ0LjYxNzE4NzUsInkiOjYyfSx7IngiOjQ0NC42MTcxODc1LCJ5Ijo4N30seyJ4Ijo0NDQuNjE3MTg3NSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M444.617,166L444.617,170.167C444.617,174.333,444.617,182.667,444.617,190.333C444.617,198,444.617,205,444.617,208.5L444.617,212" id="claude-mermaid-0-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6NDQ0LjYxNzE4NzUsInkiOjE2Nn0seyJ4Ijo0NDQuNjE3MTg3NSwieSI6MTkxfSx7IngiOjQ0NC42MTcxODc1LCJ5IjoyMTZ9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M401.369,285.603L357.474,298.978C313.579,312.353,225.79,339.102,181.895,357.977C138,376.852,138,387.852,138,393.352L138,398.852" id="claude-mermaid-0-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6NDAxLjM2OTA0NzQyMjg4NDI1LCJ5IjoyODUuNjAzNDIyNDIyODg0MjV9LHsieCI6MTM4LCJ5IjozNjUuODUxNTYyNX0seyJ4IjoxMzgsInkiOjQwMi44NTE1NjI1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M444.617,328.852L444.617,335.018C444.617,341.185,444.617,353.518,444.617,367.185C444.617,380.852,444.617,395.852,444.617,403.352L444.617,410.852" id="claude-mermaid-0-L_C_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_E_0" data-points="W3sieCI6NDQ0LjYxNzE4NzUsInkiOjMyOC44NTE1NjI1fSx7IngiOjQ0NC42MTcxODc1LCJ5IjozNjUuODUxNTYyNX0seyJ4Ijo0NDQuNjE3MTg3NSwieSI6NDE0Ljg1MTU2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M487.865,285.603L531.76,298.978C575.655,312.353,663.445,339.102,707.34,357.977C751.234,376.852,751.234,387.852,751.234,393.352L751.234,398.852" id="claude-mermaid-0-L_C_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_F_0" data-points="W3sieCI6NDg3Ljg2NTMyNzU3NzExNTc1LCJ5IjoyODUuNjAzNDIyNDIyODg0MjV9LHsieCI6NzUxLjIzNDM3NSwieSI6MzY1Ljg1MTU2MjV9LHsieCI6NzUxLjIzNDM3NSwieSI6NDAyLjg1MTU2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,480.852L138,485.018C138,489.185,138,497.518,173.05,507.629C208.101,517.74,278.202,529.629,313.252,535.573L348.302,541.517" id="claude-mermaid-0-L_D_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_G_0" data-points="W3sieCI6MTM4LCJ5Ijo0ODAuODUxNTYyNX0seyJ4IjoxMzgsInkiOjUwNS44NTE1NjI1fSx7IngiOjM1Mi4yNDYwOTM3NSwieSI6NTQyLjE4NjExMDM2MzUzMDl9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M444.617,468.852L444.617,475.018C444.617,481.185,444.617,493.518,444.617,503.185C444.617,512.852,444.617,519.852,444.617,523.352L444.617,526.852" id="claude-mermaid-0-L_E_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_G_0" data-points="W3sieCI6NDQ0LjYxNzE4NzUsInkiOjQ2OC44NTE1NjI1fSx7IngiOjQ0NC42MTcxODc1LCJ5Ijo1MDUuODUxNTYyNX0seyJ4Ijo0NDQuNjE3MTg3NSwieSI6NTMwLjg1MTU2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M751.234,480.852L751.234,485.018C751.234,489.185,751.234,497.518,716.184,507.629C681.134,517.74,611.033,529.629,575.982,535.573L540.932,541.517" id="claude-mermaid-0-L_F_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_G_0" data-points="W3sieCI6NzUxLjIzNDM3NSwieSI6NDgwLjg1MTU2MjV9LHsieCI6NzUxLjIzNDM3NSwieSI6NTA1Ljg1MTU2MjV9LHsieCI6NTM2Ljk4ODI4MTI1LCJ5Ijo1NDIuMTg2MTEwMzYzNTMwOX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M384.135,584.852L370.321,591.018C356.507,597.185,328.88,609.518,315.066,621.185C301.252,632.852,301.252,643.852,301.252,649.352L301.252,654.852" id="claude-mermaid-0-L_G_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_H_0" data-points="W3sieCI6Mzg0LjEzNDk3OTI0ODA0NjksInkiOjU4NC44NTE1NjI1fSx7IngiOjMwMS4yNTE5NTMxMjUsInkiOjYyMS44NTE1NjI1fSx7IngiOjMwMS4yNTE5NTMxMjUsInkiOjY1OC44NTE1NjI1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M505.099,584.852L518.913,591.018C532.727,597.185,560.355,609.518,574.169,623.185C587.982,636.852,587.982,651.852,587.982,659.352L587.982,666.852" id="claude-mermaid-0-L_G_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_I_0" data-points="W3sieCI6NTA1LjA5OTM5NTc1MTk1MzEsInkiOjU4NC44NTE1NjI1fSx7IngiOjU4Ny45ODI0MjE4NzUsInkiOjYyMS44NTE1NjI1fSx7IngiOjU4Ny45ODI0MjE4NzUsInkiOjY3MC44NTE1NjI1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M587.982,724.852L587.982,731.018C587.982,737.185,587.982,749.518,587.982,759.185C587.982,768.852,587.982,775.852,587.982,779.352L587.982,782.852" id="claude-mermaid-0-L_I_J_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_I_J_0" data-points="W3sieCI6NTg3Ljk4MjQyMTg3NSwieSI6NzI0Ljg1MTU2MjV9LHsieCI6NTg3Ljk4MjQyMTg3NSwieSI6NzYxLjg1MTU2MjV9LHsieCI6NTg3Ljk4MjQyMTg3NSwieSI6Nzg2Ljg1MTU2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(138, 365.8515625)"><g class="label" data-id="L_C_D_0" transform="translate(-30.7109375, -12)"><foreignObject width="61.421875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>reviewer</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(444.6171875, 365.8515625)"><g class="label" data-id="L_C_E_0" transform="translate(-45.59765625, -12)"><foreignObject width="91.1953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>product-doc</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(751.234375, 365.8515625)"><g class="label" data-id="L_C_F_0" transform="translate(-65.1328125, -12)"><foreignObject width="130.265625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>team-recap (new)</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_D_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_E_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(301.251953125, 621.8515625)"><g class="label" data-id="L_G_H_0" transform="translate(-28.6796875, -12)"><foreignObject width="57.359375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>blocked</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(587.982421875, 621.8515625)"><g class="label" data-id="L_G_I_0" transform="translate(-34.09375, -12)"><foreignObject width="68.1875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>approved</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_I_J_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A-0" data-look="classic" transform="translate(444.6171875, 35)"><rect class="basic label-container" style="" x="-95.28515625" y="-27" width="190.5703125" height="54"></rect><g class="label" style="" transform="translate(-65.28515625, -12)"><rect></rect><foreignObject width="130.5703125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Session transcript</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B-1" data-look="classic" transform="translate(444.6171875, 139)"><rect class="basic label-container" style="" x="-102.640625" y="-27" width="205.28125" height="54"></rect><g class="label" style="" transform="translate(-72.640625, -12)"><rect></rect><foreignObject width="145.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>session-artifact skill</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-3" data-look="classic" transform="translate(444.6171875, 272.42578125)"><polygon points="56.42578125,0 112.8515625,-56.42578125 56.42578125,-112.8515625 0,-56.42578125" class="label-container" transform="translate(-55.92578125, 56.42578125)"></polygon><g class="label" style="" transform="translate(-29.42578125, -12)"><rect></rect><foreignObject width="58.8515625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Framing</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D-5" data-look="classic" transform="translate(138, 441.8515625)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Summary / Decisions / Learnings</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-E-7" data-look="classic" transform="translate(444.6171875, 441.8515625)"><rect class="basic label-container" style="" x="-126.6171875" y="-27" width="253.234375" height="54"></rect><g class="label" style="" transform="translate(-96.6171875, -12)"><rect></rect><foreignObject width="193.234375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Features / Bug fixes / Gaps</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-F-9" data-look="classic" transform="translate(751.234375, 441.8515625)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Stats / Cards / Diagrams / Glossary</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-11" data-look="classic" transform="translate(444.6171875, 557.8515625)"><rect class="basic label-container" style="" x="-92.37109375" y="-27" width="184.7421875" height="54"></rect><g class="label" style="" transform="translate(-62.37109375, -12)"><rect></rect><foreignObject width="124.7421875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Secret-scan gate</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-H-17" data-look="classic" transform="translate(301.251953125, 697.8515625)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Hard stop, nothing published</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-I-19" data-look="classic" transform="translate(587.982421875, 697.8515625)"><rect class="basic label-container" style="" x="-106.73046875" y="-27" width="213.4609375" height="54"></rect><g class="label" style="" transform="translate(-76.73046875, -12)"><rect></rect><foreignObject width="153.4609375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Render page, publish</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-J-21" data-look="classic" transform="translate(587.982421875, 825.8515625)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Write the URL back to the session record</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg></div>
+      <figcaption>
+        All three framings funnel into the same scan gate. That is the whole reason the
+        new one is a command and not a fourth skill &mdash; a new skill would have meant a
+        second copy of the gate.
+      </figcaption>
+    </figure>
+
+    <figure class="figure">
+      <div class="diagram"><svg id="claude-mermaid-1" width="526.140625" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="326" viewBox="0 0 526.140625 326" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-1{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-1 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-1 .marker.cross{stroke:#a8adb8;}#claude-mermaid-1 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;color:#f2f3f5;}#claude-mermaid-1 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-1 .cluster-label span{color:#f2f3f5;}#claude-mermaid-1 .cluster-label span p{background-color:transparent;}#claude-mermaid-1 .label text,#claude-mermaid-1 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node ellipse,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .rough-node .label text,#claude-mermaid-1 .node .label text,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-anchor:middle;}#claude-mermaid-1 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-1 .rough-node .label,#claude-mermaid-1 .node .label,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-align:center;}#claude-mermaid-1 .node.clickable{cursor:pointer;}#claude-mermaid-1 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-1 .arrowheadPath{fill:#ebe7e9;}#claude-mermaid-1 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-1 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-1 .edgeLabel{background-color:rgb(20, 24, 22);text-align:center;}#claude-mermaid-1 .edgeLabel p{background-color:rgb(20, 24, 22);}#claude-mermaid-1 .edgeLabel rect{opacity:0.5;background-color:rgb(20, 24, 22);fill:rgb(20, 24, 22);}#claude-mermaid-1 .labelBkg{background-color:rgba(20, 24, 22, 0.5);}#claude-mermaid-1 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .cluster text{fill:#f2f3f5;}#claude-mermaid-1 .cluster span{color:#f2f3f5;}#claude-mermaid-1 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-1 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-1 rect.text{fill:none;stroke-width:0;}#claude-mermaid-1 .icon-shape,#claude-mermaid-1 .image-shape{background-color:rgb(20, 24, 22);text-align:center;}#claude-mermaid-1 .icon-shape p,#claude-mermaid-1 .image-shape p{background-color:rgb(20, 24, 22);padding:2px;}#claude-mermaid-1 .icon-shape .label rect,#claude-mermaid-1 .image-shape .label rect{opacity:0.5;background-color:rgb(20, 24, 22);fill:rgb(20, 24, 22);}#claude-mermaid-1 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-1 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-1 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-1_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M137.182,124L153.175,109.167C169.168,94.333,201.154,64.667,222.302,49.833C243.451,35,253.76,35,258.915,35L264.07,35" id="claude-mermaid-1-L_R_K1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R_K1_0" data-points="W3sieCI6MTM3LjE4MTUwNTkyNjcyNDEzLCJ5IjoxMjR9LHsieCI6MjMzLjE0MDYyNSwieSI6MzV9LHsieCI6MjY0LjA3MDMxMjUsInkiOjM1fV0=" data-look="classic"></path><path d="M208.141,151L212.307,151C216.474,151,224.807,151,233.141,151C241.474,151,249.807,151,253.974,151L258.141,151" id="claude-mermaid-1-L_R_K2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R_K2_0" data-points="W3sieCI6MjA4LjE0MDYyNSwieSI6MTUxfSx7IngiOjIzMy4xNDA2MjUsInkiOjE1MX0seyJ4IjoyNTguMTQwNjI1LCJ5IjoxNTF9XQ==" data-look="classic"></path><path d="M134.452,178L150.9,194.833C167.348,211.667,200.245,245.333,220.859,262.167C241.474,279,249.807,279,253.974,279L258.141,279" id="claude-mermaid-1-L_R_K3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_R_K3_0" data-points="W3sieCI6MTM0LjQ1MjMzMTU0Mjk2ODc1LCJ5IjoxNzh9LHsieCI6MjMzLjE0MDYyNSwieSI6Mjc5fSx7IngiOjI1OC4xNDA2MjUsInkiOjI3OX1d" data-look="classic"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_R_K1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_R_K2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_R_K3_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-1-flowchart-R-0" data-look="classic" transform="translate(108.0703125, 151)"><rect class="basic label-container" style="" x="-100.0703125" y="-27" width="200.140625" height="54"></rect><g class="label" style="" transform="translate(-70.0703125, -12)"><rect></rect><foreignObject width="140.140625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>One session record</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-K1-2" data-look="classic" transform="translate(388.140625, 35)"><rect class="basic label-container" style="" x="-124.0703125" y="-27" width="248.140625" height="54"></rect><g class="label" style="" transform="translate(-94.0703125, -12)"><rect></rect><foreignObject width="188.140625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>artifact-url:reviewer recap</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-K2-4" data-look="classic" transform="translate(388.140625, 151)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>product-artifact-url:product doc</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-K3-6" data-look="classic" transform="translate(388.140625, 279)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>team-artifact-url:team recap</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-1-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-1-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-1-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg></div>
+      <figcaption>
+        Three keys, one file. All three commands read and write the same record for a
+        given session, so each needs its own key inside it. A copied wrapper that forgets
+        to rename its key republishes over whichever page already owned it.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Before and after</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th scope="col"></th><th scope="col">Before</th><th scope="col">After</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Recap framings</th>
+            <td class="was">Reviewer recap, product doc</td>
+            <td>Plus a whole-team visual recap</td>
+          </tr>
+          <tr>
+            <th scope="row">Audience assumed</th>
+            <td class="was">One or the other &mdash; engineer or non-engineer</td>
+            <td>Both, in a single document</td>
+          </tr>
+          <tr>
+            <th scope="row">Visuals</th>
+            <td class="was">None specified</td>
+            <td>Diagrams required where structure or flow changed, each captioned</td>
+          </tr>
+          <tr>
+            <th scope="row">Diagram technology</th>
+            <td class="was">n/a</td>
+            <td>Mermaid only &mdash; the artifact security policy blocks external scripts and assets</td>
+          </tr>
+          <tr>
+            <th scope="row">Adding a fourth wrapper</th>
+            <td class="was">Copy one; a duplicated key still passes tests</td>
+            <td>A duplicated key fails the smoke test</td>
+          </tr>
+          <tr>
+            <th scope="row">Plugin version</th>
+            <td class="was">1.4.0</td>
+            <td>1.5.0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisions</h2>
+    <div class="items">
+
+      <div class="item">
+        <h4>A command wrapping the existing skill, not a fourth skill</h4>
+        <p>
+          The expensive and risky parts of a recap &mdash; locating the transcript,
+          extracting it without flooding the working context, the blocking secret scan,
+          publishing, verifying the page actually rendered &mdash; are already written.
+          A new skill would have duplicated all of it, and duplicating a security gate is
+          the specific thing worth never doing.
+        </p>
+        <p class="rejected">
+          <strong>Rejected:</strong> a standalone <code>team-artifact</code> skill.
+          Roughly four times the material for the same output, with two copies of the gate.
+        </p>
+      </div>
+
+      <div class="item">
+        <h4>Mermaid diagrams, no charting library</h4>
+        <p>
+          Published pages render mermaid natively, and a strict security policy blocks
+          external scripts, stylesheets, fonts, and remote images outright. There was no
+          library option to weigh &mdash; the built-in feature is also the only one that
+          works.
+        </p>
+      </div>
+
+      <div class="item">
+        <h4>Its own republish key, <code>team-artifact-url:</code></h4>
+        <p>
+          The session record&rsquo;s filename is fixed per session, so all three commands
+          land on the same file. A shared key would mean whichever command ran second
+          republished over the first one&rsquo;s page.
+        </p>
+      </div>
+
+      <div class="item">
+        <h4>The test hardcodes which file owns which key</h4>
+        <p>
+          The first version tried to infer ownership from the prose of each file. It failed
+          on the first run, because every file deliberately names the <em>other</em> keys in
+          its don&rsquo;t-write warning. Replacing the inference with a fixed map of file to
+          expected key is shorter, has no parser to maintain, and still catches the
+          realistic bug.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Learnings</h2>
+    <div class="items">
+      <div class="item">
+        <h4>A pattern-match over prose is a parser, and a parser inside a test is a liability</h4>
+        <p>
+          The ownership-inference check was written, run, and thrown out inside a single
+          iteration. The failure was immediate and unambiguous, which is the good case;
+          the lesson is that the blunt hardcoded assertion should have been the first
+          attempt, not the second.
+        </p>
+      </div>
+      <div class="item">
+        <h4>A test that has never failed has not been tested</h4>
+        <p>
+          The new check was verified by copying the plugin to a temporary directory,
+          corrupting the new command so it reused the product key, and confirming the
+          assertion fired. Passing on correct input proves nothing by itself.
+        </p>
+      </div>
+      <div class="item">
+        <h4>Three variants sharing one state file is a real hazard, not a hypothetical one</h4>
+        <p>
+          It only surfaces after a link has been shared and gone stale &mdash; exactly the
+          kind of failure that needs a mechanical guard rather than a warning in a document.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Open items</h2>
+    <div class="open">
+      <h4 style="margin:0;font-size:1rem;font-weight:600;">The command has not yet been run as a command</h4>
+      <p>
+        This page is the first exercise of the workflow it describes, and it was carried
+        out by hand from the command&rsquo;s own instructions &mdash; a newly written command
+        file is not loaded as a slash command in the session that created it. A fresh
+        session should invoke <code>/artifact-tools:team-recap</code> directly to confirm it
+        dispatches, then run it a second time to confirm the republish key sends the update
+        to this same page rather than minting a new link.
+      </p>
+      <p>
+        One thing that run will also settle: the extractor names the session record after
+        the session id, and the repository&rsquo;s filename rule rejects that name. This
+        record was renamed by hand to <span class="path">add-team-recap-command-session.md</span>.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Files touched</h2>
+    <div class="files">
+
+      <div>
+        <h4>The command</h4>
+        <ul>
+          <li>
+            <span class="path">kit/plugins/artifact-tools/commands/team-recap.md</span>
+            <span class="new">new</span>
+            <span class="why">Audience rules, the visual constraints, the nine sections, where the page gets filed, and the republish key.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>The guard</h4>
+        <ul>
+          <li>
+            <span class="path">tests/plugins/test-artifact-tools.sh</span>
+            <span class="why">Twelfth check &mdash; the three recap writers must declare distinct republish keys.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Metadata and docs</h4>
+        <ul>
+          <li>
+            <span class="path">.claude-plugin/marketplace.json</span>
+            <span class="why">1.4.0 to 1.5.0. Adding a command is a minor bump.</span>
+          </li>
+          <li>
+            <span class="path">kit/plugins/artifact-tools/CHANGELOG.md</span>
+            <span class="why">The 1.5.0 entry.</span>
+          </li>
+          <li>
+            <span class="path">kit/plugins/artifact-tools/README.md</span>
+            <span class="why">Features table, usage examples, directory tree, and a section describing the command.</span>
+          </li>
+          <li>
+            <span class="path">CLAUDE.md</span>
+            <span class="why">The repository&rsquo;s plugin table now names the command.</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Glossary</h2>
+    <dl class="glossary">
+      <div><dt>Artifact</dt><dd>A self-contained web page published from a working session. Private by default; the author chooses whether to share the link.</dd></div>
+      <div><dt>Command</dt><dd>A plugin part invoked by name, as <code>/plugin:command</code>. A <em>skill</em>, by contrast, activates on its own when a request matches its description.</dd></div>
+      <div><dt>Content security policy</dt><dd>The browser rules that stop a published page loading anything from an outside server. It is why diagrams use a built-in feature rather than a downloaded library.</dd></div>
+      <div><dt>Marketplace</dt><dd>The registry listing every plugin in this repository with its version. It is what people install from.</dd></div>
+      <div><dt>Mermaid</dt><dd>A plain-text way of writing diagrams. Published pages turn it into graphics with no extra tooling.</dd></div>
+      <div><dt>Republish key</dt><dd>A line in a session&rsquo;s saved record holding the address of an already-published page, so running a command again updates that page instead of creating a second one.</dd></div>
+      <div><dt>Scan gate</dt><dd>The mandatory secret scan that runs before anything is published. A finding stops the publish outright; there is no override.</dd></div>
+      <div><dt>Semantic versioning</dt><dd>The convention behind 1.4.0 to 1.5.0 &mdash; the middle number rises when something is added, the last when something is fixed.</dd></div>
+      <div><dt>Session record</dt><dd>The committed Markdown file summarising a session, kept with the project&rsquo;s plans. It is the durable copy; the published page is rendered from it.</dd></div>
+      <div><dt>Smoke test</dt><dd>A fast script checking that a component&rsquo;s basic structure is intact. This plugin&rsquo;s now runs twelve such checks.</dd></div>
+    </dl>
+  </section>
+
+  <p class="end">Rendered by /artifact-tools:team-recap &middot; source: docs/plans/sessions/add-team-recap-command-session.md<br>Live version: <a href="https://claude.ai/code/artifact/a38b5451-e425-4a7c-ab40-7e41b6276a12">claude.ai/code/artifact/a38b5451</a></p>
+
+</div>
+
+</body>
+</html>

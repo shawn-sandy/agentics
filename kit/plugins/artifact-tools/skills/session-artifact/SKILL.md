@@ -85,6 +85,20 @@ can name is better than the one it guessed. Write the result to
 falling back to `docs/plans`). Saving it there — rather than the scratchpad —
 is what lets the `artifact-url:` be committed and survive for a later republish.
 
+**Do not reuse the extractor's filename.** It carries the session id, and repos
+that enforce a `verb-target` plan-filename convention reject it — the write
+lands and a hook then blocks, leaving you to rename mid-run. Name the record
+`<verb>-<target>-session.md` after the work the session did (for example
+`add-team-recap-command-session.md`), and locate an existing record by its
+frontmatter rather than by guessing the name an earlier run chose:
+
+```bash
+grep -rl 'session-id: "<session-id>"' <plansDirectory>/sessions/ 2>/dev/null
+```
+
+A hit is the record to update — read its republish key from that file and write
+back to the same one. No hit means this session has no record yet; create one.
+
 ## Step 4 — Scrub before publishing (blocking gate)
 
 Run `social-media-tools:security-scrub` over the recap file via the `Skill` tool.
