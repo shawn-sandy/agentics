@@ -34,7 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now named after the work (`add-team-recap-command-session.md`), and an
   existing one is found by grepping `session-id:` in its frontmatter rather than
   by reconstructing the filename an earlier run chose. Applies to all three
-  recap writers, which share the record.
+  recap writers, which share the record; `product-doc`'s republish-key table was
+  updated to match and now points at the same frontmatter lookup.
 
 ### Fixed
 
