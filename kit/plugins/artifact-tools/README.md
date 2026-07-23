@@ -30,6 +30,10 @@ Skills activate automatically when your request matches — "publish this diff f
 review", "share a recap of this session", "publish this plan", "share this
 prompt".
 
+| Command | What it does |
+|---------|--------------|
+| `/artifact-tools:product-doc [session-id\|path\|#PR]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details. Sources from the session transcript, or from a pull request when given `#453` or a PR URL |
+
 ## Installation
 
 ```bash
@@ -56,6 +60,8 @@ Share a recap of this session             → session-artifact
 Publish docs/plans/add-dark-mode.html     → plan-artifact
 Share docs/prompts/task-refactor.md       → prompt-artifact (single)
 Publish my prompt library --library       → prompt-artifact (library mode)
+/artifact-tools:product-doc               → recap for product + stakeholders
+/artifact-tools:product-doc #453          → same recap, sourced from a PR
 ```
 
 ## Plugin Structure
@@ -66,6 +72,8 @@ artifact-tools/
 │   └── plugin.json
 ├── README.md
 ├── CHANGELOG.md
+├── commands/
+│   └── product-doc.md     # product-team framing over session-artifact
 ├── references/
 │   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
@@ -105,6 +113,38 @@ source).
 
 The extractor is a deliberate copy of the `social-media-tools` original so this
 plugin installs standalone. Keep the two in sync when either changes.
+
+### product-doc (command)
+
+`/artifact-tools:product-doc` is a thin framing layer over `session-artifact` for
+when the reader is a PM, designer, support lead, or exec rather than a code
+reviewer. It asks for prose any non-engineer can follow, and replaces the recap's Learnings section with a release-note shape:
+Features, Bug fixes, Decisions, Logic and behavior changes, Implementation plan
+details, Known gaps and follow-ups. Empty sections are dropped rather than
+printed as bare headings. Everything downstream — the scrub gate, the HTML
+render, publishing, the marker check — is the skill's, unchanged.
+
+Two sources feed the same document. With no argument (or a session ID or
+`.jsonl` path) it reads the session transcript. With `#453`, a PR URL, or
+`--pr 453` it reads the pull request instead — `gh pr view`, the changed-file
+list, the commit bodies, and the review discussion — preferring commit bodies over
+the diff, since those carry the *why* a stakeholder needs. Without `gh` or a
+GitHub remote, PR mode says so and falls back to session mode rather than
+failing.
+
+The rendered HTML is filed where every other saved artifact lives: the
+`.claude/artifacts/` inbox, published into the committed `docs/artifacts/`
+gallery via `social-media-tools:save-artifact`. Without that skill the command
+copies the page into the inbox itself under a collision-safe name (hence `Bash`
+in its `allowed-tools`) and reports it as saved but unpublished.
+
+Both modes keep a record under `{plansDirectory}/sessions/` to hold the
+published URL: session mode shares `session-artifact`'s record, PR mode gets its
+own `pr-<number>.md`. Neither writes `artifact-url:` — that key belongs to the
+reviewer recap, and reusing it would republish the product recap over that page.
+`product-doc` reads and writes `product-artifact-url:` instead. Re-running
+against the same PR therefore updates the same page as the PR evolves, so a link
+sent on day one still shows the merged state on day five.
 
 ### plan-artifact
 
