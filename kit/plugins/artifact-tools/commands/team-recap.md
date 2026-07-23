@@ -81,18 +81,35 @@ printing an empty heading.
 Same gallery as every other saved artifact. Publish with the favicon `🧭`, kept
 stable across republishes.
 
-**File the HTML you rendered, not the published page fetched back.** Fetching
-the published page yields a copy whose diagrams render offline, because
-publishing injects the mermaid runtime — but that runtime is a multi-megabyte
-minified library, and once committed, repo static analysis reads it as
-first-party source. On this repo that meant eight high-severity CodeQL alerts,
-none of them in the recap. Not worth it for one gallery copy.
+**File the rendered SVG, not the mermaid runtime.** There are three ways to get
+a gallery copy and only one is worth having:
 
-So the filed page is your own rendered HTML, wrapped into a standalone document
-(add `<!doctype html>`, `<html>`, `<head>` with the `<title>` and a viewport
-meta, `<body>`) — the render targets an artifact frame that supplies those. Its
-two mermaid blocks show as plain text; add one line to the footer pointing at
-the artifact URL, where they render.
+| Source | Diagrams | Cost |
+|---|---|---|
+| Your rendered HTML as-is | show as plain text | none, but the page's best parts are missing |
+| The published page fetched back | render | ships a multi-megabyte minified library that repo static analysis reads as first-party source — on this repo, eight high-severity CodeQL alerts, none in the recap |
+| **Rendered HTML with the SVG inlined** | **render** | **none — mermaid's output is plain SVG with no script** |
+
+Take the third. Mermaid renders to SVG in the browser; capture that output once
+and paste it in, and the diagrams ship as markup instead of as a library.
+
+1. Strip the `<!-- frame-runtime -->…<!-- /frame-runtime -->` block (claude.ai
+   iframe plumbing that resolves nowhere else) from the fetched published page
+   and serve it over `http://127.0.0.1` — `file://` is blocked, and a page
+   served from one port cannot POST to another.
+2. Open it in the browser pane and read back
+   `[...document.querySelectorAll('.mermaid-diagram svg')].map(s => s.outerHTML)`.
+   Have the page `fetch()` that JSON to a POST endpoint on the same server
+   rather than returning it through the transcript — it is tens of kilobytes,
+   and it has to survive byte-exact.
+3. Replace each `<pre class="mermaid">` block in your rendered HTML with its
+   SVG, and wrap the page into a standalone document (`<!doctype html>`,
+   `<html>`, `<head>` with the `<title>` and a viewport meta, `<body>`) — the
+   render targets an artifact frame that supplies those.
+4. Confirm the result has no `<script>` and no `on*=` attributes before filing.
+   Mermaid bakes its palette in at render time, so the diagram cannot follow the
+   viewer's theme: give its container a fixed light card that works on both
+   grounds rather than letting a light diagram vanish in dark mode.
 
 Hand that file to `social-media-tools:save-artifact`, which owns the dated
 filename, the collision suffix, and the gallery index rebuild:
@@ -118,14 +135,13 @@ cp "<standalone HTML>" "$target" && echo "Saved → $target (not published to th
 
 Either way, report the gallery path alongside the artifact URL.
 
-If the user asks for a gallery copy whose diagrams render offline, fetch the
-published page instead and strip the `<!-- frame-runtime -->…<!-- /frame-runtime -->`
-block first (claude.ai iframe plumbing that resolves nowhere else). Tell them
-what it costs before doing it: a multi-megabyte committed file, scanner findings
-against the bundled library, and a scrub that reports MEDIUM matches — minified
-grammar tables are full of `Token:` and `secret:` lookalikes. Say plainly that
-those matches are library-internal and none are in the recap, then let them
-decide. The gallery is committed and served publicly, so the gate stays theirs.
+Skip the SVG capture only if the browser pane is unavailable — then file the
+rendered HTML with its diagram blocks as text and say so, rather than falling
+back to the published page. That fallback is the one with the library in it, and
+it also trips the scrub: minified grammar tables are full of `Token:` and
+`secret:` lookalikes. If the user asks for it anyway, say plainly that those
+matches are library-internal and none are in the recap, then let them decide —
+the gallery is committed and served publicly, so the gate stays theirs.
 
 ## Republish key
 
