@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>git-agent's pre-commit lint gate and where it is inert</title>
+<style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #F7F8F7;
+    --surface: #FFFFFF;
+    --ink: #12181B;
+    --muted: #5D6B6B;
+    --rule: #D9DEDC;
+    --accent: #0F6E5C;
+    --accent-soft: #E4EFEB;
+    --halt: #A33A2A;
+    --halt-soft: #F5E6E2;
+    --diagram-bg: #FBFCFB;
+    --diagram-rule: #DCE2E0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0E1214;
+      --surface: #161C1F;
+      --ink: #E4E9E7;
+      --muted: #93A19E;
+      --rule: #2A3336;
+      --accent: #4FB79E;
+      --accent-soft: #16302B;
+      --halt: #E08A78;
+      --halt-soft: #35211D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E1214;
+    --surface: #161C1F;
+    --ink: #E4E9E7;
+    --muted: #93A19E;
+    --rule: #2A3336;
+    --accent: #4FB79E;
+    --accent-soft: #16302B;
+    --halt: #E08A78;
+    --halt-soft: #35211D;
+  }
+  :root[data-theme="light"] {
+    --paper: #F7F8F7;
+    --surface: #FFFFFF;
+    --ink: #12181B;
+    --muted: #5D6B6B;
+    --rule: #D9DEDC;
+    --accent: #0F6E5C;
+    --accent-soft: #E4EFEB;
+    --halt: #A33A2A;
+    --halt-soft: #F5E6E2;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+  }
+  p { max-width: 68ch; }
+
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.75rem;
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", ui-serif, serif;
+    font-weight: 400;
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+  h2 {
+    font-family: Georgia, "Iowan Old Style", ui-serif, serif;
+    font-weight: 400;
+    font-size: 1.6rem;
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 0 0 1.25rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--rule);
+  }
+  h3 {
+    font-size: 1.06rem;
+    font-weight: 640;
+    line-height: 1.35;
+    text-wrap: balance;
+    margin: 0 0 0.5rem;
+  }
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+  section > * { margin: 0; }
+
+  .lede { font-size: 1.1rem; color: var(--muted); max-width: 62ch; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .stat { background: var(--surface); padding: 1rem 1.1rem; }
+  .stat .n {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.85rem;
+    line-height: 1.1;
+    display: block;
+  }
+  .stat .k {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.3;
+    display: block;
+    margin-top: 0.3rem;
+  }
+  .stat.zero .n { color: var(--muted); }
+  .stat.flag .n { color: var(--halt); }
+  /* Six figures: 2 across on a phone, 3 on a tablet, 6 on a wide screen — every
+     step divides evenly, so the strip never leaves a dead cell. */
+  @media (min-width: 34rem) { .stats { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 60rem) { .stats { grid-template-columns: repeat(6, 1fr); } }
+
+  .finding {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .finding > * { margin: 0; }
+  .who {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .who b { color: var(--ink); font-weight: 600; }
+  .reach {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    border-top: 1px dashed var(--rule);
+    padding-top: 0.65rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .finding.alert { border-color: var(--halt); background: var(--halt-soft); }
+
+  .tag {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid currentColor;
+    vertical-align: 0.1em;
+  }
+  .tag.allow { color: var(--accent); }
+  .tag.block { color: var(--halt); }
+
+  .scroller { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .was { color: var(--muted); }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: var(--accent-soft);
+    padding: 0.1em 0.34em;
+  }
+
+  .decision { display: flex; flex-direction: column; gap: 0.5rem; }
+  .decision > * { margin: 0; }
+  .rejected {
+    border-left: 2px solid var(--rule);
+    padding-left: 0.9rem;
+    color: var(--muted);
+    font-size: 0.94rem;
+  }
+  .rejected b { color: var(--ink); font-weight: 600; }
+
+  ul { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  li { max-width: 68ch; }
+  li > b { font-weight: 640; }
+
+  .files h3 {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 0.6rem;
+  }
+
+  dl { margin: 0; display: flex; flex-direction: column; gap: 0.85rem; }
+  dt { font-weight: 640; font-size: 0.95rem; }
+  dd { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.95rem; max-width: 68ch; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  figcaption { font-size: 0.9rem; color: var(--muted); max-width: 68ch; }
+  .mermaid-diagram {
+    background: var(--diagram-bg);
+    border: 1px solid var(--diagram-rule);
+    padding: 1.25rem 1rem;
+    overflow-x: auto;
+    color: #12181B;
+  }
+  .mermaid-diagram svg { max-width: 100%; height: auto; }
+
+  a { color: var(--accent); }
+  a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Team recap &middot; 24 July 2026 &middot; investigation</p>
+    <h1>git-agent's pre-commit lint gate and where it is inert</h1>
+    <p class="lede">Someone asked whether our automated commit helper runs a lint
+    check before it commits. It does not — but a separate piece of plumbing that
+    ships alongside it does, and it stops the commit outright when lint fails.</p>
+  </header>
+
+  <section>
+    <h2>At a glance</h2>
+    <div class="stats">
+      <div class="stat zero"><span class="n">0</span><span class="k">Code changes shipped</span></div>
+      <div class="stat zero"><span class="n">0</span><span class="k">Files modified</span></div>
+      <div class="stat"><span class="n">7</span><span class="k">Files read</span></div>
+      <div class="stat"><span class="n">4</span><span class="k">Findings verified by test</span></div>
+      <div class="stat"><span class="n">3</span><span class="k">Decisions</span></div>
+      <div class="stat flag"><span class="n">3</span><span class="k">Open items</span></div>
+    </div>
+    <p>This was an investigation, not a code change — nothing in the repository
+    was modified. We confirmed the lint gate exists, found it lives one layer
+    below the commit helper, and proved it works by running it against a
+    purpose-built test repository rather than by reading the source.</p>
+    <p>The finding worth carrying out of the session is the last one:
+    <b>in this repository the gate currently does nothing.</b> It is installed
+    and wired correctly, but it only knows how to check JavaScript-style
+    projects, and this repo has no such project file at its root. Every commit
+    here passes it without any check running.</p>
+  </section>
+
+  <section>
+    <h2>What changed</h2>
+    <p>No source files changed this session. What changed is what the team knows
+    — each block below is a finding, not a code change.</p>
+
+    <div class="finding">
+      <h3>The commit helper does not run lint itself</h3>
+      <p class="who">AFFECTS <b>anyone who assumed commit-agent was checking their work</b></p>
+      <p><code>commit-agent</code> and its background twin <code>agent-commit</code>
+      contain no lint step at all. Both say the opposite in plain text — "STOP
+      here. Do not run tests, analyze coverage, check for issues". The same is
+      true of <code>ship</code>, which states "this skill does not run tests" and
+      mentions lint only as text it writes into a pull request's Test Plan.</p>
+      <p class="reach">kit/plugins/git-agent/skills/commit-agent/SKILL.md</p>
+    </div>
+
+    <div class="finding">
+      <h3>A hook does run lint, one layer down</h3>
+      <p class="who">AFFECTS <b>everyone who commits in a repo with git-agent installed</b></p>
+      <p>The check lives in a hook — a script the harness runs automatically
+      before a tool call, without the skill knowing about it. It watches every
+      shell command, recognizes <code>git commit</code>, and runs the project's
+      lint script before allowing the commit through. On failure it stops the
+      commit and hands the lint output back, so the assistant can fix and retry
+      with no user round-trip.</p>
+      <p class="reach">kit/plugins/git-agent/hooks/lint-before-commit.py</p>
+    </div>
+
+    <div class="finding">
+      <h3>The gate is confirmed working — tested, not just read</h3>
+      <p class="who">AFFECTS <b>teammates who need to trust the gate</b></p>
+      <p>We fed the hook four real inputs and recorded what it did. A failing
+      lint plus a <code>git commit</code> returned <span class="tag block">EXIT 2</span>
+      and blocked the commit; all three cases that should not block returned
+      <span class="tag allow">EXIT 0</span>. The full matrix is in
+      <i>Before and after</i>.</p>
+      <p class="reach">Test fixture described under Open items</p>
+    </div>
+
+    <div class="finding alert">
+      <h3>In this repository the gate is inert</h3>
+      <p class="who">AFFECTS <b>everyone committing to agentics</b> — though nothing is broken by it today</p>
+      <p>The hook detects projects by reading <code>package.json</code> at the
+      repository root. This repo has none, so the hook exits immediately without
+      running anything. Every commit here — through <code>commit-agent</code>,
+      through <code>ship</code>, or typed by hand — passes the gate with no check
+      performed. That is the intended fail-open behaviour for a
+      Markdown-and-JSON repository, but it means "the lint gate is installed" and
+      "commits here are lint-checked" are two different claims, and only the
+      first is true.</p>
+      <p class="reach">Confirmed by running the hook against this repo's root</p>
+    </div>
+
+    <div class="finding">
+      <h3>The gate belongs to the plugin, not to this project</h3>
+      <p class="who">AFFECTS <b>anyone installing git-agent into another repository</b></p>
+      <p>Both halves ship inside the plugin directory, so the gate travels with
+      the plugin to every repo that installs it. This project's own settings
+      register a separate, non-overlapping set of hooks — merge-driver setup,
+      default-branch sync, marketplace validation, an uncommitted-plans warning,
+      and a version-bump guard — and contain no lint hook at all.</p>
+      <p class="reach">kit/plugins/git-agent/hooks.json &nbsp;vs&nbsp; .claude/settings.json</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>How it works now</h2>
+
+    <figure>
+      <div class="mermaid-diagram"><svg id="claude-mermaid-0" width="1044.5" xmlns="http://www.w3.org/2000/svg" height="717" viewBox="-50 -10 1044.5 717" role="graphics-document document" aria-roledescription="sequence"><g><rect x="762.5" y="631" fill="#eaeaea" stroke="#666" width="150" height="65" name="G" rx="3" ry="3" class="actor actor-bottom"></rect><text x="837.5" y="663.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="837.5" dy="0">git</tspan></text></g><g><rect x="533.5" y="631" fill="#eaeaea" stroke="#666" width="179" height="65" name="L" rx="3" ry="3" class="actor actor-bottom"></rect><text x="623" y="663.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="623" dy="0">lint-before-commit.py</tspan></text></g><g><rect x="236.5" y="631" fill="#eaeaea" stroke="#666" width="165" height="65" name="H" rx="3" ry="3" class="actor actor-bottom"></rect><text x="319" y="663.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="319" dy="0">Harness PreToolUse</tspan></text></g><g><rect x="0" y="631" fill="#eaeaea" stroke="#666" width="176" height="65" name="S" rx="3" ry="3" class="actor actor-bottom"></rect><text x="88" y="663.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="88" dy="0">commit-agent or ship</tspan></text></g><g><line id="actor3" x1="837.5" y1="65" x2="837.5" y2="631" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="G" data-et="life-line" data-id="G"></line><g id="root-3" data-et="participant" data-type="participant" data-id="G"><rect x="762.5" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="G" rx="3" ry="3" class="actor actor-top"></rect><text x="837.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="837.5" dy="0">git</tspan></text></g></g><g><line id="actor2" x1="623" y1="65" x2="623" y2="631" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="L" data-et="life-line" data-id="L"></line><g id="root-2" data-et="participant" data-type="participant" data-id="L"><rect x="533.5" y="0" fill="#eaeaea" stroke="#666" width="179" height="65" name="L" rx="3" ry="3" class="actor actor-top"></rect><text x="623" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="623" dy="0">lint-before-commit.py</tspan></text></g></g><g><line id="actor1" x1="319" y1="65" x2="319" y2="631" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="H" data-et="life-line" data-id="H"></line><g id="root-1" data-et="participant" data-type="participant" data-id="H"><rect x="236.5" y="0" fill="#eaeaea" stroke="#666" width="165" height="65" name="H" rx="3" ry="3" class="actor actor-top"></rect><text x="319" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="319" dy="0">Harness PreToolUse</tspan></text></g></g><g><line id="actor0" x1="88" y1="65" x2="88" y2="631" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="S" data-et="life-line" data-id="S"></line><g id="root-0" data-et="participant" data-type="participant" data-id="S"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="176" height="65" name="S" rx="3" ry="3" class="actor actor-top"></rect><text x="88" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="88" dy="0">commit-agent or ship</tspan></text></g></g><style>#claude-mermaid-0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .actor{stroke:#9aa4b8;fill:#262b34;stroke-width:1;}#claude-mermaid-0 rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 rect.note[data-look="neo"]{stroke:hsl(52.6829268293, 60%, 93.9215686275%);fill:#fff5ad;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 text.actor&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-0 .actor-line{stroke:#9aa4b8;}#claude-mermaid-0 .innerArc{stroke-width:1.5;stroke-dasharray:none;}#claude-mermaid-0 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#f2f3f5;}#claude-mermaid-0 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#f2f3f5;}#claude-mermaid-0 [id$="-arrowhead"] path{fill:#f2f3f5;stroke:#f2f3f5;}#claude-mermaid-0 .sequenceNumber{fill:#575247;}#claude-mermaid-0 [id$="-sequencenumber"]{fill:#f2f3f5;}#claude-mermaid-0 [id$="-crosshead"] path{fill:#f2f3f5;stroke:#f2f3f5;}#claude-mermaid-0 .messageText{fill:#f2f3f5;stroke:none;}#claude-mermaid-0 .labelBox{stroke:#9aa4b8;fill:#262b34;filter:none;}#claude-mermaid-0 .labelText,#claude-mermaid-0 .labelText&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-0 .loopText,#claude-mermaid-0 .loopText&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-0 .sectionTitle,#claude-mermaid-0 .sectionTitle&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-0 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#9aa4b8;fill:#9aa4b8;}#claude-mermaid-0 .note{stroke:hsl(52.6829268293, 60%, 93.9215686275%);fill:#fff5ad;}#claude-mermaid-0 .noteText,#claude-mermaid-0 .noteText&gt;tspan{fill:#333;stroke:none;font-weight:normal;}#claude-mermaid-0 .activation0{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-0 .activation1{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-0 .activation2{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-0 .actorPopupMenu{position:absolute;}#claude-mermaid-0 .actorPopupMenuPanel{position:absolute;fill:#262b34;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#claude-mermaid-0 .actor-man circle,#claude-mermaid-0 line{fill:#262b34;stroke-width:2px;}#claude-mermaid-0 g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#9aa4b8;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g></g><defs><symbol id="claude-mermaid-0-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"></path></symbol></defs><defs><symbol id="claude-mermaid-0-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"></path></symbol></defs><defs><symbol id="claude-mermaid-0-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"></path></symbol></defs><defs><marker id="claude-mermaid-0-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker id="claude-mermaid-0-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><defs><marker id="claude-mermaid-0-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker id="claude-mermaid-0-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"></circle></marker></defs><defs><marker id="claude-mermaid-0-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-0-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-0-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><defs><marker id="claude-mermaid-0-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><g data-et="note" data-id="i6"><rect x="740.5" y="380" fill="#EDF2AE" stroke="#666" width="194" height="38" class="note"></rect><text x="838" y="385" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="838">commit is never created</tspan></text></g><g data-et="control-structure" data-id="i11"><line x1="77" y1="243" x2="944.5" y2="243" class="loopLine"></line><line x1="944.5" y1="243" x2="944.5" y2="611" class="loopLine"></line><line x1="77" y1="611" x2="944.5" y2="611" class="loopLine"></line><line x1="77" y1="243" x2="77" y2="611" class="loopLine"></line><line x1="77" y1="433" x2="944.5" y2="433" class="loopLine" style="stroke-dasharray: 3, 3;"></line><polygon points="77,243 127,243 127,256 118.6,263 77,263" class="labelBox"></polygon><text x="102" y="256" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="535.75" y="261" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="535.75">[lint fails]</tspan></text><text x="510.75" y="451" text-anchor="middle" class="sectionTitle" style="font-size: 16px; font-weight: 400;">[lint passes, or check skipped]</text></g><text x="202" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">run "git commit -m ..."</text><line x1="89" y1="111" x2="315" y2="111" class="messageLine0" data-et="message" data-id="i0" data-from="S" data-to="H" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="fill: none;"></line><text x="470" y="126" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">command and working directory</text><line x1="320" y1="157" x2="619" y2="157" class="messageLine0" data-et="message" data-id="i1" data-from="H" data-to="L" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="fill: none;"></line><text x="624" y="172" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">npm run lint, then typecheck</text><path d="M 624,203 C 684,193 684,233 624,223" class="messageLine0" data-et="message" data-id="i2" data-from="L" data-to="L" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="fill: none;"></path><text x="473" y="293" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">exit 2 plus lint output</text><line x1="622" y1="324" x2="323" y2="324" class="messageLine1" data-et="message" data-id="i4" data-from="L" data-to="H" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="205" y="339" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Blocked - fix and retry</text><line x1="318" y1="370" x2="92" y2="370" class="messageLine1" data-et="message" data-id="i5" data-from="H" data-to="S" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="473" y="478" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">exit 0</text><line x1="622" y1="509" x2="323" y2="509" class="messageLine1" data-et="message" data-id="i8" data-from="L" data-to="H" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="577" y="524" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">git commit</text><line x1="320" y1="555" x2="833.5" y2="555" class="messageLine0" data-et="message" data-id="i9" data-from="H" data-to="G" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="fill: none;"></line><text x="464" y="570" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">commit created</text><line x1="836.5" y1="601" x2="92" y2="601" class="messageLine1" data-et="message" data-id="i10" data-from="G" data-to="S" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-0-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line></svg></div>
+      <figcaption>The skill never calls lint. It asks to run <code>git commit</code>,
+      and the harness intercepts that request first. Look at the upper branch:
+      the commit is never created at all, rather than created and then
+      reverted.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="mermaid-diagram"><svg id="claude-mermaid-1" width="812.65625" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="1851.1875" viewBox="0 0 812.65625 1851.1875" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-1{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-1 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-1 .marker.cross{stroke:#a8adb8;}#claude-mermaid-1 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#f2f3f5;}#claude-mermaid-1 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-1 .cluster-label span{color:#f2f3f5;}#claude-mermaid-1 .cluster-label span p{background-color:transparent;}#claude-mermaid-1 .label text,#claude-mermaid-1 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node ellipse,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .rough-node .label text,#claude-mermaid-1 .node .label text,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-anchor:middle;}#claude-mermaid-1 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-1 .rough-node .label,#claude-mermaid-1 .node .label,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-align:center;}#claude-mermaid-1 .node.clickable{cursor:pointer;}#claude-mermaid-1 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-1 .arrowheadPath{fill:#f1edeb;}#claude-mermaid-1 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-1 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-1 .edgeLabel{background-color:rgb(14, 18, 20);text-align:center;}#claude-mermaid-1 .edgeLabel p{background-color:rgb(14, 18, 20);}#claude-mermaid-1 .edgeLabel rect{opacity:0.5;background-color:rgb(14, 18, 20);fill:rgb(14, 18, 20);}#claude-mermaid-1 .labelBkg{background-color:rgba(14, 18, 20, 0.5);}#claude-mermaid-1 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .cluster text{fill:#f2f3f5;}#claude-mermaid-1 .cluster span{color:#f2f3f5;}#claude-mermaid-1 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-1 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-1 rect.text{fill:none;stroke-width:0;}#claude-mermaid-1 .icon-shape,#claude-mermaid-1 .image-shape{background-color:rgb(14, 18, 20);text-align:center;}#claude-mermaid-1 .icon-shape p,#claude-mermaid-1 .image-shape p{background-color:rgb(14, 18, 20);padding:2px;}#claude-mermaid-1 .icon-shape .label rect,#claude-mermaid-1 .image-shape .label rect{opacity:0.5;background-color:rgb(14, 18, 20);fill:rgb(14, 18, 20);}#claude-mermaid-1 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-1 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-1 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-1_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M112.516,62L112.516,66.167C112.516,70.333,112.516,78.667,112.516,86.333C112.516,94,112.516,101,112.516,104.5L112.516,108" id="claude-mermaid-1-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6MTEyLjUxNTYyNSwieSI6NjJ9LHsieCI6MTEyLjUxNTYyNSwieSI6ODd9LHsieCI6MTEyLjUxNTYyNSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M75.431,243.26L65.707,255.607C55.983,267.954,36.534,292.649,26.81,325.96C17.086,359.271,17.086,401.198,17.086,443.125C17.086,485.052,17.086,526.979,17.086,571.173C17.086,615.367,17.086,661.828,17.086,708.289C17.086,754.75,17.086,801.211,17.086,849.35C17.086,897.49,17.086,947.307,17.086,997.125C17.086,1046.943,17.086,1096.76,17.086,1147.048C17.086,1197.336,17.086,1248.094,17.086,1298.852C17.086,1349.609,17.086,1400.367,17.086,1436.413C17.086,1472.458,17.086,1493.792,17.086,1515.125C17.086,1536.458,17.086,1557.792,17.086,1582.88C17.086,1607.969,17.086,1636.813,17.086,1665.656C17.086,1694.5,17.086,1723.344,30.203,1743.659C43.321,1763.974,69.556,1775.761,82.673,1781.655L95.791,1787.548" id="claude-mermaid-1-L_B_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_P_0" data-points="W3sieCI6NzUuNDMxNDI0NzA2OTQzMTksInkiOjI0My4yNTk1NDk3MDY5NDMyfSx7IngiOjE3LjA4NTkzNzUsInkiOjMxNy4zNDM3NX0seyJ4IjoxNy4wODU5Mzc1LCJ5Ijo0NDMuMTI1fSx7IngiOjE3LjA4NTkzNzUsInkiOjU2OC45MDYyNX0seyJ4IjoxNy4wODU5Mzc1LCJ5Ijo3MDguMjg5MDYyNX0seyJ4IjoxNy4wODU5Mzc1LCJ5Ijo4NDcuNjcxODc1fSx7IngiOjE3LjA4NTkzNzUsInkiOjk5Ny4xMjV9LHsieCI6MTcuMDg1OTM3NSwieSI6MTE0Ni41NzgxMjV9LHsieCI6MTcuMDg1OTM3NSwieSI6MTI5OC44NTE1NjI1fSx7IngiOjE3LjA4NTkzNzUsInkiOjE0NTEuMTI1fSx7IngiOjE3LjA4NTkzNzUsInkiOjE1MTUuMTI1fSx7IngiOjE3LjA4NTkzNzUsInkiOjE1NzkuMTI1fSx7IngiOjE3LjA4NTkzNzUsInkiOjE2NjUuNjU2MjV9LHsieCI6MTcuMDg1OTM3NSwieSI6MTc1Mi4xODc1fSx7IngiOjk5LjQzOTM5MjA4OTg0Mzc1LCJ5IjoxNzg5LjE4NzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M140.973,251.887L146.545,262.796C152.117,273.706,163.262,295.525,168.834,311.934C174.406,328.344,174.406,339.344,174.406,344.844L174.406,350.344" id="claude-mermaid-1-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MTQwLjk3Mjg0NTYyNzc3Mzk4LCJ5IjoyNTEuODg2NTI5MzcyMjI2MDJ9LHsieCI6MTc0LjQwNjI1LCJ5IjozMTcuMzQzNzV9LHsieCI6MTc0LjQwNjI1LCJ5IjozNTQuMzQzNzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M139.659,497.159L131.969,509.117C124.279,521.074,108.899,544.99,101.209,580.179C93.52,615.367,93.52,661.828,93.52,708.289C93.52,754.75,93.52,801.211,93.52,849.35C93.52,897.49,93.52,947.307,93.52,997.125C93.52,1046.943,93.52,1096.76,93.52,1147.048C93.52,1197.336,93.52,1248.094,93.52,1298.852C93.52,1349.609,93.52,1400.367,93.52,1436.413C93.52,1472.458,93.52,1493.792,93.52,1515.125C93.52,1536.458,93.52,1557.792,93.52,1582.88C93.52,1607.969,93.52,1636.813,93.52,1665.656C93.52,1694.5,93.52,1723.344,99.402,1743.468C105.284,1763.593,117.048,1774.998,122.931,1780.701L128.813,1786.403" id="claude-mermaid-1-L_C_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_P_0" data-points="W3sieCI6MTM5LjY1ODYxMDg2NDM0Njg4LCJ5Ijo0OTcuMTU4NjEwODY0MzQ2OX0seyJ4Ijo5My41MTk1MzEyNSwieSI6NTY4LjkwNjI1fSx7IngiOjkzLjUxOTUzMTI1LCJ5Ijo3MDguMjg5MDYyNX0seyJ4Ijo5My41MTk1MzEyNSwieSI6ODQ3LjY3MTg3NX0seyJ4Ijo5My41MTk1MzEyNSwieSI6OTk3LjEyNX0seyJ4Ijo5My41MTk1MzEyNSwieSI6MTE0Ni41NzgxMjV9LHsieCI6OTMuNTE5NTMxMjUsInkiOjEyOTguODUxNTYyNX0seyJ4Ijo5My41MTk1MzEyNSwieSI6MTQ1MS4xMjV9LHsieCI6OTMuNTE5NTMxMjUsInkiOjE1MTUuMTI1fSx7IngiOjkzLjUxOTUzMTI1LCJ5IjoxNTc5LjEyNX0seyJ4Ijo5My41MTk1MzEyNSwieSI6MTY2NS42NTYyNX0seyJ4Ijo5My41MTk1MzEyNSwieSI6MTc1Mi4xODc1fSx7IngiOjEzMS42ODQ4MTQ0NTMxMjUsInkiOjE3ODkuMTg3NX1d" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M214.556,491.757L225.172,504.615C235.787,517.473,257.019,543.19,267.634,561.548C278.25,579.906,278.25,590.906,278.25,596.406L278.25,601.906" id="claude-mermaid-1-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6MjE0LjU1NTk2MzM1NzM3NjE2LCJ5Ijo0OTEuNzU2NTM2NjQyNjIzODd9LHsieCI6Mjc4LjI1LCJ5Ijo1NjguOTA2MjV9LHsieCI6Mjc4LjI1LCJ5Ijo2MDUuOTA2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M235.53,767.952L226.017,781.239C216.503,794.525,197.476,821.099,187.963,859.294C178.449,897.49,178.449,947.307,178.449,997.125C178.449,1046.943,178.449,1096.76,178.449,1147.048C178.449,1197.336,178.449,1248.094,178.449,1298.852C178.449,1349.609,178.449,1400.367,178.449,1436.413C178.449,1472.458,178.449,1493.792,178.449,1515.125C178.449,1536.458,178.449,1557.792,178.449,1582.88C178.449,1607.969,178.449,1636.813,178.449,1665.656C178.449,1694.5,178.449,1723.344,176.816,1743.293C175.182,1763.242,171.915,1774.297,170.282,1779.824L168.648,1785.352" id="claude-mermaid-1-L_D_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_P_0" data-points="W3sieCI6MjM1LjUzMDE2MDc1OTA1MTgsInkiOjc2Ny45NTIwMzU3NTkwNTE4fSx7IngiOjE3OC40NDkyMTg3NSwieSI6ODQ3LjY3MTg3NX0seyJ4IjoxNzguNDQ5MjE4NzUsInkiOjk5Ny4xMjV9LHsieCI6MTc4LjQ0OTIxODc1LCJ5IjoxMTQ2LjU3ODEyNX0seyJ4IjoxNzguNDQ5MjE4NzUsInkiOjEyOTguODUxNTYyNX0seyJ4IjoxNzguNDQ5MjE4NzUsInkiOjE0NTEuMTI1fSx7IngiOjE3OC40NDkyMTg3NSwieSI6MTUxNS4xMjV9LHsieCI6MTc4LjQ0OTIxODc1LCJ5IjoxNTc5LjEyNX0seyJ4IjoxNzguNDQ5MjE4NzUsInkiOjE2NjUuNjU2MjV9LHsieCI6MTc4LjQ0OTIxODc1LCJ5IjoxNzUyLjE4NzV9LHsieCI6MTY3LjUxNDUyNjM2NzE4NzUsInkiOjE3ODkuMTg3NX1d" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M330.882,758.04L346.685,772.979C362.489,787.917,394.096,817.795,409.9,838.233C425.703,858.672,425.703,869.672,425.703,875.172L425.703,880.672" id="claude-mermaid-1-L_D_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_E_0" data-points="W3sieCI6MzMwLjg4MTcwOTE5NTgzMjc0LCJ5Ijo3NTguMDQwMTY1ODA0MTY3M30seyJ4Ijo0MjUuNzAzMTI1LCJ5Ijo4NDcuNjcxODc1fSx7IngiOjQyNS43MDMxMjUsInkiOjg4NC42NzE4NzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M368.04,1051.915L351.436,1067.692C334.831,1083.47,301.623,1115.024,285.018,1156.18C268.414,1197.336,268.414,1248.094,268.414,1298.852C268.414,1349.609,268.414,1400.367,268.414,1436.413C268.414,1472.458,268.414,1493.792,268.414,1515.125C268.414,1536.458,268.414,1557.792,268.414,1582.88C268.414,1607.969,268.414,1636.813,268.414,1665.656C268.414,1694.5,268.414,1723.344,258.498,1743.594C248.582,1763.845,228.749,1775.503,218.833,1781.332L208.917,1787.161" id="claude-mermaid-1-L_E_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_P_0" data-points="W3sieCI6MzY4LjA0MDIxNjc3NTMzNTYsInkiOjEwNTEuOTE1MjE2Nzc1MzM1NX0seyJ4IjoyNjguNDE0MDYyNSwieSI6MTE0Ni41NzgxMjV9LHsieCI6MjY4LjQxNDA2MjUsInkiOjEyOTguODUxNTYyNX0seyJ4IjoyNjguNDE0MDYyNSwieSI6MTQ1MS4xMjV9LHsieCI6MjY4LjQxNDA2MjUsInkiOjE1MTUuMTI1fSx7IngiOjI2OC40MTQwNjI1LCJ5IjoxNTc5LjEyNX0seyJ4IjoyNjguNDE0MDYyNSwieSI6MTY2NS42NTYyNX0seyJ4IjoyNjguNDE0MDYyNSwieSI6MTc1Mi4xODc1fSx7IngiOjIwNS40Njg0NDQ4MjQyMTg3NSwieSI6MTc4OS4xODc1fV0=" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M468.691,1066.59L476.941,1079.921C485.191,1093.253,501.691,1119.915,509.941,1138.747C518.191,1157.578,518.191,1168.578,518.191,1174.078L518.191,1179.578" id="claude-mermaid-1-L_E_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_F_0" data-points="W3sieCI6NDY4LjY5MTIwMzg2NDQxMDYsInkiOjEwNjYuNTkwMDQ2MTM1NTg5M30seyJ4Ijo1MTguMTkxNDA2MjUsInkiOjExNDYuNTc4MTI1fSx7IngiOjUxOC4xOTE0MDYyNSwieSI6MTE4My41NzgxMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M459.111,1355.045L442.275,1371.058C425.439,1387.071,391.766,1419.098,374.93,1445.778C358.094,1472.458,358.094,1493.792,358.094,1515.125C358.094,1536.458,358.094,1557.792,358.094,1582.88C358.094,1607.969,358.094,1636.813,358.094,1665.656C358.094,1694.5,358.094,1723.344,338.317,1744.14C318.541,1764.936,278.989,1777.685,259.212,1784.059L239.436,1790.434" id="claude-mermaid-1-L_F_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_P_0" data-points="W3sieCI6NDU5LjExMTAxMjYzODQxNjQ3LCJ5IjoxMzU1LjA0NDYwNjM4ODQxNjV9LHsieCI6MzU4LjA5Mzc1LCJ5IjoxNDUxLjEyNX0seyJ4IjozNTguMDkzNzUsInkiOjE1MTUuMTI1fSx7IngiOjM1OC4wOTM3NSwieSI6MTU3OS4xMjV9LHsieCI6MzU4LjA5Mzc1LCJ5IjoxNjY1LjY1NjI1fSx7IngiOjM1OC4wOTM3NSwieSI6MTc1Mi4xODc1fSx7IngiOjIzNS42Mjg5MDYyNSwieSI6MTc5MS42NjA3MzQ4MzcwMDl9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M556.678,1375.639L562.983,1388.22C569.289,1400.801,581.9,1425.963,588.206,1444.044C594.512,1462.125,594.512,1473.125,594.512,1478.625L594.512,1484.125" id="claude-mermaid-1-L_F_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_G_0" data-points="W3sieCI6NTU2LjY3NzYwNjIxMzY4NzcsInkiOjEzNzUuNjM4ODAwMDM2MzEyNH0seyJ4Ijo1OTQuNTExNzE4NzUsInkiOjE0NTEuMTI1fSx7IngiOjU5NC41MTE3MTg3NSwieSI6MTQ4OC4xMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M594.512,1542.125L594.512,1548.292C594.512,1554.458,594.512,1566.792,594.512,1578.458C594.512,1590.125,594.512,1601.125,594.512,1606.625L594.512,1612.125" id="claude-mermaid-1-L_G_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_H_0" data-points="W3sieCI6NTk0LjUxMTcxODc1LCJ5IjoxNTQyLjEyNX0seyJ4Ijo1OTQuNTExNzE4NzUsInkiOjE1NzkuMTI1fSx7IngiOjU5NC41MTE3MTg3NSwieSI6MTYxNi4xMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M560.464,1681.14L534.426,1692.981C508.388,1704.822,456.311,1728.505,402.817,1747.527C349.322,1766.549,294.411,1780.911,266.955,1788.092L239.499,1795.273" id="claude-mermaid-1-L_H_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_P_0" data-points="W3sieCI6NTYwLjQ2NDA5NTYwNzQ1NzQsInkiOjE2ODEuMTM5ODc2ODU3NDU3Mn0seyJ4Ijo0MDQuMjM0Mzc1LCJ5IjoxNzUyLjE4NzV9LHsieCI6MjM1LjYyODkwNjI1LCJ5IjoxNzk2LjI4NTUxNTczOTk4N31d" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M576.361,1697.037L571.044,1706.228C565.728,1715.42,555.094,1733.804,498.963,1751.444C442.832,1769.085,341.203,1785.982,290.389,1794.431L239.575,1802.88" id="claude-mermaid-1-L_H_P_2" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_P_2" data-points="W3sieCI6NTc2LjM2MDg4NDg4MDQxNjIsInkiOjE2OTcuMDM2NjY2MTMwNDE2fSx7IngiOjU0NC40NjA5Mzc1LCJ5IjoxNzUyLjE4NzV9LHsieCI6MjM1LjYyODkwNjI1LCJ5IjoxODAzLjUzNTcxMDM4OTU4NH1d" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M618.877,1690.822L628.779,1701.05C638.681,1711.277,658.485,1731.732,668.387,1747.46C678.289,1763.188,678.289,1774.188,678.289,1779.688L678.289,1785.188" id="claude-mermaid-1-L_H_Q_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_Q_0" data-points="W3sieCI6NjE4Ljg3Njg4MTIyNTA1NjgsInkiOjE2OTAuODIyMzM3NTI0OTQzMX0seyJ4Ijo2NzguMjg5MDYyNSwieSI6MTc1Mi4xODc1fSx7IngiOjY3OC4yODkwNjI1LCJ5IjoxNzg5LjE4NzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(17.0859375, 1146.578125)"><g class="label" data-id="L_B_P_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(174.40625, 317.34375)"><g class="label" data-id="L_B_C_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(93.51953125, 1298.8515625)"><g class="label" data-id="L_C_P_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(278.25, 568.90625)"><g class="label" data-id="L_C_D_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(178.44921875, 1451.125)"><g class="label" data-id="L_D_P_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(425.703125, 847.671875)"><g class="label" data-id="L_D_E_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(268.4140625, 1515.125)"><g class="label" data-id="L_E_P_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(518.19140625, 1146.578125)"><g class="label" data-id="L_E_F_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(358.09375, 1579.125)"><g class="label" data-id="L_F_P_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(594.51171875, 1451.125)"><g class="label" data-id="L_F_G_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_G_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(402.95207, 1752.52288)"><g class="label" data-id="L_H_P_0" transform="translate(-26.140625, -12)"><foreignObject width="52.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>passed</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(421.46954, 1772.63677)"><g class="label" data-id="L_H_P_2" transform="translate(-94.0859375, -12)"><foreignObject width="188.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>could not run or timed out</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(678.2890625, 1752.1875)"><g class="label" data-id="L_H_Q_0" transform="translate(-19.7421875, -12)"><foreignObject width="39.484375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>failed</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-1-flowchart-A-0" data-look="classic" transform="translate(112.515625, 35)"><rect class="basic label-container" style="" x="-100.7265625" y="-27" width="201.453125" height="54"></rect><g class="label" style="" transform="translate(-70.7265625, -12)"><rect></rect><foreignObject width="141.453125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Any shell command</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-B-1" data-look="classic" transform="translate(112.515625, 196.171875)"><polygon points="84.171875,0 168.34375,-84.171875 84.171875,-168.34375 0,-84.171875" class="label-container" transform="translate(-83.671875, 84.171875)"></polygon><g class="label" style="" transform="translate(-57.171875, -12)"><rect></rect><foreignObject width="114.34375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Is it git commit?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-P-3" data-look="classic" transform="translate(159.53515625, 1816.1875)"><rect class="basic label-container" style="" x="-76.09375" y="-27" width="152.1875" height="54"></rect><g class="label" style="" transform="translate(-46.09375, -12)"><rect></rect><foreignObject width="92.1875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>exit 0 - allow</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-C-5" data-look="classic" transform="translate(174.40625, 443.125)"><polygon points="88.78125,0 177.5625,-88.78125 88.78125,-177.5625 0,-88.78125" class="label-container" transform="translate(-88.28125, 88.78125)"></polygon><g class="label" style="" transform="translate(-61.78125, -12)"><rect></rect><foreignObject width="123.5625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Inside a git repo?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-D-9" data-look="classic" transform="translate(278.25, 708.2890625)"><polygon points="102.3828125,0 204.765625,-102.3828125 102.3828125,-204.765625 0,-102.3828125" class="label-container" transform="translate(-101.8828125, 102.3828125)"></polygon><g class="label" style="" transform="translate(-75.3828125, -12)"><rect></rect><foreignObject width="150.765625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Opt-out file present?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-E-13" data-look="classic" transform="translate(425.703125, 997.125)"><polygon points="112.453125,0 224.90625,-112.453125 112.453125,-224.90625 0,-112.453125" class="label-container" transform="translate(-111.953125, 112.453125)"></polygon><g class="label" style="" transform="translate(-85.453125, -12)"><rect></rect><foreignObject width="170.90625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>package.json readable?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-F-17" data-look="classic" transform="translate(518.19140625, 1298.8515625)"><polygon points="115.2734375,0 230.546875,-115.2734375 115.2734375,-230.546875 0,-115.2734375" class="label-container" transform="translate(-114.7734375, 115.2734375)"></polygon><g class="label" style="" transform="translate(-88.2734375, -12)"><rect></rect><foreignObject width="176.546875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Dependencies installed?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-G-21" data-look="classic" transform="translate(594.51171875, 1515.125)"><rect class="basic label-container" style="" x="-117.640625" y="-27" width="235.28125" height="54"></rect><g class="label" style="" transform="translate(-87.640625, -12)"><rect></rect><foreignObject width="175.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Run lint, then typecheck</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-H-23" data-look="classic" transform="translate(594.51171875, 1665.65625)"><polygon points="49.53125,0 99.0625,-49.53125 49.53125,-99.0625 0,-49.53125" class="label-container" transform="translate(-49.03125, 49.53125)"></polygon><g class="label" style="" transform="translate(-22.53125, -12)"><rect></rect><foreignObject width="45.0625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Result</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-Q-29" data-look="classic" transform="translate(678.2890625, 1816.1875)"><rect class="basic label-container" style="" x="-126.3671875" y="-27" width="252.734375" height="54"></rect><g class="label" style="" transform="translate(-96.3671875, -12)"><rect></rect><foreignObject width="192.734375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>exit 2 - BLOCK the commit</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-1-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-1-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-1-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg></div>
+      <figcaption>Every path but one ends in "allow". Only a check that actually
+      ran and actually found something is permitted to block — the single branch
+      reaching <b>BLOCK</b> is the only exit that stops a commit.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Before and after</h2>
+    <p>What the team assumed at the start of the session, against what the test
+    actually showed.</p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th scope="col">Assumed</th><th scope="col">Actually true</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="was">The commit helper runs lint</td><td>It does not; a hook shipped beside it does</td></tr>
+          <tr><td class="was">Only commit-agent is covered</td><td>Any <code>git commit</code> is covered — including ship, background agents, and hand-typed commits</td></tr>
+          <tr><td class="was">A lint failure gives you a commit to fix</td><td>The commit is never created; the request is blocked before git runs</td></tr>
+          <tr><td class="was">"Gate installed" means "commits are checked"</td><td>Only where a root <code>package.json</code> exists. Here it is a silent no-op</td></tr>
+          <tr><td class="was">The gate is part of this project's config</td><td>It ships with the git-agent plugin and travels to every repo that installs it</td></tr>
+          <tr><td class="was">Any command containing "commit" would trip it</td><td><code>git log --grep commit</code> passes cleanly; the pattern anchors on the real subcommand</td></tr>
+          <tr><td class="was">Disabling it means editing the plugin</td><td>Create <code>.claude/no-lint-gate</code> at the repo root</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The four cases we actually ran:</p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th scope="col">Case</th><th scope="col">Exit</th><th scope="col">Outcome</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Failing lint, <code>git commit</code></td><td class="num">2</td><td><b>Blocked</b>, with the lint output returned</td></tr>
+          <tr><td>Failing lint, <code>git log --grep commit</code></td><td class="num">0</td><td>Allowed — not a commit</td></tr>
+          <tr><td>Passing lint, <code>git commit</code></td><td class="num">0</td><td>Allowed</td></tr>
+          <tr><td>Failing lint, opt-out file present</td><td class="num">0</td><td>Allowed — opt-out honoured</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisions</h2>
+
+    <div class="decision">
+      <h3>Verify with a purpose-built fixture instead of reading the script</h3>
+      <p>The user asked for confirmation that lint runs before a commit. Reading
+      the code establishes intent, not behaviour, and this hook has enough
+      fall-through conditions that the two can differ.</p>
+      <p class="rejected"><b>Rejected — reason through the source and report.</b>
+      Would have produced a confident answer that was wrong for this repository:
+      nothing in the script text announces that it no-ops without a
+      <code>package.json</code>.</p>
+      <p class="rejected"><b>Rejected — run a real commit here and observe.</b>
+      Proves nothing. It would have passed, and passed for the wrong reason — no
+      check ran.</p>
+    </div>
+
+    <div class="decision">
+      <h3>Report this repo's no-op as a headline, not a footnote</h3>
+      <p>"The gate is installed and working" is true and misleading in the same
+      breath. A teammate acting on it would believe their commits here are
+      checked.</p>
+      <p class="rejected"><b>Rejected — lead with the passing test matrix, mention
+      the caveat at the end.</b> Technically complete, but buries the one fact
+      that changes behaviour.</p>
+    </div>
+
+    <div class="decision">
+      <h3>Leave the test fixture in place rather than deleting it</h3>
+      <p>Removing it needs <code>rm</code>, which this project requires explicit
+      approval for. The fixture sits in a session-isolated scratchpad and harms
+      nothing.</p>
+      <p class="rejected"><b>Rejected — delete it automatically as cleanup.</b>
+      The first attempt did exactly this and was correctly blocked. See
+      Learnings.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Learnings</h2>
+    <ul>
+      <li><b>The permission guard caught a destructive command mid-task.</b> The
+      first fixture build opened with <code>rm -rf</code> on the target directory
+      — routine scripting habit — and was denied. Rebuilding with
+      <code>mkdir -p</code> against a fresh directory name worked identically.
+      Reflex <code>rm -rf</code> in a setup script is a habit worth dropping in
+      this repo.</li>
+      <li><b>A lint fixture needs a dependencies directory to exist, even an
+      empty one.</b> The hook treats a missing <code>node_modules</code> as "not
+      installed yet" and exits before running anything, so a fixture without it
+      silently tests the wrong path and looks like a pass.</li>
+      <li><b>The command pattern is more careful than it first appears.</b>
+      <code>git log --grep commit</code> contains the literal word and is
+      correctly ignored; the pattern also excludes <code>commit-tree</code>,
+      which a plain word-boundary match would have caught by mistake.</li>
+      <li><b>Exit code 2 is the specific contract that makes this a gate.</b> In
+      this hook position, 0 permits the call and 2 blocks it while routing the
+      message back to the assistant. Any other non-zero code surfaces as a hook
+      error and lets the commit through — which is why the script deliberately
+      returns 0 on every condition it does not positively understand.</li>
+      <li><b>The gate's placement tracks the cost of being wrong.</b> Committing
+      is cheap and local, so a passive hook is enough. Merging is public and hard
+      to undo, so the <code>merge</code> skill re-runs lint explicitly rather
+      than trusting the commit-time hook ever ran — and reports the gate as
+      <i>skipped</i> when its preconditions do not hold, rather than as
+      passed.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Open items</h2>
+    <ul>
+      <li><b>Decide whether the inert gate here is intentional.</b> This repo has
+      no root <code>package.json</code>, so the lint gate never runs. If lint
+      coverage for the Markdown, JSON, and Python files here is wanted, it needs
+      a different mechanism — the current hook only understands JavaScript-style
+      projects. Nothing is broken today; this is a question, not a defect.</li>
+      <li><b>The typecheck path was never exercised.</b> Only the lint script was
+      tested. The hook runs typecheck second using the same logic, so it is
+      expected to behave identically — but that is inference, not evidence.</li>
+      <li><b>Test fixture left on disk.</b> Four files under the session
+      scratchpad at <code>.../scratchpad/lintfix1</code>, including a
+      <code>package.json</code> with a deliberately failing lint script.
+      Session-isolated and harmless; removal needs <code>rm</code>, which was not
+      approved.</li>
+    </ul>
+  </section>
+
+  <section class="files">
+    <h2>Files touched</h2>
+    <p><b>No files were modified this session.</b> All repository access was
+    read-only. Files examined, grouped by area:</p>
+
+    <h3>The lint gate itself</h3>
+    <ul>
+      <li><code>kit/plugins/git-agent/hooks.json</code> — the hook registration,
+      its event and its matcher</li>
+      <li><code>kit/plugins/git-agent/hooks/lint-before-commit.py</code> — the
+      full decision path, detection logic, and exit-code contract</li>
+    </ul>
+
+    <h3>Skills checked for a lint step</h3>
+    <ul>
+      <li><code>skills/commit-agent/SKILL.md</code> — confirmed no lint step</li>
+      <li><code>agents/agent-commit.md</code> — confirmed no lint step</li>
+      <li><code>skills/ship/SKILL.md</code> — confirmed lint appears only as PR
+      text, never as a command</li>
+      <li><code>kit/plugins/git-agent/README.md</code> — the contrasting
+      behaviour of <code>merge</code> and <code>ship-autonomous</code>, which do
+      run lint directly</li>
+    </ul>
+
+    <h3>Project configuration</h3>
+    <ul>
+      <li><code>.claude/settings.json</code> — confirmed the project registers no
+      lint hook of its own</li>
+      <li><code>kit/plugins/git-agent/.claude-plugin/plugin.json</code> —
+      confirmed the hook ships with the plugin</li>
+    </ul>
+
+    <h3>Created outside the repository</h3>
+    <ul>
+      <li><code>&lt;scratchpad&gt;/lintfix1/</code> — throwaway test repository;
+      see Open items</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Glossary</h2>
+    <dl>
+      <dt>git-agent</dt>
+      <dd>The plugin in this marketplace that automates git work: creating
+      branches, writing commits, opening pull requests, merging.</dd>
+
+      <dt>commit-agent</dt>
+      <dd>The part of git-agent that writes a commit message and commits. The
+      subject of the original question.</dd>
+
+      <dt>ship</dt>
+      <dd>The part of git-agent that commits, pushes, and opens a pull request in
+      one go.</dd>
+
+      <dt>merge</dt>
+      <dd>The part of git-agent that checks whether a pull request is ready and
+      merges it. Unlike the others, it runs lint directly.</dd>
+
+      <dt>Hook</dt>
+      <dd>A script the harness runs automatically around tool calls. It runs
+      whether or not the assistant knows it exists, which is why it can enforce a
+      rule that a written instruction cannot.</dd>
+
+      <dt>PreToolUse</dt>
+      <dd>The hook event that fires <i>before</i> a tool call runs, so the hook
+      can block the call. The lint gate uses this; the project's own hooks use
+      PostToolUse, which fires after and cannot block.</dd>
+
+      <dt>Exit code</dt>
+      <dd>The number a script returns when it finishes. Here, 0 means allow and 2
+      means block.</dd>
+
+      <dt>Fail-open</dt>
+      <dd>A design where anything unrecognized is allowed through rather than
+      blocked. Chosen here because the hook runs on every shell command in every
+      repo that installs the plugin, so a false block would be far more
+      disruptive than a missed check.</dd>
+
+      <dt>package.json</dt>
+      <dd>The file that defines a JavaScript project and its named scripts,
+      including lint. The hook's only detection mechanism.</dd>
+
+      <dt>node_modules</dt>
+      <dd>The directory holding a JavaScript project's installed dependencies.
+      Its absence tells the hook the project is not set up yet.</dd>
+
+      <dt>Lint / typecheck</dt>
+      <dd>Automated checks for, respectively, code style and likely mistakes, and
+      type correctness.</dd>
+
+      <dt>Working tree</dt>
+      <dd>The files as they currently sit on disk, including edits not yet
+      committed.</dd>
+
+      <dt>Scratchpad</dt>
+      <dd>A temporary directory scoped to one session, used for files that should
+      not enter the repository.</dd>
+    </dl>
+  </section>
+
+</div>
+
+</body>
+</html>
