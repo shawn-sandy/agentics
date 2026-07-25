@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span id="progress-label">0 / 11 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1430,6 +1430,7 @@ img, video { max-width: 100%; height: auto; }
       <p>Detection runs one way only — prototype HTML against plan frontmatter. A plan<br>whose `proto-model:` is hand-edited directly, bypassing the skill&#39;s write-back,<br>desyncs with no signal. Plans are user-owned prose rather than generated output,<br>so this is tolerated rather than guarded.</p>
       <p>The frontmatter write-back has no transaction semantics. Two concurrent<br>sessions touching the same plan spec could drop one writer&#39;s update. Unlikely in<br>single-session use and not worth locking for.</p>
       <p>`docs/prototypes/` currently holds only `index.html` — no real prototype exists<br>yet. Everything here is verified against fixtures rather than live artifacts.</p>
+      <p>Two duplication facts shape several steps below. The renderer exists twice —<br>`scripts/build-plan-html.mjs` and `scripts/lib/plan-shell.mjs` are the sources,<br>re-copied byte-for-byte under `kit/plugins/plan-agent/scripts/`, with<br>`tests/plugins/test-build-plan-html.mjs:557` asserting the parity. The plans-index<br>builder exists three times, all byte-identical. Every change here must land in<br>every copy, or the suite fails and gallery regeneration silently drops the chip.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1443,11 +1444,15 @@ img, video { max-width: 100%; height: auto; }
         <ul class="file-list">
           <li><code>kit/plugins/plan-agent/skills/prototype/reference/PROTOTYPE-SKELETON.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add the `#proto-model` JSON block</span></li>
           <li><code>kit/plugins/plan-agent/skills/prototype/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">pin the `proto-source` format, serialize the model, write the link back into the source plan spec</span></li>
-          <li><code>kit/plugins/plan-agent/scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">optional `plan-prototype` meta tag and the header link</span></li>
-          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">thread the `prototype` frontmatter key into both `metaTags()` and `header()`</span></li>
+          <li><code>scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">optional `plan-prototype` meta tag and the header link (repo-root source)</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical re-copy of the above</span></li>
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">thread the `prototype` frontmatter key into both `metaTags()` and `header()` (repo-root source)</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical re-copy of the above</span></li>
+          <li><code>kit/plugins/plan-agent/hooks/build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">prototype chip on the plans gallery card</span></li>
+          <li><code>scripts/build-plans-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical re-copy of the above</span></li>
+          <li><code>docs/plans/build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical re-copy of the above</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/hooks/
             <ul class="file-list">
-            <li><code>build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">prototype chip on the plans gallery card</span></li>
             <li><code>check-prototype-drift.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the drift comparison</span></li>
             <li><code>dispatch.py</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">fan out to the drift check on prototype writes</span></li>
             </ul>
@@ -1535,12 +1540,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a write-back step to `skills/prototype/SKILL.md` that runs **before** the prototype HTML is written in Step 6, resolving the plan-path input&#39;s `.html` to its sibling `.md` spec by extension swap and writing `prototype: docs/prototypes/&lt;slug&gt;.html` plus `proto-model: &lt;compact single-line JSON&gt;` into that spec&#39;s frontmatter — plan path only, skipped for idea, image, and Figma inputs. The JSON must be single-line: never pretty-printed, never containing a raw newline or a bare `---`.</span>
+                <span class="step-chip-text">Add a write-back step to `skills/prototype/SKILL.md` that runs **before** the prototype HTML is written in Step 6, resolving the plan-path input&#39;s `.html` to its sibling `.md` spec by extension swap and writing `prototype: docs/prototypes/&lt;slug&gt;.html` plus `proto-model: &lt;compact single-line JSON&gt;` into that spec&#39;s frontmatter — plan path only, skipped for idea, image, and Figma inputs. When the sibling `.md` does **not** exist, skip the write-back entirely, still generate the prototype, and print one line telling the user to run `node scripts/extract-plan-spec.mjs &lt;plan&gt;.html &gt; &lt;plan&gt;.md` first if they want the back-link. The JSON must be single-line: never pretty-printed, never containing a raw newline or a bare `---`.</span>
               </div>
-              <div class="step-why">writing the prototype fires `dispatch.py`, so a write-back placed after it would run the drift check against a plan that has no `proto-model` yet and warn on every single generation; and the frontmatter parser is a naive line scanner, so an embedded newline or `---` silently truncates the block and corrupts `status` and `created` for all three consumers that re-scan it.</div>
+              <div class="step-why">69 of the 84 non-index plans under `docs/plans/` are legacy HTML with no spec sibling, so a blind extension swap would fail generation or write an empty spec for the majority of real inputs — and materializing a spec as a side effect of prototyping would silently rewrite a plan the user never asked us to touch. The frontmatter parser is also a naive line scanner, so an embedded newline or `---` silently truncates the block and corrupts `status` and `created` for all three consumers that re-scan it.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">run the skill against a fixture plan spec, confirm both keys land on one line each, that `node scripts/extract-plan-spec.mjs` still parses the plan, and that no drift warning is printed during generation.</div>
+                <div class="verify-body">run the skill against a fixture plan spec and confirm both keys land on one line each and `node scripts/extract-plan-spec.mjs` still parses the plan; run it against a legacy HTML plan with no sibling and confirm the prototype is still written, no spec is created, and the notice is printed.</div>
               </details>
             </div>
           </div>
@@ -1552,12 +1557,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Thread `prototype` through the renderer in three places: read `parsed.metadata.prototype` in `build-plan-html.mjs` near the existing `parsed.metadata.created` handling; pass it to `shell.metaTags()`, which emits `&lt;meta name=&quot;plan-prototype&quot;&gt;` conditionally; and extend `shell.header()`&#39;s parameter list **and its call site in `build-plan-html.mjs`** to render an anchor inside `.plan-header-actions` beside the effort badge, with visible text `View prototype` and `aria-label=&quot;View the interactive prototype for this plan&quot;`. Compute its `href` as `../prototypes/&lt;slug&gt;.html`, converting from the repo-relative frontmatter value, since plans and prototypes are sibling directories under the Pages root.</span>
+                <span class="step-chip-text">Thread `prototype` through the renderer in three places: read `parsed.metadata.prototype` in `build-plan-html.mjs` near the existing `parsed.metadata.created` handling; pass it to `shell.metaTags()`, which emits `&lt;meta name=&quot;plan-prototype&quot;&gt;` conditionally; and extend `shell.header()`&#39;s parameter list **and its call site in `build-plan-html.mjs`** to render an anchor inside `.plan-header-actions` beside the effort badge, with visible text `View prototype` and `aria-label=&quot;View the interactive prototype for this plan&quot;`. Compute its `href` with `path.relative()` from the rendered plan&#39;s **output directory** to the repo-relative `prototype:` target — never a hard-coded `../prototypes/`. Apply every change to `scripts/build-plan-html.mjs` and `scripts/lib/plan-shell.mjs`, then re-copy both byte-for-byte to `kit/plugins/plan-agent/scripts/`.</span>
               </div>
-              <div class="step-why">`metaTags()` and `moreWaysDrawer()` are the existing precedents for conditional emission — `header()` has a fixed unconditional parameter list today, so the optional slot there is new territory and easy to miss; and the Verification section requires the link actually resolve when clicked, which a repo-relative href would not.</div>
+              <div class="step-why">`plansDirectory` is configurable, so a hard-coded `../prototypes/` resolves to `custom/prototypes/` for a plan rendered under `custom/plans/` while the prototype is written to `docs/prototypes/` — and nested plan directories break the same way; and `tests/plugins/test-build-plan-html.mjs:557` asserts the bundled renderer is byte-identical to the repo-root source, so editing only the bundled copy fails the suite and leaves callers of the root renderer without `prototype:` support.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">render a spec carrying `prototype:` and confirm the meta tag, a header anchor with non-empty accessible text, and a working relative href all appear; render one without it and confirm none do.</div>
+                <div class="verify-body">render a spec carrying `prototype:` from both `docs/plans/` and a custom plans directory and confirm the meta tag, a header anchor with non-empty accessible text, and an href that resolves in each; render one without it and confirm none do; `diff scripts/build-plan-html.mjs kit/plugins/plan-agent/scripts/build-plan-html.mjs` is empty.</div>
               </details>
             </div>
           </div>
@@ -1569,12 +1574,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a prototype chip to the plans gallery card in `build-index.sh` alongside the existing `card-date` span, as a text-bearing span matching the existing `status-chip` / `type-chip` / `effort-chip` pattern, carrying a `title` explaining that the prototype opens from inside the plan. It must **not** be an anchor — the whole card is already wrapped in `&lt;a class=&quot;gallery-card&quot;&gt;` at line 149, and a nested `&lt;a&gt;` is invalid HTML that browsers silently unnest.</span>
+                <span class="step-chip-text">Add a prototype chip to the plans gallery card alongside the existing `card-date` span, as a text-bearing span matching the existing `status-chip` / `type-chip` / `effort-chip` pattern, carrying a `title` explaining that the prototype opens from inside the plan. It must **not** be an anchor — the whole card is already wrapped in `&lt;a class=&quot;gallery-card&quot;&gt;` at line 149, and a nested `&lt;a&gt;` is invalid HTML that browsers silently unnest. Apply the identical change to all three byte-identical copies of the builder: `kit/plugins/plan-agent/hooks/build-index.sh`, `scripts/build-plans-index.sh`, and `docs/plans/build-index.sh`.</span>
               </div>
-              <div class="step-why">an icon-only chip gives screen reader and voice-control users no signal a prototype exists, while a nested anchor breaks the card&#39;s click target; a plain text node inside the card anchor is read for free as part of its accessible name.</div>
+              <div class="step-why">an icon-only chip gives screen reader and voice-control users no signal a prototype exists, while a nested anchor breaks the card&#39;s click target; and regenerating the gallery through either un-updated copy would drop the chip and overwrite an index that already had it.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">the emitted card contains a chip with non-empty text and no `&lt;a` nested inside another `&lt;a`.</div>
+                <div class="verify-body">the emitted card contains a chip with non-empty text and no `&lt;a` nested inside another `&lt;a`; `diff` between all three builder copies is empty.</div>
               </details>
             </div>
           </div>
@@ -1645,7 +1650,7 @@ img, video { max-width: 100%; height: auto; }
       <div class="test-list">
         <div class="test-card">Unit: drift-hook comparison branches. File: tests/plugins/test-prototype-drift.sh; Targets: check-prototype-drift.py; Key cases: model matches DOM and plan (silent), model diverges from own `&lt;th&gt;` headers, model diverges from plan frontmatter, plan exists but carries no `proto-model` yet (silent), `proto-source` names a plan that does not exist, `proto-source` resolving outside the plans directory, prototype has no `#proto-model` block, malformed JSON in either block — every case exits 0</div>
         <div class="test-card">Integration: dispatch fan-out on prototype writes. File: tests/plugins/test-prototype-drift.sh; Targets: dispatch.py; Key cases: a synthetic prototype-write payload piped through `dispatch.py` runs both `build-prototypes-index.sh` and `check-prototype-drift.py`; a payload for an unrelated path spawns neither</div>
-        <div class="test-card">Unit: renderer back-compat. File: tests/plugins/test-build-plan-html.mjs; Targets: metaTags, header; Key cases: a spec with no `prototype:` key renders byte-identical to its pre-change output</div>
+        <div class="test-card">Unit: renderer back-compat and copy parity. File: tests/plugins/test-build-plan-html.mjs; Targets: metaTags, header; Key cases: a spec with no `prototype:` key renders byte-identical to its pre-change output; a spec rendered from a custom `plansDirectory` produces a resolving href; the existing byte-identical-copies assertion at line 557 still passes for both renderer files</div>
       </div>
     </section>
 
@@ -1658,39 +1663,47 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">A plan spec carrying `prototype:` renders a `plan-prototype` meta tag and a visible header link whose href resolves to the prototype file from the plan&#39;s own directory.</label>
+          <label for="ac1">A plan spec carrying `prototype:` renders a `plan-prototype` meta tag and a visible header link whose href resolves to the prototype file from the plan&#39;s own directory, including when the plan lives in a custom `plansDirectory`.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">A plan spec without `prototype:` renders byte-identically to its output before this change.</label>
+          <label for="ac2">The two renderer files and the three plans-index builders remain byte-identical across all their copies after the change.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">The header prototype link and the gallery prototype chip both expose non-empty accessible text.</label>
+          <label for="ac3">Running `/plan-agent:prototype` against a legacy HTML plan with no sibling `.md` still writes the prototype, creates no spec file, and prints a notice explaining how to get the back-link.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">Every prototype generated from the skeleton contains a parseable `#proto-model` JSON block, and its `proto-source` holds the repo-relative path of the plan&#39;s markdown spec.</label>
+          <label for="ac4">A plan spec without `prototype:` renders byte-identically to its output before this change.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">Running `/plan-agent:prototype` against a plan writes single-line `prototype:` and `proto-model:` keys into that plan&#39;s `.md` frontmatter before the prototype HTML is written, and prints no drift warning during generation; running it against an idea, image, or Figma input writes to no plan.</label>
+          <label for="ac5">The header prototype link and the gallery prototype chip both expose non-empty accessible text.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">The plans gallery card shows a prototype chip, and the emitted card HTML contains no nested anchor.</label>
+          <label for="ac6">Every prototype generated from the skeleton contains a parseable `#proto-model` JSON block, and its `proto-source` holds the repo-relative path of the plan&#39;s markdown spec.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`check-prototype-drift.py` reports divergence between a prototype&#39;s model and its rendered columns, and between a prototype&#39;s model and its plan&#39;s copy, naming both files and the diverging field.</label>
+          <label for="ac7">Running `/plan-agent:prototype` against a plan writes single-line `prototype:` and `proto-model:` keys into that plan&#39;s `.md` frontmatter before the prototype HTML is written, and prints no drift warning during generation; running it against an idea, image, or Figma input writes to no plan.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">The drift hook exits 0 on every input, including missing files, missing blocks, out-of-tree paths, and malformed JSON.</label>
+          <label for="ac8">The plans gallery card shows a prototype chip, and the emitted card HTML contains no nested anchor.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 4.4.0.</label>
+          <label for="ac9">`check-prototype-drift.py` reports divergence between a prototype&#39;s model and its rendered columns, and between a prototype&#39;s model and its plan&#39;s copy, naming both files and the diverging field.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">The drift hook exits 0 on every input, including missing files, missing blocks, out-of-tree paths, and malformed JSON.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 4.4.0.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
