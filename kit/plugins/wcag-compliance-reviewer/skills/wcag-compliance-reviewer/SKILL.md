@@ -2,6 +2,10 @@
 name: wcag-compliance-reviewer
 description: "Reviews HTML/CSS and React code for WCAG 2.2 Level AA violations. Provides targeted fixes for each accessibility issue found. Use when the user asks to check WCAG compliance or audit accessibility."
 allowed-tools: Read
+license: MIT
+metadata:
+  author: shawn-sandy
+  version: "1.0"
 ---
 
 ## WCAG 2.2 AA Compliance Reviewer
