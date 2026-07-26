@@ -64,8 +64,8 @@ The digest-extraction clause keeps the prompt token-efficient: the implementing 
 
 **Via meta tag (programmatic use):**
 ```bash
-# Extract the goal prompt from a generated plan
-grep -oP '(?<=<meta name="plan-goal" content=")[^"]+' my-plan.html
+# Extract the goal prompt from a generated plan (portable)
+python3 -c "import re,sys; m=re.search(r'<meta name=\"plan-goal\" content=\"([^\"]+)\"',open(sys.argv[1]).read()); print(m.group(1) if m else '')" my-plan.html
 ```
 
 ## Commit history
