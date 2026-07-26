@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.3.0 — 2026-07-26 — Skill content now canonical in shawn-sandy/skills
+
+### Changed
+
+- `skills/wcag-compliance-reviewer/` is now synced from the cross-platform
+  [shawn-sandy/skills](https://github.com/shawn-sandy/skills) repository
+  (Agent Skills format: adds `license: MIT` and author/version metadata).
+  Edit the skill there, then re-sync; this copy is no longer the source of
+  truth.
+
+---
+
 ## v1.2.3 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed
