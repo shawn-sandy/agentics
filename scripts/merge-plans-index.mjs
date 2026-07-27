@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// Git merge driver for docs/plans/index.html (the generated plans gallery).
+// Git merge driver for the generated gallery indexes — docs/plans/index.html
+// and docs/artifacts/index.html. Both are built from the same card markup
+// (<a class="gallery-card">), so one driver serves both; .gitattributes points
+// each at merge=plans-index. The name is historical: it predates the artifacts
+// gallery and is kept so existing clones' git config keeps resolving.
 // Invoked by git as: node merge-plans-index.mjs %O %A %B
 //   %O = base (common ancestor — may be /dev/null for new-file merges)
 //   %A = ours (current branch path — driver MUST write result here)
@@ -88,12 +92,15 @@ try {
     merged.join('\n') +
     chromeText.slice(last.index + last[0].length);
 
-  // Patch the visible plan count — real template ("<p>48 plans …") and the
-  // build script's embedded fallback ("&middot; 48 plans"). Cosmetic; skip
-  // silently when neither pattern is present.
+  // Patch the visible card count — real template ("<p>48 plans …", "<p>12
+  // items …") and the build script's embedded fallback ("&middot; 48 plans").
+  // The noun is whitelisted rather than matched as \w+ so an unrelated
+  // "<p>3 columns" in the chrome cannot be rewritten. Cosmetic; skip silently
+  // when neither pattern is present.
+  const COUNT_NOUN = /(plans|items|artifacts)\b/.source;
   const counted = result
-    .replace(/(<p>)\d+( plans\b)/, `$1${merged.length}$2`)
-    .replace(/(&middot;\s*)\d+(\s*plans\b)/, `$1${merged.length}$2`);
+    .replace(new RegExp(`(<p>)\\d+( ${COUNT_NOUN})`), `$1${merged.length}$2`)
+    .replace(new RegExp(`(&middot;\\s*)\\d+(\\s*${COUNT_NOUN})`), `$1${merged.length}$2`);
 
   writeFileSync(oursPath, counted);
   process.exit(0);

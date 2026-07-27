@@ -1,2 +1,3 @@
 .claude-plugin/marketplace.json merge=mkt-version
 docs/plans/index.html merge=plans-index
+docs/artifacts/index.html merge=plans-index
