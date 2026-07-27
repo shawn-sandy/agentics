@@ -33,8 +33,9 @@ Two skills in `kit/plugins/plan-agent/skills/` produce documents:
   interview-classify-draft pipeline and writes a write-once
   `docs/prompts/{type}-{slug}-{date}.md` built from one of four XML templates.
 
-The four existing proposals total 638 lines; the four saved prompts total 293. Only 1 of
-the 4 proposals actually matches the canonical 13-section shape.
+The four proposals that predate this document total 638 lines; the four saved prompts total
+293. Only 1 of those 4 proposals actually matches the canonical 13-section shape. (Counts
+exclude this document, which brings the directory to five.)
 
 The observation driving this proposal: `build-proposal`'s Step 8 already ends by emitting
 a prompt — a hand-built one-line invocation string — and the skill spends an entire
