@@ -103,9 +103,14 @@ Resolved in the 2026-07-27 review:
    document ([build-proposal/SKILL.md:66-74](../../kit/plugins/plan-agent/skills/build-proposal/SKILL.md#L66)),
    which would leave the chain holding nothing. Propagates to Workstream A step 2.
 5. **The trigger is "no plan argument", and discovery offers rather than
-   auto-uses.** With no path argument, discovery still runs, but its result is
-   presented as a choice — `implement <found spec>` / `author a new plan` — instead
-   of being adopted silently. Nothing found goes straight to the chain. Rejected:
+   auto-uses — and only when no objective was supplied.** With no path argument
+   and no objective, discovery runs and its result is presented as a choice —
+   `implement <found spec>` / `author a new plan` — instead of being adopted
+   silently, capped at three candidates with the suppressed count stated. When an
+   objective *was* supplied the offer is skipped entirely: discovery selects on
+   `status:` alone with no notion of subject, so it would answer a stated
+   objective with a menu of unrelated specs. Nothing found goes straight to the
+   chain. Rejected:
    skipping discovery entirely (loses the resume path for an interrupted build)
    and chaining only when discovery is empty (leaves the stale-plan pickup in
    place). Propagates to Workstream A step 0, Workstream B's discovery bullet, and
@@ -123,10 +128,13 @@ path-shaped keeps today's hard stop.
 A new Step 1b runs whenever **no plan argument was given** and an objective is
 available (from arguments, conversation, or one `AskUserQuestion`):
 
-0. Discovery result becomes an offer, not a pickup. Candidates found →
-   `AskUserQuestion` listing them plus `None of these — author a new plan`;
+0. Discovery runs **only when no objective was supplied**; with one present,
+   skip straight to step 1. Otherwise the result becomes an offer, not a pickup:
+   candidates found → `AskUserQuestion` listing at most the top three newest-first
+   plus `None of these — author a new plan`, stating how many were suppressed;
    choosing a candidate resolves it and jumps to Step 2, skipping the chain.
-   Nothing found → continue.
+   Nothing found, or `None of these` chosen → ask for an objective if one is not
+   already known, then continue.
 1. Gate: `Start from a proposal` / `Straight to plan authoring`.
 2. Proposal path — `Skill("plan-agent:build-proposal", "<objective>")`, then
    close the seam with
@@ -252,8 +260,16 @@ that already exist:
 | What happened inside | Spec state on return | Existing rule that fires | Outcome |
 |---|---|---|---|
 | Inner `build` ran to completion | `status: completed` | Completed-plan precondition ([build/SKILL.md:84](../../kit/plugins/plan-agent/skills/build/SKILL.md#L84)) | Stops and asks before redoing work |
-| User chose Review, then Exit | `todo`, steps unmarked | Single-match discovery | Step 2 proceeds normally |
+| User chose Review, then Exit | `todo`, steps unmarked | Path-based resolution of the returned spec (never re-running discovery) | Outer chain stops and reports the path — see the Exit rule below |
 | Inner `build` stopped partway | Some steps `[x]` | Resume-from-first-unmarked ([build/SKILL.md:86](../../kit/plugins/plan-agent/skills/build/SKILL.md#L86)) | Picks up where it left off |
+
+**Exit rule.** `Exit — I'll implement later` and `Run as workflow` both
+terminate the *outer* chain, not merely the inner skill's offer — the return path
+reports the produced plan's path and stops. This supersedes the original reading
+of this appendix, in which the outer `build` proceeded. If the returned spec path
+does not resolve on return (renamed mid-run, or written outside the plan roots),
+`build` stops and reports the path it was handed rather than falling back to
+discovery, which would risk adopting an unrelated spec.
 
 No new branches, no recursion guard, no flags. Resumability falls out for free: a
 chain that dies after the plan is written leaves a `todo`/`in-progress` spec that
