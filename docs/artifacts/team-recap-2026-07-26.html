@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan and prototype linking with drift detection</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<style>
+  :root {
+    --paper:      #f6f7f9;
+    --raised:     #ffffff;
+    --ink:        #171a20;
+    --ink-soft:   #4a515e;
+    --ink-faint:  #79808d;
+    --rule:       #dfe3e9;
+    --rule-soft:  #ebeef2;
+    --link:       #0f6f7a;
+    --link-bg:    #e6f2f3;
+    --warn:       #8f5514;
+    --warn-bg:    #f8f0e2;
+    --ok:         #2c6642;
+    --ok-bg:      #e8f1ea;
+    --measure:    68ch;
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:     #121419;
+      --raised:    #191c22;
+      --ink:       #e6e9ee;
+      --ink-soft:  #a8afbb;
+      --ink-faint: #7d8492;
+      --rule:      #2a2f38;
+      --rule-soft: #22262e;
+      --link:      #5cc2ce;
+      --link-bg:   #133238;
+      --warn:      #d99e57;
+      --warn-bg:   #35291a;
+      --ok:        #6dbc8c;
+      --ok-bg:     #17301f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:     #121419;
+    --raised:    #191c22;
+    --ink:       #e6e9ee;
+    --ink-soft:  #a8afbb;
+    --ink-faint: #7d8492;
+    --rule:      #2a2f38;
+    --rule-soft: #22262e;
+    --link:      #5cc2ce;
+    --link-bg:   #133238;
+    --warn:      #d99e57;
+    --warn-bg:   #35291a;
+    --ok:        #6dbc8c;
+    --ok-bg:     #17301f;
+  }
+  :root[data-theme="light"] {
+    --paper:     #f6f7f9;
+    --raised:    #ffffff;
+    --ink:       #171a20;
+    --ink-soft:  #4a515e;
+    --ink-faint: #79808d;
+    --rule:      #dfe3e9;
+    --rule-soft: #ebeef2;
+    --link:      #0f6f7a;
+    --link-bg:   #e6f2f3;
+    --warn:      #8f5514;
+    --warn-bg:   #f8f0e2;
+    --ok:        #2c6642;
+    --ok-bg:     #e8f1ea;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 3.5rem 1.25rem 6rem;
+  }
+
+  .wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+  .wrap > section { display: flex; flex-direction: column; gap: 1rem; }
+
+  /* ── Masthead ─────────────────────────────────────────────── */
+  .masthead { display: flex; flex-direction: column; gap: .75rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--link);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    line-height: 1.12;
+    font-weight: 600;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .standfirst {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+    margin: 0;
+  }
+  .byline {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+    padding-top: .75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.25rem;
+  }
+  .byline a { color: var(--link); }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--ink);
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 650;
+    margin: 0;
+    letter-spacing: -.005em;
+  }
+  p { margin: 0; text-wrap: pretty; }
+  a { color: var(--link); }
+  code {
+    font-family: var(--mono);
+    font-size: .855em;
+    background: var(--rule-soft);
+    padding: .1em .35em;
+    border-radius: 3px;
+    overflow-wrap: break-word;
+  }
+
+  /* ── Stat strip ───────────────────────────────────────────── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+  .stat {
+    padding: .9rem 1rem;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+  }
+  .stat-n {
+    font-family: var(--serif);
+    font-size: 1.75rem;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-l {
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ── Change cards ─────────────────────────────────────────── */
+  .changes { display: flex; flex-direction: column; gap: .85rem; }
+  .change {
+    background: var(--raised);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: 4px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .change[data-affects="users"]     { border-left-color: var(--link); }
+  .change[data-affects="teammates"] { border-left-color: var(--ok); }
+  .change[data-affects="nobody"]    { border-left-color: var(--ink-faint); }
+  .change-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem .75rem; }
+  .affects {
+    font-family: var(--mono);
+    font-size: .63rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .18em .5em;
+    border-radius: 3px;
+    white-space: nowrap;
+    background: var(--rule-soft);
+    color: var(--ink-soft);
+  }
+  .change[data-affects="users"] .affects     { background: var(--link-bg); color: var(--link); }
+  .change[data-affects="teammates"] .affects { background: var(--ok-bg);   color: var(--ok); }
+  .change p { font-size: .94rem; color: var(--ink-soft); }
+  .reach {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--ink-faint);
+    border-top: 1px dashed var(--rule);
+    padding-top: .5rem;
+  }
+  .reach b { color: var(--ink-soft); font-weight: 600; }
+
+  /* ── Diagrams ─────────────────────────────────────────────── */
+  figure { margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+  /* Mermaid bakes its palette in at render time, so this card stays light
+     on both grounds rather than letting a light diagram vanish in dark mode. */
+  .diagram {
+    background: #ffffff;
+    border: 1px solid #dfe3e9;
+    border-radius: 5px;
+    padding: 1.1rem .75rem;
+    overflow-x: auto;
+  }
+  .diagram svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  figcaption {
+    font-size: .86rem;
+    color: var(--ink-faint);
+    font-style: italic;
+    text-wrap: pretty;
+  }
+
+  /* ── Tables ───────────────────────────────────────────────── */
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 5px; background: var(--raised); }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .62rem .85rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child { color: var(--ink); font-weight: 550; }
+  .ba td:nth-child(2) { color: var(--ink-faint); }
+  .ba td:nth-child(3) { color: var(--ink-soft); }
+  .res { font-family: var(--mono); font-size: .82rem; white-space: nowrap; }
+  .res-ok { color: var(--ok); }
+  .res-no { color: var(--warn); }
+
+  /* ── Decisions ────────────────────────────────────────────── */
+  .decisions { display: flex; flex-direction: column; gap: 1.1rem; }
+  .decision {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--rule);
+  }
+  .decision p { font-size: .93rem; color: var(--ink-soft); }
+  .rejected {
+    font-size: .88rem;
+    background: var(--warn-bg);
+    border-radius: 4px;
+    padding: .5rem .7rem;
+    color: var(--ink-soft);
+  }
+  .rejected b {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--warn);
+    display: block;
+    margin-bottom: .1rem;
+  }
+
+  /* ── Callout ──────────────────────────────────────────────── */
+  .callout {
+    background: var(--raised);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--warn);
+    border-radius: 4px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+  .callout h3 { font-size: 1.02rem; }
+  .callout p { font-size: .93rem; color: var(--ink-soft); }
+
+  /* ── Lists ────────────────────────────────────────────────── */
+  .items { display: flex; flex-direction: column; gap: .8rem; list-style: none; padding: 0; margin: 0; }
+  .items li { display: flex; flex-direction: column; gap: .2rem; }
+  .items .t { font-weight: 600; font-size: .95rem; }
+  .items .d { font-size: .9rem; color: var(--ink-soft); }
+
+  .files { display: flex; flex-direction: column; gap: 1.15rem; }
+  .file-group { display: flex; flex-direction: column; gap: .45rem; }
+  .file-group h3 {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--link);
+  }
+  .file-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+  .file-group li { font-size: .88rem; color: var(--ink-soft); padding-left: .9rem; text-indent: -.9rem; }
+  .file-group li code { background: none; padding: 0; color: var(--ink); }
+
+  dl.glossary { margin: 0; display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: .55rem 1.1rem; font-size: .9rem; }
+  dl.glossary dt { font-family: var(--mono); font-size: .82rem; color: var(--ink); }
+  dl.glossary dd { margin: 0; color: var(--ink-soft); }
+  @media (max-width: 560px) {
+    dl.glossary { grid-template-columns: 1fr; gap: .15rem; }
+    dl.glossary dd { margin-bottom: .55rem; }
+  }
+
+
+  pre.mermaid {
+    font-family: var(--mono);
+    font-size: .78rem;
+    line-height: 1.5;
+    color: #3b414c;
+    background: #f6f7f9;
+    border: 1px solid #dfe3e9;
+    border-radius: 4px;
+    margin: 0;
+    padding: .85rem 1rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .diagram::before {
+    content: "Diagram source — renders as a diagram in the published version";
+    display: block;
+    font-family: var(--mono);
+    font-size: .62rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #79808d;
+    margin-bottom: .5rem;
+  }
+
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Team recap &middot; plan-agent 4.4.0</div>
+    <h1>Plan and prototype linking with drift detection</h1>
+    <p class="standfirst">We made a plan document and its clickable prototype point at each other, and added an automatic check that notices when the two have quietly fallen out of sync.</p>
+    <div class="byline">
+      <span>26 July 2026</span>
+      <span><a href="https://github.com/shawn-sandy/agentics/pull/465">Pull request #465</a></span>
+      <span>21 files &middot; +1105 / &minus;85</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>At a glance</h2>
+    <div class="stats">
+      <div class="stat"><span class="stat-n">6</span><span class="stat-l">Changes shipped</span></div>
+      <div class="stat"><span class="stat-n">21</span><span class="stat-l">Files touched</span></div>
+      <div class="stat"><span class="stat-n">6</span><span class="stat-l">Decisions</span></div>
+      <div class="stat"><span class="stat-n">4</span><span class="stat-l">Open items</span></div>
+      <div class="stat"><span class="stat-n">54</span><span class="stat-l">New assertions</span></div>
+      <div class="stat"><span class="stat-n">1</span><span class="stat-l">Bug found late</span></div>
+    </div>
+    <p>Before this, a prototype knew which plan it came from, but the plan had no idea a prototype existed &mdash; and neither file wrote down the data model they supposedly shared, so nothing could tell you they had diverged.</p>
+    <p>The work was verified end to end (full test suite, a hand-built fixture pair, and a real browser click) before the plan was marked complete. One genuine bug surfaced during the manual walk that the automated tests had missed; it was fixed and regression-tested.</p>
+  </section>
+
+  <section>
+    <h2>What changed</h2>
+    <div class="changes">
+
+      <article class="change" data-affects="users">
+        <div class="change-head">
+          <h3>A plan now links to its prototype</h3>
+          <span class="affects">Affects: everyone</span>
+        </div>
+        <p>A plan whose source carries a <code>prototype:</code> line now shows a <b>View prototype</b> link in its header, beside the effort and status badges. Clicking it opens the prototype.</p>
+        <p class="reach"><b>To use:</b> add <code>prototype: docs/prototypes/&lt;slug&gt;.html</code> to a plan&rsquo;s Markdown source and re-render.</p>
+      </article>
+
+      <article class="change" data-affects="users">
+        <div class="change-head">
+          <h3>The gallery shows which plans have a prototype</h3>
+          <span class="affects">Affects: everyone</span>
+        </div>
+        <p>Each card in the plans gallery gains a small <b>prototype</b> chip. It is a text label, not a second link &mdash; the whole card is already one big link, and nesting a link inside a link is invalid HTML that browsers silently pull apart.</p>
+      </article>
+
+      <article class="change" data-affects="nobody">
+        <div class="change-head">
+          <h3>Both files now record the shared data model</h3>
+          <span class="affects">Affects: nobody yet</span>
+        </div>
+        <p>The prototype generator worked out a data model &mdash; the thing being tracked, its fields and their types, the main action, and the signal that proves it works &mdash; then threw it away once the page was built. That model is now written into both files as a single line of machine-readable data. This is the groundwork that makes the drift check possible at all.</p>
+      </article>
+
+      <article class="change" data-affects="teammates">
+        <div class="change-head">
+          <h3>A new check reports drift</h3>
+          <span class="affects">Affects: teammates</span>
+        </div>
+        <p>Whenever a prototype is written, a check compares the recorded model against the prototype&rsquo;s own visible columns and form fields, and against the plan&rsquo;s copy. When they disagree it prints a warning naming both files, the field that differs, and what to re-run.</p>
+        <p class="reach"><b>To use:</b> nothing &mdash; it runs on its own after every prototype write.</p>
+      </article>
+
+      <article class="change" data-affects="teammates">
+        <div class="change-head">
+          <h3>The generator writes the link back</h3>
+          <span class="affects">Affects: teammates</span>
+        </div>
+        <p>Running <code>/plan-agent:prototype</code> against a plan now writes the link and the model into that plan before writing the prototype. When the plan has no Markdown source &mdash; most older plans are HTML-only &mdash; it skips the write-back, still builds the prototype, and prints one line explaining how to create a source file.</p>
+      </article>
+
+      <article class="change" data-affects="nobody">
+        <div class="change-head">
+          <h3>The source-plan placeholder became a real contract</h3>
+          <span class="affects">Affects: maintainers</span>
+        </div>
+        <p><code>{{SOURCE_PLAN}}</code> was undefined free text that only ever fed a display string. It is now pinned: the repo-relative path of the plan&rsquo;s Markdown source on the plan path, and empty for idea, image, and Figma inputs. The drift check resolves the owning plan from it, so without a format contract the whole comparison would be unimplementable.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>How it works now</h2>
+
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph BEFORE["Before"]
+    direction LR
+    A1["Plan"]
+    B1["Prototype"]
+    B1 -->|"proto-source"| A1
+  end
+  subgraph AFTER["After"]
+    direction LR
+    A2["Plan"]
+    B2["Prototype"]
+    M2[["shared data model"]]
+    A2 -->|"prototype:"| B2
+    B2 -->|"proto-source"| A2
+    A2 -.->|"proto-model"| M2
+    B2 -.->|"proto-model"| M2
+  end
+</pre></div>
+      <figcaption>The link used to run one way only. Now both files point at each other, and both carry a copy of the same data model &mdash; the part that makes drift detectable.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+flowchart TD
+  W["A prototype file is written"] --> D{"Path gate"}
+  D -->|"unrelated path"| X["Exit, nothing spawned"]
+  D -->|"under docs/prototypes/"| G["Rebuild the prototypes gallery"]
+  G --> C["Run the drift check"]
+  C --> A{"Model vs. the prototype's<br/>own columns and fields"}
+  C --> B{"Model vs. the plan's copy"}
+  A -->|"differs"| W1["Warn, naming both files<br/>and the field"]
+  B -->|"differs"| W2["Warn, naming both files<br/>and the field"]
+  A -->|"matches"| S["Silent"]
+  B -->|"matches"| S
+  W1 --> Z["Always exit 0"]
+  W2 --> Z
+  S --> Z
+</pre></div>
+      <figcaption>The drift check runs last and always exits cleanly &mdash; a report about one plan must never block work on another.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+flowchart TD
+  S["The prototype generator runs"] --> Q{"Input type?"}
+  Q -->|"idea, image, Figma"| N["No write-back"]
+  Q -->|"plan path"| M{"Does the plan have<br/>a Markdown source?"}
+  M -->|"yes"| W["Write the link and the model<br/>into the plan"]
+  M -->|"no, most older plans"| K["Skip the write-back,<br/>print how to create one"]
+  W --> G["Write the prototype"]
+  K --> G
+  N --> G
+</pre></div>
+      <figcaption>The write-back is deliberately conditional: 69 of 84 committed plans are HTML-only, and creating a source file as a side effect would rewrite a file nobody asked us to touch.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Before and after</h2>
+    <div class="scroll">
+      <table class="ba">
+        <thead>
+          <tr><th>Situation</th><th>Before</th><th>After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Finding a plan&rsquo;s prototype</td><td>No way to know one existed</td><td>A link in the plan header, and a chip on the gallery card</td></tr>
+          <tr><td>The shared data model</td><td>Worked out, then discarded</td><td>Recorded in both files as one line</td></tr>
+          <tr><td>A hand-edited prototype</td><td>Nobody notices</td><td>Warning naming both files and the diverging field</td></tr>
+          <tr><td>Where the link points</td><td>&mdash;</td><td>Worked out relative to the plan&rsquo;s own folder, so a custom or nested plans folder still resolves</td></tr>
+          <tr><td>A plan with no prototype</td><td>&mdash;</td><td>Renders character-for-character identically to before</td></tr>
+          <tr><td>Running against an HTML-only plan</td><td>&mdash;</td><td>Prototype still built, no file created, one-line notice printed</td></tr>
+          <tr><td>When the check hits bad input</td><td>&mdash;</td><td>Exits cleanly every time, including missing files and malformed data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>How we know it works</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Check</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>End-to-end test <code>test-prototype-plan-link.mjs</code></td><td class="res res-ok">5 passed</td></tr>
+          <tr><td>Drift check test <code>test-prototype-drift.sh</code></td><td class="res res-ok">14 passed</td></tr>
+          <tr><td>Renderer test <code>test-build-plan-html.mjs</code></td><td class="res res-ok">35 passed</td></tr>
+          <tr><td>Prototypes gallery test</td><td class="res res-ok">passed</td></tr>
+          <tr><td>Full plugin suite, 37 files</td><td class="res res-ok">0 failing</td></tr>
+          <tr><td>Publish and demo suites</td><td class="res res-ok">0 failing</td></tr>
+          <tr><td>Version guard</td><td class="res res-ok">4.4.0, clean</td></tr>
+          <tr><td>File-copy parity</td><td class="res res-ok">all identical</td></tr>
+          <tr><td>Pages smoke test</td><td class="res res-no">fails, pre-existing</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Also walked by hand: built a matching plan and prototype pair, rendered it, opened the plan in a browser and clicked the link (it reaches a working prototype, and the new data block does not break the prototype&rsquo;s own behaviour), then ran a three-stage drift walk &mdash; a matching pair stays silent, one renamed field produces two warnings naming both files, and removing the plan&rsquo;s copy silences the plan comparison.</p>
+  </section>
+
+  <section>
+    <h2>Decisions</h2>
+    <div class="decisions">
+
+      <div class="decision">
+        <h3>Detection, not two-way sync</h3>
+        <p>Plan to prototype is regeneration &mdash; re-run the generator. Prototype to plan is detection &mdash; compare and report.</p>
+        <div class="rejected"><b>Rejected</b>Full two-way sync. Prototypes have no separate source file, so the HTML <em>is</em> the source. Pushing a prototype edit back into plan prose would need an HTML-to-model parser over generated files, which the repo&rsquo;s conventions forbid.</div>
+      </div>
+
+      <div class="decision">
+        <h3>The header link ships no new styling</h3>
+        <p>It uses the existing link colour and the header row&rsquo;s spacing.</p>
+        <div class="rejected"><b>Rejected</b>A styled button. The shared stylesheet is copied into every plan, so one new rule would change the bytes of all 84 existing plans and break the &ldquo;a plan without a prototype renders identically&rdquo; requirement. Flagged in the pull request as reversible if the team prefers the button.</div>
+      </div>
+
+      <div class="decision">
+        <h3>The gallery chip is a text label, not a link</h3>
+        <p>The card is already wrapped in a link, and a nested link is invalid HTML that browsers silently unnest.</p>
+        <div class="rejected"><b>Rejected</b>An icon-only chip &mdash; it gives screen-reader and voice-control users no signal that a prototype exists.</div>
+      </div>
+
+      <div class="decision">
+        <h3>The link path is worked out, never hard-coded</h3>
+        <p>A fixed <code>../prototypes/</code> would resolve to the wrong folder for any plan stored outside the default location, and nested folders break the same way.</p>
+        <div class="rejected"><b>Rejected</b>The hard-coded path, on the grounds that the plans folder is configurable.</div>
+      </div>
+
+      <div class="decision">
+        <h3>The drift check always exits cleanly</h3>
+        <p>Every other check in this plugin does, and the dispatcher would treat a failure exit as something the user must fix before continuing.</p>
+        <div class="rejected"><b>Rejected</b>Blocking on drift. A report about some other plan interrupting whatever you are actually doing is worse than the drift itself.</div>
+      </div>
+
+      <div class="decision">
+        <h3>The written data must stay on one line</h3>
+        <p>The plan&rsquo;s header reader is a simple line scanner. An embedded line break or stray separator would silently truncate the block and corrupt the plan&rsquo;s status and creation date for every tool that reads it.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Learnings</h2>
+
+    <div class="callout">
+      <h3>A test fixture can be too clean to catch a bug</h3>
+      <p>The drift check read field names straight out of the prototype&rsquo;s HTML. The page template contains an authoring comment that includes a literal example attribute &mdash; <code>data-field="key"</code> &mdash; and that comment ships into every generated prototype. So the check reported a field called <code>key</code> that did not exist, on a file that had not drifted at all.</p>
+      <p>The automated test missed it entirely, because its fixture was a hand-written minimal page rather than the real template. The manual verification walk caught it on the first run.</p>
+      <p>Two fixes, both kept: strip comments before scanning, and point the test fixture at the <b>real</b> template so this class of bug cannot hide again.</p>
+    </div>
+
+    <ul class="items">
+      <li>
+        <span class="t">Pattern-matching HTML sees comments as content</span>
+        <span class="d">Comments, script bodies, and attributes all look the same to a text scan. Stripping comments first is the cheap correct boundary; a full parser would be overkill for four attribute lookups.</span>
+      </li>
+      <li>
+        <span class="t">Every new assertion was deliberately broken to prove it works</span>
+        <span class="d">Each check was confirmed to fail when the behaviour it covers is reverted &mdash; five checks, five caught. A test that passes both before and after a fix is not a test.</span>
+      </li>
+      <li>
+        <span class="t">Two test failures were environment artefacts, not bugs</span>
+        <span class="d">On macOS the temporary folder is a symbolic link, and the renderer works out paths relative to the current folder &mdash; so an unresolved path produced absurd output. Resolving the temp path fixed it. Worth knowing before chasing a phantom.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Open items</h2>
+    <ul class="items">
+      <li>
+        <span class="t">The pages smoke test fails</span>
+        <span class="d">Confirmed pre-existing and unrelated by stashing all changes and re-running on a clean tree. Not investigated &mdash; someone should. File: <code>tests/pages/test-pages-smoke.sh</code>.</span>
+      </li>
+      <li>
+        <span class="t">Three acceptance criteria are specified but not executed</span>
+        <span class="d">The write-back, the HTML-only-plan notice, and the source-plan value are all behaviour of the prototype generator, which is a set of instructions for an AI agent rather than executable code. The plan itself acknowledges no committed test can assert these. Each instruction was confirmed present and unambiguous; the generator was not run.</span>
+      </li>
+      <li>
+        <span class="t">A moved, renamed, or deleted prototype goes unnoticed</span>
+        <span class="d">The header link and the gallery chip both assume the target still exists. Nothing currently checks, so a dead link would sit there silently.</span>
+      </li>
+      <li>
+        <span class="t">A hand-edited plan desyncs silently</span>
+        <span class="d">Detection runs one direction only &mdash; prototype against plan. Accepted deliberately: plans are human-written prose, not generated output.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Files touched</h2>
+    <div class="files">
+
+      <div class="file-group">
+        <h3>The linking itself &mdash; both copies must stay identical</h3>
+        <ul>
+          <li><code>scripts/build-plan-html.mjs</code> and its bundled twin &mdash; read the <code>prototype:</code> key, work out the relative link</li>
+          <li><code>scripts/lib/plan-shell.mjs</code> and its bundled twin &mdash; emit the marker tag and the header link</li>
+        </ul>
+      </div>
+
+      <div class="file-group">
+        <h3>The gallery &mdash; three identical copies</h3>
+        <ul>
+          <li><code>scripts/build-plans-index.sh</code>, <code>kit/plugins/plan-agent/hooks/build-index.sh</code>, <code>docs/plans/build-index.sh</code> &mdash; the prototype chip</li>
+          <li><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> &mdash; chip styling</li>
+        </ul>
+      </div>
+
+      <div class="file-group">
+        <h3>The drift check</h3>
+        <ul>
+          <li><code>kit/plugins/plan-agent/hooks/check-prototype-drift.py</code> &mdash; new; the whole comparison</li>
+          <li><code>kit/plugins/plan-agent/hooks/dispatch.py</code> &mdash; run it after the gallery rebuild</li>
+        </ul>
+      </div>
+
+      <div class="file-group">
+        <h3>The prototype generator</h3>
+        <ul>
+          <li><code>skills/prototype/SKILL.md</code> &mdash; pinned the source-plan contract, added the model output and the write-back step</li>
+          <li><code>skills/prototype/reference/PROTOTYPE-SKELETON.html</code> &mdash; the model block</li>
+        </ul>
+      </div>
+
+      <div class="file-group">
+        <h3>Tests</h3>
+        <ul>
+          <li><code>tests/plugins/test-prototype-plan-link.mjs</code> &mdash; new; the end-to-end check</li>
+          <li><code>tests/plugins/test-prototype-drift.sh</code> &mdash; new; 10 check branches plus dispatcher fan-out</li>
+          <li><code>tests/plugins/test-build-plan-html.mjs</code> &mdash; the &ldquo;renders identically without a prototype&rdquo; check, which renders through the previous version of the renderer and compares</li>
+        </ul>
+      </div>
+
+      <div class="file-group">
+        <h3>Docs and metadata</h3>
+        <ul>
+          <li><code>README.md</code>, <code>CHANGELOG.md</code>, <code>.claude-plugin/marketplace.json</code> &mdash; documentation and the 4.3.1 to 4.4.0 bump</li>
+          <li><code>docs/plans/add-prototype-plan-linking.md</code> and its rendered page &mdash; plan marked complete</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Glossary</h2>
+    <dl class="glossary">
+      <dt>Plan</dt><dd>A document describing work to be done. Written as Markdown &mdash; the editable source &mdash; and rendered to a web page people read.</dd>
+      <dt>Prototype</dt><dd>A single self-contained clickable page generated from a plan, so you can try the data shapes and the flow before building anything.</dd>
+      <dt>Spec</dt><dd>The Markdown source of a plan. Older plans have only the rendered page and no source.</dd>
+      <dt>Frontmatter</dt><dd>The block of <code>key: value</code> lines at the top of a Markdown file, between two <code>---</code> markers.</dd>
+      <dt>Drift</dt><dd>When two files that are supposed to describe the same thing no longer agree.</dd>
+      <dt>Hook</dt><dd>A script the tooling runs automatically when a file is written.</dd>
+      <dt>Dispatcher</dt><dd>The single hook that checks a file&rsquo;s path once and then decides which other hooks to run, instead of every hook waking up on every edit.</dd>
+      <dt>Skill</dt><dd>A set of instructions an AI agent follows. Instructions, not code &mdash; which is why some behaviour cannot be covered by an automated test.</dd>
+      <dt>Data model</dt><dd>The shape of the thing being tracked: its name, its fields and their types, the main action, and the signal that proves it works.</dd>
+      <dt>Mutation check</dt><dd>Deliberately breaking the code to confirm the test actually fails, proving the test is real.</dd>
+      <dt>Byte-identical</dt><dd>Two files matching exactly, character for character. Used here to prove existing plans were not disturbed.</dd>
+      <dt>Plans gallery</dt><dd>The browsable index page listing every plan as a card.</dd>
+    </dl>
+  </section>
+
+</div>
+
+</body>
+</html>

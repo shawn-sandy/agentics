@@ -52,6 +52,17 @@ Read `$ARGUMENTS` (or the conversation-derived text on the model path):
   pastes a Figma link), treat it as a **design path**.
 - Otherwise the whole argument string is a **raw idea**.
 
+### The `{{SOURCE_PLAN}}` contract
+
+`{{SOURCE_PLAN}}` is a **path, never a title or free text** — the drift hook
+resolves the owning plan from it, and the gallery card renders it as its
+"from `<plan>`" text:
+
+- **Plan path:** the repo-relative path of the plan's **Markdown spec** —
+  `docs/plans/<slug>.md` (swap the resolved `.html` for `.md`), even when the
+  sibling `.md` does not exist.
+- **Idea, image, and Figma paths:** empty string.
+
 ## Step 2 — Gather the model inputs
 
 - **Idea path:** run a single batched `AskUserQuestion` with three questions —
@@ -111,13 +122,53 @@ string replacement:
   (e.g. encode `</script>` as `<\/script>`) — never HTML-escaped: `load()`
   reads the JSON block as text and HTML entities are not decoded, so `&quot;`
   would break `JSON.parse`.
+- **`{{PROTO_MODEL}}` is the Step 3 model, serialized the same way** — the
+  script-breakout rule above applies to it exactly as to `{{SEED_JSON}}`, never
+  HTML escaping, or `JSON.parse` breaks identically. Emit **compact single-line
+  JSON** with the keys `entity` (string), `fields` (array of `{name, type}`),
+  `action` (string), and `successSignal` (string). The `fields` order and
+  `name` values must match the `data-field` keys in `{{COLUMNS}}` exactly —
+  that pairing is what the drift check compares.
 - Placeholders: `{{TITLE}}`, `{{SOURCE_PLAN}}`, `{{STORE_KEY}}`,
-  `{{SEED_JSON}}`, `{{COLUMNS}}`, `{{FORM_FIELDS}}`, `{{PRIMARY_ACTION}}`,
-  `{{SUMMARY}}`, plus the `proto-source` / `proto-created` meta tags.
+  `{{SEED_JSON}}`, `{{PROTO_MODEL}}`, `{{COLUMNS}}`, `{{FORM_FIELDS}}`,
+  `{{PRIMARY_ACTION}}`, `{{SUMMARY}}`, plus the `proto-source` /
+  `proto-created` meta tags.
 - Derive `{{STORE_KEY}}` from the file slug so each prototype isolates its own
   localStorage.
 
-## Step 6 — Write the prototype
+## Step 6 — Link the plan back (plan path only)
+
+Derive the prototype slug first (see Step 7), then — **before** the prototype
+HTML is written — write the back-link into the source plan's Markdown spec.
+**Plan path only:** skip this entire step for idea, image, and Figma inputs,
+which have no owning plan.
+
+- Resolve the spec by swapping the resolved plan `.html` for `.md`
+  (`docs/plans/<slug>.md`) — the same value `{{SOURCE_PLAN}}` carries.
+- **If that `.md` does not exist:** skip the write-back, still generate the
+  prototype, and print exactly one line telling the user to run
+  `node scripts/extract-plan-spec.mjs <plan>.html > <plan>.md` first if they
+  want the back-link. Most committed plans are legacy HTML with no spec
+  sibling; materializing one as a side effect would silently rewrite a plan the
+  user never asked us to touch.
+- **If it exists:** `Edit` its YAML frontmatter to carry both keys, adding them
+  when absent and replacing the existing values when present:
+
+  ```yaml
+  prototype: docs/prototypes/<slug>.html
+  proto-model: {"entity":"Workout","fields":[{"name":"date","type":"date"}],"action":"Log","successSignal":"total count"}
+  ```
+
+- **Both values stay on one line each.** Never pretty-print the JSON, never let
+  it contain a raw newline or a bare `---`. The frontmatter parser is a naive
+  line scanner: an embedded newline or `---` truncates the block and corrupts
+  `status` and `created` for every consumer that re-scans it.
+- Re-render the plan HTML afterwards so the header link and the gallery chip
+  appear: `node scripts/build-plan-html.mjs docs/plans/<slug>.md`. (The
+  `PostToolUse` hook normally does this on the spec write; run it explicitly if
+  the hook is disabled.)
+
+## Step 7 — Write the prototype
 
 Derive a `verb-target` kebab-case slug from the entity/action (e.g.
 `track-gym-workouts`). `mkdir -p docs/prototypes` first, then write to
@@ -126,7 +177,7 @@ plans-directory-scoped and does **not** enforce prototype filenames, so this
 skill owns the naming convention — never emit a placeholder/auto-generated
 slug.
 
-## Step 7 — Scrub before publishing
+## Step 8 — Scrub before publishing
 
 Before writing a prototype whose seed came from an external source — a **plan,
 image, or Figma design** — run a quick secret/PII scrub on the extracted seed
@@ -134,7 +185,7 @@ values (it publishes to a public Pages origin). Mockups and screenshots often
 show real names, emails, or tokens; drop or mask anything that looks like a
 credential, token, key, email, or other PII.
 
-## Step 8 — Index, preview, report
+## Step 9 — Index, preview, report
 
 - The `PostToolUse` hook auto-rebuilds `docs/prototypes/index.html` on the
   write. If it did not run (e.g. hook disabled), run
