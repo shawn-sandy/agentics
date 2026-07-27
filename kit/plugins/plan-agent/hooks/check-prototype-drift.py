@@ -271,8 +271,12 @@ def main():
     try:
         for warning in check(os.path.abspath(path)):
             sys.stderr.write(warning + "\n")
-    except Exception:  # noqa: BLE001 — a drift report must never block a write
-        pass
+    except Exception as exc:  # noqa: BLE001 — a drift report must never block a write
+        # Stay fail-open, but say so. A hook that exists to catch silent
+        # divergence should not itself fail silently: without this line a
+        # regression in check() disables drift detection permanently with no
+        # signal that it ever stopped working.
+        sys.stderr.write(f"[plan-agent] drift check skipped: {type(exc).__name__}: {exc}\n")
     sys.exit(0)
 
 
