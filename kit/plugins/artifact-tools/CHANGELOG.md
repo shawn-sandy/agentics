@@ -5,6 +5,32 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-07-27
+
+### Fixed
+
+- All three PR-mode recap commands (`eng-recap`, `team-recap`, `product-doc`)
+  resolve the target repository from the pull request itself rather than from
+  the local checkout. Argument-less `gh repo view` means "view current repo", so
+  a PR URL pointing at another repository paired a foreign PR number with the
+  local owner/name and read review threads off the wrong repo — returning
+  nothing, or an unrelated local PR that happened to share the number, either
+  way corrupting Decisions and Open items. `gh pr view --json url` returns the
+  PR's canonical URL, which is always on its base repo — the same repo its
+  review threads live on — and `$NUM`, `$OWNER`, and `$REPO` now all derive from
+  that one value. `gh pr view` exposes no `baseRepository` field, so the URL is
+  the available source. Verified against a cross-repository PR URL from a
+  checkout of a different repo.
+- The `reviewThreads` query reports its own truncation. Both connections are
+  bounded (100 threads, 20 comments each) and requested neither `pageInfo` nor
+  cursors, so on a PR past either cap the commands treated a first page as the
+  whole list and unresolved findings vanished silently from Open items / Known
+  gaps / Review follow-ups. The query now returns `truncated` and per-thread
+  `more_comments`, and all three commands must surface either in the recap —
+  matching the "report what you did not read" rule `eng-recap`'s diff budget
+  already carries, and the truncation check the `git-agent:merge` skill applies
+  to the same connection.
+
 ## [1.7.1] - 2026-07-27
 
 ### Fixed
