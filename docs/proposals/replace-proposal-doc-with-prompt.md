@@ -128,6 +128,23 @@ Resolved during plan authoring (2026-07-27), after this draft's first round:
     prompt file is now the authoritative deliverable, so silently clobbering a user's edits
     to it is worse than the duplicate file the rewrite rule replaces.
 
+Resolved in code review (2026-07-27):
+
+11. **`write-prompt` gains a caller-supplied `--out <path>` contract.** When present it
+    overrides Phase 7's own directory resolution *and* its 3-5-word intent-slug derivation.
+    Without this, `build-proposal` (verb-target slug, its own `--dir`) and `write-prompt`
+    (intent slug, its own `promptsDirectory`) resolve **different** paths, so the handoff and
+    the deprecation banner would name a file that was never written. The caller dictates the
+    path; the two agree by construction rather than by coincidence. Rejected: smarter
+    independent derivation on the caller side — it cannot be made correct, only luckier.
+12. **Drift detection uses a `generated-sha:` frontmatter key**, not a git baseline.
+    `build-proposal` only *offers* to commit each round, so a previous round is frequently
+    uncommitted — leaving the skill unable to tell generated content from a hand edit, which
+    would make decision 10 either warn on every single rewrite or silently clobber. Recording
+    the hash of the body the skill last wrote makes the check self-contained and correct
+    across uncommitted rounds. Rejected: mandating a commit before each rewrite (turns an
+    offer into a requirement); snapshot files (external state to keep in sync).
+
 Consequence of decision 4, recorded explicitly: dual-write means 6.0.0 does **not** deliver
 "a prompt as the sole deliverable." That property arrives in 6.1.0. Every workstream below
 is scoped accordingly.
@@ -146,10 +163,12 @@ registry. This is a prerequisite for every other workstream.
 - Phase 1: fifth row in the type table and in the technique matrix.
 - Phase 3: XML layer mapping for the new type.
 - Phase 4: template-selection entry.
-- Phase 7: `status:` and `modified:` frontmatter keys; the date-free `proposal-{slug}.md`
-  filename rule (decision 8) that gives the living document a stable identity across rounds;
-  and the in-place rewrite rule replacing the `-2`/`-3` uniqueness guard, gated by the
-  hand-edit drift check (decision 10).
+- Phase 7: the `--out <path>` caller contract (decision 11) that overrides both directory
+  resolution and intent-slug derivation; `status:`, `modified:`, and `generated-sha:`
+  frontmatter keys; the date-free `proposal-{slug}.md` filename rule (decision 8) giving the
+  living document a stable identity across rounds; and the in-place rewrite rule replacing
+  the `-2`/`-3` uniqueness guard, gated by the `generated-sha:` drift check
+  (decisions 10 and 12).
 
 **WS3 — Interview bypass.** *(M)*
 `build-proposal` Step 5 already resolves decisions with the human; `write-prompt` Phase 2
@@ -163,8 +182,9 @@ official pattern, so this is repo-local design. The likely shape: a flag or a st
   authoritative artifact. This is a required deliverable, not a nicety: without it a reader
   opening the proposal in 6.0.0 cannot tell the mirror from the source of truth, which is
   risk 4 below. Covered by a test asserting the banner is present in the written copy.
-- Step 6 derives the prompt path as `proposal-{slug}.md` (decision 8), never by reading
-  `write-prompt`'s output back — `Skill()` has no documented return value.
+- Step 6 computes the target path as `proposal-{slug}.md` (decision 8) and **passes it to
+  `write-prompt` via `--out`** (decision 11), never by reading `write-prompt`'s output back
+  and never by trusting that both sides derive the same path independently.
 - Step 8 hands off the **prompt** path.
 - Tier 0 continues to write nothing at all (decision 9), preserving `build`'s fall-through.
 - `references/artifact-shape.md` gains the section-to-slot mapping (*Appendix B*) and its

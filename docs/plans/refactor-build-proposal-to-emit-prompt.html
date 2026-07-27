@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 14 done</span>
+        <span id="progress-label">0 / 15 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1529,12 +1529,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Wire the `proposal` type through `kit/plugins/plan-agent/skills/write-prompt/SKILL.md` — add the fifth row to the Phase 1 type table and technique matrix, the Phase 3 XML layer mapping, the Phase 4 template-selection entry, and extend Phase 7 with `status:` (`gathering` or `converged`) and `modified:` frontmatter keys, a `proposal`-only filename rule of `proposal-{slug}.md` that omits the date so the identity stays stable across rounds, plus an in-place rewrite rule that replaces the `-2`/`-3` uniqueness guard for this type, guarded by a drift check that diffs the file against what the skill last wrote and asks via `AskUserQuestion` before overwriting hand edits.</span>
+                <span class="step-chip-text">Wire the `proposal` type through `kit/plugins/plan-agent/skills/write-prompt/SKILL.md` — add the fifth row to the Phase 1 type table and technique matrix, the Phase 3 XML layer mapping, the Phase 4 template-selection entry, and extend Phase 7 with three things: a **caller-supplied output path contract** (`--out &lt;path&gt;`) that, when present, overrides Phase 7&#39;s own directory resolution and its 3-5-word intent slug entirely; `status:` (`gathering` or `converged`), `modified:`, and `generated-sha:` frontmatter keys; and an in-place rewrite rule replacing the `-2`/`-3` uniqueness guard for this type, gated by comparing the current body&#39;s hash against the recorded `generated-sha:` and asking via `AskUserQuestion` when they differ.</span>
               </div>
-              <div class="step-why">the prompt file becomes the living document that deepens each round, so the write-once uniqueness guard would create a new file per round and break the record — but it is also now the authoritative deliverable, so silently clobbering a user&#39;s edits to it is worse than the duplicate it replaces.</div>
+              <div class="step-why">Phase 7 today picks its own directory and derives its own slug, so any caller that independently computes the path will disagree with it and name a file that was never written — the caller must dictate the path rather than guess it. And `generated-sha:` is what makes the drift check real: without a durable record of what the skill last wrote, an uncommitted previous round is indistinguishable from a hand edit, so the check would either warn on every rewrite or silently clobber.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">the type appears in all five phases, a round-two run overwrites the same filename rather than creating a `-2` variant, and a hand-edited file triggers the confirmation prompt instead of a silent overwrite.</div>
+                <div class="verify-body">the type appears in all five phases, `--out` round-trips to the exact path given, a round-two run overwrites the same file rather than creating a `-2` variant, and hand-editing the body then re-running triggers the confirmation prompt while an untouched file does not.</div>
               </details>
             </div>
           </div>
@@ -1580,12 +1580,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Rewrite `build-proposal`&#39;s Step 6 to dual-write — invoke `write-prompt` with the proposal content and the Step 5 bypass token, derive the saved prompt path deterministically as `{prompts-dir}/proposal-{slug}.md` — **date-free, slug is the identity** — rather than reading anything back, and additionally write the legacy `docs/proposals/&lt;slug&gt;.md` carrying a deprecation banner naming the prompt as authoritative — then rewrite Step 8 to hand off the prompt path, and retarget `--dir` to the prompts directory.</span>
+                <span class="step-chip-text">Rewrite `build-proposal`&#39;s Step 6 to dual-write — invoke `write-prompt` with the proposal content and the Step 5 bypass token, compute the target path once as `{resolved-prompts-dir}/proposal-{verb-target-slug}.md` — **date-free, slug is the identity** — and **pass it to `write-prompt` via the Step 4 `--out` contract** so the caller dictates the path rather than both sides deriving one independently, and additionally write the legacy `docs/proposals/&lt;slug&gt;.md` carrying a deprecation banner naming the prompt as authoritative — then rewrite Step 8 to hand off that same path, and retarget `--dir` to the prompts directory.</span>
               </div>
-              <div class="step-why">`Skill()` has no documented return value, so deriving the path removes the transcript dependency entirely; and the date **must** be omitted for this type because a living document spanning two calendar days would otherwise derive a different filename on round two and silently write a second file instead of rewriting the first — the `created:` and `modified:` frontmatter keys carry the dates instead.</div>
+              <div class="step-why">`Skill()` has no documented return value, and `write-prompt`&#39;s own Phase 7 would otherwise resolve a different directory and a different 3-5-word intent slug, so an independently derived path would name a file that was never written — passing it explicitly makes the two agree by construction. The date is omitted because a living document spanning two calendar days would otherwise resolve to a different filename on round two; `created:` and `modified:` carry the dates instead.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">a run started on one date and continued on a later date resolves to the same single file, and `ls {prompts-dir}/proposal-*` shows exactly one file per slug.</div>
+                <div class="verify-body">the path `build-proposal` reports is byte-identical to the file `write-prompt` wrote, a loop spanning two dates resolves to one file, and `ls {prompts-dir}/proposal-*` shows exactly one file per slug.</div>
               </details>
             </div>
           </div>
@@ -1688,7 +1688,7 @@ img, video { max-width: 100%; height: auto; }
       <div class="test-tier-label">Tier 1 — This plan creates and modifies executable test scripts, plugin skill definitions, and marketplace configuration</div>
       <div class="objective-test-card">Objective: build-proposal converges on a saved prompt authored by write-prompt. File: tests/plugins/test-proposal-prompt-pipeline.sh; Type: smoke; Asserts: the command wrapper exists and calls Skill with the write-prompt target, write-prompt declares the proposal type and its template file exists with all 11 placeholders, build-proposal Step 6 dual-writes and derives a date-free proposal-{slug}.md path, the legacy copy carries a deprecation banner, Step 8 hands off a docs/prompts path, Tier 0 is documented as writing no artifact, prompt-artifact lists five filter chips, and no build-proposal file advertises a bare-.md handoff; Run: bash tests/plugins/test-proposal-prompt-pipeline.sh</div>
       <div class="test-list">
-        <div class="test-card">Unit: the fifth prompt type is wired through every write-prompt phase. File: tests/plugins/test-write-prompt-proposal-type.sh; Targets: write-prompt/SKILL.md Phases 1, 2, 3, 4, 7 and references/proposal-prompt-template.md; Key cases: type table row, technique matrix row, XML layer mapping, template selection path, status and modified frontmatter keys, in-place rewrite rule, drift check before overwrite, bypass token documented, all 11 placeholders present in both template and guide</div>
+        <div class="test-card">Unit: the fifth prompt type is wired through every write-prompt phase. File: tests/plugins/test-write-prompt-proposal-type.sh; Targets: write-prompt/SKILL.md Phases 1, 2, 3, 4, 7 and references/proposal-prompt-template.md; Key cases: type table row, technique matrix row, XML layer mapping, template selection path, --out contract overrides directory resolution and intent slug, status/modified/generated-sha frontmatter keys, in-place rewrite rule, drift check fires on a hand edit and stays silent on an untouched uncommitted file, bypass token documented, all 11 placeholders present in both template and guide</div>
         <div class="test-card">Integration: the build chain still resolves end-to-end with the new artifact. File: tests/plugins/test-build-skill.sh; Targets: build/SKILL.md Step 1b; Key cases: the build-proposal Skill call site, the proposal-versus-direct gate, the no-artifact fall-through, and the --dir forwarding asymmetry</div>
         <div class="test-card">Integration: build-proposal&#39;s own contract under dual-write. File: tests/plugins/test-build-proposal.sh; Targets: build-proposal/SKILL.md and references/; Key cases: rewritten checks 10, 11, 14, 15 plus the existing marketplace-version check 12</div>
       </div>
@@ -1715,47 +1715,51 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">A hand-edited prompt file triggers a confirmation prompt before the next round overwrites it.</label>
+          <label for="ac4">`write-prompt` honours a caller-supplied `--out &lt;path&gt;`, writing to exactly that path and bypassing its own directory resolution and intent-slug derivation.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">A Tier 0 idea writes no file in either directory and `build`&#39;s &quot;No proposal written&quot; fall-through still fires; a Tier 1 idea writes a prompt with no empty slot headings.</label>
+          <label for="ac5">A hand-edited prompt file triggers a confirmation prompt before the next round overwrites it, detected via `generated-sha:` rather than a git-committed baseline, so an uncommitted previous round does not false-positive.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">`build-proposal` derives the prompt path from the slug alone without reading `write-prompt`&#39;s output back, and a loop spanning two calendar days resolves to one file rather than two.</label>
+          <label for="ac6">A Tier 0 idea writes no file in either directory and `build`&#39;s &quot;No proposal written&quot; fall-through still fires; a Tier 1 idea writes a prompt with no empty slot headings.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`write-prompt` Phase 2 runs zero `AskUserQuestion` calls when invoked with the pre-gathered-answers bypass token.</label>
+          <label for="ac7">`build-proposal` passes an explicit output path to `write-prompt` rather than reading its output back or independently deriving one, and the path it reports is byte-identical to the file actually written.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">A full `build-proposal` run writes both a `docs/prompts/` prompt and a `docs/proposals/` copy, and the proposal copy carries a deprecation banner naming the prompt as authoritative.</label>
+          <label for="ac8">`write-prompt` Phase 2 runs zero `AskUserQuestion` calls when invoked with the pre-gathered-answers bypass token.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">`build-proposal`&#39;s Step 8 handoff names the `docs/prompts/` path and leads with objective text, not a bare `.md` token.</label>
+          <label for="ac9">A full `build-proposal` run writes both a `docs/prompts/` prompt and a `docs/proposals/` copy, and the proposal copy carries a deprecation banner naming the prompt as authoritative.</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
-          <label for="ac10">No file under `kit/plugins/plan-agent/skills/build-proposal/` matches `implementation-plan +[^ ]+\.md`, including `references/artifact-shape.md`.</label>
+          <label for="ac10">`build-proposal`&#39;s Step 8 handoff names the `docs/prompts/` path and leads with objective text, not a bare `.md` token.</label>
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11">`prompt-artifact`&#39;s library gallery offers five filter chips and renders `type: proposal` cards reachable by their own chip.</label>
+          <label for="ac11">No file under `kit/plugins/plan-agent/skills/build-proposal/` matches `implementation-plan +[^ ]+\.md`, including `references/artifact-shape.md`.</label>
         </li>
         <li>
           <input type="checkbox" id="ac12">
-          <label for="ac12">`bash tests/plugins/test-build-skill.sh`, `bash tests/plugins/test-build-proposal.sh`, `bash tests/plugins/test-write-prompt-proposal-type.sh`, and `bash tests/plugins/test-proposal-prompt-pipeline.sh` all exit 0.</label>
+          <label for="ac12">`prompt-artifact`&#39;s library gallery offers five filter chips and renders `type: proposal` cards reachable by their own chip.</label>
         </li>
         <li>
           <input type="checkbox" id="ac13">
-          <label for="ac13">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 6.0.0.</label>
+          <label for="ac13">`bash tests/plugins/test-build-skill.sh`, `bash tests/plugins/test-build-proposal.sh`, `bash tests/plugins/test-write-prompt-proposal-type.sh`, and `bash tests/plugins/test-proposal-prompt-pipeline.sh` all exit 0.</label>
         </li>
         <li>
           <input type="checkbox" id="ac14">
-          <label for="ac14">`docs/plans/merge-plan-interview-into-plan-agent.md:26`&#39;s relative link into `../proposals/` still resolves.</label>
+          <label for="ac14">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 6.0.0.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac15">
+          <label for="ac15">`docs/plans/merge-plan-interview-into-plan-agent.md:26`&#39;s relative link into `../proposals/` still resolves.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
