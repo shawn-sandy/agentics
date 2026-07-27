@@ -123,11 +123,18 @@ def _dom_fields(content):
 
     Form controls are read from inside `<form>` only, so an unrelated control
     elsewhere on the page is not mistaken for a model field.
+
+    A surface that does not exist maps to None; one that exists but binds no
+    fields maps to []. The two are NOT the same: a table whose every
+    `data-field` was stripped is drift, while a prototype that simply has no
+    table is not, and collapsing both to "falsy" silently accepts the first.
     """
     content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
 
+    table_present = re.search(r"<th\b", content) is not None
     table = list(re.findall(r'<th[^>]*\bdata-field="([^"]+)"', content))
 
+    form_present = re.search(r"<form\b", content) is not None
     form = []
     seen = set()
     for form_m in re.finditer(r"<form\b[^>]*>(.*?)</form>", content, re.DOTALL):
@@ -138,7 +145,10 @@ def _dom_fields(content):
                 seen.add(attr.group(1))
                 form.append(attr.group(1))
 
-    return {"table headers": table, "form fields": form}
+    return {
+        "table headers": table if table_present else None,
+        "form fields": form if form_present else None,
+    }
 
 
 def _plan_proto_model(plan_path):
@@ -212,8 +222,8 @@ def check(proto_path):
     # One warning either way: a field renamed in both is one mistake, not two.
     parts = []
     for label, rendered in _dom_fields(content).items():
-        if not rendered:
-            continue
+        if rendered is None:
+            continue  # surface absent — nothing to compare, not drift
         field, kind = _first_difference(model_fields, rendered)
         if field is not None:
             parts.append(f"{field!r} is {kind} in its {label}")

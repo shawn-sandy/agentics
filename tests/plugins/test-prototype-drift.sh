@@ -165,6 +165,46 @@ write_plan "$PLAN" "$MODEL_2"
 run_drift "$PROTO"
 expect "a reordered column is detected" 1 "reordered"
 
+# 2e. The table surface still exists but every data-field binding was stripped.
+# `if not rendered` treated an emptied surface the same as an absent one and
+# went silent; a present-but-empty surface is drift.
+write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" date exercise
+python3 - "$PROTO" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+open(p, 'w').write(re.sub(r'\sdata-field="[^"]*"', '', s))
+PY
+run_drift "$PROTO"
+expect "a table stripped of every data-field is detected" 1 "table headers"
+
+# 2f. The form still exists but every control was removed.
+write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" date exercise
+python3 - "$PROTO" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+i, j = s.index('<form'), s.index('</form>')
+open(p, 'w').write(s[:i] + re.sub(r'<input\b[^>]*>', '', s[i:j]) + s[j:])
+PY
+run_drift "$PROTO"
+expect "a form emptied of every control is detected" 1 "form fields"
+
+# 2g. A surface that genuinely does not exist is NOT drift — the distinction
+# the None sentinel exists to preserve.
+python3 - "$PROTO" "$MODEL_2" <<'PY'
+import sys
+p, model = sys.argv[1], sys.argv[2]
+open(p, 'w').write(
+    '<meta name="proto-source" content="docs/plans/track-gym-workouts.md">\n'
+    '<script type="application/json" id="proto-model">' + model + '</script>\n'
+    '<p>A prototype with neither a table nor a form.</p>\n'
+)
+PY
+write_plan "$PLAN" "$MODEL_2"
+run_drift "$PROTO"
+expect "a prototype with no table and no form is silent" 0
+
 # 3. Model diverges from the plan only — DOM was hand-edited to match.
 write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_RENAMED" day exercise
 run_drift "$PROTO"
