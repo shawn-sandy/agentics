@@ -48,19 +48,45 @@ in the scratchpad:
 
 ```bash
 PR=<number-or-url>
-BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
-HEAD=$(gh pr view "$PR" --json headRefName --jq .headRefName)
-git fetch -q origin "$BASE" "$HEAD" 2>/dev/null
+NUM=$(gh pr view "$PR" --json number --jq .number)
+OWNER=$(gh repo view --json owner --jq .owner.login)
+REPO=$(gh repo view --json name --jq .name)
 
 gh pr view "$PR" --json number,title,body,url,author,state,mergedAt,labels
 gh pr diff "$PR" --name-only                              # no --stat flag exists
-git log --format='%s%n%b%n---' "origin/$BASE".."origin/$HEAD"
+
+# Commit bodies come from the API, not from a local fetch. `headRefName` is only
+# a branch name: for a fork PR, a deleted head branch, or a PR URL pointing at
+# another repository, that ref does not exist on this origin, so a
+# `git fetch origin "$HEAD"` fails and takes the commit bodies down with it —
+# and those carry the *why*, which nothing else in this brief supplies.
+gh pr view "$PR" --json commits \
+  --jq '.commits[] | .messageHeadline + "\n" + .messageBody + "\n---"'
+
+# Top-level discussion only.
 gh pr view "$PR" --json comments,reviews \
   --jq '{comments: [.comments[].body], reviews: [.reviews[] | {state, body}]}'
+
+# Inline review threads, with resolution status. The payload above carries
+# neither: `comments` is top-level issue comments, and `reviews` keeps only each
+# review's own state and body — not the thread comments and not whether anyone
+# resolved them. Unresolved findings live here or nowhere.
+gh api graphql -f query='
+query($owner:String!,$repo:String!,$num:Int!){
+  repository(owner:$owner,name:$repo){ pullRequest(number:$num){
+    reviewThreads(first:100){ nodes{ isResolved path
+      comments(first:20){ nodes{ author{login} body } } } } } } }' \
+  -F owner="$OWNER" -F repo="$REPO" -F num="$NUM" \
+  --jq '.data.repository.pullRequest.reviewThreads.nodes[]
+        | {resolved: .isResolved, path, comments: [.comments.nodes[].body]}'
 ```
 
-If the PR number itself is bad, `gh pr view` fails on the first line and `$BASE`
-is empty — report that and stop rather than gathering a partial brief.
+If the PR reference itself is bad, `gh pr view` fails on the first line and
+`$NUM` is empty — report that and stop rather than gathering a partial brief.
+
+Use each thread's `isResolved` to sort it: **`false` → Review follow-ups**,
+**`true` → Decisions** (what the finding was and what changed because of it).
+Guessing resolution from comment text is what this query exists to avoid.
 
 ### Diff budget
 
@@ -81,13 +107,27 @@ avoids by refusing to read the transcript JSONL directly. So it is capped:
 - **Report how many files were summarized rather than read**, in the recap
   itself. A partial read that reads as complete is worse than no read at all.
 
+`gh pr diff` takes **no pathspec** — its synopsis is
+`gh pr diff [<number> | <url> | <branch>] [flags]`, and passing a filename as a
+second positional argument fails outright with `accepts at most 1 arg(s)`. So
+take the diff once and split it locally:
+
 ```bash
-gh pr diff "$PR" --name-only | head -20 | while IFS= read -r f; do
-  gh pr diff "$PR" -- "$f"
-done
-TOTAL=$(gh pr diff "$PR" --name-only | wc -l)
-[ "$TOTAL" -gt 20 ] && echo "NOTE: $((TOTAL - 20)) file(s) beyond the budget — name-only"
+gh pr diff "$PR" > "$SCRATCH/pr.diff"
+TOTAL=$(gh pr diff "$PR" --name-only | wc -l | tr -d ' ')
+
+# Each file's section starts at `diff --git`; keeping the first 20 sections
+# keeps their hunks intact.
+awk '/^diff --git /{n++} n<=20' "$SCRATCH/pr.diff"
+
+if [ "$TOTAL" -gt 20 ]; then
+  echo "NOTE: $((TOTAL - 20)) file(s) past the 20-file budget — name-only:"
+  gh pr diff "$PR" --name-only | tail -n +21
+fi
 ```
+
+Read the capped output, not `$SCRATCH/pr.diff` — writing the whole diff to disk
+is free, reading it into context is the thing being budgeted.
 
 Commit bodies still lead for the *why*; hunks only supply the *what*.
 
