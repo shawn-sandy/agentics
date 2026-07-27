@@ -92,15 +92,17 @@ try {
     merged.join('\n') +
     chromeText.slice(last.index + last[0].length);
 
-  // Patch the visible card count — real template ("<p>48 plans …", "<p>12
-  // items …") and the build script's embedded fallback ("&middot; 48 plans").
-  // The noun is whitelisted rather than matched as \w+ so an unrelated
-  // "<p>3 columns" in the chrome cannot be rewritten. Cosmetic; skip silently
-  // when neither pattern is present.
-  const COUNT_NOUN = /(plans|items|artifacts)\b/.source;
-  const counted = result
-    .replace(new RegExp(`(<p>)\\d+( ${COUNT_NOUN})`), `$1${merged.length}$2`)
-    .replace(new RegExp(`(&middot;\\s*)\\d+(\\s*${COUNT_NOUN})`), `$1${merged.length}$2`);
+  // Patch EVERY visible card count, not just the first. Both galleries render
+  // the total twice — a header ("<p>48 plans …", "<p>12 items …") and a footer
+  // ("<span>12 items</span>") — and the build script has a third embedded
+  // fallback form ("&middot; 48 plans"). Patching one leaves the page showing
+  // two different totals until the next regeneration, which reads as data loss
+  // rather than the cosmetic drift it is; hence the /g and the <span> form.
+  // The noun stays whitelisted rather than matched as \w+ so an unrelated
+  // "<p>3 columns" in the chrome cannot be rewritten. Cosmetic; skips silently
+  // when no pattern is present.
+  const COUNT_RE = /(<p>|<span>|&middot;\s*)(\d+)(\s*(?:plans|items|artifacts)\b)/g;
+  const counted = result.replace(COUNT_RE, (_m, pre, _n, post) => `${pre}${merged.length}${post}`);
 
   writeFileSync(oursPath, counted);
   process.exit(0);

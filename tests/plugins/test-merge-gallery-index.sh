@@ -21,12 +21,14 @@ fail() { echo "  FAIL — $1"; FAILURES=$((FAILURES + 1)); }
 
 card() { printf '<a class="gallery-card" href="%s">%s</a>' "$1" "$2"; }
 
-# Build a gallery page: chrome + cards + a decoy count the driver must not touch.
+# Build a gallery page shaped like the real ones: a header count, a decoy the
+# driver must not touch, the cards, then the footer count the generated
+# galleries also carry. The footer is the reason the patch has to be global.
 page() {
   local noun="$1" count="$2"; shift 2
   printf '<html><body><p>%s %s</p><p>3 columns</p>\n' "$count" "$noun"
   for c in "$@"; do printf '%s\n' "$c"; done
-  printf '</body></html>\n'
+  printf '<footer><span>%s %s</span></footer></body></html>\n' "$count" "$noun"
 }
 
 run_driver() { node "$DRIVER" "$1" "$2" "$3" >/dev/null 2>&1; }
@@ -61,6 +63,12 @@ grep -q '<p>3 columns</p>' <<<"$RESULT" \
   && pass "leaves non-count numbers in the chrome alone" \
   || fail "rewrote an unrelated number in the chrome"
 
+# Both galleries render the total twice. Patching only the header leaves the
+# page contradicting itself, which reads as lost cards rather than stale chrome.
+grep -q '<span>3 items</span>' <<<"$RESULT" \
+  && pass "patches the footer count as well as the header" \
+  || fail "footer count left stale (got: $(grep -oE '<span>[0-9]+ items</span>' <<<"$RESULT" || echo none))"
+
 # ---------------------------------------------------------------------------
 # 5. A card deleted on one side stays deleted (not resurrected by the union).
 # ---------------------------------------------------------------------------
@@ -68,8 +76,11 @@ page items 2 "$(card keep.html Keep)" "$(card gone.html Gone)" > "$WORK/b2.html"
 page items 1 "$(card keep.html Keep)"                          > "$WORK/o2.html"
 page items 2 "$(card keep.html Keep)" "$(card gone.html Gone)" > "$WORK/t2.html"
 
-run_driver "$WORK/b2.html" "$WORK/o2.html" "$WORK/t2.html"
-if grep -q 'href="gone.html"' "$WORK/o2.html"; then
+# The exit status matters here: a driver that crashes leaves o2.html untouched,
+# which already lacks gone.html, so the grep below would "pass" on a dead driver.
+if ! run_driver "$WORK/b2.html" "$WORK/o2.html" "$WORK/t2.html"; then
+  fail "driver exited non-zero on the deletion merge"
+elif grep -q 'href="gone.html"' "$WORK/o2.html"; then
   fail "resurrected a card deleted on our side"
 else
   pass "keeps a deleted card deleted"
@@ -82,8 +93,9 @@ page plans 1 "$(card p1.html One)"                        > "$WORK/b3.html"
 page plans 2 "$(card p1.html One)" "$(card p2.html Two)"  > "$WORK/o3.html"
 page plans 2 "$(card p1.html One)" "$(card p3.html Tre)"  > "$WORK/t3.html"
 
-run_driver "$WORK/b3.html" "$WORK/o3.html" "$WORK/t3.html"
-if grep -q 'href="p3.html"' "$WORK/o3.html" && grep -q '<p>3 plans</p>' "$WORK/o3.html"; then
+if ! run_driver "$WORK/b3.html" "$WORK/o3.html" "$WORK/t3.html"; then
+  fail "driver exited non-zero on the plans merge"
+elif grep -q 'href="p3.html"' "$WORK/o3.html" && grep -q '<p>3 plans</p>' "$WORK/o3.html"; then
   pass "plans gallery still unions and counts"
 else
   fail "regressed the plans gallery"

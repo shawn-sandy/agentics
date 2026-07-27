@@ -46,7 +46,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ### Fixed
 
-- **Artifacts gallery merge conflicts** — `docs/artifacts/index.html` is now registered against the existing `plans-index` merge driver in `.gitattributes`, so two branches each saving an artifact no longer conflict on the regenerated index. Both galleries emit the same `<a class="gallery-card">` markup, so one driver serves both; its count patch learned the artifacts gallery's `items` noun alongside `plans`. Adds `tests/plugins/test-merge-gallery-index.sh` — the first coverage either merge driver has had
+- **Artifacts gallery merge conflicts** — `docs/artifacts/index.html` is now registered against the existing `plans-index` merge driver in `.gitattributes`, so two branches each saving an artifact no longer conflict on the regenerated index. Both galleries emit the same `<a class="gallery-card">` markup, so one driver serves both. The count patch also learned the artifacts gallery's `items` noun and now rewrites **every** rendered total rather than the first — both galleries print the count twice (a header and a `<span>` footer), and patching one left the page contradicting itself. Adds `tests/plugins/test-merge-gallery-index.sh`, wired into `check-plugin-versions.yml` — the first coverage either merge driver has had
 - **HTML plans responsive layout** — Retrofit responsive CSS into every HTML plan and hardened the skeleton (plan-agent 2.4.1, #321); moved the PDF button and status badge below the title for responsiveness (#322); set pipeline-node padding to 1rem (#298)
 - **CI version bump** — Reverted to direct-push version bump with ruleset bypass (#286)
 
