@@ -5,6 +5,31 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-07-27
+
+### Fixed
+
+- `/artifact-tools:team-recap` and `/artifact-tools:product-doc` gather PR
+  commit bodies through `gh pr view --json commits` instead of fetching
+  `headRefName` and running `git log` across it. `headRefName` is only a branch
+  name — for a fork-backed PR, a deleted head branch, or a PR URL pointing at
+  another repository, that ref does not exist on this origin, so the fetch
+  failed with stderr discarded and the `git log` produced nothing. Both commands
+  say the commit bodies should lead the recap, and both were silently dropping
+  them. The API call needs no fetch and no local ref.
+- `/artifact-tools:team-recap` and `/artifact-tools:product-doc` read inline
+  review threads with their resolution status via a `reviewThreads` GraphQL
+  query. The previous `--json comments,reviews` payload carried neither: it
+  holds top-level issue comments and each review's own state and body, not the
+  inline thread comments and not whether anyone resolved them — so "Open items
+  from unresolved review threads" (team-recap) and "Known gaps from unresolved
+  review threads" (product-doc) had no source, and the instruction to file a
+  resolved finding under Decisions instead was undecidable. Both now sort each
+  thread on `isResolved` rather than guessing from comment text.
+
+Both fixes were made in `/artifact-tools:eng-recap` (1.7.0) first; this
+backports them so the three PR-mode commands gather identically.
+
 ## [1.7.0] - 2026-07-27
 
 ### Added
