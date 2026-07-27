@@ -106,6 +106,28 @@ Resolved in the 2026-07-27 review:
    6.0.0 onward; the proposal doc is a deprecated mirror, not a second source of truth.
    Rejected: clean break; full removal.
 
+Resolved during plan authoring (2026-07-27), after this draft's first round:
+
+5. **`status:` uses the proposal-native vocabulary** `gathering` / `converged`, not the plan
+   lifecycle, so no `plan-status` tooling promise is implied.
+6. **`--dir` retargets to the prompts directory**, following the authoritative artifact. The
+   deprecated proposal copy always lands in the default `docs/proposals/`, so the flag needs
+   no further change at 6.1.0.
+7. **Appendices map to a single catch-all `{{APPENDICES}}` slot** — pass-through markdown,
+   no truncation rule. This closes what was open question 4 in the first round; see
+   *Appendix B*. Rejected: an explicit repeating slot (adds repeat semantics no other
+   template has); a truncation rule (discards grounded content).
+8. **The prompt filename omits the date for this type** — `proposal-{slug}.md`, not
+   `{type}-{slug}-{date}.md`. A living document spanning two calendar days would otherwise
+   derive a different path on round two and silently write a second file, defeating decision
+   2. The slug is the identity; `created:` and `modified:` carry the dates.
+9. **Tier behavior is unchanged.** Tier 0 still writes no artifact of either kind, so
+   `build/SKILL.md:189-193`'s "No proposal written" fall-through keeps firing; Tier 1 emits
+   a prompt from the short slot subset only.
+10. **An in-place rewrite diffs for hand edits first** and asks before overwriting. The
+    prompt file is now the authoritative deliverable, so silently clobbering a user's edits
+    to it is worse than the duplicate file the rewrite rule replaces.
+
 Consequence of decision 4, recorded explicitly: dual-write means 6.0.0 does **not** deliver
 "a prompt as the sole deliverable." That property arrives in 6.1.0. Every workstream below
 is scoped accordingly.
@@ -118,12 +140,16 @@ Independently verifiable: after this lands, `write-prompt` appears in the sessio
 registry. This is a prerequisite for every other workstream.
 
 **WS2 — Extend `write-prompt` with the `proposal` type.** *(L)*
-- New `references/proposal-prompt-template.md` with slots for the 13 canonical sections.
+- New `references/proposal-prompt-template.md` with slots for the 13 canonical sections,
+  **including the catch-all `{{APPENDICES}}` slot** (decision 7) so existing proposals'
+  appendices survive the conversion rather than being silently dropped.
 - Phase 1: fifth row in the type table and in the technique matrix.
 - Phase 3: XML layer mapping for the new type.
 - Phase 4: template-selection entry.
-- Phase 7: `status:` and `modified:` frontmatter keys, and the in-place rewrite rule
-  (round N+1 overwrites rather than tripping the `-2`/`-3` uniqueness guard).
+- Phase 7: `status:` and `modified:` frontmatter keys; the date-free `proposal-{slug}.md`
+  filename rule (decision 8) that gives the living document a stable identity across rounds;
+  and the in-place rewrite rule replacing the `-2`/`-3` uniqueness guard, gated by the
+  hand-edit drift check (decision 10).
 
 **WS3 — Interview bypass.** *(M)*
 `build-proposal` Step 5 already resolves decisions with the human; `write-prompt` Phase 2
@@ -133,7 +159,14 @@ official pattern, so this is repo-local design. The likely shape: a flag or a st
 
 **WS4 — Rewire `build-proposal`.** *(M)*
 - Step 6 dual-writes: proposal doc (deprecated) plus the prompt via `write-prompt`.
+- **The legacy proposal copy carries a deprecation banner** naming the prompt path as the
+  authoritative artifact. This is a required deliverable, not a nicety: without it a reader
+  opening the proposal in 6.0.0 cannot tell the mirror from the source of truth, which is
+  risk 4 below. Covered by a test asserting the banner is present in the written copy.
+- Step 6 derives the prompt path as `proposal-{slug}.md` (decision 8), never by reading
+  `write-prompt`'s output back — `Skill()` has no documented return value.
 - Step 8 hands off the **prompt** path.
+- Tier 0 continues to write nothing at all (decision 9), preserving `build`'s fall-through.
 - `references/artifact-shape.md` gains the section-to-slot mapping (*Appendix B*) and its
   hardcoded `docs/proposals/<slug>.md` at line 102 is updated.
 - `allowed-tools` already includes `Skill`; no frontmatter change needed.
@@ -204,20 +237,14 @@ Plugin Structure tree which omits `write-prompt/` entirely), root `README.md:451
 
 ## Open questions
 
-Decisions, not missing facts. All require a human call before or during planning.
+Decisions, not missing facts. Questions 1, 2, and 4 from this proposal's first round were
+resolved during plan authoring and now appear as locked decisions 5, 6, and 7 — they are
+struck from this list rather than left to contradict the record. What genuinely remains:
 
-1. **`status:` vocabulary for prompt frontmatter.** Reuse the plan lifecycle
-   (`todo`/`in-progress`/`completed`) so `plan-status` tooling could someday apply, or a
-   proposal-native vocabulary (`gathering`/`converged`)? The two carry different downstream
-   promises.
-2. **What does `--dir` mean during dual-write?** It currently overrides the proposals
-   directory. Does it now target the prompts directory, the proposals directory, or split
-   into two flags for one release?
-3. **Is 6.1.0 automatic or gated?** Decision 4 sets the deprecation window at one release.
+1. **Is 6.1.0 automatic or gated?** Decision 4 sets the deprecation window at one release.
    Should removal ship on schedule, or wait on evidence that nothing depends on
-   `docs/proposals/`?
-4. **Appendix handling in the template.** Explicit repeating slot, a single catch-all
-   `{{APPENDICES}}`, or an accepted truncation rule with a pointer to the transcript?
+   `docs/proposals/`? This is deliberately out of the 6.0.0 plan's scope and does not block
+   implementation — it becomes live only once 6.0.0 ships.
 
 ## Roadmap
 
@@ -265,7 +292,7 @@ template. This is the concrete artifact WS2 has to produce.
 
 | Canonical section | Proposed slot | Notes |
 |---|---|---|
-| Front-matter | frontmatter keys | plus `status:`, `modified:` per decision 2 |
+| Front-matter | frontmatter keys | plus `status:`, `modified:` per decision 2; filename is date-free `proposal-{slug}.md` per decision 8 |
 | Title + framing note | H1 + `<framing>` | framing note becomes a fixed line, not a slot |
 | TL;DR | `{{TLDR}}` | Tier 2 only; omitted for Tier 1 |
 | Context | `{{CONTEXT}}` | inside `<context>` |
@@ -276,7 +303,7 @@ template. This is the concrete artifact WS2 has to produce.
 | Risks & tensions | `{{RISKS}}` | repeating |
 | Open questions | `{{OPEN_QUESTIONS}}` | decisions only |
 | Roadmap | `{{ROADMAP}}` | phased, S/M/L |
-| Appendices | unresolved | see open question 4 |
+| Appendices | `{{APPENDICES}}` | catch-all, pass-through markdown; no truncation (decision 7) |
 | Next step | `{{CORE_INSTRUCTION}}` | the handoff becomes the prompt's instruction |
 
 The last row is the load-bearing one: the proposal's *Next step* section and the prompt's
@@ -285,11 +312,18 @@ rather than a forced fit.
 
 ## Next step
 
-The proposal is decision-complete at `docs/proposals/replace-proposal-doc-with-prompt.md`.
-To turn it into an execution plan, run:
+**Done — the execution plan exists** at `docs/plans/refactor-build-proposal-to-emit-prompt.md`
+(rendered alongside as `.html`), authored 2026-07-27 via:
 
 `/plan-agent:implementation-plan author an execution plan from the proposal at docs/proposals/replace-proposal-doc-with-prompt.md`
 
 Lead with the objective, not a bare `.md` path — a bare path drops `implementation-plan`
 into conversion mode and yields a plan whose steps restate proposal headings instead of
 naming real actions. This skill decided *should-we + what*; planning owns *how*.
+
+On "decision-complete": in this skill's vocabulary the term means **the remaining unknowns
+are decisions rather than missing facts** — not that no decision remains. A proposal is
+expected to ship with an Open questions section; that section holding *facts* is the defect,
+not it being non-empty. Six of this proposal's original open items were resolved during plan
+authoring and moved into Locked decisions 5-10; the one that remains (the 6.1.0 removal
+gate) is explicitly out of the 6.0.0 plan's scope and blocks nothing in it.
