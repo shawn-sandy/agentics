@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>build can now author the plan it implements — PR #470</title>
+<style>*{box-sizing:border-box}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #f5f6f4;
+    --surface: #ffffff;
+    --surface-2: #eceeea;
+    --ink: #191c1a;
+    --ink-2: #414a45;
+    --muted: #6c746e;
+    --line: #d8ddd7;
+    --accent: #276a5b;
+    --accent-soft: #e2ede9;
+    --warn: #8a5410;
+    --warn-soft: #f6ebdc;
+
+    --display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --measure: 72ch;
+    --s1: 0.35rem;
+    --s2: 0.7rem;
+    --s3: 1.1rem;
+    --s4: 1.8rem;
+    --s5: 2.8rem;
+    --s6: 4.2rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #121614;
+      --surface: #1a201d;
+      --surface-2: #222a26;
+      --ink: #e7ece9;
+      --ink-2: #b9c3bd;
+      --muted: #8b968f;
+      --line: #2c352f;
+      --accent: #5fbfa6;
+      --accent-soft: #1d2b27;
+      --warn: #d8a05c;
+      --warn-soft: #2b2118;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #121614;
+    --surface: #1a201d;
+    --surface-2: #222a26;
+    --ink: #e7ece9;
+    --ink-2: #b9c3bd;
+    --muted: #8b968f;
+    --line: #2c352f;
+    --accent: #5fbfa6;
+    --accent-soft: #1d2b27;
+    --warn: #d8a05c;
+    --warn-soft: #2b2118;
+  }
+
+  :root[data-theme="light"] {
+    --paper: #f5f6f4;
+    --surface: #ffffff;
+    --surface-2: #eceeea;
+    --ink: #191c1a;
+    --ink-2: #414a45;
+    --muted: #6c746e;
+    --line: #d8ddd7;
+    --accent: #276a5b;
+    --accent-soft: #e2ede9;
+    --warn: #8a5410;
+    --warn-soft: #f6ebdc;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: var(--s5) var(--s3) var(--s6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s5);
+  }
+
+  .prose { max-width: var(--measure); }
+
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    text-wrap: balance;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: clamp(1.9rem, 1.3rem + 2.4vw, 3rem); letter-spacing: -0.015em; }
+  h2 { font-size: clamp(1.35rem, 1.1rem + 1.1vw, 1.85rem); }
+  h3 { font-size: 1.08rem; font-family: var(--body); font-weight: 650; letter-spacing: -0.005em; }
+
+  p { max-width: var(--measure); }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible,
+  summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    padding: 0.1em 0.34em;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: var(--s3); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    align-items: center;
+  }
+
+  .eyebrow .merged { color: var(--accent); }
+
+  .lede {
+    font-family: var(--display);
+    font-size: clamp(1.05rem, 0.98rem + 0.4vw, 1.22rem);
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: var(--s3) var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+  }
+
+  .stat .num {
+    font-family: var(--mono);
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .stat .num.v { color: var(--accent); font-size: 1.35rem; padding-top: 0.28rem; }
+
+  .stat .lbl {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---- sections ---- */
+  section { display: flex; flex-direction: column; gap: var(--s3); }
+
+  .sec-head { display: flex; flex-direction: column; gap: var(--s1); }
+
+  .sec-head .tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 0;
+  }
+
+  /* ---- change cards ---- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: var(--s3);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  .card h3 { margin: 0; }
+  .card p { margin: 0; max-width: none; font-size: 0.95rem; color: var(--ink-2); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+
+  .chip.breaking { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+  .chip.reach { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+  .card .how {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--ink);
+    background: var(--surface-2);
+    border-radius: 3px;
+    padding: 0.45rem 0.6rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* ---- diagrams ---- */
+  .figure { display: flex; flex-direction: column; gap: var(--s2); }
+
+  .figure figcaption {
+    font-size: 0.9rem;
+    color: var(--muted);
+    max-width: var(--measure);
+  }
+
+  /* Mermaid bakes a cream-on-dark palette in at render time and does not follow
+     the viewer's theme, so this card holds one fixed dark ground on both — a
+     white card would leave the diagram's own labels near-invisible. */
+  .mermaid-diagram {
+    background: #1a1d21;
+    border: 1px solid #2c3238;
+    border-radius: 4px;
+    padding: var(--s3);
+    overflow-x: auto;
+  }
+
+  .mermaid-diagram svg { max-width: none; height: auto; }
+
+  /* ---- tables ---- */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+
+  th, td {
+    text-align: left;
+    padding: 0.62rem 0.85rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+  td:first-child { font-weight: 550; color: var(--ink); }
+  .col-before { color: var(--muted); }
+  .col-after { color: var(--ink-2); }
+
+  /* ---- decisions ---- */
+  .decisions { display: flex; flex-direction: column; gap: var(--s3); }
+
+  .decision {
+    border-left: 2px solid var(--accent);
+    padding-left: var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+  }
+
+  .decision .what { font-weight: 650; }
+  .decision p { margin: 0; font-size: 0.95rem; color: var(--ink-2); }
+  .decision .rejected { color: var(--muted); }
+  .decision .rejected b { color: var(--warn); font-weight: 600; }
+
+  /* ---- lists ---- */
+  ul.notes { list-style: none; display: flex; flex-direction: column; gap: var(--s2); max-width: var(--measure); }
+
+  ul.notes > li {
+    padding-left: var(--s3);
+    border-left: 1px solid var(--line);
+    font-size: 0.95rem;
+    color: var(--ink-2);
+  }
+
+  ul.notes > li b { color: var(--ink); font-weight: 650; }
+
+  /* ---- files ---- */
+  .filegroup { display: flex; flex-direction: column; gap: var(--s2); }
+
+  .filegroup h3 {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .files { list-style: none; display: flex; flex-direction: column; gap: var(--s2); }
+
+  .files li { display: flex; flex-direction: column; gap: 0.15rem; }
+
+  .files .path {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--accent);
+    word-break: break-all;
+  }
+
+  .files .why { font-size: 0.92rem; color: var(--ink-2); max-width: var(--measure); }
+
+  /* ---- glossary ---- */
+  .glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: var(--s3) var(--s4); }
+
+  .glossary div { display: flex; flex-direction: column; gap: 0.1rem; }
+
+  .glossary dt { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); }
+  .glossary dd { font-size: 0.9rem; color: var(--ink-2); margin: 0; }
+
+  footer {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: var(--s3);
+  }
+
+  @media (max-width: 40rem) {
+    .wrap { padding: var(--s4) var(--s3) var(--s5); gap: var(--s4); }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Pull request #470</span>
+      <span class="merged">Merged 2026-07-27</span>
+      <span>plan-agent 4.4.0 &rarr; 5.0.0</span>
+    </div>
+    <h1><code style="font-size:0.78em;background:none;padding:0">build</code> can now author the plan it implements</h1>
+    <p class="lede">
+      <code>/plan-agent:build</code> used to stop and tell you to go make a plan first.
+      Now, when you run the command without naming one, it walks you through making
+      that plan — proposal, plan, review — and then implements what comes back.
+    </p>
+  </header>
+
+  <section aria-labelledby="glance">
+    <h2 id="glance" class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">At a glance</h2>
+    <div class="stats">
+      <div class="stat"><span class="num">8</span><span class="lbl">Changes shipped</span></div>
+      <div class="stat"><span class="num">10</span><span class="lbl">Files touched</span></div>
+      <div class="stat"><span class="num">7</span><span class="lbl">Decisions</span></div>
+      <div class="stat"><span class="num">5</span><span class="lbl">Open items</span></div>
+      <div class="stat"><span class="num">9&rarr;18</span><span class="lbl">Tests</span></div>
+      <div class="stat"><span class="num v">MAJOR</span><span class="lbl">Version bump</span></div>
+    </div>
+    <p class="prose">
+      The second half of the change is a safety fix: when you ran <code>build</code> bare,
+      it used to quietly pick up whatever unfinished plan it happened to find. It now
+      shows you the candidates and asks. Nothing about the assistant's automatic
+      behaviour changed — the new chain is reachable only when you type the slash
+      command yourself.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">What changed</span>
+      <h2>Eight things are different</h2>
+    </div>
+
+    <div class="cards">
+
+      <article class="card">
+        <h3><code>build</code> with no plan now makes one</h3>
+        <div class="chips"><span class="chip">Affects: anyone running the command</span></div>
+        <p>The command no longer dead-ends. It asks whether to start from a proposal or
+        go straight to plan authoring, hands off to the skill that owns each stage, and
+        implements the plan that comes back.</p>
+        <div class="how">/plan-agent:build</div>
+      </article>
+
+      <article class="card">
+        <h3>You can hand it an objective instead of a file</h3>
+        <div class="chips"><span class="chip">Affects: anyone running the command</span></div>
+        <p>The command accepts free text. The first word decides how the argument is
+        read — a path if it ends in <code>.md</code>/<code>.html</code> or contains a
+        <code>/</code>, otherwise an objective.</p>
+        <div class="how">/plan-agent:build add a health check endpoint</div>
+      </article>
+
+      <article class="card">
+        <h3>Bare <code>build</code> asks instead of assuming</h3>
+        <div class="chips">
+          <span class="chip breaking">Breaking</span>
+          <span class="chip">Affects: anyone relying on the old pickup</span>
+        </div>
+        <p>A single unfinished plan used to be adopted with no prompt. It is now
+        presented as an option, alongside <em>None of these — author a new plan</em>.
+        The offer shows at most three candidates and states how many were hidden,
+        because the question widget renders at most four choices.</p>
+        <div class="how">/plan-agent:build  # in a repo with todo plans</div>
+      </article>
+
+      <article class="card">
+        <h3>New argument format</h3>
+        <div class="chips">
+          <span class="chip breaking">Breaking</span>
+          <span class="chip">Affects: scripts and notes</span>
+        </div>
+        <p>Flags are stripped before anything is classified, so <code>--dir tmp/plans</code>
+        on its own is still a bare <code>build</code>, not an objective named
+        <code>--dir</code>.</p>
+        <div class="how">[&lt;plan.md|plan.html&gt;] [&lt;objective&gt;] [--dir &lt;path&gt;]</div>
+      </article>
+
+      <article class="card">
+        <h3>The uncommitted-work check moved to the front</h3>
+        <div class="chips"><span class="chip">Affects: anyone with a dirty tree</span></div>
+        <p>The check used to sit just before implementation. On a chained run that meant
+        crossing a whole proposal loop and plan interview before being asked about files
+        you already had open. It now runs first — and it ignores the plan's own spec, its
+        rendered HTML, and any proposal the chain just wrote, since those are not
+        pre-existing work.</p>
+      </article>
+
+      <article class="card">
+        <h3>The model is pinned for the implementation stage</h3>
+        <div class="chips"><span class="chip">Affects: nobody directly</span></div>
+        <p>A skill's model override lasts the rest of the turn and does not unwind when
+        the skill ends, so without the pin a chained run would write source code on
+        whatever model the last planning skill happened to declare.</p>
+        <div class="how">model: opus</div>
+      </article>
+
+      <article class="card">
+        <h3>Every gate has an answer when it cannot ask</h3>
+        <div class="chips"><span class="chip">Affects: headless and automated runs</span></div>
+        <p>When the question tool is unavailable, every gate stops and reports the choice
+        it would have offered. It never picks for you.</p>
+      </article>
+
+      <article class="card">
+        <h3>Test coverage doubled</h3>
+        <div class="chips"><span class="chip">Affects: contributors</span></div>
+        <p>Nine new checks covering the chain, the discovery offer, guard ordering, and
+        the argument grammar. Each was proven load-bearing by reverting the step it
+        guards and confirming it fails.</p>
+        <div class="how">bash tests/plugins/test-build-skill.sh  # 18/18</div>
+      </article>
+
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">How it works now</span>
+      <h2>Two shapes changed</h2>
+    </div>
+
+    <figure class="figure">
+      <div class="mermaid-diagram">
+<svg id="claude-mermaid-0" width="926.18359375" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="1564.09375" viewBox="0 0 926.18359375 1564.09375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#42392e;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(221.25, 42.1052631579%, 97.5490196078%);}#claude-mermaid-0 .error-text{fill:rgb(8.8815789475, 7.2368421054, 3.6184210527);stroke:rgb(8.8815789475, 7.2368421054, 3.6184210527);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#8a7f6d;stroke:#8a7f6d;}#claude-mermaid-0 .marker.cross{stroke:#8a7f6d;}#claude-mermaid-0 svg{font-family:-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#42392e;}#claude-mermaid-0 .cluster-label text{fill:#42392e;}#claude-mermaid-0 .cluster-label span{color:#42392e;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#42392e;color:#42392e;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#f4efe4;stroke:#7a6c52;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#8a7f6d!important;stroke-width:0;stroke:#8a7f6d;}#claude-mermaid-0 .arrowheadPath{fill:#0a090b;}#claude-mermaid-0 .edgePath .path{stroke:#8a7f6d;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#8a7f6d;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(245, 246, 244);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(245, 246, 244);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(245, 246, 244);fill:rgb(245, 246, 244);}#claude-mermaid-0 .labelBkg{background-color:rgba(245, 246, 244, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#7a6c52;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#42392e;}#claude-mermaid-0 .cluster span{color:#42392e;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:12px;background:hsl(221.25, 42.1052631579%, 97.5490196078%);border:1px solid hsl(221.25, 2.1052631579%, 87.5490196078%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#42392e;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(245, 246, 244);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(245, 246, 244);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(245, 246, 244);fill:rgb(245, 246, 244);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#7a6c52;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#7a6c52;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M489.188,86L489.188,90.167C489.188,94.333,489.188,102.667,489.188,110.333C489.188,118,489.188,125,489.188,128.5L489.188,132" id="claude-mermaid-0-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6NDg5LjE4NzUsInkiOjg2fSx7IngiOjQ4OS4xODc1LCJ5IjoxMTF9LHsieCI6NDg5LjE4NzUsInkiOjEzNn1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M489.188,190L489.188,194.167C489.188,198.333,489.188,206.667,489.188,214.333C489.188,222,489.188,229,489.188,232.5L489.188,236" id="claude-mermaid-0-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6NDg5LjE4NzUsInkiOjE5MH0seyJ4Ijo0ODkuMTg3NSwieSI6MjE1fSx7IngiOjQ4OS4xODc1LCJ5IjoyNDB9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M413.838,376.729L367.865,395.454C321.892,414.179,229.946,451.628,183.973,481.02C138,510.411,138,531.745,138,551.078C138,570.411,138,587.745,138,620.5C138,653.255,138,701.432,138,751.609C138,801.786,138,853.964,138,894.719C138,935.474,138,964.807,138,994.141C138,1023.474,138,1052.807,138,1072.974C138,1093.141,138,1104.141,138,1109.641L138,1115.141" id="claude-mermaid-0-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6NDEzLjgzODI2NTI4MTkyNzI1LCJ5IjozNzYuNzI4ODkwMjgxOTI3MjV9LHsieCI6MTM4LCJ5Ijo0ODkuMDc4MTI1fSx7IngiOjEzOCwieSI6NTUzLjA3ODEyNX0seyJ4IjoxMzgsInkiOjYwNS4wNzgxMjV9LHsieCI6MTM4LCJ5Ijo3NDkuNjA5Mzc1fSx7IngiOjEzOCwieSI6OTA2LjE0MDYyNX0seyJ4IjoxMzgsInkiOjk5NC4xNDA2MjV9LHsieCI6MTM4LCJ5IjoxMDgyLjE0MDYyNX0seyJ4IjoxMzgsInkiOjExMTkuMTQwNjI1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M442.51,405.4L431.543,419.347C420.577,433.293,398.644,461.186,387.677,485.798C376.711,510.411,376.711,531.745,376.711,551.078C376.711,570.411,376.711,587.745,376.711,620.5C376.711,653.255,376.711,701.432,376.711,751.609C376.711,801.786,376.711,853.964,376.711,894.719C376.711,935.474,376.711,964.807,376.711,994.141C376.711,1023.474,376.711,1052.807,376.711,1072.974C376.711,1093.141,376.711,1104.141,376.711,1109.641L376.711,1115.141" id="claude-mermaid-0-L_C_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_E_0" data-points="W3sieCI6NDQyLjUwOTY5MjE3MjMwNzg0LCJ5Ijo0MDUuNDAwMzE3MTcyMzA3ODR9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjQ4OS4wNzgxMjV9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjU1My4wNzgxMjV9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjYwNS4wNzgxMjV9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjc0OS42MDkzNzV9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjkwNi4xNDA2MjV9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjk5NC4xNDA2MjV9LHsieCI6Mzc2LjcxMDkzNzUsInkiOjEwODIuMTQwNjI1fSx7IngiOjM3Ni43MTA5Mzc1LCJ5IjoxMTE5LjE0MDYyNX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M561.67,379.596L601.084,397.843C640.497,416.09,719.325,452.584,758.739,476.331C798.152,500.078,798.152,511.078,798.152,516.578L798.152,522.078" id="claude-mermaid-0-L_C_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_F_0" data-points="W3sieCI6NTYxLjY2OTkzMTk1MTc5MDIsInkiOjM3OS41OTU2OTMwNDgyMDk4fSx7IngiOjc5OC4xNTIzNDM3NSwieSI6NDg5LjA3ODEyNX0seyJ4Ijo3OTguMTUyMzQzNzUsInkiOjUyNi4wNzgxMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,1173.141L138,1179.307C138,1185.474,138,1197.807,138,1209.474C138,1221.141,138,1232.141,138,1237.641L138,1243.141" id="claude-mermaid-0-L_D_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_G_0" data-points="W3sieCI6MTM4LCJ5IjoxMTczLjE0MDYyNX0seyJ4IjoxMzgsInkiOjEyMTAuMTQwNjI1fSx7IngiOjEzOCwieSI6MTI0Ny4xNDA2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M120.921,1363.014L117.804,1372.028C114.688,1381.041,108.455,1399.067,160.912,1419.942C213.368,1440.817,324.513,1464.54,380.086,1476.401L435.658,1488.262" id="claude-mermaid-0-L_G_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_H_0" data-points="W3sieCI6MTIwLjkyMDczMTY5MTI4MTY2LCJ5IjoxMzYzLjAxNDQ4MTY5MTI4MTZ9LHsieCI6MTAyLjIyMjY1NjI1LCJ5IjoxNDE3LjA5Mzc1fSx7IngiOjQzOS41NzAzMTI1LCJ5IjoxNDg5LjA5NzM4ODE4OTYyMTZ9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M164.974,1353.119L172.255,1363.782C179.536,1374.444,194.098,1395.769,196.845,1412.078C199.592,1428.387,190.523,1439.681,185.989,1445.328L181.455,1450.975" id="claude-mermaid-0-L_G_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_I_0" data-points="W3sieCI6MTY0Ljk3NDQ2MTk0NTM2NjY0LCJ5IjoxMzUzLjExOTI4ODA1NDYzMzR9LHsieCI6MjA4LjY2MDE1NjI1LCJ5IjoxNDE3LjA5Mzc1fSx7IngiOjE3OC45NTA3NzIzNzIxNTkxLCJ5IjoxNDU0LjA5Mzc1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M376.711,1173.141L376.711,1179.307C376.711,1185.474,376.711,1197.807,421.354,1216.539C465.996,1235.272,555.282,1260.402,599.925,1272.968L644.567,1285.533" id="claude-mermaid-0-L_E_J_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_J_0" data-points="W3sieCI6Mzc2LjcxMDkzNzUsInkiOjExNzMuMTQwNjI1fSx7IngiOjM3Ni43MTA5Mzc1LCJ5IjoxMjEwLjE0MDYyNX0seyJ4Ijo2NDguNDE3ODE1Njg1MTY0MiwieSI6MTI4Ni42MTcxODc1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M798.152,580.078L798.152,584.245C798.152,588.411,798.152,596.745,798.152,604.411C798.152,612.078,798.152,619.078,798.152,622.578L798.152,626.078" id="claude-mermaid-0-L_F_K_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_K_0" data-points="W3sieCI6Nzk4LjE1MjM0Mzc1LCJ5Ijo1ODAuMDc4MTI1fSx7IngiOjc5OC4xNTIzNDM3NSwieSI6NjA1LjA3ODEyNX0seyJ4Ijo3OTguMTUyMzQzNzUsInkiOjYzMC4wNzgxMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M739.541,810.529L724.209,826.464C708.877,842.399,678.214,874.27,662.882,895.705C647.551,917.141,647.551,928.141,647.551,933.641L647.551,939.141" id="claude-mermaid-0-L_K_L_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_K_L_0" data-points="W3sieCI6NzM5LjU0MDU4OTIwOTUxNzIsInkiOjgxMC41Mjg4NzA0NTk1MTcyfSx7IngiOjY0Ny41NTA3ODEyNSwieSI6OTA2LjE0MDYyNX0seyJ4Ijo2NDcuNTUwNzgxMjUsInkiOjk0My4xNDA2MjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M808.221,859.072L808.943,866.917C809.664,874.761,811.108,890.451,811.829,912.962C812.551,935.474,812.551,964.807,812.551,994.141C812.551,1023.474,812.551,1052.807,812.551,1078.141C812.551,1103.474,812.551,1124.807,812.551,1146.141C812.551,1167.474,812.551,1188.807,804.516,1211.663C796.481,1234.52,780.412,1258.899,772.377,1271.088L764.342,1283.277" id="claude-mermaid-0-L_K_J_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_K_J_0" data-points="W3sieCI6ODA4LjIyMTE4MTE2MjU4NzQsInkiOjg1OS4wNzE3ODc1ODc0MTI2fSx7IngiOjgxMi41NTA3ODEyNSwieSI6OTA2LjE0MDYyNX0seyJ4Ijo4MTIuNTUwNzgxMjUsInkiOjk5NC4xNDA2MjV9LHsieCI6ODEyLjU1MDc4MTI1LCJ5IjoxMDgyLjE0MDYyNX0seyJ4Ijo4MTIuNTUwNzgxMjUsInkiOjExNDYuMTQwNjI1fSx7IngiOjgxMi41NTA3ODEyNSwieSI6MTIxMC4xNDA2MjV9LHsieCI6NzYyLjE0MDkxODc0MjkyMTgsInkiOjEyODYuNjE3MTg3NX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M573.613,1045.141L564.673,1051.307C555.733,1057.474,537.853,1069.807,528.913,1086.641C519.973,1103.474,519.973,1124.807,519.973,1146.141C519.973,1167.474,519.973,1188.807,519.973,1216.72C519.973,1244.633,519.973,1279.125,519.973,1313.617C519.973,1348.109,519.973,1382.602,519.383,1409.349C518.794,1436.096,517.616,1455.099,517.027,1464.6L516.438,1474.101" id="claude-mermaid-0-L_L_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_L_H_0" data-points="W3sieCI6NTczLjYxMzQ1ODgwNjgxODIsInkiOjEwNDUuMTQwNjI1fSx7IngiOjUxOS45NzI2NTYyNSwieSI6MTA4Mi4xNDA2MjV9LHsieCI6NTE5Ljk3MjY1NjI1LCJ5IjoxMTQ2LjE0MDYyNX0seyJ4Ijo1MTkuOTcyNjU2MjUsInkiOjEyMTAuMTQwNjI1fSx7IngiOjUxOS45NzI2NTYyNSwieSI6MTMxMy42MTcxODc1fSx7IngiOjUxOS45NzI2NTYyNSwieSI6MTQxNy4wOTM3NX0seyJ4Ijo1MTYuMTg5OTQxNDA2MjUsInkiOjE0NzguMDkzNzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M655.834,1045.141L656.836,1051.307C657.837,1057.474,659.841,1069.807,660.842,1081.474C661.844,1093.141,661.844,1104.141,661.844,1109.641L661.844,1115.141" id="claude-mermaid-0-L_L_M_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_L_M_0" data-points="W3sieCI6NjU1LjgzNDIwNjMyMTAyMjcsInkiOjEwNDUuMTQwNjI1fSx7IngiOjY2MS44NDM3NSwieSI6MTA4Mi4xNDA2MjV9LHsieCI6NjYxLjg0Mzc1LCJ5IjoxMTE5LjE0MDYyNX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M661.844,1173.141L661.844,1179.307C661.844,1185.474,661.844,1197.807,671.59,1216.199C681.337,1234.59,700.83,1259.04,710.577,1271.265L720.324,1283.49" id="claude-mermaid-0-L_M_J_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_M_J_0" data-points="W3sieCI6NjYxLjg0Mzc1LCJ5IjoxMTczLjE0MDYyNX0seyJ4Ijo2NjEuODQzNzUsInkiOjEyMTAuMTQwNjI1fSx7IngiOjcyMi44MTcxMzYxODM0NjU0LCJ5IjoxMjg2LjYxNzE4NzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M744.344,1340.617L744.344,1353.363C744.344,1366.109,744.344,1391.602,718.414,1414.276C692.485,1436.95,640.626,1456.807,614.696,1466.735L588.767,1476.663" id="claude-mermaid-0-L_J_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_J_H_0" data-points="W3sieCI6NzQ0LjM0Mzc1LCJ5IjoxMzQwLjYxNzE4NzV9LHsieCI6NzQ0LjM0Mzc1LCJ5IjoxNDE3LjA5Mzc1fSx7IngiOjU4NS4wMzEwNzI0NDMxODE4LCJ5IjoxNDc4LjA5Mzc1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(138, 749.609375)"><g class="label" data-id="L_C_D_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>ends .md or .html, or has a slash</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(376.7109375, 749.609375)"><g class="label" data-id="L_C_E_0" transform="translate(-33.015625, -12)"><foreignObject width="66.03125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>plain text</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(798.15234375, 489.078125)"><g class="label" data-id="L_C_F_0" transform="translate(-41.296875, -12)"><foreignObject width="82.59375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>nothing left</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_D_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(242.91648, 1447.1235)"><g class="label" data-id="L_G_H_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(200.19686, 1404.69987)"><g class="label" data-id="L_G_I_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_E_J_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F_K_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(647.55078125, 906.140625)"><g class="label" data-id="L_K_L_0" transform="translate(-19.8203125, -12)"><foreignObject width="39.640625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>some</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(812.55078125, 1082.140625)"><g class="label" data-id="L_K_J_0" transform="translate(-18.0078125, -12)"><foreignObject width="36.015625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>none</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(519.97265625, 1210.140625)"><g class="label" data-id="L_L_H_0" transform="translate(-42.140625, -12)"><foreignObject width="84.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>a candidate</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(661.84375, 1082.140625)"><g class="label" data-id="L_L_M_0" transform="translate(-50.9375, -12)"><foreignObject width="101.875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>None of these</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_M_J_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_J_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A-0" data-look="classic" transform="translate(489.1875, 47)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>/plan-agent:build $ARGUMENTS</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B-1" data-look="classic" transform="translate(489.1875, 163)"><rect class="basic label-container" style="" x="-122.5234375" y="-27" width="245.046875" height="54"></rect><g class="label" style="" transform="translate(-92.5234375, -12)"><rect></rect><foreignObject width="185.046875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Strip --dir and other flags</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-3" data-look="classic" transform="translate(489.1875, 346.0390625)"><polygon points="106.0390625,0 212.078125,-106.0390625 106.0390625,-212.078125 0,-106.0390625" class="label-container" transform="translate(-105.5390625, 106.0390625)"></polygon><g class="label" style="" transform="translate(-79.0390625, -12)"><rect></rect><foreignObject width="158.078125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>First positional token?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D-5" data-look="classic" transform="translate(138, 1146.140625)"><rect class="basic label-container" style="" x="-94.7421875" y="-27" width="189.484375" height="54"></rect><g class="label" style="" transform="translate(-64.7421875, -12)"><rect></rect><foreignObject width="129.484375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Treat as plan path</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-E-7" data-look="classic" transform="translate(376.7109375, 1146.140625)"><rect class="basic label-container" style="" x="-93.96875" y="-27" width="187.9375" height="54"></rect><g class="label" style="" transform="translate(-63.96875, -12)"><rect></rect><foreignObject width="127.9375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Treat as objective</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-F-9" data-look="classic" transform="translate(798.15234375, 553.078125)"><rect class="basic label-container" style="" x="-65.796875" y="-27" width="131.59375" height="54"></rect><g class="label" style="" transform="translate(-35.796875, -12)"><rect></rect><foreignObject width="71.59375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Discovery</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-11" data-look="classic" transform="translate(138, 1313.6171875)"><polygon points="66.4765625,0 132.953125,-66.4765625 66.4765625,-132.953125 0,-66.4765625" class="label-container" transform="translate(-65.9765625, 66.4765625)"></polygon><g class="label" style="" transform="translate(-39.4765625, -12)"><rect></rect><foreignObject width="78.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>File found?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-H-13" data-look="classic" transform="translate(514.515625, 1505.09375)"><rect class="basic label-container" style="" x="-74.9453125" y="-27" width="149.890625" height="54"></rect><g class="label" style="" transform="translate(-44.9453125, -12)"><rect></rect><foreignObject width="89.890625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Implement it</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-I-15" data-look="classic" transform="translate(138, 1505.09375)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>STOP - name both paths tried, never author a plan on a typo</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-J-17" data-look="classic" transform="translate(744.34375, 1313.6171875)"><rect class="basic label-container" style="" x="-112.328125" y="-27" width="224.65625" height="54"></rect><g class="label" style="" transform="translate(-82.328125, -12)"><rect></rect><foreignObject width="164.65625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Step 1b - author a plan</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-K-19" data-look="classic" transform="translate(798.15234375, 749.609375)"><polygon points="119.53125,0 239.0625,-119.53125 119.53125,-239.0625 0,-119.53125" class="label-container" transform="translate(-119.03125, 119.53125)"></polygon><g class="label" style="" transform="translate(-92.53125, -12)"><rect></rect><foreignObject width="185.0625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>todo / in-progress specs?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-L-21" data-look="classic" transform="translate(647.55078125, 994.140625)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>OFFER top 3 plus 'None of these' - never adopt silently</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-M-27" data-look="classic" transform="translate(661.84375, 1146.140625)"><rect class="basic label-container" style="" x="-101.4140625" y="-27" width="202.828125" height="54"></rect><g class="label" style="" transform="translate(-71.4140625, -12)"><rect></rect><foreignObject width="142.828125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Ask for an objective</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7a6c52" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(-78.75, 2.1052631579%, 82.5490196078%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <figcaption>Argument routing. Follow the <b>plain text</b> and <b>nothing left</b>
+      branches — those are the new ones. The <b>no</b> branch out of <em>File found?</em>
+      deliberately still stops rather than chaining.</figcaption>
+    </figure>
+
+    <figure class="figure">
+      <div class="mermaid-diagram">
+<svg id="claude-mermaid-1" width="1446.5" xmlns="http://www.w3.org/2000/svg" height="789" viewBox="-50 -10 1446.5 789" role="graphics-document document" aria-roledescription="sequence"><g><rect x="1196.5" y="703" fill="#eaeaea" stroke="#666" width="150" height="65" name="B2" rx="3" ry="3" class="actor actor-bottom"></rect><text x="1271.5" y="735.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1271.5" dy="0">build (nested)</tspan></text></g><g><rect x="945.5" y="703" fill="#eaeaea" stroke="#666" width="170" height="65" name="I" rx="3" ry="3" class="actor actor-bottom"></rect><text x="1030.5" y="735.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1030.5" dy="0">implementation-plan</tspan></text></g><g><rect x="693" y="703" fill="#eaeaea" stroke="#666" width="150" height="65" name="P" rx="3" ry="3" class="actor actor-bottom"></rect><text x="768" y="735.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="768" dy="0">build-proposal</tspan></text></g><g><rect x="323" y="703" fill="#eaeaea" stroke="#666" width="150" height="65" name="B" rx="3" ry="3" class="actor actor-bottom"></rect><text x="398" y="735.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="398" dy="0">build (outer)</tspan></text></g><g><rect x="0" y="703" fill="#eaeaea" stroke="#666" width="150" height="65" name="U" rx="3" ry="3" class="actor actor-bottom"></rect><text x="75" y="735.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">You</tspan></text></g><g><line id="actor4" x1="1271.5" y1="65" x2="1271.5" y2="703" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="B2" data-et="life-line" data-id="B2"></line><g id="root-4" data-et="participant" data-type="participant" data-id="B2"><rect x="1196.5" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="B2" rx="3" ry="3" class="actor actor-top"></rect><text x="1271.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1271.5" dy="0">build (nested)</tspan></text></g></g><g><line id="actor3" x1="1030.5" y1="65" x2="1030.5" y2="703" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="I" data-et="life-line" data-id="I"></line><g id="root-3" data-et="participant" data-type="participant" data-id="I"><rect x="945.5" y="0" fill="#eaeaea" stroke="#666" width="170" height="65" name="I" rx="3" ry="3" class="actor actor-top"></rect><text x="1030.5" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="1030.5" dy="0">implementation-plan</tspan></text></g></g><g><line id="actor2" x1="768" y1="65" x2="768" y2="703" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="P" data-et="life-line" data-id="P"></line><g id="root-2" data-et="participant" data-type="participant" data-id="P"><rect x="693" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="P" rx="3" ry="3" class="actor actor-top"></rect><text x="768" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="768" dy="0">build-proposal</tspan></text></g></g><g><line id="actor1" x1="398" y1="65" x2="398" y2="703" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="B" data-et="life-line" data-id="B"></line><g id="root-1" data-et="participant" data-type="participant" data-id="B"><rect x="323" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="B" rx="3" ry="3" class="actor actor-top"></rect><text x="398" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="398" dy="0">build (outer)</tspan></text></g></g><g><line id="actor0" x1="75" y1="65" x2="75" y2="703" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="U" data-et="life-line" data-id="U"></line><g id="root-0" data-et="participant" data-type="participant" data-id="U"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="U" rx="3" ry="3" class="actor actor-top"></rect><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">You</tspan></text></g></g><style>#claude-mermaid-1{font-family:-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#42392e;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(221.25, 42.1052631579%, 97.5490196078%);}#claude-mermaid-1 .error-text{fill:rgb(8.8815789475, 7.2368421054, 3.6184210527);stroke:rgb(8.8815789475, 7.2368421054, 3.6184210527);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#8a7f6d;stroke:#8a7f6d;}#claude-mermaid-1 .marker.cross{stroke:#8a7f6d;}#claude-mermaid-1 svg{font-family:-apple-system,"system-ui","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .actor{stroke:#7a6c52;fill:#f4efe4;stroke-width:1;}#claude-mermaid-1 rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 rect.note[data-look="neo"]{stroke:hsl(52.6829268293, 60%, 73.9215686275%);fill:#fff5ad;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 text.actor&gt;tspan{fill:#42392e;stroke:none;}#claude-mermaid-1 .actor-line{stroke:#7a6c52;}#claude-mermaid-1 .innerArc{stroke-width:1.5;stroke-dasharray:none;}#claude-mermaid-1 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#42392e;}#claude-mermaid-1 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#42392e;}#claude-mermaid-1 [id$="-arrowhead"] path{fill:#42392e;stroke:#42392e;}#claude-mermaid-1 .sequenceNumber{fill:#758092;}#claude-mermaid-1 [id$="-sequencenumber"]{fill:#42392e;}#claude-mermaid-1 [id$="-crosshead"] path{fill:#42392e;stroke:#42392e;}#claude-mermaid-1 .messageText{fill:#42392e;stroke:none;}#claude-mermaid-1 .labelBox{stroke:#7a6c52;fill:#f4efe4;filter:none;}#claude-mermaid-1 .labelText,#claude-mermaid-1 .labelText&gt;tspan{fill:#42392e;stroke:none;}#claude-mermaid-1 .loopText,#claude-mermaid-1 .loopText&gt;tspan{fill:#42392e;stroke:none;}#claude-mermaid-1 .sectionTitle,#claude-mermaid-1 .sectionTitle&gt;tspan{fill:#42392e;stroke:none;}#claude-mermaid-1 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#7a6c52;fill:#7a6c52;}#claude-mermaid-1 .note{stroke:hsl(52.6829268293, 60%, 73.9215686275%);fill:#fff5ad;}#claude-mermaid-1 .noteText,#claude-mermaid-1 .noteText&gt;tspan{fill:#333;stroke:none;font-weight:normal;}#claude-mermaid-1 .activation0{fill:hsl(-78.75, 42.1052631579%, 92.5490196078%);stroke:hsl(-78.75, 42.1052631579%, 82.5490196078%);}#claude-mermaid-1 .activation1{fill:hsl(-78.75, 42.1052631579%, 92.5490196078%);stroke:hsl(-78.75, 42.1052631579%, 82.5490196078%);}#claude-mermaid-1 .activation2{fill:hsl(-78.75, 42.1052631579%, 92.5490196078%);stroke:hsl(-78.75, 42.1052631579%, 82.5490196078%);}#claude-mermaid-1 .actorPopupMenu{position:absolute;}#claude-mermaid-1 .actorPopupMenuPanel{position:absolute;fill:#f4efe4;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#claude-mermaid-1 .actor-man circle,#claude-mermaid-1 line{fill:#f4efe4;stroke-width:2px;}#claude-mermaid-1 g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#7a6c52;}#claude-mermaid-1 .node .neo-node{stroke:#7a6c52;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#7a6c52;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g></g><defs><symbol id="claude-mermaid-1-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"></path></symbol></defs><defs><symbol id="claude-mermaid-1-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"></path></symbol></defs><defs><symbol id="claude-mermaid-1-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"></path></symbol></defs><defs><marker id="claude-mermaid-1-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker id="claude-mermaid-1-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><defs><marker id="claude-mermaid-1-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker id="claude-mermaid-1-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"></circle></marker></defs><defs><marker id="claude-mermaid-1-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-1-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-1-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><defs><marker id="claude-mermaid-1-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><g data-et="note" data-id="i4"><rect x="555.5" y="258" fill="#EDF2AE" stroke="#666" width="425" height="38" class="note"></rect><text x="768" y="263" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="768">--dir is not forwarded here - it resolves its own directory</tspan></text></g><g data-et="control-structure" data-id="i6"><line x1="387" y1="167" x2="990.5" y2="167" class="loopLine"></line><line x1="990.5" y1="167" x2="990.5" y2="352" class="loopLine"></line><line x1="387" y1="352" x2="990.5" y2="352" class="loopLine"></line><line x1="387" y1="167" x2="387" y2="352" class="loopLine"></line><polygon points="387,167 437,167 437,180 428.6,187 387,187" class="labelBox"></polygon><text x="412" y="180" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="713.75" y="185" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="713.75">[Start with a proposal]</tspan></text></g><g data-et="control-structure" data-id="i12"><line x1="1019.5" y1="454" x2="1282.5" y2="454" class="loopLine"></line><line x1="1282.5" y1="454" x2="1282.5" y2="591" class="loopLine"></line><line x1="1019.5" y1="591" x2="1282.5" y2="591" class="loopLine"></line><line x1="1019.5" y1="454" x2="1019.5" y2="591" class="loopLine"></line><polygon points="1019.5,454 1069.5,454 1069.5,467 1061.1,474 1019.5,474" class="labelBox"></polygon><text x="1045" y="467" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="labelText" style="font-size: 16px; font-weight: 400;">alt</text><text x="1176" y="472" text-anchor="middle" class="loopText" style="font-size: 16px; font-weight: 400;"><tspan x="1176">[Implement now]</tspan></text></g><text x="235" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">/plan-agent:build (objective)</text><line x1="76" y1="111" x2="394" y2="111" class="messageLine0" data-et="message" data-id="i0" data-from="U" data-to="B" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="238" y="126" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Proposal first, or straight to plan?</text><line x1="397" y1="157" x2="79" y2="157" class="messageLine0" data-et="message" data-id="i1" data-from="B" data-to="U" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="582" y="217" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Skill(build-proposal, objective)</text><line x1="399" y1="248" x2="764" y2="248" class="messageLine0" data-et="message" data-id="i3" data-from="B" data-to="P" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="585" y="311" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">proposal path, or nothing for a Tier 0 idea</text><line x1="767" y1="342" x2="402" y2="342" class="messageLine1" data-et="message" data-id="i5" data-from="P" data-to="B" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="713" y="367" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Skill(implementation-plan, objective plus --dir)</text><line x1="399" y1="398" x2="1026.5" y2="398" class="messageLine0" data-et="message" data-id="i7" data-from="B" data-to="I" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="554" y="413" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Step 8 - how do you want to execute?</text><line x1="1029.5" y1="444" x2="79" y2="444" class="messageLine0" data-et="message" data-id="i8" data-from="I" data-to="U" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="1150" y="504" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">Skill(build, plan path)</text><line x1="1031.5" y1="535" x2="1267.5" y2="535" class="messageLine0" data-et="message" data-id="i10" data-from="I" data-to="B2" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="1153" y="550" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">implemented, gates run</text><line x1="1270.5" y1="581" x2="1034.5" y2="581" class="messageLine1" data-et="message" data-id="i11" data-from="B2" data-to="I" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="716" y="606" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">outcome and plan path</text><line x1="1029.5" y1="637" x2="402" y2="637" class="messageLine1" data-et="message" data-id="i13" data-from="I" data-to="B" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="238" y="652" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">report - no re-entry, no second run</text><line x1="397" y1="683" x2="79" y2="683" class="messageLine0" data-et="message" data-id="i14" data-from="B" data-to="U" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line></svg>
+      </div>
+      <figcaption>The authoring chain. Note the loop: the plan skill's own
+      &ldquo;what next&rdquo; menu calls <code>build</code> back, and that nested run is the
+      one that writes the code. The outer chain then reports its result and stops.</figcaption>
+    </figure>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">Before and after</span>
+      <h2>Behaviour, rule by rule</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">Situation</th><th scope="col">Before</th><th scope="col">After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>No plan named</td><td class="col-before">Stopped, told you to run <code>implementation-plan</code></td><td class="col-after">Enters the chain: proposal &rarr; plan &rarr; review &rarr; implement</td></tr>
+          <tr><td>Exactly one unfinished plan</td><td class="col-before">Adopted it silently</td><td class="col-after">Offers it, alongside &ldquo;author a new plan&rdquo;</td></tr>
+          <tr><td>Many unfinished plans</td><td class="col-before">Asked, unbounded list</td><td class="col-after">Offers the newest three, states how many were hidden</td></tr>
+          <tr><td>A free-text objective</td><td class="col-before">Read as a plan path, then failed</td><td class="col-after">Skips discovery, goes straight to authoring</td></tr>
+          <tr><td>Objective whose first word has a slash</td><td class="col-before">Bare list of paths tried</td><td class="col-after">Names the misparse and says to reword</td></tr>
+          <tr><td>A mistyped plan path</td><td class="col-before">Fell through to discovery, could implement a different plan</td><td class="col-after">Stops and names both paths it tried</td></tr>
+          <tr><td>HTML-only legacy plan</td><td class="col-before">Stopped</td><td class="col-after">Still stops — needs its spec reconstructed, not a new plan on top</td></tr>
+          <tr><td>Uncommitted files present</td><td class="col-before">Asked just before implementing</td><td class="col-after">Asked first, before any authoring; plan artifacts excluded</td></tr>
+          <tr><td>Model during implementation</td><td class="col-before">Inherited from the last planning skill</td><td class="col-after">Pinned to Opus</td></tr>
+          <tr><td>Question tool unavailable</td><td class="col-before">Undefined — resolved inconsistently</td><td class="col-after">Every gate stops and reports the options</td></tr>
+          <tr><td>Ambient activation</td><td class="col-before">Requires an existing plan</td><td class="col-after">Unchanged, byte-identical description</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">Decisions</span>
+      <h2>What was chosen, and what was turned down</h2>
+    </div>
+    <div class="decisions">
+
+      <div class="decision">
+        <span class="what">The chain is delegation, not re-implementation.</span>
+        <p>Step 1b makes real <code>Skill()</code> calls to <code>build-proposal</code> and
+        <code>implementation-plan</code>.</p>
+        <p class="rejected"><b>Rejected:</b> copying their logic into <code>build</code>,
+        which would have produced a second plan-authoring implementation to keep in sync
+        with the first.</p>
+      </div>
+
+      <div class="decision">
+        <span class="what">Re-entrancy is allowed, made safe by re-resolving the plan by path.</span>
+        <p>The plan skill's Step 8 already calls back into <code>build</code>, so a chained
+        run enters <code>build</code> twice.</p>
+        <p class="rejected"><b>Rejected:</b> a re-entry flag or guard. Resolving the produced
+        spec by its path lets the existing completed/resume preconditions do the deciding,
+        with no new state to get wrong.</p>
+      </div>
+
+      <div class="decision">
+        <span class="what"><em>Implement now</em> at the nested menu is terminal for the outer chain.</span>
+        <p><code>Skill()</code> is synchronous, so by the time control returns the nested run
+        has already finished.</p>
+        <p class="rejected"><b>Rejected:</b> continuing the outer run — it would ask whether to
+        redo work that just completed, or restart a run the user deliberately stopped. This
+        overrode two rows in the original proposal's appendix.</p>
+      </div>
+
+      <div class="decision">
+        <span class="what">The chain is reachable only from the slash command.</span>
+        <p>The <code>description</code> frontmatter is byte-identical to <code>main</code>, so
+        automatic activation keeps its old contract exactly.</p>
+        <p class="rejected"><b>Rejected:</b> widening the trigger to catch &ldquo;build a todo
+        app&rdquo; — the same widening also catches &ldquo;build fails on CI&rdquo; and
+        &ldquo;build the docker image&rdquo;. The word is too overloaded.</p>
+      </div>
+
+      <div class="decision">
+        <span class="what">Two no-plan branches deliberately still stop.</span>
+        <p>A named-but-missing path, and an HTML-only legacy plan.</p>
+        <p class="rejected"><b>Rejected:</b> chaining on both. Authoring an entire plan because
+        of a typo is worse than stopping, and a legacy plan needs its spec reconstructed rather
+        than a new plan written over it.</p>
+      </div>
+
+      <div class="decision">
+        <span class="what"><code>--dir</code> is forwarded to plan authoring but not to proposal writing.</span>
+        <p>It names where the <em>plan</em> goes; <code>build-proposal</code> resolves its own
+        proposals directory.</p>
+        <p class="rejected"><b>Corrected during review:</b> the first pass withheld it from both,
+        which would have written the spec to the default directory and then failed to find it
+        on return.</p>
+      </div>
+
+      <div class="decision">
+        <span class="what">The discovery offer is capped at three.</span>
+        <p><code>AskUserQuestion</code> renders at most four options, and one slot is reserved
+        for <em>None of these</em>.</p>
+        <p class="rejected"><b>Rejected:</b> an unbounded list, which would not render at all.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">Learnings</span>
+      <h2>Found by running it, not reading it</h2>
+    </div>
+    <p class="prose">A pull request carries no record of what was tried and abandoned, so this
+    section is thin by construction. Two items survived into the PR description because they
+    came out of live runs rather than review:</p>
+    <ul class="notes">
+      <li><b>The gates had no stated behaviour when the question tool is unavailable.</b> Two
+      headless runs resolved the same missing tool in opposite directions — one stopped at the
+      proposal gate, the other adopted the lone discovery candidate, which is the exact silent
+      pickup this release exists to remove.</li>
+      <li><b>The documented misparse example was wrong.</b> The rule tests the leading token
+      only, so <code>add A/B testing support</code> parses cleanly as an objective; only a slash
+      in the <em>first</em> token misreads the argument as a path.</li>
+    </ul>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">Open items</span>
+      <h2>What is still outstanding</h2>
+    </div>
+    <ul class="notes">
+      <li><b>Four acceptance criteria are asserted statically only.</b> Criteria 2, 8, 9 and 10 —
+      chain entry when no specs exist, the objective prompt on the <em>None of these</em> path,
+      and the two Step 8 terminations — need an interactive session that no harness here can
+      drive. Recorded in the plan's Completion Report at
+      <code>docs/plans/add-plan-authoring-to-build.md</code>.</li>
+      <li><b>Some test assertions check presence, not ordering.</b> An automated reviewer noted
+      that check 10 would pass if <code>implementation-plan</code> appeared before
+      <code>build-proposal</code>, and check 13 accepts <code>status: todo</code> and
+      <em>Implement now</em> anywhere in the section rather than scoped to the Exit/workflow
+      clauses. Check 11 already does the offset comparison; 10 and 13 do not. Non-blocking, not
+      addressed.</li>
+      <li><b>A rendered-HTML formatting glitch.</b> In the completion report,
+      <em>Exit — I'll implement later</em> is split across a <code>&lt;dt&gt;</code>/<code>&lt;dd&gt;</code>
+      boundary, leaving mismatched backticks in
+      <code>docs/plans/add-plan-authoring-to-build.html</code> around line 1808. Cosmetic.</li>
+      <li><b>The plugin metadata could say more.</b> A reviewer suggested both manifests describe
+      the no-plan behaviour explicitly. The marketplace description was updated;
+      <code>plugin.json</code> carries only <code>name</code> and <code>description</code> by
+      repo convention.</li>
+      <li><b>CodeRabbit never completed a review.</b> Its run reports &ldquo;Review failed — the
+      pull request is closed&rdquo;; the PR merged before it finished.</li>
+    </ul>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">Files touched</span>
+      <h2>Ten files, one behavioural change</h2>
+    </div>
+
+    <div class="filegroup">
+      <h3>The change itself</h3>
+      <ul class="files">
+        <li><span class="path">kit/plugins/plan-agent/skills/build/SKILL.md</span>
+        <span class="why">The whole behaviour change: new Step 1b chain, rewritten Step 1
+        resolution, hoisted dirty-tree guard, <code>model: opus</code> pin, new
+        <code>argument-hint</code>, and <code>Skill</code> added to <code>allowed-tools</code>.
+        +163 lines.</span></li>
+      </ul>
+    </div>
+
+    <div class="filegroup">
+      <h3>Tests</h3>
+      <ul class="files">
+        <li><span class="path">tests/plugins/test-build-skill.sh</span>
+        <span class="why">Nine new static checks (9 &rarr; 18) covering the chain, the offer,
+        guard ordering, and the argument grammar. +174 lines.</span></li>
+      </ul>
+    </div>
+
+    <div class="filegroup">
+      <h3>Plugin metadata and docs</h3>
+      <ul class="files">
+        <li><span class="path">.claude-plugin/marketplace.json</span>
+        <span class="why">Version 4.4.0 &rarr; 5.0.0, and a description mentioning the no-plan
+        behaviour.</span></li>
+        <li><span class="path">kit/plugins/plan-agent/.claude-plugin/plugin.json</span>
+        <span class="why">Metadata touch-up.</span></li>
+        <li><span class="path">kit/plugins/plan-agent/CHANGELOG.md</span>
+        <span class="why">The 5.0.0 entry, including both breaking changes.</span></li>
+        <li><span class="path">kit/plugins/plan-agent/README.md</span>
+        <span class="why">The new command behaviour and objective-only usage.</span></li>
+        <li><span class="path">CLAUDE.md</span>
+        <span class="why">The repo-level plugin table row for <code>plan-agent</code>.</span></li>
+      </ul>
+    </div>
+
+    <div class="filegroup">
+      <h3>Plan record</h3>
+      <ul class="files">
+        <li><span class="path">docs/plans/add-plan-authoring-to-build.md</span>
+        <span class="why">Marked <code>completed</code>, with the Completion Report and
+        verification notes.</span></li>
+        <li><span class="path">docs/plans/add-plan-authoring-to-build.html</span>
+        <span class="why">The re-rendered plan.</span></li>
+        <li><span class="path">docs/plans/index.html</span>
+        <span class="why">Gallery card and count.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <div class="sec-head">
+      <span class="tag">Glossary</span>
+      <h2>Terms on this page</h2>
+    </div>
+    <dl class="glossary">
+      <div><dt>plan-agent</dt><dd>The plugin that owns the plan lifecycle: authoring, review, implementation, follow-through.</dd></div>
+      <div><dt>build</dt><dd>The skill that implements a plan — walks its steps, ticks the spec, re-renders it, runs the completion gates.</dd></div>
+      <div><dt>implementation-plan</dt><dd>The skill that authors a plan. It ends with a Step 8 menu asking how to execute.</dd></div>
+      <div><dt>build-proposal</dt><dd>The skill that turns a rough idea into a decision-complete proposal document, before any plan exists.</dd></div>
+      <div><dt>Step 1b</dt><dd>The new section of <code>build</code> holding the no-plan authoring chain.</dd></div>
+      <div><dt>Step 8</dt><dd>The menu at the end of <code>implementation-plan</code>: Implement now, Exit, or Run as workflow.</dd></div>
+      <div><dt>spec</dt><dd>The Markdown plan file. It is the source of truth; the HTML is a render of it.</dd></div>
+      <div><dt>discovery</dt><dd><code>build</code> scanning the plans directory for specs whose status is todo or in-progress.</dd></div>
+      <div><dt>ambient activation</dt><dd>The assistant starting a skill on its own from the wording of a request, rather than you typing the slash command.</dd></div>
+      <div><dt>AskUserQuestion</dt><dd>The tool that renders a multiple-choice prompt. It displays at most four options.</dd></div>
+      <div><dt>Tier 0 idea</dt><dd>One that <code>build-proposal</code> judges small enough to answer directly, producing no proposal document.</dd></div>
+      <div><dt>dirty working tree</dt><dd>Uncommitted changes present in git.</dd></div>
+      <div><dt>--dir</dt><dd>The flag overriding which directory plans are read from and written to.</dd></div>
+    </dl>
+  </section>
+
+  <footer>
+    Recap of <a href="https://github.com/shawn-sandy/agentics/pull/470">pull request #470</a> &middot; shawn-sandy/agentics &middot; merged 2026-07-27
+  </footer>
+
+</div>
+
+</body>
+</html>
