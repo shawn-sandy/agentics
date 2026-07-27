@@ -16,7 +16,7 @@ team-artifact-url: https://claude.ai/code/artifact/748b1f1f-077c-4015-a9f8-7d61c
 | Changes shipped | 3 documents (1 proposal, 1 plan spec, 1 render) |
 | Files touched | 3, all new, all under `docs/` |
 | Decisions made | 8, each with rejected alternatives |
-| Open items | 6 |
+| Open items | 5 |
 | Commit | `3c37605` |
 
 The session started as a question — what does the `build` skill do when you give
