@@ -90,6 +90,14 @@ explicitly anyway so a parse failure surfaces here instead of silently.
   uncommitted files at the end of that is the worst possible moment.
   `git-agent:ship-autonomous` runs every pre-flight guard before any mutation;
   this matches.
+- **Plan artifacts are never pre-existing work.** Exclude the resolved plan's
+  own spec and rendered HTML, and any proposal this chain wrote, from the dirty
+  report. Without that exclusion the Step 8 `Implement now` callback re-enters
+  this skill with the just-authored plan sitting uncommitted, so the guard fires
+  at exactly the post-interview moment the hoist exists to avoid — and in a
+  headless run the unavailable-question rule below would stop the chain
+  outright. When those artifacts are the only changes, the tree is clean for
+  this purpose: proceed silently.
 
 **When `AskUserQuestion` is unavailable** — a headless or otherwise
 non-interactive run — every gate in this skill **stops and reports the choice it
@@ -169,17 +177,25 @@ proposal writing, plan authoring, or review. Control returns through
    objective text naming the proposal path, never a bare `.md` first token,
    which would drop `implementation-plan` into conversion mode and produce a
    plan whose steps restate proposal headings instead of naming real actions.
+   **No proposal written → fall through to the direct path.** `build-proposal`
+   triages a Tier 0 idea by answering it directly and producing no document, so
+   there is nothing to plan from. Say so in one line and continue at step 4 with
+   the original objective; never call `implementation-plan` with an empty or
+   guessed proposal path.
 4. **Direct path.** Invoke
    `Skill(skill: "plan-agent:implementation-plan", args: "<objective>")`,
    forwarding `--dir <path>` when it was given.
 5. **Return path.** Re-resolve the produced spec **by path** — the one
    `implementation-plan` reports — never by re-running discovery, which would
    ask the user about the plan they just watched being authored. Then:
-   - `Implement now` → Step 8 has already invoked this skill with that spec
-     path, so the work may already be done. The Step 1 preconditions decide:
-     `status: completed` stops and asks before redoing it, steps carrying `[x]`
-     resume from the first unmarked one, and an untouched spec continues at
-     Step 2. Never implement the same plan twice.
+   - `Implement now` → **stop and report.** `Skill()` is synchronous, so by the
+     time control reaches here Step 8 has already invoked this skill with the
+     spec path and that nested run has reached its own terminal state — through
+     the gates, or via `Mark in-progress and stop` at its Step 4.4. Report that
+     outcome and the plan's path. Do **not** re-enter Steps 1-2: the
+     completed-plan precondition would ask whether to redo work that just
+     finished, and resume-from-first-unmarked would restart a run the user
+     deliberately stopped. The nested build's result **is** this chain's result.
    - `Exit — I'll implement later` → **stop.** Report the produced plan's path,
      leave it at `status: todo`, and write no source files. Step 8 is the only
      point at which the user is asked how to execute, so this answer declines

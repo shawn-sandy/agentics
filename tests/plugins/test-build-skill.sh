@@ -180,6 +180,9 @@ printf '%s' "$CHAIN" | grep -qF 'Skill(skill: "plan-agent:implementation-plan"' 
 printf '%s' "$CHAIN" | grep -qi 'objective check' || MISSING="$MISSING objective-check-first"
 printf '%s' "$CHAIN" | grep -qi 'proposal-versus-direct gate' || MISSING="$MISSING proposal-gate"
 printf '%s' "$CHAIN" | grep -qi 'by path' || MISSING="$MISSING return-by-path"
+# build-proposal answers a Tier 0 idea directly and writes no document, so the
+# chain must have somewhere to go when the proposal stage produces no artifact.
+printf '%s' "$CHAIN" | grep -qi 'No proposal written' || MISSING="$MISSING tier0-no-artifact-fallthrough"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -224,6 +227,10 @@ if [ -n "$PRECOND_LN" ] && [ -n "$GUARD_LN" ] && [ "$GUARD_LN" -gt "$PRECOND_LN"
   MISSING="$MISSING guard-still-in-preconditions-block"
 fi
 printf '%s' "$STEP1" | grep -qi 'ahead of Step 1b' || MISSING="$MISSING guard-chain-ordering-unstated"
+# The Step 8 callback re-enters this skill with the just-authored plan
+# uncommitted; without an exclusion the hoisted guard fires at exactly the
+# moment the hoist exists to avoid, and headless it stops the chain.
+printf '%s' "$STEP1" | grep -qi 'never pre-existing work' || MISSING="$MISSING plan-artifacts-not-excluded"
 printf '%s' "$STEP1" | grep -qi 'already `status: completed`' || MISSING="$MISSING completed-plan-precondition"
 printf '%s' "$STEP1" | grep -qi 'resume from the first unmarked step' || MISSING="$MISSING resume-precondition"
 if [ -z "$MISSING" ]; then
@@ -240,7 +247,11 @@ MISSING=""
 printf '%s' "$CHAIN" | grep -qF "\`Exit — I'll implement later\` → **stop.**" || MISSING="$MISSING exit-stops"
 printf '%s' "$CHAIN" | grep -qF '`Run as workflow` → **stop.**' || MISSING="$MISSING workflow-stops"
 printf '%s' "$CHAIN" | grep -qi 'status: todo' || MISSING="$MISSING exit-leaves-todo"
-printf '%s' "$CHAIN" | grep -qi 'Implement now' || MISSING="$MISSING implement-now-resume-case"
+# `Skill()` is synchronous: the nested build has already finished by the time
+# control returns, so re-entering the preconditions would offer to redo work
+# that just completed or restart a run the user chose to stop.
+printf '%s' "$CHAIN" | grep -qiF '`Implement now` → **stop and report.**' || MISSING="$MISSING implement-now-not-terminal"
+printf '%s' "$CHAIN" | grep -qi 're-enter Steps 1-2' || MISSING="$MISSING no-precondition-reentry"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else

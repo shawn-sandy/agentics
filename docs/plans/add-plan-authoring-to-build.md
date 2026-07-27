@@ -93,6 +93,13 @@ Two defects were found by running it, both fixed and re-verified:
 - Gates had no stated behaviour when `AskUserQuestion` is unavailable — two headless runs resolved the same missing tool in opposite ways, one adopting the lone discovery candidate (the exact silent pickup this plan removes) and one stopping; build/SKILL.md now states the fallback, check 18 guards it, and re-running both scenarios produced a clean stop-and-report.
 - The misparse example was wrong — the rule tests the leading token, so this plan's own example `add A/B testing support` parses cleanly as an objective; only a slash in the first token misparses, the example is now `A/B testing for checkout`, and a live run confirms the stop names the misparse and offers a reworded form.
 
+Three further defects were found by automated review on PR #470, all fixed and
+guarded by checks 10, 12, and 13:
+
+- `Implement now` re-entered the preconditions — `Skill()` is synchronous, so the nested build had already finished; the branch would have asked whether to redo just-completed work, or restarted a run stopped via `Mark in-progress and stop`. It now reports the nested result and stops, overriding this plan's step 7 claim that all three Appendix A resume rows stay live.
+- The hoisted dirty-tree guard fired on the Step 8 callback — `implementation-plan` writes the spec and HTML before calling back, so the guard saw them as uncommitted work and prompted at exactly the post-interview moment the hoist prevents, or stopped the chain headless. Plan artifacts are now excluded; verified by running a build against an uncommitted spec plus HTML, which proceeded silently to `completed`.
+- The proposal path assumed an artifact — a Tier 0 idea is answered directly with no document written, leaving the chain calling `implementation-plan` with a path that does not exist. It now falls through to the direct path with the original objective.
+
 The following remain verified by construction rather than execution, needing an
 interactive session no harness here can provide, and are checked off under
 Step 3.4 on the user's explicit instruction:
