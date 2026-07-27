@@ -256,10 +256,9 @@ text = (pathlib.Path(sys.argv[1]) / "commands" / "eng-recap.md").read_text()
 
 assert "gh pr diff" in text, "eng-recap: never reads the diff, so decision 4 was dropped"
 # A numeric file budget, not just prose about being careful.
-assert re.search(r'at most \*\*(\d+) files\*\*', text), (
-    "eng-recap: reads diff hunks with no numeric file cap"
-)
-cap = int(re.search(r'at most \*\*(\d+) files\*\*', text).group(1))
+budget = re.search(r'at most \*\*(\d+) files\*\*', text)
+assert budget, "eng-recap: reads diff hunks with no numeric file cap"
+cap = int(budget.group(1))
 # The cap is a cross-file contract: the command, the README, and the awk that
 # implements it must all name the same number. A range check would let the
 # command drift to 35 while the README still promises 20.
