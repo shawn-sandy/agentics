@@ -5,6 +5,39 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-07-27
+
+### Added
+
+- `/artifact-tools:eng-recap` — a third framing over `session-artifact`, written
+  for the engineer who has to touch the code next. Where `team-recap` leads every
+  section with a plain-language statement and glosses every internal name so a
+  non-engineer can follow, this one inverts that rule deliberately: it leads with
+  the technical fact, assumes the vocabulary, carries no glossary, and spends the
+  reclaimed space on detail. Eight sections — At a glance (stat strip),
+  Architecture and code paths, Decisions, Tradeoffs and rejected options,
+  Learnings, Tests and verification, Review follow-ups and tech debt, Files
+  touched. Tradeoffs and Learnings are kept distinct on purpose: a tradeoff is a
+  decision that was weighed, a learning is a dead end that was walked.
+- `eng-recap` is the first recap command to read **diff hunks** in PR mode. Its
+  siblings prefer commit bodies because those carry the *why*, which is all a
+  stakeholder needs; an engineering reader is the one case where the hunks carry
+  real signal — a changed signature, a new invariant, an error path. That read is
+  capped at 20 files (matching `diff-artifact`'s budget so the plugin carries one
+  number rather than two), falls back to `--name-only` beyond it, and must report
+  how many files were summarized rather than read, so a partial read is never
+  mistaken for a complete one. Commit bodies still lead for the *why*.
+- Both modes are guarded by the same `gh` + GitHub-remote preflight the sibling
+  commands use, falling back to session mode and naming the missing piece.
+  Session mode files under the stem `eng-recap`, PR mode under `pr-<number>-eng`,
+  and the republish URL lives under `eng-artifact-url:` — the fourth distinct key
+  on the shared per-session record, alongside `artifact-url:`,
+  `product-artifact-url:`, and `team-artifact-url:`.
+- `tests/plugins/test-artifact-tools.sh` grew a check asserting `eng-recap`
+  documents a numeric diff cap, a `--name-only` fallback past it, and the
+  summarized-file report; its republish-key map and PR-mode command count now
+  cover the new command.
+
 ## [1.6.0] - 2026-07-23
 
 ### Added

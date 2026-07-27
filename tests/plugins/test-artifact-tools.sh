@@ -194,6 +194,7 @@ owners = {
     "skills/session-artifact/SKILL.md": "artifact-url",
     "commands/product-doc.md": "product-artifact-url",
     "commands/team-recap.md": "team-artifact-url",
+    "commands/eng-recap.md": "eng-artifact-url",
 }
 for rel, key in owners.items():
     text = (root / rel).read_text()
@@ -240,7 +241,34 @@ for path in sorted((root / "commands").glob("*.md")):
     assert text.index("gh auth status") < text.index("gh pr view"), (
         f"{rel}: preflight appears after the first gh pr view"
     )
-assert found >= 2, f"expected product-doc and team-recap to be PR-mode commands, found {found}"
+assert found >= 3, (
+    f"expected product-doc, team-recap and eng-recap to be PR-mode commands, found {found}"
+)
+EOF
+ok
+
+# 9. eng-recap is the only command that reads diff hunks, so it is the only one
+# that can exhaust context on a large PR. The cap is what makes that read safe,
+# and a cap nobody reports is indistinguishable from a complete read.
+python3 - "$PLUGIN" <<'EOF' || fail "eng-recap's diff read is uncapped or unreported"
+import pathlib, re, sys
+text = (pathlib.Path(sys.argv[1]) / "commands" / "eng-recap.md").read_text()
+
+assert "gh pr diff" in text, "eng-recap: never reads the diff, so decision 4 was dropped"
+# A numeric file budget, not just prose about being careful.
+assert re.search(r'at most \*\*(\d+) files\*\*', text), (
+    "eng-recap: reads diff hunks with no numeric file cap"
+)
+cap = int(re.search(r'at most \*\*(\d+) files\*\*', text).group(1))
+assert 0 < cap <= 50, f"eng-recap: implausible diff cap of {cap} files"
+# The cap needs a defined behaviour past the budget, or it is just a limit that
+# silently drops files.
+assert "--name-only" in text, "eng-recap: no name-only fallback past the cap"
+# And the truncation has to reach the reader. A partial read presented as
+# complete is the failure this whole check exists to prevent.
+assert re.search(r'[Rr]eport how many files were summarized', text), (
+    "eng-recap: never requires reporting how many files were summarized"
+)
 EOF
 ok
 

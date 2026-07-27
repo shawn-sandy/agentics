@@ -34,6 +34,7 @@ prompt".
 |---------|--------------|
 | `/artifact-tools:product-doc [session-id\|path\|#PR]` | Runs `session-artifact` reframed for the product team and stakeholders — features, bug fixes, decisions with rationale, logic and behavior changes, and implementation-plan details. Sources from the session transcript, or from a pull request when given `#453` or a PR URL |
 | `/artifact-tools:team-recap [session-id\|path\|#PR]` | Runs `session-artifact` as a detailed, visual recap for the whole team — an at-a-glance stat strip, change cards, mermaid diagrams of what moved, a before/after table, decisions with rejected options, open items, and a glossary. Sources from the session transcript, or from a pull request when given `#455` or a PR URL. Readable by engineers and non-engineers in one pass |
+| `/artifact-tools:eng-recap [session-id\|path\|#PR]` | Runs `session-artifact` for engineers only — architecture and code paths, decisions, tradeoffs and rejected options, learnings, tests and what is knowingly untested, review follow-ups and tech debt. Assumes the vocabulary and leads with the technical fact, the inverse of `team-recap`. In PR mode it reads the diff hunks, capped at 20 files |
 
 ## Installation
 
@@ -64,6 +65,8 @@ Publish my prompt library --library       → prompt-artifact (library mode)
 /artifact-tools:product-doc               → recap for product + stakeholders
 /artifact-tools:product-doc #453          → same recap, sourced from a PR
 /artifact-tools:team-recap                → visual recap for the whole team
+/artifact-tools:eng-recap                 → engineering recap for the next maintainer
+/artifact-tools:eng-recap #455            → same recap, sourced from a PR (diff included)
 ```
 
 ## Plugin Structure
@@ -76,7 +79,8 @@ artifact-tools/
 ├── CHANGELOG.md
 ├── commands/
 │   ├── product-doc.md     # product-team framing over session-artifact
-│   └── team-recap.md      # whole-team visual framing over session-artifact
+│   ├── team-recap.md      # whole-team visual framing over session-artifact
+│   └── eng-recap.md       # engineering framing over session-artifact
 ├── references/
 │   └── titles.md          # shared artifact-title rules, read by every skill
 └── skills/
@@ -179,6 +183,45 @@ with a collision-safe local copy when that skill is absent. Its republish key is
 `product-artifact-url:`, because all three commands share one record — per
 session in session mode, per PR number in PR mode. Re-running against the same PR
 therefore updates the same page as the PR evolves.
+
+### eng-recap (command)
+
+`/artifact-tools:eng-recap` is the fourth framing over `session-artifact`, and
+the only one written for a single audience: the engineer who has to touch this
+code next, opening these files with no memory of the work.
+
+It exists because the other two both pay a translate-for-non-engineers tax, and
+that tax is what crowds out the detail a maintainer needs. `team-recap` states
+the rule outright — lead with the plain-language statement, spell out every
+internal name. This command inverts it deliberately: lead with the technical
+fact, assume the vocabulary, carry no glossary, and use code wherever code is
+the shortest correct statement. The reclaimed space is the whole point.
+
+Eight sections: an at-a-glance stat strip, architecture and code paths (what a
+maintainer has to read first), decisions with rationale, tradeoffs and rejected
+options, learnings, tests and verification including what is *knowingly*
+untested, review follow-ups and tech debt, and files touched. Tradeoffs and
+Learnings stay distinct on purpose — a tradeoff is a decision that was weighed,
+a learning is a dead end that was walked, and collapsing them loses the dead
+ends.
+
+Sources match its siblings': no argument reads the session transcript, `#455` or
+a PR URL reads the pull request, and the same `gh` + GitHub-remote preflight
+falls back to session mode when either is missing. One departure: this is the
+only recap command that reads the **diff hunks**, because an engineering reader
+is the one audience for whom a changed signature or a new invariant is the
+point. That read is capped at 20 files — `diff-artifact`'s budget, so the plugin
+carries one number — falls back to `--name-only` past the cap, and must report
+how many files were summarized rather than read. Commit bodies still lead for
+the *why*; hunks only supply the *what*. Learnings is usually empty in PR mode,
+since a diff records what shipped and never what was abandoned.
+
+Diagrams, filing, and the `docs/artifacts/` gallery work exactly as they do for
+`team-recap`, including the SVG-inlining step that keeps the mermaid runtime out
+of the committed copy. Its republish key is `eng-artifact-url:` — the fourth
+distinct key on the shared per-session record, and the reason
+`tests/plugins/test-artifact-tools.sh` enforces key uniqueness across all four
+writers.
 
 ### plan-artifact
 
