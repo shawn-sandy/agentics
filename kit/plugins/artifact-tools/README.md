@@ -186,8 +186,9 @@ therefore updates the same page as the PR evolves.
 
 ### eng-recap (command)
 
-`/artifact-tools:eng-recap` is the fourth framing over `session-artifact`, and
-the only one written for a single audience: the engineer who has to touch this
+`/artifact-tools:eng-recap` is the fourth framing over `session-artifact` — the
+third recap *command*, after `product-doc` and `team-recap` — and the only one
+written for a single audience: the engineer who has to touch this
 code next, opening these files with no memory of the work.
 
 It exists because the other two both pay a translate-for-non-engineers tax, and

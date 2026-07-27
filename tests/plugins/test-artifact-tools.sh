@@ -260,7 +260,18 @@ assert re.search(r'at most \*\*(\d+) files\*\*', text), (
     "eng-recap: reads diff hunks with no numeric file cap"
 )
 cap = int(re.search(r'at most \*\*(\d+) files\*\*', text).group(1))
-assert 0 < cap <= 50, f"eng-recap: implausible diff cap of {cap} files"
+# The cap is a cross-file contract: the command, the README, and the awk that
+# implements it must all name the same number. A range check would let the
+# command drift to 35 while the README still promises 20.
+EXPECTED_CAP = 20
+assert cap == EXPECTED_CAP, f"eng-recap: diff cap is {cap}, README/CHANGELOG promise {EXPECTED_CAP}"
+assert re.search(rf'n<={EXPECTED_CAP}\b', text), (
+    f"eng-recap: documents a {cap}-file cap but the awk that implements it uses a different bound"
+)
+readme = (pathlib.Path(sys.argv[1]) / "README.md").read_text()
+assert re.search(rf'\b{EXPECTED_CAP}[ -]file', readme), (
+    f"README does not state the {EXPECTED_CAP}-file diff budget the command enforces"
+)
 # The cap needs a defined behaviour past the budget, or it is just a limit that
 # silently drops files.
 assert "--name-only" in text, "eng-recap: no name-only fallback past the cap"

@@ -51,7 +51,7 @@ What each command does with the same session:
 | Diagrams | None | Mermaid, SVG-inlined | Mermaid, SVG-inlined |
 | PR raw material | Commit bodies + file names | Commit bodies + file names | **+ diff hunks** |
 | Code in body | Only what a non-coder needs | Only when clearest | Freely — signatures, configs, invariants |
-| Unique sections | Features, Bug fixes, Plan details | Stat strip, Before/after, Glossary | Architecture, Tradeoffs, Tests, Follow-ups |
+| Unique sections | Features, Bug fixes, Plan details | Before/after, Glossary | Architecture, Tradeoffs, Learnings, Tests, Follow-ups (stat strip shared with `team-recap`) |
 
 ## Established facts
 
@@ -87,7 +87,7 @@ Researched, not assumed:
 | 2 | Republish key `eng-artifact-url:` | Fourth distinct key on the shared record; anything else republishes over a sibling | Reusing `team-artifact-url:` |
 | 3 | **Inherit the mermaid pipeline**, SVG-inlining included | Engineers benefit most from sequence/flow/state diagrams, and the procedure is already written and proven in `team-recap` | Prose/tables only; mermaid without SVG inlining (loses diagrams in the committed gallery copy) |
 | 4 | **Read diff hunks** in PR mode, with a size cap | An engineering audience is the one case where hunks carry real signal — changed signatures, new invariants, error paths. Commit bodies still lead for the *why* | Matching siblings exactly; delegating hunk detail to `diff-artifact` |
-| 5 | Sections: Architecture & code paths, Tradeoffs & rejected options, Tests & verification, Review follow-ups & tech debt — plus Summary, Decisions, Files touched | All four selected; together they are what a maintainer picking up cold actually needs | Any narrower subset |
+| 5 | Eight sections: At a glance (stat strip), Architecture & code paths, Decisions, Tradeoffs & rejected options, Learnings, Tests & verification, Review follow-ups & tech debt, Files touched | All four offered sections were selected, then Learnings and the At-a-glance strip were added during plan alignment: a tradeoff is a decision that was weighed, a learning is a dead end that was walked, and dropping the latter loses the dead ends | Any narrower subset; folding Learnings into Tradeoffs |
 
 ### Consequence of decision 3
 
@@ -108,7 +108,7 @@ one `diff-artifact` already documents for the 16 MiB artifact limit.
 
 1. **The command file** — `kit/plugins/artifact-tools/commands/eng-recap.md`.
    Framing overrides only: source (session + PR with diff), audience (inverted
-   tax), sections (the seven), visual requirements (inherited), destination
+   tax), sections (the eight), visual requirements (inherited), destination
    (stem `eng-recap` / `pr-<n>-eng`), republish key (`eng-artifact-url:`).
 2. **Test coverage** — extend `tests/plugins/test-artifact-tools.sh`: add
    `commands/eng-recap.md` → `eng-artifact-url` to the check-7 `owners` map,

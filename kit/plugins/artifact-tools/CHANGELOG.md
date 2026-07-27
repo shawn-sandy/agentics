@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `/artifact-tools:eng-recap` — a third framing over `session-artifact`, written
+- `/artifact-tools:eng-recap` — the fourth framing over `session-artifact` (and
+  the third recap *command*, after `product-doc` and `team-recap`), written
   for the engineer who has to touch the code next. Where `team-recap` leads every
   section with a plain-language statement and glosses every internal name so a
   non-engineer can follow, this one inverts that rule deliberately: it leads with

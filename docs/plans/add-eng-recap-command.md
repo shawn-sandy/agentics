@@ -3,16 +3,17 @@ status: completed
 type: feature
 created: 2026-07-27
 workflow: false
-glance: The two existing recap commands both spend their space translating for non-engineers, which leaves no room for the code paths, tradeoffs, and test coverage a maintainer needs. This adds a third framing that inverts that rule. We will know it worked when the artifact-tools smoke test passes with eng-recap in its republish-key map.
+glance: The two existing recap commands both spend their space translating for non-engineers, which leaves no room for the code paths, tradeoffs, and test coverage a maintainer needs. This adds a third recap command that inverts that rule. We will know it worked when the artifact-tools smoke test passes with eng-recap in its republish-key map.
 ---
 
 # Plan: Give engineers a recap written for them
 
 ## Objective
 
-Add `/artifact-tools:eng-recap` — a third framing override on the
-`session-artifact` pipeline, written for the engineer who has to touch the code
-next — and register it across the marketplace, tests, and docs.
+Add `/artifact-tools:eng-recap` — the third recap command over the
+`session-artifact` pipeline (its fourth framing, counting the skill's own),
+written for the engineer who has to touch the code next — and register it across
+the marketplace, tests, and docs.
 
 ## Context
 

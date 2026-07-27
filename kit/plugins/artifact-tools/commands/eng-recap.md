@@ -186,7 +186,11 @@ anyway), then build with these constraints:
 ## Sections
 
 In this order. Omit any section the source produced nothing for rather than
-printing an empty heading. In PR mode, read "session" below as "pull request".
+printing an empty heading — **except Learnings**, which is always kept and
+answered explicitly, including with "none for this source". It is the section a
+thin source is most likely to produce nothing for, and silently dropping it
+reads as "there were no dead ends" rather than "nobody wrote them down". In PR
+mode, read "session" below as "pull request".
 
 1. **At a glance** — a compact stat strip: changes shipped, files touched,
    decisions made, open items. Then two or three sentences on where the session
@@ -203,8 +207,9 @@ printing an empty heading. In PR mode, read "session" below as "pull request".
 5. **Learnings** — what was **tried and abandoned**, and the gotchas found.
    Distinct from Tradeoffs above: a tradeoff is a decision that was weighed, a
    learning is a dead end that was walked. Do not collapse one into the other,
-   and keep the heading with an explicit "none this session" rather than
-   dropping it.
+   and keep the heading with an explicit "none for this source" rather than
+   dropping it — this is the one exception to the omit-empty-sections rule
+   above.
 6. **Tests and verification** — what coverage was added or changed, how the work
    was verified, and — named explicitly — what is knowingly untested. An
    unstated gap in coverage is one someone else discovers in production.
