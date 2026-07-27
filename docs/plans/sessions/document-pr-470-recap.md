@@ -231,7 +231,7 @@ because they were found by running the skill rather than reading it:
   and 10 — chain entry when no specs exist, the objective prompt on the
   `None of these` path, and the two Step 8 terminations — need an interactive
   session that no harness here can drive. Recorded in the plan's Completion
-  Report at [docs/plans/add-plan-authoring-to-build.md](docs/plans/add-plan-authoring-to-build.md).
+  Report at [docs/plans/add-plan-authoring-to-build.md](../add-plan-authoring-to-build.md).
 - **Test assertions check presence, not always ordering.** An automated reviewer
   noted that check 10 would pass if `implementation-plan` appeared before
   `build-proposal`, and check 13 accepts `status: todo` and `Implement now`
@@ -241,7 +241,7 @@ because they were found by running the skill rather than reading it:
 - **A rendered-HTML formatting glitch.** In the completion report,
   `Exit — I'll implement later` is split across a `<dt>`/`<dd>` boundary,
   leaving mismatched backticks in
-  [docs/plans/add-plan-authoring-to-build.html](docs/plans/add-plan-authoring-to-build.html)
+  [docs/plans/add-plan-authoring-to-build.html](../add-plan-authoring-to-build.html)
   around line 1808. Cosmetic.
 - **The plugin metadata could say more.** A reviewer suggested `plugin.json` and
   `marketplace.json` describe the no-plan behaviour explicitly. The marketplace
@@ -254,36 +254,36 @@ because they were found by running the skill rather than reading it:
 
 ### The change itself
 
-- [kit/plugins/plan-agent/skills/build/SKILL.md](kit/plugins/plan-agent/skills/build/SKILL.md)
+- [kit/plugins/plan-agent/skills/build/SKILL.md](../../../kit/plugins/plan-agent/skills/build/SKILL.md)
   — the whole behaviour change: new Step 1b chain, rewritten Step 1 resolution,
   hoisted dirty-tree guard, `model: opus` pin, new `argument-hint`, and `Skill`
   added to `allowed-tools`. +163 lines.
 
 ### Tests
 
-- [tests/plugins/test-build-skill.sh](tests/plugins/test-build-skill.sh) — 9 new
+- [tests/plugins/test-build-skill.sh](../../../tests/plugins/test-build-skill.sh) — 9 new
   static checks (9 → 18) covering the chain, the offer, guard ordering, and the
   argument grammar. +174 lines.
 
 ### Plugin metadata and docs
 
-- [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) — version
+- [.claude-plugin/marketplace.json](../../../.claude-plugin/marketplace.json) — version
   4.4.0 → 5.0.0 and a description mentioning the no-plan behaviour.
-- [kit/plugins/plan-agent/.claude-plugin/plugin.json](kit/plugins/plan-agent/.claude-plugin/plugin.json)
+- [kit/plugins/plan-agent/.claude-plugin/plugin.json](../../../kit/plugins/plan-agent/.claude-plugin/plugin.json)
   — metadata touch-up.
-- [kit/plugins/plan-agent/CHANGELOG.md](kit/plugins/plan-agent/CHANGELOG.md) —
+- [kit/plugins/plan-agent/CHANGELOG.md](../../../kit/plugins/plan-agent/CHANGELOG.md) —
   the 5.0.0 entry, including the two breaking changes.
-- [kit/plugins/plan-agent/README.md](kit/plugins/plan-agent/README.md) — the new
+- [kit/plugins/plan-agent/README.md](../../../kit/plugins/plan-agent/README.md) — the new
   command behaviour and objective-only usage.
-- [CLAUDE.md](CLAUDE.md) — the repo-level plugin table row for `plan-agent`.
+- [CLAUDE.md](../../../CLAUDE.md) — the repo-level plugin table row for `plan-agent`.
 
 ### Plan record
 
-- [docs/plans/add-plan-authoring-to-build.md](docs/plans/add-plan-authoring-to-build.md)
+- [docs/plans/add-plan-authoring-to-build.md](../add-plan-authoring-to-build.md)
   — marked `completed`, with the Completion Report and verification notes.
-- [docs/plans/add-plan-authoring-to-build.html](docs/plans/add-plan-authoring-to-build.html)
+- [docs/plans/add-plan-authoring-to-build.html](../add-plan-authoring-to-build.html)
   — the re-rendered plan.
-- [docs/plans/index.html](docs/plans/index.html) — gallery card and count.
+- [docs/plans/index.html](../index.html) — gallery card and count.
 
 ## Glossary
 
