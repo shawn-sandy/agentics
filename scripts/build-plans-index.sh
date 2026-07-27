@@ -140,8 +140,14 @@ for f in plan_files:
     created  = get_meta(content, 'plan-created', '')
     title = get_title(content, f)
 
+    prototype = get_meta(content, 'plan-prototype', '')
+
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
+    # A text-bearing span, never an <a> — the whole card is already an anchor,
+    # and a nested <a> is invalid HTML that browsers silently unnest.
+    proto_span = ('<span class="proto-chip" title="This plan has a prototype — '
+                  'open the plan and follow its View prototype link">prototype</span>') if prototype else ''
     # Empty status/effort → omit the badge; empty data-* passes every filter.
     status_badge = f'<span class="status-chip status-{e(status)}">{e(status_display)}</span>' if status else ''
     effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
@@ -153,7 +159,7 @@ for f in plan_files:
   </div>
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
-    {date_span}
+    {date_span}{proto_span}
     <span class="card-file">{e(rel_path)}</span>
   </div>
 </a>''')
@@ -193,6 +199,7 @@ else:
   .type-chip{{background:#eff6ff;color:#2563eb}}
   .card-title{{font-weight:600;margin-bottom:.35rem;font-size:.95rem}}
   .card-meta{{font-size:.75rem;color:#9ca3af;display:flex;gap:.75rem;flex-wrap:wrap}}
+  .proto-chip{{font-size:.6rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.1rem .45rem;border-radius:999px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}}
 </style>
 </head>
 <body>

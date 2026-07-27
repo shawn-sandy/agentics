@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-07-25">
@@ -1308,7 +1308,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1407,12 +1407,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 11 done</span>
+        <span id="progress-label">11 / 11 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1483,12 +1483,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add `&lt;script type=&quot;application/json&quot; id=&quot;proto-model&quot;&gt;{{PROTO_MODEL}}&lt;/script&gt;` to `PROTOTYPE-SKELETON.html` immediately after the existing `#seed` block at line 63.</span>
               </div>
               <div class="step-why">the derived model needs a durable home in the prototype before anything can compare against it, and sitting beside `#seed` keeps both machine-readable blocks together.</div>
@@ -1500,12 +1500,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Pin the `{{SOURCE_PLAN}}` contract in `skills/prototype/SKILL.md`: on the plan path it is the repo-relative path of the plan&#39;s markdown spec (`docs/plans/&lt;slug&gt;.md`), not a title or free text; on the idea, image, and Figma paths it stays empty.</span>
               </div>
               <div class="step-why">the drift hook resolves the owning plan from `proto-source`, and today that token is undefined free text that only ever fed the gallery card&#39;s display string — without a format contract the whole comparison is unimplementable.</div>
@@ -1517,12 +1517,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Extend Step 5 of `skills/prototype/SKILL.md` to substitute `{{PROTO_MODEL}}` with the Step 3 model serialized as compact single-line JSON — keys `entity`, `fields` (each `{name, type}`), `action`, `successSignal` — using the same script-breakout escaping rule already documented for `{{SEED_JSON}}`, never HTML escaping.</span>
               </div>
               <div class="step-why">`JSON.parse` on an HTML-escaped block fails the same way it would for the seed, and the existing rule is already written down one paragraph above.</div>
@@ -1534,12 +1534,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a write-back step to `skills/prototype/SKILL.md` that runs **before** the prototype HTML is written in Step 6, resolving the plan-path input&#39;s `.html` to its sibling `.md` spec by extension swap and writing `prototype: docs/prototypes/&lt;slug&gt;.html` plus `proto-model: &lt;compact single-line JSON&gt;` into that spec&#39;s frontmatter — plan path only, skipped for idea, image, and Figma inputs. When the sibling `.md` does **not** exist, skip the write-back entirely, still generate the prototype, and print one line telling the user to run `node scripts/extract-plan-spec.mjs &lt;plan&gt;.html &gt; &lt;plan&gt;.md` first if they want the back-link. The JSON must be single-line: never pretty-printed, never containing a raw newline or a bare `---`.</span>
               </div>
               <div class="step-why">69 of the 84 non-index plans under `docs/plans/` are legacy HTML with no spec sibling, so a blind extension swap would fail generation or write an empty spec for the majority of real inputs — and materializing a spec as a side effect of prototyping would silently rewrite a plan the user never asked us to touch. The frontmatter parser is also a naive line scanner, so an embedded newline or `---` silently truncates the block and corrupts `status` and `created` for all three consumers that re-scan it.</div>
@@ -1551,12 +1551,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Thread `prototype` through the renderer in three places: read `parsed.metadata.prototype` in `build-plan-html.mjs` near the existing `parsed.metadata.created` handling; pass it to `shell.metaTags()`, which emits `&lt;meta name=&quot;plan-prototype&quot;&gt;` conditionally; and extend `shell.header()`&#39;s parameter list **and its call site in `build-plan-html.mjs`** to render an anchor inside `.plan-header-actions` beside the effort badge, with visible text `View prototype` and `aria-label=&quot;View the interactive prototype for this plan&quot;`. Compute its `href` with `path.relative()` from the rendered plan&#39;s **output directory** to the repo-relative `prototype:` target — never a hard-coded `../prototypes/`. Apply every change to `scripts/build-plan-html.mjs` and `scripts/lib/plan-shell.mjs`, then re-copy both byte-for-byte to `kit/plugins/plan-agent/scripts/`.</span>
               </div>
               <div class="step-why">`plansDirectory` is configurable, so a hard-coded `../prototypes/` resolves to `custom/prototypes/` for a plan rendered under `custom/plans/` while the prototype is written to `docs/prototypes/` — and nested plan directories break the same way; and `tests/plugins/test-build-plan-html.mjs:557` asserts the bundled renderer is byte-identical to the repo-root source, so editing only the bundled copy fails the suite and leaves callers of the root renderer without `prototype:` support.</div>
@@ -1568,12 +1568,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a prototype chip to the plans gallery card alongside the existing `card-date` span, as a text-bearing span matching the existing `status-chip` / `type-chip` / `effort-chip` pattern, carrying a `title` explaining that the prototype opens from inside the plan. It must **not** be an anchor — the whole card is already wrapped in `&lt;a class=&quot;gallery-card&quot;&gt;` at line 149, and a nested `&lt;a&gt;` is invalid HTML that browsers silently unnest. Apply the identical change to all three byte-identical copies of the builder: `kit/plugins/plan-agent/hooks/build-index.sh`, `scripts/build-plans-index.sh`, and `docs/plans/build-index.sh`.</span>
               </div>
               <div class="step-why">an icon-only chip gives screen reader and voice-control users no signal a prototype exists, while a nested anchor breaks the card&#39;s click target; and regenerating the gallery through either un-updated copy would drop the chip and overwrite an index that already had it.</div>
@@ -1585,12 +1585,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write `hooks/check-prototype-drift.py`, reading the `PostToolUse` JSON payload on stdin and running two comparisons: (A) the prototype&#39;s `#proto-model` field names against the `&lt;th&gt;` headers and form field `name`/`id` attributes present in that same file, and (B) the prototype&#39;s `#proto-model` against the `proto-model:` frontmatter of the plan its `proto-source` names. Resolve that plan path under the plans directory only, and read its frontmatter with a single-line regex (`^proto-model:\s*(.*)$` then `json.loads`) in the style of `validate-plan-filename.py`&#39;s `_is_completed` — not a general YAML parser. Stay silent when the plan is missing, when either `proto-model` is absent, or when either fails to parse. Each warning names the two files, the diverging field, and what to re-run. Always `sys.exit(0)` — never exit 2, even though `dispatch.py` would propagate it as actionable feedback.</span>
               </div>
               <div class="step-why">(A) is the only check that catches a human hand-editing the prototype, which is the case the whole feature exists for; a second general-purpose Python frontmatter parser would silently diverge from the JS one in `plan-spec.mjs` over time; and exiting 0 matches every other hook in this plugin, keeping a drift report about some other plan from interrupting whatever the user is actually doing.</div>
@@ -1602,12 +1602,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Register the drift check in `dispatch.py` by appending it to the `is_prototype` branch after the existing `build-prototypes-index.sh` call, sharing the same `deadline`.</span>
               </div>
               <div class="step-why">`dispatch.py` already gates on `_PROTOTYPES_MARKER` and fans out, so no `hooks.json` change is needed — but the children share one 55s budget with a 5s per-child floor, so the cheaper check goes last and must stay cheap or it gets skipped by the fail-open path and drift silently stops being detected.</div>
@@ -1619,12 +1619,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write the three test files, document the new hook and the `prototype:` / `plan-prototype` keys in the plugin `README.md`, add the 4.4.0 CHANGELOG entry, and bump `plan-agent` from 4.3.1 to 4.4.0 in `.claude-plugin/marketplace.json`.</span>
               </div>
               <div class="step-why">any edit under `kit/plugins/&lt;name&gt;/` requires a marketplace version bump, this is a feature so it is a minor one, and the plugin README documents every other hook individually.</div>
@@ -1662,47 +1662,47 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A plan spec carrying `prototype:` renders a `plan-prototype` meta tag and a visible header link whose href resolves to the prototype file from the plan&#39;s own directory, including when the plan lives in a custom `plansDirectory`.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The two renderer files and the three plans-index builders remain byte-identical across all their copies after the change.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Running `/plan-agent:prototype` against a legacy HTML plan with no sibling `.md` still writes the prototype, creates no spec file, and prints a notice explaining how to get the back-link.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">A plan spec without `prototype:` renders byte-identically to its output before this change.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">The header prototype link and the gallery prototype chip both expose non-empty accessible text.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">Every prototype generated from the skeleton contains a parseable `#proto-model` JSON block, and its `proto-source` holds the repo-relative path of the plan&#39;s markdown spec.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">Running `/plan-agent:prototype` against a plan writes single-line `prototype:` and `proto-model:` keys into that plan&#39;s `.md` frontmatter before the prototype HTML is written, and prints no drift warning during generation; running it against an idea, image, or Figma input writes to no plan.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">The plans gallery card shows a prototype chip, and the emitted card HTML contains no nested anchor.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">`check-prototype-drift.py` reports divergence between a prototype&#39;s model and its rendered columns, and between a prototype&#39;s model and its plan&#39;s copy, naming both files and the diverging field.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">The drift hook exits 0 on every input, including missing files, missing blocks, out-of-tree paths, and malformed JSON.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 4.4.0.</label>
         </li>
       </ul>
@@ -1728,21 +1728,21 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>

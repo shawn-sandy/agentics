@@ -1564,8 +1564,8 @@ const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/><
 
 /* ── Template functions — args are pre-escaped HTML strings ────────── */
 
-/** <head> meta tags. `workflow` may be empty → tag omitted entirely. */
-export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow }) {
+/** <head> meta tags. `workflow`/`prototype` may be empty → tag omitted entirely. */
+export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype }) {
   const tags = [
     `<meta name="plan-status" content="${status}">`,
     `<meta name="plan-effort" content="${effort}">`,
@@ -1579,10 +1579,25 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
     `<meta name="plan-goal" content="${goal}">`,
   ];
   if (workflow) tags.push(`<meta name="plan-workflow" content="${workflow}">`);
+  if (prototype) tags.push(`<meta name="plan-prototype" content="${prototype}">`);
   return tags.join('\n');
 }
 
-export function header({ title, status, effortLabel, created, repo, type }) {
+/**
+ * `prototypeHref` is the already-relative link from this plan's own output
+ * directory to its prototype — empty when the spec carries no `prototype:`
+ * key, in which case no anchor is emitted at all.
+ *
+ * Deliberately carries no CSS of its own: the shared CSS block is emitted into
+ * every plan, so a new rule would change the bytes of plans that have no
+ * prototype. `a { color: var(--accent) }` and the actions row's flex gap
+ * already style it.
+ */
+export function header({ title, status, effortLabel, created, repo, type, prototypeHref }) {
+  const prototypeLink = prototypeHref
+    ? `\n        <a class="prototype-link" href="${prototypeHref}"
+           aria-label="View the interactive prototype for this plan">View prototype</a>`
+    : '';
   return `<header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1597,7 +1612,7 @@ export function header({ title, status, effortLabel, created, repo, type }) {
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>
+        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>${prototypeLink}
         <span class="status-badge">${status}</span>
       </div>
     </div>
