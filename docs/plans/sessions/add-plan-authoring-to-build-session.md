@@ -190,9 +190,11 @@ edits went to the spec instead.
 
 ## Open items
 
-- **The proposal contradicts the plan and was committed that way.** Appendix A of
-  the proposal has the outer skill proceed after Exit; step 7 of the plan
-  overrides it. The plan says so explicitly, but the proposal was never corrected.
+- ~~**The proposal contradicts the plan and was committed that way.**~~ *Resolved
+  in review.* Appendix A had the outer skill proceed after Exit while step 7 of
+  the plan overrode it. Automated review pushed on the point, so the appendix now
+  documents path-based resolution plus an explicit Exit rule covering both `Exit`
+  and `Run as workflow`, and names the reading it supersedes.
 - **The plan is unimplemented.** Status `todo`, 12 steps, nothing applied.
 - **Whether to pin effort alongside model.** The override behavior is documented
   as identical, but no failure has been observed from it.
