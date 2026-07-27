@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// Git merge driver for docs/plans/index.html (the generated plans gallery).
+// Git merge driver for the generated gallery indexes — docs/plans/index.html
+// and docs/artifacts/index.html. Both are built from the same card markup
+// (<a class="gallery-card">), so one driver serves both; .gitattributes points
+// each at merge=plans-index. The name is historical: it predates the artifacts
+// gallery and is kept so existing clones' git config keeps resolving.
 // Invoked by git as: node merge-plans-index.mjs %O %A %B
 //   %O = base (common ancestor — may be /dev/null for new-file merges)
 //   %A = ours (current branch path — driver MUST write result here)
@@ -88,12 +92,17 @@ try {
     merged.join('\n') +
     chromeText.slice(last.index + last[0].length);
 
-  // Patch the visible plan count — real template ("<p>48 plans …") and the
-  // build script's embedded fallback ("&middot; 48 plans"). Cosmetic; skip
-  // silently when neither pattern is present.
-  const counted = result
-    .replace(/(<p>)\d+( plans\b)/, `$1${merged.length}$2`)
-    .replace(/(&middot;\s*)\d+(\s*plans\b)/, `$1${merged.length}$2`);
+  // Patch EVERY visible card count, not just the first. Both galleries render
+  // the total twice — a header ("<p>48 plans …", "<p>12 items …") and a footer
+  // ("<span>12 items</span>") — and the build script has a third embedded
+  // fallback form ("&middot; 48 plans"). Patching one leaves the page showing
+  // two different totals until the next regeneration, which reads as data loss
+  // rather than the cosmetic drift it is; hence the /g and the <span> form.
+  // The noun stays whitelisted rather than matched as \w+ so an unrelated
+  // "<p>3 columns" in the chrome cannot be rewritten. Cosmetic; skips silently
+  // when no pattern is present.
+  const COUNT_RE = /(<p>|<span>|&middot;\s*)(\d+)(\s*(?:plans|items|artifacts)\b)/g;
+  const counted = result.replace(COUNT_RE, (_m, pre, _n, post) => `${pre}${merged.length}${post}`);
 
   writeFileSync(oursPath, counted);
   process.exit(0);

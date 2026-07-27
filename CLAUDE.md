@@ -108,7 +108,7 @@ Detailed patterns in `.claude/rules/`:
 - For relative-path plugins, set `version` only in `marketplace.json` — never add a `version` field to `plugin.json` (it silently overrides the marketplace value).
 - Component types: **Commands** (`/plugin:name`), **Skills** (auto-activated), **Agents** (subprocesses), **Hooks** (event-driven).
 - Skill `SKILL.md` can use `allowed-tools` frontmatter to restrict tool access if necessary
-- Two git merge drivers (registered in `.gitattributes`) auto-resolve conflicts: `merge-marketplace.mjs` keeps the higher semver in `marketplace.json`; `merge-plans-index.mjs` unions plan cards in `docs/plans/index.html`. Run `scripts/setup-merge-driver.sh` once per clone to enable them.
+- Two git merge drivers (registered in `.gitattributes`) auto-resolve conflicts: `merge-marketplace.mjs` keeps the higher semver in `marketplace.json`; `merge-plans-index.mjs` unions gallery cards in **both** `docs/plans/index.html` and `docs/artifacts/index.html` (same `<a class="gallery-card">` markup, one driver). Run `scripts/setup-merge-driver.sh` once per clone to enable them.
 
 ## Official Documentation
 

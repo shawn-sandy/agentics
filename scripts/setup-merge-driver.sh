@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Idempotent registration of the repo's custom merge drivers:
 #   mkt-version — .claude-plugin/marketplace.json (scripts/merge-marketplace.mjs)
-#   plans-index — docs/plans/index.html           (scripts/merge-plans-index.mjs)
+#   plans-index — docs/plans/index.html and docs/artifacts/index.html
+#                                                 (scripts/merge-plans-index.mjs)
 # Safe to run repeatedly — git config set is idempotent.
 # Called automatically by the Claude Code SessionStart hook.
 # Manual: bash scripts/setup-merge-driver.sh
@@ -22,5 +23,5 @@ INDEX_DRIVER="${MAIN_WORKTREE}/scripts/merge-plans-index.mjs"
 git config merge.mkt-version.name "marketplace.json version-aware merge"
 git config merge.mkt-version.driver "node \"${MKT_DRIVER}\" %O %A %B"
 
-git config merge.plans-index.name "plans gallery index union merge"
+git config merge.plans-index.name "gallery index union merge (plans + artifacts)"
 git config merge.plans-index.driver "node \"${INDEX_DRIVER}\" %O %A %B"

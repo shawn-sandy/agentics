@@ -33,3 +33,8 @@ jobs:
       # safety gates are checked at review time, not the next morning.
       - name: Test merge? shorthand hook and merge skill contract
         run: bash tests/plugins/test-merge-shorthand.sh
+      # The gallery merge driver runs during `git merge`, where a silent wrong
+      # answer looks like lost plan or artifact cards rather than a failure.
+      # Nothing else exercises it, so this is its only regression gate.
+      - name: Test gallery index merge driver
+        run: bash tests/plugins/test-merge-gallery-index.sh
