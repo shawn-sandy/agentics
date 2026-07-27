@@ -289,8 +289,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.6.0",
-      "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages \u2014 an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, and saved prompts published singly or as a filterable library with verbatim copy buttons \u2014 with a blocking secret-scrub gate and a local-HTML fallback",
+      "version": "1.7.0",
+      "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages \u2014 an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, and saved prompts published singly or as a filterable library with verbatim copy buttons \u2014 plus three audience framings over the session recap: product-doc for stakeholders, team-recap for the whole team, and eng-recap for engineers, with architecture, code paths, tradeoffs, learnings, tests, and review follow-ups drawn from a capped read of the PR diff \u2014 with a blocking secret-scrub gate and a local-HTML fallback",
       "category": "development",
       "tags": [
         "artifacts",
