@@ -47,19 +47,55 @@ in the scratchpad:
 
 ```bash
 PR=<number-or-url>
-BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName)
-HEAD=$(gh pr view "$PR" --json headRefName --jq .headRefName)
-git fetch -q origin "$BASE" "$HEAD" 2>/dev/null
+
+# Resolve the PR's own repository, not the local checkout's. Argument-less
+# `gh repo view` means "view current repo", so a PR URL pointing at another
+# repository would pair a foreign PR number with the local owner/name and read
+# review threads off the wrong repo — returning nothing, or an unrelated local
+# PR that happens to share the number. A PR's canonical `url` is always on its
+# base repo, which is exactly where its review threads live.
+PR_URL=$(gh pr view "$PR" --json url --jq .url)
+NUM=${PR_URL##*/}
+OWNER=$(echo "$PR_URL" | cut -d/ -f4)
+REPO=$(echo "$PR_URL" | cut -d/ -f5)
 
 gh pr view "$PR" --json number,title,body,url,author,state,mergedAt,labels
 gh pr diff "$PR" --name-only                              # no --stat flag exists
-git log --format='%s%n%b%n---' "origin/$BASE".."origin/$HEAD"
+
+# Commit bodies come from the API, not from a local fetch. `headRefName` is only
+# a branch name: for a fork PR, a deleted head branch, or a PR URL pointing at
+# another repository, that ref does not exist on this origin, so a
+# `git fetch origin "$HEAD"` fails and takes the commit bodies down with it —
+# and those carry the *why*, which nothing else in this brief supplies.
+gh pr view "$PR" --json commits \
+  --jq '.commits[] | .messageHeadline + "\n" + .messageBody + "\n---"'
+
+# Top-level discussion only.
 gh pr view "$PR" --json comments,reviews \
   --jq '{comments: [.comments[].body], reviews: [.reviews[] | {state, body}]}'
+
+# Inline review threads, with resolution status. The payload above carries
+# neither: `comments` is top-level issue comments, and `reviews` keeps only each
+# review's own state and body — not the thread comments and not whether anyone
+# resolved them. Unresolved findings live here or nowhere.
+gh api graphql -f query='
+query($owner:String!,$repo:String!,$num:Int!){
+  repository(owner:$owner,name:$repo){ pullRequest(number:$num){
+    reviewThreads(first:100){ totalCount pageInfo{ hasNextPage }
+      nodes{ isResolved path
+        comments(first:20){ pageInfo{ hasNextPage }
+          nodes{ author{login} body } } } } } } }' \
+  -F owner="$OWNER" -F repo="$REPO" -F num="$NUM" \
+  --jq '.data.repository.pullRequest.reviewThreads
+        | {truncated: .pageInfo.hasNextPage, of: .totalCount,
+           threads: [.nodes[] | {resolved: .isResolved, path,
+             more_comments: .comments.pageInfo.hasNextPage,
+             comments: [.comments.nodes[].body]}]}'
 ```
 
-If the PR number itself is bad, `gh pr view` fails on the first line and `$BASE`
-is empty — report that and stop rather than gathering a partial brief.
+If the PR reference itself is bad, the first `gh pr view` fails and `$PR_URL` —
+and with it `$NUM`, `$OWNER`, and `$REPO` — comes back empty. Report that and
+stop rather than gathering a partial brief.
 
 Read the sections below out of that material: **What changed** from the commit
 subjects and the changed-file list, **Decisions** from the PR body and review
@@ -69,8 +105,16 @@ bodies over the diff — they say *why*, which is the thing a diff never carries
 Draw a diagram only where the diff shows structure or flow actually moved.
 
 Bot review comments arrive as HTML-commented boilerplate; take the finding and
-drop the scaffolding. A resolved finding belongs in Decisions (what was changed
-and why), not in Open items.
+drop the scaffolding.
+
+Use each thread's `isResolved` to sort it: **`false` → Open items**, **`true` →
+Decisions** (what the finding was and what changed because of it). Guessing
+resolution from comment text is what the GraphQL query exists to avoid.
+
+Both connections are capped — 100 threads, 20 comments each. **If `truncated`
+or any `more_comments` is true, say so in the recap.** An unresolved finding
+past the cap would otherwise vanish from Open items, and a silently partial
+list reads as a complete one.
 
 A PR carries no record of what was tried and abandoned, so **Learnings** is
 usually empty in PR mode — say so under the heading rather than mining the diff

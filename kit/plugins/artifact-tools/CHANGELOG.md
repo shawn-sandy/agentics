@@ -5,6 +5,75 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-07-27
+
+### Fixed
+
+- All three PR-mode recap commands (`eng-recap`, `team-recap`, `product-doc`)
+  resolve the target repository from the pull request itself rather than from
+  the local checkout. Argument-less `gh repo view` means "view current repo", so
+  a PR URL pointing at another repository paired a foreign PR number with the
+  local owner/name and read review threads off the wrong repo — returning
+  nothing, or an unrelated local PR that happened to share the number, either
+  way corrupting Decisions and Open items. `gh pr view --json url` returns the
+  PR's canonical URL, which is always on its base repo — the same repo its
+  review threads live on — and `$NUM`, `$OWNER`, and `$REPO` now all derive from
+  that one value. `gh pr view` exposes no `baseRepository` field, so the URL is
+  the available source. Verified against a cross-repository PR URL from a
+  checkout of a different repo.
+- The `reviewThreads` query reports its own truncation. Both connections are
+  bounded (100 threads, 20 comments each) and requested neither `pageInfo` nor
+  cursors, so on a PR past either cap the commands treated a first page as the
+  whole list and unresolved findings vanished silently from Open items / Known
+  gaps / Review follow-ups. The query now returns `truncated` and per-thread
+  `more_comments`, and all three commands must surface either in the recap —
+  matching the "report what you did not read" rule `eng-recap`'s diff budget
+  already carries, and the truncation check the `git-agent:merge` skill applies
+  to the same connection.
+- The bad-reference note now says the first `gh pr view` fails, not "the first
+  line" — the first line of the block is the `PR=` assignment, which cannot
+  fail.
+
+### Added
+
+- `tests/plugins/test-artifact-tools.sh` asserts the three PR-mode commands
+  gather a pull request identically: commit bodies via `--json commits`, a
+  `reviewThreads` query carrying `isResolved` and `hasNextPage`, truncation
+  surfaced to the reader, owner/repo derived from the PR rather than
+  argument-less `gh repo view`, and no `git fetch` / `git log` / `headRefName`
+  in the executable lines. This is the guard the plugin was missing — the drift
+  it now catches went unnoticed across two commands until a review found it.
+  The check strips comment lines before asserting, because the comments
+  legitimately name `headRefName` and `git fetch` while explaining why they are
+  not used, and a substring check cannot tell an explanation from an
+  instruction. Both new assertions were verified to fail against a
+  deliberately reintroduced regression, not merely to pass as written.
+
+## [1.7.1] - 2026-07-27
+
+### Fixed
+
+- `/artifact-tools:team-recap` and `/artifact-tools:product-doc` gather PR
+  commit bodies through `gh pr view --json commits` instead of fetching
+  `headRefName` and running `git log` across it. `headRefName` is only a branch
+  name — for a fork-backed PR, a deleted head branch, or a PR URL pointing at
+  another repository, that ref does not exist on this origin, so the fetch
+  failed with stderr discarded and the `git log` produced nothing. Both commands
+  say the commit bodies should lead the recap, and both were silently dropping
+  them. The API call needs no fetch and no local ref.
+- `/artifact-tools:team-recap` and `/artifact-tools:product-doc` read inline
+  review threads with their resolution status via a `reviewThreads` GraphQL
+  query. The previous `--json comments,reviews` payload carried neither: it
+  holds top-level issue comments and each review's own state and body, not the
+  inline thread comments and not whether anyone resolved them — so "Open items
+  from unresolved review threads" (team-recap) and "Known gaps from unresolved
+  review threads" (product-doc) had no source, and the instruction to file a
+  resolved finding under Decisions instead was undecidable. Both now sort each
+  thread on `isResolved` rather than guessing from comment text.
+
+Both fixes were made in `/artifact-tools:eng-recap` (1.7.0) first; this
+backports them so the three PR-mode commands gather identically.
+
 ## [1.7.0] - 2026-07-27
 
 ### Added
