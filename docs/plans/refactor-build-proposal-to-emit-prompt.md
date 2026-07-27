@@ -110,7 +110,7 @@ Step 2 is a hard gate: if `write-prompt` does not become invocable after the wra
 
 ## Unresolved Questions
 
-- Is the 6.1.0 removal of `docs/proposals/` automatic on schedule, or gated on evidence that nothing depends on it? Proposal open question 3, deliberately left out of this plan's scope.
+- Is the 6.1.0 removal of `docs/proposals/` automatic on schedule, or gated on evidence that nothing depends on it? This is the proposal's sole remaining open question, deliberately left out of this plan's scope.
 - This plan carries 12 steps against the Deep profile's 6-10 guidance, because scope was explicitly set to the full 6.0.0 release rather than the proposal's phased split. If it proves unwieldy in execution, the natural seam is after Step 6 — Steps 1-6 add capability without changing any user-facing behavior, and Steps 7-12 are the cutover.
 
 ## Resources

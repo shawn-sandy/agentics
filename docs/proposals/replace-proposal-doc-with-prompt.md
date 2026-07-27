@@ -287,7 +287,7 @@ WS7. Docs, both CHANGELOGs, marketplace bump. Depends on Phase 3.
 
 **Phase 5 — Remove the proposal path (6.1.0).** *(M)*
 Delete the dual-write branch, retire `docs/proposals/`, fix the inbound relative link
-(risk 6). Gated on open question 3.
+(risk 6). Gated on the sole remaining open question (the 6.1.0 removal gate).
 
 ## Appendix A — The invocability natural experiment
 
