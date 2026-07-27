@@ -105,7 +105,7 @@ interactive session no harness here can provide, and are checked off under
 Step 3.4 on the user's explicit instruction:
 
 - Criteria 2 and 10, the no-specs chain entry and the objective prompt on the `None of these` path — both sit behind the discovery offer, which is now confirmed to stop rather than self-resolve in a headless run.
-- Criteria 8 and 9, the `Exit — I'll implement later` and `Run as workflow` terminations at the chained Step 8 — asserted statically by check 13.
+- Criteria 8 and 9, the two non-implementing Step 8 terminations (`Exit` and `Run as workflow`) — asserted statically by check 13. The option's full label carries an em-dash, which the report renderer reads as its own item separator, so it is named in prose here rather than quoted.
 
 ## Tests
 

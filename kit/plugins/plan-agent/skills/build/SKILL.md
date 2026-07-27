@@ -31,8 +31,14 @@ spec.
   `$ARGUMENTS` carries an optional plan path (`.md` spec or `.html`; an `.html`
   resolves to its sibling `.md`), an optional free-text objective, and an
   optional plans-directory override.
-- **Objective versus path.** The test applies to the **leading token only**: it
-  is an objective unless that token carries an `.md`/`.html` suffix or a `/`.
+- **Parse flags first.** Strip `--dir <path>` and any other recognized option
+  with its value out of `$ARGUMENTS` before classifying anything. The test below
+  applies to the **first positional token**, never to a flag: `--dir tmp/plans`
+  alone leaves no positional token at all, which is a bare `build` and takes the
+  discovery offer, not an objective named `--dir`.
+- **Objective versus path.** The test applies to that **first positional token
+  only**: it is an objective unless that token carries an `.md`/`.html` suffix
+  or a `/`.
   Anything path-shaped hits the Step 1 stop rather than being read as prose. A
   slash later in the string is harmless — `add A/B testing support` leads with
   `add` and parses as an objective — but a slash in the *first* token misreads
@@ -173,7 +179,10 @@ proposal writing, plan authoring, or review. Control returns through
    `Skill(skill: "plan-agent:build-proposal", args: "<objective>")`. Do **not**
    forward `--dir` — that skill resolves its own proposals directory. When it
    converges, invoke `Skill(skill: "plan-agent:implementation-plan", args:
-   "author an execution plan from the proposal at <proposal path>")` — lead with
+   "author an execution plan from the proposal at <proposal path> --dir <path>")`
+   — **`--dir` is forwarded here**, unlike to `build-proposal`: it names where
+   the *plan* goes, so omitting it would write the spec to the default directory
+   and then fail to resolve it on return. Lead with
    objective text naming the proposal path, never a bare `.md` first token,
    which would drop `implementation-plan` into conversion mode and produce a
    plan whose steps restate proposal headings instead of naming real actions.

@@ -183,6 +183,9 @@ printf '%s' "$CHAIN" | grep -qi 'by path' || MISSING="$MISSING return-by-path"
 # build-proposal answers a Tier 0 idea directly and writes no document, so the
 # chain must have somewhere to go when the proposal stage produces no artifact.
 printf '%s' "$CHAIN" | grep -qi 'No proposal written' || MISSING="$MISSING tier0-no-artifact-fallthrough"
+# --dir names where the *plan* goes, so the proposal branch must forward it to
+# implementation-plan even though it withholds it from build-proposal.
+printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not-forwarded-to-plan-authoring"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -273,6 +276,10 @@ MISSING=""
 echo "$ATLINE" | grep -qw Skill || MISSING="$MISSING allowed-tools-Skill"
 grep -q '^argument-hint:.*<objective>' "$SKILL" || MISSING="$MISSING argument-hint-objective"
 printf '%s' "$INVOKE" | grep -qi 'suffix' || MISSING="$MISSING suffix-rule"
+# Without a flags-first pass, `--dir tmp/plans` classifies as an objective:
+# the token carries neither a suffix nor a slash.
+printf '%s' "$INVOKE" | grep -qi 'Parse flags first' || MISSING="$MISSING flags-not-parsed-first"
+printf '%s' "$INVOKE" | grep -qi 'first positional token' || MISSING="$MISSING positional-token-rule"
 printf '%s' "$INVOKE" | grep -qi 'misparse' || MISSING="$MISSING slash-misparse-note"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
