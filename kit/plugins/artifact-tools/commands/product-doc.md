@@ -89,9 +89,9 @@ Run the `artifact-tools:session-artifact` skill with these framing overrides:
                comments: [.comments.nodes[].body]}]}'
   ```
 
-  If the PR reference itself is bad, `gh pr view` fails on the first line and
-  `$PR_URL` — and therefore `$NUM` — comes back empty. Report that and stop
-  rather than gathering a partial brief.
+  If the PR reference itself is bad, the first `gh pr view` fails and `$PR_URL`
+  — and with it `$NUM`, `$OWNER`, and `$REPO` — comes back empty. Report that
+  and stop rather than gathering a partial brief.
 
   Read the sections below out of that material: **Features** and **Bug fixes**
   from the commit subjects and the changed-file list, **Decisions** from the PR

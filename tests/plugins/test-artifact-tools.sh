@@ -247,6 +247,60 @@ assert found >= 3, (
 EOF
 ok
 
+# 8b. The three PR-mode commands must gather the PR the same way. This is the
+# contract that already drifted once: eng-recap was fixed and its two siblings
+# were left fetching a head ref, silently dropping the commit bodies both of
+# them say should lead the recap.
+python3 - "$PLUGIN" <<'EOF' || fail "a PR-mode command's gathering drifted from its siblings"
+import pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+found = 0
+for path in sorted((root / "commands").glob("*.md")):
+    text = path.read_text()
+    if "gh pr view" not in text:
+        continue
+    found += 1
+    rel = path.name
+    # Assert on the gather block with comment lines stripped. The comments
+    # legitimately name `headRefName` and `git fetch` while explaining why they
+    # are NOT used -- a raw substring check cannot tell an explanation apart
+    # from an instruction, and would pass a file that does both.
+    block = re.search(r'```bash\n\s*(PR=<number-or-url>.*?)```', text, re.S)
+    assert block, f"{rel}: no PR gather block to check"
+    code = "\n".join(
+        ln for ln in block.group(1).splitlines() if not ln.strip().startswith("#")
+    )
+    # Commit bodies through the API, never through a local ref. `headRefName` is
+    # only a branch name, so a fork PR / deleted branch / cross-repo URL has no
+    # such ref on this origin and the fetch takes the bodies down with it.
+    assert "--json commits" in code, f"{rel}: commit bodies not gathered from the API"
+    for banned, why in (
+        ("git fetch", "fetches a head ref that need not exist on this origin"),
+        ("git log", "reads commit bodies from a local ref instead of the API"),
+        ("headRefName", "resolves commits through a branch name"),
+    ):
+        assert banned not in code, f"{rel}: {why} (`{banned}`)"
+    # Unresolved findings have no other source: `comments` is top-level issue
+    # comments and `reviews` carries only each review's own state and body.
+    assert "reviewThreads" in code and "isResolved" in code, (
+        f"{rel}: no reviewThreads query, so 'unresolved review threads' has no source"
+    )
+    # Both connections are bounded, so the query must be able to say it was cut
+    # short -- otherwise a first page reads as the whole list.
+    assert "hasNextPage" in code, f"{rel}: reviewThreads query cannot report truncation"
+    assert re.search(r'truncated|more_comments', code), (
+        f"{rel}: queries pageInfo but never surfaces truncation to the reader"
+    )
+    # Owner/repo must come from the PR, not the checkout: argument-less
+    # `gh repo view` is "view current repo", which pairs a foreign PR number
+    # with local owner/name on a cross-repository PR URL.
+    assert not re.search(r'\$\(\s*gh repo view', code), (
+        f"{rel}: derives owner/repo from the local checkout instead of the PR"
+    )
+assert found >= 3, f"expected 3 PR-mode commands to check, found {found}"
+EOF
+ok
+
 # 9. eng-recap is the only command that reads diff hunks, so it is the only one
 # that can exhaust context on a large PR. The cap is what makes that read safe,
 # and a cap nobody reports is indistinguishable from a complete read.

@@ -94,9 +94,9 @@ query($owner:String!,$repo:String!,$num:Int!){
              comments: [.comments.nodes[].body]}]}'
 ```
 
-If the PR reference itself is bad, `gh pr view` fails on the first line and
-`$PR_URL` — and therefore `$NUM` — comes back empty. Report that and stop
-rather than gathering a partial brief.
+If the PR reference itself is bad, the first `gh pr view` fails and `$PR_URL` —
+and with it `$NUM`, `$OWNER`, and `$REPO` — comes back empty. Report that and
+stop rather than gathering a partial brief.
 
 Use each thread's `isResolved` to sort it: **`false` → Review follow-ups**,
 **`true` → Decisions** (what the finding was and what changed because of it).

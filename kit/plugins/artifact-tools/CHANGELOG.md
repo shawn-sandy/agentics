@@ -30,6 +30,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   matching the "report what you did not read" rule `eng-recap`'s diff budget
   already carries, and the truncation check the `git-agent:merge` skill applies
   to the same connection.
+- The bad-reference note now says the first `gh pr view` fails, not "the first
+  line" — the first line of the block is the `PR=` assignment, which cannot
+  fail.
+
+### Added
+
+- `tests/plugins/test-artifact-tools.sh` asserts the three PR-mode commands
+  gather a pull request identically: commit bodies via `--json commits`, a
+  `reviewThreads` query carrying `isResolved` and `hasNextPage`, truncation
+  surfaced to the reader, owner/repo derived from the PR rather than
+  argument-less `gh repo view`, and no `git fetch` / `git log` / `headRefName`
+  in the executable lines. This is the guard the plugin was missing — the drift
+  it now catches went unnoticed across two commands until a review found it.
+  The check strips comment lines before asserting, because the comments
+  legitimately name `headRefName` and `git fetch` while explaining why they are
+  not used, and a substring check cannot tell an explanation from an
+  instruction. Both new assertions were verified to fail against a
+  deliberately reintroduced regression, not merely to pass as written.
 
 ## [1.7.1] - 2026-07-27
 
