@@ -132,6 +132,39 @@ expect "model diverging from DOM and plan reports both" 2 "day"
   && ok "warnings name the prototype file" \
   || bad "warnings name the prototype file" "$DRIFT_OUT"
 
+# 2b. Only the FORM control was renamed; the <th> headers still match the model.
+# The merged-list version of _dom_fields missed this entirely: the untouched
+# headers supplied every model field, so the union matched and nothing fired.
+write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" date exercise
+python3 - "$PROTO" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+i, j = s.index('<form'), s.index('</form>')
+open(p, 'w').write(s[:i] + s[i:j].replace('"exercise"', '"movement"') + s[j:])
+PY
+run_drift "$PROTO"
+expect "a form-only rename is detected" 1 "form fields"
+
+# 2c. Only the <th> headers were renamed; the form controls still match.
+write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" date exercise
+python3 - "$PROTO" <<'PY'
+import re, sys
+p = sys.argv[1]
+s = open(p).read()
+i = s.index('<table')
+open(p, 'w').write(s[:i] + s[i:].replace('"exercise"', '"movement"'))
+PY
+run_drift "$PROTO"
+expect "a header-only rename is detected" 1 "table headers"
+
+# 2d. Pure reorder — same field names on both sides, different order. Passes
+# every membership check, so it needs its own sequence comparison.
+write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" exercise date
+write_plan "$PLAN" "$MODEL_2"
+run_drift "$PROTO"
+expect "a reordered column is detected" 1 "reordered"
+
 # 3. Model diverges from the plan only — DOM was hand-edited to match.
 write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_RENAMED" day exercise
 run_drift "$PROTO"

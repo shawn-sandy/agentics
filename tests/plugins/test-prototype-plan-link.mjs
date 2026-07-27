@@ -190,7 +190,13 @@ ok('href resolves from a custom nested plansDirectory too', () => {
   const specPath = join(proj, 'custom', 'deep', 'plans', 'track-gym-workouts.md');
   const outPath = join(proj, 'custom', 'deep', 'plans', 'track-gym-workouts.html');
   const protoPath = join(proj, 'docs', 'prototypes', 'track-gym-workouts.html');
-  writeFileSync(protoPath, prototypeHtml({ source: 'docs/plans/track-gym-workouts.md', fields: MATCHED_FIELDS }));
+  // proto-source names the spec that actually owns this prototype. Pointing it
+  // at docs/plans/ while the spec lives under custom/deep/plans/ would break
+  // the {{SOURCE_PLAN}} contract and quietly mislead anyone reusing the fixture.
+  writeFileSync(protoPath, prototypeHtml({
+    source: 'custom/deep/plans/track-gym-workouts.md',
+    fields: MATCHED_FIELDS,
+  }));
   writeFileSync(
     specPath,
     spec({ prototype: 'docs/prototypes/track-gym-workouts.html', protoModel: MODEL }).replace(

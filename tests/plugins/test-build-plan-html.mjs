@@ -587,10 +587,16 @@ ok('a spec with no prototype: key renders byte-identically to the pre-change ren
     const after = render(RENDERER, 'after');
     assert.equal(after, before, 'output drifted for a spec that carries no prototype: key');
   } catch (err) {
-    // A shallow clone or a missing base ref is an environment gap, not a
-    // regression — skip loudly rather than failing the suite.
-    if (/unknown revision|does not exist|ambiguous argument/i.test(err.message)) {
-      console.log(`       (skipped: ${base} not available)`);
+    // A shallow clone, a missing base ref, or no git at all is an environment
+    // gap, not a regression — skip loudly rather than failing the suite.
+    // `git show <missing>:<path>` says "invalid object name", not "unknown
+    // revision", and a git-less box throws ENOENT before saying anything.
+    const envGap = err.code === 'ENOENT'
+      || /invalid object name|unknown revision|does not exist|ambiguous argument|not a git repository|fatal:/i.test(
+        `${err.message}${err.stderr || ''}`
+      );
+    if (envGap) {
+      console.log(`       (skipped: ${base} not available — ${String(err.message).split('\n')[0]})`);
     } else {
       throw err;
     }

@@ -105,23 +105,37 @@ def _model_fields(model):
 
 def _dom_fields(content):
     """
-    Field keys the prototype actually renders: <th data-field> plus form name/id.
+    The two independent field lists the prototype actually renders: the table's
+    `<th data-field>` keys, and the form's control names.
+
+    Kept SEPARATE on purpose. Merging them into one deduplicated list hides the
+    exact edit this hook exists to catch: rename only the form control and the
+    untouched `<th>` still supplies every model field, so the union matches and
+    nothing is reported.
 
     Comments are stripped first. The skeleton's own authoring comment carries a
     literal `data-field="key"` example and survives into every generated
     prototype, so scanning raw text reports a phantom `key` field on a file
     that has not drifted at all.
+
+    Form controls are read from inside `<form>` only, so an unrelated control
+    elsewhere on the page is not mistaken for a model field.
     """
     content = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
-    names = list(re.findall(r'<th[^>]*\bdata-field="([^"]+)"', content))
-    seen = set(names)
-    for m in re.finditer(r"<(?:input|select|textarea)\b[^>]*>", content):
-        tag = m.group(0)
-        attr = re.search(r'\bname="([^"]+)"', tag) or re.search(r'\bid="([^"]+)"', tag)
-        if attr and attr.group(1) not in seen:
-            seen.add(attr.group(1))
-            names.append(attr.group(1))
-    return names
+
+    table = list(re.findall(r'<th[^>]*\bdata-field="([^"]+)"', content))
+
+    form = []
+    seen = set()
+    for form_m in re.finditer(r"<form\b[^>]*>(.*?)</form>", content, re.DOTALL):
+        for m in re.finditer(r"<(?:input|select|textarea)\b[^>]*>", form_m.group(1)):
+            tag = m.group(0)
+            attr = re.search(r'\bname="([^"]+)"', tag) or re.search(r'\bid="([^"]+)"', tag)
+            if attr and attr.group(1) not in seen:
+                seen.add(attr.group(1))
+                form.append(attr.group(1))
+
+    return {"table headers": table, "form fields": form}
 
 
 def _plan_proto_model(plan_path):
@@ -152,14 +166,24 @@ def _plan_proto_model(plan_path):
 
 
 def _first_difference(left, right):
-    """Name one diverging field, preferring an addition/removal over reordering."""
+    """
+    Name one diverging field, preferring an addition/removal over a reorder.
+
+    Order counts as drift: the field order in the model drives the prototype's
+    column order, and the skill requires the two to match exactly. A pure
+    reorder passes both membership checks, so it needs its own comparison —
+    without it, swapping two columns is silently accepted.
+    """
     missing = [n for n in left if n not in right]
     extra = [n for n in right if n not in left]
     if missing:
-        return missing[0]
+        return missing[0], "missing"
     if extra:
-        return extra[0]
-    return None
+        return extra[0], "unexpected"
+    for l, r in zip(left, right):
+        if l != r:
+            return l, "reordered"
+    return None, None
 
 
 def check(proto_path):
@@ -177,16 +201,22 @@ def check(proto_path):
 
     rel_proto = os.path.relpath(proto_path, _project_dir())
 
-    # (A) model vs. the prototype's own rendered columns / form fields.
-    dom = _dom_fields(content)
-    if dom:
-        diff = _first_difference(model_fields, dom)
-        if diff is not None:
-            warnings.append(
-                f"[plan-agent] prototype drift: {rel_proto} — field '{diff}' differs between "
-                f"its #proto-model block and its own table headers / form fields. "
-                f"Re-run /plan-agent:prototype to regenerate it from the plan."
-            )
+    # (A) model vs. the prototype's own rendered columns and form fields —
+    # each compared on its own, so an edit to only one of them still reports.
+    # One warning either way: a field renamed in both is one mistake, not two.
+    parts = []
+    for label, rendered in _dom_fields(content).items():
+        if not rendered:
+            continue
+        field, kind = _first_difference(model_fields, rendered)
+        if field is not None:
+            parts.append(f"{field!r} is {kind} in its {label}")
+    if parts:
+        warnings.append(
+            f"[plan-agent] prototype drift: {rel_proto} — {'; '.join(parts)}, "
+            f"compared with its #proto-model block. "
+            f"Re-run /plan-agent:prototype to regenerate it from the plan."
+        )
 
     # (B) model vs. the source plan's copy.
     source = _get_meta(content, "proto-source")
@@ -203,11 +233,16 @@ def check(proto_path):
     if plan_fields is None:
         return warnings  # plan carries no usable proto-model yet
 
-    diff = _first_difference(model_fields, plan_fields)
-    if diff is not None:
+    field, kind = _first_difference(model_fields, plan_fields)
+    if field is not None:
+        # Point at the .html, not the .md we just read: the skill treats a
+        # first token ending in .html as a plan path and ANY other string as a
+        # raw idea, so naming the spec here would generate a prototype from the
+        # path itself.
+        plan_arg = source[: -len(".md")] + ".html"
         warnings.append(
-            f"[plan-agent] prototype drift: {rel_proto} — field '{diff}' differs from the "
-            f"proto-model in {source}. Re-run /plan-agent:prototype {source} to regenerate "
+            f"[plan-agent] prototype drift: {rel_proto} — {field!r} is {kind} relative to the "
+            f"proto-model in {source}. Re-run /plan-agent:prototype {plan_arg} to regenerate "
             f"the prototype from the plan."
         )
     return warnings
