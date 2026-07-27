@@ -35,6 +35,9 @@ import sys
 _FALLBACK_PLANS_DIR = "docs/plans"
 _PROTOTYPES_MARKER = "docs/prototypes/"
 
+# Frontmatter sits at the top of the file; anything past this is not it.
+_FRONTMATTER_READ_BYTES = 64 * 1024
+
 
 def _project_dir():
     return os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
@@ -145,9 +148,12 @@ def _plan_proto_model(plan_path):
     deliberately not a general YAML parser: a second Python frontmatter reader
     would silently diverge from the JS one in plan-spec.mjs over time.
     """
+    # Bounded read: frontmatter is by definition the top of the file, and this
+    # hook shares one 55s dispatch budget with the gallery rebuild — slurping an
+    # arbitrarily large file would spend a budget the whole fan-out depends on.
     try:
-        with open(plan_path, encoding="utf-8") as fh:
-            content = fh.read()
+        with open(plan_path, encoding="utf-8", errors="replace") as fh:
+            content = fh.read(_FRONTMATTER_READ_BYTES)
     except OSError:
         return None
     lines = content.splitlines()
@@ -222,8 +228,12 @@ def check(proto_path):
     source = _get_meta(content, "proto-source")
     if not source or not source.endswith(".md"):
         return warnings
-    plans_dir = _plans_dir()
-    plan_path = os.path.abspath(os.path.join(_project_dir(), source))
+    # realpath, not abspath: abspath is pure string arithmetic, so a symlink
+    # sitting inside the plans directory and pointing anywhere on disk passed
+    # the guard and was then read by open(), which follows links. Resolve both
+    # sides so the boundary check tests the file actually opened.
+    plans_dir = os.path.realpath(_plans_dir())
+    plan_path = os.path.realpath(os.path.join(_project_dir(), source))
     if not (plan_path + os.sep).startswith(plans_dir + os.sep):
         return warnings  # out-of-tree proto-source — refuse to read it
     if not os.path.isfile(plan_path):

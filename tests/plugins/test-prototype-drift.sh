@@ -187,6 +187,22 @@ write_proto "$PROTO" '../../../etc/track-gym-workouts.md' "$MODEL_2" date exerci
 run_drift "$PROTO"
 expect "out-of-tree proto-source is silent" 0
 
+# 6b. proto-source names a SYMLINK that sits inside the plans directory but
+# resolves out of tree. abspath is string arithmetic and passed this; open()
+# follows links, so the guard has to resolve both sides.
+outside="$PROJ/outside-the-tree.md"
+write_plan "$outside" "$MODEL_RENAMED"
+ln -sf "$outside" "$PROJ/docs/plans/linked-plan.md"
+write_proto "$PROTO" 'docs/plans/linked-plan.md' "$MODEL_2" date exercise
+run_drift "$PROTO"
+expect "a symlink escaping the plans directory is not followed" 0
+
+# 6c. A real file inside the plans directory still resolves after that change.
+write_plan "$PLAN" "$MODEL_RENAMED"
+write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" date exercise
+run_drift "$PROTO"
+expect "a genuine in-tree plan is still compared" 1 "track-gym-workouts.md"
+
 # 7. Prototype has no #proto-model block at all (pre-4.4.0 prototype).
 write_proto "$PROTO" 'docs/plans/track-gym-workouts.md' "$MODEL_2" date exercise
 python3 - "$PROTO" <<'PY'
