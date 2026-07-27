@@ -1,5 +1,31 @@
 # Changelog
 
+## 5.0.0 — `build` can author the plan it implements (2026-07-27)
+
+### Added
+
+- **Step 1b, the no-plan chain in `build`.** `/plan-agent:build` with no plan named no longer dead-ends with a routing message. It asks `Start with a proposal` / `Straight to plan authoring`, then delegates: `Skill("plan-agent:build-proposal")` → `Skill("plan-agent:implementation-plan")`, whose Step 8 menu already calls back into `build`. The proposal handoff leads with objective text naming the proposal path — a bare `.md` first token would drop `implementation-plan` into conversion mode and produce a plan whose steps restate proposal headings. `--dir` is not forwarded to `build-proposal`, which resolves its own directory.
+- **Objective argument** — `/plan-agent:build add a health check endpoint`. The path-versus-objective test reads the **leading token only**, so a slash later in the string is harmless (`add A/B testing support` parses as an objective) but a slash in the first token misreads the whole argument as a path (`A/B testing for checkout`) — that stop message names the misparse instead of only listing paths tried.
+- **Abandonment contract** — a proposal written before an aborted chain is left in place uncommitted and its path reported, never cleaned up.
+- **A stated fallback for when `AskUserQuestion` is unavailable.** Every gate — discovery offer, objective prompt, proposal-versus-direct gate, preconditions — stops and reports the choice it would have offered, and never resolves itself by picking for the user. Found by running the skill headless: with the fallback undefined, one run adopted the lone discovery candidate "because it was the only one" (the exact silent pickup this release removes) while another stopped at the proposal gate — the same missing tool resolved two opposite ways.
+
+### Changed
+
+- **BREAKING — argument format.** `argument-hint` is now `[<plan.md|plan.html>] [<objective>] [--dir <path>]`.
+- **BREAKING — argument-less discovery is an offer, not a pickup.** A single `todo` match used to be adopted silently; it is now offered alongside `None of these — author a new plan`. The offer is capped at three candidates with the suppressed count stated, because `AskUserQuestion` renders at most four options. With an objective supplied, discovery is skipped entirely — it selects on `status:` alone with no notion of subject, so a repo of unrelated `todo` specs would answer "a todo app" with a menu of noise.
+- **The dirty-working-tree guard is hoisted** ahead of the chain. Left in the Step 1 preconditions it would have fired only after a full proposal loop and plan interview, matching `git-agent:ship-autonomous`'s guards-before-mutation order instead.
+- **`model: opus` pinned** on `build`. A skill's `model:` override applies for the rest of the turn and does not unwind when the skill ends, so a chained run would otherwise leave the source-writing stage on whatever `implementation-plan` or `review-plan` last set.
+- `Exit — I'll implement later` and `Run as workflow` at the chained Step 8 both terminate the **outer** chain.
+- **`Implement now` is terminal too.** `Skill()` is synchronous, so the nested `build` has already finished by the time control returns; re-entering Step 1 would ask whether to redo work that just completed, or restart a run the user stopped with `Mark in-progress and stop`. The nested result is now reported as the chain's result. This overrides the proposal's Appendix A rows for the completed and partway cases.
+- **The dirty-tree guard excludes plan artifacts.** The Step 8 callback re-enters `build` with the just-authored spec and HTML uncommitted, so the hoisted guard would have fired at exactly the post-interview moment the hoist exists to prevent — and headless, the new unavailable-question rule would have stopped the chain outright.
+- **A Tier 0 proposal that writes no document falls through to the direct path** with the original objective, instead of calling `implementation-plan` with a proposal path that was never created. Step 8 is the only point at which the user is asked how to execute, so treating either as declining merely the inner offer would build work they just routed elsewhere.
+
+### Notes
+
+- **The chain is reachable only from the slash command.** The objective is a command parameter; typing "build a todo app" as plain text does not enter it. `build` is overloaded enough that an ambient trigger wide enough to catch that also catches "build fails on CI" and "build the docker image". The `description` frontmatter is therefore byte-identical, and the model path keeps its route-away contract verbatim.
+- Two no-plan branches deliberately still stop: a named-but-missing path (chaining on a typo would author a whole plan) and an HTML-only legacy plan (which needs its spec reconstructed, not a new plan on top of it).
+- The new `test-build-skill.sh` checks are **static** — they assert the chain is authored correctly, not that it executes. No harness here can drive a skill's interactive gates.
+
 ## 4.4.0 — A plan and its prototype know about each other (2026-07-26)
 
 ### Added

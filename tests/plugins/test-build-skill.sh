@@ -163,6 +163,180 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+# --- No-plan chain (Step 1b) -------------------------------------------------
+# Every behaviour below is prose in a hard-wrapped markdown file, so each check
+# scopes its greps to the section that must carry the rule — the same technique
+# check 6 uses, and for the same reason: a file-wide grep passed against a
+# mutation that deleted all five rules it guarded and appended a decoy.
+STEP1="$(sed -n '/^## Step 1 — Resolve the plan/,/^## Step 1b —/p' "$SKILL" | flatten)"
+CHAIN="$(sed -n '/^## Step 1b —/,/^## Step 2 —/p' "$SKILL" | flatten)"
+INVOKE="$(sed -n '/^## Invocation/,/^## Step 0/p' "$SKILL" | flatten)"
+
+echo "10. Step 1b carries the chain and delegates to both authoring skills..."
+MISSING=""
+[ -n "$CHAIN" ] || MISSING="$MISSING step-1b-section"
+printf '%s' "$CHAIN" | grep -qF 'Skill(skill: "plan-agent:build-proposal"' || MISSING="$MISSING build-proposal-call"
+printf '%s' "$CHAIN" | grep -qF 'Skill(skill: "plan-agent:implementation-plan"' || MISSING="$MISSING implementation-plan-call"
+printf '%s' "$CHAIN" | grep -qi 'objective check' || MISSING="$MISSING objective-check-first"
+printf '%s' "$CHAIN" | grep -qi 'proposal-versus-direct gate' || MISSING="$MISSING proposal-gate"
+printf '%s' "$CHAIN" | grep -qi 'by path' || MISSING="$MISSING return-by-path"
+# build-proposal answers a Tier 0 idea directly and writes no document, so the
+# chain must have somewhere to go when the proposal stage produces no artifact.
+printf '%s' "$CHAIN" | grep -qi 'No proposal written' || MISSING="$MISSING tier0-no-artifact-fallthrough"
+# --dir names where the *plan* goes, so the proposal branch must forward it to
+# implementation-plan even though it withholds it from build-proposal.
+printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not-forwarded-to-plan-authoring"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 1b chain incomplete in build/SKILL.md:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "11. Discovery is an offer, capped at three, and skipped when an objective is given..."
+MISSING=""
+printf '%s' "$STEP1" | grep -qi 'offer, never a silent pickup' || MISSING="$MISSING offer-not-pickup"
+printf '%s' "$STEP1" | grep -qF 'None of these — author a new plan' || MISSING="$MISSING author-new-option"
+printf '%s' "$STEP1" | grep -qi 'at most the top three' || MISSING="$MISSING three-candidate-cap"
+printf '%s' "$STEP1" | grep -qi 'how many were suppressed' || MISSING="$MISSING suppressed-count"
+printf '%s' "$STEP1" | grep -qi 'skip discovery entirely' || MISSING="$MISSING objective-skips-discovery"
+# The skip must be stated *before* the offer is described, or a reader following
+# the branch top-to-bottom runs the offer with an objective in hand.
+SKIP_AT="$(printf '%s' "$STEP1" | { grep -boi 'skip discovery entirely' || true; } | head -1 | cut -d: -f1)"
+OFFER_AT="$(printf '%s' "$STEP1" | { grep -boi 'offer, never a silent pickup' || true; } | head -1 | cut -d: -f1)"
+if [ -n "$SKIP_AT" ] && [ -n "$OFFER_AT" ] && [ "$SKIP_AT" -ge "$OFFER_AT" ]; then
+  MISSING="$MISSING skip-stated-after-offer"
+fi
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: discovery is not an objective-gated three-candidate offer:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "12. The dirty-tree guard runs ahead of resolution and the chain, other preconditions intact..."
+# Compared against *resolution*, not against the Step 1b heading: the guard's old
+# home — the check-before-writing preconditions — also sits above that heading,
+# so a heading comparison passes with the guard un-hoisted. What must be true is
+# that it fires before a plan is resolved and before any chain stage is invoked.
+GUARD_LN="$(grep -n 'Dirty working tree' "$SKILL" | head -1 | cut -d: -f1 || true)"
+RESOLVE_LN="$(grep -n '^Resolve the plans directory' "$SKILL" | head -1 | cut -d: -f1 || true)"
+PRECOND_LN="$(grep -n '^\*\*Preconditions' "$SKILL" | head -1 | cut -d: -f1 || true)"
+MISSING=""
+if [ -z "$GUARD_LN" ] || [ -z "$RESOLVE_LN" ] || [ "$GUARD_LN" -ge "$RESOLVE_LN" ]; then
+  MISSING="$MISSING guard-not-hoisted-above-resolution"
+fi
+if [ -n "$PRECOND_LN" ] && [ -n "$GUARD_LN" ] && [ "$GUARD_LN" -gt "$PRECOND_LN" ]; then
+  MISSING="$MISSING guard-still-in-preconditions-block"
+fi
+printf '%s' "$STEP1" | grep -qi 'ahead of Step 1b' || MISSING="$MISSING guard-chain-ordering-unstated"
+# The Step 8 callback re-enters this skill with the just-authored plan
+# uncommitted; without an exclusion the hoisted guard fires at exactly the
+# moment the hoist exists to avoid, and headless it stops the chain.
+printf '%s' "$STEP1" | grep -qi 'never pre-existing work' || MISSING="$MISSING plan-artifacts-not-excluded"
+printf '%s' "$STEP1" | grep -qi 'already `status: completed`' || MISSING="$MISSING completed-plan-precondition"
+printf '%s' "$STEP1" | grep -qi 'resume from the first unmarked step' || MISSING="$MISSING resume-precondition"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: precondition placement wrong in build/SKILL.md:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "13. Every non-implementing Step 8 choice terminates the outer chain..."
+# Both answers route execution elsewhere: proceeding would build work the user
+# declined (Exit) or race the workflow they just launched (Run as workflow).
+MISSING=""
+printf '%s' "$CHAIN" | grep -qF "\`Exit — I'll implement later\` → **stop.**" || MISSING="$MISSING exit-stops"
+printf '%s' "$CHAIN" | grep -qF '`Run as workflow` → **stop.**' || MISSING="$MISSING workflow-stops"
+printf '%s' "$CHAIN" | grep -qi 'status: todo' || MISSING="$MISSING exit-leaves-todo"
+# `Skill()` is synchronous: the nested build has already finished by the time
+# control returns, so re-entering the preconditions would offer to redo work
+# that just completed or restart a run the user chose to stop.
+printf '%s' "$CHAIN" | grep -qiF '`Implement now` → **stop and report.**' || MISSING="$MISSING implement-now-not-terminal"
+printf '%s' "$CHAIN" | grep -qi 're-enter Steps 1-2' || MISSING="$MISSING no-precondition-reentry"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: the chain's return path does not terminate on every non-implementing choice:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "14. build pins its model so a chained run does not inherit a planning skill's override..."
+MODEL_PINS="$(grep -c '^model: opus$' "$SKILL" || true)"
+if [ "$MODEL_PINS" -eq 1 ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: build/SKILL.md must carry exactly one 'model: opus' line"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "15. The objective-versus-path grammar rule is stated, misparse included..."
+MISSING=""
+echo "$ATLINE" | grep -qw Skill || MISSING="$MISSING allowed-tools-Skill"
+grep -q '^argument-hint:.*<objective>' "$SKILL" || MISSING="$MISSING argument-hint-objective"
+printf '%s' "$INVOKE" | grep -qi 'suffix' || MISSING="$MISSING suffix-rule"
+# Without a flags-first pass, `--dir tmp/plans` classifies as an objective:
+# the token carries neither a suffix nor a slash.
+printf '%s' "$INVOKE" | grep -qi 'Parse flags first' || MISSING="$MISSING flags-not-parsed-first"
+printf '%s' "$INVOKE" | grep -qi 'first positional token' || MISSING="$MISSING positional-token-rule"
+printf '%s' "$INVOKE" | grep -qi 'misparse' || MISSING="$MISSING slash-misparse-note"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: the argument grammar does not distinguish an objective from a path:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "16. The two non-chaining no-plan branches still stop..."
+# A mistyped filename must not author a whole plan, and an HTML-only legacy plan
+# needs its spec reconstructed rather than a new plan written on top of it.
+MISSING=""
+printf '%s' "$STEP1" | grep -qi 'say which paths were tried' || MISSING="$MISSING missing-path-stop"
+printf '%s' "$STEP1" | grep -qi 'mistyped filename' || MISSING="$MISSING typo-rationale"
+printf '%s' "$STEP1" | grep -qi 'this skill edits specs, not HTML' || MISSING="$MISSING html-only-stop"
+# Exactly one branch may route into the chain.
+ENTER_REFUSALS="$(printf '%s' "$STEP1" | { grep -oi 'do not enter Step 1b' || true; } | wc -l | tr -d ' ')"
+if [ "$ENTER_REFUSALS" -ne 2 ]; then
+  MISSING="$MISSING both-branches-must-refuse-the-chain"
+fi
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: a no-plan branch that must stop no longer does:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "17. The chain is command-only and the ambient route-away contract survives..."
+MISSING=""
+printf '%s' "$INVOKE" | grep -qi 'only from the slash command' || MISSING="$MISSING command-only-scoping"
+ROUTE_AWAYS="$(grep -c 'stop and route to' "$SKILL" || true)"
+[ "$ROUTE_AWAYS" -eq 1 ] || MISSING="$MISSING route-away-instruction"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: ambient activation scoping is wrong in build/SKILL.md:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "18. Gates stop rather than self-resolve when AskUserQuestion is unavailable..."
+# Found by running the skill headless: with no AskUserQuestion, one run adopted
+# the lone discovery candidate ("it was the only one") and another stopped at the
+# proposal gate — the same missing tool resolved two opposite ways, because the
+# fallback was undefined. Silent adoption is the exact behaviour the offer exists
+# to remove, so the rule has to be stated, not inferred.
+FLATSKILL="$(flatten < "$SKILL")"
+MISSING=""
+printf '%s' "$FLATSKILL" | grep -qi 'AskUserQuestion` is unavailable' || MISSING="$MISSING unavailable-case-unstated"
+printf '%s' "$FLATSKILL" | grep -qi 'stops and reports the choice' || MISSING="$MISSING no-stop-and-report-rule"
+printf '%s' "$FLATSKILL" | grep -qi 'never resolve a gate by picking' || MISSING="$MISSING no-picking-ban"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: the AskUserQuestion-unavailable fallback is not stated in build/SKILL.md:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All build-skill checks passed."

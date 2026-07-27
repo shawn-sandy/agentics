@@ -22,7 +22,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent |
-| `build` | Skill | Command (`/plan-agent:build [<plan>]`) or auto-activates on "implement / build this plan" intent — implements an existing plan and runs its gates |
+| `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
@@ -340,17 +340,20 @@ Given a plan path it extracts the data model directly; given a raw idea it runs 
 
 #### `build` — Command or auto-activate
 
-Implements a plan that already exists. `implementation-plan` authors the plan and stops; `build` picks it up — in the same session or three days later — walks its steps, ticks the markdown spec, re-renders the HTML, and runs the three completion gates. `status: completed` is written only after end-to-end verification passes, and the skill stops without committing.
+Implements a plan and runs it to done. `implementation-plan` authors the plan and stops; `build` picks it up — in the same session or three days later — walks its steps, ticks the markdown spec, re-renders the HTML, and runs the three completion gates. `status: completed` is written only after end-to-end verification passes, and the skill stops without committing.
+
+Named no plan, the **command form** authors one instead of stopping: it asks whether to start with a proposal or go straight to plan authoring, delegates to `build-proposal` and `implementation-plan`, and implements what comes back. Model invocation is unchanged — it still requires an existing plan and routes to `/plan-agent:implementation-plan` when there is none.
 
 ```
 /plan-agent:build docs/plans/add-fitness-tracker.md
 /plan-agent:build add-fitness-tracker.html
+/plan-agent:build add a health check endpoint
 /plan-agent:build --dir tmp/plans
 /plan-agent:build
 implement the plan at docs/plans/add-fitness-tracker.md
 ```
 
-With no argument it picks the newest `todo` / `in-progress` spec in the plans directory (skipping `archive/`) and asks when the choice is ambiguous. `--dir <path>` overrides the plans directory; an explicit path is honored as given, so plans outside the default root resolve without it. Before writing anything it checks preconditions: an already-`completed` plan prompts rather than being silently redone, `[x]` steps are resumed past rather than reapplied, and a dirty working tree is surfaced first.
+With an objective and no path it skips discovery entirely and enters the chain. With neither, it **offers** the newest `todo` / `in-progress` specs in the plans directory (skipping `archive/`) — at most three, plus `None of these — author a new plan`, stating how many were suppressed — rather than adopting one silently. `--dir <path>` overrides the plans directory; an explicit path is honored as given, so plans outside the default root resolve without it, and a path that does not resolve stops rather than authoring a plan on a typo. A dirty working tree is surfaced before any of this runs; once a plan is resolved, an already-`completed` plan prompts rather than being silently redone and `[x]` steps are resumed past rather than reapplied.
 
 ### Hooks
 
@@ -514,17 +517,26 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 
 ### `build` Skill
 
-Command-invocable via `/plan-agent:build [<plan>]` and model-invocable on
-"implement the plan at …" intent. It is the **downstream** layer to
-`implementation-plan`: that skill decides *how* and stops; `build` executes it.
+Command-invocable via `/plan-agent:build [<plan>] [<objective>]` and
+model-invocable on "implement the plan at …" intent. It is the **downstream**
+layer to `implementation-plan`: that skill decides *how* and stops; `build`
+executes it — and, from the command form only, can enter the authoring chain
+when no plan was named.
 
 - **Input** — a `.md` spec or `.html` plan path (resolved as given, then by
-  basename under the plans directory), or no argument at all, in which case it
-  picks the newest `todo` / `in-progress` spec and asks when ambiguous.
-  Argument-less discovery never descends into `archive/`; an explicitly passed
-  path is honored as given, archived or not
-- **Preconditions** — refuses to silently redo a `completed` plan, resumes from
-  the first unmarked step, and surfaces a dirty working tree before writing
+  basename under the plans directory), a free-text objective, or no argument at
+  all. A leading token is an objective only when it has no `.md`/`.html` suffix
+  and no `/`. Argument-less discovery never descends into `archive/`; an
+  explicitly passed path is honored as given, archived or not, and stops when it
+  does not resolve
+- **No-plan chain (command only)** — with no path, it asks
+  `Start with a proposal` / `Straight to plan authoring`, delegates to
+  `build-proposal` and `implementation-plan`, then re-resolves the produced spec
+  by path and implements it. `Exit — I'll implement later` and `Run as workflow`
+  at the chained Step 8 both terminate the chain without writing source
+- **Preconditions** — surfaces a dirty working tree before anything else, chain
+  included; then refuses to silently redo a `completed` plan and resumes from
+  the first unmarked step
 - **Three gates** — an **acceptance-criteria gate** (verify and check off each
   criterion), an **end-to-end verification gate** (run the objective test and
   walk the Verification section; on failure, fix and re-verify up to 3 times),

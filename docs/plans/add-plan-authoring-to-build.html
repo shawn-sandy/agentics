@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-07-27">
@@ -1307,7 +1307,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1397,12 +1397,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 16 done</span>
+        <span id="progress-label">16 / 16 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1447,12 +1447,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Hoist the dirty-working-tree precondition out of the Step 1 preconditions block in kit/plugins/plan-agent/skills/build/SKILL.md so it runs before any chain stage is invoked.</span>
               </div>
               <div class="step-why">left where it is, it fires only after a full proposal loop and plan interview have already run, asking about uncommitted files at the worst possible moment — `git-agent:ship-autonomous` runs every pre-flight guard before any mutation and this should match.</div>
@@ -1464,12 +1464,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Split Step 1&#39;s three no-plan branches so only the empty-discovery branch reaches the chain: keep the named-but-missing-path branch stopping with the paths it tried, and keep the HTML-with-no-sibling-spec branch stopping with its existing message.</span>
               </div>
               <div class="step-why">chaining on a mistyped filename would author a whole plan because of a typo, and an HTML-only legacy plan is a plan that needs a spec reconstructed rather than a new plan authored on top of it.</div>
@@ -1481,12 +1481,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Change discovery from a pickup to an offer, and run the offer **only when no objective was supplied**: with an objective present, skip discovery entirely and go to Step 1b, because the user has already said what they want and unrelated `todo` specs are noise. When the offer does run, rank candidates newest-`created:` first, show at most the top three plus `None of these — author a new plan`, and say how many were suppressed.</span>
               </div>
               <div class="step-why">discovery selects on `status:` alone with no notion of subject, so in a repo carrying ten `todo` specs an objective like &quot;a todo app&quot; would be answered with a menu of unrelated plans — and `AskUserQuestion` caps at four options, so the unbounded offer cannot render at all; gating on objective-absence removes the relevance problem rather than trying to solve it, leaving the offer for the case it was designed for, a bare `build` resuming interrupted work.</div>
@@ -1498,12 +1498,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Widen the argument grammar to `[&lt;plan path&gt;] [&lt;objective&gt;] [--dir &lt;path&gt;]`, treating a leading token as an objective only when it has no `.md` or `.html` suffix and no `/`, and add `Skill` to the `allowed-tools` frontmatter line.</span>
               </div>
               <div class="step-why">`build` has no objective input today, and authoring a plan needs one — while a path-shaped token must keep hitting the stop from step 2 rather than being read as prose; note that the no-slash rule misreads an objective containing one (`add A/B testing support`) as a path, so the stop message must name the misparse rather than only listing paths tried.</div>
@@ -1515,12 +1515,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">State in the Invocation section that Step 1b is reachable **only from the slash command**: the objective is a command parameter read from `$ARGUMENTS`, and the model-invocation path keeps its current contract — it requires a plan that already exists and routes to `/plan-agent:implementation-plan` when there is none, never entering the chain.</span>
               </div>
               <div class="step-why">`$ARGUMENTS` is empty on the model path, so an ambient chain would have to infer an objective from conversation, and the trigger word `build` is overloaded enough that inference would pull in compile and CI requests; scoping the chain to the command makes the objective explicit by construction and leaves ambient routing untouched, so no existing invocation changes meaning.</div>
@@ -1532,12 +1532,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add a new Step 1b to build/SKILL.md carrying the chain: an objective check that runs first — when no objective was supplied (the bare-`build` path through step 3&#39;s `None of these — author a new plan`), ask for one with `AskUserQuestion` before anything else, because both the proposal-versus-direct gate and the delegated skills are meaningless without it; then the proposal-versus-direct gate asked on every chained entry, a proposal path that invokes `build-proposal` then `implementation-plan` with objective-led text naming the proposal path, a direct path that invokes `implementation-plan` with the objective, and a return path that re-resolves the produced spec by path.</span>
               </div>
               <div class="step-why">leading with a bare `.md` token would drop `implementation-plan` into conversion mode and produce a plan with no actionable steps, and re-running discovery on return would ask the user about the plan they just watched being authored; `--dir` must not be forwarded to `build-proposal`, which resolves its own proposals directory.</div>
@@ -1549,12 +1549,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Make every non-implementing Step 8 choice terminate the outer chain, not just one: `Exit — I&#39;ll implement later` stops with the plan at `status: todo`, and `Run as workflow` stops because `implementation-plan` has already emitted the workflow prompt and marked the plan `in-progress` — the return path reports the produced plan&#39;s path and stops without implementing in both cases.</span>
               </div>
               <div class="step-why">Step 8 is the only point at which the user is asked how to execute, so treating any of those answers as declining merely the inner skill&#39;s offer would implement work they just routed elsewhere — `Exit` would build what they declined, and `Run as workflow` would run an ordinary in-session build racing the workflow they launched. This overrides the proposal&#39;s Appendix A, which as written has the outer `build` proceed.</div>
@@ -1566,12 +1566,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add `model: opus` to build/SKILL.md&#39;s frontmatter.</span>
               </div>
               <div class="step-why">a skill&#39;s model override applies for the rest of the turn and does not unwind when the skill ends, so a chained run would leave the source-writing stage on whatever `review-plan` or `implementation-plan` last set; pinning it makes `build` re-assert on activation and gives the stage that writes source files a deterministic model.</div>
@@ -1583,12 +1583,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Leave the `description` frontmatter unchanged, and rewrite only the Overview&#39;s &quot;the execution half of `implementation-plan`, which authors a plan and stops&quot; so it says the command form can author through the chain while ambient activation still requires an existing plan. Scope — do not delete — the Model-invocation bullet&#39;s &quot;Requires a plan that **already exists** — if there is no plan file, stop and route to `/plan-agent:implementation-plan &lt;objective&gt;`&quot;; add that this applies to the model path only.</span>
               </div>
               <div class="step-why">the description governs ambient routing, and since the chain is command-only there is nothing new to advertise — leaving it narrow is what keeps `build` from claiming free-text &quot;build X&quot; requests and colliding with compile and CI phrasing. The route-away instruction is not stale prose but the ambient contract itself, so it must survive; only the Overview, which describes the skill as a whole, is now wrong.</div>
@@ -1600,12 +1600,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Update kit/plugins/plan-agent/README.md: the `build` row in the component table, which reads &quot;implements an existing plan and runs its gates&quot;, and the `build` section body, which opens &quot;Implements a plan that already exists&quot;, plus its usage examples so at least one shows a no-plan invocation.</span>
               </div>
               <div class="step-why">the README is the plugin&#39;s published documentation and describes exactly the dead end this plan removes, so shipping without it leaves the user-facing docs contradicting the skill.</div>
@@ -1617,12 +1617,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump the plan-agent `version` in .claude-plugin/marketplace.json by one **major**, add a CHANGELOG.md entry under kit/plugins/plan-agent/, and update the `build` clause in the root CLAUDE.md plugin table.</span>
               </div>
               <div class="step-why">`.claude/rules/marketplace.md` classifies &quot;changing argument format or activation behavior&quot; as MAJOR, and step 4 changes the argument format while step 3 changes what an existing no-argument invocation does — ambient activation is deliberately unchanged, so the argument grammar and the discovery behaviour are what carry the bump; a MINOR would understate a breaking change to a published plugin.</div>
@@ -1634,12 +1634,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Extend tests/plugins/test-build-skill.sh with numbered checks asserting the chain entry, the discovery offer, the hoisted guard, the Exit-terminates-chain rule, the pinned model, step 4&#39;s objective-versus-path grammar rule, step 2&#39;s two surviving stop branches, and step 5&#39;s command-only scoping alongside the retained route-away instruction, following the existing `FAILURES` counter convention and check 6&#39;s section-scoped pattern: `sed` the owning section, squeeze newlines, then grep within it.</span>
               </div>
               <div class="step-why">every behaviour above is prose in a hard-wrapped markdown file, and check 6&#39;s own comment records a file-wide grep passing against a mutation that deleted all five rules it guarded and appended a decoy paragraph; the grammar rule and the stop branches are what keep a typo from authoring a whole plan, so leaving them unasserted guards the new path while abandoning the old one.</div>
@@ -1675,67 +1675,67 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">`bash tests/plugins/test-build-skill.sh` exits 0 with the new checks included</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">A bare `/plan-agent:build` in a repo with no plan specs reaches the proposal-versus-direct gate instead of stopping</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">A bare `/plan-agent:build` in a repo with exactly one `todo` spec offers that spec plus an author-a-new-plan option, rather than adopting it silently</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">`/plan-agent:build a todo app` reaches the proposal-versus-direct gate, in a repo that already holds unrelated `todo` specs</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Typing `build a todo app` as plain text, with no command, does not enter the chain — ambient activation still requires an existing plan</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">With an objective supplied, no discovery offer is shown regardless of how many `todo` specs exist; with none supplied and more than three candidates, at most three are offered and the suppressed count is stated</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">`/plan-agent:build docs/plans/does-not-exist.md` still stops and names the paths it tried</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">Choosing `Exit — I&#39;ll implement later` at the chained `implementation-plan`&#39;s Step 8 leaves the plan at `status: todo` with no source files written</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">Choosing `Run as workflow` at that same Step 8 also stops the outer chain, with no in-session build started alongside the emitted workflow prompt</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">A bare `/plan-agent:build` that reaches the chain via `None of these — author a new plan` asks for an objective before the proposal-versus-direct gate</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">`grep -m1 &#39;^allowed-tools:&#39; kit/plugins/plan-agent/skills/build/SKILL.md` contains `Skill`, and the file carries exactly one `model: opus` line</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12">`grep -c &#39;stop and route to&#39; kit/plugins/plan-agent/skills/build/SKILL.md` returns 1 — the ambient route-away contract survives, scoped to the model path</label>
         </li>
         <li>
-          <input type="checkbox" id="ac13">
+          <input type="checkbox" id="ac13" checked>
           <label for="ac13">The `description:` frontmatter line is byte-identical to `main`</label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
+          <input type="checkbox" id="ac14" checked>
           <label for="ac14">`grep -c &#39;a plan that already exists&#39; kit/plugins/plan-agent/README.md` returns 0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac15">
+          <input type="checkbox" id="ac15" checked>
           <label for="ac15">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0, and the plan-agent version is a MAJOR bump over `main`</label>
         </li>
         <li>
-          <input type="checkbox" id="ac16">
+          <input type="checkbox" id="ac16" checked>
           <label for="ac16">The `build` clause in CLAUDE.md and the plan-agent CHANGELOG both describe the no-plan chain</label>
         </li>
       </ul>
@@ -1761,27 +1761,52 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Criterion 3, the discovery offer</dt>
+            <dd>bare `build` with one `todo` spec stopped, offered the candidate alongside an author-a-new-plan option, stated that nothing was suppressed, wrote no files, and left the spec at `status: todo`.</dd>
+            <dt>Criteria 4 and 6, objective suppresses discovery</dt>
+            <dd>`/plan-agent:build a todo app` with an unrelated `todo` spec present showed no offer at all and reached the proposal-versus-direct gate.</dd>
+            <dt>Criterion 5, ambient activation unchanged</dt>
+            <dd>plain-text `build a todo app` wrote an app directly and created no plan file, so the chain was never entered.</dd>
+            <dt>Criterion 7, the typo stop</dt>
+            <dd>`/plan-agent:build docs/plans/does-not-exist.md` stopped naming both resolution attempts and refused the chain.</dd>
+            <dt>The chain is productive, not merely reachable</dt>
+            <dd>`/plan-agent:build add a health check endpoint` in an empty repo authored a plan and implemented a working `node:http` server end to end. Two defects were found by running it, both fixed and re-verified:</dd>
+            <dt>Gates had no stated behaviour when `AskUserQuestion` is unavailable</dt>
+            <dd>two headless runs resolved the same missing tool in opposite ways, one adopting the lone discovery candidate (the exact silent pickup this plan removes) and one stopping; build/SKILL.md now states the fallback, check 18 guards it, and re-running both scenarios produced a clean stop-and-report.</dd>
+            <dt>The misparse example was wrong</dt>
+            <dd>the rule tests the leading token, so this plan&#39;s own example `add A/B testing support` parses cleanly as an objective; only a slash in the first token misparses, the example is now `A/B testing for checkout`, and a live run confirms the stop names the misparse and offers a reworded form. Three further defects were found by automated review on PR #470, all fixed and guarded by checks 10, 12, and 13:</dd>
+            <dt>`Implement now` re-entered the preconditions</dt>
+            <dd>`Skill()` is synchronous, so the nested build had already finished; the branch would have asked whether to redo just-completed work, or restarted a run stopped via `Mark in-progress and stop`. It now reports the nested result and stops, overriding this plan&#39;s step 7 claim that all three Appendix A resume rows stay live.</dd>
+            <dt>The hoisted dirty-tree guard fired on the Step 8 callback</dt>
+            <dd>`implementation-plan` writes the spec and HTML before calling back, so the guard saw them as uncommitted work and prompted at exactly the post-interview moment the hoist prevents, or stopped the chain headless. Plan artifacts are now excluded; verified by running a build against an uncommitted spec plus HTML, which proceeded silently to `completed`.</dd>
+            <dt>The proposal path assumed an artifact</dt>
+            <dd>a Tier 0 idea is answered directly with no document written, leaving the chain calling `implementation-plan` with a path that does not exist. It now falls through to the direct path with the original objective. The following remain verified by construction rather than execution, needing an interactive session no harness here can provide, and are checked off under Step 3.4 on the user&#39;s explicit instruction:</dd>
+            <dt>Criteria 2 and 10, the no-specs chain entry and the objective prompt on the `None of these` path</dt>
+            <dd>both sit behind the discovery offer, which is now confirmed to stop rather than self-resolve in a headless run.</dd>
+            <dt>Criteria 8 and 9, the two non-implementing Step 8 terminations (`Exit` and `Run as workflow`)</dt>
+            <dd>asserted statically by check 13. The option&#39;s full label carries an em-dash, which the report renderer reads as its own item separator, so it is named in prose here rather than quoted.</dd>
+          </dl>
         </div>
       </div>
     </section>

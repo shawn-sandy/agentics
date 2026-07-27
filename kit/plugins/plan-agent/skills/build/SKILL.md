@@ -1,17 +1,21 @@
 ---
 name: build
 description: "Implements a plan file that already exists. Walks its steps, ticks the spec, re-renders, and runs the completion gates. Use when asked to implement an existing plan."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode
-argument-hint: "[<plan.md|plan.html>] [--dir <path>]"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode
+argument-hint: "[<plan.md|plan.html>] [<objective>] [--dir <path>]"
+model: opus
 ---
 
 # Plan Agent — Build
 
 ## Overview
 
-Implements a plan file that already exists — the execution half of
-`implementation-plan`, which authors a plan and stops. Walks the steps, ticks
-the spec, re-renders, and runs the completion gates.
+Implements a plan and runs it to done — walks the steps, ticks the spec,
+re-renders, and runs the completion gates. Given a plan, that is all it does.
+Run as `/plan-agent:build` with no plan named, the command form first enters the
+authoring chain in Step 1b — proposal, plan, review — and implements what comes
+back. Ambient activation keeps the narrower contract: it requires a plan that
+already exists and routes elsewhere when there is none.
 
 **The markdown spec is the source of truth.** Every progress mark is a spec
 edit followed by a re-render: `[x]` step markers, `- [x]` criteria, `status:`,
@@ -23,13 +27,35 @@ spec.
 
 ## Invocation & Arguments
 
-- **Command:** `/plan-agent:build [<plan path>] [--dir <path>]` — `$ARGUMENTS`
-  carries an optional plan path (`.md` spec or `.html`; an `.html` resolves to
-  its sibling `.md`) and an optional plans-directory override.
+- **Command:** `/plan-agent:build [<plan path>] [<objective>] [--dir <path>]` —
+  `$ARGUMENTS` carries an optional plan path (`.md` spec or `.html`; an `.html`
+  resolves to its sibling `.md`), an optional free-text objective, and an
+  optional plans-directory override.
+- **Parse flags first.** Strip `--dir <path>` and any other recognized option
+  with its value out of `$ARGUMENTS` before classifying anything. The test below
+  applies to the **first positional token**, never to a flag: `--dir tmp/plans`
+  alone leaves no positional token at all, which is a bare `build` and takes the
+  discovery offer, not an objective named `--dir`.
+- **Objective versus path.** The test applies to that **first positional token
+  only**: it is an objective unless that token carries an `.md`/`.html` suffix
+  or a `/`.
+  Anything path-shaped hits the Step 1 stop rather than being read as prose. A
+  slash later in the string is harmless — `add A/B testing support` leads with
+  `add` and parses as an objective — but a slash in the *first* token misreads
+  the whole objective as a path (`A/B testing for checkout`), so that stop
+  message must name the misparse: "read `A/B testing for checkout` as a plan
+  path; reword it if you meant an objective". Never a bare list of paths tried,
+  which would leave the user with no idea their objective was read as a
+  filename.
+- **The Step 1b chain is reachable only from the slash command.** The objective
+  is a command parameter read from `$ARGUMENTS`. `/plan-agent:build a todo app`
+  enters the chain; the same words typed as plain text do not.
 - **Model invocation:** activates on "implement the plan at …", "build the plan
   in <file>". Requires a plan that **already exists** — if there is no plan
   file, stop and route to `/plan-agent:implementation-plan <objective>` rather
-  than authoring one here.
+  than authoring one here. **This is the model path's contract and it is
+  unchanged:** `$ARGUMENTS` is empty here, so there is no objective to chain on
+  and Step 1b is never entered.
 
 ## Step 0 — Exit plan mode
 
@@ -61,6 +87,33 @@ explicitly anyway so a parse failure surfaces here instead of silently.
 
 ## Step 1 — Resolve the plan
 
+**Pre-flight guard — runs before anything else, chain included:**
+
+- Dirty working tree → report the uncommitted files and ask whether to
+  proceed, so the plan's changes stay separable from pre-existing work. This
+  runs **ahead of Step 1b**, not after it: a chained run crosses a proposal loop
+  and a plan interview before it writes a line of source, and asking about
+  uncommitted files at the end of that is the worst possible moment.
+  `git-agent:ship-autonomous` runs every pre-flight guard before any mutation;
+  this matches.
+- **Plan artifacts are never pre-existing work.** Exclude the resolved plan's
+  own spec and rendered HTML, and any proposal this chain wrote, from the dirty
+  report. Without that exclusion the Step 8 `Implement now` callback re-enters
+  this skill with the just-authored plan sitting uncommitted, so the guard fires
+  at exactly the post-interview moment the hoist exists to avoid — and in a
+  headless run the unavailable-question rule below would stop the chain
+  outright. When those artifacts are the only changes, the tree is clean for
+  this purpose: proceed silently.
+
+**When `AskUserQuestion` is unavailable** — a headless or otherwise
+non-interactive run — every gate in this skill **stops and reports the choice it
+would have offered**, listing the options. This covers the discovery offer, the
+objective prompt, the proposal-versus-direct gate, and the preconditions.
+**Never resolve a gate by picking for the user.** A lone discovery candidate
+adopted because it was the only one is exactly the silent pickup the offer
+exists to prevent, and a proposal-versus-direct gate answered by default commits
+the user to an authoring branch they never chose.
+
 Resolve the plans directory the way sibling skills do: `--dir` if given, else
 the `planAgent.plansDirectory` / `plansDirectory` setting (project-local
 `.claude/settings.local.json` → project `.claude/settings.json` →
@@ -69,15 +122,30 @@ the `planAgent.plansDirectory` / `plansDirectory` setting (project-local
 1. `$ARGUMENTS` names a path → use it **as given** if that file exists
    (absolute paths and `--dir tmp/plans` plans resolve here). Otherwise retry
    its basename under the resolved plans directory. Still nothing → say which
-   paths were tried and stop; do not fall through to discovery and implement a
-   different plan.
-2. No path argument → list `.md` specs in the resolved plans directory whose
-   frontmatter `status:` is `todo` or `in-progress`, newest `created:` first
-   (missing or tied `created:` → fall back to file mtime). **Never descend into
-   `archive/`.** One match: use it. Several, or any ambiguity in the ordering:
-   ask via `AskUserQuestion`. None: say so and stop.
+   paths were tried, add the misparse note above when the token was a
+   slash-bearing objective, and **stop**. Do not fall through to discovery and
+   implement a different plan, and do not enter Step 1b: chaining on a mistyped
+   filename would author a whole plan because of a typo.
+2. No path argument → **the only branch that reaches Step 1b.**
+   - **An objective was supplied** → skip discovery entirely and go to
+     Step 1b. The user has already said what they want, so unrelated `todo`
+     specs are noise: discovery selects on `status:` alone with no notion of
+     subject, and offering a dozen unrelated plans in answer to "a todo app"
+     is worse than not asking.
+   - **No objective** → discovery, and it is an **offer, never a silent
+     pickup**: list `.md` specs in the resolved plans directory whose
+     frontmatter `status:` is `todo` or `in-progress`, newest `created:` first
+     (missing or tied `created:` → fall back to file mtime). **Never descend
+     into `archive/`.** Present **at most the top three** candidates plus
+     `None of these — author a new plan` via `AskUserQuestion`, and state how
+     many were suppressed when there are more (`AskUserQuestion` caps at four
+     options, so an unbounded offer cannot render at all). This holds for a
+     single match too — one candidate is still offered, not adopted. No
+     candidates at all → go straight to Step 1b. `None of these` → Step 1b.
 3. An `.html` argument resolves to its sibling `<stem>.md`. No sibling spec
    (legacy HTML-only plan) → stop and say so; this skill edits specs, not HTML.
+   Do not enter Step 1b: a plan exists and needs its spec reconstructed, not a
+   new plan authored on top of it.
 
 **Preconditions — check before writing anything:**
 
@@ -85,10 +153,69 @@ the `planAgent.plansDirectory` / `plansDirectory` setting (project-local
   whether to re-implement; do not silently redo finished work.
 - Steps already carrying `[x]` → resume from the first unmarked step rather
   than re-applying completed ones.
-- Dirty working tree → report the uncommitted files and ask whether to
-  proceed, so the plan's changes stay separable from pre-existing work.
 
 Echo the resolved spec path, `<stem>`, and objective before starting.
+
+## Step 1b — Author a plan first (the no-plan chain)
+
+Reached only from Step 1's no-path branch, and only via the slash command. Every
+stage is delegated to the skill that already owns it — nothing here re-implements
+proposal writing, plan authoring, or review. Control returns through
+`implementation-plan`'s Step 8 menu.
+
+1. **Objective check — first, before anything else.** No objective was supplied
+   (the bare-`build` path, including arriving here through
+   `None of these — author a new plan`) → ask for one with `AskUserQuestion`.
+   Both the gate below and the delegated skills are meaningless with an empty
+   objective, so never invoke one without it.
+2. **Proposal-versus-direct gate**, asked on **every** chained entry via
+   `AskUserQuestion` ("No plan specified. How do you want to author one?"):
+   - `Start with a proposal` — settle should-we and what first.
+   - `Straight to plan authoring` — go directly to `implementation-plan`.
+   This is a question rather than a default because `build-proposal` triages a
+   Tier 0 idea by answering it directly and producing no document, which would
+   leave the chain holding nothing to plan from.
+3. **Proposal path.** Invoke
+   `Skill(skill: "plan-agent:build-proposal", args: "<objective>")`. Do **not**
+   forward `--dir` — that skill resolves its own proposals directory. When it
+   converges, invoke `Skill(skill: "plan-agent:implementation-plan", args:
+   "author an execution plan from the proposal at <proposal path> --dir <path>")`
+   — **`--dir` is forwarded here**, unlike to `build-proposal`: it names where
+   the *plan* goes, so omitting it would write the spec to the default directory
+   and then fail to resolve it on return. Lead with
+   objective text naming the proposal path, never a bare `.md` first token,
+   which would drop `implementation-plan` into conversion mode and produce a
+   plan whose steps restate proposal headings instead of naming real actions.
+   **No proposal written → fall through to the direct path.** `build-proposal`
+   triages a Tier 0 idea by answering it directly and producing no document, so
+   there is nothing to plan from. Say so in one line and continue at step 4 with
+   the original objective; never call `implementation-plan` with an empty or
+   guessed proposal path.
+4. **Direct path.** Invoke
+   `Skill(skill: "plan-agent:implementation-plan", args: "<objective>")`,
+   forwarding `--dir <path>` when it was given.
+5. **Return path.** Re-resolve the produced spec **by path** — the one
+   `implementation-plan` reports — never by re-running discovery, which would
+   ask the user about the plan they just watched being authored. Then:
+   - `Implement now` → **stop and report.** `Skill()` is synchronous, so by the
+     time control reaches here Step 8 has already invoked this skill with the
+     spec path and that nested run has reached its own terminal state — through
+     the gates, or via `Mark in-progress and stop` at its Step 4.4. Report that
+     outcome and the plan's path. Do **not** re-enter Steps 1-2: the
+     completed-plan precondition would ask whether to redo work that just
+     finished, and resume-from-first-unmarked would restart a run the user
+     deliberately stopped. The nested build's result **is** this chain's result.
+   - `Exit — I'll implement later` → **stop.** Report the produced plan's path,
+     leave it at `status: todo`, and write no source files. Step 8 is the only
+     point at which the user is asked how to execute, so this answer declines
+     the work itself, not merely the inner skill's offer.
+   - `Run as workflow` → **stop.** `implementation-plan` has already emitted the
+     workflow prompt and set `status: in-progress`; report the plan's path and
+     do not start an in-session build racing the workflow the user launched.
+6. **Abandonment contract.** If the chain is abandoned between stages — a tool
+   error, a session drop, or the user backing out after a proposal is written
+   but before a plan exists — leave the proposal file in place uncommitted and
+   report its path. Never clean it up.
 
 ## Step 2 — Implement
 
