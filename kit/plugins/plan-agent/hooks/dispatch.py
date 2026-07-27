@@ -194,6 +194,16 @@ def main():
                 deadline,
             )
         )
+        # Goes last, and must stay cheap: every child shares one 55s budget,
+        # and a child that runs out of it is skipped by the fail-open path —
+        # which would silently stop drift from being detected at all.
+        codes.append(
+            _run(
+                ["python3", os.path.join(_HOOKS_DIR, "check-prototype-drift.py")],
+                raw,
+                deadline,
+            )
+        )
 
     # Propagate the blocking contract: any child asking for actionable feedback
     # makes the whole dispatch actionable.

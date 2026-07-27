@@ -62,6 +62,12 @@
      (e.g. </script> -> <\/script>) — never HTML-escaped, or JSON.parse breaks. -->
 <script type="application/json" id="seed">{{SEED_JSON}}</script>
 
+<!-- Derived data model — the durable copy of Step 3's model. Same
+     script-breakout escaping rule as #seed. The drift hook compares this
+     against the <th data-field> headers below and against the source plan's
+     proto-model: frontmatter. -->
+<script type="application/json" id="proto-model">{{PROTO_MODEL}}</script>
+
 <div class="summary-bar">
   <span class="summary-badge" id="summary" data-label="{{SUMMARY}}">{{SUMMARY}}: 0</span>
 </div>

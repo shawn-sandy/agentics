@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.4.0 — A plan and its prototype know about each other (2026-07-26)
+
+### Added
+
+- **`prototype:` frontmatter key on plan specs.** A spec carrying a repo-relative `prototype:` path renders `<meta name="plan-prototype">` and a **View prototype** link in the plan header. The href is computed with `path.relative()` from the rendered plan's own output directory, so it resolves from a custom or nested `plansDirectory` — a hard-coded `../prototypes/` would have pointed at `custom/prototypes/` for a plan rendered under `custom/plans/`.
+- **`proto-model:` frontmatter key**, and a matching `<script type="application/json" id="proto-model">` block in every generated prototype. Step 3 of `/plan-agent:prototype` derived a data model and then discarded it; it now survives in both files as compact single-line JSON (`entity`, `fields[{name,type}]`, `action`, `successSignal`), which is what makes drift detectable at all.
+- **`check-prototype-drift.py`** (`PostToolUse`, a child of `dispatch.py`): compares a prototype's model against its own `<th data-field>` headers and form fields, and against its plan's copy. Warnings name both files, the diverging field, and what to re-run. Silent when there is nothing to compare; **always exits 0**.
+- **Prototype chip on the plans gallery card** — a text-bearing `<span>`, never an `<a>`: the card is already wrapped in an anchor, and a nested one is invalid HTML that browsers silently unnest.
+- `tests/plugins/test-prototype-plan-link.mjs` (objective) and `tests/plugins/test-prototype-drift.sh` (drift branches + dispatch fan-out).
+
+### Changed
+
+- **`/plan-agent:prototype` writes the link back** into the source plan's Markdown spec before the prototype HTML is written — plan path only, skipped for idea, image, and Figma inputs. When the sibling `.md` does not exist (most committed plans are legacy HTML), it skips the write-back, still generates the prototype, and prints how to materialize a spec. Materializing one as a side effect would silently rewrite a plan the user never asked us to touch.
+- **`{{SOURCE_PLAN}}` is now a pinned contract**: the repo-relative path of the plan's Markdown spec on the plan path, empty otherwise. It was undefined free text that only ever fed the gallery card's display string; the drift hook resolves the owning plan from it.
+- Both written values must stay on one line. The frontmatter parser is a naive line scanner — an embedded newline or bare `---` truncates the block and corrupts `status` and `created` for every consumer that re-scans it.
+
+### Notes
+
+- The drift check compares **structure, not intent**: a hand-edit that changes the rendered columns is caught; one that changes copy, styling, or seed values is not, and should not be.
+- Detection runs one way only — prototype HTML against plan frontmatter. A hand-edited plan desyncs with no signal; plans are user-owned prose rather than generated output.
+- The header link deliberately ships **no new CSS**. The shared style block is emitted into every plan, so a new rule would change the bytes of plans that have no prototype at all.
+
 ## 4.3.1 — Condense the marketplace description (2026-07-21)
 
 ### Changed

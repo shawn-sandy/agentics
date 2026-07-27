@@ -554,6 +554,51 @@ ok('hook prefers the plugin-bundled renderer when the project has none', () => {
   rmSync(proj, { recursive: true, force: true });
 });
 
+ok('a spec with no prototype: key renders byte-identically to the pre-change renderer', () => {
+  // Materialize the renderer as it exists on the merge base and render the
+  // same spec through both. A spec that never opted into the prototype link
+  // must be unaffected by the feature that added it.
+  const base = process.env.BASE_REF || 'origin/main';
+  const proj = mkdtempSync(join(tmpdir(), 'render-backcompat-'));
+  try {
+    mkdirSync(join(proj, 'scripts', 'lib'), { recursive: true });
+    for (const rel of ['build-plan-html.mjs', 'lib/plan-spec.mjs', 'lib/plan-shell.mjs']) {
+      const src = execFileSync('git', ['show', `${base}:scripts/${rel}`], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        maxBuffer: 32 * 1024 * 1024,
+      });
+      writeFileSync(join(proj, 'scripts', rel), src);
+    }
+    assert.ok(!SAMPLE_SPEC.includes('prototype:'), 'fixture carries no prototype: key');
+
+    // Each run gets its own dir but an identical internal layout, and renders
+    // from inside it — plan-file/plan-path are derived from the output path
+    // relative to cwd, so anything else diffs for reasons unrelated to code.
+    const render = (renderer, dir) => {
+      const wd = join(proj, dir);
+      mkdirSync(wd, { recursive: true });
+      writeFileSync(join(wd, 'sample.md'), SAMPLE_SPEC);
+      const res = spawnSync('node', [renderer, 'sample.md', '-o', 'sample.html'], { cwd: wd, encoding: 'utf8' });
+      assert.equal(res.status, 0, res.stderr);
+      return readFileSync(join(wd, 'sample.html'), 'utf8');
+    };
+    const before = render(join(proj, 'scripts', 'build-plan-html.mjs'), 'before');
+    const after = render(RENDERER, 'after');
+    assert.equal(after, before, 'output drifted for a spec that carries no prototype: key');
+  } catch (err) {
+    // A shallow clone or a missing base ref is an environment gap, not a
+    // regression — skip loudly rather than failing the suite.
+    if (/unknown revision|does not exist|ambiguous argument/i.test(err.message)) {
+      console.log(`       (skipped: ${base} not available)`);
+    } else {
+      throw err;
+    }
+  } finally {
+    rmSync(proj, { recursive: true, force: true });
+  }
+});
+
 ok('plugin-bundled renderer copies are byte-identical to the repo-root sources', () => {
   for (const rel of ['build-plan-html.mjs', 'lib/plan-spec.mjs', 'lib/plan-shell.mjs']) {
     const source = readFileSync(join(ROOT, 'scripts', rel), 'utf8');

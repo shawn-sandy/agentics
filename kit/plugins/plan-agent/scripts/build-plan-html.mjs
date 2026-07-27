@@ -16,6 +16,8 @@
  *
  * Optional spec frontmatter (all keys optional):
  *   status | type | created | repo | effort | glance | workflow (true/false)
+ *   prototype (repo-relative path to the plan's prototype HTML — renders the
+ *   plan-prototype meta tag and the header "View prototype" link)
  *
  * Progress state travels in the spec too (Phase 3 of the proposal): `- [x]`
  * acceptance-criteria bullets render as checked inputs, a `[x]` marker after
@@ -31,7 +33,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { basename, relative, resolve } from 'node:path';
+import { basename, posix, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { parseSpecMarkdown, ParseError } from './lib/plan-spec.mjs';
@@ -172,6 +174,15 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
 
   const specPath = mdPath || (/\.html$/i.test(path) ? path.replace(/\.html$/i, '.md') : `${path}.md`);
 
+  // `prototype:` is a repo-relative target (docs/prototypes/<slug>.html), but
+  // the link is read from the rendered plan's own directory — which is not
+  // always docs/plans/, since plansDirectory is configurable and can nest.
+  // Relativize against the output dir rather than hard-coding ../prototypes/.
+  const prototype = md.prototype || '';
+  const prototypeHref = prototype
+    ? posix.relative(posix.dirname(path.replace(/\\/g, '/')), prototype.replace(/\\/g, '/')) || basename(prototype)
+    : '';
+
   // Every prompt ends with the same gate: verify, then record completion in the
   // spec. Without it an agent reports "done" on a plan still marked todo.
   const verifyTail = `Then verify before reporting done: run the objective test's Run command from the plan's Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.`;
@@ -250,6 +261,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
       implement: esc(implement),
       goal: esc(goal),
       workflow: esc(workflow),
+      prototype: prototype ? esc(prototype) : '',
     }),
     headerHtml: shell.header({
       title: esc(s.title),
@@ -258,6 +270,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
       created: esc(created),
       repo: esc(repoName),
       type: esc(type),
+      prototypeHref: prototypeHref ? esc(prototypeHref) : '',
     }),
     navHtml: shell.nav(navIds),
     mainHtml: main.join('\n'),

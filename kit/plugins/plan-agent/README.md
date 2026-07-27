@@ -31,10 +31,11 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
-| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the three below only for plan/prototype writes |
+| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the four below only for plan/prototype writes |
 | `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
 | `build-prototypes-index` | Child of `dispatch` | Regenerates the prototypes gallery for `docs/prototypes/` writes |
+| `check-prototype-drift` | Child of `dispatch` | Reports when a prototype has drifted from its own data model or its plan's copy |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper reviews, use the `review-plan` Agent Team. Note: `plan-agent:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
@@ -142,6 +143,7 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 - **Interactive checkboxes** — acceptance criteria the user can tick in the browser, with a live progress bar
 - **Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment
 - **Collapsible sections** — Next Steps and Unresolved Questions use `<details>` for progressive disclosure
+- **Prototype link** *(conditional)* — when the spec's frontmatter carries a `prototype:` key (a repo-relative path, written by `/plan-agent:prototype`), the header actions row gains a **View prototype** link and the `<head>` gains `<meta name="plan-prototype">`. The href is computed with `path.relative()` from the rendered plan's own output directory, so it resolves from a custom or nested `plansDirectory` — never a hard-coded `../prototypes/`. The plans gallery reads the same meta tag and shows a text-bearing `prototype` chip on the card. A spec without the key renders exactly as before
 
 Open the `.html` file directly in any browser. No server required.
 
@@ -375,6 +377,19 @@ HTML plans with `<meta name="plan-status" content="completed">` are skipped (no 
 #### Prototypes gallery rebuild (automatic)
 
 `build-prototypes-index` runs when `dispatch.py` sees a write under `docs/prototypes/`, leaving the plans gallery untouched. It calls `build-prototypes-index.sh` to regenerate `docs/prototypes/index.html` (newest-first, escaped). Always exits 0.
+
+#### Prototype drift check (automatic)
+
+`check-prototype-drift` runs after `build-prototypes-index` on the same `docs/prototypes/` write. It reads the prototype's `<script type="application/json" id="proto-model">` block — the durable copy of the data model `/plan-agent:prototype` derived — and compares it two ways:
+
+1. **Against the prototype's own DOM** — the `<th data-field>` headers and form field `name`/`id` attributes. This is the check that catches a human hand-editing the prototype.
+2. **Against its plan's copy** — the `proto-model:` frontmatter of the Markdown spec named in the prototype's `<meta name="proto-source">`.
+
+Each warning names both files, the diverging field, and what to re-run. It is deliberately narrow: structure only (copy, styling, and seed-value edits are not drift), and one direction only — a hand-edited plan desyncs with no signal, because plans are user-owned prose rather than generated output.
+
+It stays silent whenever there is nothing to compare — no model block, no plan, no `proto-model:` line, malformed JSON, or a `proto-source` resolving outside the plans directory — and **always exits 0**, so a drift report about one plan never interrupts work on another.
+
+The comparison only reports; reconciling the two sides is a judgment call left to a human.
 
 #### Hook dispatch
 
