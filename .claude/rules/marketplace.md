@@ -46,7 +46,7 @@ Tags must be specific, searchable, and related to plugin functionality. Avoid ge
 
 ## Versioning
 
-**Bump the `version` field in `marketplace.json` manually** as part of any PR that changes a plugin. The new value must be higher than the value on `main`. There is no CI version guard and no automatic post-merge bump — what you set in the PR is what ships.
+**Bump the `version` field in `marketplace.json` manually** as part of any PR that changes a plugin. The new value must be higher than the value on `main`. A CI version guard enforces this: `.github/workflows/check-plugin-versions.yml` runs `scripts/check-plugin-versions.mjs` on every pull request, and you can run it locally with `BASE_REF=main node scripts/check-plugin-versions.mjs`. There is still no automatic post-merge bump — what you set in the PR is what ships.
 
 | Bump | When |
 |------|------|
