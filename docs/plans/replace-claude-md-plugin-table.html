@@ -1397,7 +1397,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 7 done</span>
+        <span id="progress-label">0 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1415,7 +1415,8 @@ img, video { max-width: 100%; height: auto; }
       <p>The Claude 5 context-engineering guidance is explicit that CLAUDE.md should<br>carry repository *gotchas*, not obvious facts, and that detail belongs behind<br>progressive disclosure rather than in the always-loaded layer. This repo&#39;s<br>CLAUDE.md is 1,656 words and the 13-row plugin table is the bulk of it — the<br>`artifact-tools` row alone runs about 250 words describing every skill&#39;s<br>internals.</p>
       <p>That detail is not unique. `.claude-plugin/marketplace.json` is the source of<br>truth for plugin metadata, `scripts/build-readme-table.mjs` already<br>regenerates a plugin table into README.md from it (with a `--check` mode), and<br>all 13 plugins carry their own `README.md` averaging 1,800 words. The CLAUDE.md<br>table is a hand-maintained third copy, which is exactly why its rows have<br>drifted into essays while the generated one stayed terse.</p>
       <p>Risk: a row may describe a genuine gotcha that exists nowhere else — a<br>non-obvious constraint rather than a feature list. Mitigated by Step 1, which<br>audits every row against its plugin README before anything is cut, and Step 2,<br>which ports orphaned detail into the owning README first.</p>
-      <p>This plan touches no files under `kit/plugins/`, so no `marketplace.json`<br>version bump applies.</p>
+      <p>One wrinkle on version bumps. `changedPlugins()` in<br>`scripts/check-plugin-versions.mjs` matches on `^kit/plugins/([^/]+)/` — it<br>counts *any* path under a plugin directory as a plugin change, README files<br>included. So if Step 2 finds orphaned detail and moves it into a plugin&#39;s<br>`README.md`, that plugin needs a `marketplace.json` version bump (patch, docs<br>only) and a `CHANGELOG.md` entry, or CI fails. Step 2b handles this<br>conditionally: zero orphans means zero bumps, which is the likely case since<br>all 13 READMEs already average 1,800 words.</p>
+      <p>CLAUDE.md itself lives at the repo root and never triggers a bump.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1471,7 +1472,7 @@ img, video { max-width: 100%; height: auto; }
               <div class="step-why">the README is what Claude reads when it opens that plugin, so detail moved there stays discoverable without being loaded every session.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">re-run the Step 1 audit and confirm zero orphans remain.</div>
+                <div class="verify-body">re-run the Step 1 audit and confirm zero orphans remain. 2b. For every plugin whose README.md was actually modified in Step 2, bump that plugin&#39;s version in `.claude-plugin/marketplace.json` by a patch level and add a `CHANGELOG.md` entry noting the migrated documentation; if Step 2 modified no README, skip this step entirely. Why: `changedPlugins()` treats any path under `kit/plugins/&lt;name&gt;/` as a plugin change, so an unbumped README edit fails the version guard in CI. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0, and `git diff --name-only main -- &#39;kit/plugins/*/README.md&#39;` lists exactly the plugins bumped.</div>
               </details>
             </div>
           </div>
@@ -1500,9 +1501,9 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write `tests/plugins/test-claude-md-budget.sh` asserting CLAUDE.md is under 900 words, that every plugin name in `marketplace.json` appears in CLAUDE.md, and that no table row exceeds 25 words.</span>
+                <span class="step-chip-text">Write `tests/plugins/test-claude-md-budget.sh` asserting CLAUDE.md is under 800 words, that every plugin name in `marketplace.json` appears in CLAUDE.md, and that no table row exceeds 25 words.</span>
               </div>
-              <div class="step-why">the table bloated once by incremental edits and will again without a check that fails loudly.</div>
+              <div class="step-why">800 is the objective&#39;s own threshold, so the test fails whenever the objective fails — a looser ceiling would let the suite pass on a CLAUDE.md that never met the goal.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
                 <div class="verify-body">`bash tests/plugins/test-claude-md-budget.sh` exits 0; temporarily padding a row to 40 words makes it exit 1.</div>
@@ -1538,7 +1539,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 2 — This plan doesn&#39;t change application code</div>
-      <div class="objective-test-card">Objective: CLAUDE.md is under the context budget while still naming every plugin. File: tests/plugins/test-claude-md-budget.sh; Type: smoke; Asserts: CLAUDE.md word count is under 900, every plugin in marketplace.json appears in it, and no table row exceeds 25 words; Run: bash tests/plugins/test-claude-md-budget.sh</div>
+      <div class="objective-test-card">Objective: CLAUDE.md is under the context budget while still naming every plugin. File: tests/plugins/test-claude-md-budget.sh; Type: smoke; Asserts: CLAUDE.md word count is under 800 (the objective&#39;s own threshold), every plugin in marketplace.json appears in it, and no table row exceeds 25 words; Run: bash tests/plugins/test-claude-md-budget.sh</div>
     </section>
 
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
@@ -1574,7 +1575,11 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">No file under `kit/plugins/` changed except `README.md` files</label>
+          <label for="ac7">No file under `kit/plugins/` changed except `README.md` files and, where Step 2b applied, their sibling `CHANGELOG.md`</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 — every plugin with a modified README carries a version bump, and none was bumped without one</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

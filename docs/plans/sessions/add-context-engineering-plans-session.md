@@ -1,6 +1,6 @@
 ---
 session-id: "357fd05b-e93d-4ec6-9d3c-7e679f6ceed1"
-date: 2026-07-28
+date: 2026-07-27
 source: "357fd05b-e93d-4ec6-9d3c-7e679f6ceed1.jsonl"
 type: session-export
 title: "Context engineering plans for the marketplace plugins"
@@ -12,7 +12,7 @@ team-artifact-url: https://claude.ai/code/artifact/72fb60dc-1250-4de6-86e6-207f5
 ## At a glance
 
 - **Changes shipped:** 7 implementation plans
-- **Files touched:** 14 new (7 specs + 7 rendered pages)
+- **Files touched:** 17 (14 plan files, this session record, the team recap artifact, and the artifacts gallery index)
 - **Decisions made:** 6
 - **Open items:** 4
 - **Plugin code changed:** none
@@ -229,6 +229,13 @@ task rather than folded into this branch.
 **Plans — rendered pages (generated, never hand-edited):**
 
 - `docs/plans/*.html` — seven files, produced by `build-plan-html.mjs`
+
+**Outside the plans tree:**
+
+- `docs/plans/sessions/add-context-engineering-plans-session.md` — this record, holding the recap's republish URL
+- `docs/artifacts/team-recap-2026-07-27-2.html` — the published team recap
+- `docs/artifacts/index.html` — artifacts gallery, rebuilt to card the new recap
+- `docs/plans/index.html` — plans gallery, rebuilt so the seven new plans are reachable
 
 ## Glossary
 

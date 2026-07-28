@@ -1407,7 +1407,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1425,7 +1425,8 @@ img, video { max-width: 100%; height: auto; }
       <p>The Claude 5 context-engineering guidance names redundancy across context<br>layers as an anti-pattern: say a thing once, in the place that owns it. The<br>three `artifact-tools` recap commands violate this at scale. Measured across<br>the three files:</p>
       <p>- `eng-recap` and `team-recap` share 168 identical lines / 1,568 words<br>- all three share 68 identical lines / 417 words<br>- combined they are 6,190 words</p>
       <p>They are three framings of one workflow — gather the session or PR, scrub it,<br>build the page, publish, record the republish URL. Only the audience, the<br>section list, the plain-language rule, and the republish frontmatter key<br>genuinely differ.</p>
-      <p>The republish keys are the sharp edge. Each command writes to a *different*<br>key on the same shared session record: `product-doc` and the older skills use<br>`artifact-url:`, `eng-recap` uses `eng-artifact-url:`, and `team-recap` has its<br>own. Collapsing the commands must not collapse the keys — two commands writing<br>the same key would silently overwrite each other&#39;s published artifact. Step 3<br>pins each key explicitly and the objective test asserts all three remain<br>distinct.</p>
+      <p>The republish keys are the sharp edge. Four distinct keys live on the same<br>shared session record, and each of the three commands owns exactly one of<br>them: `session-artifact` owns `artifact-url:`, `eng-recap` writes<br>`eng-artifact-url:`, `team-recap` writes `team-artifact-url:`, and<br>`product-doc` writes `product-artifact-url:`. All three command files also<br>*name* `artifact-url:` in a prohibition — `product-doc.md` says &quot;Never write<br>`artifact-url:`&quot; precisely because that key belongs to `session-artifact`.</p>
+      <p>Collapsing the commands must not collapse the keys: two commands writing the<br>same key would silently overwrite each other&#39;s published artifact, and any<br>command reassigned to `artifact-url:` would clobber the reviewer-first session<br>recap. Step 3 pins each command&#39;s own key explicitly, and Step 4 verifies the<br>*assignments* rather than merely counting key names — a distinction that<br>matters because the prohibition text mentions keys a command must not write.</p>
       <p>`artifact-tools` is the only plugin touched, so exactly one<br>`marketplace.json` version bump applies (minor — behavior preserved, structure<br>changed).</p>
     </section>
 
@@ -1443,7 +1444,7 @@ img, video { max-width: 100%; height: auto; }
             <ul class="file-list">
             <li><code>eng-recap.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reduce to engineer framing + `eng-artifact-url:`</span></li>
             <li><code>team-recap.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reduce to whole-team framing + its key</span></li>
-            <li><code>product-doc.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reduce to product framing + `artifact-url:`</span></li>
+            <li><code>product-doc.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reduce to product framing + `product-artifact-url:`</span></li>
             </ul>
           </li>
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump artifact-tools minor version</span></li>
@@ -1519,12 +1520,12 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Confirm the three republish keys remain distinct and match what the shared session record already uses.</span>
+                <span class="step-chip-text">Confirm each command still writes its own republish key and still carries the `artifact-url:` prohibition, checking assignments per file rather than counting key names across files.</span>
               </div>
-              <div class="step-why">two commands sharing a key would overwrite each other&#39;s published artifact with no error.</div>
+              <div class="step-why">a shared key silently overwrites another command&#39;s published artifact, and a command reassigned to `artifact-url:` would clobber the session recap.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -o &#39;[a-z-]*artifact-url:&#39; kit/plugins/artifact-tools/commands/*.md | sort -u` returns three distinct key names.</div>
+                <div class="verify-body">run the three per-file greps below — each prints its own key and nothing else — then confirm all three files still match `Never write .artifact-url:`; note that a bare `grep -o ... commands/*.md | sort -u` cannot prove this, because grep prefixes each match with its filename and the prohibition text names keys the command must *not* write (that form returns 9 lines today, not 3).</div>
               </details>
             </div>
           </div>
@@ -1553,7 +1554,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write `tests/plugins/test-recap-command-dedupe.sh` asserting the three commands share fewer than 50 identical lines, each is under 500 words, each names a distinct republish key, and `references/recap-core.md` exists.</span>
+                <span class="step-chip-text">Write `tests/plugins/test-recap-command-dedupe.sh` asserting the three commands share fewer than 50 identical lines, each is under 500 words, `references/recap-core.md` exists, and — per file, not across files — that `eng-recap.md` writes `eng-artifact-url:`, `team-recap.md` writes `team-artifact-url:`, `product-doc.md` writes `product-artifact-url:`, and none of the three assigns `artifact-url:` to itself.</span>
               </div>
               <div class="step-why">without a check, the next feature added to all three commands re-introduces the duplication.</div>
               <details class="step-verify-toggle">
@@ -1591,7 +1592,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — This plan changes application code</div>
-      <div class="objective-test-card">Objective: the three recap commands no longer duplicate the workflow, and each still targets its own artifact URL. File: tests/plugins/test-recap-command-dedupe.sh; Type: smoke; Asserts: pairwise identical lines across the three commands are under 50, each command is under 500 words, `references/recap-core.md` exists, and the three republish keys are distinct; Run: bash tests/plugins/test-recap-command-dedupe.sh</div>
+      <div class="objective-test-card">Objective: the three recap commands no longer duplicate the workflow, and each still targets its own artifact URL. File: tests/plugins/test-recap-command-dedupe.sh; Type: smoke; Asserts: pairwise identical lines across the three commands are under 50, each command is under 500 words, `references/recap-core.md` exists, and each command file writes its own key (`eng-artifact-url:` / `team-artifact-url:` / `product-artifact-url:`) with none assigning `artifact-url:` to itself; Run: bash tests/plugins/test-recap-command-dedupe.sh</div>
       <div class="test-list">
         <div class="test-card">Integration: each command still produces a publishable recap. File: manual per Verification; Targets: /artifact-tools:eng-recap, :team-recap, :product-doc; Key cases: run each against the same merged PR and confirm three distinct artifacts with audience-appropriate sections</div>
       </div>
@@ -1618,23 +1619,27 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">The three republish frontmatter keys remain distinct from one another</label>
+          <label for="ac4">`eng-recap.md` writes `eng-artifact-url:`, `team-recap.md` writes `team-artifact-url:`, and `product-doc.md` writes `product-artifact-url:`</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">Each command still names its audience, its section list, and its republish key</label>
+          <label for="ac5">No command assigns `artifact-url:` to itself; all three retain the prohibition naming it as `session-artifact`&#39;s key</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0</label>
+          <label for="ac6">Each command still names its audience, its section list, and its republish key</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`bash tests/plugins/test-recap-command-dedupe.sh` exits 0</label>
+          <label for="ac7">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">No plugin other than `artifact-tools` is modified</label>
+          <label for="ac8">`bash tests/plugins/test-recap-command-dedupe.sh` exits 0</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">No plugin other than `artifact-tools` is modified</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

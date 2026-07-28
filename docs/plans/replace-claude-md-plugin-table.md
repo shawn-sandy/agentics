@@ -35,8 +35,16 @@ non-obvious constraint rather than a feature list. Mitigated by Step 1, which
 audits every row against its plugin README before anything is cut, and Step 2,
 which ports orphaned detail into the owning README first.
 
-This plan touches no files under `kit/plugins/`, so no `marketplace.json`
-version bump applies.
+One wrinkle on version bumps. `changedPlugins()` in
+`scripts/check-plugin-versions.mjs` matches on `^kit/plugins/([^/]+)/` — it
+counts *any* path under a plugin directory as a plugin change, README files
+included. So if Step 2 finds orphaned detail and moves it into a plugin's
+`README.md`, that plugin needs a `marketplace.json` version bump (patch, docs
+only) and a `CHANGELOG.md` entry, or CI fails. Step 2b handles this
+conditionally: zero orphans means zero bumps, which is the likely case since
+all 13 READMEs already average 1,800 words.
+
+CLAUDE.md itself lives at the repo root and never triggers a bump.
 
 ## Files
 
@@ -49,14 +57,15 @@ version bump applies.
 
 1. Audit each of the 13 plugin table rows in CLAUDE.md against that plugin's `kit/plugins/<name>/README.md`, writing the orphan list to a scratch file. Why: a row that documents a real constraint found nowhere else must be preserved, and only a row-by-row comparison distinguishes that from a feature restatement. Verify: the scratch file names every plugin and, for each, either "covered" or the specific sentences present only in CLAUDE.md.
 2. Port each orphaned sentence from Step 1 into the owning plugin's README.md under its existing structure. Why: the README is what Claude reads when it opens that plugin, so detail moved there stays discoverable without being loaded every session. Verify: re-run the Step 1 audit and confirm zero orphans remain.
+2b. For every plugin whose README.md was actually modified in Step 2, bump that plugin's version in `.claude-plugin/marketplace.json` by a patch level and add a `CHANGELOG.md` entry noting the migrated documentation; if Step 2 modified no README, skip this step entirely. Why: `changedPlugins()` treats any path under `kit/plugins/<name>/` as a plugin change, so an unbumped README edit fails the version guard in CI. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0, and `git diff --name-only main -- 'kit/plugins/*/README.md'` lists exactly the plugins bumped.
 3. Rewrite CLAUDE.md's plugin table to `| Plugin | Type | Purpose |` with the purpose held to one line under 15 words, and replace the removed prose with a single sentence pointing at README.md's generated Plugin Reference Table and at `kit/plugins/<name>/README.md` for detail. Why: one line per plugin is enough for Claude to pick the right plugin; the generated table and per-plugin READMEs carry everything else on demand. Verify: `wc -w CLAUDE.md` reports under 800, and every plugin in `.claude-plugin/marketplace.json` still appears in the table.
-4. Write `tests/plugins/test-claude-md-budget.sh` asserting CLAUDE.md is under 900 words, that every plugin name in `marketplace.json` appears in CLAUDE.md, and that no table row exceeds 25 words. Why: the table bloated once by incremental edits and will again without a check that fails loudly. Verify: `bash tests/plugins/test-claude-md-budget.sh` exits 0; temporarily padding a row to 40 words makes it exit 1.
+4. Write `tests/plugins/test-claude-md-budget.sh` asserting CLAUDE.md is under 800 words, that every plugin name in `marketplace.json` appears in CLAUDE.md, and that no table row exceeds 25 words. Why: 800 is the objective's own threshold, so the test fails whenever the objective fails — a looser ceiling would let the suite pass on a CLAUDE.md that never met the goal. Verify: `bash tests/plugins/test-claude-md-budget.sh` exits 0; temporarily padding a row to 40 words makes it exit 1.
 5. Add the new test to `.github/workflows/check-plugin-versions.yml` alongside the existing `tests/plugins/test-build-skill.sh` step. Why: a test that only runs locally stops running. Verify: the workflow file names `test-claude-md-budget.sh` and `yamllint` or a YAML parse of the file succeeds.
 
 ## Tests
 
 Tier 2 — This plan doesn't change application code
-- Objective: CLAUDE.md is under the context budget while still naming every plugin. File: tests/plugins/test-claude-md-budget.sh; Type: smoke; Asserts: CLAUDE.md word count is under 900, every plugin in marketplace.json appears in it, and no table row exceeds 25 words; Run: bash tests/plugins/test-claude-md-budget.sh
+- Objective: CLAUDE.md is under the context budget while still naming every plugin. File: tests/plugins/test-claude-md-budget.sh; Type: smoke; Asserts: CLAUDE.md word count is under 800 (the objective's own threshold), every plugin in marketplace.json appears in it, and no table row exceeds 25 words; Run: bash tests/plugins/test-claude-md-budget.sh
 
 ## Acceptance Criteria
 
@@ -66,7 +75,8 @@ Tier 2 — This plan doesn't change application code
 - [ ] The Step 1 audit file shows zero orphaned sentences after Step 2
 - [ ] `bash tests/plugins/test-claude-md-budget.sh` exits 0
 - [ ] `.github/workflows/check-plugin-versions.yml` runs the new test
-- [ ] No file under `kit/plugins/` changed except `README.md` files
+- [ ] No file under `kit/plugins/` changed except `README.md` files and, where Step 2b applied, their sibling `CHANGELOG.md`
+- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 — every plugin with a modified README carries a version bump, and none was bumped without one
 
 ## Verification
 
