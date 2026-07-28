@@ -1,0 +1,131 @@
+---
+status: todo
+type: refactor
+created: 2026-07-27
+effort: high
+glance: Five skills carry 118 hard imperatives across 13,758 words, and most of them restate process the model already infers. We will know this worked when the pruned skills reproduce their recorded structural manifests exactly on the same fixed inputs, and every safety guard we classified as load-bearing is still literally present in its file.
+workflow: false
+---
+
+# Plan: Earn every NEVER — baseline first, then prune
+
+## Objective
+
+Remove process-reminder imperatives from the five most over-constrained SKILL.md files in `plan-agent`, `git-agent`, and `skill-reviewer`, but only after each skill's behavior is captured as a committed, passing baseline test that proves the pruning changed nothing that matters.
+
+## Context
+
+Anthropic's "The new rules of context engineering for Claude 5 generation models" makes Rule 1 — judgment over rules — the headline: they removed 80%+ of Claude Code's system prompt with no measurable loss. The catch is the part that does not travel: they had evals. Removing constraints with "it still looks fine" as the verification is precisely how a silent regression ships, and the regressions in this repo are not cosmetic. `git-agent:ship-autonomous` ends in an irreversible squash merge. `plan-agent:implementation-plan` is forbidden from writing source files. `git-agent:branch-agent` stashes and pops a user's uncommitted work. If a dropped sentence changes any of those behaviors, the failure mode is a destroyed working tree or an unreviewed merge, discovered later.
+
+A measured count of lines matching `NEVER|ALWAYS|MUST|do not|don't` (case-insensitive — `grep -ciE`, matching lines rather than occurrences) across the five heaviest skills:
+
+| Skill | Imperatives | Words |
+|---|---|---|
+| `kit/plugins/plan-agent/skills/build/SKILL.md` | 34 | 2,907 |
+| `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` | 34 | 3,735 |
+| `kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` | 20 | 2,448 |
+| `kit/plugins/git-agent/skills/branch-agent/SKILL.md` | 16 | 1,515 |
+| `kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` | 14 | 3,153 |
+
+That is 118 imperatives across 13,758 words, in three plugins: `plan-agent` (5.0.0), `git-agent` (4.7.0), `skill-reviewer` (2.2.8).
+
+**The central discriminator.** Keep an imperative only if violating it fails *silently* and *expensively*. Everything else is a process reminder a Claude 5 generation model infers from the surrounding step. Concretely — KEEP the safety, scope, and irreversibility guards: `ship-autonomous`'s "Never merge on anything but green" and "never pass that flag on the strength of a merge" (the `--delete-branch` guard — the source line wraps after "merge", so only that much is greppable as one line), its "Never dismiss a review on your own initiative", `branch-agent`'s "Do not retry. Do not force." and "Do not drop the stash before staging resolved files", `implementation-plan`'s entire `## Scope Constraint — Plans Only` block including "This constraint is never lifted here", `build`'s "Never resolve a gate by picking for the user" and its never-hand-edit-the-HTML rule, `optimizing-skill-frontmatter`'s "Never write `disable-model-invocation: false`", and the blocking `security-scrub` gate wherever a skill publishes. DROP the process scaffolding: `ship-autonomous`'s "Run Steps 0–5 in strict order", `branch-agent`'s opening "Follow these steps in strict order." (its `## Step 6: Confirm and STOP` block already states the same stopping rule), every Step 0 sentence explaining *why* a mutation needs plan mode exited (`build`'s "This skill writes source files, so it cannot run inside plan mode." and `implementation-plan`'s "writing plan files is a filesystem mutation that cannot proceed inside harness plan mode"), `build`'s Step 2 aside "Spec edits only (see the source-of-truth rule above)" now that the `## Overview` source-of-truth paragraph states it, `implementation-plan`'s Step 4 `Rename` restatement of the kebab-case `verb-target` convention already given in Step 2's write instruction, and `optimizing-skill-frontmatter`'s "Follow these steps exactly" and "Count carefully".
+
+**Sequencing is the safety mechanism, not a nicety.** Baselines are captured, committed, and green *before* a single imperative is removed. A baseline recorded after the fact is a memory, not a control. This is why `workflow: false` — parallelizing these steps would let a pruning step land before its own baseline exists, which destroys the only evidence the refactor is safe.
+
+**Risks, with mitigations.** (1) Behavioral baselines need the `claude` CLI, which GitHub Actions does not have — mitigated by splitting the harness: `test-skill-behavior-baselines.sh` is a local-only gate that exits 1 rather than skipping when the CLI is missing, and `test-imperative-pruning.sh` is the CI-wired structural gate. (2) Model nondeterminism could make a baseline flaky and get it disabled — mitigated by asserting only structural facts (a file exists at path X, `status:` is `in-progress`, a refusal was emitted, no file was written outside `docs/plans/`), never prose wording. (3) A prune could silently change a frontmatter `description`, breaking activation without breaking any test — mitigated by diffing each description line against `git show origin/main:<path>`.
+
+**Abort condition, stated up front.** If a pruned skill's baseline test fails and the cause is not obvious within **one** fix attempt, restore the imperative rather than debugging further. The imperative cost a few tokens; the regression costs a merge. Restoring is a success outcome for this plan, not a failure.
+
+**Honest accounting.** This is the smallest token return of the context-engineering set — roughly five skills, and the pruned text is a few hundred words per file at most — and by a wide margin the highest regression risk. Dropping this plan entirely is a legitimate outcome. If Step 2 shows the baseline harness costs more to build and maintain than the saving is worth, stop there and record that finding; do not proceed to pruning without the harness.
+
+## Files
+
+- docs/plans/remove-skill-process-imperatives.md (new) — this spec
+- tests/fixtures/imperative-baselines/keep-phrases.txt (new) — the committed KEEP classification: one literal guard phrase per line, prefixed with the skill path it must remain in
+- tests/fixtures/imperative-baselines/scenarios/ (new) — fixed inputs per skill: a known plan spec, a known dirty tree script, a known SKILL.md
+- tests/fixtures/imperative-baselines/*.expected (new) — recorded structural manifests, one per target skill
+- tests/plugins/test-skill-behavior-baselines.sh (new) — local-only behavioral harness; runs each skill headless against its fixed scenario and diffs against the recorded manifest
+- tests/plugins/test-imperative-pruning.sh (new) — objective test; CI-wired structural gate
+- kit/plugins/plan-agent/skills/build/SKILL.md (modified) — prune process reminders, keep gate guards
+- kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (modified) — prune process reminders, keep `## Scope Constraint — Plans Only` intact
+- kit/plugins/git-agent/skills/ship-autonomous/SKILL.md (modified) — prune process reminders, keep merge and branch-deletion guards
+- kit/plugins/git-agent/skills/branch-agent/SKILL.md (modified) — prune duplicate ordering text, keep stash and no-force guards
+- kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md (modified) — prune process reminders, keep the `disable-model-invocation: false` prohibition
+- .claude-plugin/marketplace.json (modified) — plan-agent 5.0.0 → 5.1.0, git-agent 4.7.0 → 4.8.0, skill-reviewer 2.2.8 → 2.3.0
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — 5.1.0 entry
+- kit/plugins/git-agent/CHANGELOG.md (modified) — 4.8.0 entry
+- kit/plugins/skill-reviewer/CHANGELOG.md (modified) — 2.3.0 entry
+- .github/workflows/check-plugin-versions.yml (modified) — add a step running `bash tests/plugins/test-imperative-pruning.sh`
+
+## Steps
+
+1. Classify every one of the 118 imperatives in the five target SKILL.md files as KEEP or DROP using the discriminator "violating it fails silently and expensively", and write the KEEP set to `tests/fixtures/imperative-baselines/keep-phrases.txt` as `<skill path>\t<literal phrase>` lines copied verbatim from the source, where each phrase must be a substring of a single source line — these SKILL.md files are hard-wrapped, so a guard whose sentence spans a line break contributes only its longest single-line fragment (for example `never pass that flag on the strength of a merge`, which wraps before "approval"). Why: the KEEP list is the contract the objective test enforces, so it has to exist as machine-checkable data before anything is deleted, and a phrase spanning a newline would fail `grep -F` even when the guard is fully intact. Verify: `while IFS=$'\t' read -r f p; do grep -qF "$p" "$f" || echo "MISSING $p"; done < tests/fixtures/imperative-baselines/keep-phrases.txt` prints nothing, and `cut -f1 tests/fixtures/imperative-baselines/keep-phrases.txt | sort -u | wc -l` prints 5.
+2. Build `tests/plugins/test-skill-behavior-baselines.sh` plus `tests/fixtures/imperative-baselines/scenarios/`, giving each target skill one fixed input — a known `todo` plan spec for `build`, a known objective for `implementation-plan`, a known dirty tree in a throwaway `git init` sandbox for `branch-agent` and `ship-autonomous` (dry-run to the pre-flight guard only, never reaching `gh pr create`), and a known SKILL.md copy for `optimizing-skill-frontmatter`; the harness runs each skill headless via `claude -p --plugin-dir kit/plugins/<plugin>` and records only structural facts — files written and their paths, gates that fired, refusals emitted. Why: prose output is nondeterministic but the artifact set is not, so structural facts are the only assertions that will still be trustworthy in six months. Verify: `bash tests/plugins/test-skill-behavior-baselines.sh --record` writes five `.expected` manifests under `tests/fixtures/imperative-baselines/` and a plain re-run exits 0 against the **unmodified** skills.
+3. Make the harness exit 1 with `claude CLI not found — behavioral baselines cannot be skipped` when the CLI is absent, and confirm it writes nothing outside its sandbox and leaves no temp directories behind. Why: a harness that silently skips is worse than no harness, because it turns a red gate green exactly when it is needed most. Verify: `PATH=/usr/bin:/bin bash tests/plugins/test-skill-behavior-baselines.sh; echo $?` prints 1, and `git status --porcelain` is clean after a full run.
+4. Write the objective test `tests/plugins/test-imperative-pruning.sh` asserting four things — every `keep-phrases.txt` entry is literally present in its named file, each of the five `description:` frontmatter lines is byte-identical to `git show origin/main:<path>`, all five `.expected` manifests exist and are non-empty, and the behavioral harness is invoked and must pass when `command -v claude` succeeds — then wire it into `.github/workflows/check-plugin-versions.yml` as a named step with a comment explaining why. Why: this is the single command a reviewer runs to decide whether the prune was safe, and it must fail for a dropped guard, a changed description, and a missing baseline alike. Verify: `bash tests/plugins/test-imperative-pruning.sh` exits 0 on the unmodified tree, and `grep -q test-imperative-pruning .github/workflows/check-plugin-versions.yml` succeeds.
+5. Commit the classification, scenarios, recorded manifests, harness, objective test, and workflow wiring as one commit — **before any SKILL.md is edited** — and confirm the commit touches no file under `kit/plugins/`. Why: a baseline recorded from an already-pruned skill proves nothing; this commit is the green reference point every later step is compared against. Verify: `git show --stat HEAD | grep -c 'kit/plugins/'` prints 0 and `bash tests/plugins/test-imperative-pruning.sh` exits 0 at that commit.
+6. Prune the DROP-classified imperatives from `kit/plugins/plan-agent/skills/build/SKILL.md` and `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` — remove `build`'s Step 0 rationale sentence "This skill writes source files, so it cannot run inside plan mode." and `implementation-plan`'s equivalent "writing plan files is a filesystem mutation that cannot proceed inside harness plan mode", `build`'s Step 2 aside "Spec edits only (see the source-of-truth rule above)" now that the `## Overview` source-of-truth paragraph carries it, the per-step re-render reminders that merely re-point at the `## Re-render (subroutine — referenced by every step below)` section, and `implementation-plan`'s Step 4 `Rename` restatement of the kebab-case `verb-target` convention already given in Step 2's write instruction — leaving `## Scope Constraint — Plans Only` and every `keep-phrases.txt` entry untouched. Why: these two files carry 68 of the 118 imperatives and are the largest single saving available. Verify: `bash tests/plugins/test-imperative-pruning.sh` exits 0, and `bash tests/plugins/test-build-skill.sh` still exits 0; if the baseline for either skill fails and one fix attempt does not explain it, restore the removed text and re-run.
+7. Prune the DROP-classified imperatives from `kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` and `kit/plugins/git-agent/skills/branch-agent/SKILL.md` — remove "Run Steps 0–5 in strict order", `branch-agent`'s opening "Follow these steps in strict order." plus the "**STOP immediately after step 6.**" clause it wraps into, now that the `## Step 6: Confirm and STOP` block states the same rule, and both Step 0 mutation rationales — leaving the merge-on-green guard, the `--delete-branch` guard, the review-dismissal guard, and both stash guards literally intact. Why: `ship-autonomous` ends in an irreversible merge and `branch-agent` handles the user's uncommitted work, so these are the two files where a wrong deletion is unrecoverable. Verify: `bash tests/plugins/test-imperative-pruning.sh` exits 0, `bash tests/plugins/test-merge-shorthand.sh` exits 0, and `grep -cF 'Never merge on anything but green' kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` prints 1.
+8. Prune the DROP-classified imperatives from `kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` — remove "Follow these steps exactly", "Count carefully — both limits apply independently", and the Step 0 plan-mode rationale — keeping the `disable-model-invocation: false` prohibition and the placeholder-value prohibition verbatim. Why: this skill rewrites other skills' frontmatter, so a dropped prohibition propagates a defect into every file it touches. Verify: `bash tests/plugins/test-imperative-pruning.sh` exits 0 and `bash tests/plugins/test-description-budget.sh` exits 0.
+9. Bump `plan-agent` to 5.1.0, `git-agent` to 4.8.0, and `skill-reviewer` to 2.3.0 in `.claude-plugin/marketplace.json`, and add a matching entry to each plugin's `CHANGELOG.md` naming the pruned skills and stating that behavior baselines were recorded before the prune. Why: any edit under `kit/plugins/<name>/` requires a version higher than `main`, and the changelog is where a future reader learns the baselines exist. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and each of the three CHANGELOG.md files contains its new version heading.
+
+## Tests
+
+Tier 1 — This plan changes application code
+
+- Objective: proves the prune was behavior-neutral — the recorded baselines still pass after pruning and every KEEP-classified guard phrase is still literally present in its skill. File: tests/plugins/test-imperative-pruning.sh; Type: smoke; Asserts: every `keep-phrases.txt` phrase is present in its named SKILL.md, all five `description:` lines are byte-identical to `origin/main`, all five `.expected` manifests exist and are non-empty, and the behavioral harness passes when the `claude` CLI is available; Run: bash tests/plugins/test-imperative-pruning.sh
+- Unit: the behavioral baseline harness itself. File: tests/plugins/test-skill-behavior-baselines.sh; Targets: `build`, `implementation-plan`, `ship-autonomous`, `branch-agent`, `optimizing-skill-frontmatter` run headless against fixed scenario inputs; Key cases: `build` on a known `todo` spec writes only that spec's files and sets `status: in-progress`; `implementation-plan` writes nothing outside the plans directory (the Scope Constraint); `branch-agent` on a conflicting dirty tree stashes, branches, and pops without losing a file; `ship-autonomous` stops at the pre-flight guard on a clean tree and never reaches `gh`; `optimizing-skill-frontmatter` never emits `disable-model-invocation: false`; missing `claude` CLI exits 1 rather than skipping.
+- Integration: existing skill gates still hold under the pruned bodies. File: tests/plugins/test-build-skill.sh and tests/plugins/test-merge-shorthand.sh; Targets: the `build` skill's three implementation gates and the merge skill's safety gates; Key cases: both exit 0 unchanged after Steps 6 and 7.
+
+## Acceptance Criteria
+
+- [ ] `bash tests/plugins/test-imperative-pruning.sh` exits 0 on the final tree.
+- [ ] `tests/fixtures/imperative-baselines/keep-phrases.txt` contains at least one entry for each of the five target SKILL.md paths, and every listed phrase is found verbatim by `grep -F` in its named file.
+- [ ] `ls tests/fixtures/imperative-baselines/*.expected | wc -l` prints 5, and `git show --stat $(git log --format=%H -1 -- tests/fixtures/imperative-baselines/keep-phrases.txt) | grep -c 'kit/plugins/'` prints 0.
+- [ ] The baseline commit precedes the prune: `git merge-base --is-ancestor $(git log --format=%H -1 -- tests/fixtures/imperative-baselines/keep-phrases.txt) $(git log --format=%H -1 -- kit/plugins/plan-agent/skills/build/SKILL.md)` exits 0.
+- [ ] `git diff origin/main -- 'kit/plugins/*/skills/*/SKILL.md' | grep '^[-+]description:'` produces no output (exit 1 from `grep`).
+- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 5.1.0, git-agent at 4.8.0, and skill-reviewer at 2.3.0 in `.claude-plugin/marketplace.json`.
+- [ ] Each of `kit/plugins/plan-agent/CHANGELOG.md`, `kit/plugins/git-agent/CHANGELOG.md`, and `kit/plugins/skill-reviewer/CHANGELOG.md` contains a heading for its new version.
+- [ ] `.github/workflows/check-plugin-versions.yml` contains a step running `bash tests/plugins/test-imperative-pruning.sh`.
+- [ ] `bash tests/plugins/test-build-skill.sh`, `bash tests/plugins/test-merge-shorthand.sh`, and `bash tests/plugins/test-description-budget.sh` all exit 0.
+- [ ] `PATH=/usr/bin:/bin bash tests/plugins/test-skill-behavior-baselines.sh` exits 1, proving the harness cannot silently skip.
+
+## Verification
+
+Run `bash tests/plugins/test-imperative-pruning.sh` on the final tree; expected result is exit 0 with a per-skill line for all five targets and a `baselines: 5/5 match` summary. Then run `BASE_REF=main node scripts/check-plugin-versions.mjs`; expected result is exit 0 listing three bumped plugins.
+
+**Tautology check — the tests must be able to fail.** Delete the line `**Never merge on anything but green.**` from `kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` and re-run `bash tests/plugins/test-imperative-pruning.sh`; it must exit 1 naming that phrase. Restore the line with `git checkout -- kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` and confirm the test returns to exit 0. Repeat the same break-and-revert on a `description:` line (append one character) and confirm the description-drift assertion exits 1 — a test that only catches the first break is half a test.
+
+**Behavioral check — actually run the skills, do not infer from word counts.** In a scratch clone, load the three plugins with `claude --plugin-dir kit/plugins/plan-agent --plugin-dir kit/plugins/git-agent --plugin-dir kit/plugins/skill-reviewer` and exercise each pruned skill by hand against its recorded scenario: invoke `/plan-agent:build` on the fixture plan and confirm it walks the steps, ticks the spec, re-renders, and stops without committing; invoke `/plan-agent:implementation-plan` on the fixture objective and confirm it writes only under the plans directory and refuses to touch source; run `/git-agent:branch-agent` on the conflicting dirty tree and confirm the stash/branch/pop cycle loses nothing (`git stash list` empty, all modified files present); trigger `git-agent:ship-autonomous` on a clean tree and confirm it stops at "Nothing to ship" rather than proceeding; run `/skill-reviewer:optimizing-skill-frontmatter` on a fixture SKILL.md and confirm it never writes `disable-model-invocation: false`. A reduced word count is not evidence any of this still works.
+
+If any behavioral check diverges from its recorded baseline and one fix attempt does not explain the divergence, restore the removed imperative for that skill, re-run `bash tests/plugins/test-imperative-pruning.sh` to confirm green, and record the restoration in the plugin's CHANGELOG entry. A partial prune that keeps a guard is the correct outcome, not a failed plan.
+
+## Next Steps
+
+- Extend the behavioral baseline harness to the rest of the write-heavy skills
+    Only five skills get baselines here. The same harness could cover `git-agent:commit-agent`, `git-agent:pr-agent`, `git-agent:merge`, and `plan-agent:finalize-plan`, which are equally irreversible and equally unproven.
+
+    ```text
+    In the shawn-sandy/agentics repo (a Claude Code plugin marketplace), extend the behavioral baseline harness at tests/plugins/test-skill-behavior-baselines.sh to cover four more write-heavy skills: kit/plugins/git-agent/skills/commit-agent/SKILL.md, kit/plugins/git-agent/skills/pr-agent/SKILL.md, kit/plugins/git-agent/skills/merge/SKILL.md, and kit/plugins/plan-agent/skills/finalize-plan/SKILL.md. Add one fixed scenario per skill under tests/fixtures/imperative-baselines/scenarios/ and record a structural .expected manifest for each (files written, gates fired, refusals emitted — never prose wording). Do not modify any SKILL.md. Bump git-agent and plan-agent in .claude-plugin/marketplace.json only if you end up touching a file under kit/plugins/ (never add a version field to plugin.json), and add a CHANGELOG.md entry for any plugin you bump. Verify by running: bash tests/plugins/test-skill-behavior-baselines.sh --record, then a plain re-run exits 0, then BASE_REF=main node scripts/check-plugin-versions.mjs exits 0.
+    ```
+
+- Measure the actual token saving and decide whether the pattern is worth repeating
+    This plan claims the smallest return of the context-engineering set but never quantifies it. A measured before/after would settle whether imperative pruning is worth applying to the remaining skills at all.
+
+    ```text
+    In the shawn-sandy/agentics repo (a Claude Code plugin marketplace), measure the real token cost saved by the imperative prune landed in docs/plans/remove-skill-process-imperatives.md. For each of kit/plugins/plan-agent/skills/build/SKILL.md, kit/plugins/plan-agent/skills/implementation-plan/SKILL.md, kit/plugins/git-agent/skills/ship-autonomous/SKILL.md, kit/plugins/git-agent/skills/branch-agent/SKILL.md, and kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md, compare word and character counts against `git show origin/main:<path>` and write the table into the relevant plugin CHANGELOG entries. Then state a recommendation: is the saving large enough to justify pruning the remaining skills over 1,200 words? Do not edit any SKILL.md body. If you touch a file under kit/plugins/, bump that plugin's version in .claude-plugin/marketplace.json (never in plugin.json) and add a CHANGELOG entry. Verify with: BASE_REF=main node scripts/check-plugin-versions.mjs exits 0, and bash tests/plugins/test-imperative-pruning.sh still exits 0.
+    ```
+
+## Resources
+
+- [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — Rule 1 (judgment over rules) is the entire premise of this plan; it is also the source of the 80%+ system-prompt reduction figure and, implicitly, of the eval requirement this plan supplies.
+- `kit/plugins/plan-agent/skills/build/SKILL.md` — 34 imperatives in 2,907 words; the largest single concentration, and the source of the `build` gate guards that must survive.
+- `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` — 34 imperatives in 3,735 words; carries `## Scope Constraint — Plans Only`, the one guard whose loss would let a plan-authoring skill write source files.
+- `kit/plugins/git-agent/skills/ship-autonomous/SKILL.md` — 20 imperatives in 2,448 words; ends in an irreversible squash merge and holds the `--delete-branch` and review-dismissal guards.
+- `kit/plugins/git-agent/skills/branch-agent/SKILL.md` — 16 imperatives in 1,515 words; handles the user's uncommitted work through a stash/pop cycle.
+- `kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` — 14 imperatives in 3,153 words; rewrites other skills' frontmatter, so its prohibitions propagate.
+- `tests/plugins/test-build-skill.sh` — the repo's reference smoke-test shape (bash, `set -euo pipefail`, numbered checks, `FAILURES` counter); the new tests follow it.
+- `.github/workflows/check-plugin-versions.yml` — shows how individual `tests/plugins/*.sh` files are wired in as named steps with a rationale comment; the objective test is added the same way.
+- `.claude/rules/marketplace.md` — the version-bump rule (`marketplace.json` only, never `plugin.json`) and the semver table that makes this refactor a MINOR bump.
+- `.claude/rules/skill-authoring.md` — Anthropic's effective-skills checklist, which this repo requires any `SKILL.md` change to be verified against.
