@@ -12,7 +12,11 @@
 # The first collapse delegated via `Skill(skill: "plan-agent:<same-name>")`,
 # which turned out to be a no-op: a command shadows a skill of the same name, so
 # the call returned the command file and the skill body never loaded. Check 1
-# now requires the skill be loaded by path instead.
+# now requires the skill be loaded by path instead, check 1b makes that a
+# repo-wide rule so it isn't re-broken in a plugin nobody thought to list here,
+# and checks 1c/1d cover markdown-to-html, which never fit the thin-delegator
+# shape (real usage docs, an async background dispatch) but shared the same
+# shadowing bug in its own dispatch prompt.
 #
 # Check 2 — reference resolution. An instruction naming a slash command that
 # does not exist is a dead end at the exact moment a workflow hands off.
@@ -47,10 +51,16 @@ failures = []
 # there. The command still has to stay thin — a delegator that restates its
 # skill's workflow drifts from it, which is how these three earned this test in
 # the first place (they had drifted 20, 153, and 383 lines apart).
-MAX_LINES = 15
+#
+# MAX_LINES is 16, matching the longest of the already-converted wrappers
+# (write-prompt.md, not itself in this map since it predates it) — plan-status
+# needs one line more than deep-grill/documenting-plans for its extra
+# `--all`/`--force` argument-hint.
+MAX_LINES = 16
 DELEGATORS = {
     "plan-agent/commands/deep-grill.md": "deep-grill",
     "plan-agent/commands/documenting-plans.md": "documenting-plans",
+    "plan-agent/commands/plan-status.md": "plan-status",
 }
 
 for rel, skill in DELEGATORS.items():
@@ -105,8 +115,14 @@ for rel, skill in DELEGATORS.items():
         with open(skill_md, encoding="utf-8") as fh:
             skill_text = fh.read()
         def tools(src):
-            m = re.search(r"^allowed-tools:\s*(.+?)\s*$", src, re.M)
-            return {t.strip() for t in m.group(1).split(",") if t.strip()} if m else set()
+            m = re.search(r"^allowed-tools:\s*(.+?)\s*$", src, re.M | re.S)
+            if not m:
+                return set()
+            # allowed-tools may wrap onto the next line as a bare indented
+            # value (see write-prompt.md); stop at the next top-level key.
+            block = m.group(1)
+            block = re.split(r"\n[a-z][a-z-]*:", block, maxsplit=1)[0]
+            return {t.strip() for t in block.replace("\n", " ").split(",") if t.strip()}
         missing = tools(skill_text) - tools(text)
         if missing:
             failures.append(
@@ -115,26 +131,102 @@ for rel, skill in DELEGATORS.items():
                 f"this command's permissions and would stall on that branch"
             )
 
-# plan-status still uses the shadowed `Skill(skill: "plan-agent:plan-status")`
-# form and so almost certainly no-ops the same way — not converted here only
-# because it was out of scope for the change that fixed the two above. It keeps
-# the thin-delegator guards in the meantime so it cannot regrow into a copy of
-# its skill while it waits.
-UNCONVERTED = ["plan-agent/commands/plan-status.md"]
+# --- Check 1b: no command self-delegates, repo-wide -----------------------
+#
+# Not just the three above: any commands/<name>.md in any plugin that
+# instructs Skill(skill: "<plugin>:<name>") is instructing a call to itself.
+# This is what should have caught plan-status and markdown-to-html the first
+# time deep-grill/documenting-plans were fixed — it is written repo-wide and
+# name-agnostic on purpose, so the next shadowed wrapper doesn't need its own
+# entry added here to be caught. A literal mention inside an explicit "do not
+# call" warning is the documented fix, not the defect, so a self-reference is
+# allowed only when negated just before it.
+FLAT = re.compile(r"\s+")
+SELF_CALL = re.compile(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']")
 
-for rel in UNCONVERTED:
-    path = os.path.join(plugin_dir, rel)
-    if not os.path.isfile(path):
-        failures.append(f"{rel}: missing")
+for plugin in sorted(os.listdir(plugin_dir)):
+    cdir = os.path.join(plugin_dir, plugin, "commands")
+    if not os.path.isdir(cdir):
         continue
-    with open(path, encoding="utf-8") as fh:
-        text = fh.read()
-    lines = text.count("\n") + (0 if text.endswith("\n") else 1)
-    if lines > MAX_LINES:
-        failures.append(f"{rel}: {lines} lines (max {MAX_LINES})")
-    for key in ("description", "argument-hint"):
-        if not re.search(rf"^{key}:\s*\S", text, re.M):
-            failures.append(f"{rel}: lost its `{key}:` frontmatter")
+    for fname in sorted(os.listdir(cdir)):
+        if not fname.endswith(".md"):
+            continue
+        rel = os.path.join(plugin, "commands", fname)
+        with open(os.path.join(cdir, fname), encoding="utf-8") as fh:
+            flat = FLAT.sub(" ", fh.read())
+        own = f"{plugin}:{fname[:-3]}"
+        for m in SELF_CALL.finditer(flat):
+            if m.group(1) != own:
+                continue
+            preceding = flat[max(0, m.start() - 60):m.start()].lower()
+            if "not** call" in preceding or "not call" in preceding:
+                continue  # the documented warning, not an instruction
+            failures.append(
+                f"{rel}: instructs `Skill(skill: \"{own}\")` — the command shadows "
+                f"the skill of that name, so this returns the command file itself "
+                f"and the skill body never loads; Read it by path instead"
+            )
+
+# --- Check 1c: markdown-to-html's async subagent runs the whole workflow --
+#
+# markdown-to-html doesn't fit DELEGATORS (real usage docs, well over
+# MAX_LINES) but its skill's --async dispatch shares the same shadowing bug in
+# its own subagent prompt, plus a second bug found in review: an earlier fix
+# told the fresh subagent to resume at Step 4, skipping Step 2 — the only step
+# that parses the source's frontmatter/sections/steps — so synthesis had
+# nothing to render. Guarded here so neither can silently regress.
+MTH_SKILL = os.path.join(plugin_dir, "plan-agent/skills/markdown-to-html/SKILL.md")
+if os.path.isfile(MTH_SKILL):
+    with open(MTH_SKILL, encoding="utf-8") as fh:
+        mth_flat = FLAT.sub(" ", fh.read())
+    dispatch = re.search(r"Async dispatch.*?(?=### Step 4)", mth_flat, re.S)
+    if not dispatch:
+        failures.append("plan-agent/skills/markdown-to-html/SKILL.md: async dispatch section not found")
+    else:
+        d = dispatch.group(0)
+        # Isolate the `prompt` field's own quoted value — the text actually
+        # handed to the subagent — rather than the surrounding explanatory
+        # prose, which can (and should) go on saying "Step 1" regardless of
+        # what the prompt template itself says.
+        prompt_field = re.search(r"`prompt`:\s*`\"(.*?)\"`", d, re.S)
+        if not prompt_field:
+            failures.append(
+                "plan-agent/skills/markdown-to-html/SKILL.md: async dispatch has no "
+                "recognizable `prompt` field to check"
+            )
+        else:
+            p = prompt_field.group(1)
+            if re.search(r"step 4", p, re.I):
+                failures.append(
+                    "plan-agent/skills/markdown-to-html/SKILL.md: the subagent prompt "
+                    "tells it to resume at Step 4, skipping Step 2's content parsing"
+                )
+            if not re.search(r"step 1|in full|end to end|from the (start|beginning)", p, re.I):
+                failures.append(
+                    "plan-agent/skills/markdown-to-html/SKILL.md: the subagent prompt "
+                    "does not say to run the workflow from Step 1 / in full"
+                )
+            if "Skill(skill:" in p:
+                failures.append(
+                    "plan-agent/skills/markdown-to-html/SKILL.md: the subagent prompt "
+                    "hands it a Skill() call rather than a path to Read"
+                )
+
+# --- Check 1d: allowed-tools grants only what a wrapper's target uses -----
+#
+# markdown-to-html's SKILL.md mentions `Skill(...)` exactly once — inside its
+# own warning against calling it — so the tool is never genuinely invoked.
+# Declaring it in the command's allowed-tools widens the boundary for nothing.
+MTH_CMD = os.path.join(plugin_dir, "plan-agent/commands/markdown-to-html.md")
+if os.path.isfile(MTH_CMD):
+    with open(MTH_CMD, encoding="utf-8") as fh:
+        cmd_text = fh.read()
+    at_line = re.search(r"^allowed-tools:.*$", cmd_text, re.M)
+    if at_line and re.search(r"\bSkill\b", at_line.group(0)):
+        failures.append(
+            "plan-agent/commands/markdown-to-html.md: allowed-tools grants Skill, but "
+            "the skill it loads never invokes it outside a warning string"
+        )
 
 # --- Check 2: every slash reference resolves ------------------------------
 #
@@ -199,7 +291,8 @@ if failures:
         print(f"  - {f}")
     sys.exit(1)
 
-print(f"PASS: {len(DELEGATORS)} commands load their skill by path, "
-      f"{len(UNCONVERTED)} unconverted still thin (<={MAX_LINES} lines each); "
-      f"{checked} slash references all resolve")
+print(f"PASS: {len(DELEGATORS)} commands load their skill by path "
+      f"(<={MAX_LINES} lines each); no command self-delegates; "
+      f"markdown-to-html's async dispatch runs the full workflow and its "
+      f"allowed-tools grants nothing unused; {checked} slash references all resolve")
 PY

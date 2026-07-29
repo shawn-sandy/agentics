@@ -153,9 +153,25 @@ Now that theme is known, spawn a background agent and stop:
 - `subagent_type`: `"general-purpose"`
 - `run_in_background`: `true`
 - `description`: `"markdown-to-html background conversion"`
-- `prompt`: `"Invoke Skill(skill: \"plan-agent:markdown-to-html\", args:
-  \"/actual/path/to/file.md --theme=<theme> --no-open --background\") to convert
-  the file to HTML non-interactively."` — substitute real path and theme.
+- `prompt`: `"Read <this skill's own SKILL.md path> and follow it in full,
+  starting from Step 1, with arguments \"/actual/path/to/file.md
+  --theme=<theme> --no-open --background\" to convert the file to HTML
+  non-interactively."` — substitute the real skill path, file path, and theme.
+
+  **Run the whole workflow, not a truncated tail.** The subagent starts with no
+  memory of this run's Steps 1-3 — it must re-resolve the source file, parse its
+  content (Step 2 is where sections, frontmatter, and steps get extracted; skip
+  it and Step 5's synthesis has nothing to render), and resolve the theme
+  (already supplied via `--theme`, so Step 3's prompt is skipped, not the step
+  itself). "Starting from Step 1" is not optional scaffolding — the flags handed
+  to it make every step besides parsing and synthesis a no-op.
+
+  **Two distinct paths are in play; do not conflate them.** The subagent's
+  prompt names *this skill's own file path* — the one it should `Read` — not the
+  source document being converted, and not
+  `Skill(skill: "plan-agent:markdown-to-html")`. That command shares this
+  skill's name and shadows it, so a `Skill()` call would return
+  `commands/markdown-to-html.md` rather than this body.
 
 Output: `"Background conversion started: /path/to/file.md (theme: <theme>)"` and stop.
 
