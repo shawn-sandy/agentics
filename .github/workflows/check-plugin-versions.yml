@@ -43,6 +43,12 @@ jobs:
       # Nothing else exercises it, so this is its only regression gate.
       - name: Test gallery index merge driver
         run: bash tests/plugins/test-merge-gallery-index.sh
+      # A SKILL.md body is paid in full every time the skill fires, so a core
+      # that creeps back over the ceiling — or a reference link that stops
+      # resolving, or a scrub gate that drifts behind one — costs context or
+      # safety on every run and shows up in no diff review of a single file.
+      - name: Test the six split skill cores stay split
+        run: bash tests/plugins/test-remaining-skill-splits.sh
       # The plan-mode guard fails silently in both directions: strip it and a
       # skill writes from inside a mode the user deliberately entered; re-expand
       # it and 40 files each re-teach the model something it already knows.

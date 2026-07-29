@@ -11,6 +11,18 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PLUGIN="$ROOT/kit/plugins/artifact-tools"
 MARKET="$ROOT/.claude-plugin/marketplace.json"
 CHANGELOG="$PLUGIN/CHANGELOG.md"
+# diff-artifact and prompt-artifact are split core-plus-references. The blocking
+# scrub gate stays in each core (asserted by line order below, on the core only);
+# the mechanics moved to these plugin-level references, so each literal is
+# asserted against the file that now holds it rather than anywhere under the
+# plugin — a plugin-wide grep would pass even if the gate itself moved.
+REF="$PLUGIN/references"
+DIFF_SOURCES="$REF/diff-sources.md"
+DIFF_PAGE="$REF/diff-page.md"
+DIFF_PUB="$REF/diff-publishing.md"
+PROMPT_RES="$REF/prompt-resolution.md"
+PROMPT_PAGE="$REF/prompt-page.md"
+PROMPT_PUB="$REF/prompt-publishing.md"
 fail() { echo "FAIL: $1" >&2; exit 1; }
 checks=0
 ok() { checks=$((checks + 1)); }
@@ -118,32 +130,53 @@ EOF
 done
 ok
 
+# Every reference the two split cores name must exist, or a step points at a file
+# the model cannot read and the mechanics are simply gone.
+for f in "$DIFF_SOURCES" "$DIFF_PAGE" "$DIFF_PUB" \
+         "$PROMPT_RES" "$PROMPT_PAGE" "$PROMPT_PUB"; do
+  [ -f "$f" ] || fail "missing reference: ${f#$ROOT/}"
+  grep -qF "references/$(basename "$f")" "$DIFF" "$PROMPT" \
+    || fail "$(basename "$f") is orphaned — no core links to it"
+done
+
 # Diff page requirements: cap-and-summarize, sidebar, theme, severity legend.
-grep -qiF 'cap-and-summarize' "$DIFF" || fail "diff-artifact: cap-and-summarize policy missing"
-grep -qF '16 MiB' "$DIFF" || fail "diff-artifact: artifact size cap not cited"
-grep -qiE 'sticky file sidebar' "$DIFF" || fail "diff-artifact: sticky sidebar requirement missing"
-grep -qF 'prefers-color-scheme' "$DIFF" || fail "diff-artifact: adaptive light/dark theme missing"
-grep -qiE 'severity legend' "$DIFF" || fail "diff-artifact: severity legend missing"
+grep -qiF 'cap-and-summarize' "$DIFF_PAGE" || fail "diff-page.md: cap-and-summarize policy missing"
+grep -qF '16 MiB' "$DIFF_PAGE" || fail "diff-page.md: artifact size cap not cited"
+grep -qiE 'sticky file sidebar' "$DIFF_PAGE" || fail "diff-page.md: sticky sidebar requirement missing"
+grep -qF 'prefers-color-scheme' "$DIFF_PAGE" || fail "diff-page.md: adaptive light/dark theme missing"
+grep -qiE 'severity legend' "$DIFF_PAGE" || fail "diff-page.md: severity legend missing"
 # PR degradation must EXECUTE the branch diff, not merely announce it, and must
 # detect a non-GitHub remote as well as a missing/unauthenticated gh.
-grep -qiE 'using branch mode|fall(ing)? back to branch mode' "$DIFF" \
-  || fail "diff-artifact: PR-mode degradation message missing"
-grep -qF 'git diff "${DEFAULT_BRANCH}...HEAD" > "$DIFF_FILE"' "$DIFF" \
-  || fail "diff-artifact: PR degradation must actually run the branch diff, not just report it"
-grep -qF 'git remote get-url origin' "$DIFF" \
-  || fail "diff-artifact: PR mode must detect a non-GitHub remote"
-# The rendered page must be size-checked and rescanned before publish.
-grep -qF '16 * 1024 * 1024' "$DIFF" \
-  || fail "diff-artifact: rendered 16 MiB cap not enforced by measurement"
+grep -qiE 'using branch mode|fall(ing)? back to branch mode' "$DIFF_SOURCES" \
+  || fail "diff-sources.md: PR-mode degradation message missing"
+grep -qF 'git diff "${DEFAULT_BRANCH}...HEAD" > "$DIFF_FILE"' "$DIFF_SOURCES" \
+  || fail "diff-sources.md: PR degradation must actually run the branch diff, not just report it"
+grep -qF 'git remote get-url origin' "$DIFF_SOURCES" \
+  || fail "diff-sources.md: PR mode must detect a non-GitHub remote"
+# The rendered page must be size-checked and rescanned before publish. The size
+# loop is a mechanic (reference); the rescan is a gate, so it stays in the core.
+grep -qF '16 * 1024 * 1024' "$DIFF_PAGE" \
+  || fail "diff-page.md: rendered 16 MiB cap not enforced by measurement"
+grep -qF 'Rescan the finished page' "$DIFF" \
+  || fail "diff-artifact: the rendered-page rescan left the core"
 # Republish key must not be date-derived, or tomorrow's run misses the URL.
-grep -qE 'target=".claude/artifacts/diff-.*\$\(date' "$DIFF" \
-  && fail "diff-artifact: inbox key is date-derived — breaks cross-day republish"
+grep -qE 'target=".claude/artifacts/diff-.*\$\(date' "$DIFF_PUB" \
+  && fail "diff-publishing.md: inbox key is date-derived — breaks cross-day republish"
+# The prompt page's escaping contract and the verbatim-copy guarantee.
+grep -qF 'data-type' "$PROMPT_PAGE" || fail "prompt-page.md: type chip escaping target missing"
+grep -qF 'writeText' "$PROMPT_PAGE" || fail "prompt-page.md: copy button lost its clipboard call"
+grep -qF '.artifact-url' "$PROMPT_PUB" || fail "prompt-publishing.md: library sidecar missing"
 ok
 
-# All four document the fallback and the artifact-url republish mechanic.
+# All four document the fallback and the artifact-url republish mechanic. For the
+# two split skills the mechanic lives in its publishing reference, so the pair is
+# checked together — the core must still name the fallback, and the reference must
+# still carry the artifact-url write.
+declare -A PUB_REF=( ["$DIFF"]="$DIFF_PUB" ["$PROMPT"]="$PROMPT_PUB" )
 for f in "$DIFF" "$SESSION" "$PLAN" "$PROMPT"; do
   name="$(basename "$(dirname "$f")")"
-  grep -qF 'artifact-url:' "$f" || fail "$name: artifact-url frontmatter write not documented"
+  url_src="${PUB_REF[$f]:-$f}"
+  grep -qF 'artifact-url:' "$url_src" || fail "$name: artifact-url frontmatter write not documented"
   grep -qiE 'fallback|publish failure|publishing fails' "$f" || fail "$name: local fallback not documented"
   grep -qF 'ExitPlanMode' "$f" || fail "$name: ExitPlanMode bootstrap missing"
 done

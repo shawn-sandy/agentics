@@ -18,7 +18,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/memory-tools"
       },
-      "version": "4.0.0",
+      "version": "4.1.0",
       "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
       "category": "development",
       "tags": [
@@ -77,7 +77,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "2.2.9",
+      "version": "2.3.0",
       "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
@@ -99,7 +99,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.4.5",
+      "version": "3.5.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
@@ -289,7 +289,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.8.0",
+      "version": "1.9.0",
       "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, and saved prompts published singly or as a filterable library with verbatim copy buttons — plus three audience framings over the session recap: product-doc for stakeholders, team-recap for the whole team, and eng-recap for engineers, with architecture, code paths, tradeoffs, learnings, tests, and review follow-ups drawn from a capped read of the PR diff — with a blocking secret-scrub gate and a local-HTML fallback",
       "category": "development",
       "tags": [
@@ -312,7 +312,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/content-tools"
       },
-      "version": "1.0.2",
+      "version": "1.1.0",
       "description": "Turn work products into publishable site content — the artifact-to-post skill converts a local HTML artifact, pasted HTML, or a Markdown file into a draft MDX post for a static site, keeping interactive blocks interactive by scoping their CSS instead of screenshotting them, and guarding prose against MDX's JSX parsing rules",
       "category": "documentation",
       "tags": [

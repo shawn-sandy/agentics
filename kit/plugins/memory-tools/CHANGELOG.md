@@ -1,5 +1,26 @@
 # Changelog
 
+## v4.1.0 — 2026-07-29 — Split `path-rules-advisor` into a core plus references
+
+### Changed
+
+- **`path-rules-advisor` is now a 513-word core plus three reference files, down
+  from 1,519 words in a single body.**
+  - `references/rule-modes.md` — Mode A Steps 1–7 and Mode B Steps 1–7 in full
+  - `references/rule-file-format.md` — the generated-file template, brace
+    expansion, and the Notes section
+  - `references/write-verification.md` — the diff-back plus the Python
+    frontmatter parse check and the pre-write gate
+- The core keeps what must load unconditionally: mode selection, both hard-stop
+  confirmations, the run-after-every-write rule with its non-zero-exit **STOP**,
+  and the `REPORT rather than write` pre-write gate. Only the executable check
+  moved behind a link.
+
+Behaviour, `description:`, and `allowed-tools:` are unchanged.
+`tests/plugins/test-memory-doctor-guard.sh` now extracts the parse check and the
+declared-command scan from the core *and* its references, so it still executes
+real shipped code rather than going green on relocated content.
+
 ## v4.0.0 — 2026-07-20 — Rename `agentic-memory-doctor` to `agentic-memory-management`
 
 ### Changed

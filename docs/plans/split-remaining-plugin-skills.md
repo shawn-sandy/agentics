@@ -1,5 +1,5 @@
 ---
-status: todo
+status: completed
 type: refactor
 created: 2026-07-27
 effort: high
@@ -71,15 +71,15 @@ Five plugins are touched, so five `marketplace.json` version bumps and five CHAN
 
 ## Steps
 
-1. Record a pre-split baseline into the scratchpad: `for f in <the six SKILL.md paths>; do echo "$(wc -w < $f) $f"; done` plus `git show origin/main:<path> | sed -n '1,6p'` for each, capturing every `description:` line verbatim. Why: the split is only correct if word counts fall and descriptions do not move, and neither claim is checkable later without the before-state. Verify: the scratchpad file lists six word counts summing to 10,545 and six `description:` lines.
-2. Split `kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` into a core plus `references/description-rules.md`, `references/invocation-control.md`, `references/measurement.md`, and `references/budget-advisory.md`, linking each from the step that needs it and leaving `description:`, `allowed-tools:`, and `disable-model-invocation: true` untouched. Why: at 3,153 words it is the single largest monolithic skill in the repo, and it is the rubric every other skill is judged against — it cannot keep violating its own progressive-disclosure advice. Verify: `wc -w < kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` is under 600 and `git diff origin/main -- kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md | grep '^[-+]description:'` prints nothing.
-3. Split `kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md` into a core plus `references/rule-modes.md`, `references/rule-file-format.md`, and `references/write-verification.md`, keeping the "run this after every write, STOP on non-zero" rule and the pre-write gate sentence in the core, then update `tests/plugins/test-memory-doctor-guard.sh` to extract the parse check and the bash commands from the core *and* its `references/*.md`, and repoint the `path-rules-advisor` wiring regex in `tests/plugins/test-generator-skills-verify-output.sh` at the reference link. Why: two tests execute code lifted straight out of this body, so moving it without moving their extraction turns a passing safety guard into a silent no-op. Verify: `bash tests/plugins/test-memory-doctor-guard.sh` and `bash tests/plugins/test-generator-skills-verify-output.sh` both exit 0, and the core is under 600 words.
-4. Split `kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md` into a core plus `references/fix-loop.md` and `references/handoff.md`, matching the per-skill `references/` layout its four siblings (`code-testing-agent`, `reviewing-tests`, `running-tests`, `tdd-loop`) already use. Why: `tdd-fix` is the only skill in its plugin without a `references/` dir, so this is the one split that costs nothing in convention design. Verify: `ls -d kit/plugins/code-testing-agent/skills/*/references | wc -l` prints 5 (up from 4) and `wc -w < kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md` is under 600.
-5. Split `kit/plugins/content-tools/skills/artifact-to-post/SKILL.md` into a core plus `kit/plugins/content-tools/references/source-resolution.md` and `references/post-assembly.md` at the plugin level beside the existing `content-config.md` and `mdx-safety.md`, keeping the Phase 2 scrub gate and its `write nothing and end the turn` language in the core, then update `tests/plugins/test-artifact-to-post.sh` so the config-key, literal, and ladder assertions read whichever file now holds them. Why: this plugin already resolves references as `$SKILL_DIR/../../references/`, and a second per-skill dir would give one plugin two conventions. Verify: `bash tests/plugins/test-artifact-to-post.sh` exits 0 and the core is under 600 words.
-6. Split `kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md` into a core plus `references/diff-sources.md`, `references/diff-page.md`, and `references/diff-publishing.md` at the plugin level, keeping the Step 2 scrub gate, the Step 5 rendered-page rescan, and every `## Step N — ` heading in the core. Why: the gate is what stands between a diff and an irreversible external publish, and `test-generator-skills-verify-output.sh` matches the `## Step N — Publish` heading in this file. Verify: `grep -c 'security-scrub' kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md` is at least 2 and the core is under 600 words.
-7. Split `kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` into a core plus `references/prompt-resolution.md`, `references/prompt-page.md`, and `references/prompt-publishing.md`, keeping the Step 4 scrub gate and the never-publish-an-empty-gallery stop in the core, then update `tests/plugins/test-artifact-tools.sh` so each moved literal is asserted against the reference that now holds it while the scrub-before-publish ordering check stays anchored on both cores. Why: that ordering check is the only thing proving content cannot ship unscanned, and it is meaningless if it starts reading a reference file the model may never load. Verify: `bash tests/plugins/test-artifact-tools.sh` exits 0 and both artifact-tools cores are under 600 words.
-8. Write `tests/plugins/test-remaining-skill-splits.sh` asserting all four objective conditions for the six targets, and wire it into `.github/workflows/check-plugin-versions.yml` as a named step after the existing `test-merge-gallery-index.sh` step. Why: without CI wiring the guarantee decays on the next edit, and this repo has no test runner that would pick the file up on its own. Verify: `bash tests/plugins/test-remaining-skill-splits.sh` exits 0 and `grep -c test-remaining-skill-splits .github/workflows/check-plugin-versions.yml` returns 1.
-9. Bump `skill-reviewer` to 2.3.0, `memory-tools` to 4.1.0, `code-testing-agent` to 3.5.0, `content-tools` to 1.1.0, and `artifact-tools` to 1.8.0 in `.claude-plugin/marketplace.json`, add a matching CHANGELOG entry to each plugin (artifact-tools using the bracketed `## [1.8.0] - 2026-07-27` heading its own test parses), and add no `version` key to any `plugin.json`. Why: any edit under `kit/plugins/<name>/` requires a bump higher than main, and artifact-tools' test fails if its marketplace version and newest CHANGELOG heading disagree. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and `bash tests/plugins/test-artifact-tools.sh` exits 0.
+1. [x] Record a pre-split baseline into the scratchpad: `for f in <the six SKILL.md paths>; do echo "$(wc -w < $f) $f"; done` plus `git show origin/main:<path> | sed -n '1,6p'` for each, capturing every `description:` line verbatim. Why: the split is only correct if word counts fall and descriptions do not move, and neither claim is checkable later without the before-state. Verify: the scratchpad file lists six word counts summing to 10,545 and six `description:` lines.
+2. [x] Split `kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` into a core plus `references/description-rules.md`, `references/invocation-control.md`, `references/measurement.md`, and `references/budget-advisory.md`, linking each from the step that needs it and leaving `description:`, `allowed-tools:`, and `disable-model-invocation: true` untouched. Why: at 3,153 words it is the single largest monolithic skill in the repo, and it is the rubric every other skill is judged against — it cannot keep violating its own progressive-disclosure advice. Verify: `wc -w < kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` is under 600 and `git diff origin/main -- kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md | grep '^[-+]description:'` prints nothing.
+3. [x] Split `kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md` into a core plus `references/rule-modes.md`, `references/rule-file-format.md`, and `references/write-verification.md`, keeping the "run this after every write, STOP on non-zero" rule and the pre-write gate sentence in the core, then update `tests/plugins/test-memory-doctor-guard.sh` to extract the parse check and the bash commands from the core *and* its `references/*.md`, and repoint the `path-rules-advisor` wiring regex in `tests/plugins/test-generator-skills-verify-output.sh` at the reference link. Why: two tests execute code lifted straight out of this body, so moving it without moving their extraction turns a passing safety guard into a silent no-op. Verify: `bash tests/plugins/test-memory-doctor-guard.sh` and `bash tests/plugins/test-generator-skills-verify-output.sh` both exit 0, and the core is under 600 words.
+4. [x] Split `kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md` into a core plus `references/fix-loop.md` and `references/handoff.md`, matching the per-skill `references/` layout its four siblings (`code-testing-agent`, `reviewing-tests`, `running-tests`, `tdd-loop`) already use. Why: `tdd-fix` is the only skill in its plugin without a `references/` dir, so this is the one split that costs nothing in convention design. Verify: `ls -d kit/plugins/code-testing-agent/skills/*/references | wc -l` prints 5 (up from 4) and `wc -w < kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md` is under 600.
+5. [x] Split `kit/plugins/content-tools/skills/artifact-to-post/SKILL.md` into a core plus `kit/plugins/content-tools/references/source-resolution.md` and `references/post-assembly.md` at the plugin level beside the existing `content-config.md` and `mdx-safety.md`, keeping the Phase 2 scrub gate and its `write nothing and end the turn` language in the core, then update `tests/plugins/test-artifact-to-post.sh` so the config-key, literal, and ladder assertions read whichever file now holds them. Why: this plugin already resolves references as `$SKILL_DIR/../../references/`, and a second per-skill dir would give one plugin two conventions. Verify: `bash tests/plugins/test-artifact-to-post.sh` exits 0 and the core is under 600 words.
+6. [x] Split `kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md` into a core plus `references/diff-sources.md`, `references/diff-page.md`, and `references/diff-publishing.md` at the plugin level, keeping the Step 2 scrub gate, the Step 5 rendered-page rescan, and every `## Step N — ` heading in the core. Why: the gate is what stands between a diff and an irreversible external publish, and `test-generator-skills-verify-output.sh` matches the `## Step N — Publish` heading in this file. Verify: `grep -c 'security-scrub' kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md` is at least 2 and the core is under 600 words.
+7. [x] Split `kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` into a core plus `references/prompt-resolution.md`, `references/prompt-page.md`, and `references/prompt-publishing.md`, keeping the Step 4 scrub gate and the never-publish-an-empty-gallery stop in the core, then update `tests/plugins/test-artifact-tools.sh` so each moved literal is asserted against the reference that now holds it while the scrub-before-publish ordering check stays anchored on both cores. Why: that ordering check is the only thing proving content cannot ship unscanned, and it is meaningless if it starts reading a reference file the model may never load. Verify: `bash tests/plugins/test-artifact-tools.sh` exits 0 and both artifact-tools cores are under 600 words.
+8. [x] Write `tests/plugins/test-remaining-skill-splits.sh` asserting all four objective conditions for the six targets, and wire it into `.github/workflows/check-plugin-versions.yml` as a named step after the existing `test-merge-gallery-index.sh` step. Why: without CI wiring the guarantee decays on the next edit, and this repo has no test runner that would pick the file up on its own. Verify: `bash tests/plugins/test-remaining-skill-splits.sh` exits 0 and `grep -c test-remaining-skill-splits .github/workflows/check-plugin-versions.yml` returns 1.
+9. [x] Bump `skill-reviewer` to 2.3.0, `memory-tools` to 4.1.0, `code-testing-agent` to 3.5.0, `content-tools` to 1.1.0, and `artifact-tools` to 1.8.0 in `.claude-plugin/marketplace.json`, add a matching CHANGELOG entry to each plugin (artifact-tools using the bracketed `## [1.8.0] - 2026-07-27` heading its own test parses), and add no `version` key to any `plugin.json`. Why: any edit under `kit/plugins/<name>/` requires a bump higher than main, and artifact-tools' test fails if its marketplace version and newest CHANGELOG heading disagree. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and `bash tests/plugins/test-artifact-tools.sh` exits 0.
 
 ## Tests
 
@@ -94,16 +94,16 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] `wc -w` on each of the six target SKILL.md files returns under 600, against a pre-split total of 10,545 words
-- [ ] 17 new reference files exist, placed per-skill under `skill-reviewer`, `memory-tools`, and `code-testing-agent`, and at plugin level under `artifact-tools` and `content-tools`
-- [ ] `bash tests/plugins/test-remaining-skill-splits.sh` exits 0
-- [ ] Every `references/` path named in a split core resolves to an existing file, and no reference file is orphaned from every core
-- [ ] `grep -n 'security-scrub' kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` shows the gate in both cores, ahead of the `select:Artifact` line in each
-- [ ] `git diff origin/main -- '*/SKILL.md' | grep '^[-+]description:'` prints nothing
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with skill-reviewer 2.3.0, memory-tools 4.1.0, code-testing-agent 3.5.0, content-tools 1.1.0, and artifact-tools 1.8.0
-- [ ] Each of the five touched plugins has a CHANGELOG entry naming its new version, and no `plugin.json` gained a `version` key
-- [ ] `bash tests/plugins/test-artifact-tools.sh`, `bash tests/plugins/test-artifact-to-post.sh`, `bash tests/plugins/test-memory-doctor-guard.sh`, `bash tests/plugins/test-generator-skills-verify-output.sh`, and `bash tests/plugins/test-description-budget.sh` all exit 0
-- [ ] `.github/workflows/check-plugin-versions.yml` contains a step running `tests/plugins/test-remaining-skill-splits.sh`
+- [x] `wc -w` on each of the six target SKILL.md files returns under 600, against a pre-split total of 10,545 words — measured 10,451 by `wc -w` against `origin/main` (3,058 + 1,831 + 1,489 + 1,519 + 1,367 + 1,187); the plan's 10,545 came from a different counter. Post-split total is 3,431: 573 / 594 / 582 / 513 / 581 / 588
+- [x] 17 new reference files exist, placed per-skill under `skill-reviewer`, `memory-tools`, and `code-testing-agent`, and at plugin level under `artifact-tools` and `content-tools`
+- [x] `bash tests/plugins/test-remaining-skill-splits.sh` exits 0
+- [x] Every `references/` path named in a split core resolves to an existing file, and no reference file is orphaned from every core
+- [x] `grep -n 'security-scrub' kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` shows the gate in both cores, ahead of the `select:Artifact` line in each
+- [x] `git diff origin/main -- '*/SKILL.md' | grep '^[-+]description:'` prints nothing
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with skill-reviewer 2.3.0, memory-tools 4.1.0, code-testing-agent 3.5.0, content-tools 1.1.0, and artifact-tools **1.9.0** — `main` already ships artifact-tools 1.8.0, so the planned 1.8.0 could not clear the version guard; the next minor is 1.9.0, and its CHANGELOG heading is `## [1.9.0] - 2026-07-29`
+- [x] Each of the five touched plugins has a CHANGELOG entry naming its new version, and no `plugin.json` gained a `version` key
+- [x] `bash tests/plugins/test-artifact-tools.sh`, `bash tests/plugins/test-artifact-to-post.sh`, `bash tests/plugins/test-memory-doctor-guard.sh`, `bash tests/plugins/test-generator-skills-verify-output.sh`, and `bash tests/plugins/test-description-budget.sh` all exit 0
+- [x] `.github/workflows/check-plugin-versions.yml` contains a step running `tests/plugins/test-remaining-skill-splits.sh`
 
 ## Verification
 
@@ -112,6 +112,54 @@ Run the full local gate in one pass: `bash tests/plugins/test-remaining-skill-sp
 Then prove the objective test is not a tautology, one break at a time, reverting after each. Delete the `security-scrub` paragraph from `kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` and confirm `bash tests/plugins/test-remaining-skill-splits.sh` exits 1 naming the missing gate; restore it. Change one `references/` link in the `optimizing-skill-frontmatter` core to a filename that does not exist and confirm the test exits 1 on the unresolved reference; restore it. Paste roughly 400 words of the moved rules back into that same core and confirm the test exits 1 on the word ceiling; restore it. A test that passes through all three breaks is measuring nothing.
 
 Behavioral verification is the part word counts cannot cover, and it is not optional. Load the five plugins locally (`claude --plugin-dir kit/plugins/skill-reviewer --plugin-dir kit/plugins/artifact-tools --plugin-dir kit/plugins/memory-tools --plugin-dir kit/plugins/content-tools --plugin-dir kit/plugins/code-testing-agent`) and actually invoke each split skill: run `optimizing-skill-frontmatter` against a throwaway SKILL.md fixture in a temp dir and confirm it still reaches the rewrite rules, the invocation-control table, and the budget advisory by reading the references; run `path-rules-advisor` in Mode A against a scratch repo and confirm it still asks before writing and still runs the parse check after; run `artifact-to-post` against `tests/fixtures/artifact-to-post/sample-artifact.html` and confirm it stops at the scrub gate rather than writing; run `diff-artifact` and `prompt-artifact` far enough to observe the scrub gate fire from the core before any publish; run `tdd-fix` against `tests/demo/` and confirm it still writes a failing test and enters the loop. Any skill that stalls, skips a step, or fails to pull a reference it needs is a failed split regardless of its word count — report it and fix it rather than recording the plan as complete. Finally, run `/skill-reviewer:reviewing-skills` against `optimizing-skill-frontmatter` itself: the rubric must pass its own audit, including the reference-depth-≤1 and progressive-disclosure criteria it defines, since it is now both the judge and the subject. Clean up every temp dir the verification creates.
+
+**Recorded outcome.** The full local gate passes: all six objective checks, the five
+named unit tests, `check-plugin-versions.mjs`, and the whole `tests/plugins/` suite
+(43 files, 0 failures). All four tautology breaks were exercised and each fails the
+objective test, restoring green after revert: the deleted `security-scrub` paragraph
+(`core gate lost in: prompt-artifact`), a `references/` link renamed to a
+non-existent file (both the unresolved pointer *and* the resulting orphan), ~400
+words of moved rules pasted back into the `optimizing-skill-frontmatter` core (965
+words, over the ceiling), and a reworded `description:` (`frontmatter drifted:
+tdd-fix:[description]`).
+
+Behavioural verification ran all six skills through `claude -p` with the plugins
+loaded, in throwaway temp dirs (since removed). Every skill reached and read the
+references it needed, and every gate held: `optimizing-skill-frontmatter` read all
+four references at the right steps and rewrote a fixture description to three-part
+form; `path-rules-advisor` read `rule-modes.md`, `rule-file-format.md`, and
+`write-verification.md`, and refused to write without explicit confirmation;
+`artifact-to-post` stopped dead at the Phase 2 gate and wrote nothing;
+`diff-artifact` ran the default-branch resolution out of `diff-sources.md` and then
+stopped at the Step 2 gate before building a page; `prompt-artifact` read all four
+references, ran the `PROMPTS_DIR` resolver, and stopped at the Step 4 gate with no
+page written and no URL recorded; `tdd-fix` wrote a failing test, confirmed it red,
+entered the loop, fixed the bug in one iteration, swept the suite green, and printed
+the summary block.
+
+Two verification limits worth recording rather than glossing. **First**, the live
+post-write parse check could not be observed end-to-end: this container blocks
+headless writes under `.claude/`, so `path-rules-advisor` never got to run the check
+on a file it had just written. The read half is confirmed (it loads
+`write-verification.md` *before* writing), and the executable half is covered better
+than a live run would cover it — `test-memory-doctor-guard.sh` extracts the real
+shipped block from the reference and runs it against ten fixtures including the
+malformed and empty-body negatives. **Second**, `tests/demo/calculator.sh` no longer
+carries the bug its own comment describes (`add()` is already `+`), so the first
+`tdd-fix` run correctly hit Step 2's passing-test hard stop; the loop was exercised
+on a temp copy with the operator flipped back.
+
+Two deviations from the plan as written, both to reach the plan's own outcome.
+**`test-generator-skills-verify-output.sh` was left unmodified.** The plan called for
+repointing its `path-rules-advisor` wiring regex at the reference; instead the core
+keeps the three `run [Verify the write](#verify-the-write)` call sites the existing
+regex already matches, so the wiring stays asserted with no test churn — and the new
+objective test separately proves the core's `references/write-verification.md`
+pointer resolves. **`test-proposal-prompt-pipeline.sh` needed a change the plan did
+not anticipate**: its check 8 greps `prompt-artifact`'s SKILL.md for the five library
+filter chips and the tolerant-frontmatter rule, both of which moved into
+`prompt-page.md` and `prompt-resolution.md`. It now reads the core plus those two, so
+it still fails if a chip is dropped.
 
 ## Next Steps
 

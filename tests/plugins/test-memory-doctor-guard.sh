@@ -10,7 +10,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DOCTOR="$ROOT/kit/plugins/memory-tools/skills/agentic-memory-management/SKILL.md"
 ADVISOR="$ROOT/kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md"
+# path-rules-advisor is split core-plus-references: the STOP contract and the
+# in-core link stay in SKILL.md, the executable check lives under references/.
+# Assertions about shipped *code* therefore scan the skill directory, while the
+# assertions about the *rule* stay anchored on the core (checks 1 and 1b below).
+ADVISOR_DIR="$(dirname "$ADVISOR")"
 FAILURES=0
+
+# Concatenate a skill's core with any reference files it ships, so a check that
+# asserts on shipped instructions does not go silently green when content moves
+# behind a link. Prints to stdout.
+skill_bundle() {
+  cat "$1"
+  local dir
+  dir="$(dirname "$1")/references"
+  [ -d "$dir" ] || return 0
+  for r in "$dir"/*.md; do [ -f "$r" ] && cat "$r"; done
+}
 
 pass() { echo "  PASS${1:+ ($1)}"; }
 fail() { echo "  FAIL: $1"; FAILURES=$((FAILURES + 1)); }
@@ -26,10 +42,22 @@ MISSING=""
 grep -qF 'Verify the write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:heading"
 grep -qF 'Verify the write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:heading"
 grep -qF 'git --no-pager diff -- "$TARGET"' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:diff"
-grep -qF 'git --no-pager diff -- "$TARGET"' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:diff"
+skill_bundle "$ADVISOR" | grep -qF 'git --no-pager diff -- "$TARGET"' || MISSING="$MISSING advisor:diff"
 grep -qF 'REPORT rather than write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:gate"
 grep -qF 'REPORT rather than write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:gate"
 if [ -z "$MISSING" ]; then pass; else fail "missing:$MISSING"; fi
+
+echo "1b. The advisor's STOP contract and reference wiring stay in the core..."
+# The whole point of leaving the check behind a link is that the *rule* is still
+# unconditionally loaded. So the core — not a reference — must carry the
+# non-zero-exit STOP, the pre-write gate, and a resolvable pointer at the file
+# holding the executable check.
+MISSING=""
+grep -qF '**STOP**' "$ADVISOR" || MISSING="$MISSING core:stop"
+grep -qF 'REPORT rather than write' "$ADVISOR" || MISSING="$MISSING core:gate"
+grep -qF 'references/write-verification.md' "$ADVISOR" || MISSING="$MISSING core:pointer"
+[ -f "$ADVISOR_DIR/references/write-verification.md" ] || MISSING="$MISSING reference:missing"
+if [ -z "$MISSING" ]; then pass; else fail "advisor core lost:$MISSING"; fi
 
 echo "2. Declared Bash patterns actually cover the commands the guard runs..."
 # Permission patterns are prefix matches, so declaring Bash(git diff:*) while the
@@ -40,7 +68,7 @@ for f in "$DOCTOR" "$ADVISOR"; do
   TOOLS=$(grep -m1 '^allowed-tools:' "$f")
   # Commands are extracted from the shipped bash block, not hardcoded here, so a
   # third command added to the guard is covered automatically.
-  CMDS=$(awk '/^```bash$/,/^```$/' "$f" \
+  CMDS=$(skill_bundle "$f" | awk '/^```bash$/,/^```$/' \
     | grep -oE '^[[:space:]]*(git|python3|node|jq|sed|awk)[^|;&]*' \
     | sed 's/^[[:space:]]*//' | sort -u)
   if [ "$(printf '%s' "$CMDS" | grep -c .)" -lt 2 ]; then
@@ -68,7 +96,8 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 extract_check() {
-  awk '/^python3 - "\$TARGET" <<'"'"'EOF'"'"'$/ {grab=1; next} grab && /^EOF$/ {exit} grab {print}' "$1"
+  skill_bundle "$1" \
+    | awk '/^python3 - "\$TARGET" <<'"'"'EOF'"'"'$/ {grab=1; next} grab && /^EOF$/ {exit} grab {print}'
 }
 
 extract_check "$DOCTOR" > "$TMP/check.py"
@@ -165,7 +194,7 @@ if python3 "$TMP/check.py" "$TMP/nofm.md" >/dev/null 2>&1; then pass; else fail 
 
 echo
 if [ "$FAILURES" -eq 0 ]; then
-  echo "PASS: memory-tools write guard (10 checks)"
+  echo "PASS: memory-tools write guard (11 checks)"
 else
   echo "FAIL: $FAILURES check(s) failed"
   exit 1

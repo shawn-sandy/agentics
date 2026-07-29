@@ -23,6 +23,13 @@ BP="$BP_DIR/SKILL.md"
 SHAPE="$BP_DIR/references/artifact-shape.md"
 BUILD="$PA/skills/build/SKILL.md"
 GALLERY="$ROOT/kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md"
+# prompt-artifact is split core-plus-references: the library gallery's card and
+# filter rules live in references/prompt-page.md, the tolerant-frontmatter rule in
+# references/prompt-resolution.md. Check 8 asserts on what the skill ships, so it
+# reads the core plus those two — not the core alone, which would go green on a
+# gallery whose fifth chip was quietly dropped from the reference.
+GALLERY_REFS="$ROOT/kit/plugins/artifact-tools/references/prompt-page.md \
+$ROOT/kit/plugins/artifact-tools/references/prompt-resolution.md"
 FAILURES=0
 
 # These files are hard-wrapped prose; flatten before asserting on a phrase.
@@ -122,7 +129,7 @@ done
 [ -z "$M" ] && echo "  PASS" || fail "tier behaviour:$M"
 
 echo "8. The gallery can see the new type: five filter chips and tolerant frontmatter..."
-GF="$(cat "$GALLERY" | flat)"
+GF="$(cat "$GALLERY" $GALLERY_REFS | flat)"
 M=""
 for t in task system creative analytical proposal; do
   printf '%s' "$GF" | grep -qF "\`$t\`" || M="$M chip:$t"
