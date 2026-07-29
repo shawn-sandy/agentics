@@ -1,6 +1,6 @@
 ---
 description: Convert a markdown file or plan to a rich, self-contained HTML document viewable in any browser
-allowed-tools: Agent, Read, Glob, Grep, Bash(open *), Bash(realpath *), Write, TodoWrite, AskUserQuestion, Skill
+allowed-tools: Agent, Read, Glob, Grep, Bash(open *), Bash(realpath *), Write, TodoWrite, AskUserQuestion
 argument-hint: "[file-path] [--theme=default|developer|document|minimal] [--mode=auto|plan|doc] [--background] [--no-open] [--async] [--list-themes]"
 ---
 
@@ -12,15 +12,19 @@ and a selectable color theme. All styles and scripts are inline — no external 
 
 ## Instructions
 
-Invoke the markdown-to-html skill, forwarding all arguments:
+`Read` `${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html/SKILL.md` and follow it end
+to end, treating `$ARGUMENTS` as its `$ARGUMENTS`. If that path does not resolve,
+`Glob("**/plan-agent/skills/markdown-to-html/SKILL.md")` and read the match.
 
-```
-Skill(skill: "plan-agent:markdown-to-html", args: "$ARGUMENTS")
-```
+Load the file by path — do **not** call
+`Skill(skill: "plan-agent:markdown-to-html")`. This command shadows the skill of
+that name, so the call would return this file again and the workflow would never
+load. `Skill` is not in `allowed-tools`: the skill body's own `--async` dispatch
+runs the background conversion through `Agent` (already listed) plus a `Read` by
+path, and mentions `Skill(...)` only inside a warning against calling it.
 
 The skill handles all steps — file resolution, mode detection, theme selection,
-HTML generation, and browser open offer. See `skills/markdown-to-html/SKILL.md`
-for the full step-by-step workflow.
+HTML generation, and browser open offer.
 
 ## When to use
 

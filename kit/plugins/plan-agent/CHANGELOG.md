@@ -1,5 +1,64 @@
 # Changelog
 
+## 6.0.2 — Convert `plan-status` and `markdown-to-html`, closing 6.0.1's gaps (2026-07-29)
+
+### Fixed
+
+- **`plan-status` converted to the same by-path shape as `deep-grill` and
+  `documenting-plans` in 6.0.1.** It carried the identical shadowed
+  `Skill(skill: "plan-agent:plan-status")` self-delegation and was tracked
+  separately in that release rather than fixed. It now `Read`s
+  `${CLAUDE_PLUGIN_ROOT}/skills/plan-status/SKILL.md` by path, with the same
+  `Glob` fallback and inline shadowing note, worded to match its two siblings.
+  Its stale `argument-hint` (advertising only `[plan-file-path]` while the
+  skill accepts a directory, `--all`, and `--force`) is corrected in the same
+  pass.
+
+  **This closes 6.0.1's "Known limitation."** `documenting-plans` Step 2 asks
+  for `plan-agent:plan-status` through the `Skill` tool, which the unconverted
+  command shadowed — the call returned the wrapper's own stub rather than the
+  skill. Now that the wrapper's own text redirects to a path `Read`, any
+  caller reaching it through `Skill()` — a user, another skill, a background
+  agent — follows that redirect and lands on the real workflow. Fixing the
+  wrapper fixed every caller of it at once.
+
+- **`markdown-to-html` was never touched in 6.0.1** and carried the same
+  self-delegating `Skill(skill: "plan-agent:markdown-to-html")` shape as the
+  other three. It now `Read`s its skill file by path; `allowed-tools` drops
+  `Skill` (see Changed below) and keeps `Agent`, which the `--async` dispatch
+  already used.
+
+- **`markdown-to-html`'s `--async` dispatch had two independent bugs**, not
+  one: it handed its background subagent the same shadowed `Skill()` call, and
+  separately told that subagent to resume the workflow partway through, at
+  Step 4. Both are fixed — the subagent now `Read`s the skill file and starts
+  at Step 1. Starting late skipped Step 2, the only step that parses the
+  source's frontmatter, sections, and steps content, so a fresh subagent
+  (which shares none of the parent run's state) would have reached HTML
+  synthesis with nothing parsed to render. Caught in review against the first
+  draft of this fix, which corrected the shadowing but not the truncation.
+
+### Changed
+
+- **`allowed-tools` on both wrappers now mirrors the skill each one loads**,
+  matching 6.0.1's rule for the other two. `documenting-plans` keeps `Skill`
+  because its body genuinely invokes `plan-agent:plan-status` through it;
+  `markdown-to-html` does **not** get `Skill` — its skill's only mention of the
+  tool is inside the warning against calling it, never an actual invocation.
+
+- **`tests/plugins/test-command-delegation.sh`**: `plan-status` moves from the
+  `UNCONVERTED` list into `DELEGATORS` (bumping `MAX_LINES` to 16 to fit its
+  longer `argument-hint`), gaining the same by-path, no-self-call, and
+  allowed-tools-coverage checks as its two siblings. The allowed-tools
+  extractor now handles a value wrapped onto its own indented line (the form
+  `write-prompt.md` and `plan-status.md` both use), which a single-line-only
+  regex would have silently skipped. Two new checks cover `markdown-to-html`
+  specifically, since its real usage docs keep it out of `DELEGATORS`: the
+  `--async` subagent prompt must say "Step 1" and must not say "Step 4" or
+  hand over a `Skill()` call, and the command's `allowed-tools` must not grant
+  `Skill` when the skill never uses it. All new assertions were verified to
+  fail against the bugs they guard before passing on the fix.
+
 ## 6.0.1 — `/deep-grill` and `/documenting-plans` actually load their skills (2026-07-29)
 
 ### Fixed
