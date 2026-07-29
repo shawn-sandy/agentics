@@ -153,13 +153,25 @@ else
 fi
 
 echo "8. The documented drift-detection command actually discriminates..."
-# Executes the snippet Phase 7 tells the model to run. Three cases: an untouched
-# file must hash equal (no confirmation), a hand-edited body must differ (fires),
-# and a frontmatter-only change must NOT fire — the rule hashes the body, and a
+# Proves the hash rule discriminates. Three cases: an untouched file must hash
+# equal (no confirmation), a hand-edited body must differ (fires), and a
+# frontmatter-only change must NOT fire — the rule hashes the body, and a
 # `modified:` bump is written by the skill itself on every round.
+#
+# The hash program below is a FIXED LITERAL, never `eval`/`bash -c` on text read
+# out of SKILL.md: sourcing a shell command from a Markdown file would make
+# editing documentation a way to run arbitrary code in anyone's test run. The
+# link to the docs is kept by string-comparing the documented snippet against
+# this literal, so the two cannot drift apart without failing.
+EXPECTED_BODYHASH="awk 'f{print} /^---\$/{n++; if(n==2) f=1}' \"\$FILE\" | shasum -a 256 | cut -d' ' -f1"
 BODYHASH="$(sed -n "/^# body hash/,/^\`\`\`$/p" "$SKILL" | sed -n '2p')"
 if [ -z "$BODYHASH" ]; then
   echo "  FAIL: the body-hash command block is missing from Phase 7"
+  FAILURES=$((FAILURES + 1))
+elif [ "$BODYHASH" != "$EXPECTED_BODYHASH" ]; then
+  echo "  FAIL: Phase 7's documented body-hash command drifted from the one this test verifies"
+  echo "    documented: $BODYHASH"
+  echo "    verified  : $EXPECTED_BODYHASH"
   FAILURES=$((FAILURES + 1))
 else
   TMPD="$(mktemp -d)"
@@ -180,7 +192,10 @@ generated-sha: pending
 Two token formats, both hand-edited.
 </context>
 MDEOF
-  hash_of() { FILE="$1" bash -c "$BODYHASH"; }
+  # Fixed literal, kept in step with the docs by the comparison above.
+  hash_of() {
+    awk 'f{print} /^---$/{n++; if(n==2) f=1}' "$1" | shasum -a 256 | cut -d' ' -f1
+  }
   H1="$(hash_of "$FILE")"
   H_AGAIN="$(hash_of "$FILE")"
   # frontmatter-only churn: the skill rewrites `modified:` itself every round

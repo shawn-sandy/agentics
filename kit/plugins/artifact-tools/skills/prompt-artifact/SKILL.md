@@ -42,8 +42,12 @@ prompts live and this one publishes a stale or empty set. First match wins:
 ```bash
 PROMPTS_DIR=$(python3 - <<'EOF'
 import json, os, subprocess, sys
-# 1. promptsDirectory from settings: project, then user-global
-for path in (os.path.join(os.getcwd(), '.claude', 'settings.json'),
+# 1. promptsDirectory via Claude settings precedence: project-local, project,
+#    then user-global. All three files, in this order — dropping the
+#    settings.local.json read is how this skill starts publishing from a
+#    different directory than write-prompt saves to.
+for path in (os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+             os.path.join(os.getcwd(), '.claude', 'settings.json'),
              os.path.join(os.path.expanduser('~'), '.claude', 'settings.json')):
     try:
         v = json.load(open(path)).get('promptsDirectory', '').strip()
@@ -131,7 +135,7 @@ Both modes:
   |-------|----------|
   | H1 title | `<title>`, card heading |
   | `intent` | card body text |
-  | `techniques`, `created` | metadata row |
+  | `techniques`, `created`, `modified` | metadata row |
   | `type` | chip text **and** `data-type="…"` |
   | prompt body | `<pre>` |
 
@@ -148,8 +152,12 @@ Both modes:
 button.
 
 **Library mode** renders one card per prompt — title, `type` chip, `intent`,
-`created` — with the full body expandable in place (`<details>` needs no JS) and
-its own copy button per card. Filter chips by `type` (`task`, `system`,
+`created`, and `modified` when the frontmatter carries it (omit the field
+entirely when absent, rather than rendering an empty slot). A `proposal` prompt
+is a living document rewritten in place, so `created` alone makes an actively
+deepening proposal look untouched since the day it was started. Each card
+carries the full body expandable in place (`<details>` needs no JS) and its own
+copy button. Filter chips by `type` (`task`, `system`,
 `creative`, `analytical`, `proposal`) hide and show cards via inlined JS; carry
 the value on `data-type` and follow `plans-library`'s card and filter idiom
 rather than inventing a second one. A type with no saved prompts still gets its

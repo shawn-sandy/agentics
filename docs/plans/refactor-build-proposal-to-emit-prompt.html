@@ -1457,7 +1457,7 @@ img, video { max-width: 100%; height: auto; }
           <li><code>kit/plugins/artifact-tools/README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">prompt-artifact type list</span></li>
           <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">6.0.0 entry</span></li>
           <li><code>kit/plugins/artifact-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">fifth-chip entry</span></li>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 5.0.0 to 6.0.0, artifact-tools patch bump</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 5.0.0 to 6.0.0, artifact-tools minor bump</span></li>
           <li><code>CLAUDE.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent and artifact-tools table rows</span></li>
           <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">build-proposal artifact path</span></li>
         </ul>
@@ -1665,7 +1665,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update the documentation and bump versions — `kit/plugins/plan-agent/README.md` (the build-proposal and write-prompt sections, and add the missing `write-prompt/` entry to the Plugin Structure tree), `kit/plugins/artifact-tools/README.md`, `CLAUDE.md:38,81`, root `README.md:451,470,473`, both CHANGELOGs, and `.claude-plugin/marketplace.json` moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools patch bump.</span>
+                <span class="step-chip-text">Update the documentation and bump versions — `kit/plugins/plan-agent/README.md` (the build-proposal and write-prompt sections, and add the missing `write-prompt/` entry to the Plugin Structure tree), `kit/plugins/artifact-tools/README.md`, `CLAUDE.md:38,81`, root `README.md:451,470,473`, both CHANGELOGs, and `.claude-plugin/marketplace.json` moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools minor bump.</span>
               </div>
               <div class="step-why">the change removes an artifact contract, which is a major bump under the repo&#39;s semver rules, and `test-build-proposal.sh` check 12 asserts the marketplace version rises above `origin/main`.</div>
               <details class="step-verify-toggle">

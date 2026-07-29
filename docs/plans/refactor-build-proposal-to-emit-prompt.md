@@ -43,7 +43,7 @@ See `docs/proposals/replace-proposal-doc-with-prompt.md` for the full decision r
 - kit/plugins/artifact-tools/README.md (modified) — prompt-artifact type list
 - kit/plugins/plan-agent/CHANGELOG.md (modified) — 6.0.0 entry
 - kit/plugins/artifact-tools/CHANGELOG.md (modified) — fifth-chip entry
-- .claude-plugin/marketplace.json (modified) — plan-agent 5.0.0 to 6.0.0, artifact-tools patch bump
+- .claude-plugin/marketplace.json (modified) — plan-agent 5.0.0 to 6.0.0, artifact-tools minor bump
 - CLAUDE.md (modified) — plan-agent and artifact-tools table rows
 - README.md (modified) — build-proposal artifact path
 
@@ -71,7 +71,7 @@ See `docs/proposals/replace-proposal-doc-with-prompt.md` for the full decision r
 
 11. [x] Update the three test files — rewrite `tests/plugins/test-build-proposal.sh` checks 10, 11, 14, and 15 to the dual-write contract, update `tests/plugins/test-build-skill.sh`'s Step 1b assertions at L178-187, and add `tests/plugins/test-write-prompt-proposal-type.sh` plus the objective test `tests/plugins/test-proposal-prompt-pipeline.sh`. Why: `test-build-skill.sh` runs in CI via `check-plugin-versions.yml:30` and `publish-dist.yml:44`, so leaving its assertions stale turns the release red. Verify: `bash tests/plugins/test-build-skill.sh` and `bash tests/plugins/test-proposal-prompt-pipeline.sh` both exit 0.
 
-12. [x] Update the documentation and bump versions — `kit/plugins/plan-agent/README.md` (the build-proposal and write-prompt sections, and add the missing `write-prompt/` entry to the Plugin Structure tree), `kit/plugins/artifact-tools/README.md`, `CLAUDE.md:38,81`, root `README.md:451,470,473`, both CHANGELOGs, and `.claude-plugin/marketplace.json` moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools patch bump. Why: the change removes an artifact contract, which is a major bump under the repo's semver rules, and `test-build-proposal.sh` check 12 asserts the marketplace version rises above `origin/main`. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and no README or CLAUDE.md line still describes `docs/proposals/<slug>.md` as the sole deliverable.
+12. [x] Update the documentation and bump versions — `kit/plugins/plan-agent/README.md` (the build-proposal and write-prompt sections, and add the missing `write-prompt/` entry to the Plugin Structure tree), `kit/plugins/artifact-tools/README.md`, `CLAUDE.md:38,81`, root `README.md:451,470,473`, both CHANGELOGs, and `.claude-plugin/marketplace.json` moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools minor bump. Why: the change removes an artifact contract, which is a major bump under the repo's semver rules, and `test-build-proposal.sh` check 12 asserts the marketplace version rises above `origin/main`. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and no README or CLAUDE.md line still describes `docs/proposals/<slug>.md` as the sole deliverable.
 
 ## Acceptance Criteria
 

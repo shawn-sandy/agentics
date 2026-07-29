@@ -268,10 +268,14 @@ path so the two agree by construction rather than by coincidence.
 
 **Resolve the output directory** (first match wins — `--out` skips this):
 
-1. Read `promptsDirectory` from `.claude/settings.json` (check project-level
-   `.claude/settings.json` first, then `~/.claude/settings.json`). If the key is
-   present and non-empty, strip any trailing slash and use that path as the
-   output directory.
+1. Read `promptsDirectory` using Claude Code's settings precedence — project-local
+   `.claude/settings.local.json`, then project `.claude/settings.json`, then
+   global `~/.claude/settings.json`. If the key is present and non-empty, strip
+   any trailing slash and use that path as the output directory. All three
+   readers of this key — this skill, `plan-agent:build-proposal`, and
+   `artifact-tools:prompt-artifact` — must walk the same three files in the same
+   order, or a prompt saved here becomes invisible to the gallery that publishes
+   it.
 2. Otherwise, anchor to the repo root: run `git rev-parse --show-toplevel` and
    join the result with `docs/prompts` (e.g. `$(git rev-parse --show-toplevel)/docs/prompts`).
    If `git rev-parse` fails (not a git repo), fall back to `docs/prompts` relative to `$PWD`.
