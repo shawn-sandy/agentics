@@ -10,6 +10,6 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/deep-grill/SKILL.md` and follow it exactly,
 treating `$ARGUMENTS` as its input. If that path does not resolve, `Glob` for
 `**/plan-agent/skills/deep-grill/SKILL.md` and read the match instead.
 
-Do **not** reach for the `Skill` tool here. A command shadows a skill of the
-same name, so asking it for `plan-agent:deep-grill` returns this file — the
-skill body never loads and the workflow silently no-ops.
+Never ask the `Skill` tool for `plan-agent:deep-grill` — a command shadows a
+skill of the same name, so that call returns this file and the workflow
+no-ops. This workflow calls no other skill, so it needs no `Skill` tool at all.

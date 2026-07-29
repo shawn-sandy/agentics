@@ -1,5 +1,21 @@
 # Changelog
 
+## 6.0.3 — the `Skill`-tool ban in the two wrappers now forbids only the self-named call (2026-07-29)
+
+### Fixed
+
+- **`/documenting-plans` contradicted itself.** Its note said "do **not** reach
+  for the `Skill` tool here" without qualification, while its frontmatter
+  declared `Skill` and the skill it runs inline asks for
+  `plan-agent:plan-status` via that tool whenever a plan's status is not already
+  `completed`. 6.0.2 confirmed that dependency — "keeps `Skill` because its body
+  genuinely invokes `plan-agent:plan-status` through it" — but left the prose
+  ban standing. The blanket ban invited the model to skip the status branch
+  rather than error: a silent gap, not a crash. The note now forbids only the
+  self-named call and names `plan-agent:plan-status` as permitted.
+- **`/deep-grill` got the same rewording** for consistency. It was never a
+  defect there — that command declares no `Skill` tool and its skill calls none.
+
 ## 6.0.2 — Convert `plan-status` and `markdown-to-html`, closing 6.0.1's gaps (2026-07-29)
 
 ### Fixed
@@ -58,7 +74,6 @@
   hand over a `Skill()` call, and the command's `allowed-tools` must not grant
   `Skill` when the skill never uses it. All new assertions were verified to
   fail against the bugs they guard before passing on the fix.
-
 ## 6.0.1 — `/deep-grill` and `/documenting-plans` actually load their skills (2026-07-29)
 
 ### Fixed
