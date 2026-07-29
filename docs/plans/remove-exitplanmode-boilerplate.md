@@ -72,7 +72,8 @@ declaration — deleting it breaks the tool rather than saving context), 512 are
 CHANGELOG history, and 161 are the legitimate content above. The floor is 1,122
 before a single guard line exists. The budget now measures what it meant to
 measure — the bodies of `skills/*/SKILL.md`, `commands/*.md`, and `agents/*.md`,
-frontmatter excluded — where the sweep took 1,678 words down to 553.
+frontmatter excluded — where the sweep took 1,678 words down to 553, of which
+only 73 is prose other than the canonical guard itself.
 
 ## Files
 
@@ -118,7 +119,7 @@ Tier 1 — This plan changes application code
 ## Acceptance Criteria
 
 - [x] Zero files under `kit/plugins/` contain the long-form `ExitPlanMode` tutorial text — Check 1 of the objective test; CHANGELOG history is out of scope
-- [x] Total `ExitPlanMode` word count across `kit/plugins/` is under 600, down from 2,750 — **553**, measured over instruction-file bodies (see Context for why the plan's raw command has a 1,122-word floor); down from 1,678 in the same scope, and 2,750 → 1722 by the raw command
+- [x] Total `ExitPlanMode` word count across `kit/plugins/` is under 600, down from 2,750 — **73 words of non-guard prose** (budget 200), measured over instruction-file bodies (see Context for why the plan's raw command has a 1,122-word floor); down from 1,678 in the same scope, and 2,750 → 1722 by the raw command
 - [x] Every skill classified write-heavy in Step 1 contains the canonical guard line — all 40, Check 3
 - [x] Zero files classified read-only in Step 1 mention `ExitPlanMode` — all 3, Check 4
 - [x] The canonical wording is documented in `.claude/rules/plugin-patterns.md` — under `#### The plan-mode guard`, together with the fix to the rule that generated the duplication
@@ -145,7 +146,7 @@ confirm exit 1, and revert.
 
 ### Verification status — 2026-07-28
 
-**Passed — word count and version guard.** 553 words against a 600 budget
+**Passed — word count and version guard.** 73 words of non-guard prose against a 200 budget
 (scope corrected per the Context section; the raw command reads 2,750 → 1722).
 `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with eight
 plugins bumped.
@@ -159,9 +160,10 @@ reverted afterwards and the baseline re-confirmed green:
   → Check 1 fails, exit 1, quoting the line.
 
 That second mutation is why the test does not rest on the word budget alone: it
-moved the count only 553 → 563, well inside the 600 ceiling. A sum-based budget
-is a slow-creep backstop that trips after roughly ten files regress, not a
-detector. Checks 1 and 3 fail on the first file.
+moved a plain total only 553 → 563, well inside a 600 ceiling. The budget now
+measures non-guard prose only, so it neither drifts up when someone correctly
+guards a new workflow nor hides a reworded tutorial in the noise. Checks 1 and 3
+still fail on the first file.
 
 **Not run — the manual plan-mode behavioural test.** `EnterPlanMode` states it
 "REQUIRES user approval" and `ExitPlanMode` "requests user approval", so both
@@ -185,11 +187,28 @@ Then set `status: completed` and re-render.
 - Manual plan-mode behavioural test not run — EnterPlanMode requires user approval and ExitPlanMode requests it, so neither works in a non-interactive session. The guard's runtime behaviour is unverified; everything asserted about it is static. This is why status stays in-progress.
 - Fifty-two files became forty-three — nine of the 52 mention ExitPlanMode legitimately (five CHANGELOG histories, a README, a hooks.json matcher, a code-review lint rule, and the team-defaults copy of the global plan-mode rule). None was duplication.
 - Ten plugins became eight — code-review and team-defaults carry no boilerplate. Bumping them to reach ten would have been a fabricated change.
-- The under-600 word budget was rescoped, not relaxed — the plan's own command has a 1,122-word floor of frontmatter, changelog history, and legitimate content. Measured over instruction-file bodies, the sweep took 1,678 words to 553.
+- The under-600 word budget was rescoped, not relaxed — the plan's own command has a 1,122-word floor of frontmatter, changelog history, and legitimate content. Measured over instruction-file bodies, the sweep took 1,678 words to 553, only 73 of it non-guard prose.
 - Two existing tests had to be retargeted — test-build-skill.sh and test-setup-sites.sh both proved a guard existed by grepping for the tutorial wording, so removing it failed them. Both now assert the canonical line.
+- Two guards were mis-positioned and are now fixed — social-share wrote a temp file in Phase 2 but called the guard in Phase 4, and plan-review-agents ran background-flag detection before its guard. Both predate this plan; a guard after the mutation protects nothing.
+- Repo-wide guard coverage is out of scope and tracked as a follow-up — about 20 instruction files declare Write/Edit and have never carried a guard. Adding them is new behaviour across more plugins, not preservation of what existed.
 - A fourth check was added beyond the spec — read-only dispatchers must not carry a guard, which is the only thing stopping Step 4's deletions from being quietly undone.
 
 ## Next Steps
+
+- Guard the mutating workflows that never had one
+  This plan preserved every guard that existed; it did not add any. A repo-wide scan found roughly 20 instruction files that declare `Write`/`Edit` but carry no plan-mode guard, including `code-testing-agent/skills/tdd-fix`, both `settings-sync` skills, and several `plan-agent` commands and agents.
+  ```text
+  In the agentics repo, find every file under kit/plugins/ matching
+  skills/*/SKILL.md, commands/*.md, or agents/*.md that declares Write or Edit
+  in its allowed-tools/tools frontmatter but does not contain the canonical
+  plan-mode guard line documented in .claude/rules/plugin-patterns.md. For each,
+  read the body and decide whether it genuinely mutates the filesystem, git
+  state, or a remote. Add the canonical guard as the first body step to the ones
+  that do, add them to the WRITE_HEAVY manifest in
+  tests/plugins/test-exitplanmode-guard.sh, bump each touched plugin in
+  marketplace.json with a CHANGELOG entry, and report the ones you skipped with
+  the reason. Verify with bash tests/plugins/test-exitplanmode-guard.sh.
+  ```
 
 - Audit the remaining cross-plugin duplicated lines
   The same measurement that found this block also found a README boilerplate line repeated in ten plugins and a template-locating shell block repeated eleven times inside social-media-tools.

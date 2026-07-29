@@ -4,6 +4,8 @@
 
 - `plan-review-agents` replaces its `ExitPlanMode` preamble with the canonical
   one-line guard.
+- `plan-review-agents` guard moved to the first Step 0 action — it previously ran
+  background-flag detection first. Pre-existing; found in review of this change.
 - `product-plans-bg` drops the guard entirely — it only dispatches
   `agent-product-plans`, which reaches `plan-review-agents` and its guard.
   `ToolSearch` and `ExitPlanMode` are removed from its `allowed-tools`.

@@ -20,6 +20,8 @@ Route a natural-language share request to the right social media workflow.
 
 ---
 
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
 ## Phase 0 — Locate Plugin Assets
 
 Run silently:
@@ -144,8 +146,6 @@ For `share-project`, also include `--topic=<value>` from Phase 1:
 ---
 
 ## Phase 4 — Dispatch
-
-**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 Invoke the target skill directly:
 

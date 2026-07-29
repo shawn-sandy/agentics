@@ -9,6 +9,9 @@
   `share-project`, `share-react`, `share-scan`, `share-selection`,
   `share-session`, `share-video`, and `social-share` replace their four-line
   `ExitPlanMode` preamble with the canonical one-line guard.
+- **`social-share` guard moved ahead of Phase 0** — it wrote `~/.claude/tmp/social-share-selection.txt`
+  in Phase 2 but called `ExitPlanMode` only in Phase 4, so filesystem state could be
+  mutated inside plan mode. Pre-existing; found in review of this change.
 - **`digest` drops the guard entirely** — the command only invokes `share-scan`,
   which carries its own. `ToolSearch` and `ExitPlanMode` are removed from its
   `allowed-tools`.

@@ -16,7 +16,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PLUGINS="$ROOT/kit/plugins"
-WORD_BUDGET=600
+WORD_BUDGET=200
 FAILURES=0
 
 # The full canonical line, verbatim, as documented in
@@ -25,9 +25,16 @@ FAILURES=0
 # openings like "Before writing anything, call `ExitPlanMode` first — ...".
 GUARD='**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.'
 
-# Skills, commands, and agents that mutate the filesystem, git state, or a
-# remote. Hardcoded rather than derived: a list computed from "files that
-# contain the guard" would assert only that present files are present.
+# Skills, commands, and agents that carried a plan-mode guard before the
+# boilerplate sweep. Hardcoded rather than derived: a list computed from "files
+# that contain the guard" would assert only that present files are present.
+#
+# SCOPE: this manifest is a retention check, not a repo-wide coverage check.
+# Roughly 20 other instruction files declare Write/Edit and have never carried a
+# guard (`code-testing-agent/skills/tdd-fix`, `settings-sync/skills/*`, and
+# others). Guarding those is real work with its own blast radius, tracked as a
+# follow-up in docs/plans/remove-exitplanmode-boilerplate.md. Do not read a
+# green Check 3 as "every mutating workflow in this repo is guarded".
 WRITE_HEAVY=(
   artifact-tools/skills/diff-artifact/SKILL.md
   artifact-tools/skills/plan-artifact/SKILL.md
@@ -106,33 +113,38 @@ else
   echo "PASS: no file re-teaches the ToolSearch/deferred-tool mechanics."
 fi
 
-# --- Check 2: the guard prose stays small -----------------------------------
+# --- Check 2: no EXCESS prose around the guard ------------------------------
+# Counts words on ExitPlanMode lines that are NOT the canonical guard, so the
+# budget measures tutorial creep only. A plain total would grow by 12 words
+# every time someone correctly guards a new mutating workflow, and would fail
+# CI for doing the right thing once two or three were added.
+#
 # Scope is instruction-file bodies: skills, commands, and agents. Frontmatter
 # is excluded because `allowed-tools:` is the permission declaration, not
 # prose — deleting it breaks the tool rather than saving context. CHANGELOGs
 # are excluded as history.
 echo
-echo "-- Check 2: guard prose under $WORD_BUDGET words --"
+echo "-- Check 2: non-guard ExitPlanMode prose under $WORD_BUDGET words --"
 WORDS=$(find "$PLUGINS" -type f \
   \( -path '*/skills/*/SKILL.md' -o -path '*/commands/*.md' -o -path '*/agents/*.md' \) \
-  -exec awk '
+  -exec awk -v guard="$GUARD" '
     FNR == 1 { infm = ($0 == "---"); if (infm) next }
     infm && $0 == "---" { infm = 0; next }
-    !infm && /ExitPlanMode/ { n += NF }
+    !infm && /ExitPlanMode/ && index($0, guard) == 0 { n += NF }
     END { print n + 0 }
   ' {} \; | awk '{s += $1} END {print s + 0}')
 
 if [ "$WORDS" -ge "$WORD_BUDGET" ]; then
-  echo "FAIL: $WORDS words on ExitPlanMode lines, budget is $WORD_BUDGET."
+  echo "FAIL: $WORDS words of non-guard ExitPlanMode prose, budget is $WORD_BUDGET."
   echo "      The tutorial is creeping back in a reworded form."
   FAILURES=$((FAILURES + 1))
 else
-  echo "PASS: $WORDS words (budget $WORD_BUDGET)."
+  echo "PASS: $WORDS words of non-guard prose (budget $WORD_BUDGET)."
 fi
 
 # --- Check 3: every write-heavy skill still guards --------------------------
 echo
-echo "-- Check 3: guard present in all ${#WRITE_HEAVY[@]} write-heavy files --"
+echo "-- Check 3: guard retained in all ${#WRITE_HEAVY[@]} previously-guarded files --"
 MISSING=0
 for rel in "${WRITE_HEAVY[@]}"; do
   f="$PLUGINS/$rel"
@@ -149,7 +161,7 @@ if [ "$MISSING" -gt 0 ]; then
   echo "      Restore verbatim: $GUARD"
   FAILURES=$((FAILURES + 1))
 else
-  echo "PASS: all ${#WRITE_HEAVY[@]} write-heavy files carry the guard."
+  echo "PASS: all ${#WRITE_HEAVY[@]} previously-guarded files retain the guard."
 fi
 
 # --- Check 4: read-only dispatchers carry no guard --------------------------
@@ -163,6 +175,9 @@ for rel in "${READ_ONLY[@]}"; do
     EXTRA=$((EXTRA + 1))
   elif grep -q 'ExitPlanMode' "$f"; then
     echo "FAIL: $rel dispatches to a guarded skill and needs no guard of its own."
+    EXTRA=$((EXTRA + 1))
+  elif sed -n '1,25p' "$f" | grep -E '^allowed-tools:' | grep -qw 'ToolSearch'; then
+    echo "FAIL: $rel still declares ToolSearch, which it only needed for ExitPlanMode."
     EXTRA=$((EXTRA + 1))
   fi
 done
