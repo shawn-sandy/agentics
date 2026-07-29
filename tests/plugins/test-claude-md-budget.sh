@@ -25,13 +25,14 @@ if [ ! -f "$MARKETPLACE" ]; then
   exit 1
 fi
 
-# The plugin table under "## Reference Implementations", minus the |---|---|
-# separator. The header row is kept — it is well inside the row budget, and
-# dropping it would mean parsing position as well as shape.
+# The plugin rows of the table under "## Reference Implementations" — the
+# `| Plugin | Type |` header and the |---|---| separator are both dropped, so
+# the count below means plugins and the row budget is measured only against
+# rows a plugin author actually writes.
 TABLE_ROWS="$(awk '
   /^## Reference Implementations/ { in_section = 1; next }
   /^## / { in_section = 0 }
-  in_section && /^\|/ && !/^\|[[:space:]]*-+/ { print }
+  in_section && /^\|/ && !/^\|[[:space:]]*-+/ && !/^\|[[:space:]]*Plugin[[:space:]]*\|/ { print }
 ' "$CLAUDE_MD")"
 
 echo "1. CLAUDE.md is under $WORD_BUDGET words..."
