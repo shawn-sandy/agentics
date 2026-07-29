@@ -153,9 +153,16 @@ Now that theme is known, spawn a background agent and stop:
 - `subagent_type`: `"general-purpose"`
 - `run_in_background`: `true`
 - `description`: `"markdown-to-html background conversion"`
-- `prompt`: `"Invoke Skill(skill: \"plan-agent:markdown-to-html\", args:
-  \"/actual/path/to/file.md --theme=<theme> --no-open --background\") to convert
-  the file to HTML non-interactively."` — substitute real path and theme.
+- `prompt`: `"Read <this skill's own SKILL.md path> and follow it from Step 4
+  onward with arguments \"/actual/path/to/file.md --theme=<theme> --no-open
+  --background\" to convert the file to HTML non-interactively."` — substitute
+  the real skill path, file path, and theme.
+
+  Hand the subagent the **file path**, not
+  `Skill(skill: "plan-agent:markdown-to-html")`. The command of that name shadows
+  this skill, so a `Skill()` call returns `commands/markdown-to-html.md` rather
+  than this body — it only reaches the workflow because that wrapper redirects
+  to a path Read, which is an extra hop and a dependency on the wrapper's guard.
 
 Output: `"Background conversion started: /path/to/file.md (theme: <theme>)"` and stop.
 

@@ -28,16 +28,22 @@ failures = []
 
 # --- Check 1: the collapsed delegators ------------------------------------
 #
-# Each entry maps a command file to the skill it must delegate to. Listed
+# Each entry maps a command file to the skill whose body it must load. Listed
 # explicitly rather than globbed: markdown-to-html is a real multi-step command
 # and plan-to-html is a deprecation shim that forwards to a DIFFERENTLY-named
 # skill with an injected flag, so neither fits this shape. Add a command here
 # when it is collapsed to a delegator.
-MAX_LINES = 15
+#
+# The delegation is a `Read` of the skill file BY PATH, never
+# `Skill(skill: "<plugin>:<same-name>")`. A command shadows a skill of the same
+# name in the Skill namespace, so that call returns the command file itself and
+# the skill body never loads — measured: 0 section headings that way, all of
+# them when read by path. Check 1b below enforces the same rule repo-wide.
+MAX_LINES = 20
 DELEGATORS = {
-    "plan-agent/commands/deep-grill.md": "plan-agent:deep-grill",
-    "plan-agent/commands/plan-status.md": "plan-agent:plan-status",
-    "plan-agent/commands/documenting-plans.md": "plan-agent:documenting-plans",
+    "plan-agent/commands/deep-grill.md": "deep-grill",
+    "plan-agent/commands/plan-status.md": "plan-status",
+    "plan-agent/commands/documenting-plans.md": "documenting-plans",
 }
 
 for rel, skill in DELEGATORS.items():
@@ -55,16 +61,48 @@ for rel, skill in DELEGATORS.items():
             f"skill's workflow will drift from it"
         )
 
-    calls = re.findall(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']", text)
-    if len(calls) != 1:
-        failures.append(f"{rel}: found {len(calls)} `Skill(` call(s), expected exactly 1")
-    elif calls[0] != skill:
-        failures.append(f"{rel}: delegates to `{calls[0]}`, expected `{skill}`")
+    if f"skills/{skill}/SKILL.md" not in text:
+        failures.append(
+            f"{rel}: never names `skills/{skill}/SKILL.md` — a delegator that does "
+            f"not load its skill body by path loads nothing at all"
+        )
 
     # Frontmatter fields the collapse had to preserve.
     for key in ("description", "argument-hint"):
         if not re.search(rf"^{key}:\s*\S", text, re.M):
             failures.append(f"{rel}: lost its `{key}:` frontmatter in the collapse")
+
+# --- Check 1b: no command self-delegates ----------------------------------
+#
+# Repo-wide, not just the three above: any commands/<name>.md that instructs
+# Skill(skill: "<plugin>:<name>") is instructing a call to itself. A literal
+# mention inside an explicit "do not call" warning is the documented fix, not
+# the defect, so a self-reference is allowed only when negated just before it.
+FLAT = re.compile(r"\s+")
+SELF_CALL = re.compile(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']")
+
+for plugin in sorted(os.listdir(plugin_dir)):
+    cdir = os.path.join(plugin_dir, plugin, "commands")
+    if not os.path.isdir(cdir):
+        continue
+    for fname in sorted(os.listdir(cdir)):
+        if not fname.endswith(".md"):
+            continue
+        rel = os.path.join(plugin, "commands", fname)
+        with open(os.path.join(cdir, fname), encoding="utf-8") as fh:
+            flat = FLAT.sub(" ", fh.read())
+        own = f"{plugin}:{fname[:-3]}"
+        for m in SELF_CALL.finditer(flat):
+            if m.group(1) != own:
+                continue
+            preceding = flat[max(0, m.start() - 60):m.start()].lower()
+            if "not** call" in preceding or "not call" in preceding:
+                continue  # the documented warning, not an instruction
+            failures.append(
+                f"{rel}: instructs `Skill(skill: \"{own}\")` — the command shadows "
+                f"the skill of that name, so this returns the command file itself "
+                f"and the skill body never loads; Read it by path instead"
+            )
 
 # --- Check 2: every slash reference resolves ------------------------------
 #
@@ -129,6 +167,7 @@ if failures:
         print(f"  - {f}")
     sys.exit(1)
 
-print(f"PASS: {len(DELEGATORS)} commands delegate via a single Skill() call "
-      f"(<={MAX_LINES} lines each); {checked} slash references all resolve")
+print(f"PASS: {len(DELEGATORS)} commands load their skill body by path "
+      f"(<={MAX_LINES} lines each); no command self-delegates; "
+      f"{checked} slash references all resolve")
 PY

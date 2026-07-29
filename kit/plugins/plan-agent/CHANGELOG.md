@@ -1,5 +1,49 @@
 # Changelog
 
+## 6.0.1 — Stop four command wrappers from delegating to themselves (2026-07-29)
+
+### Fixed
+
+- **`deep-grill`, `documenting-plans`, `plan-status`, and `markdown-to-html`
+  never loaded their skill bodies.** Each command's body instructed
+  `Skill(skill: "plan-agent:<its own name>")`. A command *shadows* a skill of the
+  same name in the `Skill` namespace, so that call returns the command file
+  itself — a self-reference that never reaches `skills/<name>/SKILL.md`. All four
+  now `Read` the skill file by path (`${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md`,
+  with a `Glob` fallback) and carry the reason inline so the next author does not
+  "fix" them back into a loop. This is the same defect and the same fix as
+  `commands/write-prompt.md` in 6.0.0.
+
+  Measured before and after with headless probes: invoking each name previously
+  returned a short wrapper with **0** of the skill's section headings; all four
+  now load the real body on the first `Read`, with no `Glob` fallback needed.
+
+- **`markdown-to-html`'s `--async` dispatch handed the same shadowed name to its
+  background agent.** The subagent prompt said to invoke
+  `Skill(skill: "plan-agent:markdown-to-html")`; it now receives the skill file's
+  path directly. It had been converging only by taking the wrapper's redirect —
+  an extra hop, and a dependency on the wrapper's guard staying in place.
+
+- **`plan-status`'s command `argument-hint` was stale**, advertising only
+  `[plan-file-path]` while the skill accepts a directory, `--all`, and `--force`.
+
+### Changed
+
+- **`allowed-tools` on the four wrappers now mirrors the skill each one loads**
+  instead of the single `Skill` entry the delegation needed. A wrapper that
+  declares broader access than the body it runs widens the tool boundary for no
+  reason; `documenting-plans` and `markdown-to-html` keep `Skill` because their
+  skill bodies genuinely invoke other skills.
+
+- **`tests/plugins/test-command-delegation.sh` asserts the by-path contract.**
+  Check 1 previously required *exactly one* `Skill()` call naming the same-named
+  skill — the broken shape — so it would have passed a wrapper that says "do not
+  call this". It now requires each delegator to name `skills/<name>/SKILL.md`,
+  and a new repo-wide check 1b fails any `commands/<name>.md` that instructs
+  `Skill(skill: "<plugin>:<name>")`, allowing the literal only inside an explicit
+  "do not call" warning. Both assertions were verified to fail against the
+  reintroduced defect, not merely to pass as written.
+
 ## 6.0.0 — `build-proposal` converges on a saved prompt (2026-07-28)
 
 ### Breaking
