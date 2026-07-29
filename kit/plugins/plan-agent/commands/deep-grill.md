@@ -6,10 +6,10 @@ argument-hint: "[plan-file-path] - omit to auto-detect from IDE or docs/plans/"
 
 # Deep Grill
 
-`Read` `${CLAUDE_PLUGIN_ROOT}/skills/deep-grill/SKILL.md` and follow it end to
-end, treating `$ARGUMENTS` as its `$ARGUMENTS`. If that path does not resolve,
-`Glob("**/plan-agent/skills/deep-grill/SKILL.md")` and read the match.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/deep-grill/SKILL.md` and follow it exactly,
+treating `$ARGUMENTS` as its input. If that path does not resolve, `Glob` for
+`**/plan-agent/skills/deep-grill/SKILL.md` and read the match instead.
 
-Load the file by path — do **not** call `Skill(skill: "plan-agent:deep-grill")`.
-This command shadows the skill of that name, so the call would return this file
-again and the workflow would never load.
+Do **not** reach for the `Skill` tool here. A command shadows a skill of the
+same name, so asking it for `plan-agent:deep-grill` returns this file — the
+skill body never loads and the workflow silently no-ops.
