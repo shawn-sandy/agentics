@@ -118,9 +118,6 @@ Follow these steps. Treat them as a loop the human steers, not a one-shot run.
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
-`WebSearch` and `WebFetch` are deferred too — load them with `ToolSearch`
-`select:WebSearch,WebFetch` before first use in Step 2.
-
 ### Step 1 — Frame
 
 Restate the idea in **one line** and name the domain(s) it touches. Pick the

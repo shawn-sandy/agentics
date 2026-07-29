@@ -99,8 +99,7 @@ fi
 # so they are out of scope. Everything else is live instruction text.
 echo
 echo "-- Check 1: long-form tutorial absent --"
-TUTORIAL=$(grep -rn 'ExitPlanMode' "$PLUGINS" \
-  --include='*.md' --include='*.json' \
+TUTORIAL=$(grep -rn --include='*.md' --include='*.json' 'ExitPlanMode' "$PLUGINS" \
   | grep -v '/CHANGELOG.md:' \
   | grep -iE 'select:ExitPlanMode|is a deferred tool' || true)
 
