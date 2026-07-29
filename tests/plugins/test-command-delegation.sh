@@ -9,6 +9,11 @@
 # skill. A thin delegator has one behaviour by construction. (These commands
 # now live under plan-agent after plan-interview was merged into it in 4.0.0.)
 #
+# The first collapse delegated via `Skill(skill: "plan-agent:<same-name>")`,
+# which turned out to be a no-op: a command shadows a skill of the same name, so
+# the call returned the command file and the skill body never loaded. Check 1
+# now requires the skill be loaded by path instead.
+#
 # Check 2 — reference resolution. An instruction naming a slash command that
 # does not exist is a dead end at the exact moment a workflow hands off.
 set -euo pipefail
@@ -28,16 +33,24 @@ failures = []
 
 # --- Check 1: the collapsed delegators ------------------------------------
 #
-# Each entry maps a command file to the skill it must delegate to. Listed
-# explicitly rather than globbed: markdown-to-html is a real multi-step command
-# and plan-to-html is a deprecation shim that forwards to a DIFFERENTLY-named
-# skill with an injected flag, so neither fits this shape. Add a command here
-# when it is collapsed to a delegator.
+# Each entry names a command file that must load its same-named skill BY PATH.
+# Listed explicitly rather than globbed: markdown-to-html is a real multi-step
+# command and plan-to-html is a deprecation shim that forwards to a
+# DIFFERENTLY-named skill with an injected flag, so neither fits this shape.
+# Add a command here when it is collapsed to a delegator.
+#
+# By path, not `Skill(skill: "plan-agent:<name>")`. A command SHADOWS a skill of
+# the same name in the Skill namespace, so the self-named call returns the
+# command file itself and the skill body never enters context. Measured: the
+# Skill() form put 0 of deep-grill's 3 `## ` headings and 0 of
+# documenting-plans' 10 in context; reading SKILL.md by path put all of them
+# there. The command still has to stay thin — a delegator that restates its
+# skill's workflow drifts from it, which is how these three earned this test in
+# the first place (they had drifted 20, 153, and 383 lines apart).
 MAX_LINES = 15
 DELEGATORS = {
-    "plan-agent/commands/deep-grill.md": "plan-agent:deep-grill",
-    "plan-agent/commands/plan-status.md": "plan-agent:plan-status",
-    "plan-agent/commands/documenting-plans.md": "plan-agent:documenting-plans",
+    "plan-agent/commands/deep-grill.md": "deep-grill",
+    "plan-agent/commands/documenting-plans.md": "documenting-plans",
 }
 
 for rel, skill in DELEGATORS.items():
@@ -55,16 +68,73 @@ for rel, skill in DELEGATORS.items():
             f"skill's workflow will drift from it"
         )
 
-    calls = re.findall(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']", text)
-    if len(calls) != 1:
-        failures.append(f"{rel}: found {len(calls)} `Skill(` call(s), expected exactly 1")
-    elif calls[0] != skill:
-        failures.append(f"{rel}: delegates to `{calls[0]}`, expected `{skill}`")
+    if f"skills/{skill}/SKILL.md" not in text:
+        failures.append(
+            f"{rel}: never names `skills/{skill}/SKILL.md` — the skill body has "
+            f"to be loaded by path or it never enters context"
+        )
+
+    # The self-named Skill() call is the shadowed no-op this test exists to
+    # keep out. Shadowing is per-plugin, so the match is exact on
+    # `<this plugin>:<this name>` — a call to `other-plugin:{skill}` resolves to
+    # a different file entirely and is nobody's business here. The plugin comes
+    # off the path rather than being hardcoded, so a delegator in another plugin
+    # can be added to DELEGATORS without editing this check.
+    own_call = f"{rel.split('/')[0]}:{skill}"
+    for call in re.findall(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']", text):
+        if call == own_call:
+            failures.append(
+                f"{rel}: calls `Skill(skill: \"{call}\")`, which this command "
+                f"shadows — it returns this file, not the skill"
+            )
 
     # Frontmatter fields the collapse had to preserve.
     for key in ("description", "argument-hint"):
         if not re.search(rf"^{key}:\s*\S", text, re.M):
             failures.append(f"{rel}: lost its `{key}:` frontmatter in the collapse")
+
+    # The skill body now runs INLINE under the command's permissions, so the
+    # command's allowed-tools must cover every tool the skill declares. Missing
+    # one does not fail at load — it fails at the branch that needs it, which is
+    # how `documenting-plans` shipped a wrapper without `Skill` and would have
+    # died only on plans whose status was not already `completed`. Grepping the
+    # skill body for `Skill(` misses this: it asks for the tool in prose.
+    skill_md = os.path.join(plugin_dir, os.path.dirname(os.path.dirname(rel)),
+                            "skills", skill, "SKILL.md")
+    if os.path.isfile(skill_md):
+        with open(skill_md, encoding="utf-8") as fh:
+            skill_text = fh.read()
+        def tools(src):
+            m = re.search(r"^allowed-tools:\s*(.+?)\s*$", src, re.M)
+            return {t.strip() for t in m.group(1).split(",") if t.strip()} if m else set()
+        missing = tools(skill_text) - tools(text)
+        if missing:
+            failures.append(
+                f"{rel}: allowed-tools omits {sorted(missing)}, which "
+                f"skills/{skill}/SKILL.md declares — the skill runs inline under "
+                f"this command's permissions and would stall on that branch"
+            )
+
+# plan-status still uses the shadowed `Skill(skill: "plan-agent:plan-status")`
+# form and so almost certainly no-ops the same way — not converted here only
+# because it was out of scope for the change that fixed the two above. It keeps
+# the thin-delegator guards in the meantime so it cannot regrow into a copy of
+# its skill while it waits.
+UNCONVERTED = ["plan-agent/commands/plan-status.md"]
+
+for rel in UNCONVERTED:
+    path = os.path.join(plugin_dir, rel)
+    if not os.path.isfile(path):
+        failures.append(f"{rel}: missing")
+        continue
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    lines = text.count("\n") + (0 if text.endswith("\n") else 1)
+    if lines > MAX_LINES:
+        failures.append(f"{rel}: {lines} lines (max {MAX_LINES})")
+    for key in ("description", "argument-hint"):
+        if not re.search(rf"^{key}:\s*\S", text, re.M):
+            failures.append(f"{rel}: lost its `{key}:` frontmatter")
 
 # --- Check 2: every slash reference resolves ------------------------------
 #
@@ -129,6 +199,7 @@ if failures:
         print(f"  - {f}")
     sys.exit(1)
 
-print(f"PASS: {len(DELEGATORS)} commands delegate via a single Skill() call "
-      f"(<={MAX_LINES} lines each); {checked} slash references all resolve")
+print(f"PASS: {len(DELEGATORS)} commands load their skill by path, "
+      f"{len(UNCONVERTED)} unconverted still thin (<={MAX_LINES} lines each); "
+      f"{checked} slash references all resolve")
 PY
