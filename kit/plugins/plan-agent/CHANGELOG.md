@@ -1,5 +1,32 @@
 # Changelog
 
+## 5.0.3 — `/deep-grill` and `/documenting-plans` actually load their skills (2026-07-29)
+
+### Fixed
+
+- **Both commands were silent no-ops.** Each delegated with
+  `Skill(skill: "plan-agent:<its-own-name>")`, but a command shadows a skill of
+  the same name in the `Skill` namespace — the call returned the command file
+  instead of `skills/<name>/SKILL.md`, so the skill body never entered context
+  and the workflow ran on nothing. Measured with a headless probe
+  (`claude -p --plugin-dir kit/plugins/plan-agent`): the `Skill()` form put **0**
+  of `deep-grill`'s 3 `## ` headings and **0** of `documenting-plans`' 10 in
+  context; reading `SKILL.md` by path put all 10 there.
+- **Both now read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` by path**, with
+  a `Glob` fallback and an inline note explaining the shadowing so the next
+  editor does not reintroduce the `Skill()` call. Each wrapper stays at 15 lines.
+- **`allowed-tools` widened to match the skill each now runs inline** —
+  `deep-grill` takes `Read, Glob, Grep, AskUserQuestion, TodoWrite`;
+  `documenting-plans` takes `Read, Glob, Grep, Bash(git *), AskUserQuestion,
+  Write, Edit, TodoWrite`. Under the old `allowed-tools: Skill` the skill's own
+  tools would have been unreachable from the command.
+- **`tests/plugins/test-command-delegation.sh` now enforces the by-path shape** —
+  it requires each converted delegator to name `skills/<name>/SKILL.md` and
+  rejects a self-named `Skill()` call. Both assertions were verified to fail
+  against the pre-fix files. `plan-status` still uses the shadowed form and is
+  tracked separately; it keeps the thin-delegator line and frontmatter guards in
+  the meantime.
+
 ## 5.0.2 — Collapse the plan-mode guard to one line (2026-07-28)
 
 - **Eight skills reduced** — `build`, `build-proposal`, `finalize-plan`,
