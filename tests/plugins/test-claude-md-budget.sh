@@ -25,8 +25,9 @@ if [ ! -f "$MARKETPLACE" ]; then
   exit 1
 fi
 
-# The plugin table under "## Reference Implementations", minus the header and
-# the |---|---| separator. Everything else in the file is prose.
+# The plugin table under "## Reference Implementations", minus the |---|---|
+# separator. The header row is kept — it is well inside the row budget, and
+# dropping it would mean parsing position as well as shape.
 TABLE_ROWS="$(awk '
   /^## Reference Implementations/ { in_section = 1; next }
   /^## / { in_section = 0 }

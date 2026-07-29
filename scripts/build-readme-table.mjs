@@ -57,7 +57,12 @@ function renderTable() {
     return `| ${link} | ${p.version} | ${p.category} | ${formatComponents(counts)} |`;
   });
 
+  // The note is part of the generated block, not prose above it: rewrite()
+  // replaces everything between the heading and the next `---`, so a
+  // hand-added line here is silently eaten by the next regeneration.
   return [
+    '> Versions live here only — the per-plugin sections above deliberately omit them so there is one place to update.',
+    '',
     '| Plugin | Version | Category | Components |',
     '|--------|---------|----------|------------|',
     ...rows,
