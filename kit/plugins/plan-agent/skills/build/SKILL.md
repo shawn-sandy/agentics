@@ -59,12 +59,9 @@ spec.
 
 ## Step 0 — Exit plan mode
 
-This skill writes source files, so it cannot run inside plan mode.
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** —
-skip this step entirely when not in plan mode, which is the common case for a
-standalone `/plan-agent:build` on an existing plan. When calling: use
-`ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`
-silently. Either way, produce no plan document — execute the workflow directly.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
+Produce no plan document — execute the workflow directly.
 
 ## Re-render (subroutine — referenced by every step below)
 

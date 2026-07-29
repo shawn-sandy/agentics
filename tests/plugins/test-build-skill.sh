@@ -69,7 +69,7 @@ fi
 echo "4. allowed-tools declares ToolSearch and ExitPlanMode (deferred-tool bootstrap)..."
 ATLINE="$(grep -m1 '^allowed-tools:' "$SKILL" || true)"
 if echo "$ATLINE" | grep -qw ToolSearch && echo "$ATLINE" | grep -qw ExitPlanMode \
-  && grep -q "select:ExitPlanMode" "$SKILL"; then
+  && grep -qF '**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.' "$SKILL"; then
   echo "  PASS"
 else
   echo "  FAIL: ToolSearch/ExitPlanMode missing from allowed-tools or the body bootstrap"

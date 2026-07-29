@@ -41,12 +41,12 @@ next to the source plan as a shareable, browser-openable companion.
 
 ### Step 0 — Exit plan mode and create progress todos
 
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
 **Background flag detection**: Scan `$ARGUMENTS` for the literal text
 `--background`. If found, set `mode = background`; otherwise set
 `mode = interactive`. This flag governs branching in Steps 1, 2, and 7 —
 record it once here so subsequent steps can reference it without re-parsing.
-
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
 
 Use `TodoWrite` to create a todo for each step below (Steps 1–9), all
 starting `pending`. Mark each `completed` as you finish that step.

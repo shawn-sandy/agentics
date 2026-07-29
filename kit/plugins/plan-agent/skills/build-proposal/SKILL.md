@@ -116,12 +116,7 @@ Follow these steps. Treat them as a loop the human steers, not a one-shot run.
 
 ### Step 0 — Self-bootstrap (exit plan mode)
 
-**If currently in plan mode**, call `ExitPlanMode` first and silently — writing
-the proposal file is a filesystem mutation that cannot proceed inside harness
-plan mode. Skip this step entirely when not in plan mode. `ExitPlanMode` is a
-**deferred tool**: use `ToolSearch` with `select:ExitPlanMode` first, then call
-`ExitPlanMode`. `WebSearch` and `WebFetch` are deferred too — load them with
-`ToolSearch` `select:WebSearch,WebFetch` before first use in Step 2.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ### Step 1 — Frame
 

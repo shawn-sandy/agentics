@@ -25,9 +25,7 @@ separate from implementation plans.
 
 ## Exit plan mode
 
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** —
-skip this step entirely when not in plan mode. When calling: use `ToolSearch`
-with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Step 1 — Resolve the source artifact
 

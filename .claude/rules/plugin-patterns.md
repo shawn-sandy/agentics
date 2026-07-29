@@ -59,12 +59,23 @@ Use the `auditing-allowed-tools` skill (in the `skill-reviewer` plugin) to recom
 
 #### Deferred tools
 
-Some harness tools (including `ExitPlanMode`) are **deferred** — their schemas are not loaded at session start. Any skill that calls a deferred tool must:
+Some harness tools (including `ExitPlanMode`) are **deferred** — their schemas are not loaded at session start. Any skill that calls a deferred tool must list both `ToolSearch` **and** the deferred tool in `allowed-tools`. Skipping `ToolSearch` causes a permission prompt mid-skill, breaking the flow.
 
-- List both `ToolSearch` **and** the deferred tool in `allowed-tools`
-- Include a note in the step body: "use `ToolSearch` with `select:<ToolName>` first, then call `<ToolName>`"
+Do **not** explain the `ToolSearch` mechanic in the body. The harness already tells the model how to load a deferred tool, so repeating it per-skill buys nothing and costs context in every session the skill loads.
 
-Skipping `ToolSearch` causes a permission prompt mid-skill, breaking the flow.
+#### The plan-mode guard
+
+Any skill, command, or agent that mutates the filesystem, git state, or a remote carries exactly this line — verbatim, once, as its first step:
+
+```markdown
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+```
+
+Keep it verbatim and keep it standalone — its own line, nothing appended after it. `tests/plugins/test-exitplanmode-guard.sh` greps for this exact string and fails if a write-heavy skill loses it. A skill with a further instruction for the same step (`build`'s "produce no plan document") puts it in the next paragraph, so the guard reads identically in every file.
+
+Do not expand it. Earlier versions of this repo carried a four-line variant per file — what plan mode is, why writes are mutations, how to `ToolSearch` for the tool, how to handle the "not in plan mode" error. That is 43 copies of something the model already knows.
+
+Read-only skills, and pure dispatchers whose downstream skill or agent carries its own guard, omit the line entirely and drop `ToolSearch`/`ExitPlanMode` from `allowed-tools`.
 
 ## Progressive Disclosure in Skills
 

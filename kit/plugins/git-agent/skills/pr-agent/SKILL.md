@@ -14,7 +14,7 @@ Does not commit changes — use commit-agent first.
 
 ## Step 0: Exit Plan Mode
 
-**If currently in plan mode**, call `ExitPlanMode` first and silently before any other action — Pushing and creating a pull request are remote mutations and cannot proceed inside plan mode. Skip this step entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use `ToolSearch` with `select:ExitPlanMode` first, then call it silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Step 1: Guards
 

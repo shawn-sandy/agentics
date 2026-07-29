@@ -5,6 +5,16 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3] - 2026-07-28
+
+### Changed
+
+- **Plan-mode guard reduced to one line** — the four publish skills each carried a
+  four-line block explaining plan mode, why writes are mutations, and how to
+  `ToolSearch` for the deferred `ExitPlanMode`. All four now carry the canonical
+  one-line guard instead. The guard itself is unchanged in effect; only the
+  explanation is gone.
+
 ## [1.7.2] - 2026-07-27
 
 ### Fixed

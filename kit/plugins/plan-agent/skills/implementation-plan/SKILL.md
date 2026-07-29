@@ -195,12 +195,8 @@ Echo the resolved objective and effective flags after Step 0.
 
 Follow these steps exactly.
 
-0. **Self-bootstrap** — **If currently in plan mode**, call `ExitPlanMode`
-   first and silently before any other action — writing plan files is a
-   filesystem mutation that cannot proceed inside harness plan mode.
-   `ExitPlanMode` is a deferred tool: use `ToolSearch` with
-   `select:ExitPlanMode` first, then call it silently. Skip entirely when
-   not in plan mode.
+0. **Self-bootstrap** —
+   **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 0.5. **Issue Ingestion** *(skip when no issue reference was detected)* —
    Fetch via `gh issue view <n> --repo <owner>/<repo> --json

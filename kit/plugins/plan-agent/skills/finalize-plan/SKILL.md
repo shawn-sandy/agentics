@@ -15,9 +15,7 @@ Mark a plan as done: inspect the codebase for implementation evidence, confirm w
 
 ## Exit plan mode
 
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
-
----
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Step 1 — Resolve the plan file and edit mode
 

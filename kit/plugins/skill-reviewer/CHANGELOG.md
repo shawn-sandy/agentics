@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.9 — 2026-07-28 — Collapse the plan-mode guard to one line
+
+- `optimizing-skill-frontmatter` replaces its `ExitPlanMode` preamble with the
+  canonical one-line guard. Its Step 4b classification table still lists an
+  `ExitPlanMode` Step 0 as a workflow signal — that reference is unchanged.
+
 ## v2.2.8 — 2026-07-20 — Refresh the skill-splitting example
 
 ### Fixed

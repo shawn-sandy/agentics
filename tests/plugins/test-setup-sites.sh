@@ -65,7 +65,7 @@ fi
 echo "5. Body carries the Exit-plan-mode bootstrap and all 7 numbered steps..."
 STEP_COUNT="$(grep -cE '^## Step [1-7] —' "$SKILL" || true)"
 if grep -q "^## Exit plan mode$" "$SKILL" \
-  && grep -q "select:ExitPlanMode" "$SKILL" \
+  && grep -qF '**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.' "$SKILL" \
   && [ "$STEP_COUNT" -eq 7 ]; then
   echo "  PASS (7 numbered steps)"
 else

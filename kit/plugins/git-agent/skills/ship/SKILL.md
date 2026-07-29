@@ -15,7 +15,7 @@ For commit-only use commit-agent, for PR-only use pr-agent.
 
 ## Step 0: Exit Plan Mode
 
-**If currently in plan mode**, call `ExitPlanMode` first and silently before any other action — staging, committing, pushing, and creating a pull/merge request are mutations and cannot proceed inside plan mode. Skip this step entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use `ToolSearch` with `select:ExitPlanMode` first, then call it silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Step 1: Pre-flight Guards
 

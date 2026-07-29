@@ -14,9 +14,9 @@ The pipeline it installs: a push to `main` touching `docs/**` fires a path-filte
 
 ## Exit plan mode
 
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently. This skill performs filesystem writes, so it runs directly rather than producing a plan document.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
----
+Produce no plan document — execute the workflow directly.
 
 ## Step 1 — Preflight: confirm a git repo and resolve the live URL
 

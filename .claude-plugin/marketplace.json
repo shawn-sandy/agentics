@@ -77,7 +77,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "2.2.8",
+      "version": "2.2.9",
       "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
@@ -99,7 +99,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.4.4",
+      "version": "3.4.5",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
@@ -120,7 +120,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.7.0",
+      "version": "4.7.1",
       "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship/CI-watch plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
@@ -151,7 +151,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/product-plans"
       },
-      "version": "3.4.12",
+      "version": "3.4.13",
       "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing interview HTML artifact",
       "category": "productivity",
       "tags": [
@@ -196,7 +196,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.19.1",
+      "version": "2.19.2",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -241,7 +241,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "5.0.1",
+      "version": "5.0.2",
       "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a seven-reviewer Agent Team (review-plan) before marking it done (finalize-plan). Also ships build-proposal, deep-grill, write-prompt, prototype, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [
@@ -289,7 +289,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.7.2",
+      "version": "1.7.3",
       "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, and saved prompts published singly or as a filterable library with verbatim copy buttons — plus three audience framings over the session recap: product-doc for stakeholders, team-recap for the whole team, and eng-recap for engineers, with architecture, code paths, tradeoffs, learnings, tests, and review follow-ups drawn from a capped read of the PR diff — with a blocking secret-scrub gate and a local-HTML fallback",
       "category": "development",
       "tags": [
@@ -312,7 +312,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/content-tools"
       },
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Turn work products into publishable site content — the artifact-to-post skill converts a local HTML artifact, pasted HTML, or a Markdown file into a draft MDX post for a static site, keeping interactive blocks interactive by scoping their CSS instead of screenshotting them, and guarding prose against MDX's JSX parsing rules",
       "category": "documentation",
       "tags": [

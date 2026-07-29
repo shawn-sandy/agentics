@@ -1,5 +1,19 @@
 # Changelog — git-agent
 
+## v4.7.1 — 2026-07-28 — Collapse the plan-mode guard to one line
+
+### Changed
+
+- **Ten files lose the `ExitPlanMode` tutorial** — `branch-agent`, `commit-agent`,
+  `create-issue`, `merge`, `pr-agent`, `ship`, `ship-autonomous`, and the
+  `agent-merge` / `agent-ship` / `agent-ship-ci` agents each carried their own
+  wording of the same four-line block: what plan mode is, why staging or pushing
+  is a mutation, how to `ToolSearch` for the deferred tool, and how to treat the
+  "You are not in plan mode" error as success. All ten now carry one line.
+- The guard is preserved everywhere it was — these skills all mutate git state or
+  a remote, and `tests/plugins/test-exitplanmode-guard.sh` fails if any of them
+  loses it.
+
 ## v4.7.0 — 2026-07-21 — lint gate before commit
 
 ### Added

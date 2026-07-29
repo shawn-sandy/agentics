@@ -15,9 +15,7 @@ event wakes it; they are not a synchronous loop you run inside one turn.
 
 ## Step 0: Exit Plan Mode
 
-**If currently in plan mode**, call `ExitPlanMode` first and silently before any other action — Committing, pushing, and opening a PR are mutations that cannot proceed inside plan mode. Skip this step entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use `ToolSearch` with `select:ExitPlanMode` first, then call it silently.
-
----
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Step 1: Pre-flight Guards
 

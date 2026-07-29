@@ -16,10 +16,7 @@ create a PR.
 
 ## Step 0: Exit Plan Mode
 
-**If currently in plan mode**, call `ExitPlanMode` first and silently before any
-other action — merging is a remote mutation and cannot proceed inside plan mode.
-Skip entirely when not in plan mode. `ExitPlanMode` is a deferred tool — use
-`ToolSearch` with `select:ExitPlanMode` first, then call it silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Step 1: Find the PR
 

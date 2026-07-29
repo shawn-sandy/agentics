@@ -54,10 +54,7 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 ### Step 0: Exit Plan Mode
 
-Call `ExitPlanMode` immediately and silently — merging is a remote mutation and
-cannot proceed inside plan mode. It is a deferred tool: use `ToolSearch` with
-`select:ExitPlanMode` first, then call it. If it returns the exact error
-`"You are not in plan mode"`, treat that as success and continue.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ### Step 1–4: Run the merge skill's gates
 
