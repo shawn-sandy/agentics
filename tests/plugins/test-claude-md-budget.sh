@@ -35,12 +35,26 @@ TABLE_ROWS="$(awk '
 ' "$CLAUDE_MD")"
 
 echo "1. CLAUDE.md is under $WORD_BUDGET words..."
-WORDS="$(wc -w < "$CLAUDE_MD" | tr -d ' ')"
+# Locale is pinned because GNU wc counts a standalone `—` or `→` as its own
+# word under a UTF-8 locale and as nothing under C — a ~20-word swing on this
+# file, which made the budget depend on the runner rather than the content
+# (CI defaults to C.UTF-8, most dev shells do not). C is POSIX-guaranteed to
+# exist. The file is kept under budget in both, so the pin sets which number
+# is authoritative, not whether the check can be satisfied.
+WORDS="$(LC_ALL=C wc -w < "$CLAUDE_MD" | tr -d ' ')"
+WORDS_UTF8="$(LC_ALL=C.UTF-8 wc -w < "$CLAUDE_MD" 2>/dev/null | tr -d ' ' || true)"
 if [ "$WORDS" -lt "$WORD_BUDGET" ]; then
   echo "  PASS ($WORDS words)"
 else
   echo "  FAIL: $WORDS words, budget is $WORD_BUDGET"
   FAILURES=$((FAILURES + 1))
+fi
+
+# Advisory, never fatal: the UTF-8 count is the higher of the two, so a file
+# that clears it clears the budget on any runner. Reported so the headroom
+# stays visible instead of being discovered by a red CI job.
+if [ -n "$WORDS_UTF8" ] && [ "$WORDS_UTF8" -ge "$WORD_BUDGET" ]; then
+  echo "  NOTE: $WORDS_UTF8 words under a UTF-8 locale — at or over budget there"
 fi
 
 echo "2. Every plugin in marketplace.json appears in the table..."
@@ -70,7 +84,7 @@ echo "3. No plugin table row exceeds $ROW_BUDGET words..."
 LONG_ROWS=0
 while IFS= read -r row; do
   [ -z "$row" ] && continue
-  count="$(printf '%s' "$row" | tr '|' ' ' | wc -w | tr -d ' ')"
+  count="$(printf '%s' "$row" | tr '|' ' ' | LC_ALL=C wc -w | tr -d ' ')"
   if [ "$count" -gt "$ROW_BUDGET" ]; then
     echo "  FAIL: $count words — ${row:0:70}..."
     LONG_ROWS=$((LONG_ROWS + 1))

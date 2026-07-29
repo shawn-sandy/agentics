@@ -8,8 +8,7 @@ This file provides guidance to Claude Code when working with this repository.
 
 ## Tech Stack
 
-- **Formats:** Markdown (commands, skills), JSON (plugin manifests)
-- **Plugin manifest:** `kit/plugins/<name>/.claude-plugin/plugin.json` — requires `name`; `version` is managed in `marketplace.json` for relative-path plugins
+- **Plugin manifest:** `kit/plugins/<name>/.claude-plugin/plugin.json`, requires `name`
 - **Marketplace manifest:** `.claude-plugin/marketplace.json` — plugin registry with relative `source` paths
 - **Minimum Claude Code Version:** 1.0.33 or later
 
@@ -28,7 +27,7 @@ dist/                 → Local build output, gitignored (node scripts/build-dis
 
 > **Search exclusion:** Never include `docs/plans/archive/` in file searches, glob patterns, or exploratory reads. Treat it as off-limits unless the user explicitly targets it by path.
 
-Plugins are **referenced** by marketplaces, not embedded. `marketplace.json` uses relative `source` paths.
+Plugins are **referenced** by marketplaces, not embedded.
 
 ## Common Commands
 
@@ -91,7 +90,7 @@ Detailed patterns in `.claude/rules/`:
 - Plugin Homepage URLs must point to the plugin's directory, not the repository root: `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/{plugin-name}`
 - Always include the plan file in commits for plugin changes, even minor ones.
 - `.claude/settings.json` auto-validates `marketplace.json` JSON syntax after every Write/Edit — fix any errors before committing.
-- **Bump `version` manually in `marketplace.json`** when you change a plugin — the new value must be higher than the value on `main`. Follow semver: `fix` = patch, `feat` = minor, breaking change = major. See `.claude/rules/marketplace.md`.
+- **Bump `version` manually in `marketplace.json`** when you change a plugin; it must exceed `main`'s value. Semver: `fix` = patch, `feat` = minor, breaking = major. See `.claude/rules/marketplace.md`.
 - For relative-path plugins, set `version` only in `marketplace.json` — never add a `version` field to `plugin.json` (it silently overrides the marketplace value).
 - Component types: **Commands** (`/plugin:name`), **Skills** (auto-activated), **Agents** (subprocesses), **Hooks** (event-driven).
 - Skill `SKILL.md` can use `allowed-tools` frontmatter to restrict tool access if necessary
