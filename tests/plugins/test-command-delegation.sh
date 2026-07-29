@@ -75,9 +75,14 @@ for rel, skill in DELEGATORS.items():
         )
 
     # The self-named Skill() call is the shadowed no-op this test exists to
-    # keep out. Calls to OTHER skills are fine and not matched here.
+    # keep out. Shadowing is per-plugin, so the match is exact on
+    # `<this plugin>:<this name>` — a call to `other-plugin:{skill}` resolves to
+    # a different file entirely and is nobody's business here. The plugin comes
+    # off the path rather than being hardcoded, so a delegator in another plugin
+    # can be added to DELEGATORS without editing this check.
+    own_call = f"{rel.split('/')[0]}:{skill}"
     for call in re.findall(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']", text):
-        if call.endswith(f":{skill}"):
+        if call == own_call:
             failures.append(
                 f"{rel}: calls `Skill(skill: \"{call}\")`, which this command "
                 f"shadows — it returns this file, not the skill"
