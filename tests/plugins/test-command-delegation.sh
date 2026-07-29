@@ -104,6 +104,66 @@ for plugin in sorted(os.listdir(plugin_dir)):
                 f"and the skill body never loads; Read it by path instead"
             )
 
+# --- Check 1c: markdown-to-html's async subagent runs the whole workflow --
+#
+# The async dispatch hands a FRESH subagent the skill path to Read, since it
+# shares none of this run's state. An earlier draft of this fix told it to
+# start partway through (Step 4) — skipping Step 2, the only step that parses
+# the source's frontmatter/sections/steps — so synthesis had nothing to render.
+# Caught in review before merge; guarded here so it cannot silently regress.
+MTH_SKILL = os.path.join(plugin_dir, "plan-agent/skills/markdown-to-html/SKILL.md")
+if os.path.isfile(MTH_SKILL):
+    with open(MTH_SKILL, encoding="utf-8") as fh:
+        mth_flat = FLAT.sub(" ", fh.read())
+    dispatch = re.search(r"Async dispatch.*?(?=### Step 4)", mth_flat, re.S)
+    if not dispatch:
+        failures.append("plan-agent/skills/markdown-to-html/SKILL.md: async dispatch section not found")
+    else:
+        d = dispatch.group(0)
+        # Isolate the `prompt` field's own quoted value — the text actually
+        # handed to the subagent — rather than the surrounding explanatory
+        # prose, which can (and should) go on saying "Step 1" regardless of
+        # what the prompt template itself says.
+        prompt_field = re.search(r"`prompt`:\s*`\"(.*?)\"`", d, re.S)
+        if not prompt_field:
+            failures.append(
+                "plan-agent/skills/markdown-to-html/SKILL.md: async dispatch has no "
+                "recognizable `prompt` field to check"
+            )
+        else:
+            p = prompt_field.group(1)
+            if re.search(r"step 4", p, re.I):
+                failures.append(
+                    "plan-agent/skills/markdown-to-html/SKILL.md: the subagent prompt "
+                    "tells it to resume at Step 4, skipping Step 2's content parsing"
+                )
+            if not re.search(r"step 1|in full|end to end|from the (start|beginning)", p, re.I):
+                failures.append(
+                    "plan-agent/skills/markdown-to-html/SKILL.md: the subagent prompt "
+                    "does not say to run the workflow from Step 1 / in full"
+                )
+            if "Skill(skill:" in p:
+                failures.append(
+                    "plan-agent/skills/markdown-to-html/SKILL.md: the subagent prompt "
+                    "hands it a Skill() call rather than a path to Read"
+                )
+
+# --- Check 1d: allowed-tools grants only what a wrapper's target uses -----
+#
+# markdown-to-html's SKILL.md mentions `Skill(...)` exactly once — inside its
+# own warning against calling it — so the tool is never genuinely invoked.
+# Declaring it in the command's allowed-tools widens the boundary for nothing.
+MTH_CMD = os.path.join(plugin_dir, "plan-agent/commands/markdown-to-html.md")
+if os.path.isfile(MTH_CMD):
+    with open(MTH_CMD, encoding="utf-8") as fh:
+        cmd_text = fh.read()
+    at_line = re.search(r"^allowed-tools:.*$", cmd_text, re.M)
+    if at_line and re.search(r"\bSkill\b", at_line.group(0)):
+        failures.append(
+            "plan-agent/commands/markdown-to-html.md: allowed-tools grants Skill, but "
+            "the skill it loads never invokes it outside a warning string"
+        )
+
 # --- Check 2: every slash reference resolves ------------------------------
 #
 # A `/plugin:name` reference resolves against BOTH commands/<name>.md and
@@ -169,5 +229,6 @@ if failures:
 
 print(f"PASS: {len(DELEGATORS)} commands load their skill body by path "
       f"(<={MAX_LINES} lines each); no command self-delegates; "
-      f"{checked} slash references all resolve")
+      f"markdown-to-html's async dispatch runs the full workflow and its "
+      f"allowed-tools grants nothing unused; {checked} slash references all resolve")
 PY

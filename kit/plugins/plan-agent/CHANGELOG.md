@@ -19,10 +19,14 @@
   now load the real body on the first `Read`, with no `Glob` fallback needed.
 
 - **`markdown-to-html`'s `--async` dispatch handed the same shadowed name to its
-  background agent.** The subagent prompt said to invoke
-  `Skill(skill: "plan-agent:markdown-to-html")`; it now receives the skill file's
-  path directly. It had been converging only by taking the wrapper's redirect —
-  an extra hop, and a dependency on the wrapper's guard staying in place.
+  background agent, and truncated the workflow it ran.** The subagent prompt said
+  to invoke `Skill(skill: "plan-agent:markdown-to-html")` and to start at Step 4;
+  it now `Read`s the skill file by path and starts at Step 1. Starting late
+  skipped Step 2 — the only step that parses the source's frontmatter, sections,
+  and steps content — so the fresh subagent (which shares none of this run's
+  state) would have reached HTML synthesis with nothing parsed to render. Fixed
+  before it shipped: caught in review against the first attempt at this fix,
+  which fixed the shadowing but not the truncation.
 
 - **`plan-status`'s command `argument-hint` was stale**, advertising only
   `[plan-file-path]` while the skill accepts a directory, `--all`, and `--force`.
@@ -32,8 +36,11 @@
 - **`allowed-tools` on the four wrappers now mirrors the skill each one loads**
   instead of the single `Skill` entry the delegation needed. A wrapper that
   declares broader access than the body it runs widens the tool boundary for no
-  reason; `documenting-plans` and `markdown-to-html` keep `Skill` because their
-  skill bodies genuinely invoke other skills.
+  reason. `documenting-plans` keeps `Skill` because its body genuinely invokes
+  `plan-agent:plan-status` through it; `markdown-to-html` does **not** keep
+  `Skill` — its only mention of the tool is inside a warning against calling it,
+  and the first attempt at this fix claimed otherwise for both. `markdown-to-html`
+  needs `Agent` instead, for the `--async` background dispatch.
 
 - **`tests/plugins/test-command-delegation.sh` asserts the by-path contract.**
   Check 1 previously required *exactly one* `Skill()` call naming the same-named
