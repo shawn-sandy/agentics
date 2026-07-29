@@ -145,22 +145,39 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "10. docs/proposals/.gitkeep seeds the default artifact root..."
-if [ -f "$GITKEEP" ]; then
+echo "10. Step 6 dual-writes: write-prompt authors the authoritative prompt, legacy copy is bannered..."
+# The 6.0.0 contract: the saved prompt is the deliverable and write-prompt writes
+# it (never hand-authored here), while the legacy docs/proposals/ copy survives
+# one deprecation release carrying a banner that names the prompt as canonical.
+STEP6="$(sed -n '/^### Step 6 —/,/^### Step 7 —/p' "$SKILL")"
+MISSING=""
+[ -f "$GITKEEP" ] || MISSING="$MISSING proposals-gitkeep"
+printf '%s' "$STEP6" | grep -qF 'Skill(skill: "plan-agent:write-prompt"' || MISSING="$MISSING write-prompt-delegation"
+printf '%s' "$STEP6" | grep -qF -- '--out' || MISSING="$MISSING out-path-contract"
+printf '%s' "$STEP6" | grep -qF -- '--answers-gathered' || MISSING="$MISSING interview-bypass"
+printf '%s' "$STEP6" | grep -qF 'proposal-<slug>.md' || MISSING="$MISSING date-free-prompt-name"
+printf '%s' "$STEP6" | grep -qi 'deprecated' || MISSING="$MISSING legacy-deprecation-banner"
+if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: docs/proposals/.gitkeep is missing"
+  echo "  FAIL: Step 6 dual-write contract incomplete:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "11. SKILL.md resolves the artifact dir via --dir → planAgent.proposalsDirectory → docs/proposals/..."
-if grep -q "\-\-dir" "$SKILL" \
-  && grep -q "planAgent.proposalsDirectory" "$SKILL" \
-  && grep -q "docs/proposals/" "$SKILL" \
-  && grep -q "mkdir -p" "$SKILL"; then
+echo "11. SKILL.md resolves the prompts dir via --dir → promptsDirectory → docs/prompts/, legacy dir separately..."
+# --dir follows the authoritative artifact, so since 6.0.0 it names the prompts
+# directory; the deprecated proposals root still resolves, but never from --dir.
+MISSING=""
+grep -q "\-\-dir" "$SKILL" || MISSING="$MISSING dir-flag"
+grep -q "promptsDirectory" "$SKILL" || MISSING="$MISSING promptsDirectory-setting"
+grep -q "docs/prompts/" "$SKILL" || MISSING="$MISSING docs-prompts-default"
+grep -q "planAgent.proposalsDirectory" "$SKILL" || MISSING="$MISSING legacy-proposals-setting"
+grep -q "docs/proposals/" "$SKILL" || MISSING="$MISSING legacy-proposals-default"
+grep -q "mkdir -p" "$SKILL" || MISSING="$MISSING mkdir"
+if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: artifact-dir resolver order or mkdir -p missing from SKILL.md"
+  echo "  FAIL: artifact resolver incomplete in SKILL.md:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -249,25 +266,35 @@ done
 # The canonical section list must also be documented in the artifact-shape reference.
 grep -qi "Core finding" "$REFS/artifact-shape.md" || SECT_OK=0
 grep -qi "Locked & resolved decisions" "$REFS/artifact-shape.md" || SECT_OK=0
+# Every canonical section must map onto exactly one prompt slot, or the refactor
+# silently drops content on the way into the authoritative artifact.
+grep -qi "Section-to-slot mapping" "$REFS/artifact-shape.md" || SECT_OK=0
+for slot in "{{CONTEXT}}" "{{CORE_FINDING}}" "{{APPENDICES}}" "{{CORE_INSTRUCTION}}"; do
+  grep -qF "$slot" "$REFS/artifact-shape.md" || SECT_OK=0
+done
 if [ "$SECT_OK" -eq 1 ]; then
   echo "  PASS"
 else
-  echo "  FAIL: canonical sections not matchable or not documented in artifact-shape.md"
+  echo "  FAIL: canonical sections not matchable, or the section-to-slot mapping is missing from artifact-shape.md"
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "15. Step 8 handoff leads with an objective, not a bare .md (no conversion-mode hollow plan)..."
+echo "15. No file under the skill advertises a bare .md handoff; Step 8 hands off the prompt path..."
 # A bare `.md` first token would put implementation-plan into conversion mode,
 # which maps Changes/Steps -> step cards; proposals have only Workstreams/Roadmap,
 # so the handoff must lead with an objective to keep the full step-drafting pass.
-if grep -qE 'implementation-plan +[^ ]+\.md' "$SKILL"; then
-  echo "  FAIL: SKILL.md advertises a bare '.md' handoff token (triggers conversion mode)"
+# Scoped to the whole skill dir, not just SKILL.md: references/artifact-shape.md
+# taught the trap for months because the old check only scanned SKILL.md.
+if grep -rqE 'implementation-plan +[^ ]+\.md' "$SKILL_DIR"; then
+  echo "  FAIL: a build-proposal file advertises a bare '.md' handoff token (triggers conversion mode)"
+  grep -rnE 'implementation-plan +[^ ]+\.md' "$SKILL_DIR" | sed 's/^/    /'
   FAILURES=$((FAILURES + 1))
-elif grep -q "author an execution plan from the proposal at" "$SKILL" \
+elif grep -q "author an execution plan from the proposal prompt at" "$SKILL" \
+  && grep -q "prompts-dir>/proposal-<slug>.md" "$SKILL" \
   && grep -qi "conversion" "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: Step 8 handoff missing the objective-led command or the conversion-mode caveat"
+  echo "  FAIL: Step 8 handoff missing the objective-led command, the prompt path, or the conversion-mode caveat"
   FAILURES=$((FAILURES + 1))
 fi
 

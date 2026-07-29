@@ -11,8 +11,10 @@ argument-hint: "<idea> [--dir <path>] [--tier 0|1|2]"
 A **thinking partner** that turns a vague-but-promising idea into a
 decision-complete proposal. It grounds every claim in real sources, keeps a
 hard line between *facts to look up* and *decisions for the human*, drives the
-human decision cadence, and writes a single living `docs/proposals/<slug>.md`
-that deepens each round and converges on something buildable.
+human decision cadence, and converges on a single living **saved prompt** —
+`docs/prompts/proposal-<slug>.md`, authored by delegating to
+`plan-agent:write-prompt` — that deepens each round and is copy-pasteable into
+the planning layer.
 
 It is a **loop, not a pipeline** — the human steers it with "keep gathering,"
 answers to questions, and "let's build it."
@@ -22,7 +24,8 @@ answers to questions, and "let's build it."
 **This skill decides *should-we + what*. It does not implement, and it does not
 author the execution plan.**
 
-- The deliverable is a proposal document under the resolved proposals directory.
+- The deliverable is a saved proposal prompt under the resolved prompts
+  directory, plus the deprecated legacy copy (see *Artifact resolution*).
 - Do not write source code, configs, migrations, or the implementation plan.
 - Use `Read`, `Glob`, `Grep`, `Bash`, `Agent`, `WebSearch`, `WebFetch` for
   read-only research only.
@@ -49,8 +52,10 @@ Two activation paths:
 Parse `$ARGUMENTS` (or the conversation-derived text on the model path):
 
 - **`<idea>` (required):** all text that is not a flag. This is the raw idea.
-- **`--dir <path>`** — override the artifact directory (see *Artifact directory
-  resolution*).
+- **`--dir <path>`** — override the **prompts** directory, where the
+  authoritative artifact lands (see *Artifact resolution*). It follows the
+  authoritative artifact, so since 6.0.0 it no longer names the proposals
+  directory.
 - **`--tier 0|1|2`** — force a tier instead of inferring one in Step 1. Rarely
   needed; the triage normally picks the tier and escalates/de-escalates as
   research reveals scope.
@@ -65,28 +70,58 @@ Scale the loop and the artifact to match:
 | Tier | Signal | Response |
 |---|---|---|
 | **0 — Answer** | Single fact, known answer, or a well-specified task | Answer directly or route to the right skill; **do not invoke the loop** (e.g. "what version is plan-agent?", "fix this null check"). |
-| **1 — Lightweight** | A small, well-scoped idea touching one surface | One research pass; a short proposal (Context · core finding · recommendation · open questions); skip appendices and roadmap. Often a single round. |
-| **2 — Full** | Broad/ambiguous idea, external + internal surface, real decisions to make | The full 8-step loop and the canonical artifact shape, deepened over multiple rounds. |
+| **1 — Lightweight** | A small, well-scoped idea touching one surface | One research pass; a short prompt from the slot subset `{{CONTEXT}}`, `{{CORE_FINDING}}`, `{{OPEN_QUESTIONS}}`, `{{CORE_INSTRUCTION}}`; skip appendices and roadmap. Often a single round. |
+| **2 — Full** | Broad/ambiguous idea, external + internal surface, real decisions to make | The full 8-step loop and every slot the research grounds, deepened over multiple rounds. |
+
+**Tier 0 writes no artifact of either kind** — not a prompt, not a legacy copy.
+Downstream depends on this: `build`'s Step 1b falls through to direct plan
+authoring precisely when the proposal stage produces nothing, so a Tier 0 run
+that wrote a file would silently break that chain.
+
+**Tier 1 omits the unpopulated slots rather than emitting them empty.** A
+heading with nothing under it is volume, not depth, and reads to the planning
+layer as a section that was considered and came back blank.
 
 The tier is a starting estimate, not a cage — **escalate Tier 1 → 2** if
 research reveals more surface, and **stop early** if a Tier 2 idea collapses to
 a clear answer. Name the tier out loud; it sets the human's expectations for
 depth and pace.
 
-## Artifact directory resolution
+## Artifact resolution
 
-Resolve the proposals directory in this order, then `mkdir -p` it before the
-first write — mirroring how `implementation-plan` resolves `plansDirectory`:
+Two artifacts, one authoritative. Derive the `<slug>` once from the idea as a
+`verb-target` kebab-case name (e.g. `adopt-design-md`,
+`compare-state-libraries`) and use it for both.
+
+| Artifact | Path | Status |
+|---|---|---|
+| **Saved prompt** | `<prompts-dir>/proposal-<slug>.md` | **authoritative** |
+| Legacy proposal doc | `<proposals-dir>/<slug>.md` | deprecated, removed in 6.1.0 |
+
+**The prompt filename carries no date.** `proposal-<slug>.md` —
+never `proposal-<slug>-<YYYY-MM-DD>.md`: the file is a living document that deepens
+over rounds, and a dated name would resolve to a different path the moment a
+loop crosses midnight, forking the document in two. The slug is the identity;
+`created:` and `modified:` carry the dates.
+
+**Prompts directory** (first match wins), then `mkdir -p` it before the first
+write:
 
 1. `--dir <path>` if provided.
-2. `planAgent.proposalsDirectory` via Claude Code's settings precedence —
-   project-local `.claude/settings.local.json`, then project `.claude/settings.json`,
-   then global `~/.claude/settings.json`.
-3. `${PWD}/docs/proposals/` otherwise.
+2. `promptsDirectory` via Claude Code's settings precedence — project-local
+   `.claude/settings.local.json`, then project `.claude/settings.json`, then
+   global `~/.claude/settings.json`. Same key `write-prompt` and
+   `artifact-tools:prompt-artifact` read, so all three agree on where prompts
+   live.
+3. `${PWD}/docs/prompts/` otherwise.
+
+**Legacy proposals directory** — resolved the same way but from
+`planAgent.proposalsDirectory`, falling back to `${PWD}/docs/proposals/`. It is
+never overridden by `--dir`: the flag follows the authoritative artifact.
 
 ```bash
-# Resolve proposalsDirectory via Claude settings precedence
-# (project-local → project → user-global), else ${PWD}/docs/proposals
+# Resolve both directories via Claude settings precedence
+# (project-local → project → user-global), else the ${PWD} defaults.
 python3 - <<'PY'
 import json, os
 candidates = (
@@ -94,21 +129,22 @@ candidates = (
     os.path.join(".claude", "settings.json"),
     os.path.expanduser("~/.claude/settings.json"),
 )
-for p in candidates:
-    try:
-        v = (json.load(open(p)).get("planAgent", {}).get("proposalsDirectory") or "").strip()
-        if v:
-            print(v); break
-    except Exception:
-        continue
-else:
-    print(os.path.join(os.getcwd(), "docs", "proposals"))
+def resolve(getter, default):
+    for p in candidates:
+        try:
+            v = (getter(json.load(open(p))) or "").strip()
+            if v:
+                return v.rstrip("/")
+        except Exception:
+            continue
+    return os.path.join(os.getcwd(), *default)
+
+# --dir, when given, wins over this for the prompts directory.
+print(resolve(lambda d: d.get("promptsDirectory"), ("docs", "prompts")))
+print(resolve(lambda d: d.get("planAgent", {}).get("proposalsDirectory"),
+              ("docs", "proposals")))
 PY
 ```
-
-Derive the `<slug>` from the idea as a `verb-target` kebab-case name (e.g.
-`adopt-design-md`, `compare-state-libraries`). Write to
-`<resolved-dir>/<slug>.md`.
 
 ## Workflow
 
@@ -172,14 +208,49 @@ touches (Locked decisions + each affected Workstream, Open question, Roadmap
 item). Decision drift is the main failure mode; the propagate-on-answer rule is
 load-bearing.
 
-### Step 6 — Author the proposal artifact
+### Step 6 — Author the artifacts (dual-write)
 
-Write or append to `<resolved-dir>/<slug>.md` in the **canonical shape** — see
-[references/artifact-shape.md](references/artifact-shape.md) for the full
-template and section order. Scale the sections to the tier (Tier 1 keeps the
-short subset; Tier 2 uses the full shape). The document is the deliverable; chat
-is scaffolding. When the project is a git repo, offer to **commit each
-meaningful round** so the doc, not the chat, is the record.
+Assemble the round's content in the **canonical shape** — see
+[references/artifact-shape.md](references/artifact-shape.md) for the section
+order and the section-to-slot mapping. Scale to the tier. Then write **both**
+artifacts, prompt first.
+
+**1. The saved prompt (authoritative).** Delegate to `write-prompt` rather than
+hand-authoring the file:
+
+```
+Skill(skill: "plan-agent:write-prompt", args: "proposal --out <prompts-dir>/proposal-<slug>.md --answers-gathered <the assembled proposal content>")
+```
+
+- **`--out` is not optional.** `Skill()` has no documented return value, so this
+  skill cannot read back where the file landed; and `write-prompt`'s own Phase 7
+  would otherwise resolve its own directory and derive its own 3–5 word intent
+  slug — a different path from the `verb-target` one derived above. Passing the
+  path explicitly makes both sides agree by construction, so the path handed off
+  in Step 8 is byte-identical to the file actually written. Never derive the path
+  independently on both sides and hope they match.
+- **`--answers-gathered`** skips `write-prompt`'s own interview. Step 5 already
+  resolved every decision with the human; re-interviewing would ask them again
+  for answers this skill is holding.
+- `write-prompt` records `status:` (`gathering` until Step 8 declares
+  convergence, then `converged`), `modified:`, and `generated-sha:`, and on
+  round two rewrites that same file **in place** — no `-2` variant. It asks
+  before overwriting a body that was hand-edited since it last wrote.
+
+**2. The legacy proposal doc (deprecated).** Also write
+`<proposals-dir>/<slug>.md` in the canonical shape, leading with this banner
+directly under the H1:
+
+```markdown
+> **Deprecated.** The authoritative artifact is the saved prompt at
+> `<prompts-dir>/proposal-<slug>.md`. This copy is written for one deprecation
+> release (plan-agent 6.0.0) and is removed in 6.1.0. Edit the prompt, not this
+> file.
+```
+
+The prompt is the deliverable; chat is scaffolding. When the project is a git
+repo, offer to **commit each meaningful round** so the artifacts, not the chat,
+are the record.
 
 ### Step 7 — Deepen on request
 
@@ -191,13 +262,17 @@ execution-plan input?* If not, it is volume, not depth.
 ### Step 8 — Converge and hand off
 
 When the proposal is **decision-complete** (open items are decisions the human
-has now made, facts are grounded, the roadmap is sized), **stop**. Do not author
-the execution plan. Hand the proposal to the planning layer for a **full
-planning pass** — not a 1:1 conversion:
+has now made, facts are grounded, the roadmap is sized), set the prompt's
+`status:` to `converged` and **stop**. Do not author the execution plan. Hand the
+saved prompt to the planning layer for a **full planning pass** — not a 1:1
+conversion:
 
-> The proposal is decision-complete at `<resolved-dir>/<slug>.md`. To turn it
-> into an execution plan, run:
-> `/plan-agent:implementation-plan author an execution plan from the proposal at <resolved-dir>/<slug>.md`
+> The proposal is decision-complete at `<prompts-dir>/proposal-<slug>.md`. To
+> turn it into an execution plan, run:
+> `/plan-agent:implementation-plan author an execution plan from the proposal prompt at <prompts-dir>/proposal-<slug>.md`
+
+Report the prompt path — the same one passed to `write-prompt` via `--out` in
+Step 6, byte-for-byte. Never report the legacy copy as the deliverable.
 
 **Lead with the objective, not a bare `.md` path.** A proposal carries
 Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing

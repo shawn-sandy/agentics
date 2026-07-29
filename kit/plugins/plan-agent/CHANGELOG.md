@@ -1,5 +1,92 @@
 # Changelog
 
+## 6.0.0 — `build-proposal` converges on a saved prompt (2026-07-28)
+
+### Breaking
+
+- **The proposal deliverable is now a saved prompt.** `build-proposal` converges
+  on `<prompts-dir>/proposal-<slug>.md`, authored by delegating to
+  `write-prompt`, instead of hand-writing a proposal document. The legacy
+  `<proposals-dir>/<slug>.md` copy is still written for this release, carrying a
+  banner naming the prompt as authoritative; it is **removed in 6.1.0**.
+- **`--dir` now names the prompts directory**, not the proposals directory — the
+  flag follows the authoritative artifact. The prompts directory resolves
+  `--dir` → `promptsDirectory` → `${PWD}/docs/prompts/`, the same key
+  `write-prompt` and `artifact-tools:prompt-artifact` read. The deprecated
+  proposals root still resolves from `planAgent.proposalsDirectory`, but never
+  from `--dir`.
+- **`build`'s Step 1b chains a prompt path.** The proposal stage's reported
+  artifact, the dirty-tree exclusion, and the abandonment contract all name the
+  saved prompt; abandonment leaves both artifacts in place.
+
+### Added
+
+- **`commands/write-prompt.md`** — a 16-line wrapper that loads the skill body by
+  path. `write-prompt` carries `disable-model-invocation: true`, which blocks
+  *programmatic* `Skill()` invocation and not merely ambient activation, so the
+  skill was uncallable by anything; the flag stays on, and the wrapper puts the
+  name in the registry. **It does not delegate with
+  `Skill(skill: "plan-agent:write-prompt")`** — the shape `commands/deep-grill.md`
+  uses. The command *shadows* the skill of that name, so that call returns the
+  wrapper itself and the seven phases never load. Measured: delegating that way
+  put 0 `## Phase` headings in context; reading
+  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/SKILL.md` by path puts all 7 there.
+  The wrapper carries the reason inline so the next author does not "fix" it back
+  into a loop.
+
+  > The same shadowing applies to `commands/deep-grill.md` and
+  > `commands/documenting-plans.md`, which were not touched here.
+- **A fifth `proposal` prompt type in `write-prompt`**, wired through Phases 1,
+  2, 3, 4, and 7, with `references/proposal-prompt-template.md` carrying 11
+  proposal-shaped slots. The proposal's *Next step* section maps onto the
+  prompt's core instruction — the structural reason the two shapes fit. The type
+  is never offered in the clarify menu; it is reached only when a caller names
+  it.
+- **A caller-supplied `--out <path>` contract.** When present it overrides Phase
+  7's directory resolution *and* its 3–5 word intent-slug derivation entirely.
+  Without it, `build-proposal` (verb-target slug, its own `--dir`) and
+  `write-prompt` (intent slug, its own `promptsDirectory`) resolve **different**
+  paths, so the handoff and the deprecation banner would name a file that was
+  never written. `Skill()` has no documented return value, so the caller cannot
+  read the path back — it dictates it instead.
+- **A `--answers-gathered` bypass** for Phase 2. `build-proposal` resolves every
+  decision with the human in its own Step 5; without the bypass `write-prompt`
+  would interview them again for answers the caller is already holding.
+- **Living-document frontmatter** on proposal prompts: `status:`
+  (`gathering` | `converged`), `modified:`, and `generated-sha:`. Round two
+  rewrites the same file **in place** rather than minting a `-2` variant, and
+  asks first when the body's hash no longer matches `generated-sha:` — a hand
+  edit. The check is anchored to the recorded hash rather than to git precisely
+  because `build-proposal` only *offers* to commit each round, so an uncommitted
+  previous round would otherwise be indistinguishable from a hand edit.
+- **The filename omits the date for this type** — `proposal-<slug>.md`. A dated
+  name would resolve differently the moment a loop crossed midnight, forking the
+  living document in two. The slug is the identity; `created:` and `modified:`
+  carry the dates.
+- **A section-to-slot mapping table** in
+  `build-proposal/references/artifact-shape.md`, mapping all 13 canonical
+  proposal sections onto the template's slots.
+- **`tests/plugins/test-proposal-prompt-pipeline.sh`** (objective test, 10
+  checks) and **`tests/plugins/test-write-prompt-proposal-type.sh`** (unit, 10
+  checks — including one that *executes* the documented drift-detection command
+  and proves it discriminates a body edit from a `modified:` bump).
+
+### Fixed
+
+- **`artifact-shape.md` no longer teaches the conversion-mode trap.** Its line
+  102 advertised `/plan-agent:implementation-plan docs/proposals/<slug>.md` — the
+  bare-`.md` handoff `SKILL.md` forbids, which drops `implementation-plan` into
+  conversion mode and yields a plan whose steps restate proposal headings. The
+  test check that guards this now scans the whole skill directory rather than
+  `SKILL.md` alone, which is why it went unnoticed.
+
+### Preserved
+
+- **Tier 0 still writes no artifact of either kind**, so `build`'s "No proposal
+  written" fall-through keeps firing. **Tier 1** emits a prompt from the short
+  slot subset (`{{CONTEXT}}`, `{{CORE_FINDING}}`, `{{OPEN_QUESTIONS}}`,
+  `{{CORE_INSTRUCTION}}`) and omits the rest rather than emitting empty headings.
+
 ## 5.0.2 — Collapse the plan-mode guard to one line (2026-07-28)
 
 - **Eight skills reduced** — `build`, `build-proposal`, `finalize-plan`,

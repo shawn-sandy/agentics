@@ -5,6 +5,28 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-07-29
+
+### Added
+
+- **A fifth `proposal` filter chip in `prompt-artifact`'s library gallery.** The
+  skill globs `$PROMPTS_DIR/*.md` but hard-coded its chips to four literal
+  types, so `plan-agent:build-proposal`'s saved proposal prompts would have
+  rendered as cards no filter could reach. A type with no saved prompts still
+  gets its chip — an absent chip reads as a broken filter, an empty one reads as
+  an empty category.
+
+### Changed
+
+- **The frontmatter reader tolerates unknown keys.** Proposal prompts carry
+  `status:`, `modified:`, and `generated-sha:`; `modified:` now renders beside
+  `created:` in the metadata row and anything else is dropped silently. An
+  unrecognized key must never abort the read or blank a card.
+- **Long bodies scroll inside their own card.** Proposal prompts run roughly 3x
+  longer than anything the gallery had rendered before; the existing `<details>`
+  collapse handles the length, and an `overflow-x: auto` `<pre>` keeps a wide
+  markdown table from widening the page at mobile width. No type-specific CSS.
+
 ## [1.7.3] - 2026-07-28
 
 ### Changed
