@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.1 — Document Step 8's tracking-issue offer in the README (2026-07-29)
+
+### Changed
+
+- **README now describes the Step 8 tracking-issue offer** — `implementation-plan` delegates to `git-agent:create-issue` with the plan as its source, records the issue URL as the spec's `issue:` frontmatter key, skips the question when `issue:` is already set, and continues with a one-line note when `git-agent` is not installed. The behavior was documented in the SKILL and the changelog but not the README, and outside those in the repo's root `CLAUDE.md`, which is being trimmed back to one line per plugin. Documentation only; no behavior change.
+
 ## 5.0.0 — `build` can author the plan it implements (2026-07-27)
 
 ### Added

@@ -72,6 +72,13 @@ Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it a
 /plan-agent:implementation-plan docs/plans/distribute-skills-via-skill-box-catalog.md
 ```
 
+At Step 8 the skill offers to open a tracking issue for the finished plan,
+delegating to `git-agent:create-issue` with the plan as its source and
+recording the resulting URL as the spec's `issue:` frontmatter key. It is
+skipped when the spec already carries `issue:`, and if `git-agent` is not
+installed the skill notes it in one line and continues — issue creation never
+blocks the plan flow.
+
 Passing a `.md` plan path enters **conversion mode**: the markdown is treated as authoritative, pre-validated content — Clarify/Align/Interview are skipped, sections map 1:1 to the HTML structure, frontmatter (`created`, `status`) carries over, the output filename swaps the extension to `.html`, and Step 8 asks whether to keep or remove the source `.md`. If the path is missing locally, the skill checks the plan roots and the default branch before asking for direction.
 
 **Full invocation syntax:**

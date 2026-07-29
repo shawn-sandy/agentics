@@ -28,7 +28,6 @@ jobs:
             3. Run `node scripts/build-readme-table.mjs` to regenerate the Plugin Reference Table.
                Do NOT hand-edit that table — the script is the source of truth for it.
             4. Update the following sections to match marketplace.json exactly:
-               - Plugin version numbers in each plugin section heading (e.g., `code-review` v3.3.0)
                - The marketplace install commands block (add any plugins missing from the list)
                - The plugin count in the Overview table
                - The agentics-kit version in the top badge line

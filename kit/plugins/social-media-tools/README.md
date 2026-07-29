@@ -164,6 +164,13 @@ The `security-scrub` skill activates automatically when you ask to check code fo
 
 See [`references/variables.md`](references/variables.md) for the full variable reference for each card type.
 
+Posts close with a contextual learn-more invitation — one varied line naming the
+topic the reader gets more of, framed as continued learning rather than
+audience-building, and never a bare "follow me". On Twitter/X and Bluesky the
+takeaway wins and the line is dropped when the character budget is tight. The
+rule and its per-platform placement live in
+[`references/platforms.md`](references/platforms.md).
+
 ## Plugin Structure
 
 ```
