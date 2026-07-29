@@ -186,6 +186,16 @@ printf '%s' "$CHAIN" | grep -qi 'No proposal written' || MISSING="$MISSING tier0
 # --dir names where the *plan* goes, so the proposal branch must forward it to
 # implementation-plan even though it withholds it from build-proposal.
 printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not-forwarded-to-plan-authoring"
+# Since plan-agent 6.0.0 build-proposal converges on a saved prompt, not a
+# proposal doc. The chain interpolates whatever it reports without parsing it, so
+# a stale artifact name here silently chains a path that was never written.
+printf '%s' "$CHAIN" | grep -qi 'proposal prompt at <prompt path>' || MISSING="$MISSING prompt-path-chained"
+if printf '%s' "$CHAIN" | grep -qi 'from the proposal at <'; then
+  MISSING="$MISSING stale-proposal-doc-path"
+fi
+# Tier 0 writes neither artifact, and the abandonment contract must cover both.
+printf '%s' "$CHAIN" | grep -qi 'no artifact of either kind' || MISSING="$MISSING tier0-neither-artifact"
+printf '%s' "$CHAIN" | grep -qi 'leave \*\*both\*\* artifacts in place' || MISSING="$MISSING abandonment-covers-both"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else

@@ -21,12 +21,12 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | Component | Type | Activation |
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
-| `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent |
+| `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent — converges on a saved prompt at `docs/prompts/proposal-<slug>.md` |
 | `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
-| `write-prompt` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:write-prompt [intent]` |
+| `write-prompt` | Skill (`disable-model-invocation`) + Command | Invoke as `/plan-agent:write-prompt [intent] [--out <path>] [--answers-gathered]`; the command wrapper also makes it reachable from other skills, which the flag alone blocks |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
@@ -308,8 +308,18 @@ The skill runs a six-phase pipeline:
 | `task` | Clarity/directness, XML structure (`<context>`, `<example>`), thinking/CoT scaffolding, output format |
 | `creative` | Role assignment, tone/voice instructions, context/motivation, output format, positive framing |
 | `analytical` | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
+| `proposal` | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
-Invoke only via `/plan-agent:write-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts.
+Invoke only via `/plan-agent:write-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts. `disable-model-invocation: true` blocks *programmatic* `Skill()` invocation too, not merely ambient activation, so a thin `commands/write-prompt.md` wrapper exists to let other skills reach it; the flag stays on. The wrapper **reads `skills/write-prompt/SKILL.md` by path rather than delegating with `Skill(skill: "plan-agent:write-prompt")`**: the command shadows the skill of that name, so delegating would return the wrapper again and none of the seven phases would load.
+
+**The `proposal` type is caller-driven.** It is never offered in the clarify menu — `plan-agent:build-proposal` names it explicitly, passing the proposal content plus two flags:
+
+| Flag | Effect |
+|------|--------|
+| `--out <path>` | Write to exactly this path, overriding Phase 7's own directory resolution **and** its 3-5 word intent-slug derivation. The caller dictates the path so both sides agree by construction rather than by coincidence. |
+| `--answers-gathered` | Skip the Phase 2 interview entirely — zero `AskUserQuestion` calls. The caller already resolved every decision with the human. |
+
+Proposal prompts are living documents: they carry `status:` (`gathering` | `converged`), `modified:`, and `generated-sha:` frontmatter, use the date-free filename `proposal-<slug>.md`, and are rewritten **in place** on later rounds. Before overwriting, the skill compares the body's sha256 against the recorded `generated-sha:` and asks first when they differ — a hand edit. The check is anchored to that key rather than to a git baseline because `build-proposal` only *offers* to commit each round, so an uncommitted previous round would otherwise look hand-edited every time.
 
 #### `plans-open` — Auto-activates
 
@@ -469,9 +479,9 @@ plan-agent/
     build/
       SKILL.md              — Implements an existing plan: steps, spec ticks, three gates, re-render
     build-proposal/
-      SKILL.md              — Idea→proposal loop (Tier gate, 8 steps, artifact resolver)
+      SKILL.md              — Idea→prompt loop (Tier gate, 8 steps, dual-write resolver)
       references/
-        artifact-shape.md             — Canonical proposal-artifact template
+        artifact-shape.md             — Canonical proposal shape + section-to-slot mapping
         operating-principles.md       — Ten principles + capability map
         example-design-md-spec-alignment.md   — Trimmed Tier 2 worked exemplar
         example-proposal-builder-skill.md     — Trimmed recursive worked exemplar
@@ -488,11 +498,21 @@ plan-agent/
       SKILL.md              — Open existing gallery without rebuild
     setup-sites/
       SKILL.md              — Scaffold the GitHub Pages deploy pipeline into any repo
+    write-prompt/
+      SKILL.md              — 7-phase prompt authoring (classify, interview, structure, draft, save)
+      references/
+        system-prompt-template.md     — system-type template
+        task-prompt-template.md       — task-type template
+        creative-prompt-template.md   — creative-type template
+        analytical-prompt-template.md — analytical-type template
+        proposal-prompt-template.md   — proposal-type template (11 proposal-shaped slots)
+        best-practices-reference.md   — Anthropic prompting guidance
   agents/
     plan-reviewer-*.md      — Seven reviewer agent definitions (5 core + 2 UI-conditional)
     agent-review-plan.md    — Background agent for fire-and-forget review
   commands/
     review-plan-bg.md       — Background review dispatcher command
+    write-prompt.md         — Skill wrapper unblocking programmatic invocation
   templates/
     plans-gallery.html      — Static gallery template (substituted by plans-library)
     pages/
@@ -558,17 +578,19 @@ Command-invocable via `/plan-agent:build-proposal <idea>` and model-invocable on
 
 - **Right-sizing triage** — Step 1 picks a **Tier**: Tier 0 (answer directly, no loop), Tier 1 (one research pass, short proposal), Tier 2 (full 8-step loop + canonical artifact). The tier escalates or de-escalates as research reveals scope.
 - **8-step loop** — Frame → Fan out research (parallel) → Synthesize the core finding → Separate facts from decisions → Resolve decisions (recommendation-first) → Author the artifact → Deepen on request → Converge & hand off. Step 0 self-bootstraps out of plan mode.
-- **Artifact-dir resolution** — `--dir` → `planAgent.proposalsDirectory` (settings precedence: project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`) → `${PWD}/docs/proposals/`; `mkdir -p`s the resolved dir and writes `<slug>.md`. A committed `docs/proposals/.gitkeep` seeds the default.
+- **Artifact resolution (dual-write, 6.0.0)** — the deliverable is a **saved prompt** at `<prompts-dir>/proposal-<slug>.md`, authored by delegating to `write-prompt`; the legacy `<proposals-dir>/<slug>.md` copy is still written for one deprecation release carrying a banner naming the prompt as authoritative, and is removed in 6.1.0. The prompts directory resolves `--dir` → `promptsDirectory` (settings precedence: project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`) → `${PWD}/docs/prompts/` — the same key `write-prompt` and `artifact-tools:prompt-artifact` read. **`--dir` follows the authoritative artifact, so since 6.0.0 it names the prompts directory, not the proposals one**; the deprecated proposals root still resolves from `planAgent.proposalsDirectory` → `${PWD}/docs/proposals/`, seeded by a committed `docs/proposals/.gitkeep`.
+- **The prompt filename carries no date** — `proposal-<slug>.md`. It is a living document that deepens over rounds, and a dated name would resolve to a different path the moment a loop crossed midnight, forking it in two. The slug is the identity; `created:` and `modified:` carry the dates, and round two rewrites the same file in place rather than minting a `-2` variant.
+- **The caller dictates the path** — Step 6 passes `--out <path>` (and `--answers-gathered`, so the human is not re-interviewed) to `write-prompt`. `Skill()` has no documented return value, and `write-prompt`'s own Phase 7 would resolve a different directory and a different intent slug, so an independently derived path would name a file that was never written.
 - **`deep-research` is optional** — the web-research phase can delegate to the `deep-research` skill when available, falling back to `WebSearch`/`WebFetch` + `Agent` (`Explore`) breadth otherwise. No hard dependency.
 - **References (one level deep)** — `references/artifact-shape.md` (canonical section order + skeleton), `references/operating-principles.md` (ten principles + capability map), and two trimmed worked exemplars (`example-design-md-spec-alignment.md`, `example-proposal-builder-skill.md`) stamped with source URL + commit SHA/date.
-- **Handoff** — at convergence it stops and points to `/plan-agent:implementation-plan author an execution plan from the proposal at docs/proposals/<slug>.md`. It leads with an objective rather than a bare `.md` token: a bare token triggers `implementation-plan`'s 1:1 conversion mode (which maps `Changes/Steps` → step cards), and a proposal has only `Workstreams`/`Roadmap` — so leading with the objective keeps the full planning pass that drafts real, actionable steps.
+- **Handoff** — at convergence it sets the prompt's `status:` to `converged`, stops, and points to `/plan-agent:implementation-plan author an execution plan from the proposal prompt at <prompts-dir>/proposal-<slug>.md`. It leads with an objective rather than a bare `.md` token: a bare token triggers `implementation-plan`'s 1:1 conversion mode (which maps `Changes/Steps` → step cards), and a proposal has only `Workstreams`/`Roadmap` — so leading with the objective keeps the full planning pass that drafts real, actionable steps.
 
 Usage:
 
 ```text
 /plan-agent:build-proposal should we adopt DESIGN.md for our component tokens
 /plan-agent:build-proposal compare our state management to Zustand and align
-/plan-agent:build-proposal --dir docs/rfcs how would we add offline support
+/plan-agent:build-proposal --dir docs/rfcs how would we add offline support   # --dir names the prompts dir
 ```
 
 ### `finalize-plan` Skill

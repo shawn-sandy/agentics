@@ -57,7 +57,7 @@ gh workflow run publish-dist.yml --repo shawn-sandy/agentics
 | `content-tools` | Skills | Convert an HTML artifact or Markdown file into a draft site post |
 | `git-agent` | Skills + Agents + Hooks + Commands | Branch, commit, PR, merge, ship, and issue workflows, with background variants |
 | `memory-tools` | Skills | Audit CLAUDE.md and project memory against context-engineering practice |
-| `plan-agent` | Skills + Agents + Hooks + Commands | Author, review, implement, and maintain implementation plans end to end |
+| `plan-agent` | Skills + Agents + Hooks + Commands | Author, review, implement, and maintain plans; proposals converge on a saved prompt under `docs/prompts/` |
 | `product-plans` | Skills + Agents + Commands | Six-role cross-functional review panel for product plans and PRDs |
 | `settings-sync` | Skills | Back up and restore Claude Code settings to a git repo |
 | `skill-reviewer` | Skills | Audit, score, and optimize SKILL.md files and their frontmatter |

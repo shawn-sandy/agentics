@@ -5,7 +5,7 @@ description: "Builds structured AI prompts using Anthropic techniques. Interview
 disable-model-invocation: true
 argument-hint: "[intent or topic description]"
 allowed-tools:
-  AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *)
+  AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
 ---
 
 # write-prompt
@@ -28,7 +28,7 @@ prompt do you need help crafting?"
 ## Phase 1 — Classify
 
 Identify the prompt type from $ARGUMENTS or the user's stated need. Classify
-into one of four types:
+into one of five types:
 
 | Type           | When to use                                                                     |
 | -------------- | ------------------------------------------------------------------------------- |
@@ -36,6 +36,7 @@ into one of four types:
 | **task**       | A one-shot task instruction (refactor code, summarize document, translate text) |
 | **creative**   | Creative writing, storytelling, tone generation, or style mimicry               |
 | **analytical** | Research, analysis, comparison, or synthesis of information or documents        |
+| **proposal**   | A decision-complete proposal converging on a build instruction — normally invoked by `plan-agent:build-proposal`, not chosen by hand |
 
 After classifying, apply the **technique matrix** — the set of Anthropic
 best-practice layers that apply to this type:
@@ -46,10 +47,14 @@ best-practice layers that apply to this type:
 | task        | Clarity/directness, XML structure (`<context>`, `<example>`), thinking/CoT scaffolding, output format |
 | creative    | Role assignment, tone/voice instructions, context/motivation, output format, positive framing         |
 | analytical  | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format              |
+| proposal    | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
 If the input does not clearly match any single type, ask the user to clarify via
-`AskUserQuestion` with the four types as options: "Which best describes what
-you're building?" — then proceed with the chosen type.
+`AskUserQuestion` with the four author-facing types as options: "Which best
+describes what you're building?" — then proceed with the chosen type. **Never
+offer `proposal` in that menu.** It is a caller-driven type: reach it only when
+`$ARGUMENTS` names it explicitly, which in practice means `build-proposal`
+invoked this skill.
 
 Announce the classified type and selected technique matrix to the user in one
 short sentence:
@@ -60,6 +65,18 @@ short sentence:
 ---
 
 ## Phase 2 — Interview
+
+**Bypass — `--answers-gathered`.** When `$ARGUMENTS` carries this token, skip
+Phase 2 entirely: run **zero** `AskUserQuestion` calls, and treat the content the
+caller passed in as the gathered answers, feeding it straight to Phase 3. A
+caller that has already interviewed the human — `plan-agent:build-proposal`
+resolves every decision with them in its own Step 5 — would otherwise
+double-interview on material it already holds. This is a repo-local `$ARGUMENTS`
+convention, not a Claude Code feature; no upstream pattern exists for it.
+
+Never set the token from inside this skill, and never infer it from a
+content-rich invocation. An invocation without it interviews, however much
+context it arrived with.
 
 Gather context from the user using type-specific questions grounded in
 Anthropic's "Add context to improve performance" principle. The key is to
@@ -133,6 +150,12 @@ Map interview answers to XML layers:
   instruction
 - **Self-check** (analytical type): add a final "Before responding, verify..."
   clause
+- **Proposal grounding** (proposal type): wrap the proposal's sections in their
+  matching layers — `<context>`, `<finding>`, `<comparison>`, `<decisions>`,
+  `<workstreams>`, `<risks>`, `<open-questions>`, `<roadmap>`, `<appendices>` —
+  and carry the proposal's *Next step* through as the core instruction. Pass
+  markdown tables and appendices through verbatim rather than summarizing them;
+  they are the grounded evidence the prompt exists to carry.
 
 Skip any layer whose type is not in the technique matrix for this prompt.
 
@@ -154,6 +177,8 @@ Template selection by type:
   `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/creative-prompt-template.md`
 - analytical →
   `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/analytical-prompt-template.md`
+- proposal →
+  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/proposal-prompt-template.md`
 
 Read the template with the Read tool, resolving the path as
 `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/<type>-prompt-template.md`.
@@ -228,7 +253,20 @@ tighten the output format, or adjust the tone."
 After delivering the prompt in Phase 6, save it as a markdown file in the
 resolved `prompts/` directory.
 
-**Resolve the output directory** (first match wins):
+**Caller-supplied output path — `--out <path>`.** When `$ARGUMENTS` carries this
+flag, write to exactly that path and **skip the rest of this phase's path
+work entirely**: no directory resolution, no filename derivation, no 3–5 word
+intent slug. `mkdir -p` the path's parent, then write. Report back the same path
+byte-for-byte — do not normalize, re-slug, or re-date it.
+
+This exists because a caller that derives its own path and a Phase 7 that
+derives its own path will disagree. `build-proposal` names its file from a
+`verb-target` slug under its own resolved directory; Phase 7 below would pick a
+different directory and a different intent slug, and the caller would then hand
+off, banner, and report a file that was never written. The caller dictates the
+path so the two agree by construction rather than by coincidence.
+
+**Resolve the output directory** (first match wins — `--out` skips this):
 
 1. Read `promptsDirectory` from `.claude/settings.json` (check project-level
    `.claude/settings.json` first, then `~/.claude/settings.json`). If the key is
@@ -263,9 +301,44 @@ Examples:
 - `system-customer-support-bot-2026-06-04.md`
 - `analytical-compare-pricing-models-2026-06-04.md`
 
-**Uniqueness guard:** before writing, check whether
+**The `proposal` type omits the date:** `proposal-{slug}.md`. A proposal prompt
+is a living document that deepens over rounds, and a dated name would resolve to
+a different file the moment a loop crosses midnight — writing a second file and
+silently abandoning the first. The slug is the identity; `created:` and
+`modified:` carry the dates. In practice this type arrives with `--out`, which
+supersedes derivation altogether; the rule is stated so a bare invocation of the
+type still lands on one file.
+
+**Uniqueness guard (all types except `proposal`):** before writing, check whether
 `{resolved-directory}/{filename}` already exists. If it does, append `-2` to the
 base name (before `.md`), then `-3`, etc., until the path is unique.
+
+**In-place rewrite (the `proposal` type only)** — replaces the uniqueness guard,
+because a `-2` variant would fork the living document the type exists to
+maintain. Before overwriting an existing file:
+
+1. Read its frontmatter. No `generated-sha:` key → it was not written by this
+   skill; ask via `AskUserQuestion` before touching it.
+2. Compute the sha256 of the file's current body — every byte after the
+   frontmatter's closing `---` — and compare it against the recorded
+   `generated-sha:`.
+3. **Equal** → the file is exactly what this skill last wrote. Overwrite in
+   place, silently.
+4. **Different** → the body was hand-edited since. Ask via `AskUserQuestion`
+   whether to overwrite, and show what changed. Never clobber on your own
+   judgement: the prompt file is the authoritative deliverable, so a lost hand
+   edit is worse than the duplicate file this rule replaces.
+
+```bash
+# body hash — everything after the frontmatter's closing '---'
+awk 'f{print} /^---$/{n++; if(n==2) f=1}' "$FILE" | shasum -a 256 | cut -d' ' -f1
+```
+
+The check is anchored to `generated-sha:` rather than to a git baseline on
+purpose. `build-proposal` only *offers* to commit each round, so a previous round
+is frequently uncommitted — against git, every rewrite would look hand-edited and
+the confirmation would fire every single time, training the user to click through
+it.
 
 **Write the file** using the Write tool. The file content must be:
 
@@ -281,6 +354,18 @@ created: {YYYY-MM-DD}
 
 {the raw assembled prompt text from Phase 4 — substituted content, NOT the Phase 6 fenced display block; embed the prompt as plain text}
 ```
+
+**The `proposal` type carries three more frontmatter keys**, written on every
+round:
+
+- `status:` — `gathering` while the loop is still open, `converged` once the
+  proposal is decision-complete. The proposal-native vocabulary, not the plan
+  lifecycle's `todo`/`in-progress`/`completed`.
+- `modified:` — `YYYY-MM-DD` of this round. `created:` keeps the first round's
+  date.
+- `generated-sha:` — the sha256 of the body just written, computed with the
+  command above **after** assembling the content and **before** the next round
+  reads it back. Without it the drift check in the rewrite rule has no baseline.
 
 **Confirm to the user** in one line after saving:
 

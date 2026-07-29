@@ -74,6 +74,12 @@ Read the frontmatter: `type`, `intent`, `techniques`, `created`, and
 `artifact-url:`. The body below the frontmatter's closing `---` is the prompt;
 the H1 is the title.
 
+**Read the keys you need and ignore the rest.** `type: proposal` prompts also
+carry `status:`, `modified:`, and `generated-sha:`; more keys will follow. An
+unrecognized key is not an error and must never abort the read or blank a card —
+render `modified:` beside `created:` in the metadata row when present, and drop
+anything else silently.
+
 **Library mode.** `Glob` `$PROMPTS_DIR/*.md`. If nothing matches, tell the user:
 
 > "No saved prompts found in `<PROMPTS_DIR>`. Run `/plan-agent:write-prompt` to
@@ -144,10 +150,18 @@ button.
 **Library mode** renders one card per prompt — title, `type` chip, `intent`,
 `created` — with the full body expandable in place (`<details>` needs no JS) and
 its own copy button per card. Filter chips by `type` (`task`, `system`,
-`creative`, `analytical`) hide and show cards via inlined JS; carry the value on
-`data-type` and follow `plans-library`'s card and filter idiom rather than
-inventing a second one. Sort newest-first by `created` (`YYYY-MM-DD` strings
-compare correctly), empty `created` last, ties broken by title ascending.
+`creative`, `analytical`, `proposal`) hide and show cards via inlined JS; carry
+the value on `data-type` and follow `plans-library`'s card and filter idiom
+rather than inventing a second one. A type with no saved prompts still gets its
+chip — an absent chip reads as a broken filter, an empty one reads as an empty
+category. Sort newest-first by `created` (`YYYY-MM-DD` strings compare
+correctly), empty `created` last, ties broken by title ascending.
+
+`proposal` bodies run several hundred lines — roughly 3x anything else in the
+directory. The existing `<details>` collapse already keeps them out of the way
+until opened; give the `<pre>` `overflow-x: auto` so a wide markdown table
+scrolls inside its own card instead of widening the page. The page body must
+never scroll horizontally at mobile width. No type-specific CSS beyond that.
 
 ### The copy button
 
