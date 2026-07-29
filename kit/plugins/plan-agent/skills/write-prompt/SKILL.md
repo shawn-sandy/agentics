@@ -359,6 +359,21 @@ created: {YYYY-MM-DD}
 {the raw assembled prompt text from Phase 4 — substituted content, NOT the Phase 6 fenced display block; embed the prompt as plain text}
 ```
 
+**The `proposal` type inserts a fixed framing line** between the H1 and the
+assembled body — the template starts directly at `<tldr>`/`<context>`, and this
+line is not a substituted slot, so it is not in the template file:
+
+```
+> This is a proposal for review, not an execution plan. It carries the
+> grounded research and the decisions already made; the final instruction
+> below hands off to drafting an execution plan from it.
+```
+
+Without this line the reader has no signal that what follows is a proposal
+rather than a ready-to-execute instruction — the same distinction
+`build-proposal`'s own artifact shape makes with its framing block quote, which
+this line is standing in for.
+
 **The `proposal` type carries three more frontmatter keys**, written on every
 round:
 

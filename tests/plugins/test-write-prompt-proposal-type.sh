@@ -41,7 +41,17 @@ if [ -f "$WRAPPER" ]; then
   printf '%s' "$WF" | grep -qi 'do \*\*not\*\* call `Skill(skill: "plan-agent:write-prompt")`' \
     || MISSING="$MISSING no-loop-warning"
   printf '%s' "$WF" | grep -qi 'shadows the skill' || MISSING="$MISSING shadowing-unexplained"
-  grep -q '^allowed-tools:.*Read' "$WRAPPER" || MISSING="$MISSING read-not-allowed"
+  printf '%s' "$WF" | grep -qF 'allowed-tools: Read' || MISSING="$MISSING read-not-allowed"
+  # The wrapper must scope Bash the same way the skill does (Bash(git *),
+  # Bash(mkdir *), Bash(awk *), Bash(shasum *)) — a bare "Bash" token here would
+  # grant the wrapper broader shell access than SKILL.md itself declares.
+  ATLINE="$(awk '/^allowed-tools:/{f=1; print; next} f && /^[A-Za-z-]+:/{f=0} f' "$WRAPPER" | flat)"
+  if printf '%s' "$ATLINE" | grep -qE '(^|, )Bash(,|$)'; then
+    MISSING="$MISSING unscoped-bash"
+  fi
+  for scope in 'Bash(git *)' 'Bash(mkdir *)' 'Bash(awk *)' 'Bash(shasum *)'; do
+    printf '%s' "$ATLINE" | grep -qF "$scope" || MISSING="$MISSING missing-scope:$scope"
+  done
   WLINES="$(wc -l < "$WRAPPER" | tr -d ' ')"
   [ "$WLINES" -le 20 ] || MISSING="$MISSING wrapper-too-long($WLINES)"
 fi
@@ -128,6 +138,27 @@ if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
   echo "  FAIL: --out contract incomplete:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "6b. Phase 7 inserts the framing line the section-to-slot mapping promises..."
+# artifact-shape.md's mapping table promises "H1 + fixed framing line" for the
+# Title+framing section, but the template starts directly at <tldr>/<context>
+# and the generic write-the-file block only adds the H1 — so without an
+# explicit proposal-type insertion rule every authoritative prompt silently
+# drops the "this is a proposal, not an execution plan" signal. Caught by
+# review, reproduced against real generated output (three probe runs, zero
+# framing blockquotes).
+SHAPE="$ROOT/kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md"
+MISSING=""
+printf '%s' "$P7F" | grep -qi 'fixed framing line' || MISSING="$MISSING framing-rule-missing"
+printf '%s' "$P7F" | grep -qi 'not an execution plan' || MISSING="$MISSING framing-text-missing"
+printf '%s' "$P7F" | grep -qi 'not a substituted slot' || MISSING="$MISSING framing-not-a-slot-stated"
+grep -qi 'fixed framing line' "$SHAPE" || MISSING="$MISSING shape-mapping-unmatched"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: framing-line contract incomplete:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 

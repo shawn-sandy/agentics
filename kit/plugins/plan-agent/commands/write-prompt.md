@@ -1,6 +1,7 @@
 ---
 description: Build a structured AI prompt using Anthropic techniques and save it to the prompts directory
-allowed-tools: Read, Glob, AskUserQuestion, ToolSearch, Write, Bash
+allowed-tools:
+  Read, Glob, AskUserQuestion, ToolSearch, Write, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
 argument-hint: "[intent or topic] [--out <path>] [--answers-gathered]"
 ---
 
