@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.4.5 — 2026-07-28 — Collapse the plan-mode guard to one line
+
+- `tdd-loop` replaces its four-line `ExitPlanMode` preamble with the canonical
+  one-line guard. The skill still exits plan mode before its first git mutation.
+
 ## v3.4.3 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed

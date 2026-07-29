@@ -1,5 +1,18 @@
 # Changelog — social-media-tools
 
+## v2.19.2 — 2026-07-28 — Collapse the plan-mode guard to one line
+
+### Changed
+
+- **Fourteen share skills reduced** — `media-library`, `save-artifact`,
+  `share-blog`, `share-code`, `share-explanation`, `share-github`, `share-init`,
+  `share-project`, `share-react`, `share-scan`, `share-selection`,
+  `share-session`, `share-video`, and `social-share` replace their four-line
+  `ExitPlanMode` preamble with the canonical one-line guard.
+- **`digest` drops the guard entirely** — the command only invokes `share-scan`,
+  which carries its own. `ToolSearch` and `ExitPlanMode` are removed from its
+  `allowed-tools`.
+
 ## v2.19.1 — 2026-07-29 — Document the contextual learn-more CTA rule
 
 ### Changed

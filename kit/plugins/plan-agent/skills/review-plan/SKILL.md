@@ -30,7 +30,7 @@ Detection: check whether `$ARGUMENTS` (or the `args` string passed via `Skill()`
 
 ### Step 0 — Exit plan mode and create progress todos
 
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 Use `TodoWrite` to create todos for Steps 1–8. Mark each `completed` as done.
 

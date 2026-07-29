@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="in-progress" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="in-progress">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-07-27">
@@ -1308,7 +1308,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">in-progress</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1348,7 +1348,7 @@ img, video { max-width: 100%; height: auto; }
 
     <section class="plan-glance" aria-labelledby="plan-glance-label">
       <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>Fifty-two plugin files each re-teach Claude the same four-line dance about exiting plan mode before writing files, costing about 2,750 words spread across ten plugins. The guard itself matters and stays; only the explanation goes. We will know it worked when the long form appears nowhere and every write-heavy skill still carries a one-line guard.</p>
+      <p>Forty-three plugin files each re-teach Claude the same four-line dance about exiting plan mode before writing files, spread across eight plugins. The guard itself matters and stays; only the explanation goes. We will know it worked when the long form appears nowhere and every write-heavy skill still carries a one-line guard.</p>
     </section>
 
     <div class="plan-implement">
@@ -1407,12 +1407,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1426,7 +1426,11 @@ img, video { max-width: 100%; height: auto; }
       <p>Distribution: `social-media-tools` 16 files, `plan-agent` 12, `git-agent` 11,<br>`artifact-tools` 4, `product-plans` 3, `skill-reviewer` 2, and one each in<br>`team-defaults`, `content-tools`, `code-testing-agent`, and `code-review`.</p>
       <p>Two of the Claude 5 context-engineering rules apply at once. Rule 4 says state<br>a thing once rather than repeating it across layers. Rule 1 says prefer<br>judgment over rules — a current model asked to commit while in plan mode does<br>not need forty words explaining that writes are mutations.</p>
       <p>**This plan reduces the guard, it does not remove it.** A skill that starts<br>writing files inside plan mode violates a standing user preference, and that<br>failure is silent — the write either fails confusingly or escapes a mode the<br>user deliberately entered. The distinction Step 2 draws is between the *guard*<br>(one line, keep in every write-heavy skill) and the *tutorial* (the deferred<br>tool mechanics and rationale, delete everywhere). Read-only skills that carry<br>the block at all should lose it entirely, since they never mutate.</p>
-      <p>Ten plugins change, so ten `marketplace.json` version bumps land in this<br>work. That wide blast radius is the reason this is its own plan rather than<br>part of a larger sweep: it must be revertible as one unit. The per-file change<br>is mechanical and repetitive across ten directories, so `workflow: true` is set<br>to allow parallel per-plugin execution with a final verification pass.</p>
+      <p>Eight plugins change, so eight `marketplace.json` version bumps land in this<br>work. That wide blast radius is the reason this is its own plan rather than<br>part of a larger sweep: it must be revertible as one unit. The per-file change<br>is mechanical and repetitive across eight directories, so `workflow: true` is set<br>to allow parallel per-plugin execution with a final verification pass.</p>
+      <p>**Corrections made during execution.** Three of the numbers above were<br>measured against the wrong scope. They were corrected rather than worked<br>around, and each correction is recorded here so the diff can be read against<br>the spec.</p>
+      <p>**Fifty-two files, but forty-three carry boilerplate.** The 52 came from<br>`grep -rl ExitPlanMode kit/plugins`, which also matches nine files where the<br>mention is legitimate: five `CHANGELOG.md` histories, `plan-agent/README.md`,<br>`plan-agent/hooks.json` (a `PostToolUse` matcher), `code-review/commands/fix-branch.md`<br>(a lint rule asserting that any body mentioning `ExitPlanMode` also declares<br>`ToolSearch`), and `team-defaults/skills/sync-rules/rules/plan-mode.md` (the<br>shipped copy of the user&#39;s global plan-mode rule). None is duplication. The<br>real target was the 43 files matching `select:ExitPlanMode` in a body.</p>
+      <p>**Eight plugins, not ten.** The two dropped are `code-review` and<br>`team-defaults`, whose only mentions are the two legitimate files above.<br>Bumping them to reach ten would have been a fabricated change.</p>
+      <p>**The under-600 word budget needed a scope, not a smaller number.** Measured<br>with the plan&#39;s own command, `grep -rh &#39;ExitPlanMode&#39; kit/plugins | wc -w`,<br>600 is unreachable: 449 words are `allowed-tools:` frontmatter (the permission<br>declaration — deleting it breaks the tool rather than saving context), 512 are<br>CHANGELOG history, and 161 are the legitimate content above. The floor is 1,122<br>before a single guard line exists. The budget now measures what it meant to<br>measure — the bodies of `skills/*/SKILL.md`, `commands/*.md`, and `agents/*.md`,<br>frontmatter excluded — where the sweep took 1,678 words down to 583.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1438,20 +1442,25 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>kit/plugins/social-media-tools/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">16 files, the largest group</span></li>
-          <li><code>kit/plugins/plan-agent/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">12 files</span></li>
-          <li><code>kit/plugins/git-agent/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">11 files</span></li>
+          <li><code>kit/plugins/social-media-tools/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">15 files, the largest group</span></li>
+          <li><code>kit/plugins/plan-agent/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">9 files</span></li>
+          <li><code>kit/plugins/git-agent/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">10 files</span></li>
           <li><code>kit/plugins/artifact-tools/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">4 files</span></li>
-          <li><code>kit/plugins/product-plans/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">3 files</span></li>
-          <li><code>kit/plugins/skill-reviewer/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2 files</span></li>
-          <li><code>kit/plugins/team-defaults/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">1 file</span></li>
+          <li><code>kit/plugins/product-plans/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2 files</span></li>
+          <li><code>kit/plugins/skill-reviewer/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">1 file</span></li>
           <li><code>kit/plugins/content-tools/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">1 file</span></li>
           <li><code>kit/plugins/code-testing-agent/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">1 file</span></li>
-          <li><code>kit/plugins/code-review/**/*.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">1 file</span></li>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">ten version bumps</span></li>
+          <li><code>.claude/rules/plugin-patterns.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">the canonical wording, and the fix to the rule that mandated the long form</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">eight version bumps</span></li>
           <li><code>kit/plugins/*/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">one entry per touched plugin</span></li>
-          <li><code>tests/plugins/test-exitplanmode-guard.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective test</span></li>
-          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">wire the new test</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
+            <ul class="file-list">
+            <li><code>test-exitplanmode-guard.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective test</span></li>
+            <li><code>test-build-skill.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">check 4 asserted on the boilerplate wording</span></li>
+            <li><code>test-setup-sites.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">check 5 asserted on the boilerplate wording</span></li>
+            </ul>
+          </li>
+          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">wire the new test Not modified, though the original spec listed them: `kit/plugins/code-review/` and `kit/plugins/team-defaults/`. Neither carries boilerplate.</span></li>
         </ul>
       </div>
     </section>
@@ -1464,120 +1473,137 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Inventory all 52 files and classify each as write-heavy (the skill or command mutates the filesystem, git state, or a remote) or read-only, recording the classification and the current `ExitPlanMode` wording per file.</span>
               </div>
               <div class="step-why">read-only skills should lose the block entirely while write-heavy ones must keep a guard, and only reading each file&#39;s actual behavior distinguishes them.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">the inventory covers all 52 files with no &quot;unclassified&quot; entries, and the write-heavy count matches the set of skills that call Write, Edit, or mutating Bash.</div>
+                <div class="verify-body">the inventory covers all 52 files with no &quot;unclassified&quot; entries, and the write-heavy count matches the set of skills that call Write, Edit, or mutating Bash. — *Done:* 52 files inventoried, 9 excluded as legitimate mentions (see Context), leaving 43 boilerplate-bearing files: **40 write-heavy**, **3 read-only**. The classification is recorded as the `WRITE_HEAVY` and `READ_ONLY` arrays in `tests/plugins/test-exitplanmode-guard.sh`, where it is executable rather than prose. The 3 read-only files are the pure dispatchers `plan-agent/commands/review-plan-bg.md`, `product-plans/commands/product-plans-bg.md`, and `social-media-tools/commands/digest.md` — each only spawns an agent or skill that carries its own guard.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Agree the canonical one-line guard wording and record it in `.claude/rules/plugin-patterns.md` as the pattern authors must follow.</span>
               </div>
               <div class="step-why">a single documented form is what stops the next skill author from re-inventing a four-line version.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`plugin-patterns.md` contains the canonical line, and it is under 20 words.</div>
+                <div class="verify-body">`plugin-patterns.md` contains the canonical line, and it is under 20 words. — *Done:* the canonical line is ``**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.`` (12 words). Recorded under a new `#### The plan-mode guard` heading. The same edit fixes the rule that *caused* the duplication: the `#### Deferred tools` section previously instructed authors to &quot;include a note in the step body&quot; explaining the `ToolSearch` mechanic, which is why 43 files each carried one.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Replace the long form with the canonical line in every write-heavy file, one plugin at a time, starting with `code-review` (1 file) to validate the pattern before touching `social-media-tools` (16 files).</span>
               </div>
               <div class="step-why">proving the change on the smallest plugin first means a wrong canonical wording costs one file to fix, not fifty-two.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">after each plugin, `grep -rc &#39;ExitPlanMode&#39; kit/plugins/&lt;name&gt;` shows the expected reduced count and no file retains the `ToolSearch with select:ExitPlanMode` tutorial text.</div>
+                <div class="verify-body">after each plugin, `grep -rc &#39;ExitPlanMode&#39; kit/plugins/&lt;name&gt;` shows the expected reduced count and no file retains the `ToolSearch with select:ExitPlanMode` tutorial text. — *Done:* 40 files carry the canonical line. The pilot ran on `code-testing-agent` (1 file) rather than `code-review`, which turned out to have no boilerplate to pilot on. Four files keep a genuinely distinct instruction alongside the guard: `build-proposal` its `WebSearch`/`WebFetch` bootstrap, and `build` / `prototype` / `setup-sites` their &quot;produce no plan document&quot; clause.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Delete the block outright from every file classified read-only in Step 1.</span>
               </div>
               <div class="step-why">a guard against a mutation the skill never performs is pure context cost with no protective value.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -rl &#39;ExitPlanMode&#39;` returns no file on the read-only list.</div>
+                <div class="verify-body">`grep -rl &#39;ExitPlanMode&#39;` returns no file on the read-only list. — *Done:* all 3 dispatchers are clean, and `ToolSearch`/`ExitPlanMode` were dropped from their `allowed-tools` since they no longer call either. Asserted by Check 4 of the objective test.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump the version of all ten touched plugins in `.claude-plugin/marketplace.json` and add a `CHANGELOG.md` entry to each.</span>
               </div>
               <div class="step-why">repo convention requires a bump higher than main for any edit under `kit/plugins/&lt;name&gt;/`, and ten plugins changed.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and reports ten bumped plugins.</div>
+                <div class="verify-body">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and reports ten bumped plugins. — *Done:* **eight** plugins bumped (patch — refactor, no behavior change), each with a CHANGELOG entry in that file&#39;s own established style: `artifact-tools` 1.7.3, `code-testing-agent` 3.4.5, `content-tools` 1.0.2, `git-agent` 4.7.1, `plan-agent` 5.0.2, `product-plans` 3.4.13, `skill-reviewer` 2.2.9, `social-media-tools` 2.19.2.</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write `tests/plugins/test-exitplanmode-guard.sh` asserting the long-form tutorial text appears in zero files, that total `ExitPlanMode` word count across `kit/plugins/` is under 600, and that every skill on the Step 1 write-heavy list still contains the canonical guard line.</span>
               </div>
               <div class="step-why">the third assertion is the one that matters — it fails if a future edit strips the guard along with the boilerplate.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-exitplanmode-guard.sh` exits 0; deleting the guard line from one write-heavy skill makes it exit 1.</div>
+                <div class="verify-body">`bash tests/plugins/test-exitplanmode-guard.sh` exits 0; deleting the guard line from one write-heavy skill makes it exit 1. — *Done:* four checks, all passing. A fourth check was added beyond the spec: the read-only dispatchers must *not* carry a guard, which is the only thing stopping Step 4&#39;s deletions from being quietly undone. Mutation-tested both ways (see Verification).</div>
               </details>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card completed">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the new test to `.github/workflows/check-plugin-versions.yml`.</span>
               </div>
               <div class="step-why">local-only tests stop running.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body">the workflow names `test-exitplanmode-guard.sh` and parses as valid YAML.</div>
+                <div class="verify-body">the workflow names `test-exitplanmode-guard.sh` and parses as valid YAML. — *Done:* added as the final step; the file parses and the step is present.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">*(added during execution)* Retarget two existing tests that asserted on the boilerplate itself.</span>
+              </div>
+              <div class="step-why">`test-build-skill.sh` check 4 and `test-setup-sites.sh` check 5 both grepped for `select:ExitPlanMode` as their proof that a guard existed, so removing the tutorial failed them — they encoded the wording rather than the guarantee.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">both now grep for the canonical line, and the full suite is green.</div>
               </details>
             </div>
           </div>
@@ -1607,36 +1633,36 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
-          <label for="ac1">Zero files under `kit/plugins/` contain the long-form `ExitPlanMode` tutorial text</label>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1">Zero files under `kit/plugins/` contain the long-form `ExitPlanMode` tutorial text — Check 1 of the objective test; CHANGELOG history is out of scope</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
-          <label for="ac2">Total `ExitPlanMode` word count across `kit/plugins/` is under 600, down from 2,750</label>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">Total `ExitPlanMode` word count across `kit/plugins/` is under 600, down from 2,750 — **583**, measured over instruction-file bodies (see Context for why the plan&#39;s raw command has a 1,122-word floor); down from 1,678 in the same scope, and 2,750 → 1,641 by the raw command</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
-          <label for="ac3">Every skill classified write-heavy in Step 1 contains the canonical guard line</label>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3">Every skill classified write-heavy in Step 1 contains the canonical guard line — all 40, Check 3</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
-          <label for="ac4">Zero files classified read-only in Step 1 mention `ExitPlanMode`</label>
+          <input type="checkbox" id="ac4" checked>
+          <label for="ac4">Zero files classified read-only in Step 1 mention `ExitPlanMode` — all 3, Check 4</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
-          <label for="ac5">The canonical wording is documented in `.claude/rules/plugin-patterns.md`</label>
+          <input type="checkbox" id="ac5" checked>
+          <label for="ac5">The canonical wording is documented in `.claude/rules/plugin-patterns.md` — under `#### The plan-mode guard`, together with the fix to the rule that generated the duplication</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
-          <label for="ac6">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with ten plugins bumped</label>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with ten plugins bumped — exits 0 with **eight**; see Context</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
-          <label for="ac7">Each of the ten touched plugins has a new `CHANGELOG.md` entry</label>
+          <input type="checkbox" id="ac7" checked>
+          <label for="ac7">Each of the ten touched plugins has a new `CHANGELOG.md` entry — each of the **eight**</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
-          <label for="ac8">`bash tests/plugins/test-exitplanmode-guard.sh` exits 0</label>
+          <input type="checkbox" id="ac8" checked>
+          <label for="ac8">`bash tests/plugins/test-exitplanmode-guard.sh` exits 0 — 4 of 4 checks pass</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1652,6 +1678,15 @@ img, video { max-width: 100%; height: auto; }
       <p>Run `grep -rh &#39;ExitPlanMode&#39; kit/plugins | wc -w` and confirm the result is<br>under 600, down from 2,750. Run<br>`BASE_REF=main node scripts/check-plugin-versions.mjs` and confirm exit 0.</p>
       <p>Then prove the guard still works, which is the whole point of keeping it.<br>Enter plan mode, invoke `git-agent:commit-agent` on a dirty working tree, and<br>confirm it exits plan mode and commits rather than either erroring or writing<br>from inside plan mode. Repeat with `plan-agent:implementation-plan`, confirming<br>it writes its spec to the plans directory. Both are skills whose guard this<br>plan deliberately preserved.</p>
       <p>Finally, prove the test is not a tautology: delete the canonical guard line<br>from one write-heavy skill, run `bash tests/plugins/test-exitplanmode-guard.sh`,<br>confirm exit 1, and revert.</p>
+      <p>### Verification status — 2026-07-28</p>
+      <p>**Passed — word count and version guard.** 583 words against a 600 budget<br>(scope corrected per the Context section; the raw command reads 2,750 → 1,641).<br>`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with eight<br>plugins bumped.</p>
+      <p>**Passed — the test is not a tautology.** Mutated in both directions, each<br>reverted afterwards and the baseline re-confirmed green:</p>
+      <p>- Stripped the guard from `git-agent/skills/commit-agent/SKILL.md` → Check 3<br>fails, exit 1, naming the file.<br>- Re-added a tutorial sentence to `social-media-tools/skills/share-code/SKILL.md`<br>→ Check 1 fails, exit 1, quoting the line.</p>
+      <p>That second mutation is why the test does not rest on the word budget alone: it<br>moved the count only 583 → 593, well inside the 600 ceiling. A sum-based budget<br>is a slow-creep backstop that trips after roughly ten files regress, not a<br>detector. Checks 1 and 3 fail on the first file.</p>
+      <p>**Not run — the manual plan-mode behavioural test.** `EnterPlanMode` states it<br>&quot;REQUIRES user approval&quot; and `ExitPlanMode` &quot;requests user approval&quot;, so both<br>gate on an interactive prompt. The session that executed this plan was<br>non-interactive and could not enter plan mode, so the guard&#39;s runtime behaviour<br>is unverified. Everything asserted about it here is static: the line is present,<br>first in each workflow, and worded identically across all 40 files.</p>
+      <p>This is the only outstanding item, and it is why `status` remains<br>`in-progress`. To close it, from an interactive session on a dirty working tree:</p>
+      <p>1. Enter plan mode, invoke `git-agent:commit-agent`, and confirm it exits plan<br>mode and commits rather than erroring or committing from inside plan mode.<br>2. Enter plan mode, invoke `plan-agent:implementation-plan`, and confirm it<br>writes its spec to the plans directory.</p>
+      <p>Then set `status: completed` and re-render.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
@@ -1666,11 +1701,11 @@ img, video { max-width: 100%; height: auto; }
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
@@ -1680,7 +1715,20 @@ img, video { max-width: 100%; height: auto; }
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Manual plan-mode behavioural test not run</dt>
+            <dd>EnterPlanMode requires user approval and ExitPlanMode requests it, so neither works in a non-interactive session. The guard&#39;s runtime behaviour is unverified; everything asserted about it is static. This is why status stays in-progress.</dd>
+            <dt>Fifty-two files became forty-three</dt>
+            <dd>nine of the 52 mention ExitPlanMode legitimately (five CHANGELOG histories, a README, a hooks.json matcher, a code-review lint rule, and the team-defaults copy of the global plan-mode rule). None was duplication.</dd>
+            <dt>Ten plugins became eight</dt>
+            <dd>code-review and team-defaults carry no boilerplate. Bumping them to reach ten would have been a fabricated change.</dd>
+            <dt>The under-600 word budget was rescoped, not relaxed</dt>
+            <dd>the plan&#39;s own command has a 1,122-word floor of frontmatter, changelog history, and legitimate content. Measured over instruction-file bodies, the sweep took 1,678 words to 583.</dd>
+            <dt>Two existing tests had to be retargeted</dt>
+            <dd>test-build-skill.sh and test-setup-sites.sh both proved a guard existed by grepping for the tutorial wording, so removing it failed them. Both now assert the canonical line.</dd>
+            <dt>A fourth check was added beyond the spec</dt>
+            <dd>read-only dispatchers must not carry a guard, which is the only thing stopping Step 4&#39;s deletions from being quietly undone.</dd>
+          </dl>
         </div>
       </div>
     </section>

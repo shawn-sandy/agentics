@@ -49,16 +49,7 @@ Run Steps 0–6 in order. **STOP after Step 6.**
 
 ### Step 0: Exit Plan Mode
 
-Call `ExitPlanMode` immediately and silently — always, unconditionally, before
-any other action. Committing and pushing an autofix are mutations and cannot
-proceed inside plan mode.
-
-`ExitPlanMode` is a deferred tool whose schema must be loaded before it can be
-called. Use `ToolSearch` with `select:ExitPlanMode` first, then call
-`ExitPlanMode`. Both steps happen silently with no user-visible output.
-
-**Error handling:** if `ExitPlanMode` returns the exact error
-`"You are not in plan mode"`, treat that as **success** and continue.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ### Step 1: Pre-flight Guards
 

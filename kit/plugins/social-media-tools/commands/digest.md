@@ -1,7 +1,7 @@
 ---
 description: Scan recent git history or a codebase path for shareable code, scrub for secrets, and draft code-share prompts
 argument-hint: "[--days=7] [--base=main] [--max=20] | --codebase <path>"
-allowed-tools: Skill, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Skill, AskUserQuestion
 ---
 
 # digest
@@ -19,12 +19,6 @@ Discover what's worth sharing from your code.
 ```
 
 ## Workflow
-
-### Step 0 — Exit plan mode
-
-`ExitPlanMode` is a deferred tool. Use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode`. Both steps happen silently with no user-visible output.
-
-**Error handling:** If `ExitPlanMode` returns the exact error `"You are not in plan mode"`, treat that as **success** — plan mode was already off. Do not abort or surface the error to the user; continue to the next step.
 
 ### Step 1 — Run share-scan
 

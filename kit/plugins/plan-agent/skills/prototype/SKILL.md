@@ -33,10 +33,7 @@ Two activation paths, both driven by this one `SKILL.md`:
 
 ## Step 0 — Exit plan mode
 
-This skill performs write operations (filesystem). Before doing anything else,
-bootstrap out of plan mode: use `ToolSearch` with `select:ExitPlanMode`, then
-call `ExitPlanMode`. Do not produce a plan document — execute the workflow
-directly.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state. Produce no plan document — execute the workflow directly.
 
 ## Step 1 — Resolve the input
 

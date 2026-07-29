@@ -42,7 +42,7 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 
 ## Step 0: Exit plan mode, then discover project skills
 
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 Then enumerate all SKILL.md files in the current project:
 

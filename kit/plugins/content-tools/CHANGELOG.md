@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 — 2026-07-28
+
+- `artifact-to-post` replaces its four-line `ExitPlanMode` preamble with the
+  canonical one-line guard. Behaviour is unchanged.
+
 ## 1.0.1 — 2026-07-22
 
 ### Fixed

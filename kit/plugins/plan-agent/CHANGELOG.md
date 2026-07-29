@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.0.2 — Collapse the plan-mode guard to one line (2026-07-28)
+
+- **Eight skills reduced** — `build`, `build-proposal`, `finalize-plan`,
+  `implementation-plan`, `plans-library`, `prototype`, `review-plan`, and
+  `setup-sites` replace their `ExitPlanMode` preambles with the canonical
+  one-line guard. `build-proposal` keeps its separate `WebSearch`/`WebFetch`
+  bootstrap note, which is a different instruction.
+- **`review-plan-bg` drops the guard entirely** — the command only dispatches
+  `agent-review-plan`, which reaches `review-plan` and its own guard. `ToolSearch`
+  and `ExitPlanMode` are removed from its `allowed-tools` accordingly.
+
 ## 5.0.1 — Document Step 8's tracking-issue offer in the README (2026-07-29)
 
 ### Changed

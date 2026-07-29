@@ -46,7 +46,7 @@ next to the source plan as a shareable, browser-openable companion.
 `mode = interactive`. This flag governs branching in Steps 1, 2, and 7 —
 record it once here so subsequent steps can reference it without re-parsing.
 
-`ExitPlanMode` is a deferred tool. **Only call it if currently in plan mode** — skip this step entirely when not in plan mode. When calling: use `ToolSearch` with `select:ExitPlanMode` first, then call `ExitPlanMode` silently.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 Use `TodoWrite` to create a todo for each step below (Steps 1–9), all
 starting `pending`. Mark each `completed` as you finish that step.
