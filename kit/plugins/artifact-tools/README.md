@@ -244,7 +244,18 @@ from the wrong place.
 Default mode publishes one prompt and records `artifact-url:` in its frontmatter.
 `--library` publishes one filterable gallery of every saved prompt and tracks its
 URL in a `.artifact-url` sidecar in the prompts directory, since a gallery has no
-source `.md` to hold frontmatter. **Commit the sidecar** — ignoring it gives every
+source `.md` to hold frontmatter.
+
+The gallery's filter chips cover all five prompt types — `task`, `system`,
+`creative`, `analytical`, and `proposal` — and a type with no saved prompts still
+gets its chip, since an absent chip reads as a broken filter while an empty one
+reads as an empty category. The frontmatter reader takes the keys it needs and
+ignores the rest: `proposal` prompts written by `plan-agent:build-proposal` also
+carry `status:`, `modified:`, and `generated-sha:`, and an unrecognized key must
+never abort the read or blank a card. `modified:` renders beside `created:` when
+present. Proposal bodies run roughly 3x longer than anything else in the
+directory, so the `<pre>` scrolls horizontally inside its own card rather than
+widening the page. **Commit the sidecar** — ignoring it gives every
 clone its own gallery URL, which is exactly the link-rot the stable-URL design
 exists to prevent.
 

@@ -94,8 +94,9 @@ explicitly anyway so a parse failure surfaces here instead of silently.
   `git-agent:ship-autonomous` runs every pre-flight guard before any mutation;
   this matches.
 - **Plan artifacts are never pre-existing work.** Exclude the resolved plan's
-  own spec and rendered HTML, and any proposal this chain wrote, from the dirty
-  report. Without that exclusion the Step 8 `Implement now` callback re-enters
+  own spec and rendered HTML, and any artifact this chain's proposal stage wrote
+  — the saved proposal prompt under the prompts directory **and** the deprecated
+  legacy copy under the proposals directory — from the dirty report. Without that exclusion the Step 8 `Implement now` callback re-enters
   this skill with the just-authored plan sitting uncommitted, so the guard fires
   at exactly the post-interview moment the hoist exists to avoid — and in a
   headless run the unavailable-question rule below would stop the chain
@@ -174,20 +175,23 @@ proposal writing, plan authoring, or review. Control returns through
    leave the chain holding nothing to plan from.
 3. **Proposal path.** Invoke
    `Skill(skill: "plan-agent:build-proposal", args: "<objective>")`. Do **not**
-   forward `--dir` — that skill resolves its own proposals directory. When it
-   converges, invoke `Skill(skill: "plan-agent:implementation-plan", args:
-   "author an execution plan from the proposal at <proposal path> --dir <path>")`
+   forward `--dir` — that skill resolves its own prompts directory, and since
+   plan-agent 6.0.0 its `--dir` names where the *prompt* goes, not the plan.
+   It converges on a **saved proposal prompt** at
+   `<prompts-dir>/proposal-<slug>.md`; that path, the one it reports, is what
+   chains onward. Invoke `Skill(skill: "plan-agent:implementation-plan", args:
+   "author an execution plan from the proposal prompt at <prompt path> --dir <path>")`
    — **`--dir` is forwarded here**, unlike to `build-proposal`: it names where
    the *plan* goes, so omitting it would write the spec to the default directory
    and then fail to resolve it on return. Lead with
-   objective text naming the proposal path, never a bare `.md` first token,
+   objective text naming the prompt path, never a bare `.md` first token,
    which would drop `implementation-plan` into conversion mode and produce a
    plan whose steps restate proposal headings instead of naming real actions.
    **No proposal written → fall through to the direct path.** `build-proposal`
-   triages a Tier 0 idea by answering it directly and producing no document, so
-   there is nothing to plan from. Say so in one line and continue at step 4 with
-   the original objective; never call `implementation-plan` with an empty or
-   guessed proposal path.
+   triages a Tier 0 idea by answering it directly and writing no artifact of
+   either kind, so there is nothing to plan from. Say so in one line and continue
+   at step 4 with the original objective; never call `implementation-plan` with
+   an empty or guessed path.
 4. **Direct path.** Invoke
    `Skill(skill: "plan-agent:implementation-plan", args: "<objective>")`,
    forwarding `--dir <path>` when it was given.
@@ -210,9 +214,10 @@ proposal writing, plan authoring, or review. Control returns through
      workflow prompt and set `status: in-progress`; report the plan's path and
      do not start an in-session build racing the workflow the user launched.
 6. **Abandonment contract.** If the chain is abandoned between stages — a tool
-   error, a session drop, or the user backing out after a proposal is written
-   but before a plan exists — leave the proposal file in place uncommitted and
-   report its path. Never clean it up.
+   error, a session drop, or the user backing out after the proposal stage has
+   written but before a plan exists — leave **both** artifacts in place
+   uncommitted, the saved prompt and the legacy copy, and report the prompt's
+   path. Never clean either one up.
 
 ## Step 2 — Implement
 

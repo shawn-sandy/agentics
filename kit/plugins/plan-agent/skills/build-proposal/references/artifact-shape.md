@@ -39,9 +39,9 @@ only when it carries grounded content.
 12. **Appendices** — the grounded artifacts that make claims testable: mapping
     tables, worked examples, I/O contracts, inventories. Each appendix should be
     a candidate future execution-plan input.
-13. **Next step** — the handoff line: convert to an execution plan via
-    `/plan-agent:implementation-plan <resolved-dir>/<slug>.md`. The proposal
-    stops here.
+13. **Next step** — the handoff line: convert to an execution plan by invoking
+    `/plan-agent:implementation-plan` with objective text naming the saved
+    prompt. The proposal stops here.
 
 ## Skeleton
 
@@ -99,8 +99,45 @@ Resolved in the <YYYY-MM-DD> review:
 <mapping table / worked example / I/O contract>
 
 ## Next step
-Convert to an execution plan: `/plan-agent:implementation-plan docs/proposals/<slug>.md`
+Convert to an execution plan:
+`/plan-agent:implementation-plan author an execution plan from the proposal prompt at <prompts-dir>/proposal-<slug>.md`
 ```
+
+**Lead with objective text, never a bare `.md` first token.** A bare token drops
+`implementation-plan` into its conversion mode, which maps `Changes`/`Steps`
+sections 1:1 onto step cards — and a proposal has only Workstreams and a
+Roadmap, so the result is a plan whose steps restate proposal headings. This
+rule binds this reference as much as `SKILL.md`.
+
+## Section-to-slot mapping
+
+The authoritative artifact is the saved prompt, assembled by `write-prompt` from
+`references/proposal-prompt-template.md`. Each canonical section above maps onto
+exactly one slot:
+
+| Canonical section | Prompt slot | Notes |
+|---|---|---|
+| Front-matter | frontmatter keys | plus `status:` (`gathering` \| `converged`), `modified:`, `generated-sha:`; filename is date-free `proposal-{slug}.md` |
+| Title + framing note | H1 + fixed framing line | the framing note is fixed text, not a slot |
+| TL;DR | `{{TLDR}}` | Tier 2 only; omitted for Tier 1 |
+| Context | `{{CONTEXT}}` | inside `<context>` |
+| Core finding | `{{CORE_FINDING}}` | the single load-bearing sentence |
+| Side-by-side | `{{COMPARISON_TABLE}}` | markdown table passed through verbatim |
+| Locked & resolved decisions | `{{LOCKED_DECISIONS}}` | repeating |
+| Workstreams | `{{WORKSTREAMS}}` | repeating |
+| Risks & tensions | `{{RISKS}}` | repeating |
+| Open questions | `{{OPEN_QUESTIONS}}` | decisions only |
+| Roadmap | `{{ROADMAP}}` | phased, S/M/L |
+| Appendices | `{{APPENDICES}}` | one catch-all slot; pass through, never truncate |
+| Next step | `{{CORE_INSTRUCTION}}` | the handoff **is** the prompt's instruction |
+
+The last row is the load-bearing one: a proposal's *Next step* and a prompt's
+core instruction are the same thing. That is why the two shapes fit rather than
+being forced together.
+
+Tier 1 populates only `{{CONTEXT}}`, `{{CORE_FINDING}}`, `{{OPEN_QUESTIONS}}`,
+and `{{CORE_INSTRUCTION}}`, and omits the remaining slots — it does not emit
+them empty.
 
 See [example-design-md-spec-alignment.md](example-design-md-spec-alignment.md)
 (Tier 2, multi-round) and
