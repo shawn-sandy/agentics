@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.4.12 — 2026-07-29 — Document the reviewers' codebase-only research constraint
+
+### Changed
+
+- **README now states that panel research is codebase-only** — no `WebFetch`, no `WebSearch`. The reviewers' tool list was already documented, but the constraint that follows from it lived only in the repo's root `CLAUDE.md`, which is being trimmed back to one line per plugin. Documentation only; no behavior change.
+
 ## v3.4.11 — 2026-07-17 — Repoint plan-interview cross-references to plan-agent
 
 ### Changed

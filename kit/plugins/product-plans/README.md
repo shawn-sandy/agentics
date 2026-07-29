@@ -265,4 +265,6 @@ the `Task` tool or direct `subagent_type` references outside this skill.
 
 Each reviewer runs in its own context window, has `tools: Read, Glob, Grep,
 Bash(git *)`, and produces a structured 9-item output schema that the lead
-synthesizes into the final report.
+synthesizes into the final report. That tool list is deliberate: research is
+codebase-only — no `WebFetch`, no `WebSearch` — so every finding is grounded in
+the plan and the repository rather than in external sources.

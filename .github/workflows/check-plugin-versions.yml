@@ -33,6 +33,11 @@ jobs:
       # safety gates are checked at review time, not the next morning.
       - name: Test merge? shorthand hook and merge skill contract
         run: bash tests/plugins/test-merge-shorthand.sh
+      # CLAUDE.md is loaded into every session in this repo, so growth there is
+      # a tax on all future work — and it grows by ordinary PRs adding "just one
+      # more line", which is exactly what review misses.
+      - name: Test CLAUDE.md stays within its context budget
+        run: bash tests/plugins/test-claude-md-budget.sh
       # The gallery merge driver runs during `git merge`, where a silent wrong
       # answer looks like lost plan or artifact cards rather than a failure.
       # Nothing else exercises it, so this is its only regression gate.

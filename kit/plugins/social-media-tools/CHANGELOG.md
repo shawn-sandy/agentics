@@ -1,5 +1,11 @@
 # Changelog — social-media-tools
 
+## v2.19.1 — 2026-07-29 — Document the contextual learn-more/follow CTA rule
+
+### Changed
+
+- **README now names the contextual learn-more/follow CTA** that closes every generated post — one varied line matched to the post's subject rather than generic follow boilerplate — and points at `references/platforms.md`, where the rule and its per-platform placement live. The behavior was documented only in that reference and in the repo's root `CLAUDE.md`, which is being trimmed back to one line per plugin. Documentation only; no behavior change.
+
 ## v2.19.0 — 2026-07-22 — save-artifact: accept a claude.ai artifact URL as the source
 
 ### Added
