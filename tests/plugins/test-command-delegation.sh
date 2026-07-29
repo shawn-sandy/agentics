@@ -88,6 +88,28 @@ for rel, skill in DELEGATORS.items():
         if not re.search(rf"^{key}:\s*\S", text, re.M):
             failures.append(f"{rel}: lost its `{key}:` frontmatter in the collapse")
 
+    # The skill body now runs INLINE under the command's permissions, so the
+    # command's allowed-tools must cover every tool the skill declares. Missing
+    # one does not fail at load — it fails at the branch that needs it, which is
+    # how `documenting-plans` shipped a wrapper without `Skill` and would have
+    # died only on plans whose status was not already `completed`. Grepping the
+    # skill body for `Skill(` misses this: it asks for the tool in prose.
+    skill_md = os.path.join(plugin_dir, os.path.dirname(os.path.dirname(rel)),
+                            "skills", skill, "SKILL.md")
+    if os.path.isfile(skill_md):
+        with open(skill_md, encoding="utf-8") as fh:
+            skill_text = fh.read()
+        def tools(src):
+            m = re.search(r"^allowed-tools:\s*(.+?)\s*$", src, re.M)
+            return {t.strip() for t in m.group(1).split(",") if t.strip()} if m else set()
+        missing = tools(skill_text) - tools(text)
+        if missing:
+            failures.append(
+                f"{rel}: allowed-tools omits {sorted(missing)}, which "
+                f"skills/{skill}/SKILL.md declares — the skill runs inline under "
+                f"this command's permissions and would stall on that branch"
+            )
+
 # plan-status still uses the shadowed `Skill(skill: "plan-agent:plan-status")`
 # form and so almost certainly no-ops the same way — not converted here only
 # because it was out of scope for the change that fixed the two above. It keeps

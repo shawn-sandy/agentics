@@ -15,17 +15,30 @@
 - **Both now read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` by path**, with
   a `Glob` fallback and an inline note explaining the shadowing so the next
   editor does not reintroduce the `Skill()` call. Each wrapper stays at 15 lines.
-- **`allowed-tools` widened to match the skill each now runs inline** —
-  `deep-grill` takes `Read, Glob, Grep, AskUserQuestion, TodoWrite`;
-  `documenting-plans` takes `Read, Glob, Grep, Bash(git *), AskUserQuestion,
-  Write, Edit, TodoWrite`. Under the old `allowed-tools: Skill` the skill's own
-  tools would have been unreachable from the command.
+- **`allowed-tools` widened to match the skill each now runs inline** — each
+  command now mirrors its skill's declared set exactly: `deep-grill` takes
+  `Read, Glob, Grep, AskUserQuestion, TodoWrite`; `documenting-plans` takes
+  `Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite,
+  Skill`. Under the old `allowed-tools: Skill` the skill's own tools would have
+  been unreachable from the command.
 - **`tests/plugins/test-command-delegation.sh` now enforces the by-path shape** —
-  it requires each converted delegator to name `skills/<name>/SKILL.md` and
-  rejects a self-named `Skill()` call. Both assertions were verified to fail
-  against the pre-fix files. `plan-status` still uses the shadowed form and is
-  tracked separately; it keeps the thin-delegator line and frontmatter guards in
-  the meantime.
+  it requires each converted delegator to name `skills/<name>/SKILL.md`, rejects
+  a self-named `Skill()` call, and requires the command's `allowed-tools` to
+  cover every tool its skill declares. All three assertions were verified to
+  fail against the code they guard. `plan-status` still uses the shadowed form
+  and is tracked separately; it keeps the thin-delegator line and frontmatter
+  guards in the meantime.
+
+### Known limitation
+
+- **`documenting-plans` Step 2 still bottoms out in the `plan-status`
+  shadowing.** When a plan's frontmatter is not already `status: completed`, the
+  skill asks for `plan-agent:plan-status` through the `Skill` tool — which
+  `commands/plan-status.md` shadows, so the call returns that wrapper rather
+  than the skill. Restoring `Skill` to the command's `allowed-tools` makes the
+  branch *reachable*; it is fully fixed only when `plan-status` gets the same
+  by-path treatment. Plans already marked `completed`, the documented input for
+  this skill, never enter that branch.
 - **Closes the follow-up 6.0.0 left open** — its `commands/write-prompt.md` entry
   noted that the same shadowing applied to these two commands and that they were
   not touched there. They are now, in the same by-path shape. One wording

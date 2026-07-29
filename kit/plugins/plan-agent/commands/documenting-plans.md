@@ -1,6 +1,6 @@
 ---
 description: Generate developer-friendly documentation at docs/<slug>.md from a completed plan file, synthesized from the plan body, live code inspection, and git history
-allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash(git *), AskUserQuestion, Write, Edit, TodoWrite, Skill
 argument-hint: "[plan-file-path] - omit to auto-detect from IDE or settings"
 ---
 
