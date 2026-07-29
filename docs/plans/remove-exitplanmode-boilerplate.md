@@ -72,7 +72,7 @@ declaration — deleting it breaks the tool rather than saving context), 512 are
 CHANGELOG history, and 161 are the legitimate content above. The floor is 1,122
 before a single guard line exists. The budget now measures what it meant to
 measure — the bodies of `skills/*/SKILL.md`, `commands/*.md`, and `agents/*.md`,
-frontmatter excluded — where the sweep took 1,678 words down to 583.
+frontmatter excluded — where the sweep took 1,678 words down to 553.
 
 ## Files
 
@@ -118,7 +118,7 @@ Tier 1 — This plan changes application code
 ## Acceptance Criteria
 
 - [x] Zero files under `kit/plugins/` contain the long-form `ExitPlanMode` tutorial text — Check 1 of the objective test; CHANGELOG history is out of scope
-- [x] Total `ExitPlanMode` word count across `kit/plugins/` is under 600, down from 2,750 — **583**, measured over instruction-file bodies (see Context for why the plan's raw command has a 1,122-word floor); down from 1,678 in the same scope, and 2,750 → 1,641 by the raw command
+- [x] Total `ExitPlanMode` word count across `kit/plugins/` is under 600, down from 2,750 — **553**, measured over instruction-file bodies (see Context for why the plan's raw command has a 1,122-word floor); down from 1,678 in the same scope, and 2,750 → 1722 by the raw command
 - [x] Every skill classified write-heavy in Step 1 contains the canonical guard line — all 40, Check 3
 - [x] Zero files classified read-only in Step 1 mention `ExitPlanMode` — all 3, Check 4
 - [x] The canonical wording is documented in `.claude/rules/plugin-patterns.md` — under `#### The plan-mode guard`, together with the fix to the rule that generated the duplication
@@ -145,8 +145,8 @@ confirm exit 1, and revert.
 
 ### Verification status — 2026-07-28
 
-**Passed — word count and version guard.** 583 words against a 600 budget
-(scope corrected per the Context section; the raw command reads 2,750 → 1,641).
+**Passed — word count and version guard.** 553 words against a 600 budget
+(scope corrected per the Context section; the raw command reads 2,750 → 1722).
 `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with eight
 plugins bumped.
 
@@ -159,7 +159,7 @@ reverted afterwards and the baseline re-confirmed green:
   → Check 1 fails, exit 1, quoting the line.
 
 That second mutation is why the test does not rest on the word budget alone: it
-moved the count only 583 → 593, well inside the 600 ceiling. A sum-based budget
+moved the count only 553 → 563, well inside the 600 ceiling. A sum-based budget
 is a slow-creep backstop that trips after roughly ten files regress, not a
 detector. Checks 1 and 3 fail on the first file.
 
@@ -185,7 +185,7 @@ Then set `status: completed` and re-render.
 - Manual plan-mode behavioural test not run — EnterPlanMode requires user approval and ExitPlanMode requests it, so neither works in a non-interactive session. The guard's runtime behaviour is unverified; everything asserted about it is static. This is why status stays in-progress.
 - Fifty-two files became forty-three — nine of the 52 mention ExitPlanMode legitimately (five CHANGELOG histories, a README, a hooks.json matcher, a code-review lint rule, and the team-defaults copy of the global plan-mode rule). None was duplication.
 - Ten plugins became eight — code-review and team-defaults carry no boilerplate. Bumping them to reach ten would have been a fabricated change.
-- The under-600 word budget was rescoped, not relaxed — the plan's own command has a 1,122-word floor of frontmatter, changelog history, and legitimate content. Measured over instruction-file bodies, the sweep took 1,678 words to 583.
+- The under-600 word budget was rescoped, not relaxed — the plan's own command has a 1,122-word floor of frontmatter, changelog history, and legitimate content. Measured over instruction-file bodies, the sweep took 1,678 words to 553.
 - Two existing tests had to be retargeted — test-build-skill.sh and test-setup-sites.sh both proved a guard existed by grepping for the tutorial wording, so removing it failed them. Both now assert the canonical line.
 - A fourth check was added beyond the spec — read-only dispatchers must not carry a guard, which is the only thing stopping Step 4's deletions from being quietly undone.
 

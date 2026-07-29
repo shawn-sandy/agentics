@@ -33,7 +33,9 @@ Two activation paths, both driven by this one `SKILL.md`:
 
 ## Step 0 — Exit plan mode
 
-**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state. Produce no plan document — execute the workflow directly.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
+Produce no plan document — execute the workflow directly.
 
 ## Step 1 — Resolve the input
 

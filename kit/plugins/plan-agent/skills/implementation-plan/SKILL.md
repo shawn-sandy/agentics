@@ -195,7 +195,8 @@ Echo the resolved objective and effective flags after Step 0.
 
 Follow these steps exactly.
 
-0. **Self-bootstrap** — **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+0. **Self-bootstrap** —
+   **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 0.5. **Issue Ingestion** *(skip when no issue reference was detected)* —
    Fetch via `gh issue view <n> --repo <owner>/<repo> --json

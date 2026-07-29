@@ -71,7 +71,7 @@ Any skill, command, or agent that mutates the filesystem, git state, or a remote
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 ```
 
-Keep it verbatim: `tests/plugins/test-exitplanmode-guard.sh` greps for this exact string and fails if a write-heavy skill loses it.
+Keep it verbatim and keep it standalone — its own line, nothing appended after it. `tests/plugins/test-exitplanmode-guard.sh` greps for this exact string and fails if a write-heavy skill loses it. A skill with a further instruction for the same step (`build-proposal`'s `WebSearch` bootstrap, `build`'s "produce no plan document") puts it in the next paragraph, so the guard reads identically in every file.
 
 Do not expand it. Earlier versions of this repo carried a four-line variant per file — what plan mode is, why writes are mutations, how to `ToolSearch` for the tool, how to handle the "not in plan mode" error. That is 43 copies of something the model already knows.
 

@@ -14,7 +14,9 @@ The pipeline it installs: a push to `main` touching `docs/**` fires a path-filte
 
 ## Exit plan mode
 
-**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state. Produce no plan document — execute the workflow directly.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
+Produce no plan document — execute the workflow directly.
 
 ## Step 1 — Preflight: confirm a git repo and resolve the live URL
 

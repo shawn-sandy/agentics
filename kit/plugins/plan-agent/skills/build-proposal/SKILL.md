@@ -117,6 +117,7 @@ Follow these steps. Treat them as a loop the human steers, not a one-shot run.
 ### Step 0 — Self-bootstrap (exit plan mode)
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
 `WebSearch` and `WebFetch` are deferred too — load them with `ToolSearch`
 `select:WebSearch,WebFetch` before first use in Step 2.
 

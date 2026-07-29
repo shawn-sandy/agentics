@@ -59,7 +59,9 @@ spec.
 
 ## Step 0 — Exit plan mode
 
-**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state. Produce no plan document — execute the workflow directly.
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
+
+Produce no plan document — execute the workflow directly.
 
 ## Re-render (subroutine — referenced by every step below)
 

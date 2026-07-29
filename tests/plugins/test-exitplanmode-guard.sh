@@ -19,8 +19,11 @@ PLUGINS="$ROOT/kit/plugins"
 WORD_BUDGET=600
 FAILURES=0
 
-# Verbatim, as documented in .claude/rules/plugin-patterns.md.
-GUARD='call `ExitPlanMode` first — this workflow mutates state.'
+# The full canonical line, verbatim, as documented in
+# .claude/rules/plugin-patterns.md. Matching the whole sentence rather than its
+# tail is what makes "verbatim" true: a substring match would accept reworded
+# openings like "Before writing anything, call `ExitPlanMode` first — ...".
+GUARD='**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.'
 
 # Skills, commands, and agents that mutate the filesystem, git state, or a
 # remote. Hardcoded rather than derived: a list computed from "files that
