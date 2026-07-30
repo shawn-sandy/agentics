@@ -23,7 +23,7 @@
 #                            Catches a dead pointer AND dead weight.
 #   4. Descriptions pinned — the frontmatter description is the sole trigger
 #                            surface; a split must not retune it.
-#   5. Guard retention     — the eleven guard phrases are in the CORE of the skill
+#   5. Guard retention     — every guard phrase is in the CORE of the skill
 #                            that owns each, not only in a reference.
 #
 # Plus check 6: the plugin-level references/ link counts in the three share-*
@@ -206,9 +206,23 @@ PY
 #    failure mode this whole test exists for: the guard's absence is invisible
 #    until the day it should have fired.
 # ---------------------------------------------------------------------------
-echo "5. The eleven guard phrases are still in their owning cores..."
+echo "5. Every guard phrase is still in its owning core..."
+# The count is tallied, never written down. Both hard-coded numbers this message
+# has carried were wrong: it said "ten" while asserting 11, then "eleven" while
+# asserting 12. A literal in a log line drifts the moment a guard is added, and a
+# wrong count is worst exactly when someone is reading CI output to diagnose a
+# guard-retention failure.
+#
+# Adding a guard: pick a phrase that sits on ONE line in the SKILL.md. `grep -F`
+# cannot match across a newline, so a phrase the body happens to wrap — e.g.
+# "Nothing to ship" breaking after "Nothing" — reports as a lost guard even
+# though it is right there in the core.
+GUARD_ASSERTIONS=0
+GIT_GUARDS=0
 check_guard() {
   local skill="$1" phrase="$2"
+  GUARD_ASSERTIONS=$((GUARD_ASSERTIONS + 1))
+  case "$skill" in "$GA"/*) GIT_GUARDS=$((GIT_GUARDS + 1)) ;; esac
   if ! grep -qF -- "$phrase" "$skill" 2>/dev/null; then
     fail "$(basename "$(dirname "$skill")")/SKILL.md lost guard: $phrase"
   fi
@@ -239,7 +253,7 @@ for s in share-explanation share-session share-selection; do
   check_guard "$SM/$s/SKILL.md" "GATE RESULT: BLOCKED"
   check_guard "$SM/$s/SKILL.md" "security-scrub"
 done
-[ "$FAILURES" -eq "$BEFORE" ] && pass "11 git guards + the scrub gate in all three share-* cores" || true
+[ "$FAILURES" -eq "$BEFORE" ] && pass "$GIT_GUARDS git guards + $((GUARD_ASSERTIONS - GIT_GUARDS)) scrub-gate assertions across the three share-* cores" || true
 
 # ---------------------------------------------------------------------------
 # 6. Plugin-level references are untouched. Those eight files are read by

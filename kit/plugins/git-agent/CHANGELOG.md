@@ -22,7 +22,9 @@
   the stop itself into `references/platform-clis.md`, which is the one thing this
   refactor is not allowed to do. The commands, install URLs, and message text stay
   in the reference. `tests/plugins/test-skill-split-git-social.sh` now asserts the
-  phrase (11 guards, was 10) so it cannot slip again.
+  phrase so it cannot slip again — 12 git guard assertions, up from 11. That
+  count is now tallied by the test rather than written into its log line: both
+  hard-coded numbers the message previously carried were off by one.
 - Step 3's commit-message format rules moved to `ship/references/commit-message.md`.
   That is procedure, and moving it paid for the guard above: `ship` went 599 → 571,
   turning 1 word of headroom under the 600-word ceiling into 29.
