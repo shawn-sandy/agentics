@@ -6,9 +6,8 @@ allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(pnpm *), Bash(yarn *),
 
 Branch, commit, open a PR, then watch it and autofix failures.
 
-Steps 0–5 run in strict order. **Step 5 subscribes to PR events and ends the
-turn.** Steps 6–8 are standing policy applied whenever an event wakes the
-session, not a loop in one turn.
+**Step 5 subscribes to PR events and ends the turn.** Steps 6–8 are standing
+policy applied whenever an event wakes the session, not a loop in one turn.
 
 ## Guardrails
 

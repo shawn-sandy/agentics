@@ -1,0 +1,17 @@
+# Golden copy of the five pruned skills' activation descriptions.
+#
+# A skill's description: is its activation trigger. Rewording it during a body
+# prune breaks discovery while every body-level test stays green, which is the
+# drift this file exists to catch.
+#
+# This is a golden file, not a freeze. A deliberate description change updates
+# the matching line here in the same commit — that edit is the deliberate-update
+# path, and it shows up in review as an explicit act rather than an incidental
+# diff buried in a body rewrite.
+#
+# Format: <skill path><TAB><the description: line, verbatim>
+kit/plugins/plan-agent/skills/build/SKILL.md	description: "Implements a plan file that already exists. Walks its steps, ticks the spec, re-renders, and runs the completion gates. Use when asked to implement an existing plan."
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	description: "Generates HTML implementation-plan documents. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create or generate an HTML plan file."
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	description: "Runs the full ship pipeline with verification, CI polling, and bounded autofix. Chains tests, preview, commit, PR, CI poll, and gated merge. Use when asked to autonomously ship or watch CI."
+kit/plugins/git-agent/skills/branch-agent/SKILL.md	description: "Creates a git branch from origin/<default> with no upstream tracking. Auto-names the branch from staged or unstaged changes in the working tree. Use when the user asks to create or start a new branch."
+kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md	description: "Optimizes SKILL.md frontmatter fields. Rewrites descriptions to three-part format (≤200 chars) and tunes disable-model-invocation. Use when the user asks to optimize SKILL.md frontmatter."

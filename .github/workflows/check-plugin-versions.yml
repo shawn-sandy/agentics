@@ -82,3 +82,16 @@ jobs:
       # Neither shows up in a diff review of a single file.
       - name: Test plan-mode guard survives without its boilerplate
         run: bash tests/plugins/test-exitplanmode-guard.sh
+      # Guards the imperative prune. Removing a process reminder and removing a
+      # safety guard look identical in a diff — both are a deleted sentence — and
+      # the guards here sit in front of an irreversible squash merge
+      # (ship-autonomous), a stash/pop over the user's uncommitted work
+      # (branch-agent), and a plan-authoring skill forbidden from writing source
+      # (implementation-plan). This step is the structural half: it asserts every
+      # KEEP-classified guard is still literally present and that no frontmatter
+      # `description:` drifted. The behavioral half needs the `claude` CLI, which
+      # this runner has no access to, so it runs locally via
+      # tests/plugins/test-skill-behavior-baselines.sh — which exits 1 rather
+      # than skipping, so it cannot go green by being absent.
+      - name: Test pruned skill imperatives kept every load-bearing guard
+        run: bash tests/plugins/test-imperative-pruning.sh

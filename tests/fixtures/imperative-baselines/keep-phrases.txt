@@ -1,0 +1,29 @@
+kit/plugins/plan-agent/skills/build/SKILL.md	Never `checked` attributes in the HTML, never a JS
+kit/plugins/plan-agent/skills/build/SKILL.md	never hand-edit the HTML to compensate
+kit/plugins/plan-agent/skills/build/SKILL.md	**Never resolve a gate by picking for the user.**
+kit/plugins/plan-agent/skills/build/SKILL.md	implement a different plan, and do not enter Step 1b
+kit/plugins/plan-agent/skills/build/SKILL.md	do not silently redo finished work.
+kit/plugins/plan-agent/skills/build/SKILL.md	Never clean either one up.
+kit/plugins/plan-agent/skills/build/SKILL.md	and never by promoting `status:` to satisfy the check
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	Always run the script explicitly after editing a spec
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	never invent content and present
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	are opt-in only — never inferred.
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	Do not edit source files, configs, or any file outside the configured
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	Do not apply fixes, refactors, or any change described in the plan's
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	This constraint is never lifted here.
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md	never hand-edit the HTML to compensate
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	Tests or lint fail: report verbatim and **STOP** — do not commit a red tree.
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	**Any console or server error blocks the pipeline.**
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	Pre-commit hook failure: propagate it verbatim, **STOP**. Do not retry.
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	Never introduce `any`, `as unknown`, `// @ts-ignore`, or `// @ts-expect-error`
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	Never guess: unrecognized failures and ambiguous comments
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	**Never dismiss a review on your own initiative**
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	**Never merge on anything but green.**
+kit/plugins/git-agent/skills/ship-autonomous/SKILL.md	**Branch deletion requires its own explicit approval**
+kit/plugins/git-agent/skills/branch-agent/SKILL.md	Run all checks before proceeding. Stop on the first failure.
+kit/plugins/git-agent/skills/branch-agent/SKILL.md	Do not proceed with a stale ref.
+kit/plugins/git-agent/skills/branch-agent/SKILL.md	Do not retry. Do not force.
+kit/plugins/git-agent/skills/branch-agent/SKILL.md	Do not stage, commit, push, create PRs, or take any further
+kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md	**Never write `disable-model-invocation: false`.**
+kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md	Print its classification table, confirm via `AskUserQuestion`, then apply.
+kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md	Confirm each edit succeeded before moving to the next file.

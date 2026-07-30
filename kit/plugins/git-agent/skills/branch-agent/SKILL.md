@@ -11,8 +11,7 @@ Create a new branch from the latest `origin/<default>` with no upstream tracking
 ref. When called with no argument and the working tree has uncommitted changes,
 the branch name is auto-generated from those changes. A `-YYYY-MM-DD` date
 suffix is always appended to the final branch name so branches sort and group
-chronologically. Follow these steps in strict order. **STOP immediately after
-step 6.**
+chronologically.
 
 ## When not to use
 

@@ -217,8 +217,6 @@ Echo the resolved objective and effective flags after Step 0.
 
 ## Workflow
 
-Follow these steps exactly.
-
 0. **Self-bootstrap** —
    **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
@@ -313,10 +311,9 @@ EOF
    | `effort` | `low`, `medium`, `high` | derived from step and file counts |
    | `workflow` | `auto`, `always`, `never` (`true`/`false` accepted as the pre-7.0 spelling of `always`/`never`) | `auto` |
 
-4. **Rename** — **Always** ensure the filename follows the `verb-target`
-   kebab-case convention before rendering. Rename when (a) the initial name
-   is auto-generated, placeholder, or non-descriptive, or (b) the plan's
-   purpose shifted after creation. A stale filename is a plan defect — do
+4. **Rename** — re-check the filename before rendering. Rename when (a) the
+   initial name is auto-generated, placeholder, or non-descriptive, or (b) the
+   plan's purpose shifted after creation. A stale filename is a plan defect — do
    not deliver until the name matches the content. Enforced by the
    `validate-plan-filename` `PostToolUse` hook
    (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`).
