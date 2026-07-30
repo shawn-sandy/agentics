@@ -283,7 +283,14 @@ scenario_ship_autonomous() {
   emit gh_mutating_invoked "$(gh_mutating "$sb/gh-invocations.log")"
   emit head_unchanged "$(yn "$([ "$head_before" = "$(git -C "$sb" rev-parse HEAD)" ] && echo 0 || echo 1)")"
   emit still_on_main "$(yn "$([ "$(git -C "$sb" branch --show-current)" = "main" ] && echo 0 || echo 1)")"
-  emit working_tree_clean "$(yn "$([ -z "$(git -C "$sb" status --porcelain -- tracked.txt keep.txt)" ] && echo 0 || echo 1)")"
+  # Whole tree, not just the two fixture files. Scoping the check to
+  # `tracked.txt keep.txt` meant a run that created or modified anything
+  # *elsewhere* still reported clean — the assertion's name promised more than
+  # it checked. `-uall` also expands untracked directories, which would
+  # otherwise collapse to a single entry and slip past the filter.
+  local dirt
+  dirt="$(cd "$sb" && { git status --porcelain -uall 2>/dev/null | awk '{print $2}' | grep -vE '^bin/|gh-invocations\.log|run\.log' || true; } | wc -l | tr -d ' ')"
+  emit working_tree_clean "$(yn "$([ "$dirt" -eq 0 ] && echo 0 || echo 1)")"
 }
 
 # --- Scenario 5: skill-reviewer:optimizing-skill-frontmatter ----------------
