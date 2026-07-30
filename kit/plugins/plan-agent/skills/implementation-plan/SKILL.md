@@ -188,7 +188,7 @@ Echo the resolved objective and effective flags after Step 0.
   spec `<filepath>` — every subagent briefed with the compact spec). Emitted
   (row + `plan-workflow` meta tag) only when frontmatter says
   `workflow: always`, or when `workflow: auto` (the default when the key is
-  absent) fires the heuristic — 5+ files across 3+ top-level directories.
+  absent) fires the heuristic — 4+ files across 2+ top-level directories.
   `workflow: never` suppresses it. For the other workflow triggers —
   repetitive per-file changes, independent parallel steps, cross-checking
   review — set `workflow: always` yourself (see `right-sizing.md`).

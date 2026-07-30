@@ -299,7 +299,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
   const workflowMode = enumValue(md, 'workflow', 'auto');
   const wantsWorkflow = workflowMode === 'always' || workflowMode === 'true'
-    || (workflowMode === 'auto' && fileCount >= 5 && dirCount >= 3);
+    || (workflowMode === 'auto' && fileCount >= 4 && dirCount >= 2);
 
   const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. ${verifyTail}`;
   // Same gate as the workflow row: a plan too small to show that row must not

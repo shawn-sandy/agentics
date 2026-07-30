@@ -274,6 +274,20 @@ ok('workflow always/never override the file-count heuristic in both directions',
   assert.equal(render(wide, 'auto'), render(wide, null), 'auto is the same as omitting the key');
 });
 
+ok('the auto heuristic fires at 4 files across 2 directories, not below', () => {
+  const withFiles = (...paths) => parseSpecMarkdown(SAMPLE_SPEC.replace(
+    /## Files[\s\S]*?## Steps/,
+    `## Files\n${paths.map((p) => `- ${p} (new)`).join('\n')}\n\n## Steps`
+  ));
+  const fires = (...paths) => renderPlanHtml(withFiles(...paths), { fileName: 'w.html', planPath: 'w.html' })
+    .includes('id="workflow-cmd"');
+
+  // Both halves of the && are load-bearing: neither count alone opts in.
+  assert.ok(fires('a/1.mjs', 'a/2.mjs', 'b/3.mjs', 'b/4.mjs'), '4 files across 2 dirs opts in');
+  assert.ok(!fires('a/1.mjs', 'a/2.mjs', 'b/3.mjs'), '3 files across 2 dirs stays out');
+  assert.ok(!fires('a/1.mjs', 'a/2.mjs', 'a/3.mjs', 'a/4.mjs'), '4 files in 1 dir stays out');
+});
+
 ok('parseSpecMarkdown ignores headings inside fenced code blocks', () => {
   const fencedSpec = SAMPLE_SPEC.replace(
     'First paragraph of context.',

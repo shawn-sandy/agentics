@@ -1,5 +1,26 @@
 # Changelog
 
+## 7.1.0 — the auto workflow heuristic opts in at 4 files across 2 directories (2026-07-30)
+
+### Changed
+
+- `workflow: auto` now fires at **4+ files across 2+ top-level directories**,
+  down from 5+ across 3+. The threshold gates two things at once — the
+  workflow row and the goal prompt's `Fan out across parallel subagents where
+  that serves the outcome.` license — so loosening it widens both together and
+  keeps the page coherent: a plan is never told to parallelize on a page that
+  offers no workflow row.
+- Chosen over making the fan-out license unconditional. 19 of the 25 rendered
+  plans carrying a goal row already qualified under the old threshold, so
+  dropping the gate would have added the license only to the six smallest
+  plans — exactly where spinning up subagents is worst value — while
+  collapsing `GOAL_LABEL`/`GOAL_LABEL_PARALLEL` into one string that no longer
+  distinguishes anything.
+- `workflow: always` / `never` are unaffected, and remain the way to opt a
+  plan in or out against the heuristic.
+- A boundary test pins both halves of the condition: 4 files across 2 dirs
+  opts in, while 3-across-2 and 4-in-1 stay out.
+
 ## 7.0.1 — inline Markdown in plan prose renders as markup, not raw characters (2026-07-30)
 
 ### Fixed
