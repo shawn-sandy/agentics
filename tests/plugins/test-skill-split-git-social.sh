@@ -33,6 +33,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
+# Exclusive: a core must be strictly UNDER this, so 600 fails and 599 passes.
+# That is the contract the plan states in three places ("a core under 600 words"),
+# hence `-lt` below rather than `-le` — switching the comparison would loosen the
+# spec by one word rather than fix anything.
 CEILING=600
 
 FAILURES=0
@@ -83,7 +87,9 @@ while read -r skill; do
   fi
 done <<< "$TARGETS"
 if [ -n "$ABSENT" ]; then fail "core file missing:$ABSENT"; fi
-if [ -n "$OVER" ]; then fail "over the $CEILING-word ceiling:$OVER"; fi
+# "not under", not "over": the ceiling is exclusive, so a 600-word core fails —
+# and calling that "over the 600-word ceiling" would be untrue at the boundary.
+if [ -n "$OVER" ]; then fail "not under the $CEILING-word ceiling:$OVER"; fi
 if [ -z "$ABSENT" ] && [ -z "$OVER" ]; then pass "$TOTAL words across $COUNTED cores"; fi
 
 # ---------------------------------------------------------------------------
