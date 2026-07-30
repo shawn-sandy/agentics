@@ -1,0 +1,1 @@
+Add a --quiet flag to scripts/build-dist.mjs that suppresses per-file output.
