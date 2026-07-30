@@ -5,6 +5,37 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-07-29
+
+### Changed
+
+- **`diff-artifact` and `prompt-artifact` are now 566- and 583-word cores plus
+  six new plugin-level references, down from 1,527 and 1,867 words in single
+  bodies.** They sit beside the existing `titles.md`, matching this plugin's
+  `${CLAUDE_PLUGIN_ROOT}/references/` convention.
+  - `references/diff-sources.md` — mode table, default-branch resolution, and the
+    PR-mode degradation script
+  - `references/diff-page.md` — severity table, cap-and-summarize budget, page
+    requirements, and the 16 MiB shrink loop
+  - `references/diff-publishing.md` — durable-copy keying, publish and URL
+    recording, failure fallback
+  - `references/prompt-resolution.md` — mode table, the `PROMPTS_DIR` resolver,
+    and single/library prompt resolution
+  - `references/prompt-page.md` — page requirements, the six-value escaping
+    table, and the copy button with its three failure modes
+  - `references/prompt-publishing.md` — the URL-record table, the `.artifact-url`
+    sidecar, and the fallback
+- **Both blocking `security-scrub` gates stay in the cores**, ahead of the
+  `select:Artifact` publish bootstrap — including `diff-artifact`'s second rescan
+  of the rendered page in Step 5. So do both render-verification steps and every
+  `## Step N — ` heading. `tests/plugins/test-remaining-skill-splits.sh` asserts
+  the gate is in the *core* by line order, not merely somewhere under the plugin.
+
+`description:` and `allowed-tools:` are unchanged for both skills, and behaviour
+is unchanged. Word counts here and in the other four plugins' entries are measured
+with a locale-independent counter; `wc -w` disagrees by up to 23 words on these
+files because a standalone em dash is a word in a UTF-8 locale and not in C.
+
 ## [1.8.0] - 2026-07-29
 
 ### Added

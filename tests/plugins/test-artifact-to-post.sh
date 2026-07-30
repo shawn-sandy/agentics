@@ -16,6 +16,11 @@ MANIFEST="$PLUGIN/.claude-plugin/plugin.json"
 SKILL="$PLUGIN/skills/artifact-to-post/SKILL.md"
 MDX_REF="$PLUGIN/references/mdx-safety.md"
 CFG_REF="$PLUGIN/references/content-config.md"
+# artifact-to-post is split core-plus-references. The core keeps the phase order,
+# the Phase 2 scrub gate and the config contract; the per-phase mechanics moved to
+# these two plugin-level references, so the assertions follow them there.
+SRC_REF="$PLUGIN/references/source-resolution.md"
+ASM_REF="$PLUGIN/references/post-assembly.md"
 MARKET="$ROOT/.claude-plugin/marketplace.json"
 FIXTURE="$ROOT/tests/fixtures/artifact-to-post/sample-artifact.html"
 fail() { echo "FAIL: $1" >&2; exit 1; }
@@ -70,17 +75,22 @@ safety_line=$(line_of '^## Phase 6 — MDX-safety pass' "$SKILL")
 # The rationale itself, not the word "after" — which matches any English prose.
 grep -qF 'Runs **after** Phase 5, deliberately.' "$SKILL" || fail "ordering rationale missing"
 
-# 5. Config-driven: no hardcoded site literals in the skill body.
-for lit in 'src/content/posts' 'astro build' 'localhost:4321'; do
-  grep -qF "$lit" "$SKILL" && fail "hardcoded site literal in SKILL.md: $lit"
+# 5. Config-driven: no hardcoded site literals in the skill body or its references.
+for f in "$SKILL" "$SRC_REF" "$ASM_REF"; do
+  for lit in 'src/content/posts' 'astro build' 'localhost:4321'; do
+    grep -qF "$lit" "$f" && fail "hardcoded site literal in $(basename "$f"): $lit"
+  done
 done
 for key in posts_dir draft_flag images_dir preview_url build_command interactivity_ceiling; do
   grep -qF "$key" "$SKILL" || fail "SKILL.md never reads config value: $key"
 done
 
 # 6. claude.ai URLs refused with a pointer at save-artifact — no WebFetch.
-grep -qF 'claude.ai' "$SKILL" || fail "claude.ai URL handling not documented"
-grep -qF 'social-media-tools:save-artifact' "$SKILL" || fail "no pointer to save-artifact"
+[ -f "$SRC_REF" ] || fail "references/source-resolution.md missing"
+grep -qF 'claude.ai' "$SKILL" || fail "claude.ai URL handling not documented in the core"
+grep -qF 'social-media-tools:save-artifact' "$SKILL" || fail "core has no pointer to save-artifact"
+grep -qF 'Refuse' "$SRC_REF" || fail "source-resolution.md does not refuse claude.ai URLs"
+grep -qF 'social-media-tools:save-artifact' "$SRC_REF" || fail "source-resolution.md drops the save-artifact handoff"
 grep -qE '^allowed-tools:.*WebFetch' "$SKILL" && fail "WebFetch must not be an allowed tool"
 
 # 7. Security scrub is a blocking gate that fails loudly when unavailable.
@@ -89,8 +99,10 @@ scrub_line=$(line_of 'security-scrub' "$SKILL")
 write_line=$(line_of '^## Phase 8 — Write the post' "$SKILL")
 [ -n "$write_line" ] || fail "no write phase in SKILL.md"
 [ "$scrub_line" -lt "$write_line" ] || fail "security scrub runs after the write step"
-# A .md source must not tunnel past the scrub and config phases.
-grep -qF 'It skips nothing else.' "$SKILL" || fail "Markdown source may bypass the scrub/config phases"
+# A .md source must not tunnel past the scrub and config phases. The rule moved
+# to the Phase 1 reference; the core must still say the skip is Phases 4 and 7 only.
+grep -qF 'It skips nothing else.' "$SRC_REF" || fail "Markdown source may bypass the scrub/config phases"
+grep -qF 'only** Phases 4 and 7' "$SKILL" || fail "core does not bound the Markdown skip to Phases 4 and 7"
 grep -qE 'not (installed|available)' "$SKILL" || fail "no loud failure path when social-media-tools is absent"
 # Observed in a real run: the agent announced the scrub was unavailable, then
 # self-reviewed and wrote the post anyway. Loud is not the contract — stopping is.
@@ -100,7 +112,8 @@ grep -qF 'write nothing and end the turn' "$SKILL" || fail "scrub gate warns but
 #     interactivity_ceiling: 3 as forbidding rung 4 and DELETED the canvas block.
 grep -qF 'Rung 4 is never capped' "$MDX_REF" || fail "ceiling wrongly caps rung 4"
 grep -qF 'Never drop a block' "$MDX_REF" || fail "no-content-loss rule missing"
-grep -qiF 'no block is ever dropped' "$SKILL" || fail "SKILL.md does not forbid dropping blocks"
+[ -f "$ASM_REF" ] || fail "references/post-assembly.md missing"
+grep -qiF 'no block is ever dropped' "$ASM_REF" || fail "post-assembly.md does not forbid dropping blocks"
 
 # 7c. Phase 0 must use the launch message's base directory, not a filesystem
 #     hunt — real runs burned turns on `find` and hit sandbox denials.

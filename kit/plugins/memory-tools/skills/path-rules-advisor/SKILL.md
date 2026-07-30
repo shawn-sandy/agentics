@@ -10,298 +10,58 @@ Analyze the project and CLAUDE.md to recommend and create path-specific rule fil
 
 Does not create or overwrite global memory entries — use agentic-memory-management for that.
 
-## Table of Contents
+## References
 
-- [Mode A — Argument provided](#mode-a--argument-provided)
-- [Mode B — No argument (analysis mode)](#mode-b--no-argument-analysis-mode)
-- [Rule file format](#rule-file-format)
-- [Verify the write](#verify-the-write)
-- [Verification gate](#verification-gate)
-- [Notes](#notes)
+- `references/rule-modes.md` — the full Mode A and Mode B steps
+- `references/rule-file-format.md` — the generated-file template, brace expansion, and notes
+- `references/write-verification.md` — the diff-back, the frontmatter parse check, and the pre-write gate
 
----
+## Select the mode
 
-## Mode A — Argument provided
-
-Use this mode when the user provides an argument in their message.
-
-**Argument format:** `<glob-pattern> - <rule description>`
-
-The ` - ` (space-hyphen-space) separates the glob pattern from the rule description.
-
-**Example:** `src/api/**/*.ts - All endpoints must validate input and return typed responses`
-
-### Steps
-
-**Step 1 — Parse the argument**
-
-Split the argument on the first ` - `. Left side = glob pattern. Right side = rule description.
-
-If no ` - ` separator is found, stop and ask the user to re-enter in the format:
-`<glob-pattern> - <rule description>`
-
-Example: `src/api/**/*.ts - All endpoints must validate input`
-
-**Step 2 — Infer the output filename**
-
-Derive a filename from the glob pattern:
-
-| Glob example | Filename |
-|---|---|
-| `src/api/**/*.ts` | `api-rules.md` |
-| `tests/**/*.test.ts` | `test-rules.md` |
-| `components/**/*.tsx` | `component-rules.md` |
-| `src/lib/**` | `lib-rules.md` |
-
-General rule: take the most specific directory segment from the glob and append `-rules.md`. Strip `src/`, `**`, `*`, and file extensions.
-
-**Step 3 — Check for conflicts**
-
-Check if `.claude/rules/<filename>` already exists. If it does, show the user the existing file path and ask:
-"This file already exists. Overwrite it, or choose a different filename?"
-
-Do not proceed until the user confirms or provides a new filename.
-
-**Step 4 — Check for the `.claude/rules/` directory**
-
-Check if `.claude/rules/` exists in the project root.
-
-If it does not exist, tell the user and ask:
-"The `.claude/rules/` directory does not exist. Should I create it?"
-
-Do not write any files until the user confirms.
-
-**Step 5 — Expand the description into rules**
-
-Take the user's description and expand it into 3–5 well-formed, actionable rule bullets. Each bullet should:
-- Start with an imperative verb (Always, Never, Prefer, Ensure, Use)
-- Be concrete and specific — avoid vague language like "handle properly" or "be careful"
-- Address a distinct concern related to the description
-
-**Step 6 — Show the generated file**
-
-Display the complete rule file in a code block:
-
-```markdown
----
-paths:
-  - "<glob-pattern>"
----
-
-# <Descriptive Title>
-
-- Rule bullet 1
-- Rule bullet 2
-- Rule bullet 3
-- Rule bullet 4 (if applicable)
-- Rule bullet 5 (if applicable)
-```
-
-**Step 7 — Confirm before writing**
-
-Ask: "Should I write this to `.claude/rules/<filename>`?"
-
-Wait for explicit confirmation. Do not write the file until confirmed. Apply the
-[verification gate](#verification-gate) to any file being overwritten before writing. After writing,
-run [Verify the write](#verify-the-write) on the new file, then confirm the file path to the user.
-
----
-
-## Mode B — No argument (analysis mode)
-
-Use this mode when the user provides no argument.
-
-**Step 1 — Resolve the CLAUDE.md target**
-
-Use the same priority order as the `agentic-memory-management` skill:
-
-1. `CLAUDE.md` in the current working directory
-2. `.claude/CLAUDE.md` in the current working directory
-3. `~/.claude/CLAUDE.md`
-
-If both `CLAUDE.md` and `.claude/CLAUDE.md` exist, analyze `CLAUDE.md` (root takes priority) and note that `.claude/CLAUDE.md` was skipped.
-
-Tell the user which file will be analyzed (CLAUDE.md, .claude/CLAUDE.md, or ~/.claude/CLAUDE.md). If none found, report that no CLAUDE.md was located and offer to proceed with project structure analysis only.
-
-**Step 2 — Inventory `.claude/rules/`**
-
-Check whether `.claude/rules/` exists. If it does not, note this prominently.
-
-If it does exist, list every `.md` file found there along with their `paths:` frontmatter values (if any).
-
-**Step 3 — Scan CLAUDE.md for path-scoped content**
-
-Read CLAUDE.md and look for content that is specific to particular file types, directories, or frameworks:
-
-- Mentions of file extensions: `*.ts`, `*.tsx`, `*.py`, `*.css`, `*.test.ts`
-- Directory references: `src/`, `lib/`, `tests/`, `components/`, `api/`
-- Framework-specific rules: React components, API endpoints, database models, migration files
-- Section headings that imply scope: "Frontend Rules", "API Conventions", "Test Standards"
-
-**Step 4 — Check project structure**
-
-Glob for the presence of these directories in the project root:
-- `src/`
-- `lib/`
-- `tests/` or `test/`
-- `components/`
-- `api/`
-- `app/`
-
-Note which ones exist — this informs starter template recommendations.
-
-**Step 5 — Report findings**
-
-**If no path-scoped content found in CLAUDE.md:**
-
-Report that the CLAUDE.md looks clean from a path-scoping perspective.
-
-List which directories were detected and offer starter templates based on them. For example:
-
-> The following directories were detected: `src/`, `tests/`. Would you like starter rule files for any of these?
-> - `src-rules.md` (paths: `src/**`) — general source file conventions
-> - `test-rules.md` (paths: `tests/**`) — test authoring and assertion standards
-
-**If path-scoped content was found:**
-
-Report findings in a structured summary:
-
-```
-## Path-Rules Analysis
-
-**CLAUDE.md analyzed:** [path]
-**Existing .claude/rules/ files:** [list or "none"]
-
-### Extractable sections found
-
-| Section / content | Suggested rule file | Suggested paths |
+| The user's message | Mode | Read |
 |---|---|---|
-| [description] | [filename] | [glob] |
-```
+| carries an argument (`<glob-pattern> - <rule description>`) | **A** | `references/rule-modes.md`, Mode A |
+| carries no argument | **B** (analysis) | `references/rule-modes.md`, Mode B |
 
-Ask: "Which of these would you like me to create as rule files?"
+Read that reference for the mode you selected, and follow its steps in order. Emit
+generated rule files in the shape defined by `references/rule-file-format.md`.
 
-**Step 6 — Create approved rule files**
+## Two hard stops
 
-For each rule file the user approves:
+Neither mode may write anything until the user has confirmed. These two
+confirmations are the contract, and they hold whatever the reference says:
 
-1. Check for conflicts (file already exists → ask before overwriting)
-2. Create `.claude/rules/` directory if it does not exist (ask first)
-3. Expand the extracted content into 3–5 well-formed rule bullets
-4. Write `.claude/rules/<name>.md` with `paths:` frontmatter
+1. **Directory creation.** If `.claude/rules/` does not exist, say so and ask
+   "Should I create it?" Do not write any file until the user confirms.
+2. **Every file write.** Show the complete file in a code block first, then ask
+   "Should I write this to `.claude/rules/<filename>`?" Wait for explicit
+   confirmation. An existing file at that path is a third stop: show the path and
+   ask whether to overwrite or pick a new filename.
 
-Show each file in a code block before writing. Apply the
-[verification gate](#verification-gate) to CLAUDE.md and to any rule file being overwritten before
-writing. After each write, run [Verify the write](#verify-the-write) on that file, then confirm.
+Each write site ends the same way:
 
-**Step 7 — Offer to update CLAUDE.md**
-
-After writing each rule file, ask once:
-
-"Should I remove this content from CLAUDE.md and replace it with a reference to `.claude/rules/<name>.md`?"
-
-If confirmed, replace the extracted section in CLAUDE.md with:
-
-```markdown
-# See .claude/rules/<name>.md
-```
-
-Then run [Verify the write](#verify-the-write) on CLAUDE.md.
-
-If the user declines, leave CLAUDE.md unchanged.
-
----
-
-## Rule file format
-
-All generated rule files follow this structure:
-
-```markdown
----
-paths:
-  - "<glob-pattern>"
----
-
-# <Descriptive Title>
-
-- Rule bullet 1
-- Rule bullet 2
-- Rule bullet 3
-```
-
-**Brace expansion** (from official docs: <https://code.claude.com/docs/en/memory>):
-
-```md
----
-paths:
-  - "src/**/*.{ts,tsx}"
-  - "{src,lib}/**/*.ts"
----
-```
-
-This expands to match multiple extensions or directories in a single rule.
-
-- The `paths:` frontmatter causes Claude Code to activate this rule file only when working with matching files
-- Use double quotes around glob patterns in the YAML frontmatter
-- Title should be human-readable and describe the scope (e.g., "API Endpoint Rules", "Test File Standards")
-- Rules must be concrete and actionable — not summaries or vague guidance
-
----
+- Mode A Step 7 — after writing the rule file, run [Verify the write](#verify-the-write) on it.
+- Mode B Step 6 — after each approved rule file, run [Verify the write](#verify-the-write) on it.
+- Mode B Step 7 — editing CLAUDE.md is a write like any other, so run [Verify the write](#verify-the-write) on it too.
 
 ## Verify the write
 
-Run this immediately after every file write (Mode A Step 7, Mode B Steps 6 and 7). Show the
-resulting diff, then assert the file still parses with valid frontmatter and a non-empty body.
+Run this after **every** write, without exception. Substitute the path just
+written for `$TARGET`; the executable diff-back and the frontmatter parse check
+live in `references/write-verification.md` — read and run it there.
 
-```bash
-TARGET=<substitute the path just written — not a literal>
-if git ls-files --error-unmatch "$TARGET" >/dev/null 2>&1; then
-  git --no-pager diff -- "$TARGET"
-else
-  git --no-pager diff --no-index -- /dev/null "$TARGET" || true
-fi
-python3 - "$TARGET" <<'EOF'
-import sys
-path = sys.argv[1]
-text = open(path, encoding='utf-8').read()
-body = text
-if text.startswith('---\n'):
-    end = text.find('\n---', 3)
-    if end == -1:
-        sys.exit(f"MALFORMED: {path} opens a frontmatter block that is never closed")
-    for n, line in enumerate(text[4:end].splitlines(), 2):
-        # Indented lines are nested values or block-scalar continuations, which
-        # carry no colon of their own. Only top-level keys are checked.
-        if not line.strip() or line[:1] in (' ', '\t'):
-            continue
-        s = line.strip()
-        if not s.startswith(('#', '- ')) and ':' not in s:
-            sys.exit(f"MALFORMED: {path} line {n}: expected a YAML key/value, got {s!r}")
-    body = text[end + 4:]
-if not body.strip():
-    sys.exit(f"EMPTY: {path} has no body content")
-print(f"OK: {path} parses, {len(body.strip().splitlines())} body lines")
-EOF
-```
+The rule it enforces stays here: the check must show the resulting diff and
+confirm the written file still parses with valid frontmatter and a non-empty
+body. Rule files must always clear it — a rule file with no `paths:` frontmatter
+or no bullets loads as dead weight in every future session.
 
-Rule files must always clear this check — a rule file with no `paths:` frontmatter or no bullets
-loads as dead weight in every future session.
-
-If the command exits non-zero, **STOP**. Report the failure with the file path and the printed
-reason, tell the user to restore from their backup (`git checkout -- <path>` where the file is
-tracked), and do not attempt a second write.
+If the check exits non-zero, **STOP**. Report the failure with the file path and
+the printed reason, tell the user to restore from their backup
+(`git checkout -- <path>` where the file is tracked), and do not attempt a second
+write.
 
 ### Verification gate
 
 Run the same parse check on the *input* before any write. If the CLAUDE.md resolved in Mode B
 Step 1, or an existing rule file being overwritten, opens with a `---` block that is unterminated
 or contains a non key/value line, REPORT rather than write.
-
----
-
-## Notes
-
-- Path-specific rules reduce noise: Claude only sees them when relevant, keeping context lean
-- A project with a clean CLAUDE.md and well-scoped `.claude/rules/` files is better than one with everything in CLAUDE.md
-- Multiple `paths:` entries are valid in a single rule file when the same rules apply to several patterns
-- Both modes must confirm before writing any file to disk
