@@ -1494,7 +1494,7 @@ img, video { max-width: 100%; height: auto; }
             <li><code>test-ship-self-review.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">content checks resolve against `ship/references/self-review.md`; policy checks stay on SKILL.md</span></li>
             </ul>
           </li>
-          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">one new step running the objective test</span></li>
+          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">a step running the objective test, plus eight steps wiring previously-unwired tests that already existed and already passed on `main` (`test-claude-md-budget`, `test-remaining-skill-splits`, `test-artifact-tools`, `test-artifact-to-post`, `test-memory-doctor-guard`, `test-generator-skills-verify-output`, `test-description-budget`, `test-exitplanmode-guard`). Wider than Step 9 specified: the repo has no test runner, so an unwired test never runs again after the PR that added it. All nine verified green locally before wiring.</span></li>
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">git-agent 4.7.0 → 4.8.0, social-media-tools 2.19.0 → 2.20.0</span></li>
           <li><code>kit/plugins/git-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">v4.8.0 entry</span></li>
           <li><code>kit/plugins/social-media-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">v2.20.0 entry</span></li>
@@ -1734,7 +1734,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac12" checked>
-          <label for="ac12">`.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.</label>
+          <label for="ac12">`.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`, and the eight further tests wired alongside it all exit 0 — nothing was gated on a test that does not pass.</label>
         </li>
         <li>
           <input type="checkbox" id="ac13" checked>

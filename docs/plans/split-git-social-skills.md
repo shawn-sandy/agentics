@@ -66,7 +66,7 @@ Out of scope, deliberately: the eleven share-* skills that repeat the same `TEMP
 - kit/plugins/social-media-tools/skills/share-selection/references/card-population.md (new) — Phase 4/5 template pick, escape order, snippet and diff variable tables
 - tests/plugins/test-skill-split-git-social.sh (new) — objective test: ceiling, references exist, links resolve both ways, descriptions pinned, guards present
 - tests/plugins/test-ship-self-review.sh (modified) — content checks resolve against `ship/references/self-review.md`; policy checks stay on SKILL.md
-- .github/workflows/check-plugin-versions.yml (modified) — one new step running the objective test
+- .github/workflows/check-plugin-versions.yml (modified) — a step running the objective test, plus eight steps wiring previously-unwired tests that already existed and already passed on `main` (`test-claude-md-budget`, `test-remaining-skill-splits`, `test-artifact-tools`, `test-artifact-to-post`, `test-memory-doctor-guard`, `test-generator-skills-verify-output`, `test-description-budget`, `test-exitplanmode-guard`). Wider than Step 9 specified: the repo has no test runner, so an unwired test never runs again after the PR that added it. All nine verified green locally before wiring.
 - .claude-plugin/marketplace.json (modified) — git-agent 4.7.0 → 4.8.0, social-media-tools 2.19.0 → 2.20.0
 - kit/plugins/git-agent/CHANGELOG.md (modified) — v4.8.0 entry
 - kit/plugins/social-media-tools/CHANGELOG.md (modified) — v2.20.0 entry
@@ -104,7 +104,7 @@ Tier 1 — This plan changes application code
 - [x] `bash tests/plugins/test-ship-self-review.sh` exits 0.
 - [x] `bash tests/plugins/test-description-budget.sh` exits 0.
 - [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.
-- [x] `.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.
+- [x] `.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`, and the eight further tests wired alongside it all exit 0 — nothing was gated on a test that does not pass.
 - [x] `kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.
 - [x] `git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.
 - [x] `grep -c 'PLUGIN_DIR/references/' kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.

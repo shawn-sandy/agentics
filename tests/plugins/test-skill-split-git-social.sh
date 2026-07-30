@@ -120,12 +120,18 @@ TARGETS = [f"{GA}/ship-autonomous/SKILL.md", f"{GA}/branch-agent/SKILL.md",
            f"{GA}/ship/SKILL.md", f"{SM}/share-explanation/SKILL.md",
            f"{SM}/share-session/SKILL.md", f"{SM}/share-selection/SKILL.md"]
 
-# `references/<name>.md`, however the core spells the prefix.
-NAMED = re.compile(r'references/([A-Za-z0-9._-]+\.md)')
-# Plugin-level references are shared infrastructure, not this split's output.
-PLUGIN_LEVEL = {"platforms.md", "variables.md", "copy-panels.md",
-                "rendering-pipeline.md", "saving-and-delivery.md",
-                "reuse-check.md", "language-map.md", "social-config.md"}
+# Skill-local mentions only, discriminated by CONTEXT rather than by filename.
+#
+# The naive `references/(...)\.md` also matches the tail of
+# `$PLUGIN_DIR/references/platforms.md`, so an earlier version of this test
+# carried an allowlist of the eight plugin-level basenames and skipped them. That
+# allowlist was load-bearing — without it the forward check looked for
+# `<skill>/references/platforms.md` and failed on a correct link — but it was too
+# blunt: a core that wrote bare `references/platforms.md`, dropping the
+# `$PLUGIN_DIR/`, got skipped by basename and its genuinely broken link went
+# unreported. The lookbehind excludes the plugin-level path itself while still
+# checking a bare mention of the same filename, which is exactly the typo case.
+NAMED = re.compile(r'(?<!\$PLUGIN_DIR/)references/([A-Za-z0-9._-]+\.md)')
 
 bad = []
 for skill in TARGETS:
@@ -137,7 +143,7 @@ for skill in TARGETS:
     text = core.read_text(encoding="utf-8")
     named = set(NAMED.findall(text))
     # Forward: a core naming a skill-local reference that is not on disk.
-    for name in sorted(named - PLUGIN_LEVEL):
+    for name in sorted(named):
         if not (own / name).is_file():
             bad.append(f"{skill} points at references/{name}, which does not exist")
     # Reverse: a file in the skill's own references/ that the core never names.

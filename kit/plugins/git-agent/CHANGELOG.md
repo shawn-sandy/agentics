@@ -54,6 +54,11 @@ inline guard prose alone would not fit under the ceiling.
 over 600 words, loses a guard phrase, drifts a description, or leaves a
 reference link dangling in either direction.
 
+Eight further tests were wired into that workflow at the same time. They already
+existed and already passed on `main`, but none was named in any workflow — and in
+a repo with no test runner, a test nobody runs is decoration. All nine were run
+green locally before being gated on.
+
 - **`tests/plugins/test-ship-self-review.sh` retargeted** — Step 4.5's four
   regression checks, the amend procedure, and the loop bound now live in
   `ship/references/self-review.md`, so checks 5-7 read that file while the

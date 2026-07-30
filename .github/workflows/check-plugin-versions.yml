@@ -43,19 +43,22 @@ jobs:
       # Nothing else exercises it, so this is its only regression gate.
       - name: Test gallery index merge driver
         run: bash tests/plugins/test-merge-gallery-index.sh
-      # These six skills carry the repo's irreversible git operations — ship,
-      # ship-autonomous, and branch-agent rewrite refs, push to remotes, and end
-      # in a squash merge — so their guards are checked at review time by reading
-      # the SKILL.md core. A guard that drifts behind a reference link is a guard
-      # that may never load, and its absence is invisible until the day it should
-      # have fired. This step is the only thing that keeps it in the core.
+      # Three of these six skills carry irreversible git operations: `ship` and
+      # `ship-autonomous` push to remotes and end in a squash merge, and
+      # `branch-agent` creates and checks out refs and can stash and pop a dirty
+      # tree — it never commits, pushes, or merges. The three share-* skills
+      # publish to a public gallery behind a scrub gate. So their guards are
+      # checked at review time by reading the SKILL.md core: a guard that drifts
+      # behind a reference link is a guard that may never load, and its absence
+      # is invisible until the day it should have fired.
       - name: Test the git-agent and social-media-tools cores stay split
         run: bash tests/plugins/test-skill-split-git-social.sh
-      # A SKILL.md body is paid in full every time the skill fires, so a core
-      # that creeps back over the ceiling — or a reference link that stops
-      # resolving, or a scrub gate that drifts behind one — costs context or
-      # safety on every run and shows up in no diff review of a single file.
-      - name: Test the six split skill cores stay split
+      # The sibling gate for PR #487's six skills (artifact-to-post,
+      # diff-artifact, optimizing-skill-frontmatter, path-rules-advisor,
+      # prompt-artifact, tdd-fix). Same invariant, disjoint file set — a SKILL.md
+      # body is paid in full every time the skill fires, so a core creeping back
+      # over its ceiling shows up in no diff review of a single file.
+      - name: Test the PR 487 skill cores stay split
         run: bash tests/plugins/test-remaining-skill-splits.sh
       # The five tests below read shipped skill bodies as data, and four of them
       # were retargeted in this PR to follow content that moved behind a
