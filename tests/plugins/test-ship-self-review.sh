@@ -23,7 +23,7 @@ else
 fi
 
 echo "2. Step 4.5 exists..."
-if grep -q "^## Step 4.5: Self-Review Before Push" "$SKILL"; then
+if grep -qF "## Step 4.5: Self-Review Before Push" "$SKILL"; then
   echo "  PASS"
 else
   echo "  FAIL: Step 4.5 heading not found"
@@ -32,7 +32,7 @@ fi
 
 echo "3. Step 4.5 is ordered between Step 4 and Step 5..."
 S4=$(grep -n "^## Step 4: Commit" "$SKILL" | cut -d: -f1)
-S45=$(grep -n "^## Step 4.5:" "$SKILL" | cut -d: -f1)
+S45=$(grep -n "^## Step 4\.5:" "$SKILL" | cut -d: -f1)
 S5=$(grep -n "^## Step 5: Push" "$SKILL" | cut -d: -f1)
 if [ -n "$S4" ] && [ -n "$S45" ] && [ -n "$S5" ] && [ "$S4" -lt "$S45" ] && [ "$S45" -lt "$S5" ]; then
   echo "  PASS"
@@ -42,8 +42,8 @@ else
 fi
 
 echo "4. Runs by default with a --no-review escape hatch..."
-if grep -A2 "^## Step 4.5:" "$SKILL" | grep -q "by default" &&
-   grep -A2 "^## Step 4.5:" "$SKILL" | grep -q -- "--no-review"; then
+if grep -A2 "^## Step 4\.5:" "$SKILL" | grep -q "by default" &&
+   grep -A2 "^## Step 4\.5:" "$SKILL" | grep -q -- "--no-review"; then
   echo "  PASS"
 else
   echo "  FAIL: default-on / --no-review opt-out not stated at the top of Step 4.5"
@@ -65,7 +65,7 @@ STEP_45=$(awk '/^## Step 4\.5:/{f=1;next} f&&/^## /{exit} f' "$SKILL")
 if [ -z "$STEP_45" ]; then
   echo "  FAIL: no '## Step 4.5:' section found in SKILL.md (heading renamed?)"
   FAILURES=$((FAILURES + 1))
-elif printf '%s\n' "$STEP_45" | grep -q "references/self-review.md" && [ -f "$SELF_REVIEW" ]; then
+elif printf '%s\n' "$STEP_45" | grep -qF "references/self-review.md" && [ -f "$SELF_REVIEW" ]; then
   echo "  PASS"
 else
   echo "  FAIL: Step 4.5 must link references/self-review.md, and that file must exist"
@@ -99,7 +99,7 @@ else
 fi
 
 echo "8. Step 4.5 never blocks the ship..."
-if grep -A50 "^## Step 4.5:" "$SKILL" | grep -q "never blocks the ship"; then
+if grep -A50 "^## Step 4\.5:" "$SKILL" | grep -q "never blocks the ship"; then
   echo "  PASS"
 else
   echo "  FAIL: non-blocking guarantee not stated"
@@ -107,7 +107,7 @@ else
 fi
 
 echo "9. Base detection is delegated to Step 7, not duplicated..."
-if grep -A12 "^## Step 4.5:" "$SKILL" | grep -q "Step 7"; then
+if grep -A12 "^## Step 4\.5:" "$SKILL" | grep -q "Step 7"; then
   echo "  PASS"
 else
   echo "  FAIL: Step 4.5 should reuse Step 7's base-branch procedure"
@@ -137,7 +137,7 @@ fi
 
 echo "12. Step 4.5 is ordered between Step 4 and Step 5..."
 A4=$(grep -n "^### Step 4: Commit" "$AGENT" | cut -d: -f1)
-A45=$(grep -n "^### Step 4.5:" "$AGENT" | cut -d: -f1)
+A45=$(grep -n "^### Step 4\.5:" "$AGENT" | cut -d: -f1)
 A5=$(grep -n "^### Step 5: Push" "$AGENT" | cut -d: -f1)
 if [ -n "$A4" ] && [ -n "$A45" ] && [ -n "$A5" ] && [ "$A4" -lt "$A45" ] && [ "$A45" -lt "$A5" ]; then
   echo "  PASS"
@@ -147,7 +147,7 @@ else
 fi
 
 echo "13. Background ship has no opt-out (always runs)..."
-if grep -A2 "^### Step 4.5:" "$AGENT" | grep -q "no opt-out"; then
+if grep -A2 "^### Step 4\.5:" "$AGENT" | grep -q "no opt-out"; then
   echo "  PASS"
 else
   echo "  FAIL: agent-ship must state the self-review always runs"
@@ -164,7 +164,7 @@ fi
 
 echo "15. All four regression checks are present..."
 for term in "accessibility" "escaping" "truncation" "Responsive"; do
-  if grep -A30 "^### Step 4.5:" "$AGENT" | grep -qi "$term"; then
+  if grep -A30 "^### Step 4\.5:" "$AGENT" | grep -qi "$term"; then
     echo "  PASS ($term)"
   else
     echo "  FAIL: check '$term' missing from agent Step 4.5"
@@ -173,8 +173,8 @@ for term in "accessibility" "escaping" "truncation" "Responsive"; do
 done
 
 echo "16. Background self-review is report-only (does NOT amend)..."
-if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "report-only" &&
-   ! grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "commit --amend"; then
+if grep -A40 "^### Step 4\.5:" "$AGENT" | grep -q "report-only" &&
+   ! grep -A40 "^### Step 4\.5:" "$AGENT" | grep -q "commit --amend"; then
   echo "  PASS"
 else
   echo "  FAIL: agent Step 4.5 must be report-only — it cannot edit files (see check 19)"
@@ -182,7 +182,7 @@ else
 fi
 
 echo "17. Non-blocking guarantee present..."
-if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "never blocks the ship"; then
+if grep -A40 "^### Step 4\.5:" "$AGENT" | grep -q "never blocks the ship"; then
   echo "  PASS"
 else
   echo "  FAIL: non-blocking guarantee missing"
@@ -217,7 +217,7 @@ else
 fi
 
 echo "21. Step 4.5 forbids routing around the deny list via Bash..."
-if grep -A40 "^### Step 4.5:" "$AGENT" | grep -q "sed -i"; then
+if grep -A40 "^### Step 4\.5:" "$AGENT" | grep -q "sed -i"; then
   echo "  PASS"
 else
   echo "  FAIL: no explicit prohibition on Bash-based file rewriting"

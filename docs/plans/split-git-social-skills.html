@@ -1407,12 +1407,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">15 / 15 done</span>
+        <span id="progress-label">15 / 16 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill has-progress" id="progress-bar"
-             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:100%"></div>
+             role="progressbar" aria-valuenow="94" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:94%"></div>
       </div>
     </div>
 
@@ -1748,6 +1748,10 @@ img, video { max-width: 100%; height: auto; }
           <input type="checkbox" id="ac15" checked>
           <label for="ac15">`grep -c &#39;PLUGIN_DIR/references/&#39; kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.</label>
         </li>
+        <li>
+          <input type="checkbox" id="ac16">
+          <label for="ac16">**Behavioural verification — NOT DONE.** No skill in this plan has been executed. Every criterion above is structural: word counts, greps, and link resolution prove the files are shaped correctly and prove nothing about whether the six skills still branch, ship, and publish cards. Requires `claude --plugin-dir ./kit/plugins/git-agent --plugin-dir ./kit/plugins/social-media-tools` in a live session: run `branch-agent` on a scratch branch, `ship` to a real PR, `ship-autonomous` against a deliberately failing lint script to exercise the CI-autofix cap and the merge gate, and the three `share-*` skills to confirm each still renders a PNG card through its scrub gate. This is the single criterion keeping `status:` at `in-progress`; it is unchecked deliberately rather than omitted, so the plan&#39;s progress count cannot read 100% while the only test of actual behaviour has never run.</label>
+        </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
@@ -1780,7 +1784,7 @@ img, video { max-width: 100%; height: auto; }
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled checked>
+            <input type="checkbox" id="cc2" disabled>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
