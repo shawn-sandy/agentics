@@ -50,11 +50,25 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "4.5. SKILL.md links the self-review reference (a reference nothing links to never loads)..."
-if grep -q "references/self-review.md" "$SKILL" && [ -f "$SELF_REVIEW" ]; then
+echo "4.5. Step 4.5 links the self-review reference (a reference nothing links to never loads)..."
+# Scoped to the Step 4.5 section, not the whole file: an unscoped grep passes on
+# a mention anywhere in SKILL.md, so it would still go green if Step 4.5 stopped
+# delegating its procedure. The range ends at the next `## ` heading rather than
+# at a hard-coded "Step 5: Push", so renaming the following step cannot silently
+# empty the range and turn this into a vacuous pass.
+#
+# awk, not `sed -n '/a/,/b/{...}'`: that form is a GNU extension. BSD sed (macOS)
+# rejects it outright, leaving this variable empty and failing the check for the
+# wrong reason on a dev machine while CI's GNU sed passed it — the same
+# dev-vs-CI drift the Python word count in test-skill-split-git-social.sh avoids.
+STEP_45=$(awk '/^## Step 4\.5:/{f=1;next} f&&/^## /{exit} f' "$SKILL")
+if [ -z "$STEP_45" ]; then
+  echo "  FAIL: no '## Step 4.5:' section found in SKILL.md (heading renamed?)"
+  FAILURES=$((FAILURES + 1))
+elif printf '%s\n' "$STEP_45" | grep -q "references/self-review.md" && [ -f "$SELF_REVIEW" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: SKILL.md must link references/self-review.md, and that file must exist"
+  echo "  FAIL: Step 4.5 must link references/self-review.md, and that file must exist"
   FAILURES=$((FAILURES + 1))
 fi
 

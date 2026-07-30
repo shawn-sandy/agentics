@@ -4,8 +4,8 @@
 
 ### Changed
 
-- **`ship-autonomous` 2,406 → 595 words**, **`branch-agent` 1,476 → 582**, and
-  **`ship` 1,191 → 599** — 5,073 words down to 1,776. A SKILL.md body has no
+- **`ship-autonomous` 2,406 → 597 words**, **`branch-agent` 1,476 → 582**, and
+  **`ship` 1,191 → 599** — 5,073 words down to 1,778. A SKILL.md body has no
   partial load: the moment a skill triggers, its whole body is paid. These three
   now ship a small always-loaded core plus skill-local `references/*.md` files
   the model opens only at the step that needs them, matching the layout
@@ -16,6 +16,11 @@
 - No frontmatter changed. All three `description:` lines are byte-identical to
   v4.7.1 — the description is the only trigger surface, so a reworded one would
   silently change when the skill fires.
+- `ship-autonomous` Steps 2/3/4 say "invoke the `git-agent:branch-agent` skill"
+  rather than bare ``git-agent:branch-agent``. Shortening the step text had
+  dropped the noun v4.7.1 carried ("the existing … skill"), leaving the
+  identifier ambiguous enough to read as a `/plugin:name` command — which these
+  are not.
 
 ### Why the guards stayed in the core
 

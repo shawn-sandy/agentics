@@ -50,7 +50,7 @@ skill) first.
 ## Step 2: Branch
 
 On the default branch (detection in `references/preflight-and-verify.md`),
-invoke `git-agent:branch-agent` (no arguments).
+invoke the `git-agent:branch-agent` skill (no arguments).
 
 ## Step 2.5: Verify Before Committing
 
@@ -59,15 +59,15 @@ Tests, lint, then browser preview — commands in
 
 ## Step 3: Commit
 
-Invoke **`git-agent:commit-agent`**.
+Invoke the **`git-agent:commit-agent`** skill.
 
 ## Step 4: Open PR
 
-Invoke **`git-agent:pr-agent`**; capture the PR URL it prints.
+Invoke the **`git-agent:pr-agent`** skill; capture the PR URL it prints.
 
 ## Step 5: Subscribe to PR Activity (preferred) or Poll CI (fallback)
 
-Per `references/pr-events.md` (bundled with this skill): subscribe, seed the
+Per `references/pr-events.md`: subscribe, seed the
 checklist, post one update, end the turn. No subscribe tool → poll
 `gh pr checks` (`state`, not `conclusion`).
 
