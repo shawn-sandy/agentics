@@ -212,6 +212,24 @@ guidance inside a refactor that promises byte-identical behaviour would hide a
 behaviour change in a no-op diff, so they belong in the Rule 1 trim pass already
 queued in Next Steps.
 
+One review finding was wrong, and checking it found something real. Copilot reported
+that `test-generator-skills-verify-output.sh` requires the literal `TARGET"` in the
+check-section body and that the split therefore breaks the audit. It does not: the
+evidence pattern is `TARGET` (the trailing quote in the test source closes the
+`SKILLS=` heredoc string, not the regex), the core carries `$TARGET`, and the audit
+reports `OK: memory-tools/skills/path-rules-advisor/SKILL.md`. But verifying that
+exposed a genuine gap in this plan's own reasoning: **five of the tests this work
+depends on were not wired into CI at all**, including four retargeted here to follow
+moved content and the one whose unmodified pass was the stated reason for not
+touching it. Step 8's rationale — "without CI wiring the guarantee decays on the next
+edit" — was applied only to the new objective test. It applies just as much to a test
+whose literals now point at a reference file. All five pass on `origin/main`
+unchanged, so `test-artifact-tools.sh`, `test-artifact-to-post.sh`,
+`test-memory-doctor-guard.sh`, `test-generator-skills-verify-output.sh`, and
+`test-description-budget.sh` are now named steps in
+`.github/workflows/check-plugin-versions.yml`, verified by running the check job's
+full step list in order under the runner's `C.UTF-8` locale.
+
 ## Next Steps
 
 - Trim the split cores under Rule 1 (judgment over rules)
