@@ -83,7 +83,7 @@ Run:
 git rev-parse --abbrev-ref --symbolic-full-name @{u}
 ```
 
-Non-zero exit (no upstream tracking ref) → `git push -u origin <branch>`.
+Non-zero exit (no upstream tracking ref) → `git push -u origin <current-branch>`.
 Zero exit → `git push`.
 
 ## Step 6: Check for Existing PR/MR
