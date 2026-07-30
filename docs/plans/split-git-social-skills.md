@@ -98,6 +98,7 @@ Tier 1 — This plan changes application code
 - [x] Every ``references/<name>.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.
 - [x] `git diff main -- '**/SKILL.md' | grep '^[-+]description:'` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.
 - [x] `grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.
+- [x] `ship/SKILL.md` states its fourth pre-flight stop in the core — `CLI not available or not authenticated` … `STOP` — not only in `references/platform-clis.md`. The first cut of the split moved that statement out; the test now pins the phrase (11 guards, was 10).
 - [x] `grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.
 - [x] `bash tests/plugins/test-skill-split-git-social.sh` exits 0.
 - [x] `bash tests/plugins/test-ship-self-review.sh` exits 0.

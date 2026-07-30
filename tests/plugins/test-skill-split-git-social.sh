@@ -23,7 +23,7 @@
 #                            Catches a dead pointer AND dead weight.
 #   4. Descriptions pinned — the frontmatter description is the sole trigger
 #                            surface; a split must not retune it.
-#   5. Guard retention     — the ten guard phrases are in the CORE of the skill
+#   5. Guard retention     — the eleven guard phrases are in the CORE of the skill
 #                            that owns each, not only in a reference.
 #
 # Plus check 6: the plugin-level references/ link counts in the three share-*
@@ -206,7 +206,7 @@ PY
 #    failure mode this whole test exists for: the guard's absence is invisible
 #    until the day it should have fired.
 # ---------------------------------------------------------------------------
-echo "5. The ten guard phrases are still in their owning cores..."
+echo "5. The eleven guard phrases are still in their owning cores..."
 check_guard() {
   local skill="$1" phrase="$2"
   if ! grep -qF -- "$phrase" "$skill" 2>/dev/null; then
@@ -225,6 +225,12 @@ for phrase in \
 done
 check_guard "$GA/ship/SKILL.md" "Cannot ship from the default branch"
 check_guard "$GA/ship/SKILL.md" "no-verify"
+# ship's fourth pre-flight stop. The first split moved the STATEMENT of this one
+# into references/platform-clis.md and left only "verify the CLI" in the core —
+# the exact relocation this check exists to catch, and it went unnoticed because
+# no phrase here covered it. The commands, install URLs, and message text stay in
+# the reference; that the stop exists is core.
+check_guard "$GA/ship/SKILL.md" "CLI not available or not authenticated"
 check_guard "$GA/branch-agent/SKILL.md" "no-track"
 check_guard "$GA/branch-agent/SKILL.md" "Do not retry. Do not force"
 check_guard "$GA/branch-agent/SKILL.md" "detached HEAD"
@@ -233,7 +239,7 @@ for s in share-explanation share-session share-selection; do
   check_guard "$SM/$s/SKILL.md" "GATE RESULT: BLOCKED"
   check_guard "$SM/$s/SKILL.md" "security-scrub"
 done
-[ "$FAILURES" -eq "$BEFORE" ] && pass "10 git guards + the scrub gate in all three share-* cores" || true
+[ "$FAILURES" -eq "$BEFORE" ] && pass "11 git guards + the scrub gate in all three share-* cores" || true
 
 # ---------------------------------------------------------------------------
 # 6. Plugin-level references are untouched. Those eight files are read by

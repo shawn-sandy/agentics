@@ -32,8 +32,10 @@ first." and **STOP**.
 "Cannot ship from the default branch. Switch to a feature branch first." and
 **STOP**.
 
-**Platform and CLI authenticated:** Read `references/platform-clis.md` (bundled
-with this skill) — detect GitHub vs GitLab, then verify the CLI.
+**CLI not available or not authenticated:** Detect GitHub vs GitLab, then verify
+the CLI, per `references/platform-clis.md` (bundled with this skill). If the CLI
+is missing or unauthenticated, print that file's install-and-login message and
+**STOP**.
 
 ## Step 2: Stage Changes
 
@@ -43,20 +45,8 @@ This trusts `.gitignore` to exclude sensitive or generated files.
 
 ## Step 3: Analyze Diff and Write Commit Message
 
-Run `git diff --staged`, then write a conventional commit message:
-
-```
-<type>(<scope>): <description>
-```
-
-**Rules:**
-
-- Total length: ≤ 72 characters
-- Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `style`,
-  `ci`, `build`
-- Scope: the most-changed top-level directory; omit it entirely if changes span
-  more than 2 top-level directories
-- Description: imperative mood, lowercase, no trailing period
+Run `git diff --staged`, then write a `<type>(<scope>): <description>` message —
+format rules in `references/commit-message.md`.
 
 ## Step 4: Commit
 

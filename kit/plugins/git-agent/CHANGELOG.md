@@ -5,17 +5,27 @@
 ### Changed
 
 - **`ship-autonomous` 2,406 → 597 words**, **`branch-agent` 1,476 → 582**, and
-  **`ship` 1,191 → 599** — 5,073 words down to 1,778. A SKILL.md body has no
+  **`ship` 1,191 → 571** — 5,073 words down to 1,750. A SKILL.md body has no
   partial load: the moment a skill triggers, its whole body is paid. These three
   now ship a small always-loaded core plus skill-local `references/*.md` files
   the model opens only at the step that needs them, matching the layout
   `create-issue` already used.
 - New reference files: `ship-autonomous/references/{preflight-and-verify,pr-events,ci-autofix,merge-gate}.md`,
   `branch-agent/references/{branch-naming,stash-and-recovery}.md`, and
-  `ship/references/{platform-clis,self-review,pr-body}.md`.
+  `ship/references/{platform-clis,self-review,pr-body,commit-message}.md`.
 - No frontmatter changed. All three `description:` lines are byte-identical to
   v4.7.1 — the description is the only trigger surface, so a reworded one would
   silently change when the skill fires.
+- **Guard restored:** `ship` Step 1 states its fourth hard stop in the core again
+  — "**CLI not available or not authenticated:** … and **STOP**", as v4.7.1 had
+  it. The first cut of this split left only "verify the CLI" in the body and moved
+  the stop itself into `references/platform-clis.md`, which is the one thing this
+  refactor is not allowed to do. The commands, install URLs, and message text stay
+  in the reference. `tests/plugins/test-skill-split-git-social.sh` now asserts the
+  phrase (11 guards, was 10) so it cannot slip again.
+- Step 3's commit-message format rules moved to `ship/references/commit-message.md`.
+  That is procedure, and moving it paid for the guard above: `ship` went 599 → 571,
+  turning 1 word of headroom under the 600-word ceiling into 29.
 - `ship-autonomous` Steps 2/3/4 say "invoke the `git-agent:branch-agent` skill"
   rather than bare ``git-agent:branch-agent``. Shortening the step text had
   dropped the noun v4.7.1 carried ("the existing … skill"), leaving the
