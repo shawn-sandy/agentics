@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`diff-artifact` and `prompt-artifact` are now 582- and 594-word cores plus
+- **`diff-artifact` and `prompt-artifact` are now 566- and 583-word cores plus
   six new plugin-level references, down from 1,489 and 1,831 words in single
   bodies.** They sit beside the existing `titles.md`, matching this plugin's
   `${CLAUDE_PLUGIN_ROOT}/references/` convention.
@@ -32,7 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the gate is in the *core* by line order, not merely somewhere under the plugin.
 
 `description:` and `allowed-tools:` are unchanged for both skills, and behaviour
-is unchanged.
+is unchanged. Word counts here and in the other four plugins' entries are measured
+with a locale-independent counter; `wc -w` disagrees by up to 23 words on these
+files because a standalone em dash is a word in a UTF-8 locale and not in C.
 
 ## [1.8.0] - 2026-07-29
 

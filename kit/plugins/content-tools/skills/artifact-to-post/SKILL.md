@@ -6,9 +6,6 @@ allowed-tools: AskUserQuestion, Read, Write, Edit, Bash, Glob, Grep, Skill, Tool
 
 # artifact-to-post
 
-Turn an HTML artifact or Markdown file into a **draft** static-site post,
-keeping interactive blocks interactive.
-
 ## Exit plan mode
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
@@ -20,10 +17,9 @@ call it `$SKILL_DIR`. All four references sit under `$SKILL_DIR/../../`:
 `references/content-config.md`, `references/mdx-safety.md`,
 `references/source-resolution.md`, `references/post-assembly.md`.
 
-`Read` those paths directly. **Do not `find` or `Glob` for them**: the path is
-already given, and hunting for it wastes turns and hits sandbox denials.
-
-Read `references/content-config.md` now, `references/mdx-safety.md` before Phase 4.
+`Read` them directly. **Do not `find` or `Glob` for them**: the path is given, and
+hunting wastes turns and hits sandbox denials. Read
+`references/content-config.md` now, `references/mdx-safety.md` before Phase 4.
 
 ## Phase 1 — Resolve the source and branch on type
 
@@ -34,8 +30,8 @@ Follow `references/source-resolution.md`: local `.html`, pasted HTML, local `.md
 ## Phase 2 — Security scrub (blocking gate)
 
 Before **anything** is written, invoke `social-media-tools:security-scrub` on the
-source content. Artifacts carry API responses, tokens, and customer data that were
-fine in a private session and are not fine on a public blog.
+source content. Artifacts carry tokens and customer data that were fine in a
+private session and are not fine on a public blog.
 
 - Findings → report them and stop. Do not offer to publish around them.
 - `social-media-tools` not installed, or the skill fails to run for any reason →
@@ -52,11 +48,11 @@ fine in a private session and are not fine on a public blog.
 
 ## Phase 3 — Config and prerequisites
 
-Load `CONTENT.md` per `references/content-config.md`; if absent, ask once and
-offer to write one. Every site-specific value comes from that config:
-`posts_dir`, `extension`, frontmatter keys, `draft_flag`, `images_dir`,
-`preview_url`, `build_command`, `interactivity_ceiling`. Never write a literal
-path, key, or build command into the output.
+Load `CONTENT.md` per `references/content-config.md`; if absent, ask once and offer
+to write one. Every site-specific value comes from that config: `posts_dir`,
+`extension`, frontmatter keys, `draft_flag`, `images_dir`, `preview_url`,
+`build_command`, `interactivity_ceiling`. Never write a literal path, key, or
+command into the output.
 
 Run both prerequisite checks from the reference; on failure report the exact fix
 and stop. **Never auto-install `@astrojs/mdx` and never edit the target's content
@@ -64,9 +60,8 @@ config.**
 
 ## Phase 4 — Extract to Markdown (HTML sources only)
 
-Read `references/post-assembly.md` now and follow its Phases 4–10 as written.
-The summaries below are the load-bearing constraints only, not a second copy of
-those steps.
+Read `references/post-assembly.md` now and follow its Phases 4–10 as written. The
+summaries below are the load-bearing constraints only, not a second copy.
 
 ## Phase 5 — Prose rewrite
 
@@ -74,9 +69,9 @@ For a reader who arrived cold, in the author's voice.
 
 ## Phase 6 — MDX-safety pass
 
-Runs **after** Phase 5, deliberately. The rewrite is what introduces the
-hazards, so a pass before it would validate text that no longer exists. Do not
-reorder these phases. Skip the pass entirely when `extension` is `.md`.
+Runs **after** Phase 5, deliberately. The rewrite is what introduces the hazards,
+so a pass before it would validate text that no longer exists. Do not reorder
+these phases. Skip the pass entirely when `extension` is `.md`.
 
 ## Phase 7 — Rung-4 screenshots
 

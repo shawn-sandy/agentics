@@ -4,7 +4,7 @@
 
 ### Changed
 
-- **`tdd-fix` is now a 588-word core plus two reference files, down from 1,187
+- **`tdd-fix` is now a 571-word core plus two reference files, down from 1,187
   words in a single body.** It was the only skill in this plugin without a
   `references/` directory; it now matches the per-skill layout its four siblings
   already use.

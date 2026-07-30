@@ -5,10 +5,10 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, TodoWrite, AskUserQuestion
 disable-model-invocation: true
 ---
 
-Given a bug description, write a failing test that reproduces it, then
-enter an autonomous loop — run tests, analyze failures, edit code, re-run —
-until green or 10 iterations. Log each iteration's hypothesis. After
-passing, run the full suite, commit with a `fix:` prefix, and open a PR.
+Given a bug description, write a failing test that reproduces it, then loop —
+run tests, analyze failures, edit code, re-run — until green or 10 iterations,
+logging each hypothesis. Then sweep the full suite, commit with a `fix:` prefix,
+and open a PR.
 
 > **Freedom level: Strict** — Follow these steps in order. Do not skip or
 > combine steps. Stop at each hard-stop marker.
@@ -52,33 +52,30 @@ that field only. Do not ask for everything at once.
 ## Step 2: Write the Failing Test (Red Phase)
 
 Read `references/fix-loop.md` now and follow its Step 2: locate the test file,
-append one failing case marked `# tdd-fix: reproducing <symptom>`, edit **no**
-production code, and run it once to confirm it fails. A test that passes here is
-a hard stop — ask how to proceed rather than entering the loop.
+append one failing case, edit **no** production code, run it once to confirm it
+fails. A test that passes here is a hard stop — ask, do not enter the loop.
 
 ---
 
 ## Step 3: Autonomous Fix Loop (max 10 iterations)
 
-Follow Step 3 of `references/fix-loop.md`: hypothesis (3a) → minimal `Edit`
-(3b) → scoped test run (3c), logging every iteration to the markdown table and
-showing the updated log each time.
-
-PASS exits the loop to Step 5. FAIL at `i == 10` goes to Step 4.
+Per `references/fix-loop.md` Step 3: hypothesis (3a), minimal `Edit` (3b), scoped
+test run (3c), logging and showing every iteration. PASS exits to Step 5; FAIL at
+`i == 10` goes to Step 4.
 
 ---
 
 ## Step 4: Hard Cap — Loop Exhausted
 
-Ten iterations without a green test is the cap. Print the full log and the
-stop message from `references/fix-loop.md`, then **STOP** — no commit, no PR.
+Ten iterations without green is the cap. Print the full log and the stop message
+from `references/fix-loop.md`, then **STOP** — no commit, no PR.
 
 ---
 
 ## Step 5: Regression Sweep
 
 Read `references/handoff.md` and run its Step 5: the **full** suite, no scope
-filter. Any previously-passing test that now fails is a hard stop — report the
+filter. A previously-passing test that now fails is a hard stop — report the
 regressions and **STOP** without committing.
 
 ---
@@ -91,15 +88,15 @@ Print the summary block defined in `references/handoff.md` before committing.
 
 ## Step 7: Commit via commit-agent
 
-Invoke `commit-agent` per `references/handoff.md` — type `fix`, scope from the
+Invoke `commit-agent` per `references/handoff.md`: type `fix`, scope from the
 most-changed top-level directory. Do not duplicate its staging or hook logic.
 
 ---
 
 ## Step 8: Open PR via pr-agent
 
-Invoke `pr-agent` per `references/handoff.md`, including the Step 3 iteration
-log under a `## How it was found (tdd-fix)` section.
+Invoke `pr-agent` per `references/handoff.md`, including the Step 3 log under a
+`## How it was found (tdd-fix)` section.
 
 ---
 

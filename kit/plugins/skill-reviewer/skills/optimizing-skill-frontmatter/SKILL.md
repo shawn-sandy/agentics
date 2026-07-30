@@ -9,8 +9,8 @@ disable-model-invocation: true
 
 Optimizes two frontmatter fields in one pass: rewrites `description:` to the
 **three-part format** — a short description (≤80 chars), a capability sentence,
-then a "Use when…" trigger — and sets `disable-model-invocation` to the correct
-value for a write-heavy workflow versus a read-only advisory tool.
+then a "Use when…" trigger — and sets `disable-model-invocation` correctly for a
+write-heavy workflow versus a read-only advisory tool.
 
 The ≤200 total and ≤80 first-sentence limits are budget targets, not platform
 limits; `references/budget-advisory.md` explains where they come from.
@@ -23,8 +23,8 @@ Does not review overall SKILL.md quality — use reviewing-skills for that. Does
 
 ## References
 
-- `references/description-rules.md` — Rules 1–5, Rule 2b, and worked examples A and B (Step 3), plus the Step 4 edit order
-- `references/invocation-control.md` — the workflow/advisory classification table, confirmation options, and apply rules (Step 4b)
+- `references/description-rules.md` — Rules 1–5 and 2b, worked examples A and B, the Step 4 edit order
+- `references/invocation-control.md` — Step 4b's classification table, confirmation options, apply rules
 - `references/measurement.md` — the measuring loops and the SKIP rule (Steps 2, 5, 6)
 - `references/budget-advisory.md` — the `skillListingBudgetFraction` advisory and `/doctor` guidance
 

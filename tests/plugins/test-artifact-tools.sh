@@ -23,6 +23,10 @@ DIFF_PUB="$REF/diff-publishing.md"
 PROMPT_RES="$REF/prompt-resolution.md"
 PROMPT_PAGE="$REF/prompt-page.md"
 PROMPT_PUB="$REF/prompt-publishing.md"
+# titles.md predates the split but both split cores name it, so it belongs in the
+# resolve/orphan sweep below: a core pointing at a missing title reference would
+# otherwise pass CI and only fail at runtime, when the page needs a <title>.
+TITLES="$REF/titles.md"
 fail() { echo "FAIL: $1" >&2; exit 1; }
 checks=0
 ok() { checks=$((checks + 1)); }
@@ -133,7 +137,7 @@ ok
 # Every reference the two split cores name must exist, or a step points at a file
 # the model cannot read and the mechanics are simply gone.
 for f in "$DIFF_SOURCES" "$DIFF_PAGE" "$DIFF_PUB" \
-         "$PROMPT_RES" "$PROMPT_PAGE" "$PROMPT_PUB"; do
+         "$PROMPT_RES" "$PROMPT_PAGE" "$PROMPT_PUB" "$TITLES"; do
   [ -f "$f" ] || fail "missing reference: ${f#$ROOT/}"
   grep -qF "references/$(basename "$f")" "$DIFF" "$PROMPT" \
     || fail "$(basename "$f") is orphaned — no core links to it"
@@ -157,11 +161,33 @@ grep -qF 'git remote get-url origin' "$DIFF_SOURCES" \
 # loop is a mechanic (reference); the rescan is a gate, so it stays in the core.
 grep -qF '16 * 1024 * 1024' "$DIFF_PAGE" \
   || fail "diff-page.md: rendered 16 MiB cap not enforced by measurement"
-grep -qF 'Rescan the finished page' "$DIFF" \
-  || fail "diff-artifact: the rendered-page rescan left the core"
-# Republish key must not be date-derived, or tomorrow's run misses the URL.
-grep -qE 'target=".claude/artifacts/diff-.*\$\(date' "$DIFF_PUB" \
+python3 - "$DIFF" <<'EOF' || fail "diff-artifact: rendered-page rescan missing or after publish"
+import re, sys
+body = re.match(r'---\n.*?\n---\n(.*)$', open(sys.argv[1], encoding="utf-8").read(), re.S).group(1)
+lines = body.splitlines()
+def first(p):
+    return next((i for i, l in enumerate(lines) if re.search(p, l)), None)
+rescan  = first(r'Rescan the finished page')
+publish = first(r'select:Artifact')
+assert rescan is not None, 'the rendered-page rescan left the core'
+assert publish is not None, 'no Artifact publish bootstrap found'
+# Presence is not the contract: a rescan documented after the publish bootstrap
+# scans a page that already shipped.
+assert rescan < publish, (
+    f'rescan (line {rescan+1}) must precede the publish bootstrap (line {publish+1})')
+EOF
+# prompt-artifact deliberately has no rendered-page rescan: its Step 4 gate covers
+# every prompt body, which is all the page contains, so there is no second surface.
+# Its gate ordering is asserted by the shared scrub-gate check above.
+grep -qF 'Rescan the finished page' "$PROMPT" \
+  && fail "prompt-artifact grew a rendered-page rescan; add an ordering assertion for it"
+:
+# Republish key must not be date-derived in EITHER publishing reference, or
+# tomorrow's run of the same branch/prompt misses today's URL and mints a second page.
+grep -qE '\.claude/artifacts/[a-z-]*.*\$\(date' "$DIFF_PUB" \
   && fail "diff-publishing.md: inbox key is date-derived — breaks cross-day republish"
+grep -qE '\.claude/artifacts/[a-z-]*.*\$\(date' "$PROMPT_PUB" \
+  && fail "prompt-publishing.md: inbox key is date-derived — breaks cross-day republish"
 # The prompt page's escaping contract and the verbatim-copy guarantee.
 grep -qF 'data-type' "$PROMPT_PAGE" || fail "prompt-page.md: type chip escaping target missing"
 grep -qF 'writeText' "$PROMPT_PAGE" || fail "prompt-page.md: copy button lost its clipboard call"

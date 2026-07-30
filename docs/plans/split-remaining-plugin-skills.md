@@ -94,7 +94,7 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [x] `wc -w` on each of the six target SKILL.md files returns under 600, against a pre-split total of 10,545 words — measured 10,451 by `wc -w` against `origin/main` (3,058 + 1,831 + 1,489 + 1,519 + 1,367 + 1,187); the plan's 10,545 came from a different counter. Post-split total is 3,431: 573 / 594 / 582 / 513 / 581 / 588
+- [x] Each of the six target SKILL.md files is under 600 words, against a pre-split total of 10,545 — **measured 10,451**, and the counter turned out to matter more than the number. `wc -w` is locale-dependent on these files: they are full of multibyte characters (`—`, `≤`, `→`, `…`), and a standalone `—` is not a word in the C locale but is one in C.UTF-8, a ~20-word swing per file. That is exactly how CI first went red — the cores read 573–594 in this container's C locale and 589–617 on the runner. The test now counts in Python, which decodes UTF-8 regardless of ambient locale and returns the same answer everywhere. Canonical post-split total is **3,392**: 579 / 522 / 571 / 571 / 566 / 583, each with 17+ words of margin
 - [x] 17 new reference files exist, placed per-skill under `skill-reviewer`, `memory-tools`, and `code-testing-agent`, and at plugin level under `artifact-tools` and `content-tools`
 - [x] `bash tests/plugins/test-remaining-skill-splits.sh` exits 0
 - [x] Every `references/` path named in a split core resolves to an existing file, and no reference file is orphaned from every core
@@ -160,6 +160,57 @@ not anticipate**: its check 8 greps `prompt-artifact`'s SKILL.md for the five li
 filter chips and the tolerant-frontmatter rule, both of which moved into
 `prompt-page.md` and `prompt-resolution.md`. It now reads the core plus those two, so
 it still fails if a chip is dropped.
+
+**Two defects the PR review caught, both in the tests this plan added.** Neither was
+visible from a green local run, which is the point worth recording.
+
+*The word ceiling was measured with a locale-dependent counter.* `wc -w` under this
+container's C locale undercounted every core by 9–23 words, so three of them
+(`tdd-fix` 603, `diff-artifact` 602, `prompt-artifact` 617) shipped over the ceiling
+and the new CI step failed on the first run. Fixed at both ends: the test counts in
+Python so the number is the same on every machine, and all six cores were trimmed to
+566–583 by removing genuine restatement rather than reshuffling prose — Step 5's
+scrub paragraph in `diff-artifact` no longer repeats Step 2's verdict list, `tdd-fix`
+no longer paraphrases steps its references already state in full, and
+`artifact-to-post` drops a lead paragraph that restated its own frontmatter
+description.
+
+*`test-memory-doctor-guard.sh` could abort silently.* Its `extract_check` piped the
+bundled skill into an `awk` that exits at the heredoc terminator; the producer then
+wrote into a closed reader, took SIGPIPE, and under `set -o pipefail` + `set -e` the
+whole test aborted at exit 141 — skipping checks 3–10 while reporting nothing. It
+passed only because the bytes trailing the heredoc happened to fit the 64 KiB pipe
+buffer (5,756 bytes of margin for `agentic-memory-management`, 684 for
+`path-rules-advisor`), which is a property of today's reference files, not a
+guarantee. Extraction now buffers to a file, which has no reader to close; verified
+by appending 480 KB after the heredoc and confirming all 11 checks still run, where
+the old piped form exits 141.
+
+Four review findings were also worth taking, each verified by a negative control
+that fails before the fix and passes after: the frontmatter unit check now compares
+the **whole** opening `---` block rather than four named keys (an added `model:` key
+passed before); `diff-artifact`'s rendered-page rescan is asserted to precede the
+publish bootstrap, not merely to exist (moving it after publish passed before); the
+date-derived-key ban covers `prompt-publishing.md` as well as `diff-publishing.md`;
+and `references/titles.md` joined the resolve/orphan sweep, since both split cores
+name it. Reference counting also changed shape: it now counts the references each
+core actually links and that resolve, because under a plugin-level layout counting
+files in the shared directory would let a target pass on its siblings' references.
+
+Four further findings were checked and declined, each for a stated reason. Describing
+`security-scrub` as auto-activated rather than a `Skill`-tool call would break the
+gate: a blocking gate has to be invoked deterministically, `test-artifact-tools.sh`
+requires `Skill` in `allowed-tools` precisely because the body invokes another
+plugin's skill, and the wording is unchanged from `main`. Replacing the frontmatter
+parse check with a YAML parser is unnecessary — the concern was that it rejects
+nested mappings and sequence items, but it skips indented lines and `- ` items, and
+`test-memory-doctor-guard.sh` check 9 proves it on a folded scalar plus a nested
+list. The `git checkout -- <path>` recovery hint and the `## When not to use` scope
+line that omits Rule 4's body insertion are both real, both unchanged from `main`,
+and both live identically in a sibling skill outside this PR; changing shipped
+guidance inside a refactor that promises byte-identical behaviour would hide a
+behaviour change in a no-op diff, so they belong in the Rule 1 trim pass already
+queued in Next Steps.
 
 ## Next Steps
 

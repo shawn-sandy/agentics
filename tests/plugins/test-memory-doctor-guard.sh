@@ -17,6 +17,9 @@ ADVISOR="$ROOT/kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md"
 ADVISOR_DIR="$(dirname "$ADVISOR")"
 FAILURES=0
 
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
 # Concatenate a skill's core with any reference files it ships, so a check that
 # asserts on shipped instructions does not go silently green when content moves
 # behind a link. Prints to stdout.
@@ -26,6 +29,13 @@ skill_bundle() {
   dir="$(dirname "$1")/references"
   [ -d "$dir" ] || return 0
   for r in "$dir"/*.md; do [ -f "$r" ] && cat "$r"; done
+}
+
+# Same bundle, materialised at $BUNDLE. Use this for any consumer that may stop
+# reading early — see the SIGPIPE note on extract_check below.
+bundle_file() {
+  BUNDLE="$TMP/bundle-$(basename "$(dirname "$1")").md"
+  skill_bundle "$1" > "$BUNDLE"
 }
 
 pass() { echo "  PASS${1:+ ($1)}"; }
@@ -42,7 +52,8 @@ MISSING=""
 grep -qF 'Verify the write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:heading"
 grep -qF 'Verify the write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:heading"
 grep -qF 'git --no-pager diff -- "$TARGET"' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:diff"
-skill_bundle "$ADVISOR" | grep -qF 'git --no-pager diff -- "$TARGET"' || MISSING="$MISSING advisor:diff"
+bundle_file "$ADVISOR"
+grep -qF 'git --no-pager diff -- "$TARGET"' "$BUNDLE" || MISSING="$MISSING advisor:diff"
 grep -qF 'REPORT rather than write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:gate"
 grep -qF 'REPORT rather than write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:gate"
 if [ -z "$MISSING" ]; then pass; else fail "missing:$MISSING"; fi
@@ -68,7 +79,8 @@ for f in "$DOCTOR" "$ADVISOR"; do
   TOOLS=$(grep -m1 '^allowed-tools:' "$f")
   # Commands are extracted from the shipped bash block, not hardcoded here, so a
   # third command added to the guard is covered automatically.
-  CMDS=$(skill_bundle "$f" | awk '/^```bash$/,/^```$/' \
+  bundle_file "$f"
+  CMDS=$(awk '/^```bash$/,/^```$/' "$BUNDLE" \
     | grep -oE '^[[:space:]]*(git|python3|node|jq|sed|awk)[^|;&]*' \
     | sed 's/^[[:space:]]*//' | sort -u)
   if [ "$(printf '%s' "$CMDS" | grep -c .)" -lt 2 ]; then
@@ -92,12 +104,16 @@ if [ -z "$MISSING" ]; then pass; else fail "allowed-tools does not cover:$MISSIN
 
 # --- Extract the shipped check so the test exercises the real thing -----------
 
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
-
 extract_check() {
-  skill_bundle "$1" \
-    | awk '/^python3 - "\$TARGET" <<'"'"'EOF'"'"'$/ {grab=1; next} grab && /^EOF$/ {exit} grab {print}'
+  # Buffer to a file rather than piping. `awk` exits at the heredoc terminator,
+  # so on a pipe the producer keeps writing into a closed reader and dies of
+  # SIGPIPE; with `set -o pipefail` that surfaces as 141 and `set -e` aborts the
+  # whole test before check 3 — silently skipping every check after it. It only
+  # survives today because the bytes trailing the heredoc happen to fit the
+  # 64 KiB pipe buffer, which is a property of the current reference files, not
+  # a guarantee. A file has no reader to close.
+  bundle_file "$1"
+  awk '/^python3 - "\$TARGET" <<'"'"'EOF'"'"'$/ {grab=1; next} grab && /^EOF$/ {exit} grab {print}' "$BUNDLE"
 }
 
 extract_check "$DOCTOR" > "$TMP/check.py"

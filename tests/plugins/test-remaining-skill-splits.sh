@@ -30,6 +30,29 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 CEILING=600
 BASE_REF="${BASE_REF:-origin/main}"
+
+# Word count, deliberately NOT `wc -w`. These bodies are full of multibyte
+# characters (em dashes, ≤, →, …), and `wc -w` counts them differently by locale:
+# in the C locale a standalone `—` is not a word, in C.UTF-8 it is. That is a ~20
+# word swing per file, which is the difference between passing on a dev machine
+# and failing on a CI runner — the exact drift this test exists to prevent. So
+# count in Python, which decodes UTF-8 regardless of the ambient locale and gives
+# the same answer everywhere. `python3` is already a hard dependency below.
+count_words() { python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().split()))" "$1"; }
+
+# How many distinct `references/<name>.md` links this core names that actually
+# resolve — against the skill's own dir first, then the plugin-level dir.
+count_own_refs() {
+  python3 - "$1" "$2" <<'EOF'
+import pathlib, re, sys
+core, refdir = sys.argv[1], sys.argv[2]
+text = pathlib.Path(core).read_text(encoding="utf-8")
+names = set(re.findall(r'references/([A-Za-z0-9._-]+\.md)', text))
+own = pathlib.Path(core).parent / "references"
+print(sum(1 for n in sorted(names)
+          if (own / n).is_file() or (pathlib.Path(refdir) / n).is_file()))
+EOF
+}
 FAILURES=0
 pass() { echo "  PASS${1:+ — $1}"; }
 fail() { echo "  FAIL: $1"; FAILURES=$((FAILURES + 1)); }
@@ -55,7 +78,7 @@ TOTAL=0
 while IFS='|' read -r skill _; do
   [ -n "$skill" ] || continue
   if [ ! -f "$skill" ]; then fail "$skill missing"; continue; fi
-  words=$(wc -w < "$skill" | tr -d ' ')
+  words=$(count_words "$skill")
   TOTAL=$((TOTAL + words))
   if [ "$words" -lt "$CEILING" ]; then
     echo "  $words  $skill"
@@ -69,14 +92,18 @@ done <<< "$TARGETS"
 # 2. References exist, in the directory this plugin's convention dictates, and
 #    there are at least two of them per target.
 # ---------------------------------------------------------------------------
-echo "2. Each target has >= 2 reference files in its plugin's conventional dir..."
+echo "2. Each target links >= 2 reference files in its plugin's conventional dir..."
 MISSING=""
 while IFS='|' read -r skill refdir; do
   [ -n "$skill" ] || continue
   name="$(basename "$(dirname "$skill")")"
   if [ ! -d "$refdir" ]; then MISSING="$MISSING $name:[no-dir]"; continue; fi
-  n=$(find "$refdir" -maxdepth 1 -name '*.md' -type f | wc -l | tr -d ' ')
-  [ "$n" -ge 2 ] || MISSING="$MISSING $name:[$n-refs]"
+  # Count the references THIS core links and that resolve, not every file in the
+  # directory. Under a plugin-level layout the directory is shared, so counting
+  # files would let a target pass on its siblings' references while linking none
+  # of its own.
+  n=$(count_own_refs "$skill" "$refdir")
+  [ "$n" -ge 2 ] || MISSING="$MISSING $name:[$n-linked-refs]"
   # A per-skill layout and a plugin-level layout inside ONE plugin is what
   # breaks reader expectation, so assert the target has no dir of the other kind.
   sibling="$(dirname "$skill")/references"
@@ -190,24 +217,27 @@ if [ -z "$MISSING" ]; then pass; else fail "core gate lost in:$MISSING"; fi
 # ---------------------------------------------------------------------------
 # 5. UNIT: frontmatter is untouched by the split.
 # ---------------------------------------------------------------------------
-echo "5. UNIT: name/description/allowed-tools/disable-model-invocation match $BASE_REF..."
+echo "5. UNIT: the whole opening frontmatter block matches $BASE_REF..."
 if ! git rev-parse --verify --quiet "$BASE_REF" >/dev/null; then
   fail "$BASE_REF is not available locally — run: git fetch origin main"
 else
   MISSING=""
+  # Compare the ENTIRE opening `---` block, not a list of named keys. Checking
+  # only name/description/allowed-tools/disable-model-invocation would let an
+  # added or removed key through while the test still reported "unchanged" — and
+  # a stray frontmatter key changes how the skill loads just as much as a
+  # reworded description does. A body code sample may legally contain a
+  # `description:` line, which is why this reads the opening block and not the
+  # whole file.
+  fm() { awk 'NR==1&&/^---$/{f=1;next} f&&/^---$/{exit} f' ; }
   while IFS='|' read -r skill _; do
     [ -n "$skill" ] || continue
     name="$(basename "$(dirname "$skill")")"
-    # Compare the opening frontmatter block only. A body code sample may legally
-    # contain a `description:` line; the frontmatter is the contract.
-    for key in name description allowed-tools disable-model-invocation; do
-      now=$(awk -v k="^$key:" 'NR==1&&/^---$/{f=1;next} f&&/^---$/{exit} f&&$0~k' "$skill")
-      was=$(git show "$BASE_REF:$skill" \
-            | awk -v k="^$key:" 'NR==1&&/^---$/{f=1;next} f&&/^---$/{exit} f&&$0~k')
-      [ "$now" = "$was" ] || MISSING="$MISSING $name:[$key]"
-    done
+    now=$(fm < "$skill")
+    was=$(git show "$BASE_REF:$skill" | fm)
+    [ "$now" = "$was" ] || MISSING="$MISSING $name"
   done <<< "$TARGETS"
-  if [ -z "$MISSING" ]; then pass; else fail "frontmatter drifted:$MISSING"; fi
+  if [ -z "$MISSING" ]; then pass "whole block, not just named keys"; else fail "frontmatter block drifted:$MISSING"; fi
 fi
 
 echo

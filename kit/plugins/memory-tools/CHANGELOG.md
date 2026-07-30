@@ -4,7 +4,7 @@
 
 ### Changed
 
-- **`path-rules-advisor` is now a 513-word core plus three reference files, down
+- **`path-rules-advisor` is now a 522-word core plus three reference files, down
   from 1,519 words in a single body.**
   - `references/rule-modes.md` — Mode A Steps 1–7 and Mode B Steps 1–7 in full
   - `references/rule-file-format.md` — the generated-file template, brace
