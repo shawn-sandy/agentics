@@ -187,10 +187,19 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // spec. Without it an agent reports "done" on a plan still marked todo.
   const verifyTail = `Then verify before reporting done: run the objective test's Run command from the plan's Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.`;
 
-  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. ${verifyTail}`;
-  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome. ${verifyTail}`;
   const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
   const wantsWorkflow = md.workflow === 'true' || (md.workflow !== 'false' && fileCount >= 5 && dirCount >= 3);
+
+  const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. ${verifyTail}`;
+  // Same gate as the workflow row: a plan too small to show that row must not
+  // license fan-out the page never offers. Trailing license, not a leading
+  // directive — "Run a workflow to achieve this goal" would fix the
+  // decomposition before the agent is allowed to conclude the plan's
+  // decomposition is wrong, which is the one freedom a goal prompt exists to
+  // grant. Stated after the latitude, parallelism is a choice the outcome
+  // licenses rather than a method chosen for the agent up front.
+  const fanOut = wantsWorkflow ? ' Fan out across parallel subagents where that serves the outcome.' : '';
+  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome.${fanOut} ${verifyTail}`;
   const workflow = wantsWorkflow
     ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Reserve a final verification phase for the lead agent, not a subagent. ${verifyTail}`
     : '';

@@ -1,5 +1,35 @@
 # Changelog
 
+## 6.1.0 — the goal prompt licenses fan-out when the plan is big enough to warrant it (2026-07-29)
+
+### Changed
+
+- **The goal prompt now licenses parallel subagents on plans that get a
+  workflow row.** "Pursue as goal" produced `Achieve this goal: …` on every
+  plan — a purely sequential instruction. The only prompt that requested
+  parallelism was the sibling workflow row, so choosing outcome latitude meant
+  giving up fan-out even on plans that clearly warranted it. On plans where the
+  workflow row is emitted, the goal prompt now appends `Fan out across parallel
+  subagents where that serves the outcome.` and its label reads "Pursue as goal
+  — optimize for the outcome, in parallel".
+- **The license trails the latitude; it does not lead the prompt.** An earlier
+  cut of this change opened the prompt with `Run a workflow to achieve this
+  goal:`. That inverted what a goal prompt is for: fan-out needs a fixed
+  decomposition, while "the plan is only reference, optimize for the outcome"
+  licenses rewriting that decomposition — so a leading directive forced the
+  agent to commit to a work-list before it was allowed to judge the work-list
+  wrong, and in practice the latitude became dead text. It also made the goal
+  and workflow prompts open with four identical words, collapsing the visible
+  difference between the drawer's two rows. Stating fan-out after the latitude
+  keeps the prompt a goal and makes parallelism a choice the outcome licenses.
+- **Prompt and label share one gate.** The fan-out sentence keys off the same
+  `wantsWorkflow` check that emits the workflow row (`workflow: true`, or 5+
+  files across 3+ top-level directories; `workflow: false` suppresses both).
+  A plan too small to show a workflow row gets no fan-out license — the page
+  can no longer offer orchestration it doesn't show. In `moreWaysDrawer` the
+  label tracks the non-empty `workflow` argument rather than taking a
+  parameter of its own, so the two cannot drift.
+
 ## 6.0.3 — the `Skill`-tool ban in the two wrappers now forbids only the self-named call (2026-07-29)
 
 ### Fixed

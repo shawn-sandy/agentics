@@ -24,6 +24,7 @@ const STEP_CHIP = '<span class="step-chip">todo</span>';
 const STEP_CHIP_DONE = '<span class="step-chip">done</span>';
 const NO_ITEMS_REPORT = 'No items to report — all requirements met.';
 const GOAL_LABEL = 'Pursue as goal — optimize for the outcome';
+const GOAL_LABEL_PARALLEL = 'Pursue as goal — optimize for the outcome, in parallel';
 
 /* ── Blocks extracted verbatim from SKELETON.html ─────────────────── */
 export const CSS = `/* ── Design tokens ─────────────────────────────────────────────── */
@@ -1664,7 +1665,11 @@ export function implementRow(implement) {
     </div>`;
 }
 
-/** More-ways drawer. `workflow` empty → row omitted, drawer kept. */
+/**
+ * More-ways drawer. `workflow` empty → row omitted, drawer kept.
+ * A non-empty `workflow` is also the gate for the goal prompt's fan-out
+ * phrasing, so the label tracks it rather than taking its own parameter.
+ */
 export function moreWaysDrawer({ goal, workflow, file, path, md }) {
   const workflowRow = workflow
     ? `
@@ -1683,7 +1688,7 @@ export function moreWaysDrawer({ goal, workflow, file, path, md }) {
       <div class="plan-more-ways-body">
 
         <div class="plan-goal">
-          <div class="plan-goal-label">${GOAL_LABEL}</div>
+          <div class="plan-goal-label">${workflow ? GOAL_LABEL_PARALLEL : GOAL_LABEL}</div>
           <div class="plan-goal-inner">
             <code id="goal-cmd" aria-label="Goal prompt">${goal}</code>
             <button class="copy-goal-btn" type="button"

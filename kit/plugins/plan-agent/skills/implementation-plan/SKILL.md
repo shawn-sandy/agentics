@@ -158,7 +158,14 @@ Echo the resolved objective and effective flags after Step 0.
   optimize for the outcome.` plus the verification gate (same spec
   `<filepath>`). Emitted as the
   `plan-goal` meta tag and the "Pursue as goal" drawer row with its
-  `copyGoal(this)` copy button.
+  `copyGoal(this)` copy button. When the workflow prompt below is emitted,
+  the sentence `Fan out across parallel subagents where that serves the
+  outcome.` is appended after the latitude clause and the row label gains
+  `, in parallel` — the two share one gate, so a plan too small for a
+  workflow row never licenses fan-out the page does not offer. The lead-in
+  stays `Achieve this goal:` in both cases: fan-out is stated as a license
+  the outcome grants, never as a leading directive, so the prompt does not
+  fix a decomposition before the agent may judge the plan's own to be wrong.
 - **Workflow prompt** — `Run a workflow to implement the plan at <filepath>
   — <objective>. Brief subagents with the plan file at <filepath>. Reserve a
   final verification phase for the lead agent, not a subagent.` plus the
