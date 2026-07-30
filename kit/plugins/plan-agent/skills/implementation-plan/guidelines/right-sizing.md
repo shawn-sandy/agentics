@@ -38,7 +38,7 @@ Cross-cutting work, 3+ domains, decisions that are expensive to reverse.
   known risks with mitigations. Open questions go to the interview or an
   `## Unresolved Questions` markdown section — never planned around.
 - Tests: full Tier 1 spread; Verification walks a real end-to-end scenario.
-- Consider `workflow: true` when the work is parallelizable: 5+ files across
+- Consider `workflow: always` when the work is parallelizable: 5+ files across
   3+ directories, repetitive per-file changes (migrations, renames, sweeps),
   independent steps, or steps needing cross-checking review. The renderer's
   own heuristic only sees file/directory counts — set the key explicitly for

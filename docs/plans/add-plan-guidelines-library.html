@@ -10,8 +10,9 @@
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="add-plan-guidelines-library.html">
 <meta name="plan-path" content="docs/plans/add-plan-guidelines-library.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-plan-guidelines-library.html — Ship the guidelines library and markdown-first authoring for implementation-plan">
-<meta name="plan-goal" content="Achieve this goal: Ship the guidelines library and markdown-first authoring for implementation-plan. The plan at docs/plans/add-plan-guidelines-library.html describes one approach — use it as reference, but optimize for the outcome">
+<meta name="plan-md" content="docs/plans/add-plan-guidelines-library.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-plan-guidelines-library.md — Ship the guidelines library and markdown-first authoring for implementation-plan. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-plan-guidelines-library.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Ship the guidelines library and markdown-first authoring for implementation-plan. The plan at docs/plans/add-plan-guidelines-library.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-plan-guidelines-library.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Ship the guidelines library and markdown-first authoring for implementation-plan</title>
 <style>
 /* ── Design tokens ─────────────────────────────────────────────── */
@@ -1350,7 +1351,7 @@ img, video { max-width: 100%; height: auto; }
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-plan-guidelines-library.html — Ship the guidelines library and markdown-first authoring for implementation-plan</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-plan-guidelines-library.md — Ship the guidelines library and markdown-first authoring for implementation-plan. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-plan-guidelines-library.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1362,7 +1363,7 @@ img, video { max-width: 100%; height: auto; }
         <div class="plan-goal">
           <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
           <div class="plan-goal-inner">
-            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Ship the guidelines library and markdown-first authoring for implementation-plan. The plan at docs/plans/add-plan-guidelines-library.html describes one approach — use it as reference, but optimize for the outcome</code>
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Ship the guidelines library and markdown-first authoring for implementation-plan. The plan at docs/plans/add-plan-guidelines-library.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-plan-guidelines-library.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
             <button class="copy-goal-btn" type="button"
                     onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
           </div>
@@ -1380,6 +1381,12 @@ img, video { max-width: 100%; height: auto; }
             <code id="plan-path" aria-label="Plan relative path">docs/plans/add-plan-guidelines-library.html</code>
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/add-plan-guidelines-library.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
           </div>
         </div>
 
@@ -1597,7 +1604,7 @@ img, video { max-width: 100%; height: auto; }
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -1639,6 +1646,8 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1646,10 +1655,12 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
-  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }

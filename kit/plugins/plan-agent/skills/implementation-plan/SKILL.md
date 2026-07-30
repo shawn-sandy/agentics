@@ -27,10 +27,12 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" <plan>.md -o <plan>.htm
 
 Exit 0 = rendered; exit 1 prints exactly which required section is missing
 or malformed — fix the spec and re-run. A `PostToolUse` hook
-(`hooks/render-plan-html.py`) also re-renders the sibling HTML whenever a
-spec in the plans directory is written, so later markdown edits keep the
-pair fresh; still run the script explicitly after authoring so parse errors
-surface deterministically. Both files — the `.md` source of truth and the
+(`hooks/render-plan-html.py`) re-renders the sibling HTML whenever a spec in
+the plans directory is written, but do not rely on it: plugin `hooks.json`
+files are not registered in every runtime (notably the Claude Code desktop
+app, where they never fire), so a markdown edit can silently leave the pair
+stale. Always run the script explicitly after editing a spec — that also
+surfaces parse errors deterministically. Both files — the `.md` source of truth and the
 rendered `.html` — are committed together in the plans directory.
 
 **Guidelines library** (in `guidelines/` beside this file — read the full
@@ -86,7 +88,7 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
 
 Flags: `--quick` (= `--no-clarify --no-align --no-interview`),
 `--no-clarify`, `--no-align`, `--no-interview`, `--workflow` (always
-generate the workflow prompt: set `workflow: true` in the spec
+generate the workflow prompt: set `workflow: always` in the spec
 frontmatter), `--type <kind>`, `--template <name>` (`default` only;
 variants ship later as renderer style shells), `--dir <path>`,
 `--priority <level>` (written as a `priority:` frontmatter key; preserved
@@ -134,13 +136,26 @@ Echo the resolved objective and effective flags after Step 0.
 `build-plan-html.mjs` computes everything derivable from the spec:
 
 - **Verification gate (shared by all three prompts)** — every generated
-  prompt ends with the same tail: run the objective test's **Run** command,
-  walk the Verification section, confirm every acceptance criterion, then
-  mark completion in the spec (`[x]` step markers, `- [x]` criteria,
-  `status: completed`) and re-render. A failed check leaves
-  `status: in-progress` and names the failing check. A prompt that says
-  "implement this" without the gate lets an agent report done on a plan
-  still marked `todo` — never emit one.
+  prompt ends with the same tail: verify against the plan's Tests,
+  Verification, and Acceptance Criteria; if everything passed, mark
+  completion in the spec (`[x]` step markers, `- [x]` criteria,
+  `status: completed`) and re-render; a failed check leaves
+  `status: in-progress` and names it. A prompt that says "implement this"
+  without the gate lets an agent report done on a plan still marked `todo` —
+  never emit one.
+
+  The *check* clause is compressed — naming the three spec sections beats
+  spelling out how to walk each one. The *record* clause is not, and must not
+  be. 7.0.0 trimmed both and had to restore the second: an unfinished spec
+  carries bare numbered steps and bullets, so there is no `[x]` for the agent
+  to copy, and the rendered progress bar and step chips read from exactly
+  those markers. The re-render stays too — `hooks.json` registers
+  `render-plan-html.py` on PostToolUse writes, but that registration is not
+  honoured everywhere: the Claude Code desktop app never wires up plugin
+  `hooks.json` at all, so a spec edited there leaves the sibling HTML stale.
+  The instruction is not redundant in practice. Only `copyCmd()` rebuilds a
+  richer prompt from live DOM; `copyGoal()` and `copyWorkflow()` copy this
+  tail verbatim, so anything dropped here is dropped on two of three paths.
 - **Implement prompt** —
   `Read and implement all steps in the plan at <filepath> — <objective>.`
   plus the verification gate, rendered as the single visible call-to-action
@@ -158,18 +173,27 @@ Echo the resolved objective and effective flags after Step 0.
   optimize for the outcome.` plus the verification gate (same spec
   `<filepath>`). Emitted as the
   `plan-goal` meta tag and the "Pursue as goal" drawer row with its
-  `copyGoal(this)` copy button.
+  `copyGoal(this)` copy button. When the workflow prompt below is emitted,
+  the sentence `Fan out across parallel subagents where that serves the
+  outcome.` is appended after the latitude clause and the row label gains
+  `, in parallel` — the two share one gate, so a plan too small for a
+  workflow row never licenses fan-out the page does not offer. The lead-in
+  stays `Achieve this goal:` in both cases: fan-out is stated as a license
+  the outcome grants, never as a leading directive, so the prompt does not
+  fix a decomposition before the agent may judge the plan's own to be wrong.
 - **Workflow prompt** — `Run a workflow to implement the plan at <filepath>
   — <objective>. Brief subagents with the plan file at <filepath>. Reserve a
   final verification phase for the lead agent, not a subagent.` plus the
   verification gate (same
   spec `<filepath>` — every subagent briefed with the compact spec). Emitted
   (row + `plan-workflow` meta tag) only when frontmatter says
-  `workflow: true` or the heuristic fires (5+ files across 3+ top-level
-  directories). `workflow: false` suppresses it. For the other workflow
-  triggers — repetitive per-file changes, independent parallel steps,
-  cross-checking review — set `workflow: true` yourself (see
-  `right-sizing.md`).
+  `workflow: always`, or when `workflow: auto` (the default when the key is
+  absent) fires the heuristic — 5+ files across 3+ top-level directories.
+  `workflow: never` suppresses it. For the other workflow triggers —
+  repetitive per-file changes, independent parallel steps, cross-checking
+  review — set `workflow: always` yourself (see `right-sizing.md`).
+  `true`/`false` remain accepted as the pre-7.0 spelling of
+  `always`/`never`; any other value is a spec error, not a fallback.
 - **Next Steps cards** — an optional `## Next Steps` spec section renders as
   collapsible follow-up cards with Copy-prompt buttons (bullet = card;
   fenced block in the bullet = paste-ready prompt). See
@@ -278,6 +302,17 @@ EOF
    `origin` remote basename and falls back to the cwd basename. See the
    catalog's frontmatter table for the full key list.
 
+   The enumerated keys accept exactly these values — anything else fails the
+   render with a message naming the key and the valid set, rather than
+   quietly rendering something you did not write:
+
+   | key | values | default when absent |
+   |---|---|---|
+   | `status` | `todo`, `in-progress`, `completed` | `todo` |
+   | `type` | `feature`, `fix`, `refactor`, `docs`, `chore` | `feature` |
+   | `effort` | `low`, `medium`, `high` | derived from step and file counts |
+   | `workflow` | `auto`, `always`, `never` (`true`/`false` accepted as the pre-7.0 spelling of `always`/`never`) | `auto` |
+
 4. **Rename** — **Always** ensure the filename follows the `verb-target`
    kebab-case convention before rendering. Rename when (a) the initial name
    is auto-generated, placeholder, or non-descriptive, or (b) the plan's
@@ -351,8 +386,8 @@ EOF
    `## Acceptance Criteria` (author new criteria as `- [ ]` or plain `- `
    — both render unchecked). Every state change is a one-line Markdown
    edit followed by a re-render (the `render-plan-html.py` hook does this
-   automatically on each spec write; run the Step 5d command when you need
-   the failure surfaced). Re-rendering is lossless — progress re-renders
+   on each spec write *where plugin hooks are registered* — they are not in
+   the desktop app, so run the Step 5d command rather than assuming it fired). Re-rendering is lossless — progress re-renders
    from the spec, so there is no state to re-apply. Never edit `checked`
    attributes, `.step-card` classes, or status attributes in the HTML;
    `/plan-agent:finalize-plan` follows the same rule. A user ticking a box
@@ -398,7 +433,7 @@ EOF
    issue URL in one line instead.
 
    For the next-step question, **when a workflow prompt was generated**
-   (frontmatter `workflow: true` or the renderer's heuristic fired — check
+   (frontmatter `workflow: always` or the renderer's heuristic fired — check
    for the `plan-workflow` meta tag in the rendered HTML), include the
    workflow option:
    - Question: "The plan is complete. What would you like to do next?"

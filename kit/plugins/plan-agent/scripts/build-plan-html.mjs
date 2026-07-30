@@ -154,6 +154,55 @@ function reportList(entries) {
  * done state and completion-report entries; omitted state renders as not
  * done. `nextSteps` (optional) renders as the collapsible Next Steps cards.
  */
+/**
+ * Enumerated frontmatter keys and their accepted values.
+ *
+ * `workflow: auto` is the heuristic — the state that used to be spelled by
+ * omitting the key entirely, which left it unnamed and therefore untypeable.
+ * `true`/`false` are the pre-7.0 spelling of `always`/`never` and stay
+ * accepted so every committed spec keeps rendering.
+ */
+const ENUMS = {
+  status: ['todo', 'in-progress', 'completed'],
+  type: ['feature', 'fix', 'refactor', 'docs', 'chore'],
+  effort: ['low', 'medium', 'high'],
+  workflow: ['auto', 'always', 'never', 'true', 'false'],
+};
+
+/**
+ * Read an enumerated key. Absent takes the caller's default; present but
+ * unrecognized is a spec error.
+ *
+ * These keys used to fall back silently, which turned every near-miss into a
+ * plan that rendered as something the author did not write: `status: complete`
+ * rendered as `todo`, `workflow: yes` meant "no workflow", and `type:` took
+ * any string at all and became a phantom filter chip in the gallery. Refusing
+ * unknown input is an interface constraint, not a constraint on judgment —
+ * a typo is not a decision to respect.
+ *
+ * Only an absent key defaults. `status:` with nothing after it is a present
+ * key with an empty value — a half-finished edit or a template that never got
+ * filled in, which is exactly the mistake worth catching, not a request for
+ * the default.
+ *
+ * The frontmatter parser keeps everything after the colon, so a YAML inline
+ * comment lands inside the value. That was harmless while these keys fell
+ * back; once they became strict it turned `status: todo  # todo | ...` into a
+ * hard error, and every enum line in the authoring docs is written that way.
+ * Enum values are single tokens and can never contain `#`, so strip the
+ * comment here rather than making hand-authored YAML illegal.
+ */
+function enumValue(md, key, fallback) {
+  const raw = md[key];
+  if (raw === undefined) return fallback;
+  const value = raw.replace(/\s+#.*$/, '').trim();
+  if (!ENUMS[key].includes(value)) {
+    const shown = value === '' ? '(empty)' : raw;
+    throw new ParseError(`${key}: ${shown} — expected one of ${ENUMS[key].join(', ')}`);
+  }
+  return value;
+}
+
 export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps }, { fileName, planPath, mdPath, today, repo } = {}) {
   const md = metadata;
   const s = sections;
@@ -161,15 +210,15 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   const criteriaDone = (progress && progress.criteria) || [];
   const report = (progress && progress.report) || [];
 
-  const status = ['todo', 'in-progress', 'completed'].includes(md.status) ? md.status : 'todo';
-  const type = md.type || 'feature';
+  const status = enumValue(md, 'status', 'todo');
+  const type = enumValue(md, 'type', 'feature');
   const created = md.created || today || new Date().toISOString().slice(0, 10);
   const repoName = md.repo || repo || 'repo';
   const file = fileName || 'plan.html';
   const path = planPath || file;
 
   const fileCount = new Set((s.files || []).map((f) => f.path)).size;
-  const effort = ['low', 'medium', 'high'].includes(md.effort) ? md.effort : deriveEffort(s.steps.length, fileCount);
+  const effort = enumValue(md, 'effort', null) || deriveEffort(s.steps.length, fileCount);
   const effortLabel = effort[0].toUpperCase() + effort.slice(1);
 
   const specPath = mdPath || (/\.html$/i.test(path) ? path.replace(/\.html$/i, '.md') : `${path}.md`);
@@ -183,14 +232,40 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     ? posix.relative(posix.dirname(path.replace(/\\/g, '/')), prototype.replace(/\\/g, '/')) || basename(prototype)
     : '';
 
-  // Every prompt ends with the same gate: verify, then record completion in the
-  // spec. Without it an agent reports "done" on a plan still marked todo.
-  const verifyTail = `Then verify before reporting done: run the objective test's Run command from the plan's Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.`;
+  // Every prompt ends with the same gate: verify, then record the outcome in
+  // the spec. Without it an agent reports "done" on a plan still marked todo.
+  //
+  // The *check* clause is compressed — naming the three spec sections beats
+  // spelling out how to walk each one. The *record* clause is not: it stays
+  // explicit about `[x]` markers, `- [x]` criteria, and the re-render.
+  //
+  // Both were cut in 7.0.0 and both had to come back. The tick mechanics are
+  // not "visible in the spec the agent has open" — an unfinished spec carries
+  // bare numbered steps and bullets, so there is no `[x]` to copy, and the
+  // rendered progress bar and step chips derive from those markers. And the
+  // re-render is not reliably automatic: hooks.json does register
+  // render-plan-html.py on PostToolUse writes, but editing a plan spec through
+  // the Edit tool was observed leaving the sibling HTML untouched, so dropping
+  // the instruction left the gallery stale. Only copyCmd() rebuilds a richer
+  // prompt from live DOM; copyGoal()/copyWorkflow() copy this string verbatim,
+  // so whatever is missing here is missing on two of the three paths.
+  const verifyTail = `Verify against the plan's Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.`;
+
+  const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
+  const workflowMode = enumValue(md, 'workflow', 'auto');
+  const wantsWorkflow = workflowMode === 'always' || workflowMode === 'true'
+    || (workflowMode === 'auto' && fileCount >= 5 && dirCount >= 3);
 
   const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. ${verifyTail}`;
-  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome. ${verifyTail}`;
-  const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
-  const wantsWorkflow = md.workflow === 'true' || (md.workflow !== 'false' && fileCount >= 5 && dirCount >= 3);
+  // Same gate as the workflow row: a plan too small to show that row must not
+  // license fan-out the page never offers. Trailing license, not a leading
+  // directive — "Run a workflow to achieve this goal" would fix the
+  // decomposition before the agent is allowed to conclude the plan's
+  // decomposition is wrong, which is the one freedom a goal prompt exists to
+  // grant. Stated after the latitude, parallelism is a choice the outcome
+  // licenses rather than a method chosen for the agent up front.
+  const fanOut = wantsWorkflow ? ' Fan out across parallel subagents where that serves the outcome.' : '';
+  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome.${fanOut} ${verifyTail}`;
   const workflow = wantsWorkflow
     ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Reserve a final verification phase for the lead agent, not a subagent. ${verifyTail}`
     : '';
@@ -347,13 +422,24 @@ function main() {
     }
   }
 
-  const html = renderPlanHtml(parsed, {
-    fileName: basename(outPath),
-    planPath: parsed.metadata.path || relative(process.cwd(), resolve(outPath)),
-    mdPath: relative(process.cwd(), resolve(specPath)),
-    repo: defaultRepo(),
-    today: created || undefined,
-  });
+  let html;
+  try {
+    html = renderPlanHtml(parsed, {
+      fileName: basename(outPath),
+      planPath: parsed.metadata.path || relative(process.cwd(), resolve(outPath)),
+      mdPath: relative(process.cwd(), resolve(specPath)),
+      repo: defaultRepo(),
+      today: created || undefined,
+    });
+  } catch (err) {
+    // Enumerated frontmatter is validated during render, so its errors surface
+    // here rather than from parseSpecMarkdown above.
+    if (err instanceof ParseError) {
+      console.error(`build-plan-html: ${specPath} has invalid frontmatter — ${err.message}`);
+      process.exit(1);
+    }
+    throw err;
+  }
   writeFileSync(outPath, html);
   console.log(`build-plan-html: wrote ${outPath} (${html.length} bytes)`);
 }

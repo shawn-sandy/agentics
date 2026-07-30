@@ -1,6 +1,6 @@
 ---
 status: todo
-type: enhancement
+type: feature
 plugin: code-share (kit/plugins/social-media-tools)
 created: 2026-05-27
 ---

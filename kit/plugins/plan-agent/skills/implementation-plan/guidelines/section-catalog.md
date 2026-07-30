@@ -174,12 +174,17 @@ created: 2026-07-12     # YYYY-MM-DD; preserved across re-renders when set
 repo: my-repo           # default: origin remote basename, else cwd basename
 effort: high            # low | medium | high; omit to auto-derive from step/file counts
 glance: <one line>      # 2–3 plain-language sentences, on ONE line — the At-a-glance block
-workflow: true          # force (true) or suppress (false) the workflow prompt; omit for the heuristic
+workflow: auto          # auto (heuristic) | always | never; omit for auto
 ---
 ```
 
 Every value is a single `key: value` line — the frontmatter parser does not
-support multi-line values. `glance` must not restate the objective: the
+support multi-line values. The enumerated keys above (`status`, `type`,
+`effort`, `workflow`) accept only the listed values: an unrecognized one
+fails the render naming the key and the valid set, rather than silently
+falling back — `status: complete` used to render as `todo` and
+`workflow: yes` used to mean "no workflow". `workflow: true`/`false` stay
+accepted as the pre-7.0 spelling of `always`/`never`. `glance` must not restate the objective: the
 objective is the *what*; the glance is *why it matters* and *how we'll know
 it worked*, written for someone who wasn't in the planning session. Unknown
 keys (e.g. `priority`, `issue`) are preserved in the spec but not rendered

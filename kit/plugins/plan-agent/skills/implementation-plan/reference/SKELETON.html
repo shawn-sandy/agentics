@@ -1390,9 +1390,10 @@ img, video { max-width: 100%; height: auto; }
       <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
       <div class="plan-more-ways-body">
 
-        <!-- Goal prompt row (outcome-driven — always present) -->
+        <!-- Goal prompt row (outcome-driven — always present). Label gains
+             ", in parallel" exactly when the workflow row below is present. -->
         <div class="plan-goal">
-          <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
           <div class="plan-goal-inner">
             <code id="goal-cmd" aria-label="Goal prompt">{goal-prompt}</code>
             <button class="copy-goal-btn" type="button"

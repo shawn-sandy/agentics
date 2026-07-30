@@ -1,5 +1,88 @@
 # Changelog
 
+## 7.0.0 — enumerated frontmatter is validated, and the goal prompt licenses fan-out (2026-07-29)
+
+Applies two rules from Anthropic's "The new rules of context engineering for
+Claude 5 generation models" to the renderer: design the interface rather than
+absorb bad input (Rule 2), and stop saying the same thing in two layers
+(Rule 4). Also folds in the goal-prompt fan-out license that was staged as
+6.1.0 — that version is rolled up here and never shipped on its own.
+
+### Breaking
+
+- **Unrecognized values for `status`, `type`, `effort`, and `workflow` now
+  fail the render.** They used to fall back silently, so a near-miss rendered
+  as something the author did not write: `status: complete` rendered as
+  `todo`, `workflow: yes` meant "no workflow", and `type:` accepted any string
+  at all and carried it into the gallery as a filter chip. The renderer now
+  exits 1 naming the key and the accepted set. Two specs in this repo were
+  already off-enum (`type: standard`, `type: enhancement`) and are corrected
+  to `feature`. A consumer with off-enum frontmatter must fix it before their
+  plans will render — hence the major bump, even though every rejected value
+  was already producing a wrong plan.
+- **A present-but-empty value is rejected too.** Only an absent key takes the
+  default. `status:` with nothing after it is a half-finished edit or an
+  unfilled template — the mistake most worth catching, and the one case where
+  falling back would have quietly reintroduced the behaviour this change
+  removes.
+- **Inline YAML comments on the enumerated keys are stripped before
+  validation.** The frontmatter parser keeps everything after the colon, so
+  `status: todo  # todo | in-progress | completed` put the comment inside the
+  value. Harmless while these keys fell back; a hard error once they went
+  strict — and every enum line in the authoring docs is written that way.
+  Enum values are single tokens, so the comment is stripped rather than
+  hand-authored YAML being made illegal.
+- **`workflow` gains `auto`/`always`/`never`.** `auto` names the heuristic —
+  previously the unnamed state you got by omitting the key, which is what made
+  `workflow: yes` degrade without a diagnostic. `true`/`false` remain accepted
+  as the pre-7.0 spelling of `always`/`never`, so committed specs keep
+  rendering unchanged.
+
+### Changed
+
+- **The verification gate's *check* clause is compressed; its *record* clause
+  is not.** Naming the plan's Tests, Verification, and Acceptance Criteria
+  replaces three sentences spelling out how to walk each one. The completion
+  mechanics — `[x]` step markers, `- [x]` criteria, `status: completed`, and
+  the re-render — stay explicit.
+
+  An earlier cut of this release removed the record clause too, on the theory
+  that the tick syntax was already visible in the spec and the re-render was
+  the harness's job. Both were wrong. An unfinished spec carries bare numbered
+  steps and bullets, so there is no `[x]` to copy, and the rendered progress
+  bar and step chips derive from exactly those markers. And while `hooks.json`
+  does register `render-plan-html.py` on PostToolUse writes, that registration
+  is not honoured everywhere: in the Claude Code desktop app plugin `hooks.json`
+  files are never wired up, so editing a plan spec there leaves the sibling HTML
+  stale. The instruction is not redundant in practice. It matters most on the
+  goal and workflow paths: only `copyCmd()` rebuilds a richer prompt from live
+  DOM, while `copyGoal()` and `copyWorkflow()` copy this tail verbatim.
+- **The goal prompt now licenses parallel subagents on plans that get a
+  workflow row.** "Pursue as goal" produced `Achieve this goal: …` on every
+  plan — a purely sequential instruction. The only prompt that requested
+  parallelism was the sibling workflow row, so choosing outcome latitude meant
+  giving up fan-out even on plans that clearly warranted it. On plans where the
+  workflow row is emitted, the goal prompt now appends `Fan out across parallel
+  subagents where that serves the outcome.` and its label reads "Pursue as goal
+  — optimize for the outcome, in parallel".
+- **The license trails the latitude; it does not lead the prompt.** An earlier
+  cut of this change opened the prompt with `Run a workflow to achieve this
+  goal:`. That inverted what a goal prompt is for: fan-out needs a fixed
+  decomposition, while "the plan is only reference, optimize for the outcome"
+  licenses rewriting that decomposition — so a leading directive forced the
+  agent to commit to a work-list before it was allowed to judge the work-list
+  wrong, and in practice the latitude became dead text. It also made the goal
+  and workflow prompts open with four identical words, collapsing the visible
+  difference between the drawer's two rows. Stating fan-out after the latitude
+  keeps the prompt a goal and makes parallelism a choice the outcome licenses.
+- **Prompt and label share one gate.** The fan-out sentence keys off the same
+  `wantsWorkflow` check that emits the workflow row (`workflow: true`, or 5+
+  files across 3+ top-level directories; `workflow: false` suppresses both).
+  A plan too small to show a workflow row gets no fan-out license — the page
+  can no longer offer orchestration it doesn't show. In `moreWaysDrawer` the
+  label tracks the non-empty `workflow` argument rather than taking a
+  parameter of its own, so the two cannot drift.
+
 ## 6.0.3 — the `Skill`-tool ban in the two wrappers now forbids only the self-named call (2026-07-29)
 
 ### Fixed
@@ -129,7 +212,9 @@
   on `<prompts-dir>/proposal-<slug>.md`, authored by delegating to
   `write-prompt`, instead of hand-writing a proposal document. The legacy
   `<proposals-dir>/<slug>.md` copy is still written for this release, carrying a
-  banner naming the prompt as authoritative; it is **removed in 6.1.0**.
+  banner naming the prompt as authoritative; it is **removed in a future minor
+  release**. (Originally slated for 6.1.0, a version that was folded into 7.0.0
+  and never shipped.)
 - **`--dir` now names the prompts directory**, not the proposals directory — the
   flag follows the authoritative artifact. The prompts directory resolves
   `--dir` → `promptsDirectory` → `${PWD}/docs/prompts/`, the same key
