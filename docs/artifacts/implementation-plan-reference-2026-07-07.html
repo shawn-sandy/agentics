@@ -558,8 +558,9 @@
       </div>
       <div class="card">
         <h4>Workflow prompt <span class="tag">conditional</span></h4>
-        <p>Emitted with <code>--workflow</code>, or when the plan touches 5+ files across 3+ dirs, has repetitive
-          per-file changes, parallelizable steps, or needs cross-checking. Otherwise the block is removed entirely.</p>
+        <p>Emitted with <code>--workflow</code>, or automatically when the plan touches 4+ files across 2+ top-level
+          dirs. Repetitive per-file changes, parallelizable steps, and cross-checking are not auto-detected — opt in
+          explicitly. Otherwise the block is removed entirely.</p>
       </div>
       <div class="card">
         <h4>Effort level <span class="tag">always</span></h4>

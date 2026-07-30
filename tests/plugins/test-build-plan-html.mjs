@@ -286,6 +286,9 @@ ok('the auto heuristic fires at 4 files across 2 directories, not below', () => 
   assert.ok(fires('a/1.mjs', 'a/2.mjs', 'b/3.mjs', 'b/4.mjs'), '4 files across 2 dirs opts in');
   assert.ok(!fires('a/1.mjs', 'a/2.mjs', 'b/3.mjs'), '3 files across 2 dirs stays out');
   assert.ok(!fires('a/1.mjs', 'a/2.mjs', 'a/3.mjs', 'a/4.mjs'), '4 files in 1 dir stays out');
+  // Bare filenames share the repo root — they are one directory, not four.
+  assert.ok(!fires('README.md', 'package.json', 'LICENSE', 'Makefile'), '4 root-level files are 1 dir, not 4');
+  assert.ok(fires('README.md', 'LICENSE', 'a/1.mjs', 'a/2.mjs'), 'root plus one nested dir is 2 dirs');
 });
 
 ok('parseSpecMarkdown ignores headings inside fenced code blocks', () => {
