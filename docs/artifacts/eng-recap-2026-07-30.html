@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Six monolithic skill bodies split into cores plus references</title>
+<style>*{box-sizing:border-box}body{margin:0}</style>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #f6f8f7;
+    --surface: #ffffff;
+    --surface-2: #eef1f0;
+    --ink: #111a18;
+    --ink-2: #3d4b48;
+    --ink-3: #6b7a76;
+    --rule: #d6dcda;
+    --rule-2: #e6eae9;
+    --accent: #0f6b5c;
+    --accent-soft: #e0efeb;
+    --cost: #9c5518;
+    --cost-soft: #f2e5da;
+    --pass: #1c6f47;
+    --stop: #9d2f2f;
+    --warn: #8a6005;
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0d1210;
+      --surface: #141b19;
+      --surface-2: #1b2422;
+      --ink: #e6ebe9;
+      --ink-2: #b3bfbb;
+      --ink-3: #7f8e89;
+      --rule: #2a3733;
+      --rule-2: #212c29;
+      --accent: #52b8a4;
+      --accent-soft: #16302b;
+      --cost: #d18c53;
+      --cost-soft: #2e2318;
+      --pass: #56b585;
+      --stop: #d97676;
+      --warn: #c69b3c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0d1210;
+    --surface: #141b19;
+    --surface-2: #1b2422;
+    --ink: #e6ebe9;
+    --ink-2: #b3bfbb;
+    --ink-3: #7f8e89;
+    --rule: #2a3733;
+    --rule-2: #212c29;
+    --accent: #52b8a4;
+    --accent-soft: #16302b;
+    --cost: #d18c53;
+    --cost-soft: #2e2318;
+    --pass: #56b585;
+    --stop: #d97676;
+    --warn: #c69b3c;
+  }
+  :root[data-theme="light"] {
+    --ground: #f6f8f7;
+    --surface: #ffffff;
+    --surface-2: #eef1f0;
+    --ink: #111a18;
+    --ink-2: #3d4b48;
+    --ink-3: #6b7a76;
+    --rule: #d6dcda;
+    --rule-2: #e6eae9;
+    --accent: #0f6b5c;
+    --accent-soft: #e0efeb;
+    --cost: #9c5518;
+    --cost-soft: #f2e5da;
+    --pass: #1c6f47;
+    --stop: #9d2f2f;
+    --warn: #8a6005;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  .prose { max-width: var(--measure); }
+
+  /* ---------- masthead ---------- */
+  .masthead { display: flex; flex-direction: column; gap: 1rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    max-width: 34ch;
+  }
+  .standfirst {
+    font-family: var(--serif);
+    font-size: 1.16rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 58ch;
+  }
+  .meta-line {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ---------- sections ---------- */
+  section { display: flex; flex-direction: column; gap: 1.15rem; }
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--ink);
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  p { max-width: var(--measure); }
+  section > p + p { margin-top: -0.35rem; }
+
+  code, kbd {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--surface-2);
+    padding: 0.1em 0.34em;
+    border-radius: 3px;
+    overflow-wrap: break-word;
+  }
+
+  /* ---------- stat strip ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .stat { background: var(--surface); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+  .stat .n {
+    font-family: var(--mono);
+    font-size: 1.65rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .stat .l {
+    font-size: 0.73rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .stat.hero .n { color: var(--accent); }
+
+  /* ---------- ledger ---------- */
+  .ledger {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .ledger-head, .row {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1.3fr) 3.4rem 3.4rem minmax(6rem, 2fr);
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.6rem 1rem;
+  }
+  .ledger-head {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  .row + .row { border-top: 1px solid var(--rule-2); }
+  .row .name { font-family: var(--mono); font-size: 0.83rem; }
+  .row .num {
+    font-family: var(--mono);
+    font-size: 0.83rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .row .before { color: var(--cost); }
+  .row .after { color: var(--accent); font-weight: 600; }
+  .bars { display: flex; flex-direction: column; gap: 3px; }
+  .bar { height: 7px; border-radius: 2px; }
+  .bar.b { background: var(--cost); opacity: 0.75; }
+  .bar.a { background: var(--accent); }
+  .ledger-foot {
+    padding: 0.7rem 1rem;
+    border-top: 1px solid var(--rule);
+    background: var(--surface-2);
+    font-size: 0.83rem;
+    color: var(--ink-2);
+  }
+  .ceiling-note { font-family: var(--mono); font-size: 0.76rem; color: var(--ink-3); }
+
+  /* ---------- tables ---------- */
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--rule-2); vertical-align: top; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mono, th.mono { font-family: var(--mono); font-size: 0.83rem; font-variant-numeric: tabular-nums; }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.45rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill.pass { color: var(--pass); background: var(--accent-soft); }
+  .pill.gap { color: var(--warn); background: var(--cost-soft); }
+
+  /* ---------- entries ---------- */
+  .entries { display: flex; flex-direction: column; gap: 1.35rem; }
+  .entry {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-left: 1.05rem;
+    border-left: 2px solid var(--rule);
+    max-width: var(--measure);
+  }
+  .entry.stop { border-left-color: var(--stop); }
+  .entry.flag { border-left-color: var(--warn); }
+  .entry .t { font-weight: 650; line-height: 1.4; }
+  .entry .t code { background: none; padding: 0; font-size: 0.92em; }
+  .entry p { margin: 0; }
+  .entry .revisit {
+    font-size: 0.86rem;
+    color: var(--ink-3);
+    font-style: italic;
+  }
+
+  ol.checks { display: flex; flex-direction: column; gap: 0.55rem; padding-left: 1.4rem; max-width: var(--measure); }
+  ol.checks li::marker { font-family: var(--mono); font-size: 0.85rem; color: var(--ink-3); }
+
+  ul.plain { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; max-width: var(--measure); }
+  ul.plain li { padding-left: 1rem; position: relative; }
+  ul.plain li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0.72em;
+    width: 5px; height: 1px;
+    background: var(--ink-3);
+  }
+
+  .files { display: flex; flex-direction: column; gap: 1.5rem; }
+  .files h3 { margin-bottom: -0.5rem; }
+  .files dl { display: flex; flex-direction: column; gap: 0.55rem; }
+  .files dt { font-family: var(--mono); font-size: 0.8rem; overflow-wrap: break-word; }
+  .files dd { font-size: 0.9rem; color: var(--ink-2); padding-left: 1rem; border-left: 1px solid var(--rule-2); }
+
+  /* ---------- diagram ---------- */
+  figure { display: flex; flex-direction: column; gap: 0.6rem; margin: 0; }
+  .diagram-card {
+    background: #ffffff;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1.25rem 1rem;
+    overflow-x: auto;
+  }
+  .mermaid { display: flex; justify-content: center; min-width: 34rem; }
+  figcaption { font-size: 0.85rem; color: var(--ink-3); max-width: var(--measure); }
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 0.9rem 1.1rem;
+    max-width: var(--measure);
+    font-size: 0.94rem;
+  }
+  .callout strong { color: var(--accent); }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Engineering recap &middot; agentics &middot; 2026-07-30</div>
+    <h1>Six monolithic skill bodies split into cores plus references</h1>
+    <p class="standfirst">A <code>SKILL.md</code> body has no partial load: the moment a skill triggers, the whole body is paid. Six of them — three that rewrite refs and end in a squash merge — went from 9,565 words of always-loaded context to 3,536, with every safety guard held in the core.</p>
+    <div class="meta-line">
+      <span>commit e5fccc7</span>
+      <span>33 files</span>
+      <span>git-agent 4.8.0</span>
+      <span>social-media-tools 2.20.0</span>
+      <span>spec: docs/plans/split-git-social-skills.md</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>At a glance</h2>
+
+    <div class="stats">
+      <div class="stat hero"><span class="n">63%</span><span class="l">context cut</span></div>
+      <div class="stat"><span class="n">20</span><span class="l">references added</span></div>
+      <div class="stat"><span class="n">15/16</span><span class="l">criteria met</span></div>
+      <div class="stat"><span class="n">4/4</span><span class="l">tests passed</span></div>
+      <div class="stat"><span class="n">3</span><span class="l">open items</span></div>
+    </div>
+
+    <div class="ledger">
+      <div class="ledger-head">
+        <span>skill core</span><span style="text-align:right">before</span><span style="text-align:right">after</span><span>proportion</span>
+      </div>
+      <div class="row">
+        <span class="name">ship-autonomous</span><span class="num before">2,406</span><span class="num after">597</span>
+        <span class="bars"><span class="bar b" style="width:100%"></span><span class="bar a" style="width:24.8%"></span></span>
+      </div>
+      <div class="row">
+        <span class="name">share-explanation</span><span class="num before">1,840</span><span class="num after">596</span>
+        <span class="bars"><span class="bar b" style="width:76.5%"></span><span class="bar a" style="width:24.8%"></span></span>
+      </div>
+      <div class="row">
+        <span class="name">branch-agent</span><span class="num before">1,476</span><span class="num after">582</span>
+        <span class="bars"><span class="bar b" style="width:61.3%"></span><span class="bar a" style="width:24.2%"></span></span>
+      </div>
+      <div class="row">
+        <span class="name">share-session</span><span class="num before">1,391</span><span class="num after">597</span>
+        <span class="bars"><span class="bar b" style="width:57.8%"></span><span class="bar a" style="width:24.8%"></span></span>
+      </div>
+      <div class="row">
+        <span class="name">share-selection</span><span class="num before">1,261</span><span class="num after">593</span>
+        <span class="bars"><span class="bar b" style="width:52.4%"></span><span class="bar a" style="width:24.6%"></span></span>
+      </div>
+      <div class="row">
+        <span class="name">ship</span><span class="num before">1,191</span><span class="num after">571</span>
+        <span class="bars"><span class="bar b" style="width:49.5%"></span><span class="bar a" style="width:23.7%"></span></span>
+      </div>
+      <div class="ledger-foot">
+        <strong>9,565 &rarr; 3,536 words.</strong> <span class="ceiling-note">The &ldquo;after&rdquo; bars are near-identical because four of six cores land within 7 words of the 600-word gate. <code>ship</code> is the short one at 571 — review forced it lower; see Review follow-ups.</span>
+      </div>
+    </div>
+
+    <p class="prose">Implemented from <code>docs/plans/split-git-social-skills.md</code>, fanned out across six parallel subagents. All four tests pass, and 15 of the plan's 16 acceptance criteria are met — the sixteenth is behavioural verification, which has not run. The plan's behavioural verification is <strong>not run</strong>, so <code>status:</code> stayed <code>in-progress</code>.</p>
+  </section>
+
+  <section>
+    <h2>Architecture and code paths</h2>
+
+    <p class="prose">The unit of optimisation is the <strong>core</strong>, not the plugin directory. Content merely relocated under <code>kit/plugins/</code> is not &ldquo;moved out of context&rdquo;; content moved behind a link the model may never open is worse than either.</p>
+
+    <div class="callout">
+      <strong>The load-bearing rule: guards stay, procedure moves.</strong> A guard is the <em>statement</em> — <code>Never merge on anything but green</code>, <code>no-verify</code>, <code>Cap autofix at 3 attempts per failing check</code>. Procedure is the <em>commands and tables</em> that implement it: the <code>gh api graphql</code> review-thread query, the CI failure classification table, the branch-name type-inference table, the stash-pop recovery script.
+    </div>
+
+    <figure>
+      <div class="diagram-card">
+        <svg id="claude-mermaid-0" width="1586.296875" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="210" viewBox="0 0 1586.296875 210" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#f2edef;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(13, 18, 16);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(13, 18, 16);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(13, 18, 16);fill:rgb(13, 18, 16);}#claude-mermaid-0 .labelBkg{background-color:rgba(13, 18, 16, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(13, 18, 16);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(13, 18, 16);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(13, 18, 16);fill:rgb(13, 18, 16);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M156.047,105L160.214,105C164.38,105,172.714,105,180.38,105C188.047,105,195.047,105,198.547,105L202.047,105" id="claude-mermaid-0-L_T_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T_C_0" data-points="W3sieCI6MTU2LjA0Njg3NSwieSI6MTA1fSx7IngiOjE4MS4wNDY4NzUsInkiOjEwNX0seyJ4IjoyMDYuMDQ2ODc1LCJ5IjoxMDV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M440.271,144L448.734,147.167C457.196,150.333,474.122,156.667,487.187,159.833C500.253,163,509.458,163,514.061,163L518.664,163" id="claude-mermaid-0-L_C_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_G_0" data-points="W3sieCI6NDQwLjI3MTAxMjkzMTAzNDUsInkiOjE0NH0seyJ4Ijo0OTEuMDQ2ODc1LCJ5IjoxNjN9LHsieCI6NTIyLjY2NDA2MjUsInkiOjE2M31d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M440.271,66L448.734,62.833C457.196,59.667,474.122,53.333,486.084,50.167C498.047,47,505.047,47,508.547,47L512.047,47" id="claude-mermaid-0-L_C_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_H_0" data-points="W3sieCI6NDQwLjI3MTAxMjkzMTAzNDUsInkiOjY2fSx7IngiOjQ5MS4wNDY4NzUsInkiOjQ3fSx7IngiOjUxNi4wNDY4NzUsInkiOjQ3fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M776.047,47L780.214,47C784.38,47,792.714,47,807.473,47C822.232,47,843.417,47,854.009,47L864.602,47" id="claude-mermaid-0-L_H_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_P_0" data-points="W3sieCI6Nzc2LjA0Njg3NSwieSI6NDd9LHsieCI6ODAxLjA0Njg3NSwieSI6NDd9LHsieCI6ODY4LjYwMTU2MjUsInkiOjQ3fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M1043.492,47L1069.674,47C1095.857,47,1148.221,47,1192.827,47C1237.432,47,1274.279,47,1292.702,47L1311.125,47" id="claude-mermaid-0-L_P_R_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_P_R_0" data-points="W3sieCI6MTA0My40OTIxODc1LCJ5Ijo0N30seyJ4IjoxMjAwLjU4NTkzNzUsInkiOjQ3fSx7IngiOjEzMTUuMTI1LCJ5Ijo0N31d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M769.43,163L774.699,163C779.969,163,790.508,163,799.277,163C808.047,163,815.047,163,818.547,163L822.047,163" id="claude-mermaid-0-L_G_X_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_X_0" data-points="W3sieCI6NzY5LjQyOTY4NzUsInkiOjE2M30seyJ4Ijo4MDEuMDQ2ODc1LCJ5IjoxNjN9LHsieCI6ODI2LjA0Njg3NSwieSI6MTYzfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_T_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_H_P_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(1200.5859375, 47)"><g class="label" data-id="L_P_R_0" transform="translate(-89.5390625, -12)"><foreignObject width="179.078125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>model opens on demand</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_G_X_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-T-0" data-look="classic" transform="translate(82.0234375, 105)"><rect class="basic label-container" style="" x="-74.0234375" y="-27" width="148.046875" height="54"></rect><g class="label" style="" transform="translate(-44.0234375, -12)"><rect></rect><foreignObject width="88.046875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>skill triggers</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-1" data-look="classic" transform="translate(336.046875, 105)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>SKILL.md core~595 wordsALWAYS paid</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-3" data-look="classic" transform="translate(646.046875, 163)"><rect class="basic label-container" style="" x="-123.3828125" y="-27" width="246.765625" height="54"></rect><g class="label" style="" transform="translate(-93.3828125, -12)"><rect></rect><foreignObject width="186.765625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Guardrailsevery hard stop</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-H-5" data-look="classic" transform="translate(646.046875, 47)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>step headingsorder preserved</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-P-7" data-look="classic" transform="translate(956.046875, 47)"><rect class="basic label-container" style="" x="-87.4453125" y="-27" width="174.890625" height="54"></rect><g class="label" style="" transform="translate(-57.4453125, -12)"><rect></rect><foreignObject width="114.890625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>one-line pointer</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-R-9" data-look="classic" transform="translate(1446.7109375, 47)"><rect class="basic label-container" style="" x="-131.5859375" y="-39" width="263.171875" height="78"></rect><g class="label" style="" transform="translate(-101.5859375, -24)"><rect></rect><foreignObject width="203.171875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>references/*.mdcommands, tables, queries</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-X-11" data-look="classic" transform="translate(956.046875, 163)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>decides whetheranything happens at all</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <figcaption>Look at the dashed edge: it is the only thing that is not paid on every trigger. Everything a guard decides sits to its left.</figcaption>
+    </figure>
+
+    <h3>Layout follows two existing conventions</h3>
+    <ul class="plain">
+      <li><code>social-media-tools/skills/share-react/references/props-extraction.md</code> — skill-local, linked as <code>Read `references/x.md` (bundled with this skill)</code>.</li>
+      <li><code>git-agent/skills/create-issue/references/</code> — the same shape on the git-agent side.</li>
+    </ul>
+    <p class="prose">Both are distinct from <strong>plugin-level</strong> <code>social-media-tools/references/</code> — eight files that eleven skills read. Those were left byte-untouched; every new file is skill-local, and the objective test freezes the plugin-level link counts at 7 / 8 / 11 so a future edit cannot quietly rewire shared infrastructure.</p>
+
+    <h3>ship-autonomous needed a structural change</h3>
+    <p class="prose">Inline guard prose bottomed out near 700 words — 22 negative imperatives plus 12 step headings do not fit alongside per-step text. The core now leads with a <code>## Guardrails</code> block holding every hard stop, followed by all step headings (0, 1, 2, 2.5, 3, 4, 5, 6, 6a&ndash;6d, 7, 8) in unchanged order, each reduced to a pointer. <strong>Read that file first</strong> — it is the template the other five follow.</p>
+
+    <h3>Test topology</h3>
+    <p class="prose"><code>tests/plugins/test-skill-split-git-social.sh</code> is the objective gate, modelled on <code>test-remaining-skill-splits.sh</code> from PR #487. Six checks: word ceiling, reference placement, link integrity in <em>both</em> directions, descriptions pinned to literal strings, guard retention per owning core, and the frozen plugin-level counts.</p>
+    <p class="prose"><code>test-ship-self-review.sh</code> was retargeted, not relaxed. Its 22 checks span <code>ship/SKILL.md</code> and <code>agents/agent-ship.md</code>; Step 4.5's content moved, so checks 5&ndash;7 now read <code>ship/references/self-review.md</code> while the policy checks (2, 3, 4, 8, 9, 10) stay on the core. A new check 4.5 asserts the core actually links the reference — without it, the retarget would pass against an orphan.</p>
+  </section>
+
+  <section>
+    <h2>Decisions</h2>
+    <div class="entries">
+      <div class="entry">
+        <div class="t">Write the objective test before touching any skill.</div>
+        <p>A test written after a refactor describes what the refactor happened to do rather than what it had to do. Confirmed exit 1, naming all six skills over the ceiling with no <code>references/</code> dir, before the first split ran.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Count words in Python, not <code>wc -w</code>.</div>
+        <p>Borrowed from <code>test-remaining-skill-splits.sh</code>. These bodies are full of em dashes, <code>&rarr;</code> and <code>&le;</code>; in the C locale a standalone <code>&mdash;</code> is not a word, in C.UTF-8 it is. That is a ~20-word swing per file — the difference between passing on a dev machine and failing on a CI runner, which is the exact drift the test exists to prevent.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Pin descriptions to literal strings in the test, not to a git diff.</div>
+        <p>The <code>description:</code> is the sole trigger surface. Literal pinning works with no git available and prints a want-vs-got diff on failure. <code>git diff main</code> is kept as a separate acceptance check rather than as the mechanism.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Assert the ceiling, not a delta from the spec's baselines.</div>
+        <p>The plan pins 2,448 / 1,863 / 1,515 / 1,414 / 1,284 / 1,234, but commits <code>745584e</code> and <code>ce69bc8</code> had already trimmed these same bodies to 2,406 / 1,840 / 1,476 / 1,391 / 1,261 / 1,191. Step 1's verify was unmeetable as written; the ceiling is the real invariant.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Fan out one subagent per skill, six concurrent.</div>
+        <p>The splits are independent — disjoint file sets, no shared state. Each agent received the guard phrases it had to retain verbatim, the exact reference filenames, and its own verification commands. Main-loop context stayed at 41 tool calls because no 1,200&ndash;2,400-word skill body was ever read into it.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Leave <code>status: in-progress</code> with 15 of 16 criteria met.</div>
+        <p>The plan's behavioural verification requires opening a real PR, pushing to the remote, and an irreversible merge. Marking <code>completed</code> would assert verification that did not happen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tradeoffs and rejected options</h2>
+    <div class="entries">
+      <div class="entry">
+        <div class="t">More reference files than the spec budgeted</div>
+        <p><code>share-explanation</code> needed 5 against the plan's 3; <code>share-session</code> needed 3 against 2. The fixed floor of a core — frontmatter, phase-index table, plan-mode guard, scrub gate, ~12 phase headings — is already ~450 words, so the 600-word ceiling and the plan's own Files list were mutually unsatisfiable. Chose the ceiling, because that is what CI enforces.</p>
+        <p class="revisit">To revisit: raise the ceiling to ~750 and the spec's file list becomes achievable.</p>
+      </div>
+      <div class="entry">
+        <div class="t"><code>ship</code> left at 599 of 600 <em>&mdash; superseded, now 571</em></div>
+        <p>Trimming for headroom was considered and rejected <em>for now</em>: that file carries 22 test assertions and every edit risks one of them. Shipping verified-green beat shipping tidier-but-re-verified.</p>
+        <p class="revisit">To revisit: trim Step 3's rules list or the duplicated closing STOP block, then re-run <code>test-ship-self-review.sh</code>.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Every subagent inherited <code>opus-5</code></div>
+        <p>Six agents at 100k&ndash;176k tokens each. The mechanical splits would plausibly have run on a cheaper tier; the guard-retention requirement argued against it for <code>ship-autonomous</code>, and uniformity won over per-agent tuning.</p>
+        <p class="revisit">To revisit: pass <code>model</code> per agent and keep the top tier only for the guard-heavy targets.</p>
+      </div>
+      <div class="entry">
+        <div class="t"><code>TEMPLATES_DIR</code> dedup left out of scope</div>
+        <p>The same three-line <code>find</code>/<code>CLAUDE_PLUGIN_ROOT</code> bootstrap appears verbatim in eleven <code>social-media-tools</code> skills, ~70 words each. It touches eight skills this work does not otherwise open; the spec routes it to Next Steps and that held.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Learnings</h2>
+    <div class="entries">
+      <div class="entry stop">
+        <div class="t"><code>git checkout --</code> on uncommitted work restores the pre-<em>change</em> file, not the pre-<em>mutation</em> one.</div>
+        <p>This cost real work. The tautology checks mutate a file, assert the test fails, then restore. Restoring with <code>git checkout -- &lt;path&gt;</code> reverted <code>ship/SKILL.md</code> and <code>share-session/SKILL.md</code> to their <strong>pre-split</strong> 1,191- and 1,391-word state — the finished cores had never been committed, so HEAD held no copy. Both had to be rebuilt from their surviving reference files.</p>
+      </div>
+      <div class="entry stop">
+        <div class="t">Two of the four restores silently did nothing.</div>
+        <p><code>git checkout -- &lt;tracked&gt; &lt;untracked&gt;</code> errors on the unmatched pathspec and restores <strong>neither</strong> file. That is why <code>ship-autonomous</code> came back at 583 words rather than 595: it had kept the tautology mutation (one guard line deleted), and <code>self-review.md</code> had kept its deleted <code>Responsive</code> bullet. The failure is quiet — the error names the pathspec, not the fact that the whole operation was abandoned.</p>
+        <p class="revisit">Working method: <code>cp</code> to the scratchpad, mutate, test, <code>cp</code> back. All four checks ran clean on the second pass.</p>
+      </div>
+      <div class="entry">
+        <div class="t">A line-filter delete leaves orphaned continuation lines that read as valid prose.</div>
+        <p>Removing lines matching <code>Responsive</code> from a wrapped Markdown bullet left <code>breakpoint, srcset, width&hellip;</code> dangling under the <em>previous</em> item. Same shape in the <code>ship-autonomous</code> guardrails, where <code>with --match-head-commit.</code> orphaned under the review bullet. Neither looked like corruption.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Subagent token cost does not appear in the session's own ledger.</div>
+        <p><code>session_usage.py</code> reports 161k for this session; the eight subagents reported roughly 1.05M more, in separate transcripts. Fan-out moved cost off the main-loop accounting rather than reducing it — worth knowing before reading any session-usage comparison as a cost measurement.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tests and verification</h2>
+
+    <div class="callout">
+      <strong>Corrected after review.</strong> This section originally reported a clean pass. Code review then found that the split had moved <code>ship</code>'s fourth pre-flight hard stop — <code>CLI not available or not authenticated</code> &hellip; <code>STOP</code> — out of the core and into <code>references/platform-clis.md</code>: the precise failure mode this work exists to prevent. The test could not have caught it, because its guard list had no phrase covering CLI auth. Both are fixed; guard assertions went 11 &rarr; 12 and are now tallied rather than hard-coded.
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Gate</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">test-skill-split-git-social.sh <em>(new)</em></td><td><span class="pill pass">exit 0</span> 6 checks</td></tr>
+          <tr><td class="mono">test-ship-self-review.sh <em>(retargeted)</em></td><td><span class="pill pass">exit 0</span> all 22 checks</td></tr>
+          <tr><td class="mono">test-description-budget.sh</td><td><span class="pill pass">exit 0</span></td></tr>
+          <tr><td class="mono">test-no-orphan-plugin-dirs.sh</td><td><span class="pill pass">exit 0</span></td></tr>
+          <tr><td class="mono">BASE_REF=main node scripts/check-plugin-versions.mjs</td><td><span class="pill pass">exit 0</span></td></tr>
+          <tr><td class="mono">Acceptance criteria</td><td><span class="pill gap">15 / 16</span></td></tr>
+          <tr><td class="mono">Behavioural check (plan &sect;Verification)</td><td><span class="pill gap">not run</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tautology check — four passes, each against a different assertion</h3>
+    <p class="prose">Run separately so a single lenient <code>grep</code> cannot hide behind a passing sibling:</p>
+    <ol class="checks">
+      <li>+400 filler words in <code>ship/SKILL.md</code> &rarr; exit 1, <code>FAIL: ship(999)</code>.</li>
+      <li><em>Moving</em> — not deleting — the <code>Never merge on anything but green</code> line into <code>references/merge-gate.md</code> &rarr; exit 1, <code>lost guard</code>. This is the realistic failure mode, and the one a presence-anywhere check would miss.</li>
+      <li>One character in <code>share-session</code>'s <code>description:</code> &rarr; exit 1 with a want/got diff.</li>
+      <li>Deleting the <code>Responsive</code> bullet from <code>ship/references/self-review.md</code> &rarr; <code>test-ship-self-review.sh</code> exit 1.</li>
+    </ol>
+    <p class="prose">Clean exit 0 after each restore.</p>
+
+    <h3>Knowingly untested</h3>
+    <p class="prose"><strong>No skill was executed.</strong> Word counts prove nothing about whether these skills still branch, ship, and publish cards. The plan's behavioural check needs <code>claude --plugin-dir</code> sessions, a real branch and PR, <code>ship-autonomous</code> against a deliberately failing lint script, and three Playwright PNG renders. It is the single outstanding gate and the reason the plan is not marked complete. A structural read-through of <code>ship-autonomous/SKILL.md</code> stood in as a partial substitute — guards up front, step order intact, every pointer landing at the right reference — which is weaker evidence than a run.</p>
+  </section>
+
+  <section>
+    <h2>Review follow-ups and tech debt</h2>
+    <div class="entries">
+      <div class="entry flag">
+        <div class="t">Four of six cores sit within 7 words of the CI gate</div>
+        <p><code>share-session</code> 597, <code>ship-autonomous</code> 597, <code>share-explanation</code> 596, <code>share-selection</code> 593 — against a ceiling of 600. (<code>ship</code> escaped to 571 only because review forced a guard back into it.) This is not a ceiling with an upgrade path, it is a cliff: routine wording edits will break the build. Either budget a real margin per core or raise the ceiling.</p>
+      </div>
+      <div class="entry flag">
+        <div class="t">Behavioural verification outstanding</div>
+        <p>Blocks marking the plan complete. Needs a scratch branch and permission to open and close a PR.</p>
+      </div>
+      <div class="entry">
+        <div class="t">Next Steps from the spec, unstarted</div>
+        <p>The eleven-skill <code>TEMPLATES_DIR</code> dedup, and <code>git-agent/skills/merge/SKILL.md</code> — 1,156 words, no references, ends in an irreversible squash merge. Both carry self-contained paste-ready prompts in the plan.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="files">
+    <h2>Files touched</h2>
+
+    <h3>git-agent skills — cores rewritten, guards retained in-core</h3>
+    <dl>
+      <dt>skills/ship-autonomous/SKILL.md</dt>
+      <dd>2,406 &rarr; 595w. New <code>## Guardrails</code> block holds all 22 negative imperatives.</dd>
+      <dt>skills/ship-autonomous/references/{preflight-and-verify, pr-events, ci-autofix, merge-gate}.md</dt>
+      <dd>Step 1/2.5 commands; subscribe-vs-poll, triage and review handling; CI classification table; merge and branch-deletion sequences.</dd>
+      <dt>skills/branch-agent/SKILL.md</dt>
+      <dd>1,476 &rarr; 582w. Keeps the Step 1 guard trio, <code>--no-track</code>, and the no-retry/no-force rule.</dd>
+      <dt>skills/branch-agent/references/{branch-naming, stash-and-recovery}.md</dt>
+      <dd>Name resolution and type inference; conflict detection and stash-pop recovery.</dd>
+      <dt>skills/ship/SKILL.md</dt>
+      <dd>1,191 &rarr; 571w. Keeps Step 1 guards, the <code>no-verify</code> prohibition, the CLI-auth hard stop restored during review, and Step 4.5's four policy lines.</dd>
+      <dt>skills/ship/references/{platform-clis, self-review, pr-body, commit-message}.md</dt>
+      <dd><code>gh</code>/<code>glab</code> detection and auth messages; the four regression checks and amend procedure; the PR/MR body template.</dd>
+    </dl>
+
+    <h3>social-media-tools skills — cores rewritten, scrub gate retained in-core</h3>
+    <dl>
+      <dt>skills/share-explanation/SKILL.md <span class="ceiling-note">1,840 &rarr; 596w</span></dt>
+      <dd>references/{target-resolution, synthesis-structure, card-population, bootstrap, copy-drafting}.md — five-tier lookup, per-target section structures, escape order and variable tables, Phase 0 bootstrap, platform copy guidance.</dd>
+      <dt>skills/share-session/SKILL.md <span class="ceiling-note">1,391 &rarr; 597w</span></dt>
+      <dd>references/{session-data, card-population, draft-copy}.md — Phase 1a&ndash;1e gathering, escape order and card variables, per-platform recap formats.</dd>
+      <dt>skills/share-selection/SKILL.md <span class="ceiling-note">1,261 &rarr; 593w</span></dt>
+      <dd>references/{selection-sources, card-population}.md — source precedence and file guards, template pick and diff/snippet variable tables.</dd>
+    </dl>
+
+    <h3>Tests and CI</h3>
+    <dl>
+      <dt>tests/plugins/test-skill-split-git-social.sh</dt>
+      <dd>New. The objective gate: ceiling, references, link integrity both ways, pinned descriptions, guard retention, frozen plugin-level counts.</dd>
+      <dt>tests/plugins/test-ship-self-review.sh</dt>
+      <dd>Checks 5&ndash;7 retargeted to the reference; new check 4.5 asserts the core links it.</dd>
+      <dt>.github/workflows/check-plugin-versions.yml</dt>
+      <dd>One step after &ldquo;Test gallery index merge driver&rdquo;, with a comment on why these six guards are checked at review time.</dd>
+    </dl>
+
+    <h3>Metadata</h3>
+    <dl>
+      <dt>.claude-plugin/marketplace.json</dt>
+      <dd>git-agent 4.7.1 &rarr; 4.8.0, social-media-tools 2.19.2 &rarr; 2.20.0. Neither <code>plugin.json</code> gained a <code>version</code> field.</dd>
+      <dt>kit/plugins/{git-agent, social-media-tools}/CHANGELOG.md</dt>
+      <dd>v4.8.0 and v2.20.0 entries with before/after counts and the guards-stay-in-core rationale.</dd>
+      <dt>docs/plans/split-git-social-skills.md &middot; .html</dt>
+      <dd>Fourteen criteria ticked, <code>status: in-progress</code>, <code>modified: 2026-07-30</code>; HTML re-rendered by <code>scripts/build-plan-html.mjs</code>.</dd>
+    </dl>
+  </section>
+
+</div>
+
+</body>
+</html>

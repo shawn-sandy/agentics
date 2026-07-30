@@ -1,7 +1,8 @@
 ---
-status: todo
+status: in-progress
 type: refactor
 created: 2026-07-27
+modified: 2026-07-30
 effort: high
 glance: Six single-file skills across git-agent and social-media-tools bill 9,758 words of context every time one of them fires, and three of them are the skills that rewrite git history and push to remotes. We will know it worked when every one of the six loads a core under 600 words, each safety guard is still greppable in that core, and the skills still branch, ship, and publish cards end to end.
 workflow: true
@@ -65,7 +66,7 @@ Out of scope, deliberately: the eleven share-* skills that repeat the same `TEMP
 - kit/plugins/social-media-tools/skills/share-selection/references/card-population.md (new) — Phase 4/5 template pick, escape order, snippet and diff variable tables
 - tests/plugins/test-skill-split-git-social.sh (new) — objective test: ceiling, references exist, links resolve both ways, descriptions pinned, guards present
 - tests/plugins/test-ship-self-review.sh (modified) — content checks resolve against `ship/references/self-review.md`; policy checks stay on SKILL.md
-- .github/workflows/check-plugin-versions.yml (modified) — one new step running the objective test
+- .github/workflows/check-plugin-versions.yml (modified) — a step running the objective test, plus eight steps wiring previously-unwired tests that already existed and already passed on `main` (`test-claude-md-budget`, `test-remaining-skill-splits`, `test-artifact-tools`, `test-artifact-to-post`, `test-memory-doctor-guard`, `test-generator-skills-verify-output`, `test-description-budget`, `test-exitplanmode-guard`). Wider than Step 9 specified: the repo has no test runner, so an unwired test never runs again after the PR that added it. All nine verified green locally before wiring.
 - .claude-plugin/marketplace.json (modified) — git-agent 4.7.0 → 4.8.0, social-media-tools 2.19.0 → 2.20.0
 - kit/plugins/git-agent/CHANGELOG.md (modified) — v4.8.0 entry
 - kit/plugins/social-media-tools/CHANGELOG.md (modified) — v2.20.0 entry
@@ -92,24 +93,26 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] `wc -w` reports under 600 words for each of the six SKILL.md files, down from 2448 / 1863 / 1515 / 1414 / 1284 / 1234.
-- [ ] Each of the six skill directories contains a `references/` directory holding at least one `.md` file.
-- [ ] Every ``references/<name>.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.
-- [ ] `git diff main -- '**/SKILL.md' | grep '^[-+]description:'` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.
-- [ ] `grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.
-- [ ] `grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.
-- [ ] `bash tests/plugins/test-skill-split-git-social.sh` exits 0.
-- [ ] `bash tests/plugins/test-ship-self-review.sh` exits 0.
-- [ ] `bash tests/plugins/test-description-budget.sh` exits 0.
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.
-- [ ] `.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.
-- [ ] `kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.
-- [ ] `git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.
-- [ ] `grep -c 'PLUGIN_DIR/references/' kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.
+- [x] A locale-independent word count reports under 600 words for each of the six SKILL.md files, down from 2406 / 1840 / 1476 / 1391 / 1261 / 1191. Counted in Python, not with `wc -w`: these bodies carry em dashes, `→` and `≤`, which `wc -w` tallies differently by locale — a ~20-word swing, enough to pass on a dev machine and fail on a CI runner. The baselines above are the measured pre-split counts; Step 1's figures (2448 / 1863 / 1515 / 1414 / 1284 / 1234) predate commits `745584e` and `ce69bc8`, which had already trimmed these same bodies, so the ceiling rather than a delta from those numbers is the binding invariant.
+- [x] Each of the six skill directories contains a `references/` directory holding at least one `.md` file.
+- [x] Every ``references/<name>.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.
+- [x] `git diff main -- '**/SKILL.md' | grep '^[-+]description:'` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.
+- [x] `grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.
+- [x] `ship/SKILL.md` states its fourth pre-flight stop in the core — `CLI not available or not authenticated` … `STOP` — not only in `references/platform-clis.md`. The first cut of the split moved that statement out; the test now pins the phrase, taking its git guard assertions from 11 to 12 — a count it tallies rather than hard-codes.
+- [x] `grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.
+- [x] `bash tests/plugins/test-skill-split-git-social.sh` exits 0.
+- [x] `bash tests/plugins/test-ship-self-review.sh` exits 0.
+- [x] `bash tests/plugins/test-description-budget.sh` exits 0.
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.
+- [x] `.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`, and the eight further tests wired alongside it all exit 0 — nothing was gated on a test that does not pass.
+- [x] `kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.
+- [x] `git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.
+- [x] `grep -c 'PLUGIN_DIR/references/' kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.
+- [ ] **Behavioural verification — NOT DONE.** No skill in this plan has been executed. Every criterion above is structural: word counts, greps, and link resolution prove the files are shaped correctly and prove nothing about whether the six skills still branch, ship, and publish cards. Requires `claude --plugin-dir ./kit/plugins/git-agent --plugin-dir ./kit/plugins/social-media-tools` in a live session: run `branch-agent` on a scratch branch, `ship` to a real PR, `ship-autonomous` against a deliberately failing lint script to exercise the CI-autofix cap and the merge gate, and the three `share-*` skills to confirm each still renders a PNG card through its scrub gate. This is the single criterion keeping `status:` at `in-progress`; it is unchecked deliberately rather than omitted, so the plan's progress count cannot read 100% while the only test of actual behaviour has never run.
 
 ## Verification
 
-Run the full local gate in one pass: `bash tests/plugins/test-skill-split-git-social.sh && bash tests/plugins/test-ship-self-review.sh && bash tests/plugins/test-description-budget.sh && bash tests/plugins/test-no-orphan-plugin-dirs.sh && BASE_REF=main node scripts/check-plugin-versions.mjs`. Expected result: every script prints its PASS lines and the chain exits 0, with the objective test reporting six skills under the 600-word ceiling and ten guard phrases located in their owning cores.
+Run the full local gate in one pass: `bash tests/plugins/test-skill-split-git-social.sh && bash tests/plugins/test-ship-self-review.sh && bash tests/plugins/test-description-budget.sh && bash tests/plugins/test-no-orphan-plugin-dirs.sh && BASE_REF=main node scripts/check-plugin-versions.mjs`. Expected result: every script prints its PASS lines and the chain exits 0, with the objective test reporting six skills under the 600-word ceiling and every guard phrase located in its owning core — 12 git guard assertions plus 6 scrub-gate assertions, a tally the test prints rather than a literal it hard-codes. The 12 exceeds Step 2's list of ten distinct phrases because `no-verify` is asserted in two cores (`ship-autonomous` and `ship`) and `CLI not available or not authenticated` was added after review found `ship` had lost it.
 
 Tautology check, run three times against different assertions so a single lenient `grep` cannot hide: (1) append 400 words of filler to `kit/plugins/git-agent/skills/ship/SKILL.md` and confirm `bash tests/plugins/test-skill-split-git-social.sh` exits 1 naming `ship` over the ceiling; (2) delete the line containing `Never merge on anything but green` from `ship-autonomous/SKILL.md` — or, worse and more realistically, move that line into `references/merge-gate.md` — and confirm the test still exits 1 on the missing guard; (3) change one character in `share-session`'s frontmatter `description:` and confirm the test exits 1 on the pinned description. Then `git checkout -- <paths>` after each and re-run to confirm a clean exit 0. Also delete the `Responsive` bullet from `ship/references/self-review.md` and confirm `bash tests/plugins/test-ship-self-review.sh` exits 1 before reverting.
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="in-progress" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="in-progress">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-07-27">
@@ -1308,7 +1308,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">in-progress</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1407,12 +1407,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 14 done</span>
+        <span id="progress-label">15 / 16 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="94" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:94%"></div>
       </div>
     </div>
 
@@ -1494,7 +1494,7 @@ img, video { max-width: 100%; height: auto; }
             <li><code>test-ship-self-review.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">content checks resolve against `ship/references/self-review.md`; policy checks stay on SKILL.md</span></li>
             </ul>
           </li>
-          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">one new step running the objective test</span></li>
+          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">a step running the objective test, plus eight steps wiring previously-unwired tests that already existed and already passed on `main` (`test-claude-md-budget`, `test-remaining-skill-splits`, `test-artifact-tools`, `test-artifact-to-post`, `test-memory-doctor-guard`, `test-generator-skills-verify-output`, `test-description-budget`, `test-exitplanmode-guard`). Wider than Step 9 specified: the repo has no test runner, so an unwired test never runs again after the PR that added it. All nine verified green locally before wiring.</span></li>
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">git-agent 4.7.0 → 4.8.0, social-media-tools 2.19.0 → 2.20.0</span></li>
           <li><code>kit/plugins/git-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">v4.8.0 entry</span></li>
           <li><code>kit/plugins/social-media-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">v2.20.0 entry</span></li>
@@ -1689,60 +1689,68 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
-          <label for="ac1">`wc -w` reports under 600 words for each of the six SKILL.md files, down from 2448 / 1863 / 1515 / 1414 / 1284 / 1234.</label>
+          <input type="checkbox" id="ac1" checked>
+          <label for="ac1">A locale-independent word count reports under 600 words for each of the six SKILL.md files, down from 2406 / 1840 / 1476 / 1391 / 1261 / 1191. Counted in Python, not with `wc -w`: these bodies carry em dashes, `→` and `≤`, which `wc -w` tallies differently by locale — a ~20-word swing, enough to pass on a dev machine and fail on a CI runner. The baselines above are the measured pre-split counts; Step 1&#39;s figures (2448 / 1863 / 1515 / 1414 / 1284 / 1234) predate commits `745584e` and `ce69bc8`, which had already trimmed these same bodies, so the ceiling rather than a delta from those numbers is the binding invariant.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Each of the six skill directories contains a `references/` directory holding at least one `.md` file.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Every ``references/&lt;name&gt;.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">`git diff main -- &#39;**/SKILL.md&#39; | grep &#39;^[-+]description:&#39;` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">`grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
-          <label for="ac6">`grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.</label>
+          <input type="checkbox" id="ac6" checked>
+          <label for="ac6">`ship/SKILL.md` states its fourth pre-flight stop in the core — `CLI not available or not authenticated` … `STOP` — not only in `references/platform-clis.md`. The first cut of the split moved that statement out; the test now pins the phrase, taking its git guard assertions from 11 to 12 — a count it tallies rather than hard-codes.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
-          <label for="ac7">`bash tests/plugins/test-skill-split-git-social.sh` exits 0.</label>
+          <input type="checkbox" id="ac7" checked>
+          <label for="ac7">`grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
-          <label for="ac8">`bash tests/plugins/test-ship-self-review.sh` exits 0.</label>
+          <input type="checkbox" id="ac8" checked>
+          <label for="ac8">`bash tests/plugins/test-skill-split-git-social.sh` exits 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
-          <label for="ac9">`bash tests/plugins/test-description-budget.sh` exits 0.</label>
+          <input type="checkbox" id="ac9" checked>
+          <label for="ac9">`bash tests/plugins/test-ship-self-review.sh` exits 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
-          <label for="ac10">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.</label>
+          <input type="checkbox" id="ac10" checked>
+          <label for="ac10">`bash tests/plugins/test-description-budget.sh` exits 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
-          <label for="ac11">`.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.</label>
+          <input type="checkbox" id="ac11" checked>
+          <label for="ac11">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
-          <label for="ac12">`kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.</label>
+          <input type="checkbox" id="ac12" checked>
+          <label for="ac12">`.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`, and the eight further tests wired alongside it all exit 0 — nothing was gated on a test that does not pass.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac13">
-          <label for="ac13">`git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.</label>
+          <input type="checkbox" id="ac13" checked>
+          <label for="ac13">`kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
-          <label for="ac14">`grep -c &#39;PLUGIN_DIR/references/&#39; kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.</label>
+          <input type="checkbox" id="ac14" checked>
+          <label for="ac14">`git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac15" checked>
+          <label for="ac15">`grep -c &#39;PLUGIN_DIR/references/&#39; kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac16">
+          <label for="ac16">**Behavioural verification — NOT DONE.** No skill in this plan has been executed. Every criterion above is structural: word counts, greps, and link resolution prove the files are shaped correctly and prove nothing about whether the six skills still branch, ship, and publish cards. Requires `claude --plugin-dir ./kit/plugins/git-agent --plugin-dir ./kit/plugins/social-media-tools` in a live session: run `branch-agent` on a scratch branch, `ship` to a real PR, `ship-autonomous` against a deliberately failing lint script to exercise the CI-autofix cap and the merge gate, and the three `share-*` skills to confirm each still renders a PNG card through its scrub gate. This is the single criterion keeping `status:` at `in-progress`; it is unchecked deliberately rather than omitted, so the plan&#39;s progress count cannot read 100% while the only test of actual behaviour has never run.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1755,7 +1763,7 @@ img, video { max-width: 100%; height: auto; }
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>Run the full local gate in one pass: `bash tests/plugins/test-skill-split-git-social.sh &amp;&amp; bash tests/plugins/test-ship-self-review.sh &amp;&amp; bash tests/plugins/test-description-budget.sh &amp;&amp; bash tests/plugins/test-no-orphan-plugin-dirs.sh &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs`. Expected result: every script prints its PASS lines and the chain exits 0, with the objective test reporting six skills under the 600-word ceiling and ten guard phrases located in their owning cores.</p>
+      <p>Run the full local gate in one pass: `bash tests/plugins/test-skill-split-git-social.sh &amp;&amp; bash tests/plugins/test-ship-self-review.sh &amp;&amp; bash tests/plugins/test-description-budget.sh &amp;&amp; bash tests/plugins/test-no-orphan-plugin-dirs.sh &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs`. Expected result: every script prints its PASS lines and the chain exits 0, with the objective test reporting six skills under the 600-word ceiling and every guard phrase located in its owning core — 12 git guard assertions plus 6 scrub-gate assertions, a tally the test prints rather than a literal it hard-codes. The 12 exceeds Step 2&#39;s list of ten distinct phrases because `no-verify` is asserted in two cores (`ship-autonomous` and `ship`) and `CLI not available or not authenticated` was added after review found `ship` had lost it.</p>
       <p>Tautology check, run three times against different assertions so a single lenient `grep` cannot hide: (1) append 400 words of filler to `kit/plugins/git-agent/skills/ship/SKILL.md` and confirm `bash tests/plugins/test-skill-split-git-social.sh` exits 1 naming `ship` over the ceiling; (2) delete the line containing `Never merge on anything but green` from `ship-autonomous/SKILL.md` — or, worse and more realistically, move that line into `references/merge-gate.md` — and confirm the test still exits 1 on the missing guard; (3) change one character in `share-session`&#39;s frontmatter `description:` and confirm the test exits 1 on the pinned description. Then `git checkout -- &lt;paths&gt;` after each and re-run to confirm a clean exit 0. Also delete the `Responsive` bullet from `ship/references/self-review.md` and confirm `bash tests/plugins/test-ship-self-review.sh` exits 1 before reverting.</p>
       <p>Behavioral check — word counts prove nothing about whether the skills still work, so exercise all six against a scratch branch of this repo. Load both plugins with `claude --plugin-dir kit/plugins/git-agent --plugin-dir kit/plugins/social-media-tools`. For `branch-agent`: with an uncommitted edit in the tree, invoke it with no argument and confirm it still auto-generates a `&lt;type&gt;/&lt;scope&gt;-&lt;description&gt;-YYYY-MM-DD` name, branches with `--no-track` (`git config branch.&lt;name&gt;.remote` returns empty), and stops after the confirmation line. For `ship`: run it on that branch and confirm Step 1 still refuses from `main`, Step 4.5 still reports findings or &quot;Self-review: no findings.&quot;, and the PR body still carries the Summary/Changes/Test Plan structure — then close the PR. For `ship-autonomous`: confirm from a clean tree that it stops at &quot;Nothing to ship — working tree is clean.&quot; and, on a dirty tree with a deliberately failing lint script, that it stops before committing rather than proceeding. For the three share-* skills: run `share-selection` on a pasted snippet, `share-session` on the current session, and `share-explanation` on `share-scan`, and confirm each still reaches a rendered PNG under `docs/media/social/` with the security-scrub gate having printed `GATE RESULT: APPROVED`. Any skill that opens a reference file it names is behaving correctly; any skill that stalls asking where a step&#39;s detail went is a dangling link the objective test missed — fix the link, not the test.</p>
     </section>

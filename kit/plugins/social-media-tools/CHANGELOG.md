@@ -1,5 +1,48 @@
 # Changelog — social-media-tools
 
+## v2.20.0 — 2026-07-30 — Split the three heaviest share skills into cores plus references
+
+### Changed
+
+- **`share-explanation` 1,840 → 596 words**, **`share-session` 1,391 → 597**,
+  and **`share-selection` 1,261 → 593** — 4,492 words down to 1,786. A SKILL.md
+  body has no partial load: the moment a skill triggers, its whole body is paid.
+  Each now ships a small always-loaded core plus skill-local `references/*.md`
+  files, matching the layout `share-react/references/props-extraction.md`
+  already used.
+- New skill-local reference files:
+  `share-explanation/references/{target-resolution,synthesis-structure,card-population,bootstrap,copy-drafting}.md`,
+  `share-session/references/{session-data,card-population,draft-copy}.md`, and
+  `share-selection/references/{selection-sources,card-population}.md`.
+- **The eight plugin-level `references/` files are untouched.** Those are shared
+  infrastructure that eleven skills read, so rewiring them would ripple well
+  past this change. The `$PLUGIN_DIR/references/...` link counts in the three
+  cores are unchanged at 7, 8, and 11, and
+  `tests/plugins/test-skill-split-git-social.sh` fails if any of those numbers
+  moves.
+- No frontmatter changed. All three `description:` lines are byte-identical to
+  v2.19.2 — the description is the only trigger surface.
+
+### Why the scrub gate stayed in the core
+
+Each core keeps its `GATE RESULT: BLOCKED` hard stop with the
+`Skill(skill: "social-media-tools:security-scrub", ...)` call, its Quick
+Reference phase index, and its one-line guards (non-code-file, 80-line,
+"Tokens only — no dollar amounts"). Only procedure moved: the five-tier target
+lookup, the per-target synthesis structures, the source-precedence rules, the
+mandatory HTML escape order, and the card variable tables. A gate behind a link
+is a gate that may never load, which for these skills means publishing unscanned
+content.
+
+### Note on file counts
+
+The plan for this change budgeted two or three references per skill. The
+600-word ceiling needed five for `share-explanation` and three for
+`share-session`: the fixed floor — frontmatter, phase index, plan-mode guard,
+scrub gate, and roughly a dozen phase headings — is already ~450 words, so
+Phase 0/0b/1/3/5 detail had to move too. Nothing was summarized away; every
+relocated block is verbatim or reflowed in a reference.
+
 ## v2.19.2 — 2026-07-28 — Collapse the plan-mode guard to one line
 
 ### Changed

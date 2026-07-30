@@ -120,7 +120,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.7.1",
+      "version": "4.8.0",
       "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship/CI-watch plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
@@ -196,7 +196,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.19.2",
+      "version": "2.20.0",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
