@@ -110,7 +110,7 @@ Step 2 computes up to three paste-ready prompts and embeds each as a `<meta>` ta
 | **goal** | always | `Achieve this goal: <objective>. The plan at <path> describes one approach — use it as reference, but optimize for the outcome` |
 | **workflow** | conditional | `Run a workflow to implement the plan at <path> — <objective>. Brief subagents with the plan file at <path>` |
 
-The **goal prompt is never omitted** — *"every plan has an objective worth pursuing."* The **workflow prompt is conditional**: generated when `--workflow` is set, or when the plan meets any complexity trigger (5+ files across 3+ dirs, repetitive per-file changes, parallelizable steps, or cross-checking between steps). When no workflow prompt is generated, the entire `.plan-workflow` `<details>` element is removed from the HTML.
+The **goal prompt is never omitted** — *"every plan has an objective worth pursuing."* The **workflow prompt is conditional**: generated when `--workflow` (or `workflow: always`) is set, or when the plan meets the one automatic trigger — 4+ files across 2+ top-level dirs. The other complexity signals (repetitive per-file changes, parallelizable steps, cross-checking between steps) are not detected automatically and need the explicit opt-in. When no workflow prompt is generated, the entire `.plan-workflow` `<details>` element is removed from the HTML.
 
 ### The status triple
 
