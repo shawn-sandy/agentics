@@ -535,6 +535,66 @@ ok('spec text is HTML-escaped in the rendered output', () => {
   assert.equal(extractSections(html).objective, 'Guard <script>alert("x")</script> & more.');
 });
 
+/* ── Inline Markdown in prose ─────────────────────────────────────── */
+
+/** Focused fixture: every inline marker, plus the shapes that must NOT be
+ * mistaken for one — a doubled-star glob inside backticks, a bare slash-glob,
+ * and a bare number (which an index-based code-span placeholder would eat). */
+const INLINE_SPEC = `# Plan: Inline markers
+
+## Objective
+Render \`kit/plugins/x.mjs\` with **bold** and *italic* intact.
+
+## Context
+\`artifact-tools\` ships two commands. **Risk — collision.** *Mitigation:* none.
+
+Globs stay literal: \`**/*.md\` matches, and */skills/* is not emphasis.
+The build takes 5 minutes and 12 seconds.
+
+## Steps
+1. Write \`a.md\`. Why: **framing** only. Verify: run \`bash t.sh\`.
+2. Delete *nothing*. Why: it is *load-bearing*. Verify: \`node x.mjs\` exits 0.
+
+## Acceptance Criteria
+- \`foo.mjs\` is **done**.
+
+## Verification
+Run \`node x.mjs\` and confirm **every** check passes.
+`;
+
+const inlineParsed = parseSpecMarkdown(INLINE_SPEC);
+const inlineHtml = renderPlanHtml(inlineParsed, { fileName: 'i.html', planPath: 'i.html' });
+
+ok('inline markers render as tagged spans, not literal characters', () => {
+  assert.ok(inlineHtml.includes('<code class="md">kit/plugins/x.mjs</code>'), 'backticks become a code span');
+  assert.ok(inlineHtml.includes('<strong class="md">bold</strong>'), 'double stars become strong');
+  assert.ok(inlineHtml.includes('<em class="md">italic</em>'), 'single stars become em');
+  // The bug this fixes: markers surviving into the page as visible characters.
+  const objective = inlineHtml.slice(inlineHtml.indexOf('id="objective"'), inlineHtml.indexOf('plan-implement'));
+  assert.ok(!objective.includes('`'), 'no literal backtick reaches the rendered objective');
+  assert.ok(!objective.includes('**'), 'no literal double-star reaches the rendered objective');
+});
+
+ok('inline markers survive the render → extract round trip byte for byte', () => {
+  // The whole reason inline() and remark() must stay a matched pair: an
+  // extractor that only stripped tags would silently delete every marker,
+  // and the next render would lose the formatting for good.
+  assert.deepEqual(extractSections(inlineHtml), inlineParsed.sections);
+});
+
+ok('inline markdown does not fire on globs, bare numbers, or non-prose code', () => {
+  const context = inlineHtml.slice(inlineHtml.indexOf('id="context"'), inlineHtml.indexOf('id="files"') + 1 || inlineHtml.indexOf('id="steps"'));
+  // A doubled-star glob inside backticks must stay inside the code span —
+  // reading it as bold would emit <strong> and corrupt the path.
+  assert.ok(context.includes('<code class="md">**/*.md</code>'), 'glob inside backticks is not read as bold');
+  assert.ok(!context.includes('<em class="md">/skills/</em>'), 'bare slash-glob is not read as emphasis');
+  assert.ok(context.includes('5 minutes and 12 seconds'), 'bare numbers are not eaten by the code-span placeholder');
+  // File-tree leaves and the copyable prompts use bare <code>; gaining a
+  // class here would make the extractor wrap them in backticks.
+  assert.ok(inlineHtml.includes('<code id="implement-cmd"'), 'the implement prompt keeps its bare code element');
+  assert.ok(!/<code class="md"[^>]*id="/.test(inlineHtml), 'no prompt element is tagged as inline markdown');
+});
+
 /* ── Integration: CLI ─────────────────────────────────────────────── */
 
 const tmp = mkdtempSync(join(tmpdir(), 'build-plan-html-'));
@@ -670,7 +730,7 @@ ok('hook prefers the plugin-bundled renderer when the project has none', () => {
   rmSync(proj, { recursive: true, force: true });
 });
 
-ok('a spec with no prototype: key renders byte-identically to the pre-change renderer', () => {
+ok('a spec with no prototype: key renders the same markup as the pre-change renderer', () => {
   // Materialize the renderer as it exists on the merge base and render the
   // same spec through both. A spec that never opted into the prototype link
   // must be unaffected by the feature that added it.
@@ -705,11 +765,17 @@ ok('a spec with no prototype: key renders byte-identically to the pre-change ren
     // about the prototype feature not leaking into specs that never asked for
     // it. Blank the three prompt payloads on both sides so the comparison
     // covers structure and every other rendered section, not wording.
-    const stripPrompts = (html) => html
+    // The stylesheet is blanked for the same reason: presentation is expected
+    // to evolve (inline code spans gained a chip style), and pinning CSS bytes
+    // here would forbid every future visual fix. What this guard protects is
+    // the DOM contract the extractor and the gallery read.
+    const stripVolatile = (html) => html
       .replace(/(<meta name="plan-(?:implement|goal|workflow)" content=")[^"]*"/g, '$1"')
-      .replace(/(<code id="(?:implement|goal|workflow)-cmd"[^>]*>)[\s\S]*?<\/code>/g, '$1</code>');
+      .replace(/(<code id="(?:implement|goal|workflow)-cmd"[^>]*>)[\s\S]*?<\/code>/g, '$1</code>')
+      .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/g, '$1</style>');
     assert.ok(/<meta name="plan-implement" content="[^"]+"/.test(after), 'prompt payloads are non-empty before blanking');
-    assert.equal(stripPrompts(after), stripPrompts(before), 'output drifted for a spec that carries no prototype: key');
+    assert.ok(/<style\b[^>]*>\s*\S/.test(after), 'stylesheet is non-empty before blanking');
+    assert.equal(stripVolatile(after), stripVolatile(before), 'markup drifted for a spec that carries no prototype: key');
   } catch (err) {
     // A shallow clone, a missing base ref, or no git at all is an environment
     // gap, not a regression — skip loudly rather than failing the suite.

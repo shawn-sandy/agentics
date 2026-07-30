@@ -72,6 +72,20 @@ export const CSS = `/* ── Design tokens ────────────
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--text); }
+  em.md { font-style: italic; }
   pre {
     background: var(--grey-bg);
     border: 1px solid var(--border);

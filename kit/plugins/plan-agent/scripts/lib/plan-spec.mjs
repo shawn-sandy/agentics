@@ -39,16 +39,33 @@ export function decodeEntities(s) {
     .replace(/&amp;/g, '&');
 }
 
+/**
+ * Turn the inline-Markdown spans back into their source markers. The exact
+ * left-inverse of inline() in ../build-plan-html.mjs — the two are a matched
+ * pair, and the render → extract → render fidelity test is what catches a
+ * change to one that is missing from the other.
+ *
+ * Keyed on class="md" rather than the tag name because bare <code> carries
+ * file-tree leaves and the implement/goal/workflow prompts. Those are already
+ * plain text in the spec and must not acquire backticks on the way back.
+ *
+ * Runs before tag stripping, so the markers survive into the extracted text.
+ */
+const remark = (html) =>
+  html
+    .replace(/<code class="md">([\s\S]*?)<\/code>/gi, '`$1`')
+    .replace(/<(strong|em) class="md">([\s\S]*?)<\/\1>/gi, (_, tag, body) => (tag.toLowerCase() === 'strong' ? `**${body}**` : `*${body}*`));
+
 /** Strip tags and collapse whitespace to a single line of plain text. */
 export function textOf(html) {
-  const noSvg = html.replace(/<svg[\s\S]*?<\/svg>/gi, ' ');
+  const noSvg = remark(html.replace(/<svg[\s\S]*?<\/svg>/gi, ' '));
   const noTags = noSvg.replace(/<[^>]+>/g, ' ');
   return decodeEntities(noTags).replace(/\s+/g, ' ').trim();
 }
 
 /** Strip tags but keep paragraph boundaries as blank lines. */
 export function blockTextOf(html) {
-  const noSvg = html.replace(/<svg[\s\S]*?<\/svg>/gi, ' ');
+  const noSvg = remark(html.replace(/<svg[\s\S]*?<\/svg>/gi, ' '));
   const withBreaks = noSvg.replace(/<\/(p|li|ul|ol|dl|dd)>/gi, '\n\n').replace(/<br\s*\/?>/gi, '\n');
   const noTags = withBreaks.replace(/<[^>]+>/g, ' ');
   const decoded = decodeEntities(noTags);

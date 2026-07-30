@@ -1,5 +1,33 @@
 # Changelog
 
+## 7.0.1 — inline Markdown in plan prose renders as markup, not raw characters (2026-07-30)
+
+### Fixed
+
+- Plan prose now renders `` `code` ``, `**bold**`, and `*italic*` as real
+  markup. Every prose field went through `esc()` alone, so the markers reached
+  the page as literal characters — 85 of the 95 plans in `docs/plans/` showed
+  3,000+ code spans as raw markdown, which is what made rendered plans read
+  like unstyled source.
+- `inline()` (renderer) and `remark()` (extractor) are a matched pair: spans
+  are tagged `class="md"` so the extractor turns exactly those back into
+  markers, leaving the bare `<code>` that carries file paths and the
+  copyable implement/goal/workflow prompts untouched. The round-trip contract
+  is unchanged, and the 83-plan corpus test proves it.
+- Code spans are lifted out before bold/italic run, so a doubled-star glob
+  inside backticks stays a path. Italic ignores spans containing a slash,
+  which keeps bare globs in prose from rendering as emphasis.
+
+### Notes
+
+- Committed plan HTML converges on the next render; no migration is needed,
+  and no committed plan changed in this release.
+- The back-compat guard now pins markup rather than bytes — presentation CSS
+  is expected to evolve, and pinning stylesheet bytes would forbid every
+  future visual fix.
+- Not handled: fenced blocks, links, and lists inside prose. No plan uses
+  them there, and each would need its own inverse in the extractor.
+
 ## 7.0.0 — enumerated frontmatter is validated, and the goal prompt licenses fan-out (2026-07-29)
 
 Applies two rules from Anthropic's "The new rules of context engineering for

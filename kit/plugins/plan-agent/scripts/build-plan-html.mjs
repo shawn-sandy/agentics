@@ -49,13 +49,46 @@ export function esc(s) {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * esc() plus the three inline Markdown markers plan prose actually uses:
+ * `code`, **bold**, *italic*. Without this every backtick and asterisk an
+ * author wrote reached the page as a literal character — 85 of the 95 plans
+ * in docs/plans/ rendered 3,000+ code spans as raw markdown.
+ *
+ * The `class="md"` on each emitted tag is load-bearing, not decoration: it is
+ * what remark() in ./lib/plan-spec.mjs keys off to turn these spans back into
+ * markers on extraction. Bare <code> is also emitted for file-tree leaves and
+ * the implement/goal/workflow prompts, and those must NOT gain backticks when
+ * read back. This function and remark() are a matched pair — the same split
+ * paragraphs() and blockTextOf() already live on — so changing one marker
+ * means changing both, and the round-trip test is what catches forgetting.
+ *
+ * Code spans are lifted out FIRST, behind a NUL sentinel, so a doubled-star
+ * glob inside backticks can never be read as bold. NUL is unforgeable here:
+ * it cannot appear in the UTF-8 spec text and esc() leaves it untouched. A
+ * softer delimiter would not do — spaces around a bare index would turn
+ * "in 5 minutes" into a code span.
+ *
+ * The italic guard rejects a slash in the span, which is what keeps the bare
+ * globs that appear unbackticked in real plan prose from rendering as
+ * emphasis. Fenced blocks, links, and lists are deliberately not handled: no
+ * plan uses them inside prose, and each would need its own inverse.
+ */
+export function inline(s) {
+  const spans = [];
+  return esc(String(s).replace(/`([^`]+)`/g, (_, c) => `\u0000${spans.push(c) - 1}\u0000`))
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="md">$1</strong>')
+    .replace(/\*([^*/\s][^*/]*)\*/g, '<em class="md">$1</em>')
+    .replace(/\u0000(\d+)\u0000/g, (_, i) => `<code class="md">${esc(spans[i])}</code>`);
+}
+
 /** Multi-paragraph block text → <p>/<br> markup that blockTextOf inverts. */
 function paragraphs(text, indent = '      ') {
   return text
     .split('\n\n')
     // No newline after <br>: blockTextOf maps <br> to \n and would keep a
     // literal newline too, doubling every single line break on re-extraction.
-    .map((p) => `${indent}<p>${esc(p).replace(/\n/g, '<br>')}</p>`)
+    .map((p) => `${indent}<p>${inline(p).replace(/\n/g, '<br>')}</p>`)
     .join('\n');
 }
 
@@ -86,7 +119,7 @@ function fileTreeRows(files) {
   };
   const leafLi = (f, label, pad) => {
     const badge = FILE_BADGES.has(f.badge) ? f.badge : 'modified';
-    const note = f.note ? ` <span class="file-note">${esc(f.note)}</span>` : '';
+    const note = f.note ? ` <span class="file-note">${inline(f.note)}</span>` : '';
     return `${pad}<li><code>${esc(label)}</code> <span class="file-badge file-badge-${badge}">${badge}</span>${note}</li>`;
   };
   const rows = [];
@@ -121,12 +154,12 @@ ${leaves}
 function testsBody(tests) {
   if (tests.entries.length > 0) {
     const parts = [];
-    if (tests.tier) parts.push(`      <div class="test-tier-label">${esc(tests.tier)}</div>`);
-    parts.push(`      <div class="objective-test-card">${esc(tests.entries[0])}</div>`);
+    if (tests.tier) parts.push(`      <div class="test-tier-label">${inline(tests.tier)}</div>`);
+    parts.push(`      <div class="objective-test-card">${inline(tests.entries[0])}</div>`);
     if (tests.entries.length > 1) {
       const cards = tests.entries
         .slice(1)
-        .map((e) => `        <div class="test-card">${esc(e)}</div>`)
+        .map((e) => `        <div class="test-card">${inline(e)}</div>`)
         .join('\n');
       parts.push(`      <div class="test-list">\n${cards}\n      </div>`);
     }
@@ -139,7 +172,7 @@ function testsBody(tests) {
  * used to write by hand; replaces the default report-empty paragraph. */
 function reportList(entries) {
   const rows = entries
-    .map((e) => `            <dt>${esc(e.item)}</dt>\n            <dd>${esc(e.reason)}</dd>`)
+    .map((e) => `            <dt>${inline(e.item)}</dt>\n            <dd>${inline(e.reason)}</dd>`)
     .join('\n');
   return `          <dl class="report-list">\n${rows}\n          </dl>`;
 }
@@ -271,8 +304,8 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     : '';
 
   const main = [];
-  main.push(shell.objectiveCard(esc(s.objective)));
-  if (md.glance) main.push('', shell.glanceBlock(esc(md.glance)));
+  main.push(shell.objectiveCard(inline(s.objective)));
+  if (md.glance) main.push('', shell.glanceBlock(inline(md.glance)));
   main.push('', shell.implementRow(esc(implement)));
   main.push('', shell.moreWaysDrawer({
     goal: esc(goal),
@@ -286,11 +319,11 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   if (s.context) main.push('', shell.sectionCard('context', paragraphs(s.context)));
   if (s.files) main.push('', shell.sectionCard('files', shell.fileTreeBlock(esc(repoName), fileTreeRows(s.files))));
   const stepCards = s.steps
-    .map((st, i) => shell.stepCard(i + 1, { action: esc(st.action), why: esc(st.why), verify: esc(st.verify), done: Boolean(stepsDone[i]) }))
+    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]) }))
     .join('\n\n');
   main.push('', shell.sectionCard('steps', `      <div class="steps-list">\n\n${stepCards}\n\n      </div>`));
   if (s.tests) main.push('', shell.sectionCard('tests', testsBody(s.tests)));
-  main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map((c, i) => ({ text: esc(c), done: Boolean(criteriaDone[i]) })))));
+  main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map((c, i) => ({ text: inline(c), done: Boolean(criteriaDone[i]) })))));
   main.push('', shell.sectionCard('verification', paragraphs(s.verification)));
   main.push('', shell.sectionCard('completion', shell.completionBlock({
     allStepsDone: s.steps.length > 0 && s.steps.every((_, i) => Boolean(stepsDone[i])),
@@ -303,8 +336,10 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     if (nextSteps.prose) parts.push(paragraphs(nextSteps.prose));
     if (nextSteps.items.length > 0) {
       parts.push(shell.nextStepsBlock(nextSteps.items.map((it) => ({
-        summary: esc(it.summary),
-        desc: it.desc ? esc(it.desc) : '',
+        summary: inline(it.summary),
+        desc: it.desc ? inline(it.desc) : '',
+        // Verbatim: the prompt renders in a <pre> for the reader to copy and
+        // paste into Claude. Markers there are content, not formatting.
         prompt: it.prompt ? esc(it.prompt) : '',
       }))));
     }
