@@ -368,7 +368,7 @@
     <div class="stats">
       <div class="stat hero"><span class="n">63%</span><span class="l">context cut</span></div>
       <div class="stat"><span class="n">19</span><span class="l">references added</span></div>
-      <div class="stat"><span class="n">14/14</span><span class="l">criteria passed</span></div>
+      <div class="stat"><span class="n">15/15</span><span class="l">criteria passed</span></div>
       <div class="stat"><span class="n">4/4</span><span class="l">tests passed</span></div>
       <div class="stat"><span class="n">3</span><span class="l">open items</span></div>
     </div>
@@ -406,7 +406,7 @@
       </div>
     </div>
 
-    <p class="prose">Implemented from <code>docs/plans/split-git-social-skills.md</code>, fanned out across six parallel subagents. All four tests and all fourteen acceptance criteria pass. The plan's behavioural verification is <strong>not run</strong>, so <code>status:</code> stayed <code>in-progress</code>.</p>
+    <p class="prose">Implemented from <code>docs/plans/split-git-social-skills.md</code>, fanned out across six parallel subagents. All four tests and all fifteen acceptance criteria pass. The plan's behavioural verification is <strong>not run</strong>, so <code>status:</code> stayed <code>in-progress</code>.</p>
   </section>
 
   <section>
@@ -464,7 +464,7 @@
         <p>The splits are independent — disjoint file sets, no shared state. Each agent received the guard phrases it had to retain verbatim, the exact reference filenames, and its own verification commands. Main-loop context stayed at 41 tool calls because no 1,200&ndash;2,400-word skill body was ever read into it.</p>
       </div>
       <div class="entry">
-        <div class="t">Leave <code>status: in-progress</code> despite 14/14 criteria passing.</div>
+        <div class="t">Leave <code>status: in-progress</code> despite 15/15 criteria passing.</div>
         <p>The plan's behavioural verification requires opening a real PR, pushing to the remote, and an irreversible merge. Marking <code>completed</code> would assert verification that did not happen.</p>
       </div>
     </div>
@@ -520,6 +520,10 @@
 
   <section>
     <h2>Tests and verification</h2>
+
+    <div class="callout">
+      <strong>Corrected after review.</strong> This section originally reported a clean pass. Code review then found that the split had moved <code>ship</code>'s fourth pre-flight hard stop — <code>CLI not available or not authenticated</code> &hellip; <code>STOP</code> — out of the core and into <code>references/platform-clis.md</code>: the precise failure mode this work exists to prevent. The test could not have caught it, because its guard list had no phrase covering CLI auth. Both are fixed; guard assertions went 11 &rarr; 12 and are now tallied rather than hard-coded.
+    </div>
 
     <div class="scroll">
       <table>
