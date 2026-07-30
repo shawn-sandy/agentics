@@ -1,5 +1,44 @@
 # Changelog
 
+## 7.0.1 — inline Markdown in plan prose renders as markup, not raw characters (2026-07-30)
+
+### Fixed
+
+- Plan prose now renders `` `code` ``, `**bold**`, and `*italic*` as real
+  markup. Every prose field went through `esc()` alone, so the markers reached
+  the page as literal characters — 85 of the 95 plans in `docs/plans/` showed
+  3,000+ code spans as raw markdown, which is what made rendered plans read
+  like unstyled source.
+- `inline()` (renderer) and `remark()` (extractor) are a matched pair: spans
+  are tagged `class="md"` so the extractor turns exactly those back into
+  markers, leaving the bare `<code>` that carries file paths and the
+  copyable implement/goal/workflow prompts untouched. The round-trip contract
+  is unchanged, and the 83-plan corpus test proves it.
+- Code spans are lifted out before bold/italic run, so a doubled-star glob
+  inside backticks stays a path.
+- Italic uses flanking rules, not a character blacklist: the opening star must
+  follow whitespace or an opening bracket, the closing star must precede
+  whitespace or sentence punctuation, and the span may not begin or end with
+  whitespace or contain a slash. Without this, a star attached to a word
+  (`product-reviewer-*.md`) paired with the star of the next glob and swallowed
+  everything between them into one `<em>` — 569 characters in the worst
+  committed plan. The round-trip test could not see it, because `remark()`
+  faithfully restores both stars and only the rendered page was wrong.
+- Source NULs are stripped before the code-span placeholder is inserted. The
+  placeholder is NUL-delimited and UTF-8 can encode NUL, so prose carrying one
+  could otherwise impersonate a placeholder and render as
+  `<code class="md">undefined</code>`.
+
+### Notes
+
+- Committed plan HTML converges on the next render; no migration is needed,
+  and no committed plan changed in this release.
+- The back-compat guard now pins markup rather than bytes — presentation CSS
+  is expected to evolve, and pinning stylesheet bytes would forbid every
+  future visual fix.
+- Not handled: fenced blocks, links, and lists inside prose. No plan uses
+  them there, and each would need its own inverse in the extractor.
+
 ## 7.0.0 — enumerated frontmatter is validated, and the goal prompt licenses fan-out (2026-07-29)
 
 Applies two rules from Anthropic's "The new rules of context engineering for
