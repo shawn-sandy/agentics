@@ -352,7 +352,7 @@
   <header class="masthead">
     <div class="eyebrow">Engineering recap &middot; agentics &middot; 2026-07-30</div>
     <h1>Six monolithic skill bodies split into cores plus references</h1>
-    <p class="standfirst">A <code>SKILL.md</code> body has no partial load: the moment a skill triggers, the whole body is paid. Six of them — three that rewrite refs and end in a squash merge — went from 9,565 words of always-loaded context to 3,562, with every safety guard held in the core.</p>
+    <p class="standfirst">A <code>SKILL.md</code> body has no partial load: the moment a skill triggers, the whole body is paid. Six of them — three that rewrite refs and end in a squash merge — went from 9,565 words of always-loaded context to 3,536, with every safety guard held in the core.</p>
     <div class="meta-line">
       <span>commit e5fccc7</span>
       <span>33 files</span>
@@ -367,7 +367,7 @@
 
     <div class="stats">
       <div class="stat hero"><span class="n">63%</span><span class="l">context cut</span></div>
-      <div class="stat"><span class="n">19</span><span class="l">references added</span></div>
+      <div class="stat"><span class="n">20</span><span class="l">references added</span></div>
       <div class="stat"><span class="n">15/16</span><span class="l">criteria met</span></div>
       <div class="stat"><span class="n">4/4</span><span class="l">tests passed</span></div>
       <div class="stat"><span class="n">3</span><span class="l">open items</span></div>
@@ -378,8 +378,8 @@
         <span>skill core</span><span style="text-align:right">before</span><span style="text-align:right">after</span><span>proportion</span>
       </div>
       <div class="row">
-        <span class="name">ship-autonomous</span><span class="num before">2,406</span><span class="num after">595</span>
-        <span class="bars"><span class="bar b" style="width:100%"></span><span class="bar a" style="width:24.7%"></span></span>
+        <span class="name">ship-autonomous</span><span class="num before">2,406</span><span class="num after">597</span>
+        <span class="bars"><span class="bar b" style="width:100%"></span><span class="bar a" style="width:24.8%"></span></span>
       </div>
       <div class="row">
         <span class="name">share-explanation</span><span class="num before">1,840</span><span class="num after">596</span>
@@ -398,11 +398,11 @@
         <span class="bars"><span class="bar b" style="width:52.4%"></span><span class="bar a" style="width:24.6%"></span></span>
       </div>
       <div class="row">
-        <span class="name">ship</span><span class="num before">1,191</span><span class="num after">599</span>
-        <span class="bars"><span class="bar b" style="width:49.5%"></span><span class="bar a" style="width:24.9%"></span></span>
+        <span class="name">ship</span><span class="num before">1,191</span><span class="num after">571</span>
+        <span class="bars"><span class="bar b" style="width:49.5%"></span><span class="bar a" style="width:23.7%"></span></span>
       </div>
       <div class="ledger-foot">
-        <strong>9,565 &rarr; 3,562 words.</strong> <span class="ceiling-note">The &ldquo;after&rdquo; bars are all the same length because five of six cores land within 7 words of the 600-word gate — see Review follow-ups.</span>
+        <strong>9,565 &rarr; 3,536 words.</strong> <span class="ceiling-note">The &ldquo;after&rdquo; bars are near-identical because four of six cores land within 7 words of the 600-word gate. <code>ship</code> is the short one at 571 — review forced it lower; see Review follow-ups.</span>
       </div>
     </div>
 
@@ -479,7 +479,7 @@
         <p class="revisit">To revisit: raise the ceiling to ~750 and the spec's file list becomes achievable.</p>
       </div>
       <div class="entry">
-        <div class="t"><code>ship</code> left at 599 of 600</div>
+        <div class="t"><code>ship</code> left at 599 of 600 <em>&mdash; superseded, now 571</em></div>
         <p>Trimming for headroom was considered and rejected <em>for now</em>: that file carries 22 test assertions and every edit risks one of them. Shipping verified-green beat shipping tidier-but-re-verified.</p>
         <p class="revisit">To revisit: trim Step 3's rules list or the duplicated closing STOP block, then re-run <code>test-ship-self-review.sh</code>.</p>
       </div>
@@ -558,8 +558,8 @@
     <h2>Review follow-ups and tech debt</h2>
     <div class="entries">
       <div class="entry flag">
-        <div class="t">Five of six cores sit within 7 words of the CI gate</div>
-        <p><code>ship</code> 599, <code>share-session</code> 597, <code>share-explanation</code> 596, <code>ship-autonomous</code> 595, <code>share-selection</code> 593 — against a ceiling of 600. This is not a ceiling with an upgrade path, it is a cliff: routine wording edits will break the build. Either budget a real margin per core or raise the ceiling.</p>
+        <div class="t">Four of six cores sit within 7 words of the CI gate</div>
+        <p><code>share-session</code> 597, <code>ship-autonomous</code> 597, <code>share-explanation</code> 596, <code>share-selection</code> 593 — against a ceiling of 600. (<code>ship</code> escaped to 571 only because review forced a guard back into it.) This is not a ceiling with an upgrade path, it is a cliff: routine wording edits will break the build. Either budget a real margin per core or raise the ceiling.</p>
       </div>
       <div class="entry flag">
         <div class="t">Behavioural verification outstanding</div>
@@ -586,8 +586,8 @@
       <dt>skills/branch-agent/references/{branch-naming, stash-and-recovery}.md</dt>
       <dd>Name resolution and type inference; conflict detection and stash-pop recovery.</dd>
       <dt>skills/ship/SKILL.md</dt>
-      <dd>1,191 &rarr; 599w. Keeps Step 1 guards, the <code>no-verify</code> prohibition, and Step 4.5's four policy lines.</dd>
-      <dt>skills/ship/references/{platform-clis, self-review, pr-body}.md</dt>
+      <dd>1,191 &rarr; 571w. Keeps Step 1 guards, the <code>no-verify</code> prohibition, the CLI-auth hard stop restored during review, and Step 4.5's four policy lines.</dd>
+      <dt>skills/ship/references/{platform-clis, self-review, pr-body, commit-message}.md</dt>
       <dd><code>gh</code>/<code>glab</code> detection and auth messages; the four regression checks and amend procedure; the PR/MR body template.</dd>
     </dl>
 

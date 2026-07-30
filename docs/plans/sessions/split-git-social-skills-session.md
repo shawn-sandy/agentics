@@ -11,17 +11,18 @@ eng-artifact-url: https://claude.ai/code/artifact/ea50b7cb-5603-444e-a8b2-708be3
 
 ## At a glance
 
-- **Changes shipped:** 6 skill cores split, 19 reference files added, 1 new test wired into CI
+- **Changes shipped:** 6 skill cores split, 20 reference files added, 9 tests wired into CI (1 new, 8 that existed but ran nowhere)
 - **Files touched:** 33 (13 modified, 20 added) — commit `e5fccc7`
 - **Decisions made:** 6
 - **Open items:** 3 (one blocking verification, two fragility notes)
 
 Always-loaded context across the six targets dropped from **9,565 words to
-3,562**. The three `git-agent` skills that rewrite refs and end in a squash merge
+3,536**. The three `git-agent` skills that rewrite refs and end in a squash merge
 now cost 1,776 words instead of 5,073. Implemented per
 `docs/plans/split-git-social-skills.md`, fanned out across six parallel
-subagents. All four tests and all 14 acceptance criteria pass; the plan's
-behavioural verification is **not run**, so `status:` stayed `in-progress`.
+subagents. All four tests pass, and 15 of the plan's 16 acceptance criteria are
+met. The sixteenth *is* the behavioural verification, left unchecked on purpose:
+no skill here has been executed, so `status:` stayed `in-progress`.
 
 ## Architecture and code paths
 
@@ -55,7 +56,7 @@ stash-pop recovery script.
 
 ```mermaid
 flowchart LR
-  T[skill triggers] --> C[SKILL.md core<br/>~595 words<br/>ALWAYS paid]
+  T[skill triggers] --> C[SKILL.md core<br/>~590 words<br/>ALWAYS paid]
   C --> G[Guardrails<br/>every hard stop]
   C --> H[step headings<br/>order preserved]
   H --> P[one-line pointer]
@@ -131,7 +132,7 @@ Files list were mutually unsatisfiable. Chose the ceiling, since that is what th
 CI gate enforces. To revisit: raise the ceiling to ~750 and the spec's file list
 becomes achievable.
 
-**`ship` left at 599 of 600.** Trimming for headroom was considered and rejected
+**`ship` left at 599 of 600** *(superseded — now 571; see below)*. Trimming for headroom was considered and rejected
 *for now*: that file carries 22 test assertions and every edit risks one. To
 revisit: trim Step 3's rules list or the duplicated closing STOP block, then
 re-run `test-ship-self-review.sh`.
@@ -215,7 +216,11 @@ pointer landing at the right reference — which is weaker evidence than a run.
 
 ## Review follow-ups and tech debt
 
-**`ship/SKILL.md` at 599/600 words.** The next word added breaks CI. Not a
+**`ship/SKILL.md` at 599/600 words** *(resolved during review — now 571)*. Code
+review found the split had moved `ship`'s CLI-auth hard stop out of the core;
+restoring it needed words the file did not have, so Step 3's commit-message rules
+moved to `references/commit-message.md`. That bought 28 words of headroom. The
+ceiling still has no margin on the other five cores. Not a
 ceiling with an upgrade path — a genuine cliff. Trim before editing.
 
 **`share-explanation` at 596 and `share-session` at 597.** Same cliff, 4 and 3
@@ -234,12 +239,12 @@ irreversible squash merge. Both carry self-contained prompts in the plan.
 
 **git-agent skills** — cores rewritten, guards retained in-core
 
-- `skills/ship-autonomous/SKILL.md` — 2,406 → 595w; new `## Guardrails` block holds all 22 imperatives
+- `skills/ship-autonomous/SKILL.md` — 2,406 → 597w; new `## Guardrails` block holds all 22 imperatives
 - `skills/ship-autonomous/references/{preflight-and-verify,pr-events,ci-autofix,merge-gate}.md` — Step 1/2.5 commands, subscribe-vs-poll + triage + review handling, CI classification table, merge and branch-deletion sequences
 - `skills/branch-agent/SKILL.md` — 1,476 → 582w; keeps the Step 1 guard trio, `--no-track`, no-retry/no-force
 - `skills/branch-agent/references/{branch-naming,stash-and-recovery}.md` — name resolution and type inference, conflict detection and stash-pop recovery
-- `skills/ship/SKILL.md` — 1,191 → 599w; keeps Step 1 guards, the `no-verify` prohibition, Step 4.5's four policy lines
-- `skills/ship/references/{platform-clis,self-review,pr-body}.md` — `gh`/`glab` detection and auth messages, the four regression checks and amend procedure, PR body template
+- `skills/ship/SKILL.md` — 1,191 → 571w; keeps Step 1 guards, the `no-verify` prohibition, the CLI-auth hard stop, Step 4.5's four policy lines
+- `skills/ship/references/{platform-clis,self-review,pr-body,commit-message}.md` — `gh`/`glab` detection and auth messages, the four regression checks and amend procedure, PR body template, conventional-commit format rules (`commit-message.md` added during review to fund restoring the CLI-auth guard)
 
 **social-media-tools skills** — cores rewritten, scrub gate retained in-core
 

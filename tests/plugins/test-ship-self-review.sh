@@ -23,7 +23,10 @@ else
 fi
 
 echo "2. Step 4.5 exists..."
-if grep -qF "## Step 4.5: Self-Review Before Push" "$SKILL"; then
+# -x as well as -F: the heading is a whole line, so requiring a full-line match
+# keeps this strict against a stray mention in prose, without going back to a
+# regex where the `.` in "4.5" would match any character.
+if grep -qxF "## Step 4.5: Self-Review Before Push" "$SKILL"; then
   echo "  PASS"
 else
   echo "  FAIL: Step 4.5 heading not found"
