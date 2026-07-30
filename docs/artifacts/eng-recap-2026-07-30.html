@@ -368,7 +368,7 @@
     <div class="stats">
       <div class="stat hero"><span class="n">63%</span><span class="l">context cut</span></div>
       <div class="stat"><span class="n">19</span><span class="l">references added</span></div>
-      <div class="stat"><span class="n">15/15</span><span class="l">criteria passed</span></div>
+      <div class="stat"><span class="n">15/16</span><span class="l">criteria met</span></div>
       <div class="stat"><span class="n">4/4</span><span class="l">tests passed</span></div>
       <div class="stat"><span class="n">3</span><span class="l">open items</span></div>
     </div>
@@ -406,7 +406,7 @@
       </div>
     </div>
 
-    <p class="prose">Implemented from <code>docs/plans/split-git-social-skills.md</code>, fanned out across six parallel subagents. All four tests and all fifteen acceptance criteria pass. The plan's behavioural verification is <strong>not run</strong>, so <code>status:</code> stayed <code>in-progress</code>.</p>
+    <p class="prose">Implemented from <code>docs/plans/split-git-social-skills.md</code>, fanned out across six parallel subagents. All four tests pass, and 15 of the plan's 16 acceptance criteria are met — the sixteenth is behavioural verification, which has not run. The plan's behavioural verification is <strong>not run</strong>, so <code>status:</code> stayed <code>in-progress</code>.</p>
   </section>
 
   <section>
@@ -464,7 +464,7 @@
         <p>The splits are independent — disjoint file sets, no shared state. Each agent received the guard phrases it had to retain verbatim, the exact reference filenames, and its own verification commands. Main-loop context stayed at 41 tool calls because no 1,200&ndash;2,400-word skill body was ever read into it.</p>
       </div>
       <div class="entry">
-        <div class="t">Leave <code>status: in-progress</code> despite 15/15 criteria passing.</div>
+        <div class="t">Leave <code>status: in-progress</code> with 15 of 16 criteria met.</div>
         <p>The plan's behavioural verification requires opening a real PR, pushing to the remote, and an irreversible merge. Marking <code>completed</code> would assert verification that did not happen.</p>
       </div>
     </div>
@@ -534,7 +534,7 @@
           <tr><td class="mono">test-description-budget.sh</td><td><span class="pill pass">exit 0</span></td></tr>
           <tr><td class="mono">test-no-orphan-plugin-dirs.sh</td><td><span class="pill pass">exit 0</span></td></tr>
           <tr><td class="mono">BASE_REF=main node scripts/check-plugin-versions.mjs</td><td><span class="pill pass">exit 0</span></td></tr>
-          <tr><td class="mono">Acceptance criteria</td><td><span class="pill pass">14 / 14</span></td></tr>
+          <tr><td class="mono">Acceptance criteria</td><td><span class="pill gap">15 / 16</span></td></tr>
           <tr><td class="mono">Behavioural check (plan &sect;Verification)</td><td><span class="pill gap">not run</span></td></tr>
         </tbody>
       </table>
