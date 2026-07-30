@@ -1,4 +1,4 @@
-gh_invoked=yes
+gh_mutating_invoked=no
 head_unchanged=yes
 skill=ship-autonomous
 still_on_main=yes

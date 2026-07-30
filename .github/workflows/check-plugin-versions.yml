@@ -95,5 +95,3 @@ jobs:
       # than skipping, so it cannot go green by being absent.
       - name: Test pruned skill imperatives kept every load-bearing guard
         run: bash tests/plugins/test-imperative-pruning.sh
-        env:
-          BASE_REF: ${{ github.base_ref }}

@@ -9,27 +9,22 @@ set -euo pipefail
 # baseline alike:
 #
 #   1. every keep-phrases.txt entry is literally present in its named file
-#   2. every target's `description:` line is byte-identical to origin/<base>
+#   2. every target's `description:` line matches descriptions.expected
 #   3. all five recorded .expected manifests exist and are non-empty
 #   4. the behavioral harness runs and passes whenever the `claude` CLI exists
 #
 # Assertion 2 exists because a prune can silently rewrite a frontmatter
 # description — breaking skill activation without breaking any other test.
+#
+# The five skills under test are named by the two fixture files rather than by a
+# list here, so the scope of the gate lives with the data it is asserting.
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FIXTURES="$ROOT/tests/fixtures/imperative-baselines"
 KEEP="$FIXTURES/keep-phrases.txt"
 HARNESS="$ROOT/tests/plugins/test-skill-behavior-baselines.sh"
-BASE_REF="${BASE_REF:-main}"
+GOLDEN="$FIXTURES/descriptions.expected"
 FAILURES=0
-
-TARGETS="
-kit/plugins/plan-agent/skills/build/SKILL.md
-kit/plugins/plan-agent/skills/implementation-plan/SKILL.md
-kit/plugins/git-agent/skills/ship-autonomous/SKILL.md
-kit/plugins/git-agent/skills/branch-agent/SKILL.md
-kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md
-"
 
 echo "=== Imperative Pruning Objective Test ==="
 
@@ -71,39 +66,45 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-# --- 2. No description drift ------------------------------------------------
+# --- 2. No accidental description drift -------------------------------------
 # A skill's `description:` is its activation trigger. Rewording it during a body
-# prune breaks discovery while every body-level test stays green, so it is
-# compared byte-for-byte against the base branch.
-echo "2. Every target description: line is byte-identical to origin/$BASE_REF..."
-if ! git -C "$ROOT" rev-parse --verify --quiet "origin/$BASE_REF" >/dev/null; then
-  git -C "$ROOT" fetch --quiet origin "$BASE_REF" 2>/dev/null || true
-fi
-if ! git -C "$ROOT" rev-parse --verify --quiet "origin/$BASE_REF" >/dev/null; then
-  echo "  FAIL: cannot resolve origin/$BASE_REF — the drift assertion cannot be evaluated."
-  echo "        Set BASE_REF or run: git fetch origin $BASE_REF"
+# prune breaks discovery while every body-level test stays green.
+#
+# Compared against a committed golden file rather than against origin/<base>.
+# The base-branch comparison was correct for the pruning PR itself but wrong as
+# a permanent gate: it would block every future legitimate description update to
+# these five skills with no way to pass. The golden file is the deliberate-update
+# path — changing a description means updating the matching line here in the same
+# commit, which surfaces in review as an explicit act instead of an incidental
+# diff buried in a body rewrite.
+echo "2. Every target description: line matches the recorded golden copy..."
+if [ ! -s "$GOLDEN" ]; then
+  echo "  FAIL: missing golden description file at $GOLDEN"
   FAILURES=$((FAILURES + 1))
 else
   DRIFTED=0
-  for t in $TARGETS; do
-    NOW="$(grep -m1 '^description:' "$ROOT/$t" || true)"
-    WAS="$(git -C "$ROOT" show "origin/$BASE_REF:$t" 2>/dev/null | grep -m1 '^description:' || true)"
-    if [ -z "$WAS" ]; then
-      # New file on this branch: nothing to drift from, but say so out loud.
-      echo "  NOTE: $t has no description: on origin/$BASE_REF (new file)"
-      continue
-    fi
-    if [ "$NOW" != "$WAS" ]; then
-      echo "  DRIFT: $t"
-      echo "    origin/$BASE_REF: $WAS"
-      echo "    working tree:  $NOW"
+  CHECKED=0
+  while IFS=$'\t' read -r f line; do
+    case "${f:-}" in ''|\#*) continue ;; esac
+    CHECKED=$((CHECKED + 1))
+    NOW="$(grep -m1 '^description:' "$ROOT/$f" 2>/dev/null || true)"
+    if [ "$NOW" != "$line" ]; then
+      echo "  DRIFT: $f"
+      echo "    recorded:     $line"
+      echo "    working tree: $NOW"
       DRIFTED=$((DRIFTED + 1))
     fi
-  done
-  if [ "$DRIFTED" -eq 0 ]; then
-    echo "  PASS"
+  done <"$GOLDEN"
+
+  # Guard the guard: a golden file that lost entries would pass vacuously.
+  if [ "$CHECKED" -ne 5 ]; then
+    echo "  FAIL: golden file covers $CHECKED skills, expected 5"
+    FAILURES=$((FAILURES + 1))
+  elif [ "$DRIFTED" -eq 0 ]; then
+    echo "  PASS ($CHECKED descriptions)"
   else
-    echo "  FAIL: $DRIFTED description line(s) changed during the prune"
+    echo "  FAIL: $DRIFTED description line(s) differ from the recorded copy."
+    echo "        If the change is intentional, update $(basename "$GOLDEN") in the same commit."
     FAILURES=$((FAILURES + 1))
   fi
 fi
