@@ -1411,7 +1411,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 14 done</span>
+        <span id="progress-label">0 / 15 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1432,6 +1432,8 @@ img, video { max-width: 100%; height: auto; }
       <p>The format is bidirectional, and that is the main cost driver. <code class="md">buildDigest</code> is documented as the exact inverse of <code class="md">parseSpecMarkdown</code>, and <code class="md">extractSections</code> derives a spec back out of rendered HTML for legacy HTML-only plans. A new grouping level therefore has to be carried at four sites — parse, render, extract-from-DOM, re-emit — with <code class="md">test-build-plan-html.mjs</code> and <code class="md">test-extract-plan-spec.mjs</code> guarding fidelity. Anything carried at fewer than four sites is a silent data loss rather than a missing feature.</p>
       <p>One hazard is already latent. <code class="md">parseSpecMarkdown</code> splits the Steps chunk with <code class="md">split(/\n(?=\d+\.\s)/)</code> and folds each piece to a single line with <code class="md">inline()</code>, so a <code class="md">### Phase:</code> heading placed between steps two and three is appended to <strong class="md">step two&#39;s <code class="md">Verify:</code> text</strong> with no parse error at all. Phases are actively unsafe to author until step 1 of this plan lands, which is also why this plan does not use phase headings itself.</p>
       <p>Alternatives weighed. A <code class="md">phases:</code> frontmatter key holding step ranges (<code class="md">phases: 1-3 Setup, 4-6 Build</code>) would cost almost nothing — the frontmatter parser already keeps arbitrary keys and the digest round trip could not break — but inserting a step silently shifts every later range, so the grouping rots in exactly the situation it is meant to survive. Headings are self-maintaining and were chosen for that reason. Full parent and child plan files were also considered and deliberately deferred: they additionally solve authoring size, but they force a position on progress rollup, gallery nesting, and archiving before phases have been used even once. Phase boundaries are designed here to be extractable into child files later.</p>
+      <p>The remaining decisions, recorded here as well as in this plan&#39;s own <code class="md">## Decisions</code> section because the renderer skips that section until step 5 lands and the gallery, the extractor, and plan reviewers all read the rendered HTML. A phase name renders as an <code class="md">&lt;h3&gt;</code> inside a <code class="md">data-phase</code> wrapper, so phases join the document outline for screen-reader navigation while the attribute carries extraction. Phases group the same flat step numbering, so adding them to an in-progress plan keeps every existing <code class="md">[x]</code> marker valid and <code class="md">build</code> still resumes at the first unmarked step rather than at a phase start. The boundary offers to compact the session rather than only stopping, and <code class="md">build</code> prints the <code class="md">/compact</code> command rather than running it, since compaction is a user-typed CLI built-in and not a callable tool — safe mid-plan only because durable state lives in the spec rather than the conversation. <code class="md">finalize-plan</code> is in scope because <code class="md">build/SKILL.md</code> line 303 requires the two skills&#39; completion rules to stay consistent. The checkpoint contract in both skills is guarded by a prose grep in the style of <code class="md">test-exitplanmode-guard.sh</code>, which catches deletion of the contract rather than proving runtime behaviour.</p>
+      <p>The renderer has two homes, and that shaped the step order. <code class="md">tests/plugins/test-build-plan-html.mjs</code> line 837 asserts the three files under <code class="md">kit/plugins/plan-agent/scripts/</code> are byte-identical to their repo-root counterparts under <code class="md">scripts/</code>, so every renderer edit lands at the root and is re-copied into the bundle before any test runs. The extractor is not mirrored at all — <code class="md">extract-plan-spec.mjs</code> ships only at the repo root.</p>
       <p><code class="md">workflow: never</code> is set deliberately. Three of the nine steps are ordered edits to a single file, <code class="md">scripts/lib/plan-spec.mjs</code>, so subagents fanning out would conflict on it. The renderer&#39;s own heuristic counts files and directories and would otherwise license fan-out this plan cannot use.</p>
     </section>
 
@@ -1444,9 +1446,16 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>kit/plugins/plan-agent/scripts/lib/plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase-aware step splitting, Decisions parsing, digest re-emission, DOM extraction</span></li>
-          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">group step cards by phase, render the Decisions section</span></li>
-          <li><code>kit/plugins/plan-agent/scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase header helper, SECTION_CHROME entry for decisions, phase CSS</span></li>
+          <li><code>scripts/lib/plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase-aware step splitting, Decisions parsing, digest re-emission, DOM extraction</span></li>
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">group step cards by phase, render the Decisions section</span></li>
+          <li><code>scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase header helper, SECTION_CHROME entry for decisions, phase CSS</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">re-copied from the repo-root source</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/scripts/lib/
+            <ul class="file-list">
+            <li><code>plan-spec.mjs</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">re-copied from the repo-root source</span></li>
+            <li><code>plan-shell.mjs</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">re-copied from the repo-root source</span></li>
+            </ul>
+          </li>
           <li><code>kit/plugins/plan-agent/skills/build/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase checkpoint loop and the --continue override</span></li>
           <li><code>kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">refuse to complete a plan with unfinished phases</span></li>
           <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">note phases and Decisions in the renderer-derives list</span></li>
@@ -1568,6 +1577,23 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
+                <span class="step-chip-text">Re-copy the three edited renderer sources — <code class="md">scripts/build-plan-html.mjs</code>, <code class="md">scripts/lib/plan-spec.mjs</code>, and <code class="md">scripts/lib/plan-shell.mjs</code> — over their counterparts under <code class="md">kit/plugins/plan-agent/scripts/</code>, after steps 1 through 5 are complete and before any test run.</span>
+              </div>
+              <div class="step-why"><code class="md">tests/plugins/test-build-plan-html.mjs</code> line 837 asserts the bundled copies are byte-identical to the repo-root sources, so editing only one side fails an existing test and ships a phase-blind renderer to anyone who installs the plugin.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body"><code class="md">diff scripts/build-plan-html.mjs kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> and the same for both <code class="md">lib/</code> files each report no differences.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
                 <span class="step-chip-text">Rewrite Step 2 of <code class="md">skills/build/SKILL.md</code> as a phase checkpoint loop — implement one phase, run its verify gate, append the decisions made to <code class="md">## Decisions</code>, then reach the boundary offer — with a <code class="md">--continue</code> flag that pushes straight through and no behaviour change for a spec that declares no phases.</span>
               </div>
               <div class="step-why">bounding context is the objective, and stopping is the correct default because the skill&#39;s headless contract at line 106 already stops and reports rather than choosing for the user.</div>
@@ -1581,7 +1607,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">7</div>
+            <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1598,7 +1624,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">8</div>
+            <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1615,7 +1641,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">9</div>
+            <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1632,7 +1658,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">10</div>
+            <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1649,7 +1675,7 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="step-card">
           <div class="step-card-header">
-            <div class="step-number">11</div>
+            <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1739,11 +1765,15 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac13">
-          <label for="ac13"><code class="md">node tests/plugins/test-plan-phases.mjs</code> exits 0</label>
+          <label for="ac13">Each of the three renderer sources under <code class="md">kit/plugins/plan-agent/scripts/</code> is byte-identical to its repo-root counterpart under <code class="md">scripts/</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac14">
-          <label for="ac14"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 7.1.0</label>
+          <label for="ac14"><code class="md">node tests/plugins/test-plan-phases.mjs</code> exits 0</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac15">
+          <label for="ac15"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 7.1.0</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1756,7 +1786,7 @@ img, video { max-width: 100%; height: auto; }
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>Author a scratch spec with three steps split across two <code class="md">### Phase:</code> headings and a <code class="md">## Decisions</code> section carrying two bullets. Render it with <code class="md">node kit/plugins/plan-agent/scripts/build-plan-html.mjs &lt;spec&gt;.md -o &lt;spec&gt;.html</code> and confirm exit 0, two phase headers each preceding their own steps, a Decisions card, and a progress bar whose total reads 3. Run <code class="md">node kit/plugins/plan-agent/scripts/extract-plan-spec.mjs &lt;spec&gt;.html</code> and confirm the printed spec carries both phase headings and both Decisions bullets; re-render that extracted spec and diff the two HTML files to confirm the cycle is stable.</p>
+      <p>Author a scratch spec with three steps split across two <code class="md">### Phase:</code> headings and a <code class="md">## Decisions</code> section carrying two bullets. Render it with <code class="md">node scripts/build-plan-html.mjs &lt;spec&gt;.md -o &lt;spec&gt;.html</code> and confirm exit 0, two phase headers each preceding their own steps, a Decisions card, and a progress bar whose total reads 3. Run <code class="md">node scripts/extract-plan-spec.mjs &lt;spec&gt;.html</code> — the extractor ships only at the repo root, not in the plugin bundle — and confirm the printed spec carries both phase headings and both Decisions bullets; re-render that extracted spec and diff the two HTML files to confirm the cycle is stable.</p>
       <p>Then exercise the checkpoint loop for real: run <code class="md">/plan-agent:build &lt;spec&gt;.md</code> and confirm it implements only the first phase, appends a Decisions bullet, sets <code class="md">status: in-progress</code>, and stops with a resume command rather than continuing into phase two. Re-run the same command and confirm it resumes at the first unmarked step of phase two rather than redoing phase one. With phase two still unmarked, run <code class="md">/plan-agent:finalize-plan &lt;spec&gt;.md</code> and confirm it refuses to set <code class="md">status: completed</code> and names the unfinished phase in the Completion Report. Separately, add phase headings to a copy of an already in-progress committed plan whose early steps carry <code class="md">[x]</code> and confirm those markers still render as completed cards.</p>
       <p>Finally run the existing suite — <code class="md">node tests/plugins/test-build-plan-html.mjs</code>, <code class="md">node tests/plugins/test-extract-plan-spec.mjs</code>, and <code class="md">node tests/plugins/test-backfill-digest.mjs</code> — plus <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code>, and re-render one committed plan from <code class="md">docs/plans/</code> to confirm an unphased plan is untouched.</p>
     </section>
