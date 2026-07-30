@@ -1,5 +1,28 @@
 # Changelog — social-media-tools
 
+## v2.20.1 — 2026-07-30 — Fix share-selection's reuse check running under the wrong prefix
+
+### Fixed
+
+- **`share-selection` no longer looks up existing diff posts under the `snippet-`
+  prefix.** Phase 1c set `FILE_PREFIX` provisionally ("default `snippet`") and
+  only Phase 4 classified `CODE_RAW`, so for diff-like input the reuse lookup
+  scanned `snippet-*.html` while the post was saved as `diff-…` — the lookup
+  missed the existing diff post and the skill created a duplicate. Classification
+  now happens once, in Phase 1c before the lookup, and Phase 4 consumes the
+  already-set `CARD_TYPE` instead of re-deriving it. This matches the
+  precondition `references/reuse-check.md` has always stated ("after card type
+  and platform are known") and keeps the check ahead of the Phase 2 scrub gate
+  and the Phase 3 present-then-approve draft step, so a reusable post is still
+  offered before any of that work is spent.
+- `share-selection/references/card-population.md` gains a **Classify `CODE_RAW`**
+  section as the single source of the detection rule; its Phase 4 section now
+  only resolves paths.
+- `tests/plugins/test-skill-split-git-social.sh` check 7 asserts the ordering:
+  `FILE_PREFIX` must be bound before the reuse lookup, `CARD_TYPE` must be
+  established before it, and nothing may rebind the prefix between the lookup
+  and the save. It fails on the pre-fix ordering.
+
 ## v2.20.0 — 2026-07-30 — Split the three heaviest share skills into cores plus references
 
 ### Changed

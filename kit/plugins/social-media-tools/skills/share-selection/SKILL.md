@@ -16,7 +16,7 @@ user's objective. **Selection-driven** — it never scans git history; that is `
 |-------|--------|
 | 0 — Locate | Find `templates/`, derive `PLUGIN_DIR` |
 | 1 — Capture | Code + objective |
-| 1c — Reuse | Scan `docs/media/social/` |
+| 1c — Reuse | Classify card type, scan `docs/media/social/` |
 | 2 — Scrub | Run `security-scrub` |
 | 3 — Draft | Copy serving the objective |
 | 4 — Template | diff-card or snippet-card |
@@ -49,8 +49,10 @@ Guards — they decide whether anything renders:
 
 ## Phase 1c — Reuse Check
 
-Set `FILE_PREFIX` (`snippet` or `diff`, per Phase 4; default `snippet`), then read
-`$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
+Classify first, look up second — never a provisional prefix. Run **Classify `CODE_RAW`** in
+`references/card-population.md` to set `CARD_TYPE` and `FILE_PREFIX=$CARD_TYPE`, then read
+`$PLUGIN_DIR/references/reuse-check.md` and follow its procedure. Looking up a diff post under
+`snippet-` misses it and creates a duplicate.
 
 ## Phase 2 — Security Scrub
 
@@ -68,18 +70,14 @@ Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
 ## Phase 3 — Draft Copy
 
 Read `$PLUGIN_DIR/references/platforms.md` — limits, tone, Instructional Voice, Learn-More CTA,
-per-platform copy formats, standard procedure.
-
-**Takeaway-first**: every post must surface a concrete, applicable takeaway — a pattern,
-technique, or principle the reader can apply; the snippet is evidence for the
-lesson, not the headline. Draft copy **serving `OBJECTIVE`** within each platform's limit
-and tone, per `references/selection-sources.md`'s framings.
+the takeaway-first doctrine, per-platform copy formats, standard procedure. Draft copy
+**serving `OBJECTIVE`** within each platform's limit and tone, per
+`references/selection-sources.md`'s framings.
 
 ## Phase 4 — Pick Template
 
-Diff-like `CODE_RAW` → `diff-card.html` (`FILE_PREFIX=diff`), else `snippet-card.html`
-(`snippet`). Detection rules and `CARD_TYPE`/`TEMPLATE_FILE`/`TEMP_HTML`/`SLUG_INPUT` setup:
-`references/card-population.md`.
+`CARD_TYPE` is already set (Phase 1c) — do not reclassify. Resolve
+`TEMPLATE_FILE`/`TEMP_HTML`/`SLUG_INPUT` per `references/card-population.md`.
 
 ## Phase 5 — Populate Template
 
