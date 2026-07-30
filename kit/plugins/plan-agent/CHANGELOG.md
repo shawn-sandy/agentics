@@ -1,5 +1,36 @@
 # Changelog
 
+
+## 7.2.0 — process-reminder imperatives pruned behind recorded baselines (2026-07-30)
+
+### Changed
+
+- **`build` and `implementation-plan` shed process scaffolding a Claude 5
+  generation model infers from the surrounding step.** Removed: `build`'s Step 3
+  aside "Spec edits only (see the source-of-truth rule above)", now that the
+  `## Overview` source-of-truth paragraph carries it; `implementation-plan`'s
+  "Follow these steps exactly."; and Step 4 `Rename`'s restatement of the
+  kebab-case `verb-target` convention already given in Step 2's write
+  instruction. The rename triggers, the "stale filename is a plan defect" rule,
+  and the `validate-plan-filename` hook reference all stay.
+- Every safety, scope, and irreversibility guard was kept — including
+  `## Scope Constraint — Plans Only` in full, "This constraint is never lifted
+  here", and "Never resolve a gate by picking for the user".
+
+### Testing
+
+- **Behavior baselines were recorded, committed, and independently reproduced
+  *before* a single imperative was removed** (`ed6b854`). Both skills were run
+  headless against fixed scenario inputs and reduced to structural manifests —
+  files written, gates fired, refusals emitted, never prose wording. `build`
+  walks its spec, promotes `status:` to `completed`, and creates only the file
+  its plan names; `implementation-plan` writes a plan and leaves the source file
+  its objective names byte-identical, with zero writes outside the plans dir.
+  Both reproduced their manifests exactly after the prune.
+- New gates: `tests/plugins/test-imperative-pruning.sh` (CI-wired, structural)
+  and `tests/plugins/test-skill-behavior-baselines.sh` (local-only, exits 1
+  rather than skipping when the `claude` CLI is absent).
+
 ## 7.1.0 — the auto workflow heuristic opts in at 4 files across 2 directories (2026-07-30)
 
 ### Changed

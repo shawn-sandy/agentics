@@ -231,7 +231,7 @@ the re-render flips the card and chip).
 1. Read each criterion from the spec's `## Acceptance Criteria` bullets.
 2. Verify each one — run the relevant command or inspect the changed files.
 3. Flip a bullet to `- [x]` only after confirming it; flip back to `- [ ]` to
-   undo. Spec edits only (see the source-of-truth rule above).
+   undo.
 4. If any criterion cannot be verified, list the unverified items via
    `AskUserQuestion` ("Mark them as done anyway?" — `Yes, check them off` /
    `No, leave unchecked`). Criteria checked off this way are **not verified**:

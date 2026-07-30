@@ -1,5 +1,35 @@
 # Changelog — git-agent
 
+
+## v4.9.0 — 2026-07-30 — Prune ordering reminders, keep every irreversibility guard
+
+### Changed
+
+- **`ship-autonomous` drops "Steps 0–5 run in strict order."** The operative
+  half of that paragraph — Step 5 subscribing to PR events and ending the turn,
+  and Steps 6–8 being standing policy rather than a loop — is unchanged.
+- **`branch-agent` drops "Follow these steps in strict order. **STOP
+  immediately after step 6.**"** from its opening paragraph; the
+  `## Step 6: Confirm and STOP` block already states the same stopping rule,
+  and it survives verbatim.
+- Untouched, by classification: "Never merge on anything but green", the
+  branch-deletion approval guard, "Never dismiss a review on your own
+  initiative", "Do not retry. Do not force.", and the stale-ref and
+  no-further-action stops.
+
+### Testing
+
+- **Baselines recorded and reproduced before the prune** (`ed6b854`).
+  `branch-agent` was run headless against a fixed dirty tree that conflicts with
+  a checkout: it branches, and the stash/pop cycle returns every file with its
+  contents intact (`tracked.txt` still modified, the untracked scratch file
+  still present, `git stash list` empty) while adding no commit and never
+  reaching `gh`. `ship-autonomous` on a clean tree leaves `HEAD`, the branch,
+  and the working tree unchanged. Both reproduced their manifests after the
+  prune.
+- Guarded by `tests/plugins/test-imperative-pruning.sh`, now wired into
+  `check-plugin-versions.yml`.
+
 ## v4.8.0 — 2026-07-30 — Split the three heaviest skills into cores plus references
 
 ### Changed

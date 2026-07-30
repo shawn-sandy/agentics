@@ -82,12 +82,21 @@ run_claude() {
       >"$log" 2>&1 </dev/null
   ) &
   local pid=$!
+  # `>/dev/null` on the watchdog is load-bearing for wall-clock, not tidiness.
+  # Scenario output is consumed as `scenario_fn | sort`, so `sort` waits for EOF
+  # on that pipe. A watchdog inheriting stdout holds the write end open — and
+  # killing the subshell orphans its `sleep`, which keeps holding it. The result
+  # is that every run blocks for the full RUN_TIMEOUT no matter when the work
+  # actually finished, which is how a useful gate becomes one people switch off.
   (
     sleep "$RUN_TIMEOUT"
     kill -TERM "$pid" 2>/dev/null || true
-  ) </dev/null &
+  ) >/dev/null 2>&1 </dev/null &
   local watchdog=$!
   wait "$pid" || rc=$?
+  # Kill the sleep itself, not just its subshell: an orphaned sleep survives a
+  # TERM to the parent and would keep the watchdog alive for the full timeout.
+  pkill -P "$watchdog" 2>/dev/null || true
   kill "$watchdog" 2>/dev/null || true
   wait "$watchdog" 2>/dev/null || true
   return "$rc"

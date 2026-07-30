@@ -15,8 +15,6 @@ write-heavy workflow versus a read-only advisory tool.
 The ≤200 total and ≤80 first-sentence limits are budget targets, not platform
 limits; `references/budget-advisory.md` explains where they come from.
 
-Follow these steps exactly.
-
 ## When not to use
 
 Does not review overall SKILL.md quality — use reviewing-skills for that. Does not change `allowed-tools` values — use auditing-allowed-tools for that. This skill only touches `description:` and `disable-model-invocation`.

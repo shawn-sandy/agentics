@@ -1,5 +1,28 @@
 # Changelog
 
+
+## v2.4.0 — 2026-07-30 — Drop "Follow these steps exactly" from `optimizing-skill-frontmatter`
+
+### Changed
+
+- **`optimizing-skill-frontmatter` drops its "Follow these steps exactly."
+  line.** The numbered `## Step N` headings already impose the order, and this
+  skill is the rubric other skills are measured against — it should not model a
+  process reminder it would flag elsewhere.
+- **`**Never write `disable-model-invocation: false`.**` is untouched**, as is
+  the rest of Step 4b. This skill rewrites other skills' frontmatter, so a
+  dropped prohibition would propagate a defect into every file it touches.
+
+### Testing
+
+- **Baseline recorded and reproduced before the prune** (`ed6b854`). The skill
+  was run headless against a fixture SKILL.md with a deliberately over-budget,
+  trigger-less description and no `disable-model-invocation` line; the recorded
+  manifest asserts it never writes the forbidden `false` value and never
+  destroys the file it is editing. It reproduced exactly after the prune.
+- Guarded by `tests/plugins/test-imperative-pruning.sh`, now wired into
+  `check-plugin-versions.yml`.
+
 ## v2.3.0 — 2026-07-29 — Split `optimizing-skill-frontmatter` into a core plus references
 
 ### Changed
