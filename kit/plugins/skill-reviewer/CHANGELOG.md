@@ -5,7 +5,7 @@
 ### Changed
 
 - **`optimizing-skill-frontmatter` is now a 579-word core plus four reference
-  files, down from 3,058 words in a single body.** A SKILL.md body is paid in full
+  files, down from 3,131 words in a single body.** A SKILL.md body is paid in full
   every time the skill fires, and this was the largest monolithic skill in the
   repo — while also being the rubric every other skill is measured against, so it
   was violating the progressive-disclosure advice it teaches.

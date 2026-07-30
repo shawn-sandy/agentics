@@ -5,7 +5,7 @@
 ### Changed
 
 - **`artifact-to-post` is now a 571-word core plus two new plugin-level
-  references, down from 1,367 words in a single body.** They sit beside the
+  references, down from 1,408 words in a single body.** They sit beside the
   existing `content-config.md` and `mdx-safety.md`, matching this plugin's
   established `$SKILL_DIR/../../references/` convention rather than adding a
   second per-skill one.

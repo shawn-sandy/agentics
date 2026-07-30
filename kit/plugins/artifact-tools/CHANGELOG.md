@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **`diff-artifact` and `prompt-artifact` are now 566- and 583-word cores plus
-  six new plugin-level references, down from 1,489 and 1,831 words in single
+  six new plugin-level references, down from 1,527 and 1,867 words in single
   bodies.** They sit beside the existing `titles.md`, matching this plugin's
   `${CLAUDE_PLUGIN_ROOT}/references/` convention.
   - `references/diff-sources.md` — mode table, default-branch resolution, and the
