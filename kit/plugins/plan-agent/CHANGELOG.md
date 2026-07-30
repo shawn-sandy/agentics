@@ -1,5 +1,41 @@
 # Changelog
 
+## 7.0.0 — enumerated frontmatter is validated, and the verify gate stops repeating the harness (2026-07-29)
+
+Applies two rules from Anthropic's "The new rules of context engineering for
+Claude 5 generation models" to the renderer: design the interface rather than
+absorb bad input (Rule 2), and stop saying the same thing in two layers
+(Rule 4).
+
+### Breaking
+
+- **Unrecognized values for `status`, `type`, `effort`, and `workflow` now
+  fail the render.** They used to fall back silently, so a near-miss rendered
+  as something the author did not write: `status: complete` rendered as
+  `todo`, `workflow: yes` meant "no workflow", and `type:` accepted any string
+  at all and carried it into the gallery as a filter chip. The renderer now
+  exits 1 naming the key and the accepted set. Two specs in this repo were
+  already off-enum (`type: standard`, `type: enhancement`) and are corrected
+  to `feature`. A consumer with off-enum frontmatter must fix it before their
+  plans will render — hence the major bump, even though every rejected value
+  was already producing a wrong plan.
+- **`workflow` gains `auto`/`always`/`never`.** `auto` names the heuristic —
+  previously the unnamed state you got by omitting the key, which is what made
+  `workflow: yes` degrade without a diagnostic. `true`/`false` remain accepted
+  as the pre-7.0 spelling of `always`/`never`, so committed specs keep
+  rendering unchanged.
+
+### Changed
+
+- **The verification gate dropped from 65 words to 29.** It was 60–72% of
+  every generated prompt and appeared six times in each rendered plan. Two of
+  its clauses earned removal outright: the `[x]` tick mechanics and status
+  literals were micro-specification of syntax already visible in the spec the
+  agent has open, and *"re-render the HTML from the spec"* instructed work the
+  harness already does — `hooks.json` runs `render-plan-html.py` on every
+  PostToolUse write to a plan spec. The gate still names what to check and
+  what to record; a test asserts it never regrows the re-render clause.
+
 ## 6.1.0 — the goal prompt licenses fan-out when the plan is big enough to warrant it (2026-07-29)
 
 ### Changed

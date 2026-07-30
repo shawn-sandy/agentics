@@ -1,6 +1,6 @@
 ---
 status: todo
-type: standard
+type: feature
 created: 2026-05-13
 ---
 

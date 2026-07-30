@@ -11,9 +11,9 @@
 <meta name="plan-file" content="add-content-tools-plugin.html">
 <meta name="plan-path" content="docs/plans/add-content-tools-plugin.html">
 <meta name="plan-md" content="docs/plans/add-content-tools-plugin.md">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Then verify before reporting done: run the objective test&#39;s Run command from the plan&#39;s Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in docs/plans/add-content-tools-plugin.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.">
-<meta name="plan-goal" content="Achieve this goal: Create the content-tools plugin with an artifact-to-post skill. The plan at docs/plans/add-content-tools-plugin.md describes one approach — use it as reference, but optimize for the outcome. Then verify before reporting done: run the objective test&#39;s Run command from the plan&#39;s Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in docs/plans/add-content-tools-plugin.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Brief subagents with the plan file at docs/plans/add-content-tools-plugin.md. Reserve a final verification phase for the lead agent, not a subagent. Then verify before reporting done: run the objective test&#39;s Run command from the plan&#39;s Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in docs/plans/add-content-tools-plugin.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in docs/plans/add-content-tools-plugin.md — completed only if everything passed, otherwise which check failed.">
+<meta name="plan-goal" content="Achieve this goal: Create the content-tools plugin with an artifact-to-post skill. The plan at docs/plans/add-content-tools-plugin.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in docs/plans/add-content-tools-plugin.md — completed only if everything passed, otherwise which check failed.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Brief subagents with the plan file at docs/plans/add-content-tools-plugin.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in docs/plans/add-content-tools-plugin.md — completed only if everything passed, otherwise which check failed.">
 <title>Plan: Create the content-tools plugin with an artifact-to-post skill</title>
 <style>
 /* ── Design tokens ─────────────────────────────────────────────── */
@@ -1308,7 +1308,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">in-progress</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1353,7 +1353,7 @@ img, video { max-width: 100%; height: auto; }
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Then verify before reporting done: run the objective test&#39;s Run command from the plan&#39;s Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in docs/plans/add-content-tools-plugin.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in docs/plans/add-content-tools-plugin.md — completed only if everything passed, otherwise which check failed.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1363,9 +1363,9 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-more-ways-body">
 
         <div class="plan-goal">
-          <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
           <div class="plan-goal-inner">
-            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Create the content-tools plugin with an artifact-to-post skill. The plan at docs/plans/add-content-tools-plugin.md describes one approach — use it as reference, but optimize for the outcome. Then verify before reporting done: run the objective test&#39;s Run command from the plan&#39;s Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in docs/plans/add-content-tools-plugin.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.</code>
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Create the content-tools plugin with an artifact-to-post skill. The plan at docs/plans/add-content-tools-plugin.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in docs/plans/add-content-tools-plugin.md — completed only if everything passed, otherwise which check failed.</code>
             <button class="copy-goal-btn" type="button"
                     onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
           </div>
@@ -1374,7 +1374,7 @@ img, video { max-width: 100%; height: auto; }
         <div class="plan-workflow">
           <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
           <div class="plan-workflow-inner">
-            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Brief subagents with the plan file at docs/plans/add-content-tools-plugin.md. Reserve a final verification phase for the lead agent, not a subagent. Then verify before reporting done: run the objective test&#39;s Run command from the plan&#39;s Tests section, walk the Verification section, and confirm every acceptance criterion holds. Only once all checks pass, mark completion in docs/plans/add-content-tools-plugin.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check fails, leave status: in-progress and report exactly which check failed.</code>
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-content-tools-plugin.md — Create the content-tools plugin with an artifact-to-post skill. Brief subagents with the plan file at docs/plans/add-content-tools-plugin.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in docs/plans/add-content-tools-plugin.md — completed only if everything passed, otherwise which check failed.</code>
             <button class="copy-workflow-btn" type="button"
                     onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
           </div>
@@ -1407,12 +1407,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 14 done</span>
+        <span id="progress-label">13 / 14 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="93" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:93%"></div>
       </div>
     </div>
 

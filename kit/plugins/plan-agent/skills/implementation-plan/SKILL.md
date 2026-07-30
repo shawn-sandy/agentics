@@ -86,7 +86,7 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
 
 Flags: `--quick` (= `--no-clarify --no-align --no-interview`),
 `--no-clarify`, `--no-align`, `--no-interview`, `--workflow` (always
-generate the workflow prompt: set `workflow: true` in the spec
+generate the workflow prompt: set `workflow: always` in the spec
 frontmatter), `--type <kind>`, `--template <name>` (`default` only;
 variants ship later as renderer style shells), `--dir <path>`,
 `--priority <level>` (written as a `priority:` frontmatter key; preserved
@@ -134,13 +134,18 @@ Echo the resolved objective and effective flags after Step 0.
 `build-plan-html.mjs` computes everything derivable from the spec:
 
 - **Verification gate (shared by all three prompts)** — every generated
-  prompt ends with the same tail: run the objective test's **Run** command,
-  walk the Verification section, confirm every acceptance criterion, then
-  mark completion in the spec (`[x]` step markers, `- [x]` criteria,
-  `status: completed`) and re-render. A failed check leaves
-  `status: in-progress` and names the failing check. A prompt that says
-  "implement this" without the gate lets an agent report done on a plan
-  still marked `todo` — never emit one.
+  prompt ends with the same tail: verify against the plan's Tests,
+  Verification, and Acceptance Criteria, then record the outcome in the spec
+  — completed only if everything passed, otherwise which check failed. A
+  prompt that says "implement this" without the gate lets an agent report
+  done on a plan still marked `todo` — never emit one.
+
+  The tail names *what to check and what to record*, not the keystrokes. It
+  does not spell out the `[x]` tick syntax or the status literals, which are
+  visible in the spec the agent already has open, and it does not ask for a
+  re-render: `hooks.json` runs `render-plan-html.py` on every PostToolUse
+  write to a plan spec, so an instruction to re-render would be the same
+  instruction living in two layers. Do not grow those back.
 - **Implement prompt** —
   `Read and implement all steps in the plan at <filepath> — <objective>.`
   plus the verification gate, rendered as the single visible call-to-action
@@ -172,11 +177,13 @@ Echo the resolved objective and effective flags after Step 0.
   verification gate (same
   spec `<filepath>` — every subagent briefed with the compact spec). Emitted
   (row + `plan-workflow` meta tag) only when frontmatter says
-  `workflow: true` or the heuristic fires (5+ files across 3+ top-level
-  directories). `workflow: false` suppresses it. For the other workflow
-  triggers — repetitive per-file changes, independent parallel steps,
-  cross-checking review — set `workflow: true` yourself (see
-  `right-sizing.md`).
+  `workflow: always`, or when `workflow: auto` (the default when the key is
+  absent) fires the heuristic — 5+ files across 3+ top-level directories.
+  `workflow: never` suppresses it. For the other workflow triggers —
+  repetitive per-file changes, independent parallel steps, cross-checking
+  review — set `workflow: always` yourself (see `right-sizing.md`).
+  `true`/`false` remain accepted as the pre-7.0 spelling of
+  `always`/`never`; any other value is a spec error, not a fallback.
 - **Next Steps cards** — an optional `## Next Steps` spec section renders as
   collapsible follow-up cards with Copy-prompt buttons (bullet = card;
   fenced block in the bullet = paste-ready prompt). See
@@ -284,6 +291,17 @@ EOF
    `effort:`, `workflow:`. `repo` may be omitted: the renderer resolves the
    `origin` remote basename and falls back to the cwd basename. See the
    catalog's frontmatter table for the full key list.
+
+   The enumerated keys accept exactly these values — anything else fails the
+   render with a message naming the key and the valid set, rather than
+   quietly rendering something you did not write:
+
+   | key | values | default when absent |
+   |---|---|---|
+   | `status` | `todo`, `in-progress`, `completed` | `todo` |
+   | `type` | `feature`, `fix`, `refactor`, `docs`, `chore` | `feature` |
+   | `effort` | `low`, `medium`, `high` | derived from step and file counts |
+   | `workflow` | `auto`, `always`, `never` (`true`/`false` accepted as the pre-7.0 spelling of `always`/`never`) | `auto` |
 
 4. **Rename** — **Always** ensure the filename follows the `verb-target`
    kebab-case convention before rendering. Rename when (a) the initial name
@@ -405,7 +423,7 @@ EOF
    issue URL in one line instead.
 
    For the next-step question, **when a workflow prompt was generated**
-   (frontmatter `workflow: true` or the renderer's heuristic fired — check
+   (frontmatter `workflow: always` or the renderer's heuristic fired — check
    for the `plan-workflow` meta tag in the rendered HTML), include the
    workflow option:
    - Question: "The plan is complete. What would you like to do next?"

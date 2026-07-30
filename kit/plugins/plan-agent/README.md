@@ -99,7 +99,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 | `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
 | `--priority <level>` | Write `priority` to plan HTML metadata (`low`, `medium`, `high`, `critical`) |
-| `--workflow` | Always generate a workflow prompt, bypassing the complexity heuristic |
+| `--workflow` | Always generate a workflow prompt, bypassing the complexity heuristic (writes `workflow: always`) |
 
 **Examples with flags:**
 

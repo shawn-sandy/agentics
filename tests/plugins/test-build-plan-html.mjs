@@ -171,6 +171,73 @@ ok('parseSpecMarkdown raises ParseError on missing required sections', () => {
   assert.throws(() => parseSpecMarkdown('no title here'), ParseError);
 });
 
+ok('enumerated frontmatter rejects near-misses instead of falling back', () => {
+  // Each of these used to render as something the author did not write:
+  // status: complete became todo, workflow: yes meant "no workflow", and
+  // type: took any string at all and reached the gallery as a filter chip.
+  const cases = [
+    ['status', 'complete'], ['status', 'done'], ['status', 'Completed'],
+    ['type', 'enhancement'], ['type', 'bogus'],
+    ['effort', 'huge'],
+    ['workflow', 'yes'], ['workflow', 'TRUE'],
+  ];
+  for (const [key, value] of cases) {
+    const parsed = parseSpecMarkdown(SAMPLE_SPEC);
+    parsed.metadata[key] = value;
+    assert.throws(
+      () => renderPlanHtml(parsed, { fileName: 's.html', planPath: 's.html' }),
+      (err) => err instanceof ParseError && err.message.includes(key) && err.message.includes(value),
+      `${key}: ${value} must be rejected, not silently corrected`
+    );
+  }
+});
+
+ok('enumerated frontmatter accepts every documented value, and absent keys default', () => {
+  const accept = [
+    ['status', 'todo'], ['status', 'in-progress'], ['status', 'completed'],
+    ['type', 'feature'], ['type', 'fix'], ['type', 'refactor'], ['type', 'docs'], ['type', 'chore'],
+    ['effort', 'low'], ['effort', 'medium'], ['effort', 'high'],
+    // auto names the heuristic; true/false are the pre-7.0 spelling of
+    // always/never and must keep rendering committed specs.
+    ['workflow', 'auto'], ['workflow', 'always'], ['workflow', 'never'],
+    ['workflow', 'true'], ['workflow', 'false'],
+  ];
+  for (const [key, value] of accept) {
+    const parsed = parseSpecMarkdown(SAMPLE_SPEC);
+    parsed.metadata[key] = value;
+    assert.doesNotThrow(
+      () => renderPlanHtml(parsed, { fileName: 's.html', planPath: 's.html' }),
+      `${key}: ${value} is documented and must render`
+    );
+  }
+  // An omitted key is not a near-miss — it takes the documented default.
+  const bare = parseSpecMarkdown(SAMPLE_SPEC);
+  for (const key of ['status', 'type', 'effort', 'workflow']) delete bare.metadata[key];
+  const html = renderPlanHtml(bare, { fileName: 's.html', planPath: 's.html' });
+  assert.ok(html.includes('data-status="todo"'), 'absent status defaults to todo');
+  assert.ok(html.includes('<meta name="plan-type" content="feature">'), 'absent type defaults to feature');
+});
+
+ok('workflow always/never override the file-count heuristic in both directions', () => {
+  const wide = SAMPLE_SPEC.replace(
+    /## Files[\s\S]*?## Steps/,
+    '## Files\n- a/one.mjs (new)\n- b/two.mjs (new)\n- c/three.mjs (new)\n- d/four.mjs (new)\n- e/five.mjs (new)\n\n## Steps'
+  );
+  const render = (spec, workflow) => {
+    const parsed = parseSpecMarkdown(spec);
+    if (workflow) parsed.metadata.workflow = workflow;
+    return renderPlanHtml(parsed, { fileName: 'w.html', planPath: 'w.html' });
+  };
+  // never suppresses a spec the heuristic would have opted in.
+  assert.ok(!render(wide, 'never').includes('id="workflow-cmd"'), 'never suppresses the heuristic');
+  assert.ok(!render(wide, 'never').includes('Fan out across parallel subagents'), 'never suppresses the fan-out license');
+  // always opts in a spec too small for the heuristic.
+  assert.ok(render(SAMPLE_SPEC, 'always').includes('id="workflow-cmd"'), 'always overrides a small spec');
+  assert.ok(render(SAMPLE_SPEC, 'always').includes('Fan out across parallel subagents'), 'always licenses fan-out');
+  // auto and an absent key agree.
+  assert.equal(render(wide, 'auto'), render(wide, null), 'auto is the same as omitting the key');
+});
+
 ok('parseSpecMarkdown ignores headings inside fenced code blocks', () => {
   const fencedSpec = SAMPLE_SPEC.replace(
     'First paragraph of context.',
@@ -218,14 +285,17 @@ ok('derived effort follows the skill thresholds', () => {
 });
 
 ok('implement and goal meta tags reference the markdown spec path, not the HTML', () => {
+  // Pin the spec path and each prompt's distinguishing lead-in, not the whole
+  // string — the verify gate's wording is tuned between releases and an
+  // assertion that spans it fails on copy edits that change no behaviour.
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature. Then verify before reporting done:'
+      '<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/sample.md — Ship a sample feature.'
     )
   );
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome. Then verify before reporting done:'
+      '<meta name="plan-goal" content="Achieve this goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome.'
     )
   );
   assert.ok(sampleHtml.includes('<meta name="plan-md" content="docs/plans/sample.md">'), 'plan-md meta carries the spec path');
@@ -262,11 +332,16 @@ ok('every prompt carries the verify-then-mark-completed gate', () => {
     return m[1];
   });
   for (const p of prompts) {
-    assert.match(p, /run the objective test&#39;s Run command/, 'names the runnable check');
-    assert.match(p, /walk the Verification section/, 'names end-to-end verification');
-    assert.match(p, /confirm every acceptance criterion holds/, 'names the criteria check');
-    assert.match(p, /set status: completed/, 'marks the plan completed');
-    assert.match(p, /leave status: in-progress/, 'has a failure path that does not mark done');
+    assert.match(p, /\bTests\b/, 'names the runnable checks');
+    assert.match(p, /\bVerification\b/, 'names end-to-end verification');
+    assert.match(p, /\bAcceptance Criteria\b/, 'names the criteria check');
+    assert.match(p, /\bw\.md\b/, 'says where the outcome gets recorded');
+    assert.match(p, /\bcompleted\b/, 'has a success state');
+    assert.match(p, /\bfailed\b/, 'has a failure path that does not mark done');
+    // hooks.json runs render-plan-html.py on every PostToolUse write to a
+    // plan spec, so a prompt that also orders a re-render is the same
+    // instruction in two layers — the duplication this gate must not regrow.
+    assert.doesNotMatch(p, /re-render the HTML/, 'does not re-instruct work the render hook already does');
   }
 });
 
@@ -585,7 +660,15 @@ ok('a spec with no prototype: key renders byte-identically to the pre-change ren
     };
     const before = render(join(proj, 'scripts', 'build-plan-html.mjs'), 'before');
     const after = render(RENDERER, 'after');
-    assert.equal(after, before, 'output drifted for a spec that carries no prototype: key');
+    // Prompt copy is deliberately retuned between releases; this guard is
+    // about the prototype feature not leaking into specs that never asked for
+    // it. Blank the three prompt payloads on both sides so the comparison
+    // covers structure and every other rendered section, not wording.
+    const stripPrompts = (html) => html
+      .replace(/(<meta name="plan-(?:implement|goal|workflow)" content=")[^"]*"/g, '$1"')
+      .replace(/(<code id="(?:implement|goal|workflow)-cmd"[^>]*>)[\s\S]*?<\/code>/g, '$1</code>');
+    assert.ok(/<meta name="plan-implement" content="[^"]+"/.test(after), 'prompt payloads are non-empty before blanking');
+    assert.equal(stripPrompts(after), stripPrompts(before), 'output drifted for a spec that carries no prototype: key');
   } catch (err) {
     // A shallow clone, a missing base ref, or no git at all is an environment
     // gap, not a regression — skip loudly rather than failing the suite.
