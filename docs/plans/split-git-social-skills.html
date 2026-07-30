@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="in-progress" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="in-progress">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-07-27">
@@ -1308,7 +1308,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">in-progress</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1407,12 +1407,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 14 done</span>
+        <span id="progress-label">14 / 14 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1689,59 +1689,59 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">`wc -w` reports under 600 words for each of the six SKILL.md files, down from 2448 / 1863 / 1515 / 1414 / 1284 / 1234.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Each of the six skill directories contains a `references/` directory holding at least one `.md` file.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Every ``references/&lt;name&gt;.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">`git diff main -- &#39;**/SKILL.md&#39; | grep &#39;^[-+]description:&#39;` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">`grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">`grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">`bash tests/plugins/test-skill-split-git-social.sh` exits 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">`bash tests/plugins/test-ship-self-review.sh` exits 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">`bash tests/plugins/test-description-budget.sh` exits 0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">`.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12">`kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac13">
+          <input type="checkbox" id="ac13" checked>
           <label for="ac13">`git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
+          <input type="checkbox" id="ac14" checked>
           <label for="ac14">`grep -c &#39;PLUGIN_DIR/references/&#39; kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.</label>
         </li>
       </ul>
@@ -1776,7 +1776,7 @@ img, video { max-width: 100%; height: auto; }
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>

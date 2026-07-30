@@ -1,5 +1,49 @@
 # Changelog — git-agent
 
+## v4.8.0 — 2026-07-30 — Split the three heaviest skills into cores plus references
+
+### Changed
+
+- **`ship-autonomous` 2,406 → 595 words**, **`branch-agent` 1,476 → 582**, and
+  **`ship` 1,191 → 599** — 5,073 words down to 1,776. A SKILL.md body has no
+  partial load: the moment a skill triggers, its whole body is paid. These three
+  now ship a small always-loaded core plus skill-local `references/*.md` files
+  the model opens only at the step that needs them, matching the layout
+  `create-issue` already used.
+- New reference files: `ship-autonomous/references/{preflight-and-verify,pr-events,ci-autofix,merge-gate}.md`,
+  `branch-agent/references/{branch-naming,stash-and-recovery}.md`, and
+  `ship/references/{platform-clis,self-review,pr-body}.md`.
+- No frontmatter changed. All three `description:` lines are byte-identical to
+  v4.7.1 — the description is the only trigger surface, so a reworded one would
+  silently change when the skill fires.
+
+### Why the guards stayed in the core
+
+These three skills rewrite refs, push to remotes, and end in an irreversible
+squash merge; `ship-autonomous` alone carries 22 negative imperatives. A guard
+relocated into a reference file the model never opens is a guard that no longer
+exists, and its absence is invisible until the day it should have fired. So only
+commands and tables moved out — the CI classification table, the
+`gh api graphql` review-thread query, the branch-name type-inference table, the
+stash-pop recovery script. Every hard stop stayed in the always-loaded body,
+including `do not commit a red tree`, `Do not use --no-verify`,
+`Cap autofix at 3 attempts per failing check`, `Never merge on anything but
+green`, `--match-head-commit`, and `Branch deletion requires its own explicit
+approval`. `ship-autonomous` now leads with a `## Guardrails` block because
+inline guard prose alone would not fit under the ceiling.
+
+`tests/plugins/test-skill-split-git-social.sh` (new, wired into
+`.github/workflows/check-plugin-versions.yml`) fails if any core creeps back
+over 600 words, loses a guard phrase, drifts a description, or leaves a
+reference link dangling in either direction.
+
+- **`tests/plugins/test-ship-self-review.sh` retargeted** — Step 4.5's four
+  regression checks, the amend procedure, and the loop bound now live in
+  `ship/references/self-review.md`, so checks 5-7 read that file while the
+  policy checks (default-on, `--no-review`, never blocks the ship, Step 7 base
+  reuse) still read the core. A new check asserts SKILL.md actually links the
+  reference — a reference nothing links to never loads.
+
 ## v4.7.1 — 2026-07-28 — Collapse the plan-mode guard to one line
 
 ### Changed

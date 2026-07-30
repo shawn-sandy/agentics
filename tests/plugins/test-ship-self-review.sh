@@ -3,6 +3,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SKILL="$ROOT/kit/plugins/git-agent/skills/ship/SKILL.md"
+# Step 4.5's procedure detail lives in a reference file since git-agent v4.8.0 —
+# the SKILL.md body is paid in full on every trigger, so the checklist a
+# reviewer walks once moved out while the POLICY stayed in the core. The split
+# is why checks 5-7 read this file and checks 2-4/8-10 still read SKILL.md:
+# where the contract lives may change, that it exists somewhere reachable from
+# the core may not. Check 6.5 asserts the reachability.
+SELF_REVIEW="$ROOT/kit/plugins/git-agent/skills/ship/references/self-review.md"
 FAILURES=0
 
 echo "=== ship Self-Review Smoke Test ==="
@@ -43,29 +50,37 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "5. All four regression checks are present..."
+echo "4.5. SKILL.md links the self-review reference (a reference nothing links to never loads)..."
+if grep -q "references/self-review.md" "$SKILL" && [ -f "$SELF_REVIEW" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: SKILL.md must link references/self-review.md, and that file must exist"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "5. All four regression checks are present (in references/self-review.md)..."
 for term in "accessibility" "escaping" "truncation" "Responsive"; do
-  if grep -A30 "^## Step 4.5:" "$SKILL" | grep -qi "$term"; then
+  if [ -f "$SELF_REVIEW" ] && grep -qi "$term" "$SELF_REVIEW"; then
     echo "  PASS ($term)"
   else
-    echo "  FAIL: check '$term' missing from Step 4.5"
+    echo "  FAIL: check '$term' missing from references/self-review.md"
     FAILURES=$((FAILURES + 1))
   fi
 done
 
-echo "6. Fixes fold into the Step 4 commit via amend..."
-if grep -A45 "^## Step 4.5:" "$SKILL" | grep -q "commit --amend --no-edit"; then
+echo "6. Fixes fold into the Step 4 commit via amend (in references/self-review.md)..."
+if [ -f "$SELF_REVIEW" ] && grep -q "commit --amend --no-edit" "$SELF_REVIEW"; then
   echo "  PASS"
 else
-  echo "  FAIL: 'git commit --amend --no-edit' not found in Step 4.5"
+  echo "  FAIL: 'git commit --amend --no-edit' not found in references/self-review.md"
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "7. Re-check is bounded (no unbounded loop)..."
-if grep -A45 "^## Step 4.5:" "$SKILL" | grep -q "Do not loop a third time"; then
+echo "7. Re-check is bounded (no unbounded loop) (in references/self-review.md)..."
+if [ -f "$SELF_REVIEW" ] && grep -q "Do not loop a third time" "$SELF_REVIEW"; then
   echo "  PASS"
 else
-  echo "  FAIL: no loop bound stated in Step 4.5"
+  echo "  FAIL: no loop bound stated in references/self-review.md"
   FAILURES=$((FAILURES + 1))
 fi
 

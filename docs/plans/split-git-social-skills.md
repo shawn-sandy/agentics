@@ -1,7 +1,8 @@
 ---
-status: todo
+status: in-progress
 type: refactor
 created: 2026-07-27
+modified: 2026-07-30
 effort: high
 glance: Six single-file skills across git-agent and social-media-tools bill 9,758 words of context every time one of them fires, and three of them are the skills that rewrite git history and push to remotes. We will know it worked when every one of the six loads a core under 600 words, each safety guard is still greppable in that core, and the skills still branch, ship, and publish cards end to end.
 workflow: true
@@ -92,20 +93,20 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] `wc -w` reports under 600 words for each of the six SKILL.md files, down from 2448 / 1863 / 1515 / 1414 / 1284 / 1234.
-- [ ] Each of the six skill directories contains a `references/` directory holding at least one `.md` file.
-- [ ] Every ``references/<name>.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.
-- [ ] `git diff main -- '**/SKILL.md' | grep '^[-+]description:'` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.
-- [ ] `grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.
-- [ ] `grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.
-- [ ] `bash tests/plugins/test-skill-split-git-social.sh` exits 0.
-- [ ] `bash tests/plugins/test-ship-self-review.sh` exits 0.
-- [ ] `bash tests/plugins/test-description-budget.sh` exits 0.
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.
-- [ ] `.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.
-- [ ] `kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.
-- [ ] `git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.
-- [ ] `grep -c 'PLUGIN_DIR/references/' kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.
+- [x] `wc -w` reports under 600 words for each of the six SKILL.md files, down from 2448 / 1863 / 1515 / 1414 / 1284 / 1234.
+- [x] Each of the six skill directories contains a `references/` directory holding at least one `.md` file.
+- [x] Every ``references/<name>.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.
+- [x] `git diff main -- '**/SKILL.md' | grep '^[-+]description:'` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.
+- [x] `grep` finds `Never merge on anything but green`, `--match-head-commit`, `--delete-branch`, `Cap autofix at`, `no-verify`, and `do not commit a red tree` in `ship-autonomous/SKILL.md` itself, not only in its references.
+- [x] `grep` finds `Cannot ship from the default branch` and `no-verify` in `ship/SKILL.md`, and `no-track`, `Do not retry. Do not force`, and `detached HEAD` in `branch-agent/SKILL.md`.
+- [x] `bash tests/plugins/test-skill-split-git-social.sh` exits 0.
+- [x] `bash tests/plugins/test-ship-self-review.sh` exits 0.
+- [x] `bash tests/plugins/test-description-budget.sh` exits 0.
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.8.0 and social-media-tools at 2.20.0.
+- [x] `.github/workflows/check-plugin-versions.yml` contains a step invoking `tests/plugins/test-skill-split-git-social.sh`.
+- [x] `kit/plugins/git-agent/CHANGELOG.md` has a `## v4.8.0` entry and `kit/plugins/social-media-tools/CHANGELOG.md` has a `## v2.20.0` entry, each naming the skills split.
+- [x] `git diff --name-status main -- kit/plugins/social-media-tools/references/ kit/plugins/git-agent/references/` returns nothing, and `ls kit/plugins/social-media-tools/references/` still lists exactly the same eight files as `main` — the plugin-level reference set is unchanged.
+- [x] `grep -c 'PLUGIN_DIR/references/' kit/plugins/social-media-tools/skills/{share-explanation,share-session,share-selection}/SKILL.md` returns 7, 8, and 11 — unchanged from `main`.
 
 ## Verification
 

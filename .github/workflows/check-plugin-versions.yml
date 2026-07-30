@@ -43,6 +43,14 @@ jobs:
       # Nothing else exercises it, so this is its only regression gate.
       - name: Test gallery index merge driver
         run: bash tests/plugins/test-merge-gallery-index.sh
+      # These six skills carry the repo's irreversible git operations — ship,
+      # ship-autonomous, and branch-agent rewrite refs, push to remotes, and end
+      # in a squash merge — so their guards are checked at review time by reading
+      # the SKILL.md core. A guard that drifts behind a reference link is a guard
+      # that may never load, and its absence is invisible until the day it should
+      # have fired. This step is the only thing that keeps it in the core.
+      - name: Test the git-agent and social-media-tools cores stay split
+        run: bash tests/plugins/test-skill-split-git-social.sh
       # A SKILL.md body is paid in full every time the skill fires, so a core
       # that creeps back over the ceiling — or a reference link that stops
       # resolving, or a scrub gate that drifts behind one — costs context or
