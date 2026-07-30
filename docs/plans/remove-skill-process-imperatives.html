@@ -1625,7 +1625,7 @@ img, video { max-width: 100%; height: auto; }
               <div class="step-why">any edit under <code class="md">kit/plugins/&lt;name&gt;/</code> requires a version higher than <code class="md">main</code>, and the changelog is where a future reader learns the baselines exist.</div>
               <details class="step-verify-toggle">
                 <summary>How to check this worked</summary>
-                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and each of the three CHANGELOG.md files contains its new version heading.</div>
+                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and each of the three CHANGELOG.md files contains its new version heading. <strong class="md">Shipped as plan-agent 7.2.0, git-agent 4.9.0, skill-reviewer 2.4.0</strong> — the targets named above were already met or exceeded on <code class="md">main</code> by the time this ran, so bumping to them would have been a regression; see the Completion Report. The step text is left as originally specified so the deviation stays visible rather than being edited out of the record.</div>
               </details>
             </div>
           </div>
