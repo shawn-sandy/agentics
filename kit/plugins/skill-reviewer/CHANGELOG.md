@@ -9,9 +9,9 @@
   line.** The numbered `## Step N` headings already impose the order, and this
   skill is the rubric other skills are measured against — it should not model a
   process reminder it would flag elsewhere.
-- **`**Never write `disable-model-invocation: false`.**` is untouched**, as is
-  the rest of Step 4b. This skill rewrites other skills' frontmatter, so a
-  dropped prohibition would propagate a defect into every file it touches.
+- **The `disable-model-invocation: false` prohibition is untouched**, as is the
+  rest of Step 4b. This skill rewrites other skills' frontmatter, so a dropped
+  prohibition would propagate a defect into every file it touches.
 
 ### Testing
 

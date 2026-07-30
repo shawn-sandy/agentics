@@ -257,8 +257,14 @@ scenario_branch_agent() {
 }
 
 # --- Scenario 4: git-agent:ship-autonomous ----------------------------------
-# Clean tree: the pre-flight guard must stop the pipeline before it reaches any
-# remote operation. This scenario never gets near the merge gate by design.
+# Clean tree, so the pre-flight "Nothing to ship" guard fires and the pipeline
+# never reaches the merge gate.
+#
+# The recorded invariant is that no repository or remote state changes: HEAD,
+# the branch, and the working tree are untouched, and no state-changing `gh`
+# command is attempted. It is deliberately NOT "gh was never called" — the
+# pre-flight also runs `gh auth status`, a read, and pinning that would freeze
+# an incidental check ordering into the baseline rather than the guard itself.
 scenario_ship_autonomous() {
   local sb="$SANDBOX_ROOT/ship/sandbox"
   bash "$SCENARIOS/dirty-tree.sh" "$sb" >/dev/null

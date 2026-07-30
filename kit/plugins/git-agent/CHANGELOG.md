@@ -8,10 +8,10 @@
 - **`ship-autonomous` drops "Steps 0–5 run in strict order."** The operative
   half of that paragraph — Step 5 subscribing to PR events and ending the turn,
   and Steps 6–8 being standing policy rather than a loop — is unchanged.
-- **`branch-agent` drops "Follow these steps in strict order. **STOP
-  immediately after step 6.**"** from its opening paragraph; the
-  `## Step 6: Confirm and STOP` block already states the same stopping rule,
-  and it survives verbatim.
+- **`branch-agent` drops its opening ordering sentence** —
+  `Follow these steps in strict order. **STOP immediately after step 6.**` —
+  because the `## Step 6: Confirm and STOP` block already states the same
+  stopping rule, and it survives verbatim.
 - Untouched, by classification: "Never merge on anything but green", the
   branch-deletion approval guard, "Never dismiss a review on your own
   initiative", "Do not retry. Do not force.", and the stale-ref and

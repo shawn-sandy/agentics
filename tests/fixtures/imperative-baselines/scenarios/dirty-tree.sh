@@ -27,20 +27,44 @@ case "$TARGET" in
   *) TARGET="$PWD/$TARGET" ;;
 esac
 
-# Destructive-path guard: only ever rm -rf inside /tmp (or its macOS
-# /private/tmp realpath) or a path containing a "sandbox" component.
+# Destructive-path guard: `rm -rf` below only ever runs inside a temp root or a
+# path with a whole `sandbox` component.
+#
+# Deliberately NOT `*sandbox*`. The substring form accepts any path merely
+# containing those letters, so a real project at ~/work/sandbox-experiments/live
+# would qualify for rm -rf. Only a complete path component counts.
+#
+# The temp roots are listed explicitly rather than assumed to be /tmp: on macOS
+# `mktemp -d` honours TMPDIR (/var/folders/...), and `pwd -P` then resolves that
+# to /private/var/..., so both spellings have to be allowed or the sibling
+# origin.git cleanup below is refused on a re-run.
+TMP_ROOTS="/tmp /private/tmp"
+if [ -n "${TMPDIR:-}" ]; then
+  TMP_ROOTS="$TMP_ROOTS ${TMPDIR%/}"
+  if RESOLVED_TMP=$(cd "$TMPDIR" 2>/dev/null && pwd -P); then
+    TMP_ROOTS="$TMP_ROOTS $RESOLVED_TMP"
+  fi
+fi
+
 is_safe_to_remove() {
   case "$1" in
-    /tmp/*|/private/tmp/*|*/sandbox|*/sandbox/*|*sandbox*) return 0 ;;
-    *) return 1 ;;
+    */sandbox|*/sandbox/*) return 0 ;;
   esac
+  for _root in $TMP_ROOTS; do
+    case "$1" in
+      "$_root"/*) return 0 ;;
+    esac
+  done
+  return 1
 }
+
+REFUSAL="not inside a temp root ($TMP_ROOTS) and has no 'sandbox' path component"
 
 if [ -e "$TARGET" ]; then
   if is_safe_to_remove "$TARGET"; then
     rm -rf "$TARGET"
   else
-    echo "refusing to remove '$TARGET': not under /tmp and does not match */sandbox*" >&2
+    echo "refusing to remove '$TARGET': $REFUSAL" >&2
     exit 1
   fi
 fi
@@ -55,7 +79,7 @@ if [ -e "$ORIGIN" ]; then
   if is_safe_to_remove "$ORIGIN"; then
     rm -rf "$ORIGIN"
   else
-    echo "refusing to remove '$ORIGIN': not under /tmp and does not match */sandbox*" >&2
+    echo "refusing to remove '$ORIGIN': $REFUSAL" >&2
     exit 1
   fi
 fi
