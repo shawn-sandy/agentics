@@ -29,6 +29,15 @@
 # Plus check 6: the plugin-level references/ link counts in the three share-*
 # cores are unchanged, proving the split added skill-local files rather than
 # rewiring shared infrastructure eleven other skills already read.
+#
+# And check 7: share-selection's reuse lookup and its card type cannot disagree.
+# `reuse-check.md` scans `${FILE_PREFIX}-*.html` and `saving-and-delivery.md`
+# saves as `${FILE_PREFIX}-…`, so the two are the same variable read at two
+# points in one run. The pre-fix core bound it provisionally at Phase 1c
+# ("default snippet") and only classified `CODE_RAW` at Phase 4 — so diff
+# content was looked up under `snippet-` and saved under `diff-`, the lookup
+# missed the existing diff post, and the skill made a duplicate. This is an
+# ORDERING assertion on where the variable is bound, not a wording check.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -282,9 +291,109 @@ n=$(find kit/plugins/social-media-tools/references -maxdepth 1 -name '*.md' | wc
 [ "$n" = "8" ] || MISSING="$MISSING plugin-references:[want 8 got $n]"
 if [ -z "$MISSING" ]; then pass "7 / 8 / 11 links, 8 shared files"; else fail "shared reference set changed:$MISSING"; fi
 
+# ---------------------------------------------------------------------------
+# 7. share-selection binds FILE_PREFIX from the card type BEFORE the reuse
+#    lookup, and never rebinds it between the lookup and the save.
+# ---------------------------------------------------------------------------
+echo "7. share-selection's reuse-lookup prefix agrees with its card type..."
+python3 - "$SM/share-selection/SKILL.md" \
+         kit/plugins/social-media-tools/references/reuse-check.md \
+         kit/plugins/social-media-tools/references/saving-and-delivery.md \
+         "$SM/share-selection/references/card-population.md" <<'PY' \
+         || FAILURES=$((FAILURES + 1))
+import pathlib, re, sys
+
+core_path, reuse_ref, save_ref, card_ref = sys.argv[1:5]
+bad = []
+
+def read(p):
+    f = pathlib.Path(p)
+    if not f.is_file():
+        bad.append(f"{p} does not exist")
+        return None
+    return f.read_text(encoding="utf-8")
+
+# Ground the premise in the references themselves rather than asserting it:
+# this check only matters because BOTH consumers key off the same $FILE_PREFIX.
+# If a future edit renames the variable in one of them, fail here loudly
+# instead of silently checking an invariant that no longer binds anything.
+for ref, role in ((reuse_ref, "reuse lookup"), (save_ref, "persistent save")):
+    text = read(ref)
+    if text is not None and "`$FILE_PREFIX`" not in text:
+        bad.append(f"{ref} no longer declares $FILE_PREFIX — the {role} "
+                   f"stopped keying off the variable this check tracks")
+
+# The core must point at a classification step that actually exists.
+card = read(card_ref)
+if card is not None and not re.search(r'^#+ .*Classify `CODE_RAW`', card, re.M):
+    bad.append(f"{card_ref} has no 'Classify `CODE_RAW`' section for the core to run")
+
+core = read(core_path)
+if core is None:
+    for b in bad:
+        print(f"  FAIL: {b}")
+    sys.exit(1)
+lines = core.splitlines()
+
+# A BINDING is an assignment (`FILE_PREFIX=…`) or an imperative that hands the
+# variable a value (`set `FILE_PREFIX` (`snippet` or `diff`…)` / `… to X`).
+# Deliberately NOT a bare mention: Phase 5b's "Variables already set:
+# `FILE_PREFIX`, `SLUG_INPUT`" restates what Phase 1c bound and must not read
+# as a rebind, or the fixed core would fail its own check.
+BIND = re.compile(r'FILE_PREFIX\s*=|(?:[Ss]et|[Bb]ind)\s+`?FILE_PREFIX`?\s*(?:\(|to\b)')
+
+def first(pattern):
+    for i, line in enumerate(lines):
+        if re.search(pattern, line):
+            return i
+    return None
+
+reuse = first(r'reuse-check\.md')
+save = first(r'saving-and-delivery\.md')
+card_type = first(r'CARD_TYPE')
+binds = [i for i, line in enumerate(lines) if BIND.search(line)]
+
+if reuse is None:
+    bad.append("core never reads reuse-check.md")
+if save is None:
+    bad.append("core never reads saving-and-delivery.md")
+
+if reuse is not None and save is not None:
+    # (a) The prefix the lookup scans under must already be bound when it runs.
+    if not binds:
+        bad.append("core never binds FILE_PREFIX — the reuse lookup would scan "
+                   "under an undefined prefix")
+    elif min(binds) > reuse:
+        bad.append(f"FILE_PREFIX is first bound at line {min(binds) + 1}, after the "
+                   f"reuse lookup at line {reuse + 1}")
+
+    # (b) Classification must precede the lookup. A prefix bound to a literal
+    #     default with the card type "per Phase 4" is the original bug: the
+    #     binding is early but the decision that determines it is not.
+    if card_type is None:
+        bad.append("core never establishes CARD_TYPE — the reuse lookup cannot "
+                   "be using the card type Phase 4 selects")
+    elif card_type > reuse:
+        bad.append(f"CARD_TYPE is first established at line {card_type + 1}, after "
+                   f"the reuse lookup at line {reuse + 1} — classification is deferred")
+
+    # (c) Nothing may rebind the prefix between the lookup and the save, or the
+    #     post is filed under a prefix the lookup never searched.
+    late = [i + 1 for i in binds if reuse < i < save]
+    if late:
+        bad.append(f"FILE_PREFIX is rebound at line(s) {late}, between the reuse "
+                   f"lookup (line {reuse + 1}) and the save (line {save + 1})")
+
+if bad:
+    for b in bad:
+        print(f"  FAIL: {b}")
+    sys.exit(1)
+print("  PASS")
+PY
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
-  echo "PASS: six cores split, references wired, descriptions pinned, guards retained"
+  echo "PASS: six cores split, references wired, descriptions pinned, guards retained, reuse prefix consistent"
   exit 0
 fi
 echo "FAIL: $FAILURES check(s) failed"

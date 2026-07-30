@@ -1,6 +1,6 @@
-# Card population — locating templates, template pick, escape order, variables
+# Card population — locating templates, classification, escape order, variables
 
-Phases 0, 4, and 5 of `share-selection` in full.
+Phases 0, 1c-classify, 4, and 5 of `share-selection` in full.
 
 ## Phase 0 — Locate Plugin Assets
 
@@ -22,16 +22,32 @@ PLUGIN_DIR=$(dirname "$TEMPLATES_DIR")
 If no directory is found: output "Templates not found. Install the plugin or load it with
 `--plugin-dir`." and **STOP**.
 
-## Phase 4 — Pick Template
+## Classify `CODE_RAW` (Phase 1c)
+
+This is the **only** place the card type is decided. It runs in Phase 1c, before the reuse
+lookup, because `reuse-check.md` scans `${FILE_PREFIX}-*.html` and `saving-and-delivery.md`
+saves as `${FILE_PREFIX}-…` — if the lookup ran under a provisional prefix and the card were
+classified afterwards, a diff post would be searched for under `snippet-` and saved under
+`diff-`, so the lookup would miss it and a duplicate would be created.
 
 Inspect `CODE_RAW`:
 
 - **Diff-like** — most lines start with `+` / `-`, it contains `@@ … @@` hunk headers, or it
-  was pasted in a ```` ```diff ```` fence → use `diff-card.html`, `FILE_PREFIX=diff`.
-- **Otherwise** → use `snippet-card.html`, `FILE_PREFIX=snippet`.
+  was pasted in a ```` ```diff ```` fence → `CARD_TYPE=diff` (renders `diff-card.html`).
+- **Otherwise** → `CARD_TYPE=snippet` (renders `snippet-card.html`).
 
 ```bash
 CARD_TYPE=<diff or snippet>
+FILE_PREFIX=$CARD_TYPE
+```
+
+Do not re-derive or overwrite either variable after this point.
+
+## Phase 4 — Pick Template
+
+`CARD_TYPE` and `FILE_PREFIX` are already set. Resolve the paths only:
+
+```bash
 TEMPLATE_FILE=$TEMPLATES_DIR/${CARD_TYPE}-card.html
 TEMP_HTML=share-selection-card.html
 SLUG_INPUT=<FILENAME or a short title for the snippet>
