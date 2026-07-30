@@ -1,5 +1,23 @@
 # Changelog
 
+## v3.5.0 — 2026-07-29 — Split `tdd-fix` into a core plus references
+
+### Changed
+
+- **`tdd-fix` is now a 571-word core plus two reference files, down from 1,202
+  words in a single body.** It was the only skill in this plugin without a
+  `references/` directory; it now matches the per-skill layout its four siblings
+  already use.
+  - `references/fix-loop.md` — Step 2's red phase, Step 3's iteration log and
+    3a–3c, Step 4's hard cap
+  - `references/handoff.md` — Step 5's regression sweep, Step 6's summary block,
+    Steps 7–8's commit-agent and pr-agent handoffs
+- The core keeps the strict freedom-level marker, `## When not to use`, every
+  Step 0–9 heading, and each step's hard stop.
+
+Behaviour, `description:`, `allowed-tools:`, and `disable-model-invocation: true`
+are unchanged.
+
 ## v3.4.5 — 2026-07-28 — Collapse the plan-mode guard to one line
 
 - `tdd-loop` replaces its four-line `ExitPlanMode` preamble with the canonical

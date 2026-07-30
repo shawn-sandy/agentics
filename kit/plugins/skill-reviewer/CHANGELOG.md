@@ -1,5 +1,28 @@
 # Changelog
 
+## v2.3.0 — 2026-07-29 — Split `optimizing-skill-frontmatter` into a core plus references
+
+### Changed
+
+- **`optimizing-skill-frontmatter` is now a 579-word core plus four reference
+  files, down from 3,131 words in a single body.** A SKILL.md body is paid in full
+  every time the skill fires, and this was the largest monolithic skill in the
+  repo — while also being the rubric every other skill is measured against, so it
+  was violating the progressive-disclosure advice it teaches.
+  - `references/description-rules.md` — Rules 1–5, Rule 2b, worked examples A and
+    B, and the Step 4 edit order
+  - `references/invocation-control.md` — the Step 4b classification table,
+    confirmation options, and grep-then-`Edit` apply rules
+  - `references/measurement.md` — the Step 2, 5, and 6 measuring loops
+  - `references/budget-advisory.md` — the `skillListingBudgetFraction` advisory,
+    the installed-skills table, and the `/doctor` guidance
+- Dropped a pointer to `references/best-practices.md`, which never resolved from
+  this skill's directory (the file lives under `reviewing-skills`).
+
+Behaviour, `description:`, `allowed-tools:`, and `disable-model-invocation: true`
+are unchanged. `tests/plugins/test-remaining-skill-splits.sh` pins the core
+ceiling, the reference wiring, and the untouched frontmatter.
+
 ## v2.2.9 — 2026-07-28 — Collapse the plan-mode guard to one line
 
 - `optimizing-skill-frontmatter` replaces its `ExitPlanMode` preamble with the

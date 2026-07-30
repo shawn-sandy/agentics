@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.0 — 2026-07-29
+
+### Changed
+
+- **`artifact-to-post` is now a 571-word core plus two new plugin-level
+  references, down from 1,408 words in a single body.** They sit beside the
+  existing `content-config.md` and `mdx-safety.md`, matching this plugin's
+  established `$SKILL_DIR/../../references/` convention rather than adding a
+  second per-skill one.
+  - `references/source-resolution.md` — the Phase 1 source table, the claude.ai
+    refusal text, and the "It skips nothing else." Markdown-source rule
+  - `references/post-assembly.md` — Phases 4–10 in full
+- The core keeps Phase 0's asset locating, the Phase 2 security-scrub gate
+  verbatim (including its `write nothing and end the turn` stop), Phase 3's
+  config contract, and every `## Phase N` heading in order.
+
+Behaviour, `description:`, and `allowed-tools:` are unchanged.
+
 ## 1.0.2 — 2026-07-28
 
 - `artifact-to-post` replaces its four-line `ExitPlanMode` preamble with the

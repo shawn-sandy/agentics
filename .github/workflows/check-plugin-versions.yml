@@ -43,6 +43,28 @@ jobs:
       # Nothing else exercises it, so this is its only regression gate.
       - name: Test gallery index merge driver
         run: bash tests/plugins/test-merge-gallery-index.sh
+      # A SKILL.md body is paid in full every time the skill fires, so a core
+      # that creeps back over the ceiling — or a reference link that stops
+      # resolving, or a scrub gate that drifts behind one — costs context or
+      # safety on every run and shows up in no diff review of a single file.
+      - name: Test the six split skill cores stay split
+        run: bash tests/plugins/test-remaining-skill-splits.sh
+      # The five tests below read shipped skill bodies as data, and four of them
+      # were retargeted in this PR to follow content that moved behind a
+      # reference link. None of them was wired into CI, so nothing stopped a
+      # future edit from moving a literal back and quietly turning a safety
+      # assertion into a no-op — the same decay the step above exists to prevent.
+      # All five pass on main unchanged, so wiring them breaks nothing in flight.
+      - name: Test artifact-tools contracts survive the reference split
+        run: bash tests/plugins/test-artifact-tools.sh
+      - name: Test artifact-to-post contracts survive the reference split
+        run: bash tests/plugins/test-artifact-to-post.sh
+      - name: Test the memory-tools write guard executes shipped code
+        run: bash tests/plugins/test-memory-doctor-guard.sh
+      - name: Test generator skills verify their own output
+        run: bash tests/plugins/test-generator-skills-verify-output.sh
+      - name: Test every skill description stays within budget
+        run: bash tests/plugins/test-description-budget.sh
       # The plan-mode guard fails silently in both directions: strip it and a
       # skill writes from inside a mode the user deliberately entered; re-expand
       # it and 40 files each re-teach the model something it already knows.
