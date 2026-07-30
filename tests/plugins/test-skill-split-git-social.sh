@@ -64,18 +64,27 @@ echo "=== git-agent + social-media-tools skill split (objective test) ==="
 echo "1. Each split core is under $CEILING words..."
 TOTAL=0
 OVER=""
+ABSENT=""
+COUNTED=0
 while read -r skill; do
   [ -n "$skill" ] || continue
-  if [ ! -f "$skill" ]; then fail "$skill missing"; continue; fi
+  # A missing core is counted separately from an oversized one. Folding it into
+  # FAILURES alone would leave OVER empty, and check 1 would print
+  # "PASS: N words across six cores" for five cores while the script still
+  # exited 1 — a log that contradicts the exit code.
+  if [ ! -f "$skill" ]; then ABSENT="$ABSENT $(basename "$(dirname "$skill")")"; continue; fi
   words=$(count_words "$skill")
   TOTAL=$((TOTAL + words))
+  COUNTED=$((COUNTED + 1))
   if [ "$words" -lt "$CEILING" ]; then
     echo "  $words  $skill"
   else
     OVER="$OVER $(basename "$(dirname "$skill")")($words)"
   fi
 done <<< "$TARGETS"
-if [ -z "$OVER" ]; then pass "$TOTAL words across six cores"; else fail "over the $CEILING-word ceiling:$OVER"; fi
+if [ -n "$ABSENT" ]; then fail "core file missing:$ABSENT"; fi
+if [ -n "$OVER" ]; then fail "over the $CEILING-word ceiling:$OVER"; fi
+if [ -z "$ABSENT" ] && [ -z "$OVER" ]; then pass "$TOTAL words across $COUNTED cores"; fi
 
 # ---------------------------------------------------------------------------
 # 2. Each skill ships a skill-local references/ dir with at least one .md.

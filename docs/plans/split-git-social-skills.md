@@ -93,7 +93,7 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [x] `wc -w` reports under 600 words for each of the six SKILL.md files, down from 2448 / 1863 / 1515 / 1414 / 1284 / 1234.
+- [x] A locale-independent word count reports under 600 words for each of the six SKILL.md files, down from 2406 / 1840 / 1476 / 1391 / 1261 / 1191. Counted in Python, not with `wc -w`: these bodies carry em dashes, `→` and `≤`, which `wc -w` tallies differently by locale — a ~20-word swing, enough to pass on a dev machine and fail on a CI runner. The baselines above are the measured pre-split counts; Step 1's figures (2448 / 1863 / 1515 / 1414 / 1284 / 1234) predate commits `745584e` and `ce69bc8`, which had already trimmed these same bodies, so the ceiling rather than a delta from those numbers is the binding invariant.
 - [x] Each of the six skill directories contains a `references/` directory holding at least one `.md` file.
 - [x] Every ``references/<name>.md`` string appearing in the six SKILL.md bodies resolves to a file that exists, and every file under those `references/` dirs is named at least once in its SKILL.md.
 - [x] `git diff main -- '**/SKILL.md' | grep '^[-+]description:'` returns nothing, proving all six frontmatter descriptions are byte-identical to `main`.

@@ -8,7 +8,7 @@ SKILL="$ROOT/kit/plugins/git-agent/skills/ship/SKILL.md"
 # reviewer walks once moved out while the POLICY stayed in the core. The split
 # is why checks 5-7 read this file and checks 2-4/8-10 still read SKILL.md:
 # where the contract lives may change, that it exists somewhere reachable from
-# the core may not. Check 6.5 asserts the reachability.
+# the core may not. Check 4.5 asserts the reachability.
 SELF_REVIEW="$ROOT/kit/plugins/git-agent/skills/ship/references/self-review.md"
 FAILURES=0
 
