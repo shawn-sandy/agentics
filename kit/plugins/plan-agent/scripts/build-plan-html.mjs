@@ -159,7 +159,7 @@ function reportList(entries) {
  *
  * `workflow: auto` is the heuristic — the state that used to be spelled by
  * omitting the key entirely, which left it unnamed and therefore untypeable.
- * `true`/`false` are the pre-6.2 spelling of `always`/`never` and stay
+ * `true`/`false` are the pre-7.0 spelling of `always`/`never` and stay
  * accepted so every committed spec keeps rendering.
  */
 const ENUMS = {
@@ -179,14 +179,28 @@ const ENUMS = {
  * any string at all and became a phantom filter chip in the gallery. Refusing
  * unknown input is an interface constraint, not a constraint on judgment —
  * a typo is not a decision to respect.
+ *
+ * Only an absent key defaults. `status:` with nothing after it is a present
+ * key with an empty value — a half-finished edit or a template that never got
+ * filled in, which is exactly the mistake worth catching, not a request for
+ * the default.
+ *
+ * The frontmatter parser keeps everything after the colon, so a YAML inline
+ * comment lands inside the value. That was harmless while these keys fell
+ * back; once they became strict it turned `status: todo  # todo | ...` into a
+ * hard error, and every enum line in the authoring docs is written that way.
+ * Enum values are single tokens and can never contain `#`, so strip the
+ * comment here rather than making hand-authored YAML illegal.
  */
 function enumValue(md, key, fallback) {
   const raw = md[key];
-  if (raw === undefined || raw === '') return fallback;
-  if (!ENUMS[key].includes(raw)) {
-    throw new ParseError(`${key}: ${raw} — expected one of ${ENUMS[key].join(', ')}`);
+  if (raw === undefined) return fallback;
+  const value = raw.replace(/\s+#.*$/, '').trim();
+  if (!ENUMS[key].includes(value)) {
+    const shown = value === '' ? '(empty)' : raw;
+    throw new ParseError(`${key}: ${shown} — expected one of ${ENUMS[key].join(', ')}`);
   }
-  return raw;
+  return value;
 }
 
 export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps }, { fileName, planPath, mdPath, today, repo } = {}) {
@@ -221,12 +235,21 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // Every prompt ends with the same gate: verify, then record the outcome in
   // the spec. Without it an agent reports "done" on a plan still marked todo.
   //
-  // Says what to check and what to write down, not how to write it. The `[x]`
-  // tick mechanics and the status literals are visible in the spec the agent
-  // already has open, and "re-render the HTML" named work the harness does on
-  // its own — hooks.json runs render-plan-html.py on every PostToolUse write
-  // to a plan spec, so instructing it here was one instruction in two layers.
-  const verifyTail = `Verify against the plan's Tests, Verification, and Acceptance Criteria before reporting done, then record the outcome in ${specPath} — completed only if everything passed, otherwise which check failed.`;
+  // The *check* clause is compressed — naming the three spec sections beats
+  // spelling out how to walk each one. The *record* clause is not: it stays
+  // explicit about `[x]` markers, `- [x]` criteria, and the re-render.
+  //
+  // Both were cut in 7.0.0 and both had to come back. The tick mechanics are
+  // not "visible in the spec the agent has open" — an unfinished spec carries
+  // bare numbered steps and bullets, so there is no `[x]` to copy, and the
+  // rendered progress bar and step chips derive from those markers. And the
+  // re-render is not reliably automatic: hooks.json does register
+  // render-plan-html.py on PostToolUse writes, but editing a plan spec through
+  // the Edit tool was observed leaving the sibling HTML untouched, so dropping
+  // the instruction left the gallery stale. Only copyCmd() rebuilds a richer
+  // prompt from live DOM; copyGoal()/copyWorkflow() copy this string verbatim,
+  // so whatever is missing here is missing on two of the three paths.
+  const verifyTail = `Verify against the plan's Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.`;
 
   const dirCount = new Set((s.files || []).map((f) => f.path.split('/')[0])).size;
   const workflowMode = enumValue(md, 'workflow', 'auto');

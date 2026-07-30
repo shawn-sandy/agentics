@@ -135,17 +135,24 @@ Echo the resolved objective and effective flags after Step 0.
 
 - **Verification gate (shared by all three prompts)** — every generated
   prompt ends with the same tail: verify against the plan's Tests,
-  Verification, and Acceptance Criteria, then record the outcome in the spec
-  — completed only if everything passed, otherwise which check failed. A
-  prompt that says "implement this" without the gate lets an agent report
-  done on a plan still marked `todo` — never emit one.
+  Verification, and Acceptance Criteria; if everything passed, mark
+  completion in the spec (`[x]` step markers, `- [x]` criteria,
+  `status: completed`) and re-render; a failed check leaves
+  `status: in-progress` and names it. A prompt that says "implement this"
+  without the gate lets an agent report done on a plan still marked `todo` —
+  never emit one.
 
-  The tail names *what to check and what to record*, not the keystrokes. It
-  does not spell out the `[x]` tick syntax or the status literals, which are
-  visible in the spec the agent already has open, and it does not ask for a
-  re-render: `hooks.json` runs `render-plan-html.py` on every PostToolUse
-  write to a plan spec, so an instruction to re-render would be the same
-  instruction living in two layers. Do not grow those back.
+  The *check* clause is compressed — naming the three spec sections beats
+  spelling out how to walk each one. The *record* clause is not, and must not
+  be. 7.0.0 trimmed both and had to restore the second: an unfinished spec
+  carries bare numbered steps and bullets, so there is no `[x]` for the agent
+  to copy, and the rendered progress bar and step chips read from exactly
+  those markers. The re-render stays too — `hooks.json` registers
+  `render-plan-html.py` on PostToolUse writes, but editing a spec through the
+  Edit tool was observed leaving the sibling HTML untouched, so the
+  instruction is not redundant in practice. Only `copyCmd()` rebuilds a
+  richer prompt from live DOM; `copyGoal()` and `copyWorkflow()` copy this
+  tail verbatim, so anything dropped here is dropped on two of three paths.
 - **Implement prompt** —
   `Read and implement all steps in the plan at <filepath> — <objective>.`
   plus the verification gate, rendered as the single visible call-to-action

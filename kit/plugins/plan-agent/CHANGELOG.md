@@ -19,6 +19,18 @@ absorb bad input (Rule 2), and stop saying the same thing in two layers
   to `feature`. A consumer with off-enum frontmatter must fix it before their
   plans will render — hence the major bump, even though every rejected value
   was already producing a wrong plan.
+- **A present-but-empty value is rejected too.** Only an absent key takes the
+  default. `status:` with nothing after it is a half-finished edit or an
+  unfilled template — the mistake most worth catching, and the one case where
+  falling back would have quietly reintroduced the behaviour this change
+  removes.
+- **Inline YAML comments on the enumerated keys are stripped before
+  validation.** The frontmatter parser keeps everything after the colon, so
+  `status: todo  # todo | in-progress | completed` put the comment inside the
+  value. Harmless while these keys fell back; a hard error once they went
+  strict — and every enum line in the authoring docs is written that way.
+  Enum values are single tokens, so the comment is stripped rather than
+  hand-authored YAML being made illegal.
 - **`workflow` gains `auto`/`always`/`never`.** `auto` names the heuristic —
   previously the unnamed state you got by omitting the key, which is what made
   `workflow: yes` degrade without a diagnostic. `true`/`false` remain accepted
@@ -27,14 +39,22 @@ absorb bad input (Rule 2), and stop saying the same thing in two layers
 
 ### Changed
 
-- **The verification gate dropped from 65 words to 29.** It was 60–72% of
-  every generated prompt and appeared six times in each rendered plan. Two of
-  its clauses earned removal outright: the `[x]` tick mechanics and status
-  literals were micro-specification of syntax already visible in the spec the
-  agent has open, and *"re-render the HTML from the spec"* instructed work the
-  harness already does — `hooks.json` runs `render-plan-html.py` on every
-  PostToolUse write to a plan spec. The gate still names what to check and
-  what to record; a test asserts it never regrows the re-render clause.
+- **The verification gate's *check* clause is compressed; its *record* clause
+  is not.** Naming the plan's Tests, Verification, and Acceptance Criteria
+  replaces three sentences spelling out how to walk each one. The completion
+  mechanics — `[x]` step markers, `- [x]` criteria, `status: completed`, and
+  the re-render — stay explicit.
+
+  An earlier cut of this release removed the record clause too, on the theory
+  that the tick syntax was already visible in the spec and the re-render was
+  the harness's job. Both were wrong. An unfinished spec carries bare numbered
+  steps and bullets, so there is no `[x]` to copy, and the rendered progress
+  bar and step chips derive from exactly those markers. And while `hooks.json`
+  does register `render-plan-html.py` on PostToolUse writes, editing a plan
+  spec through the Edit tool was observed leaving the sibling HTML untouched —
+  the instruction is not redundant in practice. It matters most on the goal
+  and workflow paths: only `copyCmd()` rebuilds a richer prompt from live DOM,
+  while `copyGoal()` and `copyWorkflow()` copy this tail verbatim.
 
 ## 6.1.0 — the goal prompt licenses fan-out when the plan is big enough to warrant it (2026-07-29)
 

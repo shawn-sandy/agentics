@@ -180,14 +180,24 @@ ok('enumerated frontmatter rejects near-misses instead of falling back', () => {
     ['type', 'enhancement'], ['type', 'bogus'],
     ['effort', 'huge'],
     ['workflow', 'yes'], ['workflow', 'TRUE'],
+    // A present-but-empty value is a half-finished edit, not a request for
+    // the default — only an absent key defaults.
+    ['status', ''], ['type', ''], ['effort', ''], ['workflow', ''],
+    // A trailing YAML comment is stripped before validation, so the error
+    // must still come from the value and not from the comment.
+    ['status', 'complete   # oops'],
   ];
   for (const [key, value] of cases) {
     const parsed = parseSpecMarkdown(SAMPLE_SPEC);
     parsed.metadata[key] = value;
     assert.throws(
       () => renderPlanHtml(parsed, { fileName: 's.html', planPath: 's.html' }),
-      (err) => err instanceof ParseError && err.message.includes(key) && err.message.includes(value),
-      `${key}: ${value} must be rejected, not silently corrected`
+      // An empty value has no text to echo, so the message says (empty) —
+      // asserting includes('') would pass on any string at all.
+      (err) => err instanceof ParseError
+        && err.message.includes(key)
+        && err.message.includes(value === '' ? '(empty)' : value),
+      `${key}: ${value || '(empty)'} must be rejected, not silently corrected`
     );
   }
 });
@@ -210,6 +220,31 @@ ok('enumerated frontmatter accepts every documented value, and absent keys defau
       `${key}: ${value} is documented and must render`
     );
   }
+  // The frontmatter parser keeps everything after the colon, so the inline
+  // comments used throughout the authoring docs land inside the value. Those
+  // snippets must stay copy-pasteable now that these keys are strict.
+  for (const [key, value] of [
+    ['status', 'todo            # todo | in-progress | completed'],
+    ['type', 'feature         # feature | fix | refactor | docs | chore'],
+    ['effort', 'high            # low | medium | high'],
+    ['workflow', 'auto            # auto | always | never'],
+  ]) {
+    const parsed = parseSpecMarkdown(SAMPLE_SPEC);
+    parsed.metadata[key] = value;
+    assert.doesNotThrow(
+      () => renderPlanHtml(parsed, { fileName: 's.html', planPath: 's.html' }),
+      `${key} with a trailing YAML comment must render`
+    );
+  }
+  // The comment is stripped, not kept — a commented value must not leak into
+  // the rendered attribute.
+  const commented = parseSpecMarkdown(SAMPLE_SPEC);
+  commented.metadata.status = 'completed      # done and dusted';
+  assert.ok(
+    renderPlanHtml(commented, { fileName: 's.html', planPath: 's.html' }).includes('data-status="completed"'),
+    'a commented value renders as the bare value'
+  );
+
   // An omitted key is not a near-miss — it takes the documented default.
   const bare = parseSpecMarkdown(SAMPLE_SPEC);
   for (const key of ['status', 'type', 'effort', 'workflow']) delete bare.metadata[key];
@@ -228,12 +263,13 @@ ok('workflow always/never override the file-count heuristic in both directions',
     if (workflow) parsed.metadata.workflow = workflow;
     return renderPlanHtml(parsed, { fileName: 'w.html', planPath: 'w.html' });
   };
-  // never suppresses a spec the heuristic would have opted in.
-  assert.ok(!render(wide, 'never').includes('id="workflow-cmd"'), 'never suppresses the heuristic');
-  assert.ok(!render(wide, 'never').includes('Fan out across parallel subagents'), 'never suppresses the fan-out license');
-  // always opts in a spec too small for the heuristic.
-  assert.ok(render(SAMPLE_SPEC, 'always').includes('id="workflow-cmd"'), 'always overrides a small spec');
-  assert.ok(render(SAMPLE_SPEC, 'always').includes('Fan out across parallel subagents'), 'always licenses fan-out');
+  // workflow: never on a spec the heuristic would have opted in — expect no
+  // workflow row and no fan-out license.
+  assert.ok(!render(wide, 'never').includes('id="workflow-cmd"'), 'workflow: never leaves no workflow row on a wide spec');
+  assert.ok(!render(wide, 'never').includes('Fan out across parallel subagents'), 'workflow: never leaves no fan-out license on a wide spec');
+  // workflow: always on a spec too small for the heuristic — expect both.
+  assert.ok(render(SAMPLE_SPEC, 'always').includes('id="workflow-cmd"'), 'workflow: always adds a workflow row to a small spec');
+  assert.ok(render(SAMPLE_SPEC, 'always').includes('Fan out across parallel subagents'), 'workflow: always adds the fan-out license to a small spec');
   // auto and an absent key agree.
   assert.equal(render(wide, 'auto'), render(wide, null), 'auto is the same as omitting the key');
 });
@@ -338,10 +374,15 @@ ok('every prompt carries the verify-then-mark-completed gate', () => {
     assert.match(p, /\bw\.md\b/, 'says where the outcome gets recorded');
     assert.match(p, /\bcompleted\b/, 'has a success state');
     assert.match(p, /\bfailed\b/, 'has a failure path that does not mark done');
-    // hooks.json runs render-plan-html.py on every PostToolUse write to a
-    // plan spec, so a prompt that also orders a re-render is the same
-    // instruction in two layers — the duplication this gate must not regrow.
-    assert.doesNotMatch(p, /re-render the HTML/, 'does not re-instruct work the render hook already does');
+    // Only copyCmd() rebuilds a prompt from live DOM state; copyGoal() and
+    // copyWorkflow() copy this tail verbatim. An unfinished spec has no `[x]`
+    // to copy and the rendered progress bar reads from those markers, so the
+    // record clause has to spell them out or two of the three paths ship a
+    // plan that reports done at 0/N.
+    assert.match(p, /\[x\] marker/, 'names the step marker to tick');
+    assert.match(p, /- \[x\]/, 'names the criterion marker to tick');
+    assert.match(p, /set status: completed/, 'names the status literal to write');
+    assert.match(p, /re-render the HTML/, 'orders the re-render — the PostToolUse hook was observed not firing on Edit');
   }
 });
 
