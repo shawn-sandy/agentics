@@ -27,10 +27,12 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" <plan>.md -o <plan>.htm
 
 Exit 0 = rendered; exit 1 prints exactly which required section is missing
 or malformed — fix the spec and re-run. A `PostToolUse` hook
-(`hooks/render-plan-html.py`) also re-renders the sibling HTML whenever a
-spec in the plans directory is written, so later markdown edits keep the
-pair fresh; still run the script explicitly after authoring so parse errors
-surface deterministically. Both files — the `.md` source of truth and the
+(`hooks/render-plan-html.py`) re-renders the sibling HTML whenever a spec in
+the plans directory is written, but do not rely on it: plugin `hooks.json`
+files are not registered in every runtime (notably the Claude Code desktop
+app, where they never fire), so a markdown edit can silently leave the pair
+stale. Always run the script explicitly after editing a spec — that also
+surfaces parse errors deterministically. Both files — the `.md` source of truth and the
 rendered `.html` — are committed together in the plans directory.
 
 **Guidelines library** (in `guidelines/` beside this file — read the full
@@ -148,9 +150,10 @@ Echo the resolved objective and effective flags after Step 0.
   carries bare numbered steps and bullets, so there is no `[x]` for the agent
   to copy, and the rendered progress bar and step chips read from exactly
   those markers. The re-render stays too — `hooks.json` registers
-  `render-plan-html.py` on PostToolUse writes, but editing a spec through the
-  Edit tool was observed leaving the sibling HTML untouched, so the
-  instruction is not redundant in practice. Only `copyCmd()` rebuilds a
+  `render-plan-html.py` on PostToolUse writes, but that registration is not
+  honoured everywhere: the Claude Code desktop app never wires up plugin
+  `hooks.json` at all, so a spec edited there leaves the sibling HTML stale.
+  The instruction is not redundant in practice. Only `copyCmd()` rebuilds a
   richer prompt from live DOM; `copyGoal()` and `copyWorkflow()` copy this
   tail verbatim, so anything dropped here is dropped on two of three paths.
 - **Implement prompt** —
@@ -383,8 +386,8 @@ EOF
    `## Acceptance Criteria` (author new criteria as `- [ ]` or plain `- `
    — both render unchecked). Every state change is a one-line Markdown
    edit followed by a re-render (the `render-plan-html.py` hook does this
-   automatically on each spec write; run the Step 5d command when you need
-   the failure surfaced). Re-rendering is lossless — progress re-renders
+   on each spec write *where plugin hooks are registered* — they are not in
+   the desktop app, so run the Step 5d command rather than assuming it fired). Re-rendering is lossless — progress re-renders
    from the spec, so there is no state to re-apply. Never edit `checked`
    attributes, `.step-card` classes, or status attributes in the HTML;
    `/plan-agent:finalize-plan` follows the same rule. A user ticking a box

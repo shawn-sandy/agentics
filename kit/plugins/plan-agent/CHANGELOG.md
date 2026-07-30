@@ -1,11 +1,12 @@
 # Changelog
 
-## 7.0.0 — enumerated frontmatter is validated, and the verify gate stops repeating the harness (2026-07-29)
+## 7.0.0 — enumerated frontmatter is validated, and the goal prompt licenses fan-out (2026-07-29)
 
 Applies two rules from Anthropic's "The new rules of context engineering for
 Claude 5 generation models" to the renderer: design the interface rather than
 absorb bad input (Rule 2), and stop saying the same thing in two layers
-(Rule 4).
+(Rule 4). Also folds in the goal-prompt fan-out license that was staged as
+6.1.0 — that version is rolled up here and never shipped on its own.
 
 ### Breaking
 
@@ -50,16 +51,12 @@ absorb bad input (Rule 2), and stop saying the same thing in two layers
   the harness's job. Both were wrong. An unfinished spec carries bare numbered
   steps and bullets, so there is no `[x]` to copy, and the rendered progress
   bar and step chips derive from exactly those markers. And while `hooks.json`
-  does register `render-plan-html.py` on PostToolUse writes, editing a plan
-  spec through the Edit tool was observed leaving the sibling HTML untouched —
-  the instruction is not redundant in practice. It matters most on the goal
-  and workflow paths: only `copyCmd()` rebuilds a richer prompt from live DOM,
-  while `copyGoal()` and `copyWorkflow()` copy this tail verbatim.
-
-## 6.1.0 — the goal prompt licenses fan-out when the plan is big enough to warrant it (2026-07-29)
-
-### Changed
-
+  does register `render-plan-html.py` on PostToolUse writes, that registration
+  is not honoured everywhere: in the Claude Code desktop app plugin `hooks.json`
+  files are never wired up, so editing a plan spec there leaves the sibling HTML
+  stale. The instruction is not redundant in practice. It matters most on the
+  goal and workflow paths: only `copyCmd()` rebuilds a richer prompt from live
+  DOM, while `copyGoal()` and `copyWorkflow()` copy this tail verbatim.
 - **The goal prompt now licenses parallel subagents on plans that get a
   workflow row.** "Pursue as goal" produced `Achieve this goal: …` on every
   plan — a purely sequential instruction. The only prompt that requested
@@ -215,7 +212,9 @@ absorb bad input (Rule 2), and stop saying the same thing in two layers
   on `<prompts-dir>/proposal-<slug>.md`, authored by delegating to
   `write-prompt`, instead of hand-writing a proposal document. The legacy
   `<proposals-dir>/<slug>.md` copy is still written for this release, carrying a
-  banner naming the prompt as authoritative; it is **removed in 6.1.0**.
+  banner naming the prompt as authoritative; it is **removed in a future minor
+  release**. (Originally slated for 6.1.0, a version that was folded into 7.0.0
+  and never shipped.)
 - **`--dir` now names the prompts directory**, not the proposals directory — the
   flag follows the authoritative artifact. The prompts directory resolves
   `--dir` → `promptsDirectory` → `${PWD}/docs/prompts/`, the same key
