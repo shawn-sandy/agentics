@@ -35,7 +35,7 @@ import {
   ParseError,
   unguardScriptClose,
 } from '../../scripts/lib/plan-spec.mjs';
-import { deriveEffort, renderPlanHtml } from '../../scripts/build-plan-html.mjs';
+import { deriveEffort, inline, renderPlanHtml } from '../../scripts/build-plan-html.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const RENDERER = join(ROOT, 'scripts', 'build-plan-html.mjs');
@@ -593,6 +593,45 @@ ok('inline markdown does not fire on globs, bare numbers, or non-prose code', ()
   // class here would make the extractor wrap them in backticks.
   assert.ok(inlineHtml.includes('<code id="implement-cmd"'), 'the implement prompt keeps its bare code element');
   assert.ok(!/<code class="md"[^>]*id="/.test(inlineHtml), 'no prompt element is tagged as inline markdown');
+});
+
+ok('a star attached to a word never opens emphasis across the next glob', () => {
+  // Regression: the first guard only rejected slashes inside the span, so the
+  // star in `product-reviewer-*.md` paired with the star of the NEXT glob and
+  // swallowed every word between them into one <em> — 569 characters in the
+  // worst committed plan. The round-trip test could not see it: remark()
+  // faithfully restores both stars, so only the rendered page was wrong.
+  const prose = 'Reads plan-reviewer-*.md agent definitions and mirrors the product-reviewer-*.md siblings.';
+  const out = inline(prose);
+  assert.ok(!out.includes('<em'), `a glob pair must not open emphasis, got: ${out}`);
+  assert.ok(out.includes('plan-reviewer-*.md') && out.includes('product-reviewer-*.md'), 'both globs keep their stars');
+
+  // Two bare extension globs in one sentence are the same trap.
+  assert.ok(!inline('Match *.md and *.ts under docs.').includes('<em'), 'bare extension globs are not emphasis');
+
+  // ...while real emphasis, including multi-word, still renders. Committed
+  // plans use all of these shapes.
+  for (const [text, want] of [
+    ['Delete *nothing* from the file.', 'nothing'],
+    ['*Mitigation:* none.', 'Mitigation:'],
+    ['It is a *prose rewrite*, not a port.', 'prose rewrite'],
+    ['Confirm *the document contradicts itself* here.', 'the document contradicts itself'],
+  ]) {
+    assert.ok(inline(text).includes(`<em class="md">${want}</em>`), `real emphasis must survive: ${text}`);
+  }
+});
+
+ok('a NUL in the source text cannot forge the code-span placeholder', () => {
+  // The placeholder is NUL-delimited. UTF-8 can encode NUL, so a spec
+  // carrying one could otherwise impersonate a placeholder and render as
+  // <code class="md">undefined</code>. Stripping on the way in closes that.
+  const nul = String.fromCharCode(0);
+  const forged = `Prefix ${nul}0${nul} suffix with a real \`span\` after it.`;
+  const out = inline(forged);
+  assert.ok(!out.includes('undefined'), `a forged placeholder must not resolve, got: ${out}`);
+  assert.equal((out.match(/<code class="md">/g) || []).length, 1, 'only the real backtick span becomes a code span');
+  assert.ok(out.includes('<code class="md">span</code>'), 'the real span still renders');
+  assert.ok(!out.includes(nul), 'no raw NUL survives into the rendered page');
 });
 
 /* ── Integration: CLI ─────────────────────────────────────────────── */

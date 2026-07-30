@@ -64,21 +64,33 @@ export function esc(s) {
  * means changing both, and the round-trip test is what catches forgetting.
  *
  * Code spans are lifted out FIRST, behind a NUL sentinel, so a doubled-star
- * glob inside backticks can never be read as bold. NUL is unforgeable here:
- * it cannot appear in the UTF-8 spec text and esc() leaves it untouched. A
- * softer delimiter would not do — spaces around a bare index would turn
- * "in 5 minutes" into a code span.
+ * glob inside backticks can never be read as bold. UTF-8 can encode NUL, so
+ * the sentinel is only unforgeable once the input's own NULs are dropped —
+ * hence the strip on the way in. Dropping beats escaping-and-restoring: NUL
+ * is not meaningful content in plan prose, so normalizing it away is safer
+ * than carrying it through two passes. A softer delimiter would not do —
+ * spaces around a bare index would turn "in 5 minutes" into a code span.
  *
- * The italic guard rejects a slash in the span, which is what keeps the bare
- * globs that appear unbackticked in real plan prose from rendering as
- * emphasis. Fenced blocks, links, and lists are deliberately not handled: no
- * plan uses them inside prose, and each would need its own inverse.
+ * Italic needs real flanking rules, not just a character blacklist. Bare
+ * globs are common in plan prose, and a star attached to a word (the star in
+ * product-reviewer-*.md) would otherwise pair with the star of the NEXT glob,
+ * swallowing everything between them into one <em> — a 569-character span in
+ * one committed plan, which the round-trip test could not see because
+ * remark() faithfully restores both stars. So: the opening star must follow
+ * whitespace or an opening bracket, the closing star must precede whitespace
+ * or sentence punctuation, and the span may not begin or end with whitespace
+ * or contain a slash. Bold needs none of this — its doubled delimiter makes
+ * accidental pairing vanishingly rare, and real plans do use multi-word bold.
+ *
+ * Fenced blocks, links, and lists are deliberately not handled: no plan uses
+ * them inside prose, and each would need its own inverse.
  */
 export function inline(s) {
   const spans = [];
-  return esc(String(s).replace(/`([^`]+)`/g, (_, c) => `\u0000${spans.push(c) - 1}\u0000`))
+  const clean = String(s).replace(/\u0000/g, '');
+  return esc(clean.replace(/`([^`]+)`/g, (_, c) => `\u0000${spans.push(c) - 1}\u0000`))
     .replace(/\*\*([^*]+)\*\*/g, '<strong class="md">$1</strong>')
-    .replace(/\*([^*/\s][^*/]*)\*/g, '<em class="md">$1</em>')
+    .replace(/(^|[\s([—])\*([^*/\s](?:[^*/]*[^*/\s])?)\*(?=$|[\s.,;:!?)\]—])/g, '$1<em class="md">$2</em>')
     .replace(/\u0000(\d+)\u0000/g, (_, i) => `<code class="md">${esc(spans[i])}</code>`);
 }
 
