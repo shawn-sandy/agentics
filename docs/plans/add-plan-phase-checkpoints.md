@@ -31,7 +31,7 @@ The remaining decisions, recorded here as well as in this plan's own `## Decisio
 
 The renderer has two homes, and that shaped the step order. `tests/plugins/test-build-plan-html.mjs` line 837 asserts the three files under `kit/plugins/plan-agent/scripts/` are byte-identical to their repo-root counterparts under `scripts/`, so every renderer edit lands at the root and is re-copied into the bundle before any test runs. The extractor is not mirrored at all — `extract-plan-spec.mjs` ships only at the repo root.
 
-`workflow: never` is set deliberately. Three of the nine steps are ordered edits to a single file, `scripts/lib/plan-spec.mjs`, so subagents fanning out would conflict on it. The renderer's own heuristic counts files and directories and would otherwise license fan-out this plan cannot use.
+`workflow: never` is set deliberately. Four of the twelve steps — 1, 2, 3, and 5 — are ordered edits to a single file, `scripts/lib/plan-spec.mjs`, so subagents fanning out would conflict on it. The renderer's own heuristic counts files and directories and would otherwise license fan-out this plan cannot use.
 
 ## Files
 
