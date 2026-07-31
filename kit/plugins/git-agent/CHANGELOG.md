@@ -5,21 +5,28 @@
 
 ### Added
 
-- **`commit-agent` Step 5: Ask Whether to Push.** After a successful commit the
-  skill now always asks via `AskUserQuestion` ("Push / Don't push") instead of
-  ending at the undo note. On approval it reuses `pr-agent` Step 4's upstream
-  probe — `git rev-parse --abbrev-ref --symbolic-full-name @{u}`, then
-  `git push -u origin <branch>` when there is no tracking ref and `git push`
-  when there is. A dismissed question counts as "Don't push", so closing the
-  dialog leaves the commit local. Push failures are reported verbatim and stop
-  the skill: no retry, no `--force`.
+- **`commit-agent` Steps 5–6: resolve the push command, then ask.** After a
+  successful commit the skill now always asks via `AskUserQuestion` ("Push /
+  Don't push") instead of ending at the undo note. Step 5 first runs
+  `pr-agent` Step 4's upstream probe —
+  `git rev-parse --abbrev-ref --symbolic-full-name @{u}` — to resolve
+  `git push -u origin <branch>` (no tracking ref) or `git push` (tracking ref
+  exists). The probe is read-only and deliberately precedes the question so the
+  prompt can name the exact command it is authorizing, rather than asking about
+  an abstract "push" and only then discovering which form it takes. Step 6 asks
+  and, on approval, runs the resolved command. A dismissed question counts as
+  "Don't push", so closing the dialog leaves the commit local.
+- **Push failures stop the skill.** Reported verbatim: no retry, no `--force`,
+  and no `pull`/`fetch`/`rebase`/`merge` to make the push land. A rejected push
+  means the branch diverged, and reconciling divergence is the user's call —
+  not a step the skill takes on its own to satisfy the approval it was given.
 - `AskUserQuestion` added to the skill's `allowed-tools`.
 
 ### Changed
 
-- The skill's stop marker moves from step 4 to step 5, and the "When not to
+- The skill's stop marker moves from step 4 to step 6, and the "When not to
   use" note narrows from "Does not push or create PRs" to "Does not create PRs
-   — use pr-agent for that. Never pushes without the Step 5 approval."
+   — use pr-agent for that. Never pushes without the Step 6 approval."
 
 ### Unchanged
 

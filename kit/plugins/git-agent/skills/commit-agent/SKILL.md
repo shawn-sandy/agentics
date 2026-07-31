@@ -6,11 +6,11 @@ disable-model-invocation: true
 model: haiku
 ---
 
-Stage all changes, create a conventional commit message, then ask whether to push. Follow these steps in strict order. **STOP immediately after step 5.**
+Stage all changes, create a conventional commit message, then ask whether to push. Follow these steps in strict order. **STOP immediately after step 6.**
 
 ## When not to use
 
-Does not create PRs — use pr-agent for that. Never pushes without the Step 5 approval.
+Does not create PRs — use pr-agent for that. Never pushes without the Step 6 approval.
 
 ## Step 0: Exit Plan Mode
 
@@ -66,26 +66,32 @@ After a successful commit, output one line:
 
 > To undo: `git reset HEAD~1`
 
-## Step 5: Ask Whether to Push
+## Step 5: Resolve the Push Command
+
+Determine which push the next step would run, so the question can name it. This step only reads state — it pushes nothing.
+
+Run:
+```
+git rev-parse --abbrev-ref --symbolic-full-name @{u}
+```
+
+- Exits non-zero (no upstream tracking ref) → the push command is `git push -u origin <current-branch>`
+- Exits zero (upstream exists) → the push command is `git push`
+
+## Step 6: Ask Whether to Push
 
 Always ask — never push on your own initiative, and never skip the question because the commit looked routine.
 
 Use **AskUserQuestion** with the header `Push`, the question "Commit created. Push `<branch>` to the remote?", and two options:
 
-- **Push** — push this commit to the remote now
+- **Push** — run `<push command from Step 5>`
 - **Don't push** — leave the commit local
 
 **If the answer is "Don't push"** (or the question is dismissed), output "Commit left local." and **STOP**.
 
-**If the answer is "Push"**, run:
-```
-git rev-parse --abbrev-ref --symbolic-full-name @{u}
-```
+**If the answer is "Push"**, run the command resolved in Step 5 and report the result.
 
-- Exits non-zero (no upstream tracking ref) → `git push -u origin <current-branch>`
-- Exits zero (upstream exists) → `git push`
-
-Report the push result. **If the push fails** (rejected, no remote, auth failure, pre-push hook), report the error verbatim and **STOP**. Do not retry. Do not force.
+**If the push fails** (rejected, no remote, auth failure, pre-push hook), report the error verbatim and **STOP**. Do not retry. Do not force. Do not pull, fetch, rebase, or merge to make the push succeed — a rejected push means the branch diverged, and reconciling it is the user's call.
 
 ---
 
