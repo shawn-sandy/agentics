@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 7.4.2 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
+## 7.4.3 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
 
 ### Fixed
 
@@ -26,6 +26,12 @@
   the same character at greater-or-equal length, so a prompt quoting fenced
   code needs a longer outer fence (` ````text `). `buildDigest()` sizes the
   fence it emits to outrun anything inside the prompt.
+- **Angle-bracket placeholders in a prompt are no longer eaten.**
+  `extractNextSteps()` ran the `<pre>` contents through a `<[^>]+>` tag strip,
+  which deleted the `<owner>`/`<repo>`-style placeholders a paste-ready prompt
+  depends on. The renderer escapes prompts, so a renderer-built card holds no
+  markup there and the strip only ever destroyed real text. Removing it also
+  clears a CodeQL incomplete-multi-character-sanitization alert.
 ## 7.4.1 — harden the ticket link and the summary handoff (2026-07-31)
 
 ### Fixed

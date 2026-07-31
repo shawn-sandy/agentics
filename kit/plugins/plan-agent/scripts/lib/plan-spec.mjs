@@ -354,10 +354,13 @@ export function extractNextSteps(html) {
       const summary = summaryInner === null ? '' : textOf(summaryInner);
       if (!summary) continue;
       // <pre> holds the prompt verbatim — decode entities but keep newlines
-      // and indentation, unlike textOf()'s single-line collapse.
+      // and indentation, unlike textOf()'s single-line collapse. No tag
+      // stripping: nextStepsBlock() escapes the prompt, so a renderer-built
+      // card carries no markup here, and the one thing a regex strip would
+      // find in a legacy hand-written card is placeholder text like
+      // `<owner>/<repo>` that must survive into the spec.
       const preInner = innerByMarker(card, '<pre', 'pre');
-      const prompt =
-        preInner === null ? null : decodeEntities(preInner.replace(/<[^>]+>/g, '')).replace(/\s+$/, '');
+      const prompt = preInner === null ? null : decodeEntities(preInner).replace(/\s+$/, '');
       const bodyInner = innerByMarker(card, 'class="next-step-prompt"', 'div') || '';
       const desc = blockTextOf(
         bodyInner

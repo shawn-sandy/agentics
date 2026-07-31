@@ -500,6 +500,26 @@ ok('Next Steps survives the HTML round trip instead of being dropped', () => {
   assert.equal(extractNextSteps(sampleHtml), null);
 });
 
+ok('angle-bracket placeholders in a prompt survive extraction', () => {
+  // The prompt is escaped on the way in, so the <pre> holds no markup — and a
+  // regex tag-strip here would silently eat the placeholders a prompt like
+  // `gh repo clone <owner>/<repo>` depends on.
+  const spec = `${SAMPLE_SPEC}
+## Next Steps
+
+- Clone and patch the repo
+  \`\`\`text
+  Run gh repo clone <owner>/<repo>, then edit <path>/config.json.
+  \`\`\`
+`;
+  const parsed = parseSpecMarkdown(spec);
+  const prompt = 'Run gh repo clone <owner>/<repo>, then edit <path>/config.json.';
+  assert.equal(parsed.nextSteps.items[0].prompt, prompt);
+  const html = renderPlanHtml(parsed, { fileName: 'ns.html', planPath: 'ns.html' });
+  assert.ok(html.includes('&lt;owner&gt;/&lt;repo&gt;'), 'placeholders must be escaped in the HTML');
+  assert.equal(extractNextSteps(html).items[0].prompt, prompt, 'placeholders lost on extraction');
+});
+
 ok('a prompt keeps a nested fence when the outer fence is longer', () => {
   // CommonMark: a fence closes only on the same character at >= its own
   // length. The old open/closed toggle ended the prompt at the inner ```yaml
