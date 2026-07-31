@@ -123,7 +123,7 @@ for f in proto_files:
     source_span = f'<span class="card-source">from {e(source)}</span>' if source else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(rel)}"
-   data-title="{e(html.unescape(title).lower())}">
+   data-month="{e(created[:7] if created else '')}" data-title="{e(html.unescape(title).lower())}">
   <div class="card-title">{e(title)}</div>
   <div class="card-meta">
     {date_span}

@@ -334,8 +334,9 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     : '';
 
   const main = [];
-  main.push(shell.objectiveCard(inline(s.objective)));
-  if (md.glance) main.push('', shell.glanceBlock(inline(md.glance)));
+  // One goal panel: the glance is nested inside #objective, not stacked
+  // beside it. extractSections() strips it back out of the objective.
+  main.push(shell.objectiveCard(inline(s.objective), md.glance ? shell.glanceBlock(inline(md.glance)) : ''));
   main.push('', shell.implementRow(esc(implement)));
   main.push('', shell.moreWaysDrawer({
     goal: esc(goal),
@@ -415,7 +416,13 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
       issueHref: issue ? esc(issue) : '',
       issueLabel: esc(issueLabel),
     }),
-    navHtml: shell.nav(navIds),
+    // The rail links to #step-N; the action text is the same inline-rendered
+    // HTML the card carries, so a step titled with `code` reads the same in
+    // both places.
+    navHtml: shell.nav(navIds, s.steps.map((st, i) => ({
+      action: inline(st.action),
+      done: Boolean(stepsDone[i]),
+    }))),
     mainHtml: main.join('\n'),
   });
 }

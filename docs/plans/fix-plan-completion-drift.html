@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="todo">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="fix">
@@ -16,54 +27,154 @@
 <meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/fix-plan-completion-drift.md — Make a finished plan admit it is finished. Brief subagents with the plan file at docs/plans/fix-plan-completion-drift.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-plan-completion-drift.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Make a finished plan admit it is finished</title>
 <style>
-/* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -93,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -103,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -119,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -130,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -157,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -168,9 +286,8 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
 
   /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
   .effort-badge {
@@ -185,12 +302,15 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .effort-badge::before { content: "Effort "; opacity: .7; }
-  [data-effort="low"]    .effort-badge { background: #16a34a; }
-  [data-effort="medium"] .effort-badge { background: #d97706; }
-  [data-effort="high"]   .effort-badge { background: #dc2626; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -207,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -225,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -232,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -246,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -264,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -301,98 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
+  }
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
   }
   .objective-card .section-label,
   .plan-glance-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
-  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
   .plan-glance {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    margin: -1.5rem 0 1.5rem;
-    line-height: 1.7;
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
   }
-  .plan-glance-label { color: var(--muted); }
-  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -400,22 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
     letter-spacing: -.01em;
-    color: var(--text);
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
   .section-card .section-intro {
-    font-size: .875rem;
-    color: var(--muted);
+    font-size: .85rem;
+    color: var(--ink-2);
     margin: -1rem 0 1.25rem;
   }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -424,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -491,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -554,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -592,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -610,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -632,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -663,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -677,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -691,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -712,17 +928,17 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
@@ -738,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -749,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -784,10 +1000,10 @@
     min-height: 44px;
   }
   .optional-section > summary::before,
-  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .optional-section[open] > summary::before,
   .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
@@ -795,9 +1011,9 @@
 
   /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
   .plan-more-ways {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
     overflow: hidden;
@@ -806,7 +1022,7 @@
     padding: .55rem 1rem;
     font-size: .78rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -816,10 +1032,10 @@
     min-height: 44px;
   }
   .plan-more-ways > summary:hover { color: var(--accent); }
-  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
   .plan-more-ways-body {
     padding: .75rem 1rem 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: .75rem;
@@ -833,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -843,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -861,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -872,8 +1088,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
@@ -895,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -913,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -924,8 +1140,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
@@ -947,14 +1163,14 @@
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -965,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -976,8 +1192,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
   /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
@@ -1008,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -1019,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -1030,8 +1246,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
   /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
@@ -1045,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -1068,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1098,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1120,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1132,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1149,69 +1365,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
   .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
 
   /* ── Resources (images, screenshots & reference links) ──────────── */
   .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
   .resource-figure > a { display: block; line-height: 0; }
-  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
-  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
   .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
-  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
   .resource-links li:last-child { border-bottom: none; }
   .resource-links a { font-weight: 600; word-break: break-word; }
-  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1219,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1307,6 +1523,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">todo</span>
       </div>
@@ -1337,19 +1555,34 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>10 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/hooks/detect-plan-completion-drift.py</code>, modelling it on <code class="md">hooks/render-plan-html.py</code> — reuse its <code class="md">_project_dir()</code>, <code class="md">_load_settings()</code>, <code class="md">_get_plans_dir()</code> and <code class="md">_is_plan_spec()</code> helpers verbatim (copy, do not import; hooks run as standalone scripts). Read <code class="md">tool_input.file_path</code> from stdin JSON, exit 0 immediately unless the path is a <code class="md"># Plan:</code> spec inside the resolved plans directory. Then parse the spec for three facts: <code class="md">status:</code> in frontmatter, step markers (<code class="md">^\d+\. \[x\]</code> vs <code class="md">^\d+\. </code>), and criteria bullets under <code class="md">## Acceptance Criteria</code> (<code class="md">- [x]</code> vs <code class="md">- [ ]</code>). Fire only when there is at least one step and at least one criterion, all steps are <code class="md">[x]</code>, all criteria are <code class="md">- [x]</code>, and status is not <code class="md">completed</code>; write a message to stderr naming the spec path and instructing <code class="md">/plan-agent:finalize-plan &lt;path&gt;</code>, then <code class="md">sys.exit(2)</code>. Every other case exits 0 silently.</span><span class="rail-state">step 1 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Register the hook in <code class="md">kit/plugins/plan-agent/hooks.json</code> as a fifth <code class="md">PostToolUse</code> entry matching <code class="md">Write|Edit|MultiEdit</code>, invoked as <code class="md">python3 &quot;${CLAUDE_PLUGIN_ROOT}/hooks/detect-plan-completion-drift.py&quot;</code> with <code class="md">&quot;timeout&quot;: 5</code>.</span><span class="rail-state">step 2 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">In <code class="md">kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code>, delete the <code class="md">disable-model-invocation: true</code> line (<code class="md">:5</code>) and retune the <code class="md">description</code> (<code class="md">:4</code>) so it reads as a completion action triggered by finishing implementation — keep it under 200 chars per <code class="md">.claude/rules/skill-authoring.md</code>, and drop the trailing &quot;Use via /plan-agent:finalize-plan.&quot; now that the command is no longer the only door.</span><span class="rail-state">step 3 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">In <code class="md">kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code>, amend the <code class="md">Exit — I&#39;ll implement later</code> branch (<code class="md">:516</code>) to state that a later implementing session is covered by the drift detector provided it ticks steps and criteria in the spec, and add one line to Step 6 (<code class="md">:144</code>) recording that the detector watches for the all-ticked/not-completed contradiction. Do not move or duplicate the three gates.</span><span class="rail-state">step 4 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Write <code class="md">tests/plugins/test-plan-completion-drift.sh</code> following the shape of <code class="md">tests/plugins/test-finalize-all-flag.sh</code>. Build spec fixtures in a temp dir under a fake plans directory and assert the hook&#39;s exit code for each: (a) all steps <code class="md">[x]</code> + all criteria <code class="md">- [x]</code> + <code class="md">status: in-progress</code> → exit 2 with the spec path on stderr; (b) same but <code class="md">status: completed</code> → exit 0 silent; (c) one step unticked → exit 0; (d) one criterion <code class="md">- [ ]</code> → exit 0; (e) a non-plan <code class="md">.md</code> in the plans dir → exit 0; (f) a <code class="md"># Plan:</code> spec outside the plans dir → exit 0.</span><span class="rail-state">step 5 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">In <code class="md">kit/plugins/plan-agent/scripts/lib/plan-shell.mjs</code>, generalise <code class="md">buildImplementPrompt()</code> (<code class="md">:1306</code>) into a shared builder that takes the source command element id (<code class="md">implement-cmd</code> / <code class="md">goal-cmd</code> / <code class="md">workflow-cmd</code>), keeping its existing five instructions and live-DOM status line verbatim. Rewire <code class="md">copyGoal</code> (<code class="md">:1390</code>) and <code class="md">copyWorkflow</code> (<code class="md">:1383</code>) to call it instead of copying raw <code class="md">textContent</code>. Keep <code class="md">copyCmd</code>&#39;s output byte-identical to today&#39;s. Add one instruction that applies to every variant: if the objective was achieved without following a step, leave that step unticked and record it as a <code class="md">## Completion Report</code> bullet in the spec rather than ticking it.</span><span class="rail-state">step 6 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">In <code class="md">kit/plugins/plan-agent/scripts/build-plan-html.mjs</code>, extend the <code class="md">goal</code> (<code class="md">:176</code>) and <code class="md">workflow</code> (<code class="md">:180</code>) strings so the check-off requirement survives into the <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags — append a clause instructing the agent to tick <code class="md">[x]</code> step markers and <code class="md">- [x]</code> criteria in the spec and set <code class="md">status: completed</code> when done. For the workflow string, place it so it applies to the briefed subagents, not just the orchestrator.</span><span class="rail-state">step 7 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Add goal/workflow prompt coverage to <code class="md">tests/plugins/test-build-plan-html.mjs</code>. Assert that the rendered <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags each contain the check-off clause, that the shared builder is wired to all three copy handlers (<code class="md">copyCmd</code>, <code class="md">copyGoal</code>, <code class="md">copyWorkflow</code> all reference it), and that a plan with <code class="md">workflow: false</code> still emits a <code class="md">plan-goal</code> tag carrying the clause.</span><span class="rail-state">step 8 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Add a <code class="md">3.1.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> above the <code class="md">3.0.0</code> entry, dated 2026-07-15, with <code class="md">### Added</code> (the drift-detector hook) and <code class="md">### Changed</code> (<code class="md">finalize-plan</code> is now model-invocable — state explicitly that the <code class="md">/plan-agent:finalize-plan</code> command is unchanged and existing invocations keep working, and that the skill may now activate on its own when a plan finishes).</span><span class="rail-state">step 9 of 10</span></a></li>
+        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Bump <code class="md">plan-agent</code>&#39;s <code class="md">version</code> in <code class="md">.claude-plugin/marketplace.json</code> from <code class="md">3.0.0</code> to <code class="md">3.1.0</code>.</span><span class="rail-state">step 10 of 10</span></a></li>
+      </ul>
+    </details>
   </nav>
 
   <main id="main">
 
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Close the plan-completion gap from both ends: make every prompt that starts an implementation require the plan be checked off, and add a PostToolUse hook that deterministically catches a plan whose steps and criteria are all checked while its `status` still says otherwise — then unlock `finalize-plan` so the model can act on that signal.</p>
+      <p>Close the plan-completion gap from both ends: make every prompt that starts an implementation require the plan be checked off, and add a PostToolUse hook that deterministically catches a plan whose steps and criteria are all checked while its <code class="md">status</code> still says otherwise — then unlock <code class="md">finalize-plan</code> so the model can act on that signal.</p>
+      <section class="plan-glance" aria-labelledby="plan-glance-label">
+        <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+        <p>Plans get implemented and then quietly stay at &quot;todo&quot; forever, so the gallery lies about what shipped. The completion machinery already exists — it is just unreachable unless you happen to be standing in the right skill at the right moment. This fixes both ends: the prompts now ask every agent to check the plan off, and a deterministic detector fires the instant one contradicts itself.</p>
+      </section>
     </div>
-
-    <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>Plans get implemented and then quietly stay at &quot;todo&quot; forever, so the gallery lies about what shipped. The completion machinery already exists — it is just unreachable unless you happen to be standing in the right skill at the right moment. This fixes both ends: the prompts now ask every agent to check the plan off, and a deterministic detector fires the instant one contradicts itself.</p>
-    </section>
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
@@ -1422,25 +1655,25 @@ img, video { max-width: 100%; height: auto; }
         Context
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
-      <p>Plans generated by `plan-agent` routinely finish implementation and never get<br>marked `completed`. The gallery then misrepresents what shipped.</p>
+      <p>Plans generated by <code class="md">plan-agent</code> routinely finish implementation and never get<br>marked <code class="md">completed</code>. The gallery then misrepresents what shipped.</p>
       <p>The completion machinery is not missing — it is unreachable. Verified in the<br>current tree:</p>
-      <p>- `skills/implementation-plan/SKILL.md:423,439,461` — the acceptance-criteria,<br>end-to-end-verification, and completion-checklist gates are all nested inside<br>the `Implement now` branch at `:417`. No other path reaches them.<br>- `skills/implementation-plan/SKILL.md:400,516` — the sibling branch,<br>`Exit — I&#39;ll implement later`, states: &quot;No implementation, no status change —<br>the plan stays at `todo` everywhere.&quot;<br>- `skills/finalize-plan/SKILL.md:5` — `disable-model-invocation: true` bars the<br>model from ever auto-invoking the skill. Only a manually typed<br>`/plan-agent:finalize-plan` reaches it.<br>- `hooks.json:3` — all four hooks are `PostToolUse` on `Write|Edit|MultiEdit`.<br>There is no `Stop` or `SubagentStop` hook, so nothing observes a session<br>ending.<br>- The only &quot;always update status&quot; instruction is `~/.claude/rules/plan-mode.md`<br>§7 — a maintainer-local file that ships to nobody. Marketplace installs<br>(plan-agent 3.0.0) receive none of it.</p>
-      <p>Net: the dominant path — generate a plan, exit, implement it in a *later*<br>session — hits no gate at all.</p>
+      <p>- <code class="md">skills/implementation-plan/SKILL.md:423,439,461</code> — the acceptance-criteria,<br>end-to-end-verification, and completion-checklist gates are all nested inside<br>the <code class="md">Implement now</code> branch at <code class="md">:417</code>. No other path reaches them.<br>- <code class="md">skills/implementation-plan/SKILL.md:400,516</code> — the sibling branch,<br><code class="md">Exit — I&#39;ll implement later</code>, states: &quot;No implementation, no status change —<br>the plan stays at <code class="md">todo</code> everywhere.&quot;<br>- <code class="md">skills/finalize-plan/SKILL.md:5</code> — <code class="md">disable-model-invocation: true</code> bars the<br>model from ever auto-invoking the skill. Only a manually typed<br><code class="md">/plan-agent:finalize-plan</code> reaches it.<br>- <code class="md">hooks.json:3</code> — all four hooks are <code class="md">PostToolUse</code> on <code class="md">Write|Edit|MultiEdit</code>.<br>There is no <code class="md">Stop</code> or <code class="md">SubagentStop</code> hook, so nothing observes a session<br>ending.<br>- The only &quot;always update status&quot; instruction is <code class="md">~/.claude/rules/plan-mode.md</code><br>§7 — a maintainer-local file that ships to nobody. Marketplace installs<br>(plan-agent 3.0.0) receive none of it.</p>
+      <p>Net: the dominant path — generate a plan, exit, implement it in a <em class="md">later</em><br>session — hits no gate at all.</p>
       <p>### The mechanism, and why this one</p>
-      <p>**Recommended: a drift-detector hook that hands off to the existing<br>verification skill.** A new `hooks/detect-plan-completion-drift.py` fires on<br>plan-spec writes and reports one specific contradiction: *every step carries<br>`[x]`, every acceptance criterion is `- [x]`, and `status` is not `completed`.*<br>It reports; it never writes status. `finalize-plan` — unlocked in Step 3 — does<br>the actual verification and status write, behind its own existing<br>user-confirmation gate.</p>
+      <p><strong class="md">Recommended: a drift-detector hook that hands off to the existing<br>verification skill.</strong> A new <code class="md">hooks/detect-plan-completion-drift.py</code> fires on<br>plan-spec writes and reports one specific contradiction: <em class="md">every step carries<br><code class="md">[x]</code>, every acceptance criterion is <code class="md">- [x]</code>, and <code class="md">status</code> is not <code class="md">completed</code>.</em><br>It reports; it never writes status. <code class="md">finalize-plan</code> — unlocked in Step 3 — does<br>the actual verification and status write, behind its own existing<br>user-confirmation gate.</p>
       <p>This is one mechanism in two files: the detector needs a callee it can actually<br>reach, and today it has none.</p>
-      <p>The design turns on a distinction that matters. The hook does **not** judge<br>whether the work is done — it cannot; acceptance criteria are prose. It detects<br>that *the document contradicts itself*, which is mechanical string-matching over<br>committed state. Resolving the contradiction is delegated to the skill that<br>already verifies against the codebase and asks the user. So nothing in this<br>chain asks the model to self-attest to completion.</p>
+      <p>The design turns on a distinction that matters. The hook does <strong class="md">not</strong> judge<br>whether the work is done — it cannot; acceptance criteria are prose. It detects<br>that <em class="md">the document contradicts itself</em>, which is mechanical string-matching over<br>committed state. Resolving the contradiction is delegated to the skill that<br>already verifies against the codebase and asks the user. So nothing in this<br>chain asks the model to self-attest to completion.</p>
       <p>Against the four failure modes:</p>
-      <p>| Failure mode | How this handles it |<br>|---|---|<br>| **Silent skip** (today&#39;s bug) | Solved for the dominant case. The renderer&#39;s implement-prompt already instructs the implementing agent to tick `[x]` markers and criteria as it goes; what gets forgotten is the final `status:` flip. That forgetting *is* the drift state, so the last tick trips the detector. |<br>| **False completion** | Structurally prevented. The hook writes nothing and decides nothing. `finalize-plan` inspects codebase evidence and gates on `AskUserQuestion` before any status write — behavior this plan does not alter. |<br>| **Noisy prompts** | Four conditions must hold simultaneously: the written file is a `# Plan:` spec inside the resolved `plansDirectory`, every step is `[x]`, every criterion is `- [x]`, and `status != completed`. The hook cannot fire in a session with no plan in play, because it only fires on writes to plan specs. |<br>| **Plugin-user gap** | Every behavioral change lands in `kit/plugins/plan-agent/**` and ships via the `git-subdir` source. Nothing depends on `~/.claude/rules/`, repo-local settings, or this repo&#39;s layout. |</p>
-      <p>**What this deliberately does not solve:** a session that implements a plan and<br>ticks *nothing*. With no write to the spec there is no hook event, and the plan<br>stays silently at `todo`. Closing that hole *completely* needs a `Stop` hook<br>scanning the transcript to distinguish &quot;implemented this plan&quot; from &quot;happened to<br>read it&quot; — which trades directly into the noise column and cannot make that<br>distinction reliably. It is named in Next Steps rather than smuggled in here.<br>Partially ticked plans (some steps `[x]`, not all) are likewise out of range by<br>design: that is a genuinely unfinished plan, and `status: in-progress` is<br>accurate.</p>
+      <p>| Failure mode | How this handles it |<br>|---|---|<br>| <strong class="md">Silent skip</strong> (today&#39;s bug) | Solved for the dominant case. The renderer&#39;s implement-prompt already instructs the implementing agent to tick <code class="md">[x]</code> markers and criteria as it goes; what gets forgotten is the final <code class="md">status:</code> flip. That forgetting <em class="md">is</em> the drift state, so the last tick trips the detector. |<br>| <strong class="md">False completion</strong> | Structurally prevented. The hook writes nothing and decides nothing. <code class="md">finalize-plan</code> inspects codebase evidence and gates on <code class="md">AskUserQuestion</code> before any status write — behavior this plan does not alter. |<br>| <strong class="md">Noisy prompts</strong> | Four conditions must hold simultaneously: the written file is a <code class="md"># Plan:</code> spec inside the resolved <code class="md">plansDirectory</code>, every step is <code class="md">[x]</code>, every criterion is <code class="md">- [x]</code>, and <code class="md">status != completed</code>. The hook cannot fire in a session with no plan in play, because it only fires on writes to plan specs. |<br>| <strong class="md">Plugin-user gap</strong> | Every behavioral change lands in <code class="md">kit/plugins/plan-agent/**</code> and ships via the <code class="md">git-subdir</code> source. Nothing depends on <code class="md">~/.claude/rules/</code>, repo-local settings, or this repo&#39;s layout. |</p>
+      <p><strong class="md">What this deliberately does not solve:</strong> a session that implements a plan and<br>ticks <em class="md">nothing</em>. With no write to the spec there is no hook event, and the plan<br>stays silently at <code class="md">todo</code>. Closing that hole <em class="md">completely</em> needs a <code class="md">Stop</code> hook<br>scanning the transcript to distinguish &quot;implemented this plan&quot; from &quot;happened to<br>read it&quot; — which trades directly into the noise column and cannot make that<br>distinction reliably. It is named in Next Steps rather than smuggled in here.<br>Partially ticked plans (some steps <code class="md">[x]</code>, not all) are likewise out of range by<br>design: that is a genuinely unfinished plan, and <code class="md">status: in-progress</code> is<br>accurate.</p>
       <p>### Feeding the detector: the prompts must ask for ticks</p>
       <p>A detector that only fires on ticks is worth nothing if the prompts never ask<br>for any. Three prompts start an implementation, and only one of them teaches<br>check-off:</p>
-      <p>| Prompt | Path | Instructs check-off today? |<br>|---|---|---|<br>| Implement | `copyCmd` → `buildImplementPrompt()` (`plan-shell.mjs:1306`) | **Yes** — five numbered instructions covering `[x]` step markers, `- [x]` criteria, `status: completed`, and re-render. |<br>| Goal | `copyGoal` (`plan-shell.mjs:1390`) + `plan-goal` meta | **No** — copies the bare one-liner&#39;s `textContent`. |<br>| Workflow | `copyWorkflow` (`plan-shell.mjs:1383`) + `plan-workflow` meta | **No** — copies the bare one-liner&#39;s `textContent`. |</p>
-      <p>The workflow gap is the worst of the three, because that prompt says &quot;Brief<br>subagents with the plan file&quot; — so every subagent is briefed with a plan and<br>never told to record anything. Nothing ticks, no spec write happens, and the<br>detector in Steps 1–2 never fires. This plan&#39;s own rendered HTML has the defect:<br>its `plan-workflow` meta tag tells subagents to implement it and says nothing<br>about completion.</p>
-      <p>Both the copy handlers *and* the meta-tag strings need fixing, because they are<br>different delivery paths: `implementation-plan/SKILL.md:482-483` sends the user<br>the workflow prompt read **from the `plan-workflow` meta tag**, not from the copy<br>button. Fixing only the button would leave the primary workflow path untouched.</p>
+      <p>| Prompt | Path | Instructs check-off today? |<br>|---|---|---|<br>| Implement | <code class="md">copyCmd</code> → <code class="md">buildImplementPrompt()</code> (<code class="md">plan-shell.mjs:1306</code>) | <strong class="md">Yes</strong> — five numbered instructions covering <code class="md">[x]</code> step markers, <code class="md">- [x]</code> criteria, <code class="md">status: completed</code>, and re-render. |<br>| Goal | <code class="md">copyGoal</code> (<code class="md">plan-shell.mjs:1390</code>) + <code class="md">plan-goal</code> meta | <strong class="md">No</strong> — copies the bare one-liner&#39;s <code class="md">textContent</code>. |<br>| Workflow | <code class="md">copyWorkflow</code> (<code class="md">plan-shell.mjs:1383</code>) + <code class="md">plan-workflow</code> meta | <strong class="md">No</strong> — copies the bare one-liner&#39;s <code class="md">textContent</code>. |</p>
+      <p>The workflow gap is the worst of the three, because that prompt says &quot;Brief<br>subagents with the plan file&quot; — so every subagent is briefed with a plan and<br>never told to record anything. Nothing ticks, no spec write happens, and the<br>detector in Steps 1–2 never fires. This plan&#39;s own rendered HTML has the defect:<br>its <code class="md">plan-workflow</code> meta tag tells subagents to implement it and says nothing<br>about completion.</p>
+      <p>Both the copy handlers <em class="md">and</em> the meta-tag strings need fixing, because they are<br>different delivery paths: <code class="md">implementation-plan/SKILL.md:482-483</code> sends the user<br>the workflow prompt read <strong class="md">from the <code class="md">plan-workflow</code> meta tag</strong>, not from the copy<br>button. Fixing only the button would leave the primary workflow path untouched.</p>
       <p>Steps 6–8 close this. Together with the detector they narrow the never-ticked<br>hole to sessions that ignore the prompt entirely — without the Stop hook.</p>
       <p>### Risks</p>
-      <p>- **Exit-2 styling.** This plugin&#39;s hook convention is stderr + `sys.exit(2)`<br>(`hooks/validate-plan-filename.py:210-211`), which the UI renders as a<br>&quot;blocking error&quot; even though `PostToolUse` cannot block an already-run tool.<br>A completion nudge styled as an error is a cosmetic mismatch. Mitigation:<br>follow the established convention for consistency; the message text carries<br>the framing. Revisiting the delivery channel repo-wide is a Next Step.<br>- **Unlocking `finalize-plan` widens its activation surface.** Mitigated by its<br>narrow description and its own confirmation gate. Step 3 tightens the<br>description so it reads as a completion action rather than an ambient one.<br>- **The goal prompt gets the full check-off, including per-step `[x]` markers.**<br>Decided during the plan interview, over the narrower alternative of criteria +<br>status only. The tension it creates is real and worth stating: the goal prompt<br>exists to tell an agent to *optimize for the outcome* and treat the plan as<br>reference, so an agent may legitimately achieve the objective without<br>following the plan&#39;s steps. Ticking those steps would then record work that<br>never happened — a false record, adjacent to the false-completion failure mode<br>this plan otherwise guards against. What keeps it honest is that the inherited<br>instruction is already conditional (&quot;after completing each step, mark it<br>done&quot;), so a bypassed step stays unticked. The consequence is that a<br>goal-driven agent which met every criterion by a different route cannot reach<br>`status: completed`, because not every step is `[x]`. Step 6 resolves that with<br>the mechanism the section catalog already provides: route the discrepancy to a<br>`## Completion Report` entry rather than a false tick. Re-open this if goal-run<br>plans start stalling at `in-progress` with clean criteria.<br>- **The version bump reads the rule&#39;s spirit over its letter.** Decided during<br>the plan interview: `.claude/rules/marketplace.md` lists &quot;changing activation<br>behavior&quot; under MAJOR, and this plan changes it. It ships as `3.1.0` anyway,<br>because the clause targets changes that invalidate existing usage and this one<br>does not — the command still works, nothing an installed user does breaks. The<br>cost is that a user skimming version numbers sees a routine minor bump and may<br>not notice the skill can now fire on its own. Mitigation: Step 9 makes the<br>CHANGELOG entry state the activation change outright, since it is now the only<br>place that information surfaces.</p>
+      <p>- <strong class="md">Exit-2 styling.</strong> This plugin&#39;s hook convention is stderr + <code class="md">sys.exit(2)</code><br>(<code class="md">hooks/validate-plan-filename.py:210-211</code>), which the UI renders as a<br>&quot;blocking error&quot; even though <code class="md">PostToolUse</code> cannot block an already-run tool.<br>A completion nudge styled as an error is a cosmetic mismatch. Mitigation:<br>follow the established convention for consistency; the message text carries<br>the framing. Revisiting the delivery channel repo-wide is a Next Step.<br>- <strong class="md">Unlocking <code class="md">finalize-plan</code> widens its activation surface.</strong> Mitigated by its<br>narrow description and its own confirmation gate. Step 3 tightens the<br>description so it reads as a completion action rather than an ambient one.<br>- <strong class="md">The goal prompt gets the full check-off, including per-step <code class="md">[x]</code> markers.</strong><br>Decided during the plan interview, over the narrower alternative of criteria +<br>status only. The tension it creates is real and worth stating: the goal prompt<br>exists to tell an agent to <em class="md">optimize for the outcome</em> and treat the plan as<br>reference, so an agent may legitimately achieve the objective without<br>following the plan&#39;s steps. Ticking those steps would then record work that<br>never happened — a false record, adjacent to the false-completion failure mode<br>this plan otherwise guards against. What keeps it honest is that the inherited<br>instruction is already conditional (&quot;after completing each step, mark it<br>done&quot;), so a bypassed step stays unticked. The consequence is that a<br>goal-driven agent which met every criterion by a different route cannot reach<br><code class="md">status: completed</code>, because not every step is <code class="md">[x]</code>. Step 6 resolves that with<br>the mechanism the section catalog already provides: route the discrepancy to a<br><code class="md">## Completion Report</code> entry rather than a false tick. Re-open this if goal-run<br>plans start stalling at <code class="md">in-progress</code> with clean criteria.<br>- <strong class="md">The version bump reads the rule&#39;s spirit over its letter.</strong> Decided during<br>the plan interview: <code class="md">.claude/rules/marketplace.md</code> lists &quot;changing activation<br>behavior&quot; under MAJOR, and this plan changes it. It ships as <code class="md">3.1.0</code> anyway,<br>because the clause targets changes that invalidate existing usage and this one<br>does not — the command still works, nothing an installed user does breaks. The<br>cost is that a user skimming version numbers sees a routine minor bump and may<br>not notice the skill can now fire on its own. Mitigation: Step 9 makes the<br>CHANGELOG entry state the activation change outright, since it is now the only<br>place that information surfaces.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1453,15 +1686,15 @@ img, video { max-width: 100%; height: auto; }
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
           <li><code>`kit/plugins/plan-agent/hooks/detect-plan-completion-drift.py`</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the detector.</span></li>
-          <li><code>`kit/plugins/plan-agent/hooks.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register it on `Write|Edit|MultiEdit`.</span></li>
-          <li><code>`kit/plugins/plan-agent/skills/finalize-plan/SKILL.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">drop `disable-model-invocation`, retune the description.</span></li>
-          <li><code>`kit/plugins/plan-agent/skills/implementation-plan/SKILL.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the detector on the `Exit` branch and in Step 6.</span></li>
-          <li><code>`kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">generalise `buildImplementPrompt()`; rewire `copyGoal` and `copyWorkflow` to it.</span></li>
-          <li><code>`kit/plugins/plan-agent/scripts/build-plan-html.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">carry the check-off clause into the `plan-goal` and `plan-workflow` meta tags.</span></li>
-          <li><code>`tests/plugins/test-build-plan-html.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">assert all three prompts instruct check-off. **Outside the plugin path by the same test convention as below.**</span></li>
+          <li><code>`kit/plugins/plan-agent/hooks.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register it on <code class="md">Write|Edit|MultiEdit</code>.</span></li>
+          <li><code>`kit/plugins/plan-agent/skills/finalize-plan/SKILL.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">drop <code class="md">disable-model-invocation</code>, retune the description.</span></li>
+          <li><code>`kit/plugins/plan-agent/skills/implementation-plan/SKILL.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the detector on the <code class="md">Exit</code> branch and in Step 6.</span></li>
+          <li><code>`kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">generalise <code class="md">buildImplementPrompt()</code>; rewire <code class="md">copyGoal</code> and <code class="md">copyWorkflow</code> to it.</span></li>
+          <li><code>`kit/plugins/plan-agent/scripts/build-plan-html.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">carry the check-off clause into the <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags.</span></li>
+          <li><code>`tests/plugins/test-build-plan-html.mjs`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">assert all three prompts instruct check-off. <strong class="md">Outside the plugin path by the same test convention as below.</strong></span></li>
           <li><code>`kit/plugins/plan-agent/CHANGELOG.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">release entry.</span></li>
-          <li><code>`.claude-plugin/marketplace.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version bump. **Outside `kit/plugins/plan-agent/**` by necessity:** for relative-path plugins this repo sets `version` only in `marketplace.json`, never in `plugin.json` (per `.claude/rules/marketplace.md`). There is no in-plugin alternative.</span></li>
-          <li><code>`tests/plugins/test-plan-completion-drift.sh`</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Tier 1 test. **Outside the plugin path by convention:** every plugin test in this repo lives under `tests/plugins/`; no plugin directory contains tests.</span></li>
+          <li><code>`.claude-plugin/marketplace.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version bump. <strong class="md">Outside <code class="md">kit/plugins/plan-agent/**</code> by necessity:</strong> for relative-path plugins this repo sets <code class="md">version</code> only in <code class="md">marketplace.json</code>, never in <code class="md">plugin.json</code> (per <code class="md">.claude/rules/marketplace.md</code>). There is no in-plugin alternative.</span></li>
+          <li><code>`tests/plugins/test-plan-completion-drift.sh`</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Tier 1 test. <strong class="md">Outside the plugin path by convention:</strong> every plugin test in this repo lives under <code class="md">tests/plugins/</code>; no plugin directory contains tests.</span></li>
         </ul>
       </div>
     </section>
@@ -1474,172 +1707,202 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write `kit/plugins/plan-agent/hooks/detect-plan-completion-drift.py`, modelling it on `hooks/render-plan-html.py` — reuse its `_project_dir()`, `_load_settings()`, `_get_plans_dir()` and `_is_plan_spec()` helpers verbatim (copy, do not import; hooks run as standalone scripts). Read `tool_input.file_path` from stdin JSON, exit 0 immediately unless the path is a `# Plan:` spec inside the resolved plans directory. Then parse the spec for three facts: `status:` in frontmatter, step markers (`^\d+\. \[x\]` vs `^\d+\. `), and criteria bullets under `## Acceptance Criteria` (`- [x]` vs `- [ ]`). Fire only when there is at least one step and at least one criterion, all steps are `[x]`, all criteria are `- [x]`, and status is not `completed`; write a message to stderr naming the spec path and instructing `/plan-agent:finalize-plan &lt;path&gt;`, then `sys.exit(2)`. Every other case exits 0 silently.</span>
+                <span class="step-chip-text">Write <code class="md">kit/plugins/plan-agent/hooks/detect-plan-completion-drift.py</code>, modelling it on <code class="md">hooks/render-plan-html.py</code> — reuse its <code class="md">_project_dir()</code>, <code class="md">_load_settings()</code>, <code class="md">_get_plans_dir()</code> and <code class="md">_is_plan_spec()</code> helpers verbatim (copy, do not import; hooks run as standalone scripts). Read <code class="md">tool_input.file_path</code> from stdin JSON, exit 0 immediately unless the path is a <code class="md"># Plan:</code> spec inside the resolved plans directory. Then parse the spec for three facts: <code class="md">status:</code> in frontmatter, step markers (<code class="md">^\d+\. \[x\]</code> vs <code class="md">^\d+\. </code>), and criteria bullets under <code class="md">## Acceptance Criteria</code> (<code class="md">- [x]</code> vs <code class="md">- [ ]</code>). Fire only when there is at least one step and at least one criterion, all steps are <code class="md">[x]</code>, all criteria are <code class="md">- [x]</code>, and status is not <code class="md">completed</code>; write a message to stderr naming the spec path and instructing <code class="md">/plan-agent:finalize-plan &lt;path&gt;</code>, then <code class="md">sys.exit(2)</code>. Every other case exits 0 silently.</span>
               </div>
-              <div class="step-why">this is the whole mechanism — a deterministic contradiction detector that reports without deciding, so it can never manufacture a false completion.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`echo &#39;{&quot;tool_input&quot;:{&quot;file_path&quot;:&quot;docs/plans/fix-plan-completion-drift.md&quot;}}&#39; | python3 kit/plugins/plan-agent/hooks/detect-plan-completion-drift.py; echo &quot;exit=$?&quot;` prints `exit=0` against this plan while it is unticked.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">this is the whole mechanism — a deterministic contradiction detector that reports without deciding, so it can never manufacture a false completion.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">echo &#39;{&quot;tool_input&quot;:{&quot;file_path&quot;:&quot;docs/plans/fix-plan-completion-drift.md&quot;}}&#39; | python3 kit/plugins/plan-agent/hooks/detect-plan-completion-drift.py; echo &quot;exit=$?&quot;</code> prints <code class="md">exit=0</code> against this plan while it is unticked.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Register the hook in `kit/plugins/plan-agent/hooks.json` as a fifth `PostToolUse` entry matching `Write|Edit|MultiEdit`, invoked as `python3 &quot;${CLAUDE_PLUGIN_ROOT}/hooks/detect-plan-completion-drift.py&quot;` with `&quot;timeout&quot;: 5`.</span>
+                <span class="step-chip-text">Register the hook in <code class="md">kit/plugins/plan-agent/hooks.json</code> as a fifth <code class="md">PostToolUse</code> entry matching <code class="md">Write|Edit|MultiEdit</code>, invoked as <code class="md">python3 &quot;${CLAUDE_PLUGIN_ROOT}/hooks/detect-plan-completion-drift.py&quot;</code> with <code class="md">&quot;timeout&quot;: 5</code>.</span>
               </div>
-              <div class="step-why">`${CLAUDE_PLUGIN_ROOT}` is what makes the hook resolve for marketplace installs rather than only in this checkout — the plugin-user gap closes here or not at all.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`python3 -c &quot;import json; h=json.load(open(&#39;kit/plugins/plan-agent/hooks.json&#39;))[&#39;hooks&#39;][&#39;PostToolUse&#39;]; print(len(h)); print([e[&#39;hooks&#39;][0][&#39;command&#39;] for e in h])&quot;` prints `5` and lists the new command with `${CLAUDE_PLUGIN_ROOT}` intact.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">${CLAUDE_PLUGIN_ROOT}</code> is what makes the hook resolve for marketplace installs rather than only in this checkout — the plugin-user gap closes here or not at all.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">python3 -c &quot;import json; h=json.load(open(&#39;kit/plugins/plan-agent/hooks.json&#39;))[&#39;hooks&#39;][&#39;PostToolUse&#39;]; print(len(h)); print([e[&#39;hooks&#39;][0][&#39;command&#39;] for e in h])&quot;</code> prints <code class="md">5</code> and lists the new command with <code class="md">${CLAUDE_PLUGIN_ROOT}</code> intact.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">In `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md`, delete the `disable-model-invocation: true` line (`:5`) and retune the `description` (`:4`) so it reads as a completion action triggered by finishing implementation — keep it under 200 chars per `.claude/rules/skill-authoring.md`, and drop the trailing &quot;Use via /plan-agent:finalize-plan.&quot; now that the command is no longer the only door.</span>
+                <span class="step-chip-text">In <code class="md">kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code>, delete the <code class="md">disable-model-invocation: true</code> line (<code class="md">:5</code>) and retune the <code class="md">description</code> (<code class="md">:4</code>) so it reads as a completion action triggered by finishing implementation — keep it under 200 chars per <code class="md">.claude/rules/skill-authoring.md</code>, and drop the trailing &quot;Use via /plan-agent:finalize-plan.&quot; now that the command is no longer the only door.</span>
               </div>
-              <div class="step-why">with the flag in place the detector&#39;s advice is unactionable — the model is barred from the skill and the user must hand-type the command, which is the habit that produced the bug.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`head -8 kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` shows no `disable-model-invocation` key, and `grep -c disable-model-invocation kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` returns `0`.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">with the flag in place the detector&#39;s advice is unactionable — the model is barred from the skill and the user must hand-type the command, which is the habit that produced the bug.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">head -8 kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> shows no <code class="md">disable-model-invocation</code> key, and <code class="md">grep -c disable-model-invocation kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> returns <code class="md">0</code>.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">In `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md`, amend the `Exit — I&#39;ll implement later` branch (`:516`) to state that a later implementing session is covered by the drift detector provided it ticks steps and criteria in the spec, and add one line to Step 6 (`:144`) recording that the detector watches for the all-ticked/not-completed contradiction. Do not move or duplicate the three gates.</span>
+                <span class="step-chip-text">In <code class="md">kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code>, amend the <code class="md">Exit — I&#39;ll implement later</code> branch (<code class="md">:516</code>) to state that a later implementing session is covered by the drift detector provided it ticks steps and criteria in the spec, and add one line to Step 6 (<code class="md">:144</code>) recording that the detector watches for the all-ticked/not-completed contradiction. Do not move or duplicate the three gates.</span>
               </div>
-              <div class="step-why">the `Exit` branch is where the dominant failure path begins, and it currently reads as a dead end; a reader there has no idea anything downstream will catch them.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -n &quot;drift\|detect-plan-completion-drift&quot; kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` returns hits in both the Step 6 region and the Exit branch, and `grep -c &quot;Acceptance criteria gate&quot; kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` still returns `1`.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the <code class="md">Exit</code> branch is where the dominant failure path begins, and it currently reads as a dead end; a reader there has no idea anything downstream will catch them.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -n &quot;drift\|detect-plan-completion-drift&quot; kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> returns hits in both the Step 6 region and the Exit branch, and <code class="md">grep -c &quot;Acceptance criteria gate&quot; kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> still returns <code class="md">1</code>.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write `tests/plugins/test-plan-completion-drift.sh` following the shape of `tests/plugins/test-finalize-all-flag.sh`. Build spec fixtures in a temp dir under a fake plans directory and assert the hook&#39;s exit code for each: (a) all steps `[x]` + all criteria `- [x]` + `status: in-progress` → exit 2 with the spec path on stderr; (b) same but `status: completed` → exit 0 silent; (c) one step unticked → exit 0; (d) one criterion `- [ ]` → exit 0; (e) a non-plan `.md` in the plans dir → exit 0; (f) a `# Plan:` spec outside the plans dir → exit 0.</span>
+                <span class="step-chip-text">Write <code class="md">tests/plugins/test-plan-completion-drift.sh</code> following the shape of <code class="md">tests/plugins/test-finalize-all-flag.sh</code>. Build spec fixtures in a temp dir under a fake plans directory and assert the hook&#39;s exit code for each: (a) all steps <code class="md">[x]</code> + all criteria <code class="md">- [x]</code> + <code class="md">status: in-progress</code> → exit 2 with the spec path on stderr; (b) same but <code class="md">status: completed</code> → exit 0 silent; (c) one step unticked → exit 0; (d) one criterion <code class="md">- [ ]</code> → exit 0; (e) a non-plan <code class="md">.md</code> in the plans dir → exit 0; (f) a <code class="md"># Plan:</code> spec outside the plans dir → exit 0.</span>
               </div>
-              <div class="step-why">cases (b)–(f) are the noise contract — they are the reason this hook is safe to run on every write in every session, so they need to fail loudly if someone loosens the conditions later.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-plan-completion-drift.sh` exits 0 and reports all six cases passing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">cases (b)–(f) are the noise contract — they are the reason this hook is safe to run on every write in every session, so they need to fail loudly if someone loosens the conditions later.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-plan-completion-drift.sh</code> exits 0 and reports all six cases passing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">In `kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`, generalise `buildImplementPrompt()` (`:1306`) into a shared builder that takes the source command element id (`implement-cmd` / `goal-cmd` / `workflow-cmd`), keeping its existing five instructions and live-DOM status line verbatim. Rewire `copyGoal` (`:1390`) and `copyWorkflow` (`:1383`) to call it instead of copying raw `textContent`. Keep `copyCmd`&#39;s output byte-identical to today&#39;s. Add one instruction that applies to every variant: if the objective was achieved without following a step, leave that step unticked and record it as a `## Completion Report` bullet in the spec rather than ticking it.</span>
+                <span class="step-chip-text">In <code class="md">kit/plugins/plan-agent/scripts/lib/plan-shell.mjs</code>, generalise <code class="md">buildImplementPrompt()</code> (<code class="md">:1306</code>) into a shared builder that takes the source command element id (<code class="md">implement-cmd</code> / <code class="md">goal-cmd</code> / <code class="md">workflow-cmd</code>), keeping its existing five instructions and live-DOM status line verbatim. Rewire <code class="md">copyGoal</code> (<code class="md">:1390</code>) and <code class="md">copyWorkflow</code> (<code class="md">:1383</code>) to call it instead of copying raw <code class="md">textContent</code>. Keep <code class="md">copyCmd</code>&#39;s output byte-identical to today&#39;s. Add one instruction that applies to every variant: if the objective was achieved without following a step, leave that step unticked and record it as a <code class="md">## Completion Report</code> bullet in the spec rather than ticking it.</span>
               </div>
-              <div class="step-why">all three prompts start an implementation, so all three must teach the check-off loop — one shared builder is also the only way they cannot drift apart again later; and the Completion Report clause is what stops the goal prompt&#39;s full check-off (see Risks) from turning a bypassed step into a false record.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">render any plan, then in the browser console confirm `copyGoal`/`copyWorkflow` produce text containing `[x]`, `status: completed`, and the Completion Report clause, and that `copyCmd`&#39;s output still matches a pre-change capture except for that one added clause.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">all three prompts start an implementation, so all three must teach the check-off loop — one shared builder is also the only way they cannot drift apart again later; and the Completion Report clause is what stops the goal prompt&#39;s full check-off (see Risks) from turning a bypassed step into a false record.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">render any plan, then in the browser console confirm <code class="md">copyGoal</code>/<code class="md">copyWorkflow</code> produce text containing <code class="md">[x]</code>, <code class="md">status: completed</code>, and the Completion Report clause, and that <code class="md">copyCmd</code>&#39;s output still matches a pre-change capture except for that one added clause.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">In `kit/plugins/plan-agent/scripts/build-plan-html.mjs`, extend the `goal` (`:176`) and `workflow` (`:180`) strings so the check-off requirement survives into the `plan-goal` and `plan-workflow` meta tags — append a clause instructing the agent to tick `[x]` step markers and `- [x]` criteria in the spec and set `status: completed` when done. For the workflow string, place it so it applies to the briefed subagents, not just the orchestrator.</span>
+                <span class="step-chip-text">In <code class="md">kit/plugins/plan-agent/scripts/build-plan-html.mjs</code>, extend the <code class="md">goal</code> (<code class="md">:176</code>) and <code class="md">workflow</code> (<code class="md">:180</code>) strings so the check-off requirement survives into the <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags — append a clause instructing the agent to tick <code class="md">[x]</code> step markers and <code class="md">- [x]</code> criteria in the spec and set <code class="md">status: completed</code> when done. For the workflow string, place it so it applies to the briefed subagents, not just the orchestrator.</span>
               </div>
-              <div class="step-why">`implementation-plan/SKILL.md:482-483` hands the user the workflow prompt read from the **meta tag**, so a copy-handler-only fix would miss the primary workflow path entirely.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">re-render this plan and confirm `grep -o &#39;&lt;meta name=&quot;plan-workflow&quot;[^&gt;]*&gt;&#39; docs/plans/fix-plan-completion-drift.html` contains both `[x]` and `status: completed`; same for `plan-goal`.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">implementation-plan/SKILL.md:482-483</code> hands the user the workflow prompt read from the <strong class="md">meta tag</strong>, so a copy-handler-only fix would miss the primary workflow path entirely.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">re-render this plan and confirm <code class="md">grep -o &#39;&lt;meta name=&quot;plan-workflow&quot;[^&gt;]*&gt;&#39; docs/plans/fix-plan-completion-drift.html</code> contains both <code class="md">[x]</code> and <code class="md">status: completed</code>; same for <code class="md">plan-goal</code>.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add goal/workflow prompt coverage to `tests/plugins/test-build-plan-html.mjs`. Assert that the rendered `plan-goal` and `plan-workflow` meta tags each contain the check-off clause, that the shared builder is wired to all three copy handlers (`copyCmd`, `copyGoal`, `copyWorkflow` all reference it), and that a plan with `workflow: false` still emits a `plan-goal` tag carrying the clause.</span>
+                <span class="step-chip-text">Add goal/workflow prompt coverage to <code class="md">tests/plugins/test-build-plan-html.mjs</code>. Assert that the rendered <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags each contain the check-off clause, that the shared builder is wired to all three copy handlers (<code class="md">copyCmd</code>, <code class="md">copyGoal</code>, <code class="md">copyWorkflow</code> all reference it), and that a plan with <code class="md">workflow: false</code> still emits a <code class="md">plan-goal</code> tag carrying the clause.</span>
               </div>
-              <div class="step-why">the whole detector chain is dead if a future edit quietly reverts a prompt to a bare one-liner, and that regression is invisible — nothing fails, plans just silently stop getting marked done again.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`node tests/plugins/test-build-plan-html.mjs` exits 0 with the new assertions reported.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the whole detector chain is dead if a future edit quietly reverts a prompt to a bare one-liner, and that regression is invisible — nothing fails, plans just silently stop getting marked done again.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> exits 0 with the new assertions reported.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a `3.1.0` entry to `kit/plugins/plan-agent/CHANGELOG.md` above the `3.0.0` entry, dated 2026-07-15, with `### Added` (the drift-detector hook) and `### Changed` (`finalize-plan` is now model-invocable — state explicitly that the `/plan-agent:finalize-plan` command is unchanged and existing invocations keep working, and that the skill may now activate on its own when a plan finishes).</span>
+                <span class="step-chip-text">Add a <code class="md">3.1.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> above the <code class="md">3.0.0</code> entry, dated 2026-07-15, with <code class="md">### Added</code> (the drift-detector hook) and <code class="md">### Changed</code> (<code class="md">finalize-plan</code> is now model-invocable — state explicitly that the <code class="md">/plan-agent:finalize-plan</code> command is unchanged and existing invocations keep working, and that the skill may now activate on its own when a plan finishes).</span>
               </div>
-              <div class="step-why">the activation change is the only part an installed user can notice without reading the diff, so the CHANGELOG has to carry it even though the version number does not — a minor bump makes the entry the sole place a user learns the skill can now fire by itself.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`head -3 kit/plugins/plan-agent/CHANGELOG.md` shows the `## 3.1.0` heading, and `grep -n &quot;finalize-plan&quot; kit/plugins/plan-agent/CHANGELOG.md | head -1` lands inside the new entry.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the activation change is the only part an installed user can notice without reading the diff, so the CHANGELOG has to carry it even though the version number does not — a minor bump makes the entry the sole place a user learns the skill can now fire by itself.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">head -3 kit/plugins/plan-agent/CHANGELOG.md</code> shows the <code class="md">## 3.1.0</code> heading, and <code class="md">grep -n &quot;finalize-plan&quot; kit/plugins/plan-agent/CHANGELOG.md | head -1</code> lands inside the new entry.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump `plan-agent`&#39;s `version` in `.claude-plugin/marketplace.json` from `3.0.0` to `3.1.0`.</span>
+                <span class="step-chip-text">Bump <code class="md">plan-agent</code>&#39;s <code class="md">version</code> in <code class="md">.claude-plugin/marketplace.json</code> from <code class="md">3.0.0</code> to <code class="md">3.1.0</code>.</span>
               </div>
-              <div class="step-why">the change is additive — a new hook (MINOR per `.claude/rules/marketplace.md`) plus a widened activation surface that breaks nothing. `/plan-agent:finalize-plan` keeps working identically, so no installed user has to change anything. This is a deliberate reading of the rule&#39;s *spirit* over its letter: the rule lists &quot;changing activation behavior&quot; under MAJOR, but that clause is aimed at changes that invalidate existing usage, and nothing here does.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`python3 -c &quot;import json; print([p[&#39;version&#39;] for p in json.load(open(&#39;.claude-plugin/marketplace.json&#39;))[&#39;plugins&#39;] if p[&#39;name&#39;]==&#39;plan-agent&#39;])&quot;` prints `[&#39;3.1.0&#39;]`, and the file still parses.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the change is additive — a new hook (MINOR per <code class="md">.claude/rules/marketplace.md</code>) plus a widened activation surface that breaks nothing. <code class="md">/plan-agent:finalize-plan</code> keeps working identically, so no installed user has to change anything. This is a deliberate reading of the rule&#39;s <em class="md">spirit</em> over its letter: the rule lists &quot;changing activation behavior&quot; under MAJOR, but that clause is aimed at changes that invalidate existing usage, and nothing here does.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">python3 -c &quot;import json; print([p[&#39;version&#39;] for p in json.load(open(&#39;.claude-plugin/marketplace.json&#39;))[&#39;plugins&#39;] if p[&#39;name&#39;]==&#39;plan-agent&#39;])&quot;</code> prints <code class="md">[&#39;3.1.0&#39;]</code>, and the file still parses.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1654,11 +1917,11 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — This plan changes application code</div>
-      <div class="objective-test-card">Objective: proves a finished-but-unmarked plan can no longer pass unnoticed — the detector fires on exactly the drift state and stays silent otherwise. File: `tests/plugins/test-plan-completion-drift.sh`; Type: smoke; Asserts: feeding the hook a spec with all steps `[x]`, all criteria `- [x]` and `status: in-progress` exits 2 and names the spec path, while the five non-drift fixtures each exit 0 silently; Run: `bash tests/plugins/test-plan-completion-drift.sh`</div>
+      <div class="objective-test-card">Objective: proves a finished-but-unmarked plan can no longer pass unnoticed — the detector fires on exactly the drift state and stays silent otherwise. File: <code class="md">tests/plugins/test-plan-completion-drift.sh</code>; Type: smoke; Asserts: feeding the hook a spec with all steps <code class="md">[x]</code>, all criteria <code class="md">- [x]</code> and <code class="md">status: in-progress</code> exits 2 and names the spec path, while the five non-drift fixtures each exit 0 silently; Run: <code class="md">bash tests/plugins/test-plan-completion-drift.sh</code></div>
       <div class="test-list">
-        <div class="test-card">Unit: the noise contract in isolation. File: `tests/plugins/test-plan-completion-drift.sh`; Targets: `_is_plan_spec()` and the status/step/criteria parse in `detect-plan-completion-drift.py`; Key cases: non-plan `.md` inside the plans dir, `# Plan:` spec outside the plans dir, spec with zero criteria, spec with a `# schema:` frontmatter comment ahead of the title heading</div>
-        <div class="test-card">Integration: hook registration resolves for a marketplace install, not just this checkout. File: `tests/plugins/test-plan-completion-drift.sh`; Targets: `hooks.json` + `detect-plan-completion-drift.py`; Key cases: the fifth `PostToolUse` entry exists, its command interpolates `${CLAUDE_PLUGIN_ROOT}`, and the referenced script path exists relative to the plugin root</div>
-        <div class="test-card">Integration: every prompt that starts an implementation instructs check-off, so the detector has something to detect. File: `tests/plugins/test-build-plan-html.mjs`; Targets: `build-plan-html.mjs` prompt strings + `plan-shell.mjs` copy handlers; Key cases: rendered `plan-goal` and `plan-workflow` meta tags each contain `[x]` and `status: completed`; `copyCmd`/`copyGoal`/`copyWorkflow` all route through the shared builder; a `workflow: false` plan still emits a compliant `plan-goal` tag</div>
+        <div class="test-card">Unit: the noise contract in isolation. File: <code class="md">tests/plugins/test-plan-completion-drift.sh</code>; Targets: <code class="md">_is_plan_spec()</code> and the status/step/criteria parse in <code class="md">detect-plan-completion-drift.py</code>; Key cases: non-plan <code class="md">.md</code> inside the plans dir, <code class="md"># Plan:</code> spec outside the plans dir, spec with zero criteria, spec with a <code class="md"># schema:</code> frontmatter comment ahead of the title heading</div>
+        <div class="test-card">Integration: hook registration resolves for a marketplace install, not just this checkout. File: <code class="md">tests/plugins/test-plan-completion-drift.sh</code>; Targets: <code class="md">hooks.json</code> + <code class="md">detect-plan-completion-drift.py</code>; Key cases: the fifth <code class="md">PostToolUse</code> entry exists, its command interpolates <code class="md">${CLAUDE_PLUGIN_ROOT}</code>, and the referenced script path exists relative to the plugin root</div>
+        <div class="test-card">Integration: every prompt that starts an implementation instructs check-off, so the detector has something to detect. File: <code class="md">tests/plugins/test-build-plan-html.mjs</code>; Targets: <code class="md">build-plan-html.mjs</code> prompt strings + <code class="md">plan-shell.mjs</code> copy handlers; Key cases: rendered <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags each contain <code class="md">[x]</code> and <code class="md">status: completed</code>; <code class="md">copyCmd</code>/<code class="md">copyGoal</code>/<code class="md">copyWorkflow</code> all route through the shared builder; a <code class="md">workflow: false</code> plan still emits a compliant <code class="md">plan-goal</code> tag</div>
       </div>
     </section>
 
@@ -1671,11 +1934,11 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">A plan spec with every step `[x]`, every criterion `- [x]`, and `status: in-progress` causes the hook to exit 2 and name the spec path on stderr.</label>
+          <label for="ac1">A plan spec with every step <code class="md">[x]</code>, every criterion <code class="md">- [x]</code>, and <code class="md">status: in-progress</code> causes the hook to exit 2 and name the spec path on stderr.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">The same spec with `status: completed` causes the hook to exit 0 with no output.</label>
+          <label for="ac2">The same spec with <code class="md">status: completed</code> causes the hook to exit 0 with no output.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
@@ -1683,43 +1946,43 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">A non-plan `.md` write, and a `# Plan:` spec outside the resolved plans directory, both cause the hook to exit 0 with no output.</label>
+          <label for="ac4">A non-plan <code class="md">.md</code> write, and a <code class="md"># Plan:</code> spec outside the resolved plans directory, both cause the hook to exit 0 with no output.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">`finalize-plan/SKILL.md` contains no `disable-model-invocation` key, and its description is under 200 characters.</label>
+          <label for="ac5"><code class="md">finalize-plan/SKILL.md</code> contains no <code class="md">disable-model-invocation</code> key, and its description is under 200 characters.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">The `plan-goal` and `plan-workflow` meta tags of a freshly rendered plan each instruct the agent to tick `[x]` step markers and `- [x]` criteria and set `status: completed`.</label>
+          <label for="ac6">The <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta tags of a freshly rendered plan each instruct the agent to tick <code class="md">[x]</code> step markers and <code class="md">- [x]</code> criteria and set <code class="md">status: completed</code>.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`copyCmd`, `copyGoal`, and `copyWorkflow` all produce their prompt from the one shared builder — no handler copies a bare `textContent` one-liner.</label>
+          <label for="ac7"><code class="md">copyCmd</code>, <code class="md">copyGoal</code>, and <code class="md">copyWorkflow</code> all produce their prompt from the one shared builder — no handler copies a bare <code class="md">textContent</code> one-liner.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">Every prompt variant tells the agent to record a bypassed step as a `## Completion Report` bullet rather than ticking it.</label>
+          <label for="ac8">Every prompt variant tells the agent to record a bypassed step as a <code class="md">## Completion Report</code> bullet rather than ticking it.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">`node tests/plugins/test-build-plan-html.mjs` passes with the new prompt assertions.</label>
+          <label for="ac9"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> passes with the new prompt assertions.</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
-          <label for="ac10">`hooks.json` registers the detector via `${CLAUDE_PLUGIN_ROOT}` and contains five `PostToolUse` entries.</label>
+          <label for="ac10"><code class="md">hooks.json</code> registers the detector via <code class="md">${CLAUDE_PLUGIN_ROOT}</code> and contains five <code class="md">PostToolUse</code> entries.</label>
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11">`bash tests/plugins/test-plan-completion-drift.sh` passes.</label>
+          <label for="ac11"><code class="md">bash tests/plugins/test-plan-completion-drift.sh</code> passes.</label>
         </li>
         <li>
           <input type="checkbox" id="ac12">
-          <label for="ac12">`plan-agent` is at `3.1.0` in `.claude-plugin/marketplace.json` with a matching CHANGELOG entry that names the activation change.</label>
+          <label for="ac12"><code class="md">plan-agent</code> is at <code class="md">3.1.0</code> in <code class="md">.claude-plugin/marketplace.json</code> with a matching CHANGELOG entry that names the activation change.</label>
         </li>
         <li>
           <input type="checkbox" id="ac13">
-          <label for="ac13">Every behavioral change lives under `kit/plugins/plan-agent/**`; the only exceptions are `marketplace.json` and `tests/`, each justified in Files.</label>
+          <label for="ac13">Every behavioral change lives under <code class="md">kit/plugins/plan-agent/**</code>; the only exceptions are <code class="md">marketplace.json</code> and <code class="md">tests/</code>, each justified in Files.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1733,9 +1996,9 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
       <p>Walk the bug end-to-end as a plugin user would hit it, in a scratch copy of a<br>plan spec under the plans directory:</p>
-      <p>1. Take any plan spec with `status: in-progress` and at least one unticked step.<br>Tick the remaining steps and criteria one at a time via `Edit`. Nothing fires<br>until the final tick — confirming the hook is silent on partial progress.<br>2. On the edit that completes the last step or criterion, the hook fires: the<br>session surfaces a message naming that spec and pointing at<br>`/plan-agent:finalize-plan`. This is the moment that silently did nothing<br>before.<br>3. Confirm the model can now act on it — that `finalize-plan` resolves without<br>the user typing the command, and that it still runs its own verification and<br>asks before writing `status`. A completion that was never verified must still<br>not happen.<br>4. Re-run the edit once `status: completed` is set. The hook stays silent —<br>the contradiction is gone, so the nudge is gone.<br>5. Edit an unrelated `.md` file and a source file in the same session. No hook<br>output. This is the noise contract holding.</p>
+      <p>1. Take any plan spec with <code class="md">status: in-progress</code> and at least one unticked step.<br>Tick the remaining steps and criteria one at a time via <code class="md">Edit</code>. Nothing fires<br>until the final tick — confirming the hook is silent on partial progress.<br>2. On the edit that completes the last step or criterion, the hook fires: the<br>session surfaces a message naming that spec and pointing at<br><code class="md">/plan-agent:finalize-plan</code>. This is the moment that silently did nothing<br>before.<br>3. Confirm the model can now act on it — that <code class="md">finalize-plan</code> resolves without<br>the user typing the command, and that it still runs its own verification and<br>asks before writing <code class="md">status</code>. A completion that was never verified must still<br>not happen.<br>4. Re-run the edit once <code class="md">status: completed</code> is set. The hook stays silent —<br>the contradiction is gone, so the nudge is gone.<br>5. Edit an unrelated <code class="md">.md</code> file and a source file in the same session. No hook<br>output. This is the noise contract holding.</p>
       <p>Then verify the prompts actually feed the detector — the two halves are useless<br>apart:</p>
-      <p>6. Re-render this plan and read its own `plan-goal` and `plan-workflow` meta<br>tags. Both must now instruct `[x]` ticks, `- [x]` criteria, and<br>`status: completed`. Before this change the workflow tag briefed subagents to<br>implement the plan and said nothing about recording it.<br>7. Copy each of the three prompts from the rendered page. All three must carry<br>the check-off loop; before this change only the implement prompt did.<br>8. Close the loop end-to-end: paste the workflow prompt into a fresh session and<br>confirm the resulting run ticks the spec as it goes, which is what trips the<br>detector from step 2 above. A prompt that instructs check-off and a hook that<br>fires on check-off are one mechanism — this step is the only place that shows<br>them working as one.</p>
+      <p>6. Re-render this plan and read its own <code class="md">plan-goal</code> and <code class="md">plan-workflow</code> meta<br>tags. Both must now instruct <code class="md">[x]</code> ticks, <code class="md">- [x]</code> criteria, and<br><code class="md">status: completed</code>. Before this change the workflow tag briefed subagents to<br>implement the plan and said nothing about recording it.<br>7. Copy each of the three prompts from the rendered page. All three must carry<br>the check-off loop; before this change only the implement prompt did.<br>8. Close the loop end-to-end: paste the workflow prompt into a fresh session and<br>confirm the resulting run ticks the spec as it goes, which is what trips the<br>detector from step 2 above. A prompt that instructs check-off and a hook that<br>fires on check-off are one mechanism — this step is the only place that shows<br>them working as one.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
@@ -1820,6 +2083,31 @@ img, video { max-width: 100%; height: auto; }
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -2031,27 +2319,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
     }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
-    sections.forEach(function (el) { observer.observe(el); });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

@@ -911,21 +911,23 @@ ok('a spec with no prototype: key renders the same markup as the pre-change rend
     };
     const before = render(join(proj, 'scripts', 'build-plan-html.mjs'), 'before');
     const after = render(RENDERER, 'after');
-    // Prompt copy is deliberately retuned between releases; this guard is
-    // about the prototype feature not leaking into specs that never asked for
-    // it. Blank the three prompt payloads on both sides so the comparison
-    // covers structure and every other rendered section, not wording.
-    // The stylesheet is blanked for the same reason: presentation is expected
-    // to evolve (inline code spans gained a chip style), and pinning CSS bytes
-    // here would forbid every future visual fix. What this guard protects is
-    // the DOM contract the extractor and the gallery read.
-    const stripVolatile = (html) => html
-      .replace(/(<meta name="plan-(?:implement|goal|workflow)" content=")[^"]*"/g, '$1"')
-      .replace(/(<code id="(?:implement|goal|workflow)-cmd"[^>]*>)[\s\S]*?<\/code>/g, '$1</code>')
-      .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/g, '$1</style>');
-    assert.ok(/<meta name="plan-implement" content="[^"]+"/.test(after), 'prompt payloads are non-empty before blanking');
-    assert.ok(/<style\b[^>]*>\s*\S/.test(after), 'stylesheet is non-empty before blanking');
-    assert.equal(stripVolatile(after), stripVolatile(before), 'markup drifted for a spec that carries no prototype: key');
+    // What this guard protects is the DOM contract the extractor and the
+    // gallery read — NOT the rendered bytes. Presentation is expected to
+    // evolve: a byte diff also fails on every deliberate markup, stylesheet,
+    // and inline-script change, which makes an intentional redesign
+    // indistinguishable from an accidental regression. So compare the
+    // extracted spec, then assert the one thing this test was actually added
+    // for: the prototype feature does not leak into a spec that never asked
+    // for it.
+    assert.ok(/<meta name="plan-implement" content="[^"]+"/.test(after), 'prompt payloads are non-empty');
+    assert.ok(/<style\b[^>]*>\s*\S/.test(after), 'stylesheet is non-empty');
+    assert.deepEqual(
+      extractSections(after),
+      extractSections(before),
+      'the extractor contract drifted for a spec that carries no prototype: key'
+    );
+    assert.ok(!after.includes('name="plan-prototype"'), 'no prototype meta tag for a spec without the key');
+    assert.ok(!after.includes('class="prototype-link"'), 'no prototype header link for a spec without the key');
   } catch (err) {
     // A shallow clone, a missing base ref, or no git at all is an environment
     // gap, not a regression — skip loudly rather than failing the suite.

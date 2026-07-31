@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
@@ -16,54 +27,154 @@
 <meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/split-remaining-plugin-skills.md — Stop paying 10,545 words every time these six skills fire. Brief subagents with the plan file at docs/plans/split-remaining-plugin-skills.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/split-remaining-plugin-skills.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Stop paying 10,545 words every time these six skills fire</title>
 <style>
-/* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -93,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -103,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -119,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -130,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -157,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -168,9 +286,8 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
 
   /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
   .effort-badge {
@@ -185,12 +302,15 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .effort-badge::before { content: "Effort "; opacity: .7; }
-  [data-effort="low"]    .effort-badge { background: #16a34a; }
-  [data-effort="medium"] .effort-badge { background: #d97706; }
-  [data-effort="high"]   .effort-badge { background: #dc2626; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -207,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -225,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -232,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -246,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -264,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -301,98 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
+  }
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
   }
   .objective-card .section-label,
   .plan-glance-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
-  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
   .plan-glance {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    margin: -1.5rem 0 1.5rem;
-    line-height: 1.7;
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
   }
-  .plan-glance-label { color: var(--muted); }
-  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -400,22 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
     letter-spacing: -.01em;
-    color: var(--text);
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
   .section-card .section-intro {
-    font-size: .875rem;
-    color: var(--muted);
+    font-size: .85rem;
+    color: var(--ink-2);
     margin: -1rem 0 1.25rem;
   }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -424,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -491,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -554,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -592,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -610,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -632,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -663,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -677,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -691,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -712,17 +928,17 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
@@ -738,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -749,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -784,10 +1000,10 @@
     min-height: 44px;
   }
   .optional-section > summary::before,
-  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .optional-section[open] > summary::before,
   .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
@@ -795,9 +1011,9 @@
 
   /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
   .plan-more-ways {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
     overflow: hidden;
@@ -806,7 +1022,7 @@
     padding: .55rem 1rem;
     font-size: .78rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -816,10 +1032,10 @@
     min-height: 44px;
   }
   .plan-more-ways > summary:hover { color: var(--accent); }
-  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
   .plan-more-ways-body {
     padding: .75rem 1rem 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: .75rem;
@@ -833,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -843,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -861,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -872,8 +1088,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
@@ -895,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -913,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -924,8 +1140,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
@@ -947,14 +1163,14 @@
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -965,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -976,8 +1192,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
   /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
@@ -1008,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -1019,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -1030,8 +1246,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
   /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
@@ -1045,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -1068,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1098,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1120,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1132,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1149,69 +1365,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
   .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
 
   /* ── Resources (images, screenshots & reference links) ──────────── */
   .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
   .resource-figure > a { display: block; line-height: 0; }
-  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
-  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
   .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
-  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
   .resource-links li:last-child { border-bottom: none; }
   .resource-links a { font-weight: 600; word-break: break-word; }
-  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1219,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1307,6 +1523,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">completed</span>
       </div>
@@ -1337,19 +1555,33 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>9 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Record a pre-split baseline into the scratchpad: <code class="md">for f in &lt;the six SKILL.md paths&gt;; do echo &quot;$(wc -w &lt; $f) $f&quot;; done</code> plus <code class="md">git show origin/main:&lt;path&gt; | sed -n &#39;1,6p&#39;</code> for each, capturing every <code class="md">description:</code> line verbatim.</span><span class="rail-state">step 1 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md</code> into a core plus <code class="md">references/description-rules.md</code>, <code class="md">references/invocation-control.md</code>, <code class="md">references/measurement.md</code>, and <code class="md">references/budget-advisory.md</code>, linking each from the step that needs it and leaving <code class="md">description:</code>, <code class="md">allowed-tools:</code>, and <code class="md">disable-model-invocation: true</code> untouched.</span><span class="rail-state">step 2 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md</code> into a core plus <code class="md">references/rule-modes.md</code>, <code class="md">references/rule-file-format.md</code>, and <code class="md">references/write-verification.md</code>, keeping the &quot;run this after every write, STOP on non-zero&quot; rule and the pre-write gate sentence in the core, then update <code class="md">tests/plugins/test-memory-doctor-guard.sh</code> to extract the parse check and the bash commands from the core <em class="md">and</em> its <code class="md">references/*.md</code>, and repoint the <code class="md">path-rules-advisor</code> wiring regex in <code class="md">tests/plugins/test-generator-skills-verify-output.sh</code> at the reference link.</span><span class="rail-state">step 3 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md</code> into a core plus <code class="md">references/fix-loop.md</code> and <code class="md">references/handoff.md</code>, matching the per-skill <code class="md">references/</code> layout its four siblings (<code class="md">code-testing-agent</code>, <code class="md">reviewing-tests</code>, <code class="md">running-tests</code>, <code class="md">tdd-loop</code>) already use.</span><span class="rail-state">step 4 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/content-tools/skills/artifact-to-post/SKILL.md</code> into a core plus <code class="md">kit/plugins/content-tools/references/source-resolution.md</code> and <code class="md">references/post-assembly.md</code> at the plugin level beside the existing <code class="md">content-config.md</code> and <code class="md">mdx-safety.md</code>, keeping the Phase 2 scrub gate and its <code class="md">write nothing and end the turn</code> language in the core, then update <code class="md">tests/plugins/test-artifact-to-post.sh</code> so the config-key, literal, and ladder assertions read whichever file now holds them.</span><span class="rail-state">step 5 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md</code> into a core plus <code class="md">references/diff-sources.md</code>, <code class="md">references/diff-page.md</code>, and <code class="md">references/diff-publishing.md</code> at the plugin level, keeping the Step 2 scrub gate, the Step 5 rendered-page rescan, and every <code class="md">## Step N — </code> heading in the core.</span><span class="rail-state">step 6 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> into a core plus <code class="md">references/prompt-resolution.md</code>, <code class="md">references/prompt-page.md</code>, and <code class="md">references/prompt-publishing.md</code>, keeping the Step 4 scrub gate and the never-publish-an-empty-gallery stop in the core, then update <code class="md">tests/plugins/test-artifact-tools.sh</code> so each moved literal is asserted against the reference that now holds it while the scrub-before-publish ordering check stays anchored on both cores.</span><span class="rail-state">step 7 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-remaining-skill-splits.sh</code> asserting all four objective conditions for the six targets, and wire it into <code class="md">.github/workflows/check-plugin-versions.yml</code> as a named step after the existing <code class="md">test-merge-gallery-index.sh</code> step.</span><span class="rail-state">step 8 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">skill-reviewer</code> to 2.3.0, <code class="md">memory-tools</code> to 4.1.0, <code class="md">code-testing-agent</code> to 3.5.0, <code class="md">content-tools</code> to 1.1.0, and <code class="md">artifact-tools</code> to 1.8.0 in <code class="md">.claude-plugin/marketplace.json</code>, add a matching CHANGELOG entry to each plugin (artifact-tools using the bracketed <code class="md">## [1.8.0] - 2026-07-27</code> heading its own test parses), and add no <code class="md">version</code> key to any <code class="md">plugin.json</code>.</span><span class="rail-state">step 9 of 9, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
   <main id="main">
 
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Split the six remaining monolithic SKILL.md files — across `skill-reviewer`, `artifact-tools`, `memory-tools`, `content-tools`, and `code-testing-agent` — into small cores plus per-topic reference files, each core under 600 words, with every skill&#39;s behavior and frontmatter `description` left byte-identical.</p>
+      <p>Split the six remaining monolithic SKILL.md files — across <code class="md">skill-reviewer</code>, <code class="md">artifact-tools</code>, <code class="md">memory-tools</code>, <code class="md">content-tools</code>, and <code class="md">code-testing-agent</code> — into small cores plus per-topic reference files, each core under 600 words, with every skill&#39;s behavior and frontmatter <code class="md">description</code> left byte-identical.</p>
+      <section class="plan-glance" aria-labelledby="plan-glance-label">
+        <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+        <p>Six skills across five plugins each dump between 1,202 and 3,153 words into context every single time they fire, and the largest of them is the rubric that tells every other skill not to do that. We will know it worked when each core reads under 600 words, every reference file resolves from a link in its own core, and the blocking security-scrub gate is still sitting in both artifact-tools cores where the model cannot fail to load it.</p>
+      </section>
     </div>
-
-    <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>Six skills across five plugins each dump between 1,202 and 3,153 words into context every single time they fire, and the largest of them is the rubric that tells every other skill not to do that. We will know it worked when each core reads under 600 words, every reference file resolves from a link in its own core, and the blocking security-scrub gate is still sitting in both artifact-tools cores where the model cannot fail to load it.</p>
-    </section>
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
@@ -1422,14 +1654,14 @@ img, video { max-width: 100%; height: auto; }
         Context
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
-      <p>Anthropic&#39;s &quot;The new rules of context engineering for Claude 5 generation models&quot; makes progressive disclosure (Rule 3) the load-bearing rule for skills: move detail out of the always-loaded body into references the model pulls on demand, and split long skills into multiple files. A SKILL.md body is paid in **full** whenever the skill triggers — there is no partial load, no lazy tail. A measured audit of this repo found 17 SKILL.md files over 1,200 words shipping as a single file with zero sibling files. This plan takes the last six of them: `optimizing-skill-frontmatter` (3,153 words), `prompt-artifact` (1,665), `diff-artifact` (1,549), `path-rules-advisor` (1,546), `artifact-to-post` (1,430), and `tdd-fix` (1,202) — 10,545 words across five plugins.</p>
-      <p>The pattern is already proven in-repo and is not being invented here. `plan-agent/skills/implementation-plan/` ships a core plus `guidelines/` and `reference/SKELETON.md`; `code-testing-agent` carries `references/` on four of its five skills; `wcag-compliance-reviewer` and `skill-reviewer/reviewing-skills` do the same. The alternative — trimming prose in place per Rule 1 (judgment over rules) — was weighed and rejected as the primary move for these six: it deletes information rather than relocating it, and these bodies are mostly executable mechanics (bash blocks, escaping tables, apply rules) that the model genuinely needs *once it is already mid-step*. Trimming is a follow-up, not this plan.</p>
-      <p>Three hazards shape the work. **First, `optimizing-skill-frontmatter` is self-referential.** It is `skill-reviewer`&#39;s own authoring rubric — the file that defines the three-part description format, the ≤200-char budget, and the ≤80-char first sentence that everything else in the repo is measured against. Splitting the rubric that governs skill authoring means the split must itself satisfy the rubric it teaches, or the plugin ships advice it visibly ignores. Mitigation: Step 9 runs `/skill-reviewer:reviewing-skills` against the split core and requires a passing score, and the split must not touch its own `description:`.</p>
-      <p>**Second, `diff-artifact` and `prompt-artifact` both run a blocking `security-scrub` gate before publishing.** Publishing is outward-facing and irreversible; a gate the model does not load is a secret leak, not a style regression. That gate — the `security-scrub` invocation, the `GATE RESULT: BLOCKED` / `CANCELLED` / `APPROVED` verdicts, and the hard-stop language — stays in the core of both skills, and so does the second rescan of the rendered page in `diff-artifact` Step 5. Mitigation: the objective test asserts the gate is present in the core (not merely somewhere under the plugin), and `tests/plugins/test-artifact-tools.sh` already asserts the gate is documented *before* the `select:Artifact` publish bootstrap by line order — that ordering assertion stays anchored on the core file.</p>
-      <p>**Third, each plugin already has a layout, and this plan matches it rather than imposing one.** `artifact-tools` puts references at the plugin level (`kit/plugins/artifact-tools/references/titles.md`, read via `${CLAUDE_PLUGIN_ROOT}/references/`), and so does `content-tools` (`references/content-config.md`, `references/mdx-safety.md`, read via `$SKILL_DIR/../../references/`). `code-testing-agent`, `memory-tools`, and `skill-reviewer` put them per-skill (`skills/&lt;name&gt;/references/`). Both are correct; mixing them inside one plugin is what breaks reader expectations.</p>
-      <p>The real blast radius is the tests, and it is wider than the six files. Four existing tests read these skill bodies as data and will fail the moment content moves: `tests/plugins/test-artifact-tools.sh` greps literals from `diff-artifact` and `prompt-artifact` (`cap-and-summarize`, `16 MiB`, `sticky file sidebar`, `prefers-color-scheme`, `severity legend`, `git remote get-url origin`, `16 * 1024 * 1024`, the `${DEFAULT_BRANCH}...HEAD` fallback line); `tests/plugins/test-artifact-to-post.sh` greps config keys and compares `## Phase 5` / `## Phase 6` line numbers; `tests/plugins/test-memory-doctor-guard.sh` *extracts the bash and python parse check out of `path-rules-advisor/SKILL.md` and executes it*, and separately derives commands from its ` ```bash ` blocks to check `allowed-tools` coverage; `tests/plugins/test-generator-skills-verify-output.sh` requires a `## Step N — Publish` heading in both artifact skills and the literal `run [Verify the write](#verify-the-write)` link in `path-rules-advisor`. Mitigation: every step that moves content also updates the test that reads it, in the same step, and the step&#39;s Verify runs that test.</p>
-      <p>One deliberate decision worth flagging: in `path-rules-advisor` the executable parse check moves to `references/write-verification.md` while the *rule* it enforces (run it after every write; on non-zero exit STOP and report) stays in the core. Keeping the 400-word block inline would leave that core near 700 words. The risk is that a safety check behind a reference is a safety check that might not load — mitigated by keeping the STOP contract in the core, keeping the in-core link, and repointing `test-generator-skills-verify-output.sh` at the reference so the wiring is still asserted.</p>
-      <p>Five plugins are touched, so five `marketplace.json` version bumps and five CHANGELOG entries are required — the widest blast radius of the three splitting plans. `artifact-tools` additionally requires its CHANGELOG heading in the exact `## [1.8.0] - YYYY-MM-DD` form, because `tests/plugins/test-artifact-tools.sh` asserts the marketplace version equals the newest `## [x.y.z]` heading.</p>
+      <p>Anthropic&#39;s &quot;The new rules of context engineering for Claude 5 generation models&quot; makes progressive disclosure (Rule 3) the load-bearing rule for skills: move detail out of the always-loaded body into references the model pulls on demand, and split long skills into multiple files. A SKILL.md body is paid in <strong class="md">full</strong> whenever the skill triggers — there is no partial load, no lazy tail. A measured audit of this repo found 17 SKILL.md files over 1,200 words shipping as a single file with zero sibling files. This plan takes the last six of them: <code class="md">optimizing-skill-frontmatter</code> (3,153 words), <code class="md">prompt-artifact</code> (1,665), <code class="md">diff-artifact</code> (1,549), <code class="md">path-rules-advisor</code> (1,546), <code class="md">artifact-to-post</code> (1,430), and <code class="md">tdd-fix</code> (1,202) — 10,545 words across five plugins.</p>
+      <p>The pattern is already proven in-repo and is not being invented here. <code class="md">plan-agent/skills/implementation-plan/</code> ships a core plus <code class="md">guidelines/</code> and <code class="md">reference/SKELETON.md</code>; <code class="md">code-testing-agent</code> carries <code class="md">references/</code> on four of its five skills; <code class="md">wcag-compliance-reviewer</code> and <code class="md">skill-reviewer/reviewing-skills</code> do the same. The alternative — trimming prose in place per Rule 1 (judgment over rules) — was weighed and rejected as the primary move for these six: it deletes information rather than relocating it, and these bodies are mostly executable mechanics (bash blocks, escaping tables, apply rules) that the model genuinely needs <em class="md">once it is already mid-step</em>. Trimming is a follow-up, not this plan.</p>
+      <p>Three hazards shape the work. <strong class="md">First, <code class="md">optimizing-skill-frontmatter</code> is self-referential.</strong> It is <code class="md">skill-reviewer</code>&#39;s own authoring rubric — the file that defines the three-part description format, the ≤200-char budget, and the ≤80-char first sentence that everything else in the repo is measured against. Splitting the rubric that governs skill authoring means the split must itself satisfy the rubric it teaches, or the plugin ships advice it visibly ignores. Mitigation: Step 9 runs <code class="md">/skill-reviewer:reviewing-skills</code> against the split core and requires a passing score, and the split must not touch its own <code class="md">description:</code>.</p>
+      <p><strong class="md">Second, <code class="md">diff-artifact</code> and <code class="md">prompt-artifact</code> both run a blocking <code class="md">security-scrub</code> gate before publishing.</strong> Publishing is outward-facing and irreversible; a gate the model does not load is a secret leak, not a style regression. That gate — the <code class="md">security-scrub</code> invocation, the <code class="md">GATE RESULT: BLOCKED</code> / <code class="md">CANCELLED</code> / <code class="md">APPROVED</code> verdicts, and the hard-stop language — stays in the core of both skills, and so does the second rescan of the rendered page in <code class="md">diff-artifact</code> Step 5. Mitigation: the objective test asserts the gate is present in the core (not merely somewhere under the plugin), and <code class="md">tests/plugins/test-artifact-tools.sh</code> already asserts the gate is documented <em class="md">before</em> the <code class="md">select:Artifact</code> publish bootstrap by line order — that ordering assertion stays anchored on the core file.</p>
+      <p><strong class="md">Third, each plugin already has a layout, and this plan matches it rather than imposing one.</strong> <code class="md">artifact-tools</code> puts references at the plugin level (<code class="md">kit/plugins/artifact-tools/references/titles.md</code>, read via <code class="md">${CLAUDE_PLUGIN_ROOT}/references/</code>), and so does <code class="md">content-tools</code> (<code class="md">references/content-config.md</code>, <code class="md">references/mdx-safety.md</code>, read via <code class="md">$SKILL_DIR/../../references/</code>). <code class="md">code-testing-agent</code>, <code class="md">memory-tools</code>, and <code class="md">skill-reviewer</code> put them per-skill (<code class="md">skills/&lt;name&gt;/references/</code>). Both are correct; mixing them inside one plugin is what breaks reader expectations.</p>
+      <p>The real blast radius is the tests, and it is wider than the six files. Four existing tests read these skill bodies as data and will fail the moment content moves: <code class="md">tests/plugins/test-artifact-tools.sh</code> greps literals from <code class="md">diff-artifact</code> and <code class="md">prompt-artifact</code> (<code class="md">cap-and-summarize</code>, <code class="md">16 MiB</code>, <code class="md">sticky file sidebar</code>, <code class="md">prefers-color-scheme</code>, <code class="md">severity legend</code>, <code class="md">git remote get-url origin</code>, <code class="md">16 * 1024 * 1024</code>, the <code class="md">${DEFAULT_BRANCH}...HEAD</code> fallback line); <code class="md">tests/plugins/test-artifact-to-post.sh</code> greps config keys and compares <code class="md">## Phase 5</code> / <code class="md">## Phase 6</code> line numbers; <code class="md">tests/plugins/test-memory-doctor-guard.sh</code> <em class="md">extracts the bash and python parse check out of <code class="md">path-rules-advisor/SKILL.md</code> and executes it</em>, and separately derives commands from its <code class="md"> </code>`<code class="md">bash </code> blocks to check <code class="md">allowed-tools</code> coverage; <code class="md">tests/plugins/test-generator-skills-verify-output.sh</code> requires a <code class="md">## Step N — Publish</code> heading in both artifact skills and the literal <code class="md">run [Verify the write](#verify-the-write)</code> link in <code class="md">path-rules-advisor</code>. Mitigation: every step that moves content also updates the test that reads it, in the same step, and the step&#39;s Verify runs that test.</p>
+      <p>One deliberate decision worth flagging: in <code class="md">path-rules-advisor</code> the executable parse check moves to <code class="md">references/write-verification.md</code> while the <em class="md">rule</em> it enforces (run it after every write; on non-zero exit STOP and report) stays in the core. Keeping the 400-word block inline would leave that core near 700 words. The risk is that a safety check behind a reference is a safety check that might not load — mitigated by keeping the STOP contract in the core, keeping the in-core link, and repointing <code class="md">test-generator-skills-verify-output.sh</code> at the reference so the wiring is still asserted.</p>
+      <p>Five plugins are touched, so five <code class="md">marketplace.json</code> version bumps and five CHANGELOG entries are required — the widest blast radius of the three splitting plans. <code class="md">artifact-tools</code> additionally requires its CHANGELOG heading in the exact <code class="md">## [1.8.0] - YYYY-MM-DD</code> form, because <code class="md">tests/plugins/test-artifact-tools.sh</code> asserts the marketplace version equals the newest <code class="md">## [x.y.z]</code> heading.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1441,13 +1673,13 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core keeps overview, `## When not to use`, and Step 0–6 names; mechanics move out</span></li>
+          <li><code>kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core keeps overview, <code class="md">## When not to use</code>, and Step 0–6 names; mechanics move out</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/references/
             <ul class="file-list">
             <li><code>description-rules.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Rules 1, 2, 2b, 3, 4, 5 plus worked examples A and B</span></li>
             <li><code>invocation-control.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Step 4b classification table, confirmation options, and the grep-then-Edit apply rules</span></li>
             <li><code>measurement.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the Step 2, Step 5, and Step 6 bash measuring loops</span></li>
-            <li><code>budget-advisory.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the `skillListingBudgetFraction` advisory, the installed-skills table, and the `/doctor` guidance</span></li>
+            <li><code>budget-advisory.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the <code class="md">skillListingBudgetFraction</code> advisory, the installed-skills table, and the <code class="md">/doctor</code> guidance</span></li>
             </ul>
           </li>
           <li><code>kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core keeps mode selection, both hard-stop confirmations, and the write-verification rule</span></li>
@@ -1458,7 +1690,7 @@ img, video { max-width: 100%; height: auto; }
             <li><code>write-verification.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the diff-back bash plus the python frontmatter parse check and the pre-write gate</span></li>
             </ul>
           </li>
-          <li><code>kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core keeps the freedom-level marker, `## When not to use`, and Step 0–9 names</span></li>
+          <li><code>kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core keeps the freedom-level marker, <code class="md">## When not to use</code>, and Step 0–9 names</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/code-testing-agent/skills/tdd-fix/references/
             <ul class="file-list">
             <li><code>fix-loop.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Step 2 red phase, Step 3 iteration log and 3a–3c, Step 4 hard cap</span></li>
@@ -1483,18 +1715,18 @@ img, video { max-width: 100%; height: auto; }
           <li><code>kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core keeps the Step 4 scrub gate, the empty-library stop, and Step 1–8 headings</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-tools/references/
             <ul class="file-list">
-            <li><code>prompt-resolution.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">mode table, the `PROMPTS_DIR` python resolver, and single/library prompt resolution</span></li>
+            <li><code>prompt-resolution.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">mode table, the <code class="md">PROMPTS_DIR</code> python resolver, and single/library prompt resolution</span></li>
             <li><code>prompt-page.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">page requirements, the six-value escaping table, and the copy-button script with its three failure modes</span></li>
-            <li><code>prompt-publishing.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the URL-record table, the `.artifact-url` sidecar, render verification, and the fallback</span></li>
+            <li><code>prompt-publishing.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the URL-record table, the <code class="md">.artifact-url</code> sidecar, render verification, and the fallback</span></li>
             </ul>
           </li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
             <ul class="file-list">
             <li><code>test-remaining-skill-splits.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective-verification test for all six splits</span></li>
-            <li><code>test-artifact-tools.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">literal assertions follow the moved content into `references/`</span></li>
+            <li><code>test-artifact-tools.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">literal assertions follow the moved content into <code class="md">references/</code></span></li>
             <li><code>test-artifact-to-post.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">config-key and ladder assertions follow the moved content</span></li>
             <li><code>test-memory-doctor-guard.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">extracts the parse check and the bash commands from core plus references</span></li>
-            <li><code>test-generator-skills-verify-output.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">`path-rules-advisor` wiring regex repointed at the reference link</span></li>
+            <li><code>test-generator-skills-verify-output.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">path-rules-advisor</code> wiring regex repointed at the reference link</span></li>
             </ul>
           </li>
           <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">new step running the objective test</span></li>
@@ -1503,7 +1735,7 @@ img, video { max-width: 100%; height: auto; }
           <li><code>kit/plugins/memory-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">v4.1.0 entry</span></li>
           <li><code>kit/plugins/code-testing-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">v3.5.0 entry</span></li>
           <li><code>kit/plugins/content-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">1.1.0 entry</span></li>
-          <li><code>kit/plugins/artifact-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">`## [1.8.0]` entry in bracketed form</span></li>
+          <li><code>kit/plugins/artifact-tools/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">## [1.8.0]</code> entry in bracketed form</span></li>
         </ul>
       </div>
     </section>
@@ -1516,155 +1748,182 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Record a pre-split baseline into the scratchpad: `for f in &lt;the six SKILL.md paths&gt;; do echo &quot;$(wc -w &lt; $f) $f&quot;; done` plus `git show origin/main:&lt;path&gt; | sed -n &#39;1,6p&#39;` for each, capturing every `description:` line verbatim.</span>
+                <span class="step-chip-text">Record a pre-split baseline into the scratchpad: <code class="md">for f in &lt;the six SKILL.md paths&gt;; do echo &quot;$(wc -w &lt; $f) $f&quot;; done</code> plus <code class="md">git show origin/main:&lt;path&gt; | sed -n &#39;1,6p&#39;</code> for each, capturing every <code class="md">description:</code> line verbatim.</span>
               </div>
-              <div class="step-why">the split is only correct if word counts fall and descriptions do not move, and neither claim is checkable later without the before-state.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the scratchpad file lists six word counts summing to 10,545 and six `description:` lines.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the split is only correct if word counts fall and descriptions do not move, and neither claim is checkable later without the before-state.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the scratchpad file lists six word counts summing to 10,545 and six <code class="md">description:</code> lines.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Split `kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` into a core plus `references/description-rules.md`, `references/invocation-control.md`, `references/measurement.md`, and `references/budget-advisory.md`, linking each from the step that needs it and leaving `description:`, `allowed-tools:`, and `disable-model-invocation: true` untouched.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md</code> into a core plus <code class="md">references/description-rules.md</code>, <code class="md">references/invocation-control.md</code>, <code class="md">references/measurement.md</code>, and <code class="md">references/budget-advisory.md</code>, linking each from the step that needs it and leaving <code class="md">description:</code>, <code class="md">allowed-tools:</code>, and <code class="md">disable-model-invocation: true</code> untouched.</span>
               </div>
-              <div class="step-why">at 3,153 words it is the single largest monolithic skill in the repo, and it is the rubric every other skill is judged against — it cannot keep violating its own progressive-disclosure advice.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`wc -w &lt; kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md` is under 600 and `git diff origin/main -- kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md | grep &#39;^[-+]description:&#39;` prints nothing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">at 3,153 words it is the single largest monolithic skill in the repo, and it is the rubric every other skill is judged against — it cannot keep violating its own progressive-disclosure advice.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">wc -w &lt; kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md</code> is under 600 and <code class="md">git diff origin/main -- kit/plugins/skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md | grep &#39;^[-+]description:&#39;</code> prints nothing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Split `kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md` into a core plus `references/rule-modes.md`, `references/rule-file-format.md`, and `references/write-verification.md`, keeping the &quot;run this after every write, STOP on non-zero&quot; rule and the pre-write gate sentence in the core, then update `tests/plugins/test-memory-doctor-guard.sh` to extract the parse check and the bash commands from the core *and* its `references/*.md`, and repoint the `path-rules-advisor` wiring regex in `tests/plugins/test-generator-skills-verify-output.sh` at the reference link.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md</code> into a core plus <code class="md">references/rule-modes.md</code>, <code class="md">references/rule-file-format.md</code>, and <code class="md">references/write-verification.md</code>, keeping the &quot;run this after every write, STOP on non-zero&quot; rule and the pre-write gate sentence in the core, then update <code class="md">tests/plugins/test-memory-doctor-guard.sh</code> to extract the parse check and the bash commands from the core <em class="md">and</em> its <code class="md">references/*.md</code>, and repoint the <code class="md">path-rules-advisor</code> wiring regex in <code class="md">tests/plugins/test-generator-skills-verify-output.sh</code> at the reference link.</span>
               </div>
-              <div class="step-why">two tests execute code lifted straight out of this body, so moving it without moving their extraction turns a passing safety guard into a silent no-op.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-memory-doctor-guard.sh` and `bash tests/plugins/test-generator-skills-verify-output.sh` both exit 0, and the core is under 600 words.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">two tests execute code lifted straight out of this body, so moving it without moving their extraction turns a passing safety guard into a silent no-op.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-memory-doctor-guard.sh</code> and <code class="md">bash tests/plugins/test-generator-skills-verify-output.sh</code> both exit 0, and the core is under 600 words.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Split `kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md` into a core plus `references/fix-loop.md` and `references/handoff.md`, matching the per-skill `references/` layout its four siblings (`code-testing-agent`, `reviewing-tests`, `running-tests`, `tdd-loop`) already use.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md</code> into a core plus <code class="md">references/fix-loop.md</code> and <code class="md">references/handoff.md</code>, matching the per-skill <code class="md">references/</code> layout its four siblings (<code class="md">code-testing-agent</code>, <code class="md">reviewing-tests</code>, <code class="md">running-tests</code>, <code class="md">tdd-loop</code>) already use.</span>
               </div>
-              <div class="step-why">`tdd-fix` is the only skill in its plugin without a `references/` dir, so this is the one split that costs nothing in convention design.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`ls -d kit/plugins/code-testing-agent/skills/*/references | wc -l` prints 5 (up from 4) and `wc -w &lt; kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md` is under 600.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">tdd-fix</code> is the only skill in its plugin without a <code class="md">references/</code> dir, so this is the one split that costs nothing in convention design.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">ls -d kit/plugins/code-testing-agent/skills/*/references | wc -l</code> prints 5 (up from 4) and <code class="md">wc -w &lt; kit/plugins/code-testing-agent/skills/tdd-fix/SKILL.md</code> is under 600.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Split `kit/plugins/content-tools/skills/artifact-to-post/SKILL.md` into a core plus `kit/plugins/content-tools/references/source-resolution.md` and `references/post-assembly.md` at the plugin level beside the existing `content-config.md` and `mdx-safety.md`, keeping the Phase 2 scrub gate and its `write nothing and end the turn` language in the core, then update `tests/plugins/test-artifact-to-post.sh` so the config-key, literal, and ladder assertions read whichever file now holds them.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/content-tools/skills/artifact-to-post/SKILL.md</code> into a core plus <code class="md">kit/plugins/content-tools/references/source-resolution.md</code> and <code class="md">references/post-assembly.md</code> at the plugin level beside the existing <code class="md">content-config.md</code> and <code class="md">mdx-safety.md</code>, keeping the Phase 2 scrub gate and its <code class="md">write nothing and end the turn</code> language in the core, then update <code class="md">tests/plugins/test-artifact-to-post.sh</code> so the config-key, literal, and ladder assertions read whichever file now holds them.</span>
               </div>
-              <div class="step-why">this plugin already resolves references as `$SKILL_DIR/../../references/`, and a second per-skill dir would give one plugin two conventions.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-artifact-to-post.sh` exits 0 and the core is under 600 words.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">this plugin already resolves references as <code class="md">$SKILL_DIR/../../references/</code>, and a second per-skill dir would give one plugin two conventions.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-artifact-to-post.sh</code> exits 0 and the core is under 600 words.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Split `kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md` into a core plus `references/diff-sources.md`, `references/diff-page.md`, and `references/diff-publishing.md` at the plugin level, keeping the Step 2 scrub gate, the Step 5 rendered-page rescan, and every `## Step N — ` heading in the core.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md</code> into a core plus <code class="md">references/diff-sources.md</code>, <code class="md">references/diff-page.md</code>, and <code class="md">references/diff-publishing.md</code> at the plugin level, keeping the Step 2 scrub gate, the Step 5 rendered-page rescan, and every <code class="md">## Step N — </code> heading in the core.</span>
               </div>
-              <div class="step-why">the gate is what stands between a diff and an irreversible external publish, and `test-generator-skills-verify-output.sh` matches the `## Step N — Publish` heading in this file.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -c &#39;security-scrub&#39; kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md` is at least 2 and the core is under 600 words.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the gate is what stands between a diff and an irreversible external publish, and <code class="md">test-generator-skills-verify-output.sh</code> matches the <code class="md">## Step N — Publish</code> heading in this file.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -c &#39;security-scrub&#39; kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md</code> is at least 2 and the core is under 600 words.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Split `kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` into a core plus `references/prompt-resolution.md`, `references/prompt-page.md`, and `references/prompt-publishing.md`, keeping the Step 4 scrub gate and the never-publish-an-empty-gallery stop in the core, then update `tests/plugins/test-artifact-tools.sh` so each moved literal is asserted against the reference that now holds it while the scrub-before-publish ordering check stays anchored on both cores.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> into a core plus <code class="md">references/prompt-resolution.md</code>, <code class="md">references/prompt-page.md</code>, and <code class="md">references/prompt-publishing.md</code>, keeping the Step 4 scrub gate and the never-publish-an-empty-gallery stop in the core, then update <code class="md">tests/plugins/test-artifact-tools.sh</code> so each moved literal is asserted against the reference that now holds it while the scrub-before-publish ordering check stays anchored on both cores.</span>
               </div>
-              <div class="step-why">that ordering check is the only thing proving content cannot ship unscanned, and it is meaningless if it starts reading a reference file the model may never load.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-artifact-tools.sh` exits 0 and both artifact-tools cores are under 600 words.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">that ordering check is the only thing proving content cannot ship unscanned, and it is meaningless if it starts reading a reference file the model may never load.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-artifact-tools.sh</code> exits 0 and both artifact-tools cores are under 600 words.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Write `tests/plugins/test-remaining-skill-splits.sh` asserting all four objective conditions for the six targets, and wire it into `.github/workflows/check-plugin-versions.yml` as a named step after the existing `test-merge-gallery-index.sh` step.</span>
+                <span class="step-chip-text">Write <code class="md">tests/plugins/test-remaining-skill-splits.sh</code> asserting all four objective conditions for the six targets, and wire it into <code class="md">.github/workflows/check-plugin-versions.yml</code> as a named step after the existing <code class="md">test-merge-gallery-index.sh</code> step.</span>
               </div>
-              <div class="step-why">without CI wiring the guarantee decays on the next edit, and this repo has no test runner that would pick the file up on its own.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-remaining-skill-splits.sh` exits 0 and `grep -c test-remaining-skill-splits .github/workflows/check-plugin-versions.yml` returns 1.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">without CI wiring the guarantee decays on the next edit, and this repo has no test runner that would pick the file up on its own.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-remaining-skill-splits.sh</code> exits 0 and <code class="md">grep -c test-remaining-skill-splits .github/workflows/check-plugin-versions.yml</code> returns 1.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Bump `skill-reviewer` to 2.3.0, `memory-tools` to 4.1.0, `code-testing-agent` to 3.5.0, `content-tools` to 1.1.0, and `artifact-tools` to 1.8.0 in `.claude-plugin/marketplace.json`, add a matching CHANGELOG entry to each plugin (artifact-tools using the bracketed `## [1.8.0] - 2026-07-27` heading its own test parses), and add no `version` key to any `plugin.json`.</span>
+                <span class="step-chip-text">Bump <code class="md">skill-reviewer</code> to 2.3.0, <code class="md">memory-tools</code> to 4.1.0, <code class="md">code-testing-agent</code> to 3.5.0, <code class="md">content-tools</code> to 1.1.0, and <code class="md">artifact-tools</code> to 1.8.0 in <code class="md">.claude-plugin/marketplace.json</code>, add a matching CHANGELOG entry to each plugin (artifact-tools using the bracketed <code class="md">## [1.8.0] - 2026-07-27</code> heading its own test parses), and add no <code class="md">version</code> key to any <code class="md">plugin.json</code>.</span>
               </div>
-              <div class="step-why">any edit under `kit/plugins/&lt;name&gt;/` requires a bump higher than main, and artifact-tools&#39; test fails if its marketplace version and newest CHANGELOG heading disagree.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and `bash tests/plugins/test-artifact-tools.sh` exits 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">any edit under <code class="md">kit/plugins/&lt;name&gt;/</code> requires a bump higher than main, and artifact-tools&#39; test fails if its marketplace version and newest CHANGELOG heading disagree.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and <code class="md">bash tests/plugins/test-artifact-tools.sh</code> exits 0.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1679,12 +1938,12 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — This plan changes application code</div>
-      <div class="objective-test-card">Objective: proves the split actually landed and did not gut a safety gate. File: tests/plugins/test-remaining-skill-splits.sh; Type: smoke; Asserts: each of the six SKILL.md cores is under 600 words, each has at least two reference files in the directory its plugin&#39;s convention dictates, every `references/*.md` path mentioned in a core resolves to a file on disk, every reference file on disk is linked from at least one core (no orphans), and `security-scrub` plus `GATE RESULT: BLOCKED` plus hard-stop language appear in the *core* of both `diff-artifact` and `prompt-artifact`; Run: bash tests/plugins/test-remaining-skill-splits.sh</div>
+      <div class="objective-test-card">Objective: proves the split actually landed and did not gut a safety gate. File: tests/plugins/test-remaining-skill-splits.sh; Type: smoke; Asserts: each of the six SKILL.md cores is under 600 words, each has at least two reference files in the directory its plugin&#39;s convention dictates, every <code class="md">references/*.md</code> path mentioned in a core resolves to a file on disk, every reference file on disk is linked from at least one core (no orphans), and <code class="md">security-scrub</code> plus <code class="md">GATE RESULT: BLOCKED</code> plus hard-stop language appear in the <em class="md">core</em> of both <code class="md">diff-artifact</code> and <code class="md">prompt-artifact</code>; Run: bash tests/plugins/test-remaining-skill-splits.sh</div>
       <div class="test-list">
-        <div class="test-card">Unit: frontmatter is untouched by the split. File: tests/plugins/test-remaining-skill-splits.sh; Targets: the `description:`, `name:`, `allowed-tools:`, and `disable-model-invocation:` lines of all six targets; Key cases: each line is byte-identical to `git show origin/main:&lt;path&gt;`; a deliberately reworded description fails the check</div>
-        <div class="test-card">Unit: artifact-tools contract survives relocation. File: tests/plugins/test-artifact-tools.sh; Targets: diff-artifact and prompt-artifact cores plus their six new references; Key cases: scrub gate precedes `select:Artifact` in the core; `cap-and-summarize`, `16 MiB`, `sticky file sidebar`, `severity legend`, `prefers-color-scheme`, `16 * 1024 * 1024`, `git remote get-url origin`, and the `${DEFAULT_BRANCH}...HEAD` fallback line each still assert against the file that now holds them; the inbox key is still not date-derived</div>
-        <div class="test-card">Unit: artifact-to-post contract survives relocation. File: tests/plugins/test-artifact-to-post.sh; Targets: the artifact-to-post core and the two new content-tools references; Key cases: Phase 5 still precedes Phase 6 in the core; `write nothing and end the turn` stays in the core; all six config keys and `no block is ever dropped` still resolve; no hardcoded site literal reappears</div>
-        <div class="test-card">Unit: memory-tools write guard still executes real shipped code. File: tests/plugins/test-memory-doctor-guard.sh; Targets: path-rules-advisor core plus `references/write-verification.md`; Key cases: the parse check extracted from the reference rejects unterminated frontmatter and accepts valid frontmatter; the `allowed-tools` coverage scan still finds at least two commands after the bash blocks move</div>
+        <div class="test-card">Unit: frontmatter is untouched by the split. File: tests/plugins/test-remaining-skill-splits.sh; Targets: the <code class="md">description:</code>, <code class="md">name:</code>, <code class="md">allowed-tools:</code>, and <code class="md">disable-model-invocation:</code> lines of all six targets; Key cases: each line is byte-identical to <code class="md">git show origin/main:&lt;path&gt;</code>; a deliberately reworded description fails the check</div>
+        <div class="test-card">Unit: artifact-tools contract survives relocation. File: tests/plugins/test-artifact-tools.sh; Targets: diff-artifact and prompt-artifact cores plus their six new references; Key cases: scrub gate precedes <code class="md">select:Artifact</code> in the core; <code class="md">cap-and-summarize</code>, <code class="md">16 MiB</code>, <code class="md">sticky file sidebar</code>, <code class="md">severity legend</code>, <code class="md">prefers-color-scheme</code>, <code class="md">16 * 1024 * 1024</code>, <code class="md">git remote get-url origin</code>, and the <code class="md">${DEFAULT_BRANCH}...HEAD</code> fallback line each still assert against the file that now holds them; the inbox key is still not date-derived</div>
+        <div class="test-card">Unit: artifact-to-post contract survives relocation. File: tests/plugins/test-artifact-to-post.sh; Targets: the artifact-to-post core and the two new content-tools references; Key cases: Phase 5 still precedes Phase 6 in the core; <code class="md">write nothing and end the turn</code> stays in the core; all six config keys and <code class="md">no block is ever dropped</code> still resolve; no hardcoded site literal reappears</div>
+        <div class="test-card">Unit: memory-tools write guard still executes real shipped code. File: tests/plugins/test-memory-doctor-guard.sh; Targets: path-rules-advisor core plus <code class="md">references/write-verification.md</code>; Key cases: the parse check extracted from the reference rejects unterminated frontmatter and accepts valid frontmatter; the <code class="md">allowed-tools</code> coverage scan still finds at least two commands after the bash blocks move</div>
         <div class="test-card">Unit: description budget sweep is unaffected. File: tests/plugins/test-description-budget.sh; Targets: every shipped SKILL.md; Key cases: all six split cores still pass the ≤200 total and ≤80 first-sentence limits</div>
       </div>
     </section>
@@ -1698,43 +1957,43 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1">Each of the six target SKILL.md files is under 600 words, against a pre-split total of 10,545 — and the counter turned out to matter more than the number. Under the canonical (locale-independent) counter the pre-split total is **10,681** and the post-split total **3,392**, a 68% cut; the plan&#39;s 10,545 and the 10,451 an early `wc -w` pass reported are both C-locale undercounts of the same files. Every figure quoted anywhere in this plan or the five CHANGELOGs now uses the canonical counter on both sides, so the before and after are comparable. `wc -w` is locale-dependent on these files: they are full of multibyte characters (`—`, `≤`, `→`, `…`), and a standalone `—` is not a word in the C locale but is one in C.UTF-8, a ~20-word swing per file. That is exactly how CI first went red — the cores read 573–594 in this container&#39;s C locale and 589–617 on the runner. The test now counts in Python, which decodes UTF-8 regardless of ambient locale and returns the same answer everywhere. Post-split: 579 / 522 / 571 / 571 / 566 / 583, each with 17+ words of margin</label>
+          <label for="ac1">Each of the six target SKILL.md files is under 600 words, against a pre-split total of 10,545 — and the counter turned out to matter more than the number. Under the canonical (locale-independent) counter the pre-split total is <strong class="md">10,681</strong> and the post-split total <strong class="md">3,392</strong>, a 68% cut; the plan&#39;s 10,545 and the 10,451 an early <code class="md">wc -w</code> pass reported are both C-locale undercounts of the same files. Every figure quoted anywhere in this plan or the five CHANGELOGs now uses the canonical counter on both sides, so the before and after are comparable. <code class="md">wc -w</code> is locale-dependent on these files: they are full of multibyte characters (<code class="md">—</code>, <code class="md">≤</code>, <code class="md">→</code>, <code class="md">…</code>), and a standalone <code class="md">—</code> is not a word in the C locale but is one in C.UTF-8, a ~20-word swing per file. That is exactly how CI first went red — the cores read 573–594 in this container&#39;s C locale and 589–617 on the runner. The test now counts in Python, which decodes UTF-8 regardless of ambient locale and returns the same answer everywhere. Post-split: 579 / 522 / 571 / 571 / 566 / 583, each with 17+ words of margin</label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
-          <label for="ac2">17 new reference files exist, placed per-skill under `skill-reviewer`, `memory-tools`, and `code-testing-agent`, and at plugin level under `artifact-tools` and `content-tools`</label>
+          <label for="ac2">17 new reference files exist, placed per-skill under <code class="md">skill-reviewer</code>, <code class="md">memory-tools</code>, and <code class="md">code-testing-agent</code>, and at plugin level under <code class="md">artifact-tools</code> and <code class="md">content-tools</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac3" checked>
-          <label for="ac3">`bash tests/plugins/test-remaining-skill-splits.sh` exits 0</label>
+          <label for="ac3"><code class="md">bash tests/plugins/test-remaining-skill-splits.sh</code> exits 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4">Every `references/` path named in a split core resolves to an existing file, and no reference file is orphaned from every core</label>
+          <label for="ac4">Every <code class="md">references/</code> path named in a split core resolves to an existing file, and no reference file is orphaned from every core</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5">`grep -n &#39;security-scrub&#39; kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` shows the gate in both cores, ahead of the `select:Artifact` line in each</label>
+          <label for="ac5"><code class="md">grep -n &#39;security-scrub&#39; kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> shows the gate in both cores, ahead of the <code class="md">select:Artifact</code> line in each</label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6">`git diff origin/main -- &#39;*/SKILL.md&#39; | grep &#39;^[-+]description:&#39;` prints nothing</label>
+          <label for="ac6"><code class="md">git diff origin/main -- &#39;*/SKILL.md&#39; | grep &#39;^[-+]description:&#39;</code> prints nothing</label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with skill-reviewer 2.3.0, memory-tools 4.1.0, code-testing-agent 3.5.0, content-tools 1.1.0, and artifact-tools **1.9.0** — `main` already ships artifact-tools 1.8.0, so the planned 1.8.0 could not clear the version guard; the next minor is 1.9.0, and its CHANGELOG heading is `## [1.9.0] - 2026-07-29`</label>
+          <label for="ac7"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with skill-reviewer 2.3.0, memory-tools 4.1.0, code-testing-agent 3.5.0, content-tools 1.1.0, and artifact-tools <strong class="md">1.9.0</strong> — <code class="md">main</code> already ships artifact-tools 1.8.0, so the planned 1.8.0 could not clear the version guard; the next minor is 1.9.0, and its CHANGELOG heading is <code class="md">## [1.9.0] - 2026-07-29</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8">Each of the five touched plugins has a CHANGELOG entry naming its new version, and no `plugin.json` gained a `version` key</label>
+          <label for="ac8">Each of the five touched plugins has a CHANGELOG entry naming its new version, and no <code class="md">plugin.json</code> gained a <code class="md">version</code> key</label>
         </li>
         <li>
           <input type="checkbox" id="ac9" checked>
-          <label for="ac9">`bash tests/plugins/test-artifact-tools.sh`, `bash tests/plugins/test-artifact-to-post.sh`, `bash tests/plugins/test-memory-doctor-guard.sh`, `bash tests/plugins/test-generator-skills-verify-output.sh`, and `bash tests/plugins/test-description-budget.sh` all exit 0</label>
+          <label for="ac9"><code class="md">bash tests/plugins/test-artifact-tools.sh</code>, <code class="md">bash tests/plugins/test-artifact-to-post.sh</code>, <code class="md">bash tests/plugins/test-memory-doctor-guard.sh</code>, <code class="md">bash tests/plugins/test-generator-skills-verify-output.sh</code>, and <code class="md">bash tests/plugins/test-description-budget.sh</code> all exit 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac10" checked>
-          <label for="ac10">`.github/workflows/check-plugin-versions.yml` contains a step running `tests/plugins/test-remaining-skill-splits.sh`</label>
+          <label for="ac10"><code class="md">.github/workflows/check-plugin-versions.yml</code> contains a step running <code class="md">tests/plugins/test-remaining-skill-splits.sh</code></label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1747,19 +2006,19 @@ img, video { max-width: 100%; height: auto; }
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>Run the full local gate in one pass: `bash tests/plugins/test-remaining-skill-splits.sh &amp;&amp; bash tests/plugins/test-artifact-tools.sh &amp;&amp; bash tests/plugins/test-artifact-to-post.sh &amp;&amp; bash tests/plugins/test-memory-doctor-guard.sh &amp;&amp; bash tests/plugins/test-generator-skills-verify-output.sh &amp;&amp; bash tests/plugins/test-description-budget.sh &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs`. Expected result: every command exits 0 and the objective test prints six word counts, all under 600.</p>
-      <p>Then prove the objective test is not a tautology, one break at a time, reverting after each. Delete the `security-scrub` paragraph from `kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` and confirm `bash tests/plugins/test-remaining-skill-splits.sh` exits 1 naming the missing gate; restore it. Change one `references/` link in the `optimizing-skill-frontmatter` core to a filename that does not exist and confirm the test exits 1 on the unresolved reference; restore it. Paste roughly 400 words of the moved rules back into that same core and confirm the test exits 1 on the word ceiling; restore it. A test that passes through all three breaks is measuring nothing.</p>
-      <p>Behavioral verification is the part word counts cannot cover, and it is not optional. Load the five plugins locally (`claude --plugin-dir kit/plugins/skill-reviewer --plugin-dir kit/plugins/artifact-tools --plugin-dir kit/plugins/memory-tools --plugin-dir kit/plugins/content-tools --plugin-dir kit/plugins/code-testing-agent`) and actually invoke each split skill: run `optimizing-skill-frontmatter` against a throwaway SKILL.md fixture in a temp dir and confirm it still reaches the rewrite rules, the invocation-control table, and the budget advisory by reading the references; run `path-rules-advisor` in Mode A against a scratch repo and confirm it still asks before writing and still runs the parse check after; run `artifact-to-post` against `tests/fixtures/artifact-to-post/sample-artifact.html` and confirm it stops at the scrub gate rather than writing; run `diff-artifact` and `prompt-artifact` far enough to observe the scrub gate fire from the core before any publish; run `tdd-fix` against `tests/demo/` and confirm it still writes a failing test and enters the loop. Any skill that stalls, skips a step, or fails to pull a reference it needs is a failed split regardless of its word count — report it and fix it rather than recording the plan as complete. Finally, run `/skill-reviewer:reviewing-skills` against `optimizing-skill-frontmatter` itself: the rubric must pass its own audit, including the reference-depth-≤1 and progressive-disclosure criteria it defines, since it is now both the judge and the subject. Clean up every temp dir the verification creates.</p>
-      <p>**Recorded outcome.** The full local gate passes: all six objective checks, the five<br>named unit tests, `check-plugin-versions.mjs`, and the whole `tests/plugins/` suite<br>(43 files, 0 failures). All four tautology breaks were exercised and each fails the<br>objective test, restoring green after revert: the deleted `security-scrub` paragraph<br>(`core gate lost in: prompt-artifact`), a `references/` link renamed to a<br>non-existent file (both the unresolved pointer *and* the resulting orphan), ~400<br>words of moved rules pasted back into the `optimizing-skill-frontmatter` core (965<br>words, over the ceiling), and a reworded `description:` (`frontmatter drifted:<br>tdd-fix:[description]`).</p>
-      <p>Behavioural verification ran all six skills through `claude -p` with the plugins<br>loaded, in throwaway temp dirs (since removed). Every skill reached and read the<br>references it needed, and every gate held: `optimizing-skill-frontmatter` read all<br>four references at the right steps and rewrote a fixture description to three-part<br>form; `path-rules-advisor` read `rule-modes.md`, `rule-file-format.md`, and<br>`write-verification.md`, and refused to write without explicit confirmation;<br>`artifact-to-post` stopped dead at the Phase 2 gate and wrote nothing;<br>`diff-artifact` ran the default-branch resolution out of `diff-sources.md` and then<br>stopped at the Step 2 gate before building a page; `prompt-artifact` read all four<br>references, ran the `PROMPTS_DIR` resolver, and stopped at the Step 4 gate with no<br>page written and no URL recorded; `tdd-fix` wrote a failing test, confirmed it red,<br>entered the loop, fixed the bug in one iteration, swept the suite green, and printed<br>the summary block.</p>
-      <p>Two verification limits worth recording rather than glossing. **First**, the live<br>post-write parse check could not be observed end-to-end: this container blocks<br>headless writes under `.claude/`, so `path-rules-advisor` never got to run the check<br>on a file it had just written. The read half is confirmed (it loads<br>`write-verification.md` *before* writing), and the executable half is covered better<br>than a live run would cover it — `test-memory-doctor-guard.sh` extracts the real<br>shipped block from the reference and runs it against ten fixtures including the<br>malformed and empty-body negatives. **Second**, `tests/demo/calculator.sh` no longer<br>carries the bug its own comment describes (`add()` is already `+`), so the first<br>`tdd-fix` run correctly hit Step 2&#39;s passing-test hard stop; the loop was exercised<br>on a temp copy with the operator flipped back.</p>
-      <p>Two deviations from the plan as written, both to reach the plan&#39;s own outcome.<br>**`test-generator-skills-verify-output.sh` was left unmodified.** The plan called for<br>repointing its `path-rules-advisor` wiring regex at the reference; instead the core<br>keeps the three `run [Verify the write](#verify-the-write)` call sites the existing<br>regex already matches, so the wiring stays asserted with no test churn — and the new<br>objective test separately proves the core&#39;s `references/write-verification.md`<br>pointer resolves. **`test-proposal-prompt-pipeline.sh` needed a change the plan did<br>not anticipate**: its check 8 greps `prompt-artifact`&#39;s SKILL.md for the five library<br>filter chips and the tolerant-frontmatter rule, both of which moved into<br>`prompt-page.md` and `prompt-resolution.md`. It now reads the core plus those two, so<br>it still fails if a chip is dropped.</p>
-      <p>**Two defects the PR review caught, both in the tests this plan added.** Neither was<br>visible from a green local run, which is the point worth recording.</p>
-      <p>*The word ceiling was measured with a locale-dependent counter.* `wc -w` under this<br>container&#39;s C locale undercounted every core by 9–23 words, so three of them<br>(`tdd-fix` 603, `diff-artifact` 602, `prompt-artifact` 617) shipped over the ceiling<br>and the new CI step failed on the first run. Fixed at both ends: the test counts in<br>Python so the number is the same on every machine, and all six cores were trimmed to<br>566–583 by removing genuine restatement rather than reshuffling prose — Step 5&#39;s<br>scrub paragraph in `diff-artifact` no longer repeats Step 2&#39;s verdict list, `tdd-fix`<br>no longer paraphrases steps its references already state in full, and<br>`artifact-to-post` drops a lead paragraph that restated its own frontmatter<br>description.</p>
-      <p>*`test-memory-doctor-guard.sh` could abort silently.* Its `extract_check` piped the<br>bundled skill into an `awk` that exits at the heredoc terminator; the producer then<br>wrote into a closed reader, took SIGPIPE, and under `set -o pipefail` + `set -e` the<br>whole test aborted at exit 141 — skipping checks 3–10 while reporting nothing. It<br>passed only because the bytes trailing the heredoc happened to fit the 64 KiB pipe<br>buffer (5,756 bytes of margin for `agentic-memory-management`, 684 for<br>`path-rules-advisor`), which is a property of today&#39;s reference files, not a<br>guarantee. Extraction now buffers to a file, which has no reader to close; verified<br>by appending 480 KB after the heredoc and confirming all 11 checks still run, where<br>the old piped form exits 141.</p>
-      <p>Four review findings were also worth taking, each verified by a negative control<br>that fails before the fix and passes after: the frontmatter unit check now compares<br>the **whole** opening `---` block rather than four named keys (an added `model:` key<br>passed before); `diff-artifact`&#39;s rendered-page rescan is asserted to precede the<br>publish bootstrap, not merely to exist (moving it after publish passed before); the<br>date-derived-key ban covers `prompt-publishing.md` as well as `diff-publishing.md`;<br>and `references/titles.md` joined the resolve/orphan sweep, since both split cores<br>name it. Reference counting also changed shape: it now counts the references each<br>core actually links and that resolve, because under a plugin-level layout counting<br>files in the shared directory would let a target pass on its siblings&#39; references.</p>
-      <p>Four further findings were checked and declined, each for a stated reason. Describing<br>`security-scrub` as auto-activated rather than a `Skill`-tool call would break the<br>gate: a blocking gate has to be invoked deterministically, `test-artifact-tools.sh`<br>requires `Skill` in `allowed-tools` precisely because the body invokes another<br>plugin&#39;s skill, and the wording is unchanged from `main`. Replacing the frontmatter<br>parse check with a YAML parser is unnecessary — the concern was that it rejects<br>nested mappings and sequence items, but it skips indented lines and `- ` items, and<br>`test-memory-doctor-guard.sh` check 9 proves it on a folded scalar plus a nested<br>list. The `git checkout -- &lt;path&gt;` recovery hint and the `## When not to use` scope<br>line that omits Rule 4&#39;s body insertion are both real, both unchanged from `main`,<br>and both live identically in a sibling skill outside this PR; changing shipped<br>guidance inside a refactor that promises byte-identical behaviour would hide a<br>behaviour change in a no-op diff, so they belong in the Rule 1 trim pass already<br>queued in Next Steps.</p>
-      <p>One review finding was wrong, and checking it found something real. Copilot reported<br>that `test-generator-skills-verify-output.sh` requires the literal `TARGET&quot;` in the<br>check-section body and that the split therefore breaks the audit. It does not: the<br>evidence pattern is `TARGET` (the trailing quote in the test source closes the<br>`SKILLS=` heredoc string, not the regex), the core carries `$TARGET`, and the audit<br>reports `OK: memory-tools/skills/path-rules-advisor/SKILL.md`. But verifying that<br>exposed a genuine gap in this plan&#39;s own reasoning: **five of the tests this work<br>depends on were not wired into CI at all**, including four retargeted here to follow<br>moved content and the one whose unmodified pass was the stated reason for not<br>touching it. Step 8&#39;s rationale — &quot;without CI wiring the guarantee decays on the next<br>edit&quot; — was applied only to the new objective test. It applies just as much to a test<br>whose literals now point at a reference file. All five pass on `origin/main`<br>unchanged, so `test-artifact-tools.sh`, `test-artifact-to-post.sh`,<br>`test-memory-doctor-guard.sh`, `test-generator-skills-verify-output.sh`, and<br>`test-description-budget.sh` are now named steps in<br>`.github/workflows/check-plugin-versions.yml`, verified by running the check job&#39;s<br>full step list in order under the runner&#39;s `C.UTF-8` locale.</p>
+      <p>Run the full local gate in one pass: <code class="md">bash tests/plugins/test-remaining-skill-splits.sh &amp;&amp; bash tests/plugins/test-artifact-tools.sh &amp;&amp; bash tests/plugins/test-artifact-to-post.sh &amp;&amp; bash tests/plugins/test-memory-doctor-guard.sh &amp;&amp; bash tests/plugins/test-generator-skills-verify-output.sh &amp;&amp; bash tests/plugins/test-description-budget.sh &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code>. Expected result: every command exits 0 and the objective test prints six word counts, all under 600.</p>
+      <p>Then prove the objective test is not a tautology, one break at a time, reverting after each. Delete the <code class="md">security-scrub</code> paragraph from <code class="md">kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> and confirm <code class="md">bash tests/plugins/test-remaining-skill-splits.sh</code> exits 1 naming the missing gate; restore it. Change one <code class="md">references/</code> link in the <code class="md">optimizing-skill-frontmatter</code> core to a filename that does not exist and confirm the test exits 1 on the unresolved reference; restore it. Paste roughly 400 words of the moved rules back into that same core and confirm the test exits 1 on the word ceiling; restore it. A test that passes through all three breaks is measuring nothing.</p>
+      <p>Behavioral verification is the part word counts cannot cover, and it is not optional. Load the five plugins locally (<code class="md">claude --plugin-dir kit/plugins/skill-reviewer --plugin-dir kit/plugins/artifact-tools --plugin-dir kit/plugins/memory-tools --plugin-dir kit/plugins/content-tools --plugin-dir kit/plugins/code-testing-agent</code>) and actually invoke each split skill: run <code class="md">optimizing-skill-frontmatter</code> against a throwaway SKILL.md fixture in a temp dir and confirm it still reaches the rewrite rules, the invocation-control table, and the budget advisory by reading the references; run <code class="md">path-rules-advisor</code> in Mode A against a scratch repo and confirm it still asks before writing and still runs the parse check after; run <code class="md">artifact-to-post</code> against <code class="md">tests/fixtures/artifact-to-post/sample-artifact.html</code> and confirm it stops at the scrub gate rather than writing; run <code class="md">diff-artifact</code> and <code class="md">prompt-artifact</code> far enough to observe the scrub gate fire from the core before any publish; run <code class="md">tdd-fix</code> against <code class="md">tests/demo/</code> and confirm it still writes a failing test and enters the loop. Any skill that stalls, skips a step, or fails to pull a reference it needs is a failed split regardless of its word count — report it and fix it rather than recording the plan as complete. Finally, run <code class="md">/skill-reviewer:reviewing-skills</code> against <code class="md">optimizing-skill-frontmatter</code> itself: the rubric must pass its own audit, including the reference-depth-≤1 and progressive-disclosure criteria it defines, since it is now both the judge and the subject. Clean up every temp dir the verification creates.</p>
+      <p><strong class="md">Recorded outcome.</strong> The full local gate passes: all six objective checks, the five<br>named unit tests, <code class="md">check-plugin-versions.mjs</code>, and the whole <code class="md">tests/plugins/</code> suite<br>(43 files, 0 failures). All four tautology breaks were exercised and each fails the<br>objective test, restoring green after revert: the deleted <code class="md">security-scrub</code> paragraph<br>(<code class="md">core gate lost in: prompt-artifact</code>), a <code class="md">references/</code> link renamed to a<br>non-existent file (both the unresolved pointer <em class="md">and</em> the resulting orphan), ~400<br>words of moved rules pasted back into the <code class="md">optimizing-skill-frontmatter</code> core (965<br>words, over the ceiling), and a reworded <code class="md">description:</code> (<code class="md">frontmatter drifted:<br>tdd-fix:[description]</code>).</p>
+      <p>Behavioural verification ran all six skills through <code class="md">claude -p</code> with the plugins<br>loaded, in throwaway temp dirs (since removed). Every skill reached and read the<br>references it needed, and every gate held: <code class="md">optimizing-skill-frontmatter</code> read all<br>four references at the right steps and rewrote a fixture description to three-part<br>form; <code class="md">path-rules-advisor</code> read <code class="md">rule-modes.md</code>, <code class="md">rule-file-format.md</code>, and<br><code class="md">write-verification.md</code>, and refused to write without explicit confirmation;<br><code class="md">artifact-to-post</code> stopped dead at the Phase 2 gate and wrote nothing;<br><code class="md">diff-artifact</code> ran the default-branch resolution out of <code class="md">diff-sources.md</code> and then<br>stopped at the Step 2 gate before building a page; <code class="md">prompt-artifact</code> read all four<br>references, ran the <code class="md">PROMPTS_DIR</code> resolver, and stopped at the Step 4 gate with no<br>page written and no URL recorded; <code class="md">tdd-fix</code> wrote a failing test, confirmed it red,<br>entered the loop, fixed the bug in one iteration, swept the suite green, and printed<br>the summary block.</p>
+      <p>Two verification limits worth recording rather than glossing. <strong class="md">First</strong>, the live<br>post-write parse check could not be observed end-to-end: this container blocks<br>headless writes under <code class="md">.claude/</code>, so <code class="md">path-rules-advisor</code> never got to run the check<br>on a file it had just written. The read half is confirmed (it loads<br><code class="md">write-verification.md</code> <em class="md">before</em> writing), and the executable half is covered better<br>than a live run would cover it — <code class="md">test-memory-doctor-guard.sh</code> extracts the real<br>shipped block from the reference and runs it against ten fixtures including the<br>malformed and empty-body negatives. <strong class="md">Second</strong>, <code class="md">tests/demo/calculator.sh</code> no longer<br>carries the bug its own comment describes (<code class="md">add()</code> is already <code class="md">+</code>), so the first<br><code class="md">tdd-fix</code> run correctly hit Step 2&#39;s passing-test hard stop; the loop was exercised<br>on a temp copy with the operator flipped back.</p>
+      <p>Two deviations from the plan as written, both to reach the plan&#39;s own outcome.<br><strong class="md"><code class="md">test-generator-skills-verify-output.sh</code> was left unmodified.</strong> The plan called for<br>repointing its <code class="md">path-rules-advisor</code> wiring regex at the reference; instead the core<br>keeps the three <code class="md">run [Verify the write](#verify-the-write)</code> call sites the existing<br>regex already matches, so the wiring stays asserted with no test churn — and the new<br>objective test separately proves the core&#39;s <code class="md">references/write-verification.md</code><br>pointer resolves. <strong class="md"><code class="md">test-proposal-prompt-pipeline.sh</code> needed a change the plan did<br>not anticipate</strong>: its check 8 greps <code class="md">prompt-artifact</code>&#39;s SKILL.md for the five library<br>filter chips and the tolerant-frontmatter rule, both of which moved into<br><code class="md">prompt-page.md</code> and <code class="md">prompt-resolution.md</code>. It now reads the core plus those two, so<br>it still fails if a chip is dropped.</p>
+      <p><strong class="md">Two defects the PR review caught, both in the tests this plan added.</strong> Neither was<br>visible from a green local run, which is the point worth recording.</p>
+      <p><em class="md">The word ceiling was measured with a locale-dependent counter.</em> <code class="md">wc -w</code> under this<br>container&#39;s C locale undercounted every core by 9–23 words, so three of them<br>(<code class="md">tdd-fix</code> 603, <code class="md">diff-artifact</code> 602, <code class="md">prompt-artifact</code> 617) shipped over the ceiling<br>and the new CI step failed on the first run. Fixed at both ends: the test counts in<br>Python so the number is the same on every machine, and all six cores were trimmed to<br>566–583 by removing genuine restatement rather than reshuffling prose — Step 5&#39;s<br>scrub paragraph in <code class="md">diff-artifact</code> no longer repeats Step 2&#39;s verdict list, <code class="md">tdd-fix</code><br>no longer paraphrases steps its references already state in full, and<br><code class="md">artifact-to-post</code> drops a lead paragraph that restated its own frontmatter<br>description.</p>
+      <p><em class="md"><code class="md">test-memory-doctor-guard.sh</code> could abort silently.</em> Its <code class="md">extract_check</code> piped the<br>bundled skill into an <code class="md">awk</code> that exits at the heredoc terminator; the producer then<br>wrote into a closed reader, took SIGPIPE, and under <code class="md">set -o pipefail</code> + <code class="md">set -e</code> the<br>whole test aborted at exit 141 — skipping checks 3–10 while reporting nothing. It<br>passed only because the bytes trailing the heredoc happened to fit the 64 KiB pipe<br>buffer (5,756 bytes of margin for <code class="md">agentic-memory-management</code>, 684 for<br><code class="md">path-rules-advisor</code>), which is a property of today&#39;s reference files, not a<br>guarantee. Extraction now buffers to a file, which has no reader to close; verified<br>by appending 480 KB after the heredoc and confirming all 11 checks still run, where<br>the old piped form exits 141.</p>
+      <p>Four review findings were also worth taking, each verified by a negative control<br>that fails before the fix and passes after: the frontmatter unit check now compares<br>the <strong class="md">whole</strong> opening <code class="md">---</code> block rather than four named keys (an added <code class="md">model:</code> key<br>passed before); <code class="md">diff-artifact</code>&#39;s rendered-page rescan is asserted to precede the<br>publish bootstrap, not merely to exist (moving it after publish passed before); the<br>date-derived-key ban covers <code class="md">prompt-publishing.md</code> as well as <code class="md">diff-publishing.md</code>;<br>and <code class="md">references/titles.md</code> joined the resolve/orphan sweep, since both split cores<br>name it. Reference counting also changed shape: it now counts the references each<br>core actually links and that resolve, because under a plugin-level layout counting<br>files in the shared directory would let a target pass on its siblings&#39; references.</p>
+      <p>Four further findings were checked and declined, each for a stated reason. Describing<br><code class="md">security-scrub</code> as auto-activated rather than a <code class="md">Skill</code>-tool call would break the<br>gate: a blocking gate has to be invoked deterministically, <code class="md">test-artifact-tools.sh</code><br>requires <code class="md">Skill</code> in <code class="md">allowed-tools</code> precisely because the body invokes another<br>plugin&#39;s skill, and the wording is unchanged from <code class="md">main</code>. Replacing the frontmatter<br>parse check with a YAML parser is unnecessary — the concern was that it rejects<br>nested mappings and sequence items, but it skips indented lines and <code class="md">- </code> items, and<br><code class="md">test-memory-doctor-guard.sh</code> check 9 proves it on a folded scalar plus a nested<br>list. The <code class="md">git checkout -- &lt;path&gt;</code> recovery hint and the <code class="md">## When not to use</code> scope<br>line that omits Rule 4&#39;s body insertion are both real, both unchanged from <code class="md">main</code>,<br>and both live identically in a sibling skill outside this PR; changing shipped<br>guidance inside a refactor that promises byte-identical behaviour would hide a<br>behaviour change in a no-op diff, so they belong in the Rule 1 trim pass already<br>queued in Next Steps.</p>
+      <p>One review finding was wrong, and checking it found something real. Copilot reported<br>that <code class="md">test-generator-skills-verify-output.sh</code> requires the literal <code class="md">TARGET&quot;</code> in the<br>check-section body and that the split therefore breaks the audit. It does not: the<br>evidence pattern is <code class="md">TARGET</code> (the trailing quote in the test source closes the<br><code class="md">SKILLS=</code> heredoc string, not the regex), the core carries <code class="md">$TARGET</code>, and the audit<br>reports <code class="md">OK: memory-tools/skills/path-rules-advisor/SKILL.md</code>. But verifying that<br>exposed a genuine gap in this plan&#39;s own reasoning: <strong class="md">five of the tests this work<br>depends on were not wired into CI at all</strong>, including four retargeted here to follow<br>moved content and the one whose unmodified pass was the stated reason for not<br>touching it. Step 8&#39;s rationale — &quot;without CI wiring the guarantee decays on the next<br>edit&quot; — was applied only to the new objective test. It applies just as much to a test<br>whose literals now point at a reference file. All five pass on <code class="md">origin/main</code><br>unchanged, so <code class="md">test-artifact-tools.sh</code>, <code class="md">test-artifact-to-post.sh</code>,<br><code class="md">test-memory-doctor-guard.sh</code>, <code class="md">test-generator-skills-verify-output.sh</code>, and<br><code class="md">test-description-budget.sh</code> are now named steps in<br><code class="md">.github/workflows/check-plugin-versions.yml</code>, verified by running the check job&#39;s<br>full step list in order under the runner&#39;s <code class="md">C.UTF-8</code> locale.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
@@ -1860,6 +2119,31 @@ one path from the allowlist and confirming it exits 1.</pre>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -2071,27 +2355,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
     }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
-    sections.forEach(function (el) { observer.observe(el); });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

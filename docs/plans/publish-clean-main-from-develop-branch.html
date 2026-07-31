@@ -1,63 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="todo" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="todo">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-06">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="publish-clean-main-from-develop-branch.html">
 <meta name="plan-path" content="docs/plans/publish-clean-main-from-develop-branch.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch">
+<meta name="plan-md" content="docs/plans/publish-clean-main-from-develop-branch.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/publish-clean-main-from-develop-branch.md — Publish a clean main branch from a develop workspace. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-clean-main-from-develop-branch.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Publish a clean main branch from a develop workspace. The plan at docs/plans/publish-clean-main-from-develop-branch.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-clean-main-from-develop-branch.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/publish-clean-main-from-develop-branch.md — Publish a clean main branch from a develop workspace. Brief subagents with the plan file at docs/plans/publish-clean-main-from-develop-branch.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-clean-main-from-develop-branch.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Publish a clean main branch from a develop workspace</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -87,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -97,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -113,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -124,11 +242,21 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
   }
 
   /* Status badge */
@@ -144,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -155,14 +286,90 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Meta row */
   .plan-meta {
@@ -171,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -185,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -203,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -240,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -326,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -346,66 +673,35 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-body { min-width: 0; }
+  .step-card.completed .step-number { color: var(--moss); }
+  .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
     margin-bottom: .3rem;
@@ -413,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
-  .step-chip-text { }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+  .step-chip-text { flex: 1; }
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -476,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -514,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -532,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -554,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -585,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -599,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -613,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -634,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -658,37 +954,38 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
     content: "";
+    flex: 1;
     height: 1px;
     background: var(--wish-border);
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -702,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -717,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -727,14 +1059,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-cmd-btn {
@@ -744,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -755,23 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -780,14 +1111,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {
@@ -797,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -808,40 +1140,38 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt ──────────────────────────────────────────── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-workflow-btn {
@@ -851,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -862,13 +1192,143 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--ink);
+    flex: 1;
+  }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .objective-test-card {
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -876,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -888,90 +1348,99 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
     a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
   }
 
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
+     ═════════════════════════════════════════════════════════════════ */
+
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
+  .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
+
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
     display: inline-flex;
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
   .plan-back-link:hover { color: var(--accent); }
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-  /* ── Save as PDF button (backfilled) ──────────────────────────── */
-  .save-pdf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem 1rem;
-    font-size: .8rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--accent, #2563eb);
-    border: 1px solid var(--accent, #2563eb);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: filter .15s, box-shadow .15s;
-  }
-  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .save-pdf-btn:active { filter: brightness(.75); }
-  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
-  .plan-header-actions {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-wrap: wrap;
-    margin-top: .75rem;
-  }
-  @media print { .save-pdf-btn { display: none !important; } }
 </style>
 <style id="plan-responsive-fix" data-version="1">
 /* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
@@ -986,67 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST (backfilled)
-     First element child of <body>. type="text/markdown" never renders
-     or runs. Spec only — no status/checkbox/progress state. Literal
-     closing-script sequences in the content are guarded as <\/script.
-     Extract (first-match flag-and-exit):
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-# Plan: Publish a clean main branch from a develop workspace
-
-> Authored spec only. Status and progress live in the <head> meta tags and
-> the live DOM, never in this block.
-
-## Objective
-Split the agentics repo into a develop branch for day-to-day work and a clean main branch (kept as the GitHub default) that carries only the plugin distribution — so every /plugin install pulls stripped plugin files directly from the default branch while docs, scripts, and development live on develop, automatically republished to main on every push.
-
-## Context
-The agentics repo is both the development workspace and the install source. .claude-plugin/marketplace.json registers 12 active plugins via git-subdir sources whose url points at https://github.com/shawn-sandy/agentics.git . When a user installs, Claude Code sparsely clones the plugin's path subtree from the repo's default branch — but that branch carries a lot that has no business in an install: a 35 KB root README.md , docs/ , examples/ , scripts/ , tests/ , .playwright-mcp/ , a session .png , CLAUDE.local.md , .DS_Store files, and top-level markdown ( ROADMAP.md , SECURITY.md , SOCIAL.md ).
-
-The sibling plan build-clean-plugin-dist.html solves this by mirroring the marketplace into a separate clean repo ( shawn-sandy/agentics-kit ) and rewriting each source.url . This plan takes a branch-based approach in the same repo instead: main stays as the GitHub default but is replaced with a clean, stripped plugin distribution, while a new develop branch holds the full workspace where all dev work and PRs happen. Because main remains the default branch, git-subdir sources need no ref field at all — installs naturally resolve from the default branch and get clean files. No second repo, no source.url rewrite, and no ref pins needed.
-
-Decisions locked in clarification: branch model = developers push to develop first (all feature branches and PRs target develop), and only develop can be merged/pushed to main — no direct pushes, no PRs from feature branches to main. A GitHub Action rebuilds and republishes main on every push to develop , orphan-replacing main 's tree with the freshly built clean output (main carries distribution snapshots, not dev history). main stays as the GitHub default so installs resolve from it automatically. A key advantage over the separate-repo plan: publishing stays in-repo, so the default GITHUB_TOKEN can push to main — no cross-repo PAT required. An additional advantage over flipping the default: no user migration needed — existing installs keep resolving from main seamlessly.
-
-## Files
-- .github/workflows/publish-dist.yml (new) — rebuild + publish main on push to develop
-- .github/workflows/version-guard.yml (modified) — retarget PR branch filter main &rarr; develop
-- .github/workflows/update-readme.yml (modified) — ensure it writes to develop, not main
-- .claude-plugin/marketplace.json (modified) — strip removed[] for clean dist; no ref pins needed
-- scripts/build-dist.mjs (new) — manifest-driven clean builder + check/publish
-- .claude/rules/marketplace.md (modified) — main is generated; never hand-edit
-- README.md (modified) — branch model & distribution section
-- CLAUDE.md (modified) — develop-default; never commit to main
-- main (branch) (generated) — clean plugin distribution snapshot
-
-## Steps
-1. Create the develop branch from main and configure PR targeting Why: develop must carry the entire current workspace before main is ever stripped. Tag the pre-split commit (e.g. git tag pre-dist-split ) as a safety net so the full history stays reachable. Main stays as the GitHub default so that /plugin install resolves from it without any ref pin — but PRs and dev work must target develop going forward. Verify: git checkout main && git pull && git checkout -b develop && git push -u origin develop succeeds; gh repo view --json defaultBranchRef -q .defaultBranchRef.name still returns main ; git diff main develop --stat is empty (identical trees at split time); git tag pre-dist-split exists.
-2. Enforce the develop-first workflow and retarget open PRs Why: Developers push to develop first — all feature branches and PRs must target develop , never main . Only the CI publish workflow writes to main. Retarget any open PRs from main to develop and communicate the new branching model to contributors. Verify: gh pr list --base main --state open returns no results (all retargeted to develop); commit lands on develop .
-3. Write scripts/build-dist.mjs — a manifest-driven clean builder Why: A deterministic build from develop is the only writer of main, guaranteeing the clean branch never drifts. Mirror the existing merge-marketplace.mjs convention (bare ESM, run via node , no package.json). Enumerate plugins by reading marketplace.json plugins[] (never by globbing); copy only a KEEP allowlist ( .claude-plugin , commands , skills , agents , hooks , hooks.json , templates , README.md , CHANGELOG.md , LICENSE ) per plugin into an OUT_DIR ; drop a DROP denylist ( docs , *.local.md , .DS_Store , *.png , .playwright-mcp ); emit a clean root (marketplace.json with removed[] stripped, a slim README.md, copied LICENSE). Verify: node scripts/build-dist.mjs --list prints exactly the 12 active plugin names and omits the 6 in removed[] ; after node scripts/build-dist.mjs , find <OUT_DIR> -name '*.local.md' -o -name '.DS_Store' -o -path '*/docs/*' returns nothing.
-4. Add --check and orphan-replace --publish modes to the build script Why: --check walks the built output and exits non-zero if any DROP pattern leaked (a CI tripwire against bloat). --publish implements the chosen "orphan / replace each publish" model: it builds the clean tree, replaces main 's working tree wholesale with that output as a single fresh commit referencing the source develop SHA, and updates main (via git worktree + a clean checkout, or an orphan commit) so deleted plugins disappear downstream. Support --dry-run so the commit can be previewed without pushing. Verify: On a clean build, node scripts/build-dist.mjs --check; echo $? prints 0 ; temporarily adding docs to KEEP, rebuilding, and rerunning --check exits non-zero naming the offending path (then revert). node scripts/build-dist.mjs --publish --dry-run reports the single clean commit it would write to main without pushing.
-5. Add .github/workflows/publish-dist.yml triggered on push to develop Why: "On every push to develop" keeps main in lockstep automatically. Steps: on: push: branches: [develop] plus workflow_dispatch ; checkout develop, actions/setup-node , node scripts/build-dist.mjs --check (fail fast on leakage), then --publish to replace main's tree. Because the dist target is the same repo, set permissions: contents: write and use the default GITHUB_TOKEN — no cross-repo PAT. Add a concurrency group ( publish-dist , cancel-in-progress) so rapid pushes don't race on main. Verify: YAML lints clean ( actionlint .github/workflows/publish-dist.yml ); a workflow_dispatch run (or a test push to develop) completes green and writes a new clean commit to main ; git ls-tree -r origin/main --name-only | grep -E 'docs/|\.local\.md|\.DS_Store' returns nothing.
-6. Retarget dev workflows to develop and protect main as generated-only Why: Dev automation must run against develop (where all PRs target) and main must have exactly one writer (the publish-dist Action). version-guard.yml filters pull_request: branches: [main] — change to [develop] . Update update-readme.yml to commit to develop instead of main . claude-code-review.yml / claude.yml need PR base branch filter updated to develop. Add branch protection on main to block direct pushes and PRs — only the publish-dist Action (via GITHUB_TOKEN ) can write to main. Verify: grep -n 'branches:' .github/workflows/version-guard.yml shows [develop] ; opening a test PR against develop triggers the version-guard and Claude review workflows; no workflow other than publish-dist.yml pushes to main .
-7. Document the branch model in README, CLAUDE.md, and the marketplace rule Why: Contributors and future Claude sessions must know: developers push to develop first, all PRs target develop, and only develop is published to main via CI. Main is a generated artifact (clean dist + default branch) — never commit to main directly. Add a "Branch model & distribution" section to README.md explaining the develop-first workflow. Include an "Existing Users" migration note: installed plugins are safe (local copies in ~/.claude/plugins/cache/ ), the marketplace self-heals on next /plugin marketplace update (one-time re-clone after the orphan-replace), and no action is required — but if users hit issues, they can remove and re-add the marketplace. Update CLAUDE.md 's Git & Branches section to branch off develop and never commit to main. Note in .claude/rules/marketplace.md that main is generated — not hand-edited. Verify: grep -ri 'develop' README.md CLAUDE.md .claude/rules/marketplace.md shows the new branch-model guidance in all three; CLAUDE.md's branch-creation command branches off develop ; marketplace.md states main is generated and not hand-edited; README.md contains an "Existing Users" section with migration guidance.
-8. Cut over: run the first publish and verify a clean end-to-end install Why: Proves the split works for real installs. Trigger publish-dist.yml (or run --publish once) to rebuild main clean, then in a fresh session register the marketplace and install a plugin — confirming the catalog and plugin files both resolve from main (the default branch) and contain only clean distribution files. Verify: In a clean session, /plugin marketplace add shawn-sandy/agentics then /plugin install plan-agent@agentics-kit installs successfully; the installed tree contains no docs/ , *.local.md , .DS_Store , or session PNGs; git ls-tree origin/main --name-only shows only the clean root set.
-
-## Acceptance Criteria
-- A develop branch carries the full pre-split workspace; main remains the GitHub default branch; the pre-split commit is preserved by a tag.
-- No plugin source in .claude-plugin/marketplace.json requires a ref field — installs resolve from main (the default branch) automatically; no source.url was changed.
-- scripts/build-dist.mjs enumerates the 12 plugins from plugins[] , never ships the 6 in removed[] , and copies only allowlisted files.
-- node scripts/build-dist.mjs --check exits 0 on a clean build and non-zero when a denylisted path leaks into the output.
-- .github/workflows/publish-dist.yml rebuilds and orphan-replaces main with the clean output on every push to develop , using the in-repo GITHUB_TOKEN (no PAT).
-- main contains only the clean distribution — no docs/ , *.local.md , .DS_Store , session PNGs, or top-level dev markdown.
-- version-guard.yml targets develop ; main is protected and written only by publish-dist.yml — direct pushes and PRs to main are blocked.
-- /plugin install <name>@agentics-kit resolves plugin files from main (the default branch) and yields a working, cruft-free plugin tree.
-- README.md , CLAUDE.md , and .claude/rules/marketplace.md document the develop-for-work / clean-main-as-default model and the "never commit to main" rule.
-
-## Verification
-End-to-end: confirm gh repo view --json defaultBranchRef still reports main and that the pre-split tag exists. Run node scripts/build-dist.mjs --check locally (exit 0), then verify the tripwire by temporarily allowlisting docs and confirming a non-zero exit. Trigger publish-dist.yml via workflow_dispatch (or push a no-op commit to develop) and confirm it writes a fresh clean commit to main ; then git ls-tree -r origin/main --name-only must show 12 plugin directories carrying only allowlisted files plus a root marketplace.json , slim README.md , and LICENSE — and zero cruft. Finally, in a clean session register shawn-sandy/agentics and install plan-agent (both resolve from main, the default branch), then list the installed files to confirm no docs/ , *.local.md , or PNGs. develop must still hold the complete workspace, unchanged except for the new script, workflow, and docs.
-</script>
-
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1091,11 +1499,16 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
   <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
   </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+  </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1109,30 +1522,24 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
       <h1 class="plan-title">Publish a clean main branch from a develop workspace</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
-              aria-label="Save this plan as PDF">Save as PDF</button>
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">todo</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-06
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-06</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1140,63 +1547,92 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>8 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Create the develop branch from main and configure PR targeting</span><span class="rail-state">step 1 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Enforce the develop-first workflow and retarget open PRs</span><span class="rail-state">step 2 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Write scripts/build-dist.mjs — a manifest-driven clean builder</span><span class="rail-state">step 3 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Add --check and orphan-replace --publish modes to the build script</span><span class="rail-state">step 4 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Add .github/workflows/publish-dist.yml triggered on push to develop</span><span class="rail-state">step 5 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Retarget dev workflows to develop and protect main as generated-only</span><span class="rail-state">step 6 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Document the branch model in README, CLAUDE.md, and the marketplace rule</span><span class="rail-state">step 7 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Cut over: run the first publish and verify a clean end-to-end install</span><span class="rail-state">step 8 of 8</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Split the agentics repo into a <code>develop</code> branch for day-to-day work and a clean <code>main</code> branch (kept as the GitHub default) that carries only the plugin distribution — so every <code>/plugin install</code> pulls stripped plugin files directly from the default branch while docs, scripts, and development live on develop, automatically republished to main on every push.</p>
+      <p>Split the agentics repo into a develop branch for day-to-day work and a clean main branch (kept as the GitHub default) that carries only the plugin distribution — so every /plugin install pulls stripped plugin files directly from the default branch while docs, scripts, and development live on develop, automatically republished to main on every push.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/publish-clean-main-from-develop-branch.md — Publish a clean main branch from a develop workspace. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-clean-main-from-develop-branch.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/publish-clean-main-from-develop-branch.html — Split repo into a develop dev branch and a clean main distribution branch</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Publish a clean main branch from a develop workspace. The plan at docs/plans/publish-clean-main-from-develop-branch.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-clean-main-from-develop-branch.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/publish-clean-main-from-develop-branch.md — Publish a clean main branch from a develop workspace. Brief subagents with the plan file at docs/plans/publish-clean-main-from-develop-branch.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-clean-main-from-develop-branch.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">publish-clean-main-from-develop-branch.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/publish-clean-main-from-develop-branch.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/publish-clean-main-from-develop-branch.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
       </div>
     </details>
 
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">publish-clean-main-from-develop-branch.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/publish-clean-main-from-develop-branch.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
-
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
+        <span>Definition of done</span>
         <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
@@ -1206,32 +1642,33 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The agentics repo is both the development workspace and the install source. <code>.claude-plugin/marketplace.json</code> registers 12 active plugins via <code>git-subdir</code> sources whose <code>url</code> points at <code>https://github.com/shawn-sandy/agentics.git</code>. When a user installs, Claude Code sparsely clones the plugin's <code>path</code> subtree from the repo's <strong>default branch</strong> — but that branch carries a lot that has no business in an install: a 35&nbsp;KB root <code>README.md</code>, <code>docs/</code>, <code>examples/</code>, <code>scripts/</code>, <code>tests/</code>, <code>.playwright-mcp/</code>, a session <code>.png</code>, <code>CLAUDE.local.md</code>, <code>.DS_Store</code> files, and top-level markdown (<code>ROADMAP.md</code>, <code>SECURITY.md</code>, <code>SOCIAL.md</code>).</p>
-      <p>The sibling plan <code>build-clean-plugin-dist.html</code> solves this by mirroring the marketplace into a <em>separate</em> clean repo (<code>shawn-sandy/agentics-kit</code>) and rewriting each <code>source.url</code>. This plan takes a <strong>branch-based</strong> approach in the <em>same</em> repo instead: <code>main</code> stays as the GitHub default but is replaced with a clean, stripped plugin distribution, while a new <code>develop</code> branch holds the full workspace where all dev work and PRs happen. Because <code>main</code> remains the default branch, <code>git-subdir</code> sources need <strong>no <code>ref</code> field at all</strong> — installs naturally resolve from the default branch and get clean files. No second repo, no <code>source.url</code> rewrite, and no <code>ref</code> pins needed.</p>
-      <p><strong>Decisions locked in clarification:</strong> branch model = developers push to <code>develop</code> first (all feature branches and PRs target develop), and <strong>only develop can be merged/pushed to main</strong> — no direct pushes, no PRs from feature branches to main. A GitHub Action rebuilds and republishes <code>main</code> on <em>every push to develop</em>, orphan-replacing <code>main</code>'s tree with the freshly built clean output (main carries distribution snapshots, not dev history). <code>main</code> stays as the GitHub default so installs resolve from it automatically. A key advantage over the separate-repo plan: publishing stays in-repo, so the default <code>GITHUB_TOKEN</code> can push to <code>main</code> — no cross-repo PAT required. An additional advantage over flipping the default: no user migration needed — existing installs keep resolving from main seamlessly.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>The agentics repo is both the development workspace and the install source. .claude-plugin/marketplace.json registers 12 active plugins via git-subdir sources whose url points at https://github.com/shawn-sandy/agentics.git . When a user installs, Claude Code sparsely clones the plugin&#39;s path subtree from the repo&#39;s default branch — but that branch carries a lot that has no business in an install: a 35 KB root README.md , docs/ , examples/ , scripts/ , tests/ , .playwright-mcp/ , a session .png , CLAUDE.local.md , .DS_Store files, and top-level markdown ( ROADMAP.md , SECURITY.md , SOCIAL.md ).</p>
+      <p>The sibling plan build-clean-plugin-dist.html solves this by mirroring the marketplace into a separate clean repo ( shawn-sandy/agentics-kit ) and rewriting each source.url . This plan takes a branch-based approach in the same repo instead: main stays as the GitHub default but is replaced with a clean, stripped plugin distribution, while a new develop branch holds the full workspace where all dev work and PRs happen. Because main remains the default branch, git-subdir sources need no ref field at all — installs naturally resolve from the default branch and get clean files. No second repo, no source.url rewrite, and no ref pins needed.</p>
+      <p>Decisions locked in clarification: branch model = developers push to develop first (all feature branches and PRs target develop), and only develop can be merged/pushed to main — no direct pushes, no PRs from feature branches to main. A GitHub Action rebuilds and republishes main on every push to develop , orphan-replacing main &#39;s tree with the freshly built clean output (main carries distribution snapshots, not dev history). main stays as the GitHub default so installs resolve from it automatically. A key advantage over the separate-repo plan: publishing stays in-repo, so the default GITHUB_TOKEN can push to main — no cross-repo PAT required. An additional advantage over flipping the default: no user migration needed — existing installs keep resolving from main seamlessly.</p>
     </section>
 
-    <!-- ── Files ──────────────────────────────────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .github/workflows/</li>
-          <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .github/workflows/
+            <ul class="file-list">
             <li><code>publish-dist.yml</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">rebuild + publish main on push to develop</span></li>
-            <li><code>version-guard.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">retarget PR branch filter main &rarr; develop</span></li>
+            <li><code>version-guard.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">retarget PR branch filter main &amp;rarr; develop</span></li>
             <li><code>update-readme.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">ensure it writes to develop, not main</span></li>
-          </ul>
+            </ul>
+          </li>
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">strip removed[] for clean dist; no ref pins needed</span></li>
           <li><code>scripts/build-dist.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">manifest-driven clean builder + check/publish</span></li>
           <li><code>.claude/rules/marketplace.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">main is generated; never hand-edit</span></li>
@@ -1242,86 +1679,35 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
       </div>
     </section>
 
-    <!-- ── Diagram ────────────────────────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">Publish pipeline — develop to clean main</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Source / dev</div><code>develop</code><div class="pipeline-sub">developers push here first — all feature branches &amp; PRs target develop</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓ push triggers</div>
-        <div class="pipeline-node"><div class="pipeline-label">CI</div><code>.github/workflows/publish-dist.yml</code><div class="pipeline-sub">checkout → setup-node → --check → --publish (GITHUB_TOKEN)</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓ runs</div>
-        <div class="pipeline-node"><div class="pipeline-label">Build</div><code>scripts/build-dist.mjs</code><div class="pipeline-sub">reads plugins[] · copies KEEP · drops cruft &amp; removed[] · strips to clean dist</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓ orphan-replaces</div>
-        <div class="pipeline-node"><div class="pipeline-label">Clean dist (default branch)</div><code>main</code><div class="pipeline-sub">manifest + component dirs + README + LICENSE — no docs/ or cruft</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓ installs pull from default branch</div>
-        <div class="pipeline-node"><div class="pipeline-label">Users</div><code>/plugin install &lt;name&gt;@agentics-kit</code><div class="pipeline-sub">clean tree resolved from main (the default branch)</div></div>
-      </div>
-
-      <div class="diagram-subheading">What lives on each branch</div>
-      <div class="compare-grid">
-        <div class="compare-col-neutral">
-          <div class="compare-header">develop — full workspace</div>
-          <ul class="compare-list">
-            <li>docs/ · examples/</li>
-            <li>scripts/ · tests/</li>
-            <li>*.local.md · ROADMAP/SECURITY/SOCIAL.md</li>
-            <li>full kit/plugins/* (with scratch)</li>
-            <li>all dev CI workflows</li>
-          </ul>
-        </div>
-        <div class="compare-col-add">
-          <div class="compare-header">main — kept (clean, default)</div>
-          <ul class="compare-list">
-            <li>.claude-plugin/marketplace.json</li>
-            <li>&nbsp;&nbsp;no ref needed (default branch)</li>
-            <li>kit/plugins/&lt;name&gt;/ stripped</li>
-            <li>slim README.md · LICENSE</li>
-          </ul>
-        </div>
-        <div class="compare-col-remove">
-          <div class="compare-header">stripped from main</div>
-          <ul class="compare-list">
-            <li>docs/ · examples/ · tests/</li>
-            <li>*.local.md · .DS_Store · *.png</li>
-            <li>.playwright-mcp/</li>
-            <li>ROADMAP/SECURITY/SOCIAL.md</li>
-            <li>removed[] plugins (×6)</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Create the <code>develop</code> branch from <code>main</code> and configure PR targeting</span>
+                <span class="step-chip-text">Create the develop branch from main and configure PR targeting</span>
               </div>
-              <div class="step-why">develop must carry the entire current workspace before main is ever stripped. Tag the pre-split commit (e.g. <code>git tag pre-dist-split</code>) as a safety net so the full history stays reachable. Main stays as the GitHub default so that <code>/plugin install</code> resolves from it without any <code>ref</code> pin — but PRs and dev work must target develop going forward.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>git checkout main &amp;&amp; git pull &amp;&amp; git checkout -b develop &amp;&amp; git push -u origin develop</code> succeeds; <code>gh repo view --json defaultBranchRef -q .defaultBranchRef.name</code> still returns <code>main</code>; <code>git diff main develop --stat</code> is empty (identical trees at split time); <code>git tag pre-dist-split</code> exists.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">develop must carry the entire current workspace before main is ever stripped. Tag the pre-split commit (e.g. git tag pre-dist-split ) as a safety net so the full history stays reachable. Main stays as the GitHub default so that /plugin install resolves from it without any ref pin — but PRs and dev work must target develop going forward.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">git checkout main &amp;&amp; git pull &amp;&amp; git checkout -b develop &amp;&amp; git push -u origin develop succeeds; gh repo view --json defaultBranchRef -q .defaultBranchRef.name still returns main ; git diff main develop --stat is empty (identical trees at split time); git tag pre-dist-split exists.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
@@ -1329,84 +1715,99 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Enforce the develop-first workflow and retarget open PRs</span>
               </div>
-              <div class="step-why">Developers push to <code>develop</code> first — all feature branches and PRs must target <code>develop</code>, never <code>main</code>. Only the CI publish workflow writes to main. Retarget any open PRs from main to develop and communicate the new branching model to contributors.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>gh pr list --base main --state open</code> returns no results (all retargeted to develop); commit lands on <code>develop</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Developers push to develop first — all feature branches and PRs must target develop , never main . Only the CI publish workflow writes to main. Retarget any open PRs from main to develop and communicate the new branching model to contributors.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">gh pr list --base main --state open returns no results (all retargeted to develop); commit lands on develop .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write <code>scripts/build-dist.mjs</code> — a manifest-driven clean builder</span>
+                <span class="step-chip-text">Write scripts/build-dist.mjs — a manifest-driven clean builder</span>
               </div>
-              <div class="step-why">A deterministic build from develop is the only writer of main, guaranteeing the clean branch never drifts. Mirror the existing <code>merge-marketplace.mjs</code> convention (bare ESM, run via <code>node</code>, no package.json). Enumerate plugins by reading <code>marketplace.json</code> <code>plugins[]</code> (never by globbing); copy only a KEEP allowlist (<code>.claude-plugin</code>, <code>commands</code>, <code>skills</code>, <code>agents</code>, <code>hooks</code>, <code>hooks.json</code>, <code>templates</code>, <code>README.md</code>, <code>CHANGELOG.md</code>, <code>LICENSE</code>) per plugin into an <code>OUT_DIR</code>; drop a DROP denylist (<code>docs</code>, <code>*.local.md</code>, <code>.DS_Store</code>, <code>*.png</code>, <code>.playwright-mcp</code>); emit a clean root (marketplace.json with <code>removed[]</code> stripped, a slim README.md, copied LICENSE).</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>node scripts/build-dist.mjs --list</code> prints exactly the 12 active plugin names and omits the 6 in <code>removed[]</code>; after <code>node scripts/build-dist.mjs</code>, <code>find &lt;OUT_DIR&gt; -name '*.local.md' -o -name '.DS_Store' -o -path '*/docs/*'</code> returns nothing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A deterministic build from develop is the only writer of main, guaranteeing the clean branch never drifts. Mirror the existing merge-marketplace.mjs convention (bare ESM, run via node , no package.json). Enumerate plugins by reading marketplace.json plugins[] (never by globbing); copy only a KEEP allowlist ( .claude-plugin , commands , skills , agents , hooks , hooks.json , templates , README.md , CHANGELOG.md , LICENSE ) per plugin into an OUT_DIR ; drop a DROP denylist ( docs , *.local.md , .DS_Store , *.png , .playwright-mcp ); emit a clean root (marketplace.json with removed[] stripped, a slim README.md, copied LICENSE).</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">node scripts/build-dist.mjs --list prints exactly the 12 active plugin names and omits the 6 in removed[] ; after node scripts/build-dist.mjs , find &lt;OUT_DIR&gt; -name &#39;*.local.md&#39; -o -name &#39;.DS_Store&#39; -o -path &#39;*/docs/*&#39; returns nothing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add <code>--check</code> and orphan-replace <code>--publish</code> modes to the build script</span>
+                <span class="step-chip-text">Add --check and orphan-replace --publish modes to the build script</span>
               </div>
-              <div class="step-why"><code>--check</code> walks the built output and exits non-zero if any DROP pattern leaked (a CI tripwire against bloat). <code>--publish</code> implements the chosen "orphan / replace each publish" model: it builds the clean tree, replaces <code>main</code>'s working tree wholesale with that output as a single fresh commit referencing the source develop SHA, and updates <code>main</code> (via <code>git worktree</code> + a clean checkout, or an orphan commit) so deleted plugins disappear downstream. Support <code>--dry-run</code> so the commit can be previewed without pushing.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">On a clean build, <code>node scripts/build-dist.mjs --check; echo $?</code> prints <code>0</code>; temporarily adding <code>docs</code> to KEEP, rebuilding, and rerunning <code>--check</code> exits non-zero naming the offending path (then revert). <code>node scripts/build-dist.mjs --publish --dry-run</code> reports the single clean commit it would write to <code>main</code> without pushing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">--check walks the built output and exits non-zero if any DROP pattern leaked (a CI tripwire against bloat). --publish implements the chosen &quot;orphan / replace each publish&quot; model: it builds the clean tree, replaces main &#39;s working tree wholesale with that output as a single fresh commit referencing the source develop SHA, and updates main (via git worktree + a clean checkout, or an orphan commit) so deleted plugins disappear downstream. Support --dry-run so the commit can be previewed without pushing.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">On a clean build, node scripts/build-dist.mjs --check; echo $? prints 0 ; temporarily adding docs to KEEP, rebuilding, and rerunning --check exits non-zero naming the offending path (then revert). node scripts/build-dist.mjs --publish --dry-run reports the single clean commit it would write to main without pushing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add <code>.github/workflows/publish-dist.yml</code> triggered on push to <code>develop</code></span>
+                <span class="step-chip-text">Add .github/workflows/publish-dist.yml triggered on push to develop</span>
               </div>
-              <div class="step-why">"On every push to develop" keeps main in lockstep automatically. Steps: <code>on: push: branches: [develop]</code> plus <code>workflow_dispatch</code>; checkout develop, <code>actions/setup-node</code>, <code>node scripts/build-dist.mjs --check</code> (fail fast on leakage), then <code>--publish</code> to replace main's tree. Because the dist target is the same repo, set <code>permissions: contents: write</code> and use the default <code>GITHUB_TOKEN</code> — no cross-repo PAT. Add a <code>concurrency</code> group (<code>publish-dist</code>, cancel-in-progress) so rapid pushes don't race on main.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">YAML lints clean (<code>actionlint .github/workflows/publish-dist.yml</code>); a <code>workflow_dispatch</code> run (or a test push to develop) completes green and writes a new clean commit to <code>main</code>; <code>git ls-tree -r origin/main --name-only | grep -E 'docs/|\.local\.md|\.DS_Store'</code> returns nothing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">&quot;On every push to develop&quot; keeps main in lockstep automatically. Steps: on: push: branches: [develop] plus workflow_dispatch ; checkout develop, actions/setup-node , node scripts/build-dist.mjs --check (fail fast on leakage), then --publish to replace main&#39;s tree. Because the dist target is the same repo, set permissions: contents: write and use the default GITHUB_TOKEN — no cross-repo PAT. Add a concurrency group ( publish-dist , cancel-in-progress) so rapid pushes don&#39;t race on main.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">YAML lints clean ( actionlint .github/workflows/publish-dist.yml ); a workflow_dispatch run (or a test push to develop) completes green and writes a new clean commit to main ; git ls-tree -r origin/main --name-only | grep -E &#39;docs/|\.local\.md|\.DS_Store&#39; returns nothing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Retarget dev workflows to <code>develop</code> and protect <code>main</code> as generated-only</span>
+                <span class="step-chip-text">Retarget dev workflows to develop and protect main as generated-only</span>
               </div>
-              <div class="step-why">Dev automation must run against develop (where all PRs target) and main must have exactly one writer (the publish-dist Action). <code>version-guard.yml</code> filters <code>pull_request: branches: [main]</code> — change to <code>[develop]</code>. Update <code>update-readme.yml</code> to commit to <code>develop</code> instead of <code>main</code>. <code>claude-code-review.yml</code> / <code>claude.yml</code> need PR base branch filter updated to develop. Add branch protection on <code>main</code> to block direct pushes and PRs — only the publish-dist Action (via <code>GITHUB_TOKEN</code>) can write to main.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -n 'branches:' .github/workflows/version-guard.yml</code> shows <code>[develop]</code>; opening a test PR against <code>develop</code> triggers the version-guard and Claude review workflows; no workflow other than <code>publish-dist.yml</code> pushes to <code>main</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Dev automation must run against develop (where all PRs target) and main must have exactly one writer (the publish-dist Action). version-guard.yml filters pull_request: branches: [main] — change to [develop] . Update update-readme.yml to commit to develop instead of main . claude-code-review.yml / claude.yml need PR base branch filter updated to develop. Add branch protection on main to block direct pushes and PRs — only the publish-dist Action (via GITHUB_TOKEN ) can write to main.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -n &#39;branches:&#39; .github/workflows/version-guard.yml shows [develop] ; opening a test PR against develop triggers the version-guard and Claude review workflows; no workflow other than publish-dist.yml pushes to main .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
@@ -1414,16 +1815,19 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Document the branch model in README, CLAUDE.md, and the marketplace rule</span>
               </div>
-              <div class="step-why">Contributors and future Claude sessions must know: developers push to <code>develop</code> first, all PRs target develop, and only develop is published to main via CI. Main is a generated artifact (clean dist + default branch) — never commit to main directly. Add a "Branch model &amp; distribution" section to <code>README.md</code> explaining the develop-first workflow. Include an "Existing Users" migration note: installed plugins are safe (local copies in <code>~/.claude/plugins/cache/</code>), the marketplace self-heals on next <code>/plugin marketplace update</code> (one-time re-clone after the orphan-replace), and no action is required — but if users hit issues, they can remove and re-add the marketplace. Update <code>CLAUDE.md</code>'s Git &amp; Branches section to branch off <code>develop</code> and never commit to main. Note in <code>.claude/rules/marketplace.md</code> that main is generated — not hand-edited.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -ri 'develop' README.md CLAUDE.md .claude/rules/marketplace.md</code> shows the new branch-model guidance in all three; CLAUDE.md's branch-creation command branches off <code>develop</code>; marketplace.md states main is generated and not hand-edited; README.md contains an "Existing Users" section with migration guidance.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Contributors and future Claude sessions must know: developers push to develop first, all PRs target develop, and only develop is published to main via CI. Main is a generated artifact (clean dist + default branch) — never commit to main directly. Add a &quot;Branch model &amp; distribution&quot; section to README.md explaining the develop-first workflow. Include an &quot;Existing Users&quot; migration note: installed plugins are safe (local copies in ~/.claude/plugins/cache/ ), the marketplace self-heals on next /plugin marketplace update (one-time re-clone after the orphan-replace), and no action is required — but if users hit issues, they can remove and re-add the marketplace. Update CLAUDE.md &#39;s Git &amp; Branches section to branch off develop and never commit to main. Note in .claude/rules/marketplace.md that main is generated — not hand-edited.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -ri &#39;develop&#39; README.md CLAUDE.md .claude/rules/marketplace.md shows the new branch-model guidance in all three; CLAUDE.md&#39;s branch-creation command branches off develop ; marketplace.md states main is generated and not hand-edited; README.md contains an &quot;Existing Users&quot; section with migration guidance.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
@@ -1431,11 +1835,14 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Cut over: run the first publish and verify a clean end-to-end install</span>
               </div>
-              <div class="step-why">Proves the split works for real installs. Trigger <code>publish-dist.yml</code> (or run <code>--publish</code> once) to rebuild main clean, then in a fresh session register the marketplace and install a plugin — confirming the catalog and plugin files both resolve from <code>main</code> (the default branch) and contain only clean distribution files.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">In a clean session, <code>/plugin marketplace add shawn-sandy/agentics</code> then <code>/plugin install plan-agent@agentics-kit</code> installs successfully; the installed tree contains no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, or session PNGs; <code>git ls-tree origin/main --name-only</code> shows only the clean root set.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Proves the split works for real installs. Trigger publish-dist.yml (or run --publish once) to rebuild main clean, then in a fresh session register the marketplace and install a plugin — confirming the catalog and plugin files both resolve from main (the default branch) and contain only clean distribution files.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">In a clean session, /plugin marketplace add shawn-sandy/agentics then /plugin install plan-agent@agentics-kit installs successfully; the installed tree contains no docs/ , *.local.md , .DS_Store , or session PNGs; git ls-tree origin/main --name-only shows only the clean root set.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1443,69 +1850,69 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">A <code>develop</code> branch carries the full pre-split workspace; <code>main</code> remains the GitHub default branch; the pre-split commit is preserved by a tag.</label>
+          <label for="ac1">A develop branch carries the full pre-split workspace; main remains the GitHub default branch; the pre-split commit is preserved by a tag.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">No plugin source in <code>.claude-plugin/marketplace.json</code> requires a <code>ref</code> field — installs resolve from <code>main</code> (the default branch) automatically; no <code>source.url</code> was changed.</label>
+          <label for="ac2">No plugin source in .claude-plugin/marketplace.json requires a ref field — installs resolve from main (the default branch) automatically; no source.url was changed.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3"><code>scripts/build-dist.mjs</code> enumerates the 12 plugins from <code>plugins[]</code>, never ships the 6 in <code>removed[]</code>, and copies only allowlisted files.</label>
+          <label for="ac3">scripts/build-dist.mjs enumerates the 12 plugins from plugins[] , never ships the 6 in removed[] , and copies only allowlisted files.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4"><code>node scripts/build-dist.mjs --check</code> exits 0 on a clean build and non-zero when a denylisted path leaks into the output.</label>
+          <label for="ac4">node scripts/build-dist.mjs --check exits 0 on a clean build and non-zero when a denylisted path leaks into the output.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5"><code>.github/workflows/publish-dist.yml</code> rebuilds and orphan-replaces <code>main</code> with the clean output on every push to <code>develop</code>, using the in-repo <code>GITHUB_TOKEN</code> (no PAT).</label>
+          <label for="ac5">.github/workflows/publish-dist.yml rebuilds and orphan-replaces main with the clean output on every push to develop , using the in-repo GITHUB_TOKEN (no PAT).</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6"><code>main</code> contains only the clean distribution — no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, session PNGs, or top-level dev markdown.</label>
+          <label for="ac6">main contains only the clean distribution — no docs/ , *.local.md , .DS_Store , session PNGs, or top-level dev markdown.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7"><code>version-guard.yml</code> targets <code>develop</code>; <code>main</code> is protected and written only by <code>publish-dist.yml</code> — direct pushes and PRs to main are blocked.</label>
+          <label for="ac7">version-guard.yml targets develop ; main is protected and written only by publish-dist.yml — direct pushes and PRs to main are blocked.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8"><code>/plugin install &lt;name&gt;@agentics-kit</code> resolves plugin files from <code>main</code> (the default branch) and yields a working, cruft-free plugin tree.</label>
+          <label for="ac8">/plugin install &lt;name&gt;@agentics-kit resolves plugin files from main (the default branch) and yields a working, cruft-free plugin tree.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9"><code>README.md</code>, <code>CLAUDE.md</code>, and <code>.claude/rules/marketplace.md</code> document the develop-for-work / clean-main-as-default model and the "never commit to main" rule.</label>
+          <label for="ac9">README.md , CLAUDE.md , and .claude/rules/marketplace.md document the develop-for-work / clean-main-as-default model and the &quot;never commit to main&quot; rule.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>End-to-end: confirm <code>gh repo view --json defaultBranchRef</code> still reports <code>main</code> and that the pre-split tag exists. Run <code>node scripts/build-dist.mjs --check</code> locally (exit 0), then verify the tripwire by temporarily allowlisting <code>docs</code> and confirming a non-zero exit. Trigger <code>publish-dist.yml</code> via <code>workflow_dispatch</code> (or push a no-op commit to develop) and confirm it writes a fresh clean commit to <code>main</code>; then <code>git ls-tree -r origin/main --name-only</code> must show 12 plugin directories carrying only allowlisted files plus a root <code>marketplace.json</code>, slim <code>README.md</code>, and <code>LICENSE</code> — and zero cruft. Finally, in a clean session register <code>shawn-sandy/agentics</code> and install <code>plan-agent</code> (both resolve from main, the default branch), then list the installed files to confirm no <code>docs/</code>, <code>*.local.md</code>, or PNGs. develop must still hold the complete workspace, unchanged except for the new script, workflow, and docs.</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>End-to-end: confirm gh repo view --json defaultBranchRef still reports main and that the pre-split tag exists. Run node scripts/build-dist.mjs --check locally (exit 0), then verify the tripwire by temporarily allowlisting docs and confirming a non-zero exit. Trigger publish-dist.yml via workflow_dispatch (or push a no-op commit to develop) and confirm it writes a fresh clean commit to main ; then git ls-tree -r origin/main --name-only must show 12 plugin directories carrying only allowlisted files plus a root marketplace.json , slim README.md , and LICENSE — and zero cruft. Finally, in a clean session register shawn-sandy/agentics and install plan-agent (both resolve from main, the default branch), then list the installed files to confirm no docs/ , *.local.md , or PNGs. develop must still hold the complete workspace, unchanged except for the new script, workflow, and docs.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
       <div class="completion-checklist" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
@@ -1531,14 +1938,13 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
       </div>
     </section>
 
-    <!-- ── Next Steps ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
         <details class="next-step-item">
           <summary>Add branch protection so only the publish Action writes main</summary>
           <div class="next-step-prompt">
@@ -1553,54 +1959,24 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
           <summary>Add a per-publish leak report and size diff to the build</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In scripts/build-dist.mjs (the branch-based clean-distribution build for the agentics marketplace), add a post-build summary that prints, per plugin, the source file count and byte size on develop versus the stripped count and byte size published to main, plus a total "bytes saved" line and an explicit list of any paths that matched the DROP denylist and were excluded. Drive the plugin list from .claude-plugin/marketplace.json plugins[]. Keep it dependency-free.</pre>
+            <pre>In scripts/build-dist.mjs (the branch-based clean-distribution build for the agentics marketplace), add a post-build summary that prints, per plugin, the source file count and byte size on develop versus the stripped count and byte size published to main, plus a total &quot;bytes saved&quot; line and an explicit list of any paths that matched the DROP denylist and were excluded. Drive the plugin list from .claude-plugin/marketplace.json plugins[]. Keep it dependency-free.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Auto-generate release notes on each main publish
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Auto-generate release notes on each main publish Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>Explore extending the agentics publish-dist pipeline so each push to develop that changes a plugin not only republishes the clean main branch but also drafts release notes: diff the new main tree against the previous main commit, group changes by plugin using marketplace.json, and open a GitHub Release (or a CHANGELOG entry) summarizing which plugins changed and their version bumps. Recommend whether this should live in build-dist.mjs or a separate workflow step, and outline the implementation.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
-
-    <!-- ── Unresolved Questions ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>Should main be a true orphan branch or a rolling single-commit branch?</summary>
-              <div class="unresolved-prompt">
-                <pre>For the agentics publish-dist pipeline, decide between two implementations of "orphan / replace each publish" for the main branch: (a) a true orphan branch with no parent (git checkout --orphan) force-pushed each publish, versus (b) a normal branch where each publish commits the fully-replaced clean tree on top of the previous main commit (no force-push, history grows but stays diffable). Weigh force-push safety for downstream consumers, diffability of releases, and CI simplicity, and recommend one. Then specify the exact git commands build-dist.mjs --publish should run.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
@@ -1611,6 +1987,36 @@ End-to-end: confirm gh repo view --json defaultBranchRef still reports main and 
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
 /* ── Build rich implementation prompt from DOM ──────────────── */
 function buildImplementPrompt() {
   var cmdEl = document.getElementById('implement-cmd');
@@ -1626,33 +2032,46 @@ function buildImplementPrompt() {
     return cb && cb.checked;
   }).length;
 
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
+
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
   lines.push('');
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1662,7 +2081,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1671,70 +2090,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1744,47 +2123,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1873,35 +2223,61 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>
-<script>
-/* Save as PDF (native browser print dialog) — backfilled */
-function savePDF() {
-  window.print();
-}
 </script>
 </body>
 </html>

@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
@@ -15,54 +26,154 @@
 <meta name="plan-goal" content="Achieve this goal: Give engineers a recap written for them. The plan at docs/plans/add-eng-recap-command.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-eng-recap-command.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Give engineers a recap written for them</title>
 <style>
-/* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -92,7 +203,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -102,8 +213,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -118,9 +229,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -129,11 +241,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -156,7 +271,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -167,9 +285,8 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
 
   /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
   .effort-badge {
@@ -184,12 +301,15 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .effort-badge::before { content: "Effort "; opacity: .7; }
-  [data-effort="low"]    .effort-badge { background: #16a34a; }
-  [data-effort="medium"] .effort-badge { background: #d97706; }
-  [data-effort="high"]   .effort-badge { background: #dc2626; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -206,9 +326,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -224,6 +345,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -231,9 +377,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -245,14 +392,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -263,29 +413,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -300,98 +451,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
+  }
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
   }
   .objective-card .section-label,
   .plan-glance-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
-  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
   .plan-glance {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    margin: -1.5rem 0 1.5rem;
-    line-height: 1.7;
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
   }
-  .plan-glance-label { color: var(--muted); }
-  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -399,22 +637,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
     letter-spacing: -.01em;
-    color: var(--text);
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
   .section-card .section-intro {
-    font-size: .875rem;
-    color: var(--muted);
+    font-size: .85rem;
+    color: var(--ink-2);
     margin: -1rem 0 1.25rem;
   }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -423,65 +672,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -490,58 +708,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -553,31 +769,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -591,14 +807,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -609,20 +825,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -631,25 +847,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -662,11 +878,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -676,10 +892,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -690,14 +906,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -711,17 +927,17 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
@@ -737,7 +953,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -748,27 +964,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -783,10 +999,10 @@
     min-height: 44px;
   }
   .optional-section > summary::before,
-  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .optional-section[open] > summary::before,
   .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
@@ -794,9 +1010,9 @@
 
   /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
   .plan-more-ways {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
     overflow: hidden;
@@ -805,7 +1021,7 @@
     padding: .55rem 1rem;
     font-size: .78rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -815,10 +1031,10 @@
     min-height: 44px;
   }
   .plan-more-ways > summary:hover { color: var(--accent); }
-  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
   .plan-more-ways-body {
     padding: .75rem 1rem 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: .75rem;
@@ -832,8 +1048,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -842,14 +1058,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -860,9 +1076,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -871,8 +1087,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
@@ -894,14 +1110,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -912,9 +1128,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -923,8 +1139,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
@@ -946,14 +1162,14 @@
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -964,9 +1180,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -975,8 +1191,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
   /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
@@ -1007,7 +1223,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -1018,9 +1234,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -1029,8 +1245,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
   /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
@@ -1044,8 +1260,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -1067,27 +1283,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1097,21 +1313,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1119,10 +1335,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1131,7 +1347,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1148,69 +1364,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
   .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
 
   /* ── Resources (images, screenshots & reference links) ──────────── */
   .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
   .resource-figure > a { display: block; line-height: 0; }
-  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
-  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
   .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
-  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
   .resource-links li:last-child { border-bottom: none; }
   .resource-links a { font-weight: 600; word-break: break-word; }
-  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1218,7 +1434,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1306,6 +1522,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">completed</span>
       </div>
@@ -1336,19 +1554,30 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>6 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/artifact-tools/commands/eng-recap.md</code> with frontmatter (<code class="md">description</code>, <code class="md">allowed-tools: Skill, Bash</code>) and a body that overrides only framing: <strong class="md">Source</strong> (session default; PR via <code class="md">#n</code>/URL/<code class="md">--pr n</code>, behind the same <code class="md">gh auth status</code> + <code class="md">git remote get-url origin | grep -qi &#39;github\.com&#39;</code> preflight emitting <code class="md">PR_MODE_OK</code>/<code class="md">PR_MODE_UNAVAILABLE</code> before any <code class="md">gh pr view</code>), <strong class="md">Audience</strong> (assume the vocabulary; lead with the technical fact — the inverse of <code class="md">team-recap</code>&#39;s rule, stated as such), <strong class="md">Sections</strong> (At a glance — a stat strip of changes shipped, files touched, decisions, and open items, plus two or three sentences on where the work landed; Architecture and code paths; Decisions with rationale; Tradeoffs and rejected options; Learnings; Tests and verification; Review follow-ups and tech debt; Files touched), <strong class="md">Visual requirements</strong> and <strong class="md">Destination</strong> (copied from <code class="md">team-recap</code>: mermaid in <code class="md">&lt;pre class=&quot;mermaid&quot;&gt;</code>, the SVG-inlining procedure, <code class="md">save-artifact</code> handoff, stem <code class="md">eng-recap</code> / <code class="md">pr-&lt;number&gt;-eng</code>), and <strong class="md">Republish key</strong> (<code class="md">eng-artifact-url:</code> plus a &quot;Never write&quot; line naming <code class="md">artifact-url:</code>, <code class="md">product-artifact-url:</code>, and <code class="md">team-artifact-url:</code>).</span><span class="rail-state">step 1 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">In the same file, add the <strong class="md">diff-read budget</strong> under Source: read full hunks via <code class="md">gh pr diff</code> for at most <strong class="md">20 files</strong>, fall back to <code class="md">--name-only</code> for the remainder, and report how many files were summarized rather than read — commit bodies still lead for the <em class="md">why</em>, hunks only supply the <em class="md">what</em>.</span><span class="rail-state">step 2 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Extend <code class="md">tests/plugins/test-artifact-tools.sh</code>: add <code class="md">&quot;commands/eng-recap.md&quot;: &quot;eng-artifact-url&quot;</code> to check 7&#39;s <code class="md">owners</code> map, raise check 8&#39;s <code class="md">assert found &gt;= 2</code> to <code class="md">&gt;= 3</code> with a message naming all three PR-mode commands, and add a new check asserting <code class="md">eng-recap.md</code> documents both a numeric diff cap and the <code class="md">--name-only</code> fallback.</span><span class="rail-state">step 3 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Confirm the new checks actually fail on a broken command file: temporarily change <code class="md">eng-artifact-url</code> to <code class="md">team-artifact-url</code> in <code class="md">eng-recap.md</code>, run the suite, confirm it FAILs on the key collision, then revert.</span><span class="rail-state">step 4 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">artifact-tools</code> to <code class="md">1.7.0</code> in <code class="md">.claude-plugin/marketplace.json</code>, extend its <code class="md">description</code> to mention the engineering recap, and add a <code class="md">[1.7.0]</code> Added entry to <code class="md">kit/plugins/artifact-tools/CHANGELOG.md</code> in Keep a Changelog form, naming the command, its sections, the <code class="md">eng-artifact-url:</code> key, and the diff budget.</span><span class="rail-state">step 5 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Update <code class="md">kit/plugins/artifact-tools/README.md</code> in all four places it lists commands — the Commands table row, the Usage block, the Plugin Structure tree comment, and a new <code class="md">### eng-recap (command)</code> subsection after <code class="md">### team-recap (command)</code> — then update the <code class="md">artifact-tools</code> row in the root <code class="md">CLAUDE.md</code> reference-implementations table.</span><span class="rail-state">step 6 of 6, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
   <main id="main">
 
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Add `/artifact-tools:eng-recap` — the third recap command over the `session-artifact` pipeline (its fourth framing, counting the skill&#39;s own), written for the engineer who has to touch the code next — and register it across the marketplace, tests, and docs.</p>
+      <p>Add <code class="md">/artifact-tools:eng-recap</code> — the third recap command over the <code class="md">session-artifact</code> pipeline (its fourth framing, counting the skill&#39;s own), written for the engineer who has to touch the code next — and register it across the marketplace, tests, and docs.</p>
+      <section class="plan-glance" aria-labelledby="plan-glance-label">
+        <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+        <p>The two existing recap commands both spend their space translating for non-engineers, which leaves no room for the code paths, tradeoffs, and test coverage a maintainer needs. This adds a third recap command that inverts that rule. We will know it worked when the artifact-tools smoke test passes with eng-recap in its republish-key map.</p>
+      </section>
     </div>
-
-    <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>The two existing recap commands both spend their space translating for non-engineers, which leaves no room for the code paths, tradeoffs, and test coverage a maintainer needs. This adds a third recap command that inverts that rule. We will know it worked when the artifact-tools smoke test passes with eng-recap in its republish-key map.</p>
-    </section>
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
@@ -1412,10 +1641,10 @@ img, video { max-width: 100%; height: auto; }
         Context
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
-      <p>`artifact-tools` ships two recap commands over one pipeline: `product-doc`<br>(stakeholders) and `team-recap` (whole team, mixed audience). Neither serves an<br>engineering reader, because both are bound by a translate-for-non-engineers<br>rule. `team-recap` states it outright: *&quot;Lead every section with the<br>plain-language statement, then the technical detail. Never the reverse.&quot;* That<br>rule is correct for its audience and is exactly what crowds out code paths,<br>invariants, and rejected tradeoffs.</p>
-      <p>Decision-complete proposal: `docs/proposals/add-eng-recap-command.md`. Its five<br>locked decisions are inputs to this plan, not open questions.</p>
-      <p>**Risk — republish-key collision.** All recap writers share one per-session<br>record under `{plansDirectory}/sessions/`, distinguished only by a frontmatter<br>key. A fourth writer that reuses a sibling&#39;s key silently republishes over that<br>sibling&#39;s live page. *Mitigation:* `eng-artifact-url:` is unique, the command<br>carries an explicit never-write warning naming the other three keys, and<br>Step 2 extends the existing test that enforces this.</p>
-      <p>**Risk — context blowout from the diff read.** Decision 4 has `eng-recap` read<br>diff hunks, which no sibling does. An uncapped `gh pr diff` on a large PR<br>consumes the context the recap itself needs. *Mitigation:* a documented<br>cap-and-summarize policy modelled on `diff-artifact`&#39;s, asserted by a test.</p>
+      <p><code class="md">artifact-tools</code> ships two recap commands over one pipeline: <code class="md">product-doc</code><br>(stakeholders) and <code class="md">team-recap</code> (whole team, mixed audience). Neither serves an<br>engineering reader, because both are bound by a translate-for-non-engineers<br>rule. <code class="md">team-recap</code> states it outright: <em class="md">&quot;Lead every section with the<br>plain-language statement, then the technical detail. Never the reverse.&quot;</em> That<br>rule is correct for its audience and is exactly what crowds out code paths,<br>invariants, and rejected tradeoffs.</p>
+      <p>Decision-complete proposal: <code class="md">docs/proposals/add-eng-recap-command.md</code>. Its five<br>locked decisions are inputs to this plan, not open questions.</p>
+      <p><strong class="md">Risk — republish-key collision.</strong> All recap writers share one per-session<br>record under <code class="md">{plansDirectory}/sessions/</code>, distinguished only by a frontmatter<br>key. A fourth writer that reuses a sibling&#39;s key silently republishes over that<br>sibling&#39;s live page. <em class="md">Mitigation:</em> <code class="md">eng-artifact-url:</code> is unique, the command<br>carries an explicit never-write warning naming the other three keys, and<br>Step 2 extends the existing test that enforces this.</p>
+      <p><strong class="md">Risk — context blowout from the diff read.</strong> Decision 4 has <code class="md">eng-recap</code> read<br>diff hunks, which no sibling does. An uncapped <code class="md">gh pr diff</code> on a large PR<br>consumes the context the recap itself needs. <em class="md">Mitigation:</em> a documented<br>cap-and-summarize policy modelled on <code class="md">diff-artifact</code>&#39;s, asserted by a test.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1429,10 +1658,10 @@ img, video { max-width: 100%; height: auto; }
         <ul class="file-list">
           <li><code>`kit/plugins/artifact-tools/commands/eng-recap.md`</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the command file; framing overrides only, no new pipeline</span></li>
           <li><code>`tests/plugins/test-artifact-tools.sh`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">extend checks 7 and 8, add a diff-cap check</span></li>
-          <li><code>`.claude-plugin/marketplace.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">`artifact-tools` 1.6.0 → 1.7.0 and its description</span></li>
-          <li><code>`kit/plugins/artifact-tools/CHANGELOG.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">`[1.7.0]` entry</span></li>
-          <li><code>`kit/plugins/artifact-tools/README.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Commands table, Usage block, Plugin Structure tree, `### eng-recap (command)` section</span></li>
-          <li><code>`CLAUDE.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">the `artifact-tools` row in the reference-implementations table</span></li>
+          <li><code>`.claude-plugin/marketplace.json`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">artifact-tools</code> 1.6.0 → 1.7.0 and its description</span></li>
+          <li><code>`kit/plugins/artifact-tools/CHANGELOG.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">[1.7.0]</code> entry</span></li>
+          <li><code>`kit/plugins/artifact-tools/README.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Commands table, Usage block, Plugin Structure tree, <code class="md">### eng-recap (command)</code> section</span></li>
+          <li><code>`CLAUDE.md`</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">the <code class="md">artifact-tools</code> row in the reference-implementations table</span></li>
         </ul>
       </div>
     </section>
@@ -1445,104 +1674,122 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Write `kit/plugins/artifact-tools/commands/eng-recap.md` with frontmatter (`description`, `allowed-tools: Skill, Bash`) and a body that overrides only framing: **Source** (session default; PR via `#n`/URL/`--pr n`, behind the same `gh auth status` + `git remote get-url origin | grep -qi &#39;github\.com&#39;` preflight emitting `PR_MODE_OK`/`PR_MODE_UNAVAILABLE` before any `gh pr view`), **Audience** (assume the vocabulary; lead with the technical fact — the inverse of `team-recap`&#39;s rule, stated as such), **Sections** (At a glance — a stat strip of changes shipped, files touched, decisions, and open items, plus two or three sentences on where the work landed; Architecture and code paths; Decisions with rationale; Tradeoffs and rejected options; Learnings; Tests and verification; Review follow-ups and tech debt; Files touched), **Visual requirements** and **Destination** (copied from `team-recap`: mermaid in `&lt;pre class=&quot;mermaid&quot;&gt;`, the SVG-inlining procedure, `save-artifact` handoff, stem `eng-recap` / `pr-&lt;number&gt;-eng`), and **Republish key** (`eng-artifact-url:` plus a &quot;Never write&quot; line naming `artifact-url:`, `product-artifact-url:`, and `team-artifact-url:`).</span>
+                <span class="step-chip-text">Write <code class="md">kit/plugins/artifact-tools/commands/eng-recap.md</code> with frontmatter (<code class="md">description</code>, <code class="md">allowed-tools: Skill, Bash</code>) and a body that overrides only framing: <strong class="md">Source</strong> (session default; PR via <code class="md">#n</code>/URL/<code class="md">--pr n</code>, behind the same <code class="md">gh auth status</code> + <code class="md">git remote get-url origin | grep -qi &#39;github\.com&#39;</code> preflight emitting <code class="md">PR_MODE_OK</code>/<code class="md">PR_MODE_UNAVAILABLE</code> before any <code class="md">gh pr view</code>), <strong class="md">Audience</strong> (assume the vocabulary; lead with the technical fact — the inverse of <code class="md">team-recap</code>&#39;s rule, stated as such), <strong class="md">Sections</strong> (At a glance — a stat strip of changes shipped, files touched, decisions, and open items, plus two or three sentences on where the work landed; Architecture and code paths; Decisions with rationale; Tradeoffs and rejected options; Learnings; Tests and verification; Review follow-ups and tech debt; Files touched), <strong class="md">Visual requirements</strong> and <strong class="md">Destination</strong> (copied from <code class="md">team-recap</code>: mermaid in <code class="md">&lt;pre class=&quot;mermaid&quot;&gt;</code>, the SVG-inlining procedure, <code class="md">save-artifact</code> handoff, stem <code class="md">eng-recap</code> / <code class="md">pr-&lt;number&gt;-eng</code>), and <strong class="md">Republish key</strong> (<code class="md">eng-artifact-url:</code> plus a &quot;Never write&quot; line naming <code class="md">artifact-url:</code>, <code class="md">product-artifact-url:</code>, and <code class="md">team-artifact-url:</code>).</span>
               </div>
-              <div class="step-why">the value is entirely in the framing — re-implementing extraction, scrubbing, or publishing would fork a pipeline that already works.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`head -6` shows a valid frontmatter block, and `grep -c &#39;eng-artifact-url&#39; kit/plugins/artifact-tools/commands/eng-recap.md` returns at least 2.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the value is entirely in the framing — re-implementing extraction, scrubbing, or publishing would fork a pipeline that already works.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">head -6</code> shows a valid frontmatter block, and <code class="md">grep -c &#39;eng-artifact-url&#39; kit/plugins/artifact-tools/commands/eng-recap.md</code> returns at least 2.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">In the same file, add the **diff-read budget** under Source: read full hunks via `gh pr diff` for at most **20 files**, fall back to `--name-only` for the remainder, and report how many files were summarized rather than read — commit bodies still lead for the *why*, hunks only supply the *what*.</span>
+                <span class="step-chip-text">In the same file, add the <strong class="md">diff-read budget</strong> under Source: read full hunks via <code class="md">gh pr diff</code> for at most <strong class="md">20 files</strong>, fall back to <code class="md">--name-only</code> for the remainder, and report how many files were summarized rather than read — commit bodies still lead for the <em class="md">why</em>, hunks only supply the <em class="md">what</em>.</span>
               </div>
-              <div class="step-why">this is the one place `eng-recap` departs from both siblings, and an uncapped diff read reintroduces exactly the context blowout `session-artifact` avoids by refusing to read the JSONL directly.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the file states a numeric file cap and the `--name-only` fallback in the same section.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">this is the one place <code class="md">eng-recap</code> departs from both siblings, and an uncapped diff read reintroduces exactly the context blowout <code class="md">session-artifact</code> avoids by refusing to read the JSONL directly.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the file states a numeric file cap and the <code class="md">--name-only</code> fallback in the same section.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Extend `tests/plugins/test-artifact-tools.sh`: add `&quot;commands/eng-recap.md&quot;: &quot;eng-artifact-url&quot;` to check 7&#39;s `owners` map, raise check 8&#39;s `assert found &gt;= 2` to `&gt;= 3` with a message naming all three PR-mode commands, and add a new check asserting `eng-recap.md` documents both a numeric diff cap and the `--name-only` fallback.</span>
+                <span class="step-chip-text">Extend <code class="md">tests/plugins/test-artifact-tools.sh</code>: add <code class="md">&quot;commands/eng-recap.md&quot;: &quot;eng-artifact-url&quot;</code> to check 7&#39;s <code class="md">owners</code> map, raise check 8&#39;s <code class="md">assert found &gt;= 2</code> to <code class="md">&gt;= 3</code> with a message naming all three PR-mode commands, and add a new check asserting <code class="md">eng-recap.md</code> documents both a numeric diff cap and the <code class="md">--name-only</code> fallback.</span>
               </div>
-              <div class="step-why">check 7 is the only thing standing between a copied-from-a-sibling command and a silent republish over a live page, and it is blind to any command absent from that map.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-artifact-tools.sh` prints PASS with a higher check count than before.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">check 7 is the only thing standing between a copied-from-a-sibling command and a silent republish over a live page, and it is blind to any command absent from that map.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-artifact-tools.sh</code> prints PASS with a higher check count than before.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Confirm the new checks actually fail on a broken command file: temporarily change `eng-artifact-url` to `team-artifact-url` in `eng-recap.md`, run the suite, confirm it FAILs on the key collision, then revert.</span>
+                <span class="step-chip-text">Confirm the new checks actually fail on a broken command file: temporarily change <code class="md">eng-artifact-url</code> to <code class="md">team-artifact-url</code> in <code class="md">eng-recap.md</code>, run the suite, confirm it FAILs on the key collision, then revert.</span>
               </div>
-              <div class="step-why">a check that passes against a deliberately broken input is a tautology and proves nothing — this is the only step that establishes the test has teeth.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the suite exits non-zero while broken and PASSes after the revert, with `git diff --stat kit/plugins/artifact-tools/commands/eng-recap.md` empty relative to step 2&#39;s state.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">a check that passes against a deliberately broken input is a tautology and proves nothing — this is the only step that establishes the test has teeth.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the suite exits non-zero while broken and PASSes after the revert, with <code class="md">git diff --stat kit/plugins/artifact-tools/commands/eng-recap.md</code> empty relative to step 2&#39;s state.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Bump `artifact-tools` to `1.7.0` in `.claude-plugin/marketplace.json`, extend its `description` to mention the engineering recap, and add a `[1.7.0]` Added entry to `kit/plugins/artifact-tools/CHANGELOG.md` in Keep a Changelog form, naming the command, its sections, the `eng-artifact-url:` key, and the diff budget.</span>
+                <span class="step-chip-text">Bump <code class="md">artifact-tools</code> to <code class="md">1.7.0</code> in <code class="md">.claude-plugin/marketplace.json</code>, extend its <code class="md">description</code> to mention the engineering recap, and add a <code class="md">[1.7.0]</code> Added entry to <code class="md">kit/plugins/artifact-tools/CHANGELOG.md</code> in Keep a Changelog form, naming the command, its sections, the <code class="md">eng-artifact-url:</code> key, and the diff budget.</span>
               </div>
-              <div class="step-why">a new command is a MINOR bump, and the smoke test cross-checks the marketplace version against the CHANGELOG&#39;s newest heading — they fail together if either is missed.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`python3 -c &quot;import json;print([p[&#39;version&#39;] for p in json.load(open(&#39;.claude-plugin/marketplace.json&#39;))[&#39;plugins&#39;] if p[&#39;name&#39;]==&#39;artifact-tools&#39;])&quot;` prints `[&#39;1.7.0&#39;]`, and `BASE_REF=main node scripts/check-plugin-versions.mjs` passes.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">a new command is a MINOR bump, and the smoke test cross-checks the marketplace version against the CHANGELOG&#39;s newest heading — they fail together if either is missed.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">python3 -c &quot;import json;print([p[&#39;version&#39;] for p in json.load(open(&#39;.claude-plugin/marketplace.json&#39;))[&#39;plugins&#39;] if p[&#39;name&#39;]==&#39;artifact-tools&#39;])&quot;</code> prints <code class="md">[&#39;1.7.0&#39;]</code>, and <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> passes.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update `kit/plugins/artifact-tools/README.md` in all four places it lists commands — the Commands table row, the Usage block, the Plugin Structure tree comment, and a new `### eng-recap (command)` subsection after `### team-recap (command)` — then update the `artifact-tools` row in the root `CLAUDE.md` reference-implementations table.</span>
+                <span class="step-chip-text">Update <code class="md">kit/plugins/artifact-tools/README.md</code> in all four places it lists commands — the Commands table row, the Usage block, the Plugin Structure tree comment, and a new <code class="md">### eng-recap (command)</code> subsection after <code class="md">### team-recap (command)</code> — then update the <code class="md">artifact-tools</code> row in the root <code class="md">CLAUDE.md</code> reference-implementations table.</span>
               </div>
-              <div class="step-why">the README documents each command twice by design, and a command present in one place but not the other reads as an oversight to the next maintainer.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -c &#39;eng-recap&#39; kit/plugins/artifact-tools/README.md` returns at least 4, and `grep -c &#39;eng-recap&#39; CLAUDE.md` returns at least 1.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the README documents each command twice by design, and a command present in one place but not the other reads as an oversight to the next maintainer.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -c &#39;eng-recap&#39; kit/plugins/artifact-tools/README.md</code> returns at least 4, and <code class="md">grep -c &#39;eng-recap&#39; CLAUDE.md</code> returns at least 1.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1557,10 +1804,10 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — This plan changes application code (the plugin&#39;s command surface and its test suite).</div>
-      <div class="objective-test-card">Objective: `/artifact-tools:eng-recap` exists as a complete, registered, collision-free command — the plan&#39;s stated objective. File: `tests/plugins/test-artifact-tools.sh`; Type: smoke; Asserts: `commands/eng-recap.md` exists with valid frontmatter, carries all eight agreed section headings, owns `eng-artifact-url` and warns against writing all three sibling keys, guards its `gh` calls behind the preflight, and documents the 20-file diff cap with its `--name-only` fallback; and that `artifact-tools` is registered at a version matching the CHANGELOG. Run: `bash tests/plugins/test-artifact-tools.sh`</div>
+      <div class="objective-test-card">Objective: <code class="md">/artifact-tools:eng-recap</code> exists as a complete, registered, collision-free command — the plan&#39;s stated objective. File: <code class="md">tests/plugins/test-artifact-tools.sh</code>; Type: smoke; Asserts: <code class="md">commands/eng-recap.md</code> exists with valid frontmatter, carries all eight agreed section headings, owns <code class="md">eng-artifact-url</code> and warns against writing all three sibling keys, guards its <code class="md">gh</code> calls behind the preflight, and documents the 20-file diff cap with its <code class="md">--name-only</code> fallback; and that <code class="md">artifact-tools</code> is registered at a version matching the CHANGELOG. Run: <code class="md">bash tests/plugins/test-artifact-tools.sh</code></div>
       <div class="test-list">
-        <div class="test-card">Integration: the republish-key map covers every command that writes to the shared session record, so no writer can collide with another. File: `tests/plugins/test-artifact-tools.sh`; Targets: check 7&#39;s `owners` map across `session-artifact/SKILL.md`, `product-doc.md`, `team-recap.md`, `eng-recap.md`; Key cases: each writer declares its own key; each sibling key it mentions sits under a never-write warning; a command whose key is swapped for a sibling&#39;s fails the check.</div>
-        <div class="test-card">Unit: the version guard agrees with the bump. File: `tests/publish/test-check-plugin-versions.mjs`; Targets: `scripts/check-plugin-versions.mjs`; Key cases: `artifact-tools` at 1.7.0 is accepted against a 1.6.0 base; an unbumped 1.6.0 is rejected.</div>
+        <div class="test-card">Integration: the republish-key map covers every command that writes to the shared session record, so no writer can collide with another. File: <code class="md">tests/plugins/test-artifact-tools.sh</code>; Targets: check 7&#39;s <code class="md">owners</code> map across <code class="md">session-artifact/SKILL.md</code>, <code class="md">product-doc.md</code>, <code class="md">team-recap.md</code>, <code class="md">eng-recap.md</code>; Key cases: each writer declares its own key; each sibling key it mentions sits under a never-write warning; a command whose key is swapped for a sibling&#39;s fails the check.</div>
+        <div class="test-card">Unit: the version guard agrees with the bump. File: <code class="md">tests/publish/test-check-plugin-versions.mjs</code>; Targets: <code class="md">scripts/check-plugin-versions.mjs</code>; Key cases: <code class="md">artifact-tools</code> at 1.7.0 is accepted against a 1.6.0 base; an unbumped 1.6.0 is rejected.</div>
       </div>
     </section>
 
@@ -1573,11 +1820,11 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1">`kit/plugins/artifact-tools/commands/eng-recap.md` exists with valid YAML frontmatter carrying a `description` and `allowed-tools`</label>
+          <label for="ac1"><code class="md">kit/plugins/artifact-tools/commands/eng-recap.md</code> exists with valid YAML frontmatter carrying a <code class="md">description</code> and <code class="md">allowed-tools</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
-          <label for="ac2">The command&#39;s audience section explicitly inverts `team-recap`&#39;s plain-language-first rule rather than restating it</label>
+          <label for="ac2">The command&#39;s audience section explicitly inverts <code class="md">team-recap</code>&#39;s plain-language-first rule rather than restating it</label>
         </li>
         <li>
           <input type="checkbox" id="ac3" checked>
@@ -1589,27 +1836,27 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5">The command declares `eng-artifact-url:` and carries a never-write warning naming `artifact-url:`, `product-artifact-url:`, and `team-artifact-url:`</label>
+          <label for="ac5">The command declares <code class="md">eng-artifact-url:</code> and carries a never-write warning naming <code class="md">artifact-url:</code>, <code class="md">product-artifact-url:</code>, and <code class="md">team-artifact-url:</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6">PR mode is guarded by the `gh auth status` + github.com-remote preflight, which appears before the first `gh pr view`</label>
+          <label for="ac6">PR mode is guarded by the <code class="md">gh auth status</code> + github.com-remote preflight, which appears before the first <code class="md">gh pr view</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7">The diff read states a numeric file cap and a `--name-only` fallback, and requires reporting how many files were summarized</label>
+          <label for="ac7">The diff read states a numeric file cap and a <code class="md">--name-only</code> fallback, and requires reporting how many files were summarized</label>
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8">`bash tests/plugins/test-artifact-tools.sh` passes, and fails when `eng-recap.md`&#39;s key is swapped for a sibling&#39;s</label>
+          <label for="ac8"><code class="md">bash tests/plugins/test-artifact-tools.sh</code> passes, and fails when <code class="md">eng-recap.md</code>&#39;s key is swapped for a sibling&#39;s</label>
         </li>
         <li>
           <input type="checkbox" id="ac9" checked>
-          <label for="ac9">`artifact-tools` is at `1.7.0` in `marketplace.json` with a matching `[1.7.0]` CHANGELOG entry</label>
+          <label for="ac9"><code class="md">artifact-tools</code> is at <code class="md">1.7.0</code> in <code class="md">marketplace.json</code> with a matching <code class="md">[1.7.0]</code> CHANGELOG entry</label>
         </li>
         <li>
           <input type="checkbox" id="ac10" checked>
-          <label for="ac10">`eng-recap` appears in the README&#39;s Commands table, Usage block, Structure tree, and its own Components subsection, and in the root `CLAUDE.md` plugin table</label>
+          <label for="ac10"><code class="md">eng-recap</code> appears in the README&#39;s Commands table, Usage block, Structure tree, and its own Components subsection, and in the root <code class="md">CLAUDE.md</code> plugin table</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1623,7 +1870,7 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
       <p>End-to-end, in order:</p>
-      <p>1. `bash tests/plugins/test-artifact-tools.sh` — PASSes, with a check count higher than the pre-change run.<br>2. `BASE_REF=main node scripts/check-plugin-versions.mjs` — passes, confirming the bump is visible to the guard that gates merges.<br>3. Break it deliberately: swap `eng-artifact-url` for `team-artifact-url` in `eng-recap.md` and re-run the suite. It must FAIL on the key collision. Revert. This is the step that proves the new coverage is real rather than decorative.<br>4. Load the plugin (`claude --plugin-dir ./kit/plugins/artifact-tools`) and confirm `/artifact-tools:eng-recap` is listed alongside `/artifact-tools:product-doc` and `/artifact-tools:team-recap`.<br>5. Read `eng-recap.md` end-to-end against `team-recap.md` and confirm it overrides framing only — no duplicated transcript extraction, scrub gate, or publish logic.</p>
+      <p>1. <code class="md">bash tests/plugins/test-artifact-tools.sh</code> — PASSes, with a check count higher than the pre-change run.<br>2. <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> — passes, confirming the bump is visible to the guard that gates merges.<br>3. Break it deliberately: swap <code class="md">eng-artifact-url</code> for <code class="md">team-artifact-url</code> in <code class="md">eng-recap.md</code> and re-run the suite. It must FAIL on the key collision. Revert. This is the step that proves the new coverage is real rather than decorative.<br>4. Load the plugin (<code class="md">claude --plugin-dir ./kit/plugins/artifact-tools</code>) and confirm <code class="md">/artifact-tools:eng-recap</code> is listed alongside <code class="md">/artifact-tools:product-doc</code> and <code class="md">/artifact-tools:team-recap</code>.<br>5. Read <code class="md">eng-recap.md</code> end-to-end against <code class="md">team-recap.md</code> and confirm it overrides framing only — no duplicated transcript extraction, scrub gate, or publish logic.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
@@ -1653,8 +1900,8 @@ img, video { max-width: 100%; height: auto; }
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
           <dl class="report-list">
-            <dt>Verification step 4 (`claude --plugin-dir ./kit/plugins/artifact-tools`, confirm the command is listed)</dt>
-            <dd>verified by proxy, not directly. Launching an interactive Claude Code session was not available in this run, so the check was made structurally instead: all three command files under `commands/` parse to valid frontmatter with a `description`, which is what plugin loading reads. Every acceptance criterion was verified directly; this one verification step was not.</dd>
+            <dt>Verification step 4 (<code class="md">claude --plugin-dir ./kit/plugins/artifact-tools</code>, confirm the command is listed)</dt>
+            <dd>verified by proxy, not directly. Launching an interactive Claude Code session was not available in this run, so the check was made structurally instead: all three command files under <code class="md">commands/</code> parse to valid frontmatter with a <code class="md">description</code>, which is what plugin loading reads. Every acceptance criterion was verified directly; this one verification step was not.</dd>
           </dl>
         </div>
       </div>
@@ -1670,8 +1917,8 @@ img, video { max-width: 100%; height: auto; }
         <details class="next-step-item">
           <summary>Wire the artifact-tools smoke test into CI — it currently runs nowhere</summary>
           <div class="next-step-prompt">
-            <p>`tests/plugins/test-artifact-tools.sh` is not referenced by any workflow in
-`.github/workflows/`, so its checks only run when invoked by hand. Found while
+            <p><code class="md">tests/plugins/test-artifact-tools.sh</code> is not referenced by any workflow in
+<code class="md">.github/workflows/</code>, so its checks only run when invoked by hand. Found while
 planning this change; out of scope here because it alters CI for the whole repo.</p>
             <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>tests/plugins/test-artifact-tools.sh is not referenced by any workflow in .github/workflows/, so it never runs in CI. Other plugin smoke tests (test-artifact-titles.mjs, test-save-artifact.sh, test-build-skill.sh) are wired into publish-dist.yml or check-plugin-versions.yml. Audit tests/plugins/ and tests/publish/ for every test file that is not referenced by any workflow, then add the missing ones to the appropriate workflow, matching the existing step style. Report which tests were unwired before your change.</pre>
@@ -1683,8 +1930,8 @@ planning this change; out of scope here because it alters CI for the whole repo.
         <details class="next-step-item">
           <summary>Factor the shared recap contract out of the three command files</summary>
           <div class="next-step-prompt">
-            <p>`product-doc`, `team-recap`, and `eng-recap` will each restate the same PR
-preflight, `save-artifact` destination flow, and republish-key discipline.
+            <p><code class="md">product-doc</code>, <code class="md">team-recap</code>, and <code class="md">eng-recap</code> will each restate the same PR
+preflight, <code class="md">save-artifact</code> destination flow, and republish-key discipline.
 Worth extracting once there are three copies, not before.</p>
             <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>In kit/plugins/artifact-tools/, the commands product-doc.md, team-recap.md, and eng-recap.md each restate the same three contracts: the gh/GitHub-remote PR preflight, the save-artifact destination flow with its collision-safe local fallback, and the shared-session-record republish-key discipline. Evaluate extracting these into a references/ file that each command links to, in the style of references/titles.md which the skills already share. Weigh the cost: a command file that defers to a reference is harder to follow in one read, and progressive disclosure means the model may not load the reference. Recommend whether to extract or leave duplicated, with reasoning. Do not implement without approval.</pre>
@@ -1704,6 +1951,31 @@ Worth extracting once there are three copies, not before.</p>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -1915,27 +2187,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
     }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
-    sections.forEach(function (el) { observer.observe(el); });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

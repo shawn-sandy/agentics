@@ -1,66 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-29">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="add-prototype-generator-skill.html">
 <meta name="plan-path" content="docs/plans/add-prototype-generator-skill.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-prototype-generator-skill.html — Add a static-HTML prototype generator skill to plan-agent">
-<meta name="plan-goal" content="Achieve this goal: Add a static-HTML prototype generator skill to plan-agent. The plan at docs/plans/add-prototype-generator-skill.html describes one approach — use it as reference, but optimize for the outcome">
+<meta name="plan-md" content="docs/plans/add-prototype-generator-skill.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-prototype-generator-skill.md — Add a static-HTML prototype generator to plan-agent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-prototype-generator-skill.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Add a static-HTML prototype generator to plan-agent. The plan at docs/plans/add-prototype-generator-skill.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-prototype-generator-skill.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-prototype-generator-skill.md — Add a static-HTML prototype generator to plan-agent. Brief subagents with the plan file at docs/plans/add-prototype-generator-skill.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-prototype-generator-skill.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Add a static-HTML prototype generator to plan-agent</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -90,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -100,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -116,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -127,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -154,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -165,13 +286,39 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
   }
 
   /* Save as PDF button */
@@ -180,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -198,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -205,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -219,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -237,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -274,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -360,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -380,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -447,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -510,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -548,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -566,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -588,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -619,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -633,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -647,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -668,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -692,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -703,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -737,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -752,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -762,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -780,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -791,23 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -816,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -834,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -845,40 +1140,37 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -889,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -900,27 +1192,25 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
-  /* ── Goal prompt (outcome-driven — always present) ────────────── */
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
   .plan-goal {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-goal summary {
+  .plan-goal-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--purple);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-goal summary:hover { text-decoration: underline; }
   .plan-goal-inner {
     display: flex;
     align-items: flex-start;
@@ -934,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -945,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -956,10 +1246,11 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
   @media print { .plan-goal { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
@@ -970,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -993,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1023,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1045,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1057,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1074,56 +1365,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1131,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1151,7 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1199,11 +1502,13 @@ img, video { max-width: 100%; height: auto; }
   <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1218,29 +1523,23 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-29
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-29</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1248,154 +1547,139 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>6 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Scaffold the prototype skill and its SKILL.md (command + ambient). Create kit/plugins/plan-agent/skills/prototype/SKILL.md with frontmatter ( name: prototype , a three-part description ≤200 chars, and allowed-tools covering ToolSearch, ExitPlanMode, Bash, Read, Write, Glob, Grep, AskUserQuestion plus browser/preview tools) and a numbered workflow: (0) self-bootstrap out of plan mode; (1) resolve input — a first token ending in .html is a plan path, otherwise the args are a raw idea; (2) idea path runs a 3-question AskUserQuestion (core entity , primary action , observable success signal — with example phrasing and a sensible fallback when an answer is blank), plan path reads the file and extracts objective, steps, and domain nouns; (3) derive a deterministic data model : the primary domain noun → the entity; its attributes → columns/form fields with inferred types (string/number/date/bool); generate 2–3 seed rows; map the success signal to a visible summary; (4) echo the derived model back (entity, fields, action, success signal) for confirmation before writing; (5) fill the skeleton placeholders by {{token}} string replacement, HTML-escaping every interpolated value — except {{SEED_JSON}} , which is JSON-serialized with script-breakout escaping only (e.g. &lt;/script&gt; ): HTML entities are not decoded when load() reads the JSON block as text, so HTML-escaping it would break JSON.parse ; (6) derive a verb-target slug and write to docs/prototypes/&lt;slug&gt;.html ( mkdir -p first) — note validate-plan-filename.py is plans-dir-scoped and does not enforce prototype names, so the skill owns the convention; (7) before writing a plan-derived prototype, run a quick secret/PII scrub on extracted seed values (it publishes to a public Pages origin); (8) trigger the gallery rebuild, preview + SendUserFile , and report what to validate.</span><span class="rail-state">step 1 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Build the self-contained, accessibility-baked prototype skeleton. Create kit/plugins/plan-agent/skills/prototype/reference/PROTOTYPE-SKELETON.html — one file, inline CSS + vanilla JS, reusing the plan skeleton&#39;s colour tokens. Data layer: an inline &lt;script type=&quot;application/json&quot; id=&quot;seed&quot;&gt; block holding JSON-serialized seed data with script-breakout escaping only (e.g. &lt;/script&gt; ) — never HTML-escaped , or JSON.parse chokes on &amp;quot; — plus a store keyed by a per-prototype {{STORE_KEY}} (derived from the file slug) — load() reads localStorage and falls back to the seed, save() writes, reset() is guarded by confirm() then clears and reseeds. Render records via textContent / createTextNode , never innerHTML . UI &amp; a11y (required): a semantic &lt;table&gt; with &lt;th scope=&quot;col&quot;&gt; (or a true &lt;ul&gt; ); an add/edit form whose every input has an associated &lt;label for&gt; , marks required fields, and blocks submit on empty/invalid with an inline error; a per-row delete control and an empty-state message; real &lt;button&gt; elements for the primary action, Reset, and delete; a visible :focus-visible ring; an aria-live=&quot;polite&quot; status region announcing added/updated/deleted/reset; focus management (return focus to the form&#39;s first field after add, to the status/Reset after reset); and a summary badge bound to the success signal. Placeholders: {{TITLE}} , {{SOURCE_PLAN}} , {{STORE_KEY}} , {{SEED_JSON}} , {{COLUMNS}} (header cells + field keys), {{FORM_FIELDS}} (label + typed input per field), {{PRIMARY_ACTION}} , {{SUMMARY}} , plus &lt;meta name=&quot;proto-source&quot;&gt; and &lt;meta name=&quot;proto-created&quot;&gt; tags.</span><span class="rail-state">step 2 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Fork the gallery generator into build-prototypes-index.sh . Copy kit/plugins/plan-agent/hooks/build-index.sh to kit/plugins/plan-agent/hooks/build-prototypes-index.sh , retargeted to scan docs/prototypes/*.html (excluding index.html ), parse each file&#39;s &lt;title&gt; and &lt;meta name=&quot;proto-*&quot;&gt; tags, and emit docs/prototypes/index.html sorted newest-first by proto-created . Preserve the html.escape() on every emitted card field so a hostile title cannot inject into the gallery. Render cards from a new kit/plugins/plan-agent/templates/prototypes-gallery.html that mirrors templates/plans-gallery.html (keep the externalised-template pattern rather than inlining markup).</span><span class="rail-state">step 3 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Wire the auto-rebuild hook and the docs hub (with a committed bootstrap). Add a second PostToolUse ( Write|Edit|MultiEdit ) entry to kit/plugins/plan-agent/hooks.json that runs build-prototypes-index.sh , scoped so it only rebuilds for docs/prototypes/ writes (mirroring how the existing hooks gate on the plans dir). Add a third card to docs/index.html linking prototypes/index.html alongside Plans and Media (&quot;Prototypes — clickable proofs of plans&quot;). Generate and commit an initial docs/prototypes/index.html (empty-state gallery) so the hub link resolves immediately.</span><span class="rail-state">step 4 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add the fixture, the three runnable tests, and CI wiring. Create tests/fixtures/plan-agent/sample-prototype.html (an inline #seed block plus proto-created / proto-source meta). Create three tests under tests/plugins/ following the repo&#39;s test-*.sh convention: test-prototype-portability.sh (objective smoke — asserts no external http(s):// resource refs, an inline #seed block, textContent -based rendering, that a hostile seed/title value is inert, and that running the builder yields an index.html containing the escaped fixture title, and — by static grep against the skeleton — that every input has a &lt;label for&gt; , Reset/primary are &lt;button&gt; , and an aria-live region exists); test-build-prototypes-index.sh (builder unit — parses &lt;title&gt; / proto-created , sorts newest-first, escapes &lt; / &quot; / &amp; , ignores index.html , empty dir → empty-state + exit 0); and test-prototype-persistence.mjs ( plain Node with a tiny in-memory localStorage shim — no jsdom, no added dependency — seed parses+loads, adds persist under the namespaced key, two prototypes don&#39;t share state, reset restores). Register all three by explicit path in .github/workflows/publish-dist.yml — they need only bash and node builtins, so no install step is required.</span><span class="rail-state">step 5 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Bump the version and document the new skill. In .claude-plugin/marketplace.json bump plan-agent 2.8.3 → 2.9.0 and extend its description ; mirror only the description (never a version field) in kit/plugins/plan-agent/.claude-plugin/plugin.json ; add a 2.9.0 entry to kit/plugins/plan-agent/CHANGELOG.md ; add a Features bullet + usage example to kit/plugins/plan-agent/README.md ; update the plan-agent row in root CLAUDE.md . Before committing, confirm 2.9.0 exceeds the version in git show origin/main:.claude-plugin/marketplace.json .</span><span class="rail-state">step 6 of 6, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a <code>/plan-agent:prototype</code> skill that turns any completed HTML plan — or a raw one-line idea — into a runnable, framework-free static-HTML prototype under <code>docs/prototypes/</code>, so a developer can click through the real data shapes and core flow — and the idea's actual success signal — and judge the implementation's practicality before writing production code.</p>
+      <p>Ship a /plan-agent:prototype skill that turns any completed HTML plan — or a raw one-line idea — into a runnable, framework-free static-HTML prototype under docs/prototypes/ , so a developer can click through the real data shapes and core flow — and the idea&#39;s actual success signal — and judge the implementation&#39;s practicality before writing production code.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-prototype-generator-skill.html — Add a static-HTML prototype generator skill to plan-agent</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-prototype-generator-skill.md — Add a static-HTML prototype generator to plan-agent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-prototype-generator-skill.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Goal prompt (outcome-driven — always present) ─────────── -->
-    <details class="plan-goal">
-      <summary>Pursue as goal — optimize for the outcome</summary>
-      <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Add a static-HTML prototype generator skill to plan-agent. The plan at docs/plans/add-prototype-generator-skill.html describes one approach — use it as reference, but optimize for the outcome</code>
-        <button class="copy-goal-btn" type="button"
-                onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Add a static-HTML prototype generator to plan-agent. The plan at docs/plans/add-prototype-generator-skill.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-prototype-generator-skill.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-prototype-generator-skill.md — Add a static-HTML prototype generator to plan-agent. Brief subagents with the plan file at docs/plans/add-prototype-generator-skill.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-prototype-generator-skill.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">add-prototype-generator-skill.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/add-prototype-generator-skill.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/add-prototype-generator-skill.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
       </div>
     </details>
 
-
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">add-prototype-generator-skill.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/add-prototype-generator-skill.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
-
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span>Definition of done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>plan-agent already produces detailed, self-contained HTML plans — but there is no cheap way to pressure-test whether a design is actually practical before building it for real. A throwaway static-HTML prototype (vanilla HTML/CSS/JS, a localStorage-backed "database", zero build) lets a developer validate the data model and the core user flow in minutes. The prototype must inherit plan-agent's portability framework — one self-contained file, no CDN, no framework, GitHub-Pages-deployable — so prototypes publish alongside the Plans gallery and Media library. The capability is a single new skill in the plan-agent plugin; it reuses the proven gallery generator (<code>hooks/build-index.sh</code>), the docs hub, and the self-contained HTML template style rather than inventing new infrastructure. Because the prototype skeleton is authored once and reused by every future prototype, this plan bakes the load-bearing concerns — output escaping (the prototype is published to a live <code>*.github.io</code> origin), accessibility, and per-prototype storage isolation — into the skeleton itself rather than leaving them to each generation. A reviewing panel (architecture, completeness, testability, risk, conventions, UX, accessibility) shaped this revision; see the Team Review at the foot of the plan.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>plan-agent already produces detailed, self-contained HTML plans — but there is no cheap way to pressure-test whether a design is actually practical before building it for real. A throwaway static-HTML prototype (vanilla HTML/CSS/JS, a localStorage-backed &quot;database&quot;, zero build) lets a developer validate the data model and the core user flow in minutes. The prototype must inherit plan-agent&#39;s portability framework — one self-contained file, no CDN, no framework, GitHub-Pages-deployable — so prototypes publish alongside the Plans gallery and Media library. The capability is a single new skill in the plan-agent plugin; it reuses the proven gallery generator ( hooks/build-index.sh ), the docs hub, and the self-contained HTML template style rather than inventing new infrastructure. Because the prototype skeleton is authored once and reused by every future prototype, this plan bakes the load-bearing concerns — output escaping (the prototype is published to a live *.github.io origin), accessibility, and per-prototype storage isolation — into the skeleton itself rather than leaving them to each generation. A reviewing panel (architecture, completeness, testability, risk, conventions, UX, accessibility) shaped this revision; see the Team Review at the foot of the plan.</p>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Files file-tree.
-         KEEP and fill <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/prototype/</li>
-          <ul class="file-list">
-            <li><code>SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the prototype skill (command + ambient)</span></li>
-            <li><code>reference/PROTOTYPE-SKELETON.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">self-contained, a11y-baked template</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/hooks/</li>
-          <ul class="file-list">
-            <li><code>build-prototypes-index.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery generator, forked from build-index.sh</span></li>
-            <li><code>hooks.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register auto-rebuild on docs/prototypes/</span></li>
-          </ul>
-          <li><code>kit/plugins/plan-agent/templates/prototypes-gallery.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery card template (mirrors plans-gallery.html)</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
-          <ul class="file-list">
-            <li><code>.claude-plugin/plugin.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">description only — never a version field</span></li>
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.9.0 entry</span></li>
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the skill + usage</span></li>
-          </ul>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version 2.8.3 → 2.9.0 + desc</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/</li>
-          <ul class="file-list">
-            <li><code>fixtures/plan-agent/sample-prototype.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">fixture the shell/DOM tests consume</span></li>
-            <li><code>plugins/test-prototype-portability.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test</span></li>
-            <li><code>plugins/test-build-prototypes-index.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery builder unit test</span></li>
-            <li><code>plugins/test-prototype-persistence.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Node persistence test (no jsdom)</span></li>
-          </ul>
-          <li><code>.github/workflows/publish-dist.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">run the three tests by explicit path</span></li>
-          <li><code>docs/index.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Prototypes hub card</span></li>
-          <li><code>docs/prototypes/index.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">committed bootstrap gallery (then regenerated)</span></li>
-          <li><code>CLAUDE.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent plugin table row</span></li> when the plan touches files
-         (most multi-file plans). DELETE this whole section element and
-         its nav entry (the "#files" link) when not needed.
-         Badge classes: file-badge-new | file-badge-modified |
-         file-badge-deleted | file-badge-generated.
-         ════════════════════════════════════════════════════════════ -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/prototype/</li>
-          <ul class="file-list">
-            <li><code>SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the prototype skill (command + ambient)</span></li>
-            <li><code>reference/PROTOTYPE-SKELETON.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">self-contained, a11y-baked template</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/hooks/</li>
-          <ul class="file-list">
+          <li><code>kit/plugins/plan-agent/skills/prototype/SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the prototype skill (command + ambient)</span></li>
+          <li><code>reference/PROTOTYPE-SKELETON.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">self-contained, a11y-baked template</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/hooks/
+            <ul class="file-list">
             <li><code>build-prototypes-index.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery generator, forked from build-index.sh</span></li>
             <li><code>hooks.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register auto-rebuild on docs/prototypes/</span></li>
-          </ul>
+            </ul>
+          </li>
           <li><code>kit/plugins/plan-agent/templates/prototypes-gallery.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery card template (mirrors plans-gallery.html)</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
-          <ul class="file-list">
-            <li><code>.claude-plugin/plugin.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">description only — never a version field</span></li>
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.9.0 entry</span></li>
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the skill + usage</span></li>
-          </ul>
+          <li><code>.claude-plugin/plugin.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">description only — never a version field</span></li>
+          <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.9.0 entry</span></li>
+          <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">document the skill + usage</span></li>
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version 2.8.3 → 2.9.0 + desc</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/</li>
-          <ul class="file-list">
-            <li><code>fixtures/plan-agent/sample-prototype.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">fixture the shell/DOM tests consume</span></li>
-            <li><code>plugins/test-prototype-portability.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test</span></li>
-            <li><code>plugins/test-build-prototypes-index.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery builder unit test</span></li>
-            <li><code>plugins/test-prototype-persistence.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Node persistence test (no jsdom)</span></li>
-          </ul>
+          <li><code>fixtures/plan-agent/sample-prototype.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">fixture the shell/DOM tests consume</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> plugins/
+            <ul class="file-list">
+            <li><code>test-prototype-portability.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective smoke test</span></li>
+            <li><code>test-build-prototypes-index.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">gallery builder unit test</span></li>
+            <li><code>test-prototype-persistence.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Node persistence test (no jsdom)</span></li>
+            </ul>
+          </li>
           <li><code>.github/workflows/publish-dist.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">run the three tests by explicit path</span></li>
           <li><code>docs/index.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Prototypes hub card</span></li>
           <li><code>docs/prototypes/index.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">committed bootstrap gallery (then regenerated)</span></li>
@@ -1404,264 +1688,211 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <!-- Flow / pipeline — remove if unused -->
-      <div class="diagram-subheading">Prototype generation flow</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Input</div><code>plan.html | idea</code><div class="pipeline-sub">plan, or idea + 3-Q interview</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Extract</div><code>model + flow</code><div class="pipeline-sub">entity, typed fields, success signal; echo-back</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Fill</div><code>PROTOTYPE-SKELETON</code><div class="pipeline-sub">escape values; inline seed + namespaced store</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Write</div><code>docs/prototypes/*.html</code><div class="pipeline-sub">single self-contained file</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Auto-index</div><code>hooks.json → builder</code><div class="pipeline-sub">rebuild docs/prototypes/index.html (escaped)</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Preview</div><code>open in browser</code><div class="pipeline-sub">screenshot + report what to validate</div></div>
-        <!-- Node + arrow template (duplicate; drop the trailing arrow on the last node):
-        <div class="pipeline-node"><div class="pipeline-label">Stage</div><code>label</code><div class="pipeline-sub">detail</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div> -->
-      </div>
-
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text"><strong>Scaffold the <code>prototype</code> skill and its <code>SKILL.md</code> (command + ambient).</strong> Create <code>kit/plugins/plan-agent/skills/prototype/SKILL.md</code> with frontmatter (<code>name: prototype</code>, a three-part description ≤200 chars, and <code>allowed-tools</code> covering <code>ToolSearch, ExitPlanMode, Bash, Read, Write, Glob, Grep, AskUserQuestion</code> plus browser/preview tools) and a numbered workflow: (0) self-bootstrap out of plan mode; (1) resolve input — a first token ending in <code>.html</code> is a plan path, otherwise the args are a raw idea; (2) idea path runs a 3-question <code>AskUserQuestion</code> (core <em>entity</em>, primary <em>action</em>, observable <em>success signal</em> — with example phrasing and a sensible fallback when an answer is blank), plan path reads the file and extracts objective, steps, and domain nouns; (3) <strong>derive a deterministic data model</strong>: the primary domain noun → the entity; its attributes → columns/form fields with inferred types (string/number/date/bool); generate 2–3 seed rows; map the success signal to a visible summary; (4) <strong>echo the derived model back</strong> (entity, fields, action, success signal) for confirmation before writing; (5) fill the skeleton placeholders by <code>{{token}}</code> string replacement, <strong>HTML-escaping every interpolated value — except <code>{{SEED_JSON}}</code></strong>, which is JSON-serialized with script-breakout escaping only (e.g. <code>&lt;/script&gt;</code>): HTML entities are not decoded when <code>load()</code> reads the JSON block as text, so HTML-escaping it would break <code>JSON.parse</code>; (6) derive a <code>verb-target</code> slug and write to <code>docs/prototypes/&lt;slug&gt;.html</code> (<code>mkdir -p</code> first) — note <code>validate-plan-filename.py</code> is plans-dir-scoped and does <em>not</em> enforce prototype names, so the skill owns the convention; (7) before writing a plan-derived prototype, run a quick secret/PII scrub on extracted seed values (it publishes to a public Pages origin); (8) trigger the gallery rebuild, preview + <code>SendUserFile</code>, and report what to validate.</span>
+                <span class="step-chip-text">Scaffold the prototype skill and its SKILL.md (command + ambient). Create kit/plugins/plan-agent/skills/prototype/SKILL.md with frontmatter ( name: prototype , a three-part description ≤200 chars, and allowed-tools covering ToolSearch, ExitPlanMode, Bash, Read, Write, Glob, Grep, AskUserQuestion plus browser/preview tools) and a numbered workflow: (0) self-bootstrap out of plan mode; (1) resolve input — a first token ending in .html is a plan path, otherwise the args are a raw idea; (2) idea path runs a 3-question AskUserQuestion (core entity , primary action , observable success signal — with example phrasing and a sensible fallback when an answer is blank), plan path reads the file and extracts objective, steps, and domain nouns; (3) derive a deterministic data model : the primary domain noun → the entity; its attributes → columns/form fields with inferred types (string/number/date/bool); generate 2–3 seed rows; map the success signal to a visible summary; (4) echo the derived model back (entity, fields, action, success signal) for confirmation before writing; (5) fill the skeleton placeholders by {{token}} string replacement, HTML-escaping every interpolated value — except {{SEED_JSON}} , which is JSON-serialized with script-breakout escaping only (e.g. &lt;/script&gt; ): HTML entities are not decoded when load() reads the JSON block as text, so HTML-escaping it would break JSON.parse ; (6) derive a verb-target slug and write to docs/prototypes/&lt;slug&gt;.html ( mkdir -p first) — note validate-plan-filename.py is plans-dir-scoped and does not enforce prototype names, so the skill owns the convention; (7) before writing a plan-derived prototype, run a quick secret/PII scrub on extracted seed values (it publishes to a public Pages origin); (8) trigger the gallery rebuild, preview + SendUserFile , and report what to validate.</span>
               </div>
-              <div class="step-why">One SKILL.md gives both the <code>/plan-agent:prototype</code> command and ambient activation ("prototype this plan") with no separate command file, matching <code>implementation-plan</code>. Specifying the extraction heuristic and an echo-back makes two implementers produce the same prototype and lets the user catch a wrong interpretation before a file is written.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>head -8 SKILL.md</code> shows valid frontmatter with <code>name</code>, <code>description</code> (≤200 chars), and <code>allowed-tools</code> including <code>ToolSearch</code>; the body names the <code>.html</code>-vs-idea branch, the data-model heuristic, the echo-back, fill-time escaping, the <code>docs/prototypes/</code> output, and the scrub note.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">One SKILL.md gives both the /plan-agent:prototype command and ambient activation (&quot;prototype this plan&quot;) with no separate command file, matching implementation-plan . Specifying the extraction heuristic and an echo-back makes two implementers produce the same prototype and lets the user catch a wrong interpretation before a file is written.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">head -8 SKILL.md shows valid frontmatter with name , description (≤200 chars), and allowed-tools including ToolSearch ; the body names the .html -vs-idea branch, the data-model heuristic, the echo-back, fill-time escaping, the docs/prototypes/ output, and the scrub note.</div>
+              </div>
             </div>
           </div>
         </div>
 
-
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text"><strong>Build the self-contained, accessibility-baked prototype skeleton.</strong> Create <code>kit/plugins/plan-agent/skills/prototype/reference/PROTOTYPE-SKELETON.html</code> — one file, inline CSS + vanilla JS, reusing the plan skeleton's colour tokens. <strong>Data layer:</strong> an inline <code>&lt;script type="application/json" id="seed"&gt;</code> block holding JSON-serialized seed data with script-breakout escaping only (e.g. <code>&lt;/script&gt;</code>) — <strong>never HTML-escaped</strong>, or <code>JSON.parse</code> chokes on <code>&amp;quot;</code> — plus a store keyed by a per-prototype <code>{{STORE_KEY}}</code> (derived from the file slug) — <code>load()</code> reads localStorage and falls back to the seed, <code>save()</code> writes, <code>reset()</code> is guarded by <code>confirm()</code> then clears and reseeds. <strong>Render records via <code>textContent</code>/<code>createTextNode</code>, never <code>innerHTML</code></strong>. <strong>UI &amp; a11y (required):</strong> a semantic <code>&lt;table&gt;</code> with <code>&lt;th scope="col"&gt;</code> (or a true <code>&lt;ul&gt;</code>); an add/edit form whose every input has an associated <code>&lt;label for&gt;</code>, marks required fields, and blocks submit on empty/invalid with an inline error; a per-row delete control and an empty-state message; real <code>&lt;button&gt;</code> elements for the primary action, Reset, and delete; a visible <code>:focus-visible</code> ring; an <code>aria-live="polite"</code> status region announcing added/updated/deleted/reset; focus management (return focus to the form's first field after add, to the status/Reset after reset); and a summary badge bound to the success signal. <strong>Placeholders:</strong> <code>{{TITLE}}</code>, <code>{{SOURCE_PLAN}}</code>, <code>{{STORE_KEY}}</code>, <code>{{SEED_JSON}}</code>, <code>{{COLUMNS}}</code> (header cells + field keys), <code>{{FORM_FIELDS}}</code> (label + typed input per field), <code>{{PRIMARY_ACTION}}</code>, <code>{{SUMMARY}}</code>, plus <code>&lt;meta name="proto-source"&gt;</code> and <code>&lt;meta name="proto-created"&gt;</code> tags.</span>
+                <span class="step-chip-text">Build the self-contained, accessibility-baked prototype skeleton. Create kit/plugins/plan-agent/skills/prototype/reference/PROTOTYPE-SKELETON.html — one file, inline CSS + vanilla JS, reusing the plan skeleton&#39;s colour tokens. Data layer: an inline &lt;script type=&quot;application/json&quot; id=&quot;seed&quot;&gt; block holding JSON-serialized seed data with script-breakout escaping only (e.g. &lt;/script&gt; ) — never HTML-escaped , or JSON.parse chokes on &amp;quot; — plus a store keyed by a per-prototype {{STORE_KEY}} (derived from the file slug) — load() reads localStorage and falls back to the seed, save() writes, reset() is guarded by confirm() then clears and reseeds. Render records via textContent / createTextNode , never innerHTML . UI &amp; a11y (required): a semantic &lt;table&gt; with &lt;th scope=&quot;col&quot;&gt; (or a true &lt;ul&gt; ); an add/edit form whose every input has an associated &lt;label for&gt; , marks required fields, and blocks submit on empty/invalid with an inline error; a per-row delete control and an empty-state message; real &lt;button&gt; elements for the primary action, Reset, and delete; a visible :focus-visible ring; an aria-live=&quot;polite&quot; status region announcing added/updated/deleted/reset; focus management (return focus to the form&#39;s first field after add, to the status/Reset after reset); and a summary badge bound to the success signal. Placeholders: {{TITLE}} , {{SOURCE_PLAN}} , {{STORE_KEY}} , {{SEED_JSON}} , {{COLUMNS}} (header cells + field keys), {{FORM_FIELDS}} (label + typed input per field), {{PRIMARY_ACTION}} , {{SUMMARY}} , plus &lt;meta name=&quot;proto-source&quot;&gt; and &lt;meta name=&quot;proto-created&quot;&gt; tags.</span>
               </div>
-              <div class="step-why">Inline seed + localStorage is the only data layer that survives a double-click on <code>file://</code> (a fetched <code>./data.json</code> is blocked by file:// CORS). Because this one file is reused by every prototype and published to a live origin, escaping, a11y, and storage isolation must live in the skeleton — fixing them here fixes them everywhere.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Open the raw skeleton from <code>file://</code>: the table renders from seed via <code>textContent</code>; adding a row validates then persists across reload under the namespaced key; per-row delete works and an empty list shows the empty-state; Reset prompts a confirm then restores the seed; a value of <code>"&gt;&lt;script&gt;</code> in a field renders inert. Tab through: labels, real buttons, a visible focus ring, and an aria-live announcement on each action; token pairs meet AA contrast. DevTools Network tab is empty.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Inline seed + localStorage is the only data layer that survives a double-click on file:// (a fetched ./data.json is blocked by file:// CORS). Because this one file is reused by every prototype and published to a live origin, escaping, a11y, and storage isolation must live in the skeleton — fixing them here fixes them everywhere.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Open the raw skeleton from file:// : the table renders from seed via textContent ; adding a row validates then persists across reload under the namespaced key; per-row delete works and an empty list shows the empty-state; Reset prompts a confirm then restores the seed; a value of &quot;&gt;&lt;script&gt; in a field renders inert. Tab through: labels, real buttons, a visible focus ring, and an aria-live announcement on each action; token pairs meet AA contrast. DevTools Network tab is empty.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text"><strong>Fork the gallery generator into <code>build-prototypes-index.sh</code>.</strong> Copy <code>kit/plugins/plan-agent/hooks/build-index.sh</code> to <code>kit/plugins/plan-agent/hooks/build-prototypes-index.sh</code>, retargeted to scan <code>docs/prototypes/*.html</code> (excluding <code>index.html</code>), parse each file's <code>&lt;title&gt;</code> and <code>&lt;meta name="proto-*"&gt;</code> tags, and emit <code>docs/prototypes/index.html</code> sorted newest-first by <code>proto-created</code>. <strong>Preserve the <code>html.escape()</code> on every emitted card field</strong> so a hostile title cannot inject into the gallery. Render cards from a new <code>kit/plugins/plan-agent/templates/prototypes-gallery.html</code> that mirrors <code>templates/plans-gallery.html</code> (keep the externalised-template pattern rather than inlining markup).</span>
+                <span class="step-chip-text">Fork the gallery generator into build-prototypes-index.sh . Copy kit/plugins/plan-agent/hooks/build-index.sh to kit/plugins/plan-agent/hooks/build-prototypes-index.sh , retargeted to scan docs/prototypes/*.html (excluding index.html ), parse each file&#39;s &lt;title&gt; and &lt;meta name=&quot;proto-*&quot;&gt; tags, and emit docs/prototypes/index.html sorted newest-first by proto-created . Preserve the html.escape() on every emitted card field so a hostile title cannot inject into the gallery. Render cards from a new kit/plugins/plan-agent/templates/prototypes-gallery.html that mirrors templates/plans-gallery.html (keep the externalised-template pattern rather than inlining markup).</span>
               </div>
-              <div class="step-why">The real generator is <code>hooks/build-index.sh</code> (the plans gallery's card rendering, meta parsing, newest-first sort, and per-field <code>html.escape()</code>); <code>rebuild-plans-index.py</code> is only the debounced hook dispatcher. Forking the correct file — rather than the dispatcher — preserves the proven escaping and keeps the prototypes gallery from re-deriving logic. A fork (not a shared parameterised builder) keeps the live plans gallery out of the blast radius.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Drop the test fixture into <code>docs/prototypes/</code>, run <code>bash hooks/build-prototypes-index.sh</code>, and confirm it writes <code>docs/prototypes/index.html</code> with a card linking the prototype, newest-first; a fixture whose title contains <code>&lt;</code>/<code>"</code>/<code>&amp;</code> is escaped in the output; an empty dir produces the empty-state gallery and exits 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The real generator is hooks/build-index.sh (the plans gallery&#39;s card rendering, meta parsing, newest-first sort, and per-field html.escape() ); rebuild-plans-index.py is only the debounced hook dispatcher. Forking the correct file — rather than the dispatcher — preserves the proven escaping and keeps the prototypes gallery from re-deriving logic. A fork (not a shared parameterised builder) keeps the live plans gallery out of the blast radius.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Drop the test fixture into docs/prototypes/ , run bash hooks/build-prototypes-index.sh , and confirm it writes docs/prototypes/index.html with a card linking the prototype, newest-first; a fixture whose title contains &lt; / &quot; / &amp; is escaped in the output; an empty dir produces the empty-state gallery and exits 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text"><strong>Wire the auto-rebuild hook and the docs hub (with a committed bootstrap).</strong> Add a second <code>PostToolUse</code> (<code>Write|Edit|MultiEdit</code>) entry to <code>kit/plugins/plan-agent/hooks.json</code> that runs <code>build-prototypes-index.sh</code>, scoped so it only rebuilds for <code>docs/prototypes/</code> writes (mirroring how the existing hooks gate on the plans dir). Add a third card to <code>docs/index.html</code> linking <code>prototypes/index.html</code> alongside Plans and Media ("Prototypes — clickable proofs of plans"). Generate and commit an initial <code>docs/prototypes/index.html</code> (empty-state gallery) so the hub link resolves immediately.</span>
+                <span class="step-chip-text">Wire the auto-rebuild hook and the docs hub (with a committed bootstrap). Add a second PostToolUse ( Write|Edit|MultiEdit ) entry to kit/plugins/plan-agent/hooks.json that runs build-prototypes-index.sh , scoped so it only rebuilds for docs/prototypes/ writes (mirroring how the existing hooks gate on the plans dir). Add a third card to docs/index.html linking prototypes/index.html alongside Plans and Media (&quot;Prototypes — clickable proofs of plans&quot;). Generate and commit an initial docs/prototypes/index.html (empty-state gallery) so the hub link resolves immediately.</span>
               </div>
-              <div class="step-why">The plans gallery auto-rebuilds via a PostToolUse hook; without a parallel entry the prototypes gallery goes stale on any write outside the skill. Committing an initial <code>index.html</code> stops the hub card 404-ing before the first prototype exists.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Open <code>docs/index.html</code> — a Prototypes card appears and its <code>href="prototypes/index.html"</code> resolves; writing a file under <code>docs/prototypes/</code> rebuilds the gallery while leaving <code>docs/plans/index.html</code> untouched and raising no filename violation.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The plans gallery auto-rebuilds via a PostToolUse hook; without a parallel entry the prototypes gallery goes stale on any write outside the skill. Committing an initial index.html stops the hub card 404-ing before the first prototype exists.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Open docs/index.html — a Prototypes card appears and its href=&quot;prototypes/index.html&quot; resolves; writing a file under docs/prototypes/ rebuilds the gallery while leaving docs/plans/index.html untouched and raising no filename violation.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text"><strong>Add the fixture, the three runnable tests, and CI wiring.</strong> Create <code>tests/fixtures/plan-agent/sample-prototype.html</code> (an inline <code>#seed</code> block plus <code>proto-created</code>/<code>proto-source</code> meta). Create three tests under <code>tests/plugins/</code> following the repo's <code>test-*.sh</code> convention: <code>test-prototype-portability.sh</code> (objective smoke — asserts no external <code>http(s)://</code> resource refs, an inline <code>#seed</code> block, <code>textContent</code>-based rendering, that a hostile seed/title value is inert, and that running the builder yields an <code>index.html</code> containing the escaped fixture title, and — by static grep against the skeleton — that every input has a <code>&lt;label for&gt;</code>, Reset/primary are <code>&lt;button&gt;</code>, and an <code>aria-live</code> region exists); <code>test-build-prototypes-index.sh</code> (builder unit — parses <code>&lt;title&gt;</code>/<code>proto-created</code>, sorts newest-first, escapes <code>&lt;</code>/<code>"</code>/<code>&amp;</code>, ignores <code>index.html</code>, empty dir → empty-state + exit 0); and <code>test-prototype-persistence.mjs</code> (<strong>plain Node with a tiny in-memory <code>localStorage</code> shim — no jsdom, no added dependency</strong> — seed parses+loads, adds persist under the namespaced key, two prototypes don't share state, reset restores). Register all three by explicit path in <code>.github/workflows/publish-dist.yml</code> — they need only <code>bash</code> and <code>node</code> builtins, so no install step is required.</span>
+                <span class="step-chip-text">Add the fixture, the three runnable tests, and CI wiring. Create tests/fixtures/plan-agent/sample-prototype.html (an inline #seed block plus proto-created / proto-source meta). Create three tests under tests/plugins/ following the repo&#39;s test-*.sh convention: test-prototype-portability.sh (objective smoke — asserts no external http(s):// resource refs, an inline #seed block, textContent -based rendering, that a hostile seed/title value is inert, and that running the builder yields an index.html containing the escaped fixture title, and — by static grep against the skeleton — that every input has a &lt;label for&gt; , Reset/primary are &lt;button&gt; , and an aria-live region exists); test-build-prototypes-index.sh (builder unit — parses &lt;title&gt; / proto-created , sorts newest-first, escapes &lt; / &quot; / &amp; , ignores index.html , empty dir → empty-state + exit 0); and test-prototype-persistence.mjs ( plain Node with a tiny in-memory localStorage shim — no jsdom, no added dependency — seed parses+loads, adds persist under the namespaced key, two prototypes don&#39;t share state, reset restores). Register all three by explicit path in .github/workflows/publish-dist.yml — they need only bash and node builtins, so no install step is required.</span>
               </div>
-              <div class="step-why">Playwright is not installed and CI runs tests by explicit path (no glob), so the originally-named tests would never run. A plain-Node check (in-memory localStorage shim) keeps the plan's zero-dependency ethos; an explicit CI entry makes the tests real; the fixture is what both shell tests consume.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Run all three locally — <code>bash tests/plugins/test-prototype-portability.sh</code>, <code>bash tests/plugins/test-build-prototypes-index.sh</code>, <code>node tests/plugins/test-prototype-persistence.mjs</code> — each exits 0; <code>grep</code> confirms the three paths are named in <code>publish-dist.yml</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Playwright is not installed and CI runs tests by explicit path (no glob), so the originally-named tests would never run. A plain-Node check (in-memory localStorage shim) keeps the plan&#39;s zero-dependency ethos; an explicit CI entry makes the tests real; the fixture is what both shell tests consume.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Run all three locally — bash tests/plugins/test-prototype-portability.sh , bash tests/plugins/test-build-prototypes-index.sh , node tests/plugins/test-prototype-persistence.mjs — each exits 0; grep confirms the three paths are named in publish-dist.yml .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text"><strong>Bump the version and document the new skill.</strong> In <code>.claude-plugin/marketplace.json</code> bump <code>plan-agent</code> <code>2.8.3</code> → <code>2.9.0</code> and extend its <code>description</code>; mirror <strong>only the description</strong> (never a version field) in <code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code>; add a <code>2.9.0</code> entry to <code>kit/plugins/plan-agent/CHANGELOG.md</code>; add a Features bullet + usage example to <code>kit/plugins/plan-agent/README.md</code>; update the plan-agent row in root <code>CLAUDE.md</code>. Before committing, confirm <code>2.9.0</code> exceeds the version in <code>git show origin/main:.claude-plugin/marketplace.json</code>.</span>
+                <span class="step-chip-text">Bump the version and document the new skill. In .claude-plugin/marketplace.json bump plan-agent 2.8.3 → 2.9.0 and extend its description ; mirror only the description (never a version field) in kit/plugins/plan-agent/.claude-plugin/plugin.json ; add a 2.9.0 entry to kit/plugins/plan-agent/CHANGELOG.md ; add a Features bullet + usage example to kit/plugins/plan-agent/README.md ; update the plan-agent row in root CLAUDE.md . Before committing, confirm 2.9.0 exceeds the version in git show origin/main:.claude-plugin/marketplace.json .</span>
               </div>
-              <div class="step-why">A new skill is a MINOR bump per the marketplace rules; there is no CI version guard, so the bump must be checked against <code>origin/main</code> by hand. Keeping changelog/README/manifests/CLAUDE.md in sync keeps the catalog and contributor guide accurate; the settings hook validates the marketplace JSON on write.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>python3 -c "import json;json.load(open('.claude-plugin/marketplace.json'))"</code> exits 0 and the plan-agent version reads <code>2.9.0</code> and is &gt; <code>origin/main</code>; <code>git grep -l prototype</code> hits README, CHANGELOG, plugin.json, marketplace.json, and CLAUDE.md; <code>plugin.json</code> has no <code>version</code> field.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A new skill is a MINOR bump per the marketplace rules; there is no CI version guard, so the bump must be checked against origin/main by hand. Keeping changelog/README/manifests/CLAUDE.md in sync keeps the catalog and contributor guide accurate; the settings hook validates the marketplace JSON on write.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">python3 -c &quot;import json;json.load(open(&#39;.claude-plugin/marketplace.json&#39;))&quot; exits 0 and the plan-agent version reads 2.9.0 and is &gt; origin/main ; git grep -l prototype hits README, CHANGELOG, plugin.json, marketplace.json, and CLAUDE.md; plugin.json has no version field.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- end steps -->
-
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — Code-touching plan</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">A generated prototype is self-contained, escapes hostile input, persists locally, and lands in the gallery</span>
-        </div>
-        <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/plugins/test-prototype-portability.sh</code></p><p><strong>Type:</strong> smoke test</p><p><strong>Asserts:</strong> a generated prototype is self-contained, safe, and gallery-listed — greps the filled skeleton/fixture for zero external <code>http(s)://</code> resource references, an inline <code>#seed</code> block, and <code>textContent</code>-based rendering; confirms a hostile seed/title value renders inert; then runs <code>build-prototypes-index.sh</code> against a fixture dir and asserts <code>index.html</code> contains the <em>escaped</em> fixture title; and statically asserts the skeleton's a11y affordances are present (every input has a <code>&lt;label for&gt;</code>, Reset and the primary action are <code>&lt;button&gt;</code>, an <code>aria-live</code> region exists) — i.e. the plan's objective (a portable, safe, accessible, gallery-listed prototype) holds.</p><p><strong>Run:</strong> <code>bash tests/plugins/test-prototype-portability.sh</code> (wired into <code>publish-dist.yml</code>). Note: the plan-path and idea-path skill invocations are non-deterministic and are verified manually (Verification), not by an automated test.</p>
-        </div>
-      </div>
-
-      <!-- Tier 1 test sub-sections — omit entirely for Tier 2 plans -->
+      <div class="objective-test-card">Objective A generated prototype is self-contained, escapes hostile input, persists locally, and lands in the gallery File: tests/plugins/test-prototype-portability.sh Type: smoke test Asserts: a generated prototype is self-contained, safe, and gallery-listed — greps the filled skeleton/fixture for zero external http(s):// resource references, an inline #seed block, and textContent -based rendering; confirms a hostile seed/title value renders inert; then runs build-prototypes-index.sh against a fixture dir and asserts index.html contains the escaped fixture title; and statically asserts the skeleton&#39;s a11y affordances are present (every input has a &lt;label for&gt; , Reset and the primary action are &lt;button&gt; , an aria-live region exists) — i.e. the plan&#39;s objective (a portable, safe, accessible, gallery-listed prototype) holds. Run: bash tests/plugins/test-prototype-portability.sh (wired into publish-dist.yml ). Note: the plan-path and idea-path skill invocations are non-deterministic and are verified manually (Verification), not by an automated test.</div>
       <div class="test-list">
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Gallery builder parses, sorts, and escapes</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plugins/test-build-prototypes-index.sh</code></p>
-            <p><strong>Targets:</strong> <code>build-prototypes-index.sh</code> meta parsing, ordering, escaping</p>
-            <p><strong>Key cases:</strong> parses <code>&lt;title&gt;</code>/<code>proto-created</code> from fixtures; sorts newest-first; escapes <code>&lt;</code>/<code>"</code>/<code>&amp;</code> in card output; ignores <code>index.html</code>; empty dir → empty-state gallery, exit 0.</p>
-          </div>
-        </div>
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">Prototype store persistence (plain Node + localStorage shim — no jsdom)</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/plugins/test-prototype-persistence.mjs</code></p>
-            <p><strong>Targets:</strong> the skeleton's store logic (<code>load</code>/<code>save</code>/<code>reset</code>) driven with a tiny in-memory <code>localStorage</code> shim — no DOM runtime, no added dependency</p>
-            <p><strong>Key cases:</strong> seed JSON parses and loads on first call; adding a record persists under the namespaced <code>{{STORE_KEY}}</code>; two prototypes (distinct keys) don't share state; reset restores the seed. Runs with <code>node</code> alone (a11y affordances are asserted statically by the portability smoke test).</p>
-          </div>
-        </div>
+        <div class="test-card">Unit Gallery builder parses, sorts, and escapes File: tests/plugins/test-build-prototypes-index.sh Targets: build-prototypes-index.sh meta parsing, ordering, escaping Key cases: parses &lt;title&gt; / proto-created from fixtures; sorts newest-first; escapes &lt; / &quot; / &amp; in card output; ignores index.html ; empty dir → empty-state gallery, exit 0.</div>
+        <div class="test-card">Integration Prototype store persistence (plain Node + localStorage shim — no jsdom) File: tests/plugins/test-prototype-persistence.mjs Targets: the skeleton&#39;s store logic ( load / save / reset ) driven with a tiny in-memory localStorage shim — no DOM runtime, no added dependency Key cases: seed JSON parses and loads on first call; adding a record persists under the namespaced {{STORE_KEY}} ; two prototypes (distinct keys) don&#39;t share state; reset restores the seed. Runs with node alone (a11y affordances are asserted statically by the portability smoke test).</div>
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1"><code>/plan-agent:prototype docs/plans/&lt;plan&gt;.html</code> generates one self-contained <code>.html</code> under <code>docs/prototypes/</code> with no external CSS/JS/CDN references.</label>
+          <label for="ac1">/plan-agent:prototype docs/plans/&lt;plan&gt;.html generates one self-contained .html under docs/prototypes/ with no external CSS/JS/CDN references.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
-          <label for="ac2"><code>/plan-agent:prototype "&lt;one-line idea&gt;"</code> runs the 3-question interview, echoes back the derived model, then generates a prototype with no plan file.</label>
+          <label for="ac2">/plan-agent:prototype &quot;&lt;one-line idea&gt;&quot; runs the 3-question interview, echoes back the derived model, then generates a prototype with no plan file.</label>
         </li>
-<li>
+        <li>
           <input type="checkbox" id="ac3" checked>
-          <label for="ac3">The prototype opens by double-click (<code>file://</code>) and persists edits under a per-prototype localStorage key, reseeding on a confirm-guarded reset.</label>
+          <label for="ac3">The prototype opens by double-click ( file:// ) and persists edits under a per-prototype localStorage key, reseeding on a confirm-guarded reset.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4">The generated prototype is keyboard-operable and screen-reader-labeled: semantic table/list, labeled inputs, real buttons, visible focus, and an <code>aria-live</code> status region; the add form validates (blocks empty submit) and per-row delete + empty-state work.</label>
+          <label for="ac4">The generated prototype is keyboard-operable and screen-reader-labeled: semantic table/list, labeled inputs, real buttons, visible focus, and an aria-live status region; the add form validates (blocks empty submit) and per-row delete + empty-state work.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5">Hostile input (e.g. <code>"&gt;&lt;script&gt;</code>) in an idea/seed/field renders inert in both the prototype (via <code>textContent</code>) and the gallery (via <code>html.escape()</code>).</label>
+          <label for="ac5">Hostile input (e.g. &quot;&gt;&lt;script&gt; ) in an idea/seed/field renders inert in both the prototype (via textContent ) and the gallery (via html.escape() ).</label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6"><code>build-prototypes-index.sh</code> produces <code>docs/prototypes/index.html</code> (newest-first, escaped), auto-rebuilt via the hooks.json entry, reachable from a Prototypes card on <code>docs/index.html</code>; a committed bootstrap <code>index.html</code> makes the link resolve before first use.</label>
+          <label for="ac6">build-prototypes-index.sh produces docs/prototypes/index.html (newest-first, escaped), auto-rebuilt via the hooks.json entry, reachable from a Prototypes card on docs/index.html ; a committed bootstrap index.html makes the link resolve before first use.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7">All three tests run by explicit path in <code>publish-dist.yml</code> and pass; the plan-path/idea-path skill invocations are documented as manual-verification-only.</label>
+          <label for="ac7">All three tests run by explicit path in publish-dist.yml and pass; the plan-path/idea-path skill invocations are documented as manual-verification-only.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8"><code>plan-agent</code> is <code>2.9.0</code> in <code>marketplace.json</code> and exceeds <code>origin/main</code>, with matching CHANGELOG, README, CLAUDE.md, and a description-only <code>plugin.json</code> mirror (no version field); marketplace JSON validates.</label>
+          <label for="ac8">plan-agent is 2.9.0 in marketplace.json and exceeds origin/main , with matching CHANGELOG, README, CLAUDE.md, and a description-only plugin.json mirror (no version field); marketplace JSON validates.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>Load the plugins locally, then run <code>/plan-agent:prototype docs/plans/&lt;an-existing-plan&gt;.html</code>: confirm a prototype lands in <code>docs/prototypes/</code>, opens standalone from <code>file://</code> with working add/edit/delete, form validation that blocks an empty submit, a Reset guarded by a confirm() that reseeds from inline JSON, and a visible summary badge reflecting the idea's success signal. Tab through it: every input has a label, Reset and the primary action are real buttons, focus is visible and lands sensibly after each action, and an <code>aria-live</code> region announces add/update/delete/reset. Feed a hostile value (e.g. <code>"&gt;&lt;script&gt;</code>) into a seed field and the title — confirm it renders inert in both the prototype and the gallery. Generate a second prototype and confirm the two do not share localStorage state (distinct <code>{{STORE_KEY}}</code>). Confirm the write to <code>docs/prototypes/foo.html</code> rebuilds <code>docs/prototypes/index.html</code> via the new hooks.json entry, leaves <code>docs/plans/index.html</code> untouched, and raises no filename violation. Run <code>/plan-agent:prototype "track gym workouts"</code> and confirm the idea-path interview echoes back the derived model before writing. Run the three tests by their explicit CI paths — they pass. Finally confirm the bumped <code>2.9.0</code> exceeds <code>origin/main</code> and the marketplace JSON validates.</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Load the plugins locally, then run /plan-agent:prototype docs/plans/&lt;an-existing-plan&gt;.html : confirm a prototype lands in docs/prototypes/ , opens standalone from file:// with working add/edit/delete, form validation that blocks an empty submit, a Reset guarded by a confirm() that reseeds from inline JSON, and a visible summary badge reflecting the idea&#39;s success signal. Tab through it: every input has a label, Reset and the primary action are real buttons, focus is visible and lands sensibly after each action, and an aria-live region announces add/update/delete/reset. Feed a hostile value (e.g. &quot;&gt;&lt;script&gt; ) into a seed field and the title — confirm it renders inert in both the prototype and the gallery. Generate a second prototype and confirm the two do not share localStorage state (distinct {{STORE_KEY}} ). Confirm the write to docs/prototypes/foo.html rebuilds docs/prototypes/index.html via the new hooks.json entry, leaves docs/plans/index.html untouched, and raises no filename violation. Run /plan-agent:prototype &quot;track gym workouts&quot; and confirm the idea-path interview echoes back the derived model before writing. Run the three tests by their explicit CI paths — they pass. Finally confirm the bumped 2.9.0 exceeds origin/main and the marketplace JSON validates.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
@@ -1686,15 +1917,13 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
-        <!-- Actionable next step -->
         <details class="next-step-item">
           <summary>Enforce verb-target filenames for prototypes via the validator hook</summary>
           <div class="next-step-prompt">
@@ -1705,64 +1934,53 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Prototype straight from a React/Vue component, with AI-synthesized mock data
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Prototype straight from a React/Vue component, with AI-synthesized mock data Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Extend /plan-agent:prototype to accept a React or Vue component file and produce a static prototype that renders the component (inline compiled markup, no build) with an interactive props panel, plus AI-generated realistic seed data derived from the plan&#x27;s domain entities. Keep the single-file, no-build, no-CDN, escaped-output, a11y-baked portability constraints from the base skeleton.</pre>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Extend /plan-agent:prototype to accept a React or Vue component file and produce a static prototype that renders the component (inline compiled markup, no build) with an interactive props panel, plus AI-generated realistic seed data derived from the plan&#39;s domain entities. Keep the single-file, no-build, no-CDN, escaped-output, a11y-baked portability constraints from the base skeleton.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
-
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
       Generated by plan-agent · 2026-06-29 · agentics
     </footer>
 
-    <details id="team-review-2026-06-29" class="team-review">
-      <summary>Team Review (2026-06-29 · 7 reviewers · improvements applied in place)</summary>
-      <div class="review-body">
-        <p>Executive summary: the panel judged the architecture sound (single SKILL.md command+ambient, inline-seed + localStorage over file://, docs/prototypes/, MINOR 2.8.3 → 2.9.0) but not build-ready as first drafted. Because the prototype skeleton is authored once and reused by every future prototype, the highest-leverage fixes — output escaping, accessibility, and storage isolation — were folded into the skeleton itself. All findings below were accepted and applied to the steps above.</p>
-        <h3>Highest-risk issues (now addressed)</h3>
-        <ul>
-          <li>XSS / escaping (Risk, BLOCKER; Arch; Conventions): untrusted idea/seed text was interpolated into generated HTML with no mandated escaping. Step 2/Step 1 now require HTML-escaping at fill time, textContent rendering (never innerHTML), &lt;/script&gt;-safe seed encoding, and html.escape() in the gallery builder; a hostile-input case was added to the smoke test and acceptance criteria.</li>
-          <li>Wrong reuse target (Architecture; Completeness; Conventions): the real generator is hooks/build-index.sh (with templates/plans-gallery.html), not the rebuild-plans-index.py dispatcher. Step 3 now forks build-index.sh and adds a prototypes-gallery.html template.</li>
-          <li>Accessibility baked once (Accessibility, BLOCKER): Step 2 now mandates labeled inputs, semantic table/list, real buttons, :focus-visible, focus management, an aria-live status region, and AA contrast; a DOM test asserts the basics.</li>
-          <li>Tests unrunnable (Testability; Completeness): Playwright is not installed and CI runs tests by explicit path. Step 5 replaces the Playwright E2E with a plain-Node test (localStorage shim, no jsdom), adds the missing fixture, aligns names to test-*.sh, and registers all three in publish-dist.yml.</li>
-          <li>localStorage collisions (Risk; UX): all prototypes share one Pages origin; the skeleton now keys storage by a per-prototype {{STORE_KEY}} and a test asserts two prototypes don&#x27;t share state.</li>
-          <li>UX states (UX): Step 2 adds a confirm-guarded reset, form validation, a per-row delete path with an empty state, an echo-back of the derived model before writing, and a summary badge bound to the idea&#x27;s success signal.</li>
-          <li>Underspecified mechanics (Completeness): Step 1 now specifies the data-model extraction heuristic and placeholder substitution; Step 4 commits a bootstrap docs/prototypes/index.html; the leftover path/to/file.ext stub was removed.</li>
-        </ul>
-        <h3>Decisions taken (author)</h3>
-        <ul>
-          <li>Gallery hook: WIRE a hooks.json PostToolUse entry scoped to docs/prototypes/ for parity with the plans gallery (the deferred Next Step was pulled into scope, Step 4).</li>
-          <li>Builder reuse: FORK build-index.sh into build-prototypes-index.sh (lower blast radius) rather than parameterizing the live plans builder.</li>
-          <li>Test infra: NO new infra — a plain-Node check (localStorage shim) replaces Playwright, all tests wired into CI by explicit path.</li>
-        </ul>
-        <h3>Triage outcome</h3>
-        <p>Apply mode: Apply recommended set. All panel findings were accepted and applied as-is (no modifications, no rejections). Convention checks that passed unchanged: version only in marketplace.json, MINOR bump correctness, three-part description + ToolSearch/ExitPlanMode pairing, CHANGELOG/README/CLAUDE.md updates.</p>
-        <p>Remaining out of scope (see Next Steps): extending validate-plan-filename.py to enforce verb-target names under docs/prototypes/.</p>
-      </div>
-    </details>
-
   </main>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -1785,6 +2003,8 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1792,27 +2012,35 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
-  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1822,7 +2050,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1831,103 +2059,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy goal prompt ──────────────────────────────────────── */
 function copyGoal(btn) {
   var code = document.getElementById('goal-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1937,47 +2092,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ──────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -2066,27 +2192,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>
