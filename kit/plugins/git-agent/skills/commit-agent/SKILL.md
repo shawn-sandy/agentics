@@ -88,7 +88,7 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u}
 
 Always ask — never push on your own initiative, and never skip the question because the commit looked routine.
 
-Use **AskUserQuestion** with the header `Push`, the question "Commit created. Push `<branch>` to the remote?", and two options:
+Use **AskUserQuestion** with the header `Push`, the question "Commit created. Push `<current-branch>` to the remote?", and two options:
 
 - **Push** — run `<push command from Step 5>`
 - **Don't push** — leave the commit local
