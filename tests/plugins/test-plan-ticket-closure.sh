@@ -42,12 +42,17 @@ both "quotes the GitLab summary via command substitution" '-m "$(cat'
 both "validates the ticket URL is https before using it" 'https://'
 both "quotes the ticket URL in the command" '"<url>"'
 both "never asks about closing a plan that landed in-progress" 'never ask'
+unsafe=""
 for f in "${SKILLS[@]}"; do
   if grep -qF -- '--comment "<summary>"' "$f" || grep -qF -- '--body "<summary>"' "$f"; then
-    echo "FAIL: $f still interpolates the summary into a shell string"; fail=1
+    unsafe="$unsafe $f"
   fi
 done
-echo "ok: neither skill interpolates the summary into a shell string"
+if [ -z "$unsafe" ]; then
+  echo "ok: neither skill interpolates the summary into a shell string"
+else
+  echo "FAIL: still interpolates the summary into a shell string —$unsafe"; fail=1
+fi
 
 # A ticket that cannot be closed must not strand the plan in a non-completed
 # state — the whole point is that plan completion is already decided by then.
