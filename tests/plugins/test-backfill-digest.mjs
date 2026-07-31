@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import {
   buildDigest,
   decodeEntities,
+  extractNextSteps,
   extractSections,
   guardScriptClose,
   hasDigest,
@@ -78,7 +79,7 @@ function firstElementTag(fragment) {
 // files against this reconstruction proves injection is insertion-only and
 // deterministic without regex-removing the block afterwards.
 function expectedBackfill(originalHtml) {
-  return injectDigest(originalHtml, buildDigest(extractSections(originalHtml)));
+  return injectDigest(originalHtml, buildDigest(extractSections(originalHtml), extractNextSteps(originalHtml)));
 }
 
 /** Minimal synthetic plan using the real generated selectors. */

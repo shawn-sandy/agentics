@@ -1,6 +1,33 @@
 # Changelog
 
 
+## 7.2.1 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
+
+### Fixed
+
+- **The follow-ups heading is matched case-insensitively and accepts
+  `## Out of Scope`.** `parseSpecMarkdown()` tested headings against
+  `/^Next Steps\b/`, so `## Next steps` and `## Out of Scope` — the heading
+  authors most often reach for — fell through to the unknown-heading path and
+  were discarded with no warning and a clean exit 0. The plan rendered without
+  its Next Steps cards and nothing said why.
+- **Next Steps survives the HTML → spec round trip.** `extractSections()`
+  returned no follow-up data and `buildDigest()` had no parameter to emit it,
+  so any plan recovered from its HTML (no `.md` sibling) lost its follow-ups
+  permanently — the next render dropped the cards. Adds `extractNextSteps()`,
+  the read-side twin of plan-shell's `nextStepsBlock()`, and an optional
+  second `buildDigest(sections, nextSteps)` argument; `extract-plan-spec.mjs`
+  and `backfill-plan-digests.mjs` pass it.
+- **A prompt containing its own code fence is no longer truncated.** Fence
+  tracking was an open/closed toggle, so a `` ```yaml `` block inside a
+  paste-ready prompt ended the prompt early and leaked its tail into the card
+  description — and an odd number of nested fences could swallow every heading
+  after the section. Fence runs now follow CommonMark: a run closes only on
+  the same character at greater-or-equal length, so a prompt quoting fenced
+  code needs a longer outer fence (` ````text `). `buildDigest()` sizes the
+  fence it emits to outrun anything inside the prompt.
+
+
 ## 7.2.0 — process-reminder imperatives pruned behind recorded baselines (2026-07-30)
 
 ### Changed

@@ -31,11 +31,11 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { buildDigest, extractSections, hasDigest, ParseError } from './lib/plan-spec.mjs';
+import { buildDigest, extractNextSteps, extractSections, hasDigest, ParseError } from './lib/plan-spec.mjs';
 
 // Re-export the shared parse helpers so existing importers keep resolving
 // them from this module.
-export { buildDigest, decodeEntities, extractSections, guardScriptClose, hasDigest } from './lib/plan-spec.mjs';
+export { buildDigest, decodeEntities, extractNextSteps, extractSections, guardScriptClose, hasDigest } from './lib/plan-spec.mjs';
 
 const DEFAULT_DIR = join(fileURLToPath(new URL('..', import.meta.url)), 'docs', 'plans');
 
@@ -97,7 +97,7 @@ export function runBackfill(dir, { dryRun = false } = {}) {
     let updated;
     try {
       const sections = extractSections(html);
-      updated = injectDigest(html, buildDigest(sections));
+      updated = injectDigest(html, buildDigest(sections, extractNextSteps(html)));
     } catch (err) {
       if (err instanceof ParseError) {
         result.unparseable.push({ file: name, reason: err.message });

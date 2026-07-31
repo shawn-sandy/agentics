@@ -21,6 +21,7 @@ import { pathToFileURL } from 'node:url';
 
 import {
   buildDigest,
+  extractNextSteps,
   extractSections,
   hasDigest,
   readEmbeddedDigest,
@@ -35,7 +36,7 @@ export function resolveSpec(html) {
   }
   // DOM-derive. buildDigest guards closing-script sequences for embedding; a
   // read tool wants clean markdown, so un-guard before printing.
-  return unguardScriptClose(buildDigest(extractSections(html)));
+  return unguardScriptClose(buildDigest(extractSections(html), extractNextSteps(html)));
 }
 
 function main() {
