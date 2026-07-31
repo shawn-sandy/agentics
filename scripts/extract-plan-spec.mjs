@@ -21,21 +21,35 @@ import { pathToFileURL } from 'node:url';
 
 import {
   buildDigest,
+  extractNextSteps,
   extractSections,
   hasDigest,
+  nextStepsMarkdown,
   readEmbeddedDigest,
   unguardScriptClose,
 } from './lib/plan-spec.mjs';
+
+// Plans backfilled before Next Steps round-tripping (plan-agent < 7.4.3)
+// carry an embedded digest with no Next Steps section, even when the visible
+// DOM has one — the digest was frozen at backfill time and never regenerated.
+// Matches nextStepsMarkdown()'s own heading, case-insensitively per the same
+// heading-matching rule parseSpecMarkdown() uses.
+const DIGEST_HAS_NEXT_STEPS_RE = /^##\s*(?:next steps|out of scope)\b/im;
 
 /** Resolve a plan's spec markdown: embedded-first, DOM-derive fallback. */
 export function resolveSpec(html) {
   if (hasDigest(html)) {
     const embedded = readEmbeddedDigest(html);
-    if (embedded) return embedded;
+    if (embedded) {
+      if (DIGEST_HAS_NEXT_STEPS_RE.test(embedded)) return embedded;
+      // Splice in the DOM-visible follow-ups a stale digest predates, rather
+      // than silently returning a spec that is missing a whole section.
+      return embedded + nextStepsMarkdown(extractNextSteps(html)).join('\n');
+    }
   }
   // DOM-derive. buildDigest guards closing-script sequences for embedding; a
   // read tool wants clean markdown, so un-guard before printing.
-  return unguardScriptClose(buildDigest(extractSections(html)));
+  return unguardScriptClose(buildDigest(extractSections(html), extractNextSteps(html)));
 }
 
 function main() {

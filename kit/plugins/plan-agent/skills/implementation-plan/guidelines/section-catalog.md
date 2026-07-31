@@ -121,6 +121,9 @@ Judge the tier by what the steps actually do, not the `type:` frontmatter.
 ### `## Next Steps` *(optional)*
 
 Follow-up work that builds on the plan but is not required to finish it.
+`## Out of Scope` is accepted as the same section, and the match is
+case-insensitive — but any other heading is discarded silently, so use one of
+these two.
 Renders as collapsible cards, each with a Copy-prompt button — the same
 markup legacy hand-written plans carried. Each top-level `- ` bullet is one
 card: the bullet's first line is the summary, an indented fenced code block
@@ -132,6 +135,11 @@ follow-up can run in a fresh session. Each prompt ends with its own
 verification instruction: the command to run or state to confirm before
 reporting done. These prompts run in a fresh session with no plan behind
 them, so the check has to travel inside the prompt.
+
+When a prompt contains its own fenced block, the outer fence must be longer
+than any fence inside it — ` ````text ` around a prompt quoting ` ```yaml `.
+Same-length fences make the prompt end at the inner fence, which is how
+Markdown works everywhere, not a quirk of this parser.
 
 ```markdown
 ## Next Steps

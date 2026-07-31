@@ -30,6 +30,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   buildDigest,
+  extractNextSteps,
   extractSections,
   parseSpecMarkdown,
   ParseError,
@@ -456,6 +457,99 @@ ok('Next Steps renders as collapsible cards with copy buttons and a nav entry', 
   assert.deepEqual(extractSections(html), sampleParsed.sections);
   // Specs without the section render neither the card nor the nav entry.
   assert.ok(!sampleHtml.includes('card-next-steps'), 'no card without the section');
+});
+
+ok('the follow-ups heading matches case-insensitively and accepts "Out of Scope"', () => {
+  // Every one of these used to parse as an unknown heading and be discarded
+  // silently — a clean exit 0 with the follow-up cards missing from the HTML.
+  for (const heading of ['## Next steps', '## NEXT STEPS', '## Out of Scope', '## Out of scope']) {
+    const spec = NEXT_STEPS_SPEC.replace('## Next Steps', heading);
+    const { nextSteps } = parseSpecMarkdown(spec);
+    assert.ok(nextSteps, `${heading} produced no nextSteps`);
+    assert.equal(nextSteps.items.length, 2, `${heading} lost items`);
+    const html = renderPlanHtml(parseSpecMarkdown(spec), { fileName: 'ns.html', planPath: 'ns.html' });
+    assert.equal(
+      (html.match(/<details class="next-step-item">/g) || []).length,
+      2,
+      `${heading} rendered no cards`,
+    );
+  }
+  // A heading that is genuinely not the follow-ups section stays unmatched.
+  assert.equal(parseSpecMarkdown(NEXT_STEPS_SPEC.replace('## Next Steps', '## Resources')).nextSteps, null);
+});
+
+ok('Next Steps survives the HTML round trip instead of being dropped', () => {
+  const parsed = parseSpecMarkdown(NEXT_STEPS_SPEC);
+  const html = renderPlanHtml(parsed, { fileName: 'ns.html', planPath: 'ns.html' });
+  // extractNextSteps is the read-side twin of the renderer's card markup.
+  const recovered = extractNextSteps(html);
+  assert.deepEqual(recovered, parsed.nextSteps, 'recovered cards differ from the authored ones');
+  // The full recovery path a plan with no .md sibling goes through:
+  // HTML -> sections + nextSteps -> digest markdown -> parse -> render.
+  const digest = unguardScriptClose(buildDigest(extractSections(html), recovered));
+  assert.match(digest, /^## Next Steps$/m, 'digest lost the Next Steps section');
+  const reparsed = parseSpecMarkdown(digest);
+  assert.deepEqual(reparsed.nextSteps, parsed.nextSteps, 'digest round trip changed the cards');
+  const rehtml = renderPlanHtml(reparsed, { fileName: 'ns.html', planPath: 'ns.html' });
+  assert.equal(
+    (rehtml.match(/<details class="next-step-item">/g) || []).length,
+    2,
+    're-rendered plan lost its cards',
+  );
+  // Plans with no follow-ups still round-trip to nothing, not an empty section.
+  assert.equal(extractNextSteps(sampleHtml), null);
+});
+
+ok('angle-bracket placeholders in a prompt survive extraction', () => {
+  // The prompt is escaped on the way in, so the <pre> holds no markup — and a
+  // regex tag-strip here would silently eat the placeholders a prompt like
+  // `gh repo clone <owner>/<repo>` depends on.
+  const spec = `${SAMPLE_SPEC}
+## Next Steps
+
+- Clone and patch the repo
+  \`\`\`text
+  Run gh repo clone <owner>/<repo>, then edit <path>/config.json.
+  \`\`\`
+`;
+  const parsed = parseSpecMarkdown(spec);
+  const prompt = 'Run gh repo clone <owner>/<repo>, then edit <path>/config.json.';
+  assert.equal(parsed.nextSteps.items[0].prompt, prompt);
+  const html = renderPlanHtml(parsed, { fileName: 'ns.html', planPath: 'ns.html' });
+  assert.ok(html.includes('&lt;owner&gt;/&lt;repo&gt;'), 'placeholders must be escaped in the HTML');
+  assert.equal(extractNextSteps(html).items[0].prompt, prompt, 'placeholders lost on extraction');
+});
+
+ok('a prompt keeps a nested fence when the outer fence is longer', () => {
+  // CommonMark: a fence closes only on the same character at >= its own
+  // length. The old open/closed toggle ended the prompt at the inner ```yaml
+  // and leaked the remainder into the card description.
+  const spec = `${SAMPLE_SPEC}
+## Next Steps
+
+- Add the dispatcher
+  \`\`\`\`text
+  Add commands/panel-bg.md with this frontmatter:
+
+  \`\`\`yaml
+  description: run in background
+  \`\`\`
+
+  Then run npm test to verify.
+  \`\`\`\`
+`;
+  const expected = 'Add commands/panel-bg.md with this frontmatter:\n\n```yaml\ndescription: run in background\n```\n\nThen run npm test to verify.';
+  const { nextSteps } = parseSpecMarkdown(spec);
+  assert.equal(nextSteps.items.length, 1);
+  assert.equal(nextSteps.items[0].prompt, expected, 'prompt truncated at the nested fence');
+  assert.equal(nextSteps.items[0].desc, '', 'prompt tail leaked into the description');
+  // Headings after a nested fence are still found — an unbalanced toggle
+  // would swallow the rest of the spec.
+  const withTrailing = parseSpecMarkdown(`${spec}\n## Completion Report\n- A finding — a reason\n`);
+  assert.equal(withTrailing.progress.report.length, 1, 'heading after the nested fence was swallowed');
+  // buildDigest re-emits an outer fence long enough to survive re-parsing.
+  const digest = unguardScriptClose(buildDigest(parseSpecMarkdown(spec).sections, nextSteps));
+  assert.equal(parseSpecMarkdown(digest).nextSteps.items[0].prompt, expected, 'digest re-fenced the prompt too short');
 });
 
 /* ── Unit: spec-carried progress state ────────────────────────────── */

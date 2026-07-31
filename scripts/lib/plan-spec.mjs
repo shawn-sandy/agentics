@@ -141,6 +141,38 @@ function allInnerByRe(html, openTagRe, tagName) {
   return out;
 }
 
+/**
+ * The fence run opening or closing a code block, or null for a normal line.
+ * CommonMark: a run closes only on the same character at >= the opening
+ * length, so a Next Steps prompt quoting its own ```yaml block needs a longer
+ * outer fence (````text) to survive — a naive open/closed toggle ends the
+ * prompt at the inner fence and leaks its tail into the card description.
+ */
+const fenceRun = (line) => {
+  const m = line.match(/^\s*(`{3,}|~{3,})/);
+  return m ? m[1] : null;
+};
+
+/** Fold a fence run into the currently-open fence; null means "outside". */
+const fenceStep = (open, run) => {
+  if (open === null) return run;
+  return run[0] === open[0] && run.length >= open.length ? null : open;
+};
+
+/** Longest backtick fence run inside `s` — 0 when it holds no fences. */
+const longestFenceRun = (s) =>
+  (String(s).match(/^\s*`{3,}/gm) || []).reduce((n, m) => Math.max(n, m.trim().length), 0);
+
+// Humanized skeletons (plan-agent >= 2.17.0) place a one-line
+// <p class="section-intro"> under each section heading. Intro copy is
+// presentation-only chrome — strip it so extracted spec text stays pure.
+// Attribute-agnostic on purpose: generated plans may add ids/classes to
+// the intro <p>, and a missed match silently pollutes the spec.
+const stripIntro = (inner) =>
+  inner.replace(/<p\b[^>]*class="[^"]*\bsection-intro\b[^"]*"[^>]*>[\s\S]*?<\/p>/gi, ' ');
+
+const stripHeading = (inner) => inner.replace(/<h2\b[\s\S]*?<\/h2>/i, ' ');
+
 export class ParseError extends Error {}
 
 /**
@@ -179,14 +211,6 @@ export function extractSections(html) {
   if (!titleMatch || !textOf(titleMatch[1])) fail('no <title>');
   const title = textOf(titleMatch[1]);
 
-  // Humanized skeletons (plan-agent >= 2.17.0) place a one-line
-  // <p class="section-intro"> under each section heading. Intro copy is
-  // presentation-only chrome — strip it so extracted spec text stays pure.
-  // Attribute-agnostic on purpose: generated plans may add ids/classes to
-  // the intro <p>, and a missed match silently pollutes the spec.
-  const stripIntro = (inner) =>
-    inner.replace(/<p\b[^>]*class="[^"]*\bsection-intro\b[^"]*"[^>]*>[\s\S]*?<\/p>/gi, ' ');
-
   const objectiveInner = innerByMarker(html, 'id="objective"', 'div');
   if (objectiveInner === null) fail('no objective element (id="objective")');
   // Defense against the one placement error the skill warns about: a
@@ -196,8 +220,6 @@ export function extractSections(html) {
     inner.replace(/<section\b[^>]*class="[^"]*\bplan-glance\b[^"]*"[^>]*>[\s\S]*?<\/section>/gi, ' ');
   const objective = textOf(stripGlance(stripIntro(objectiveInner)).replace(/<div class="section-label">[\s\S]*?<\/div>/i, ' '));
   if (!objective) fail('objective is empty');
-
-  const stripHeading = (inner) => inner.replace(/<h2\b[\s\S]*?<\/h2>/i, ' ');
 
   let context = null;
   const contextInner = innerByMarker(html, 'id="context"', 'section');
@@ -310,6 +332,61 @@ export function extractSections(html) {
 }
 
 /**
+ * Extract the Next Steps cards from a plan's HTML — the read-side twin of
+ * plan-shell's nextStepsBlock(), and the reason a plan recovered from HTML
+ * keeps its follow-ups. Returns the shape parseSpecMarkdown() puts on
+ * `nextSteps` ({ items: [{ summary, desc, prompt }], prose }), or null when
+ * the section is absent.
+ *
+ * Kept separate from extractSections() because nextSteps lives BESIDE
+ * `sections` on the parse result — folding it in would break the
+ * extract → digest → parse byte-stability the round-trip test asserts.
+ */
+export function extractNextSteps(html) {
+  const sectionInner = innerByMarker(html, 'id="next-steps"', 'section');
+  if (sectionInner === null) return null;
+
+  const items = [];
+  const listInner = innerByMarker(sectionInner, 'class="next-steps-list"', 'div');
+  if (listInner !== null) {
+    // Token match, not an exact-string marker: a wish-list card renders
+    // class="next-step-item wish-item" (see plan-shell.mjs's .wish-item
+    // styling), and an exact '"next-step-item"' marker misses every one of
+    // those — the same [" ] pattern the step-card matcher above already uses.
+    for (const card of allInnerByRe(listInner, /<details\b[^>]*class="next-step-item[" ][^>]*>/, 'details')) {
+      const summaryInner = innerByMarker(card, '<summary', 'summary');
+      const summary = summaryInner === null ? '' : textOf(summaryInner);
+      if (!summary) continue;
+      // <pre> holds the prompt verbatim — decode entities but keep newlines
+      // and indentation, unlike textOf()'s single-line collapse. No tag
+      // stripping: nextStepsBlock() escapes the prompt, so a renderer-built
+      // card carries no markup here, and the one thing a regex strip would
+      // find in a legacy hand-written card is placeholder text like
+      // `<owner>/<repo>` that must survive into the spec.
+      const preInner = innerByMarker(card, '<pre', 'pre');
+      const prompt = preInner === null ? null : decodeEntities(preInner).replace(/\s+$/, '');
+      const bodyInner = innerByMarker(card, 'class="next-step-prompt"', 'div') || '';
+      const desc = blockTextOf(
+        bodyInner
+          .replace(/<p\b[^>]*>Paste this prompt into Claude[\s\S]*?<\/p>/i, ' ')
+          .replace(/<pre\b[\s\S]*?<\/pre>/gi, ' ')
+          .replace(/<button\b[\s\S]*?<\/button>/gi, ' '),
+      );
+      // A promptless card echoes its summary as the body; re-emitting that
+      // would grow a duplicate description line on every round trip.
+      items.push({ summary, desc: desc && desc !== summary ? desc : '', prompt });
+    }
+  }
+
+  // Bullet-less prose renders as plain paragraphs above the card list.
+  const prose = blockTextOf(
+    stripIntro(stripHeading(sectionInner)).replace(/<div\b[^>]*class="[^"]*\bnext-steps-list\b[\s\S]*/i, ' '),
+  );
+  if (items.length === 0 && !prose) return null;
+  return { items, prose: prose || null };
+}
+
+/**
  * Parse a Markdown plan spec back into the sections object extractSections()
  * returns — the exact inverse of buildDigest(). Accepts an optional YAML-ish
  * frontmatter block (`key: value` lines only) whose fields are returned
@@ -362,12 +439,13 @@ export function parseSpecMarkdown(md) {
   // containing "## Context") is not chopped at the quoted heading.
   let titleText = null;
   const marks = [];
-  let fenced = false;
+  let openFence = null;
   let offset = 0;
   for (const line of body.split('\n')) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      fenced = !fenced;
-    } else if (!fenced) {
+    const run = fenceRun(line);
+    if (run) {
+      openFence = fenceStep(openFence, run);
+    } else if (openFence === null) {
       if (titleText === null) {
         const t = line.match(/^#\s+(?:Plan:\s*)?(.+)$/);
         if (t) titleText = t[1];
@@ -494,8 +572,11 @@ export function parseSpecMarkdown(md) {
   // prompt, and any other indented lines are description prose. Bullet-less
   // content falls back to prose. Returned BESIDE `sections` (like `progress`)
   // so the extract → digest → parse round trip stays byte-stable.
+  // `Out of Scope` is the other heading authors reach for; both used to be
+  // matched case-sensitively against "Next Steps", so anything else was
+  // silently discarded — a clean exit with the follow-ups missing.
   let nextSteps = null;
-  const nsKey = Object.keys(chunks).find((k) => /^Next Steps\b/.test(k));
+  const nsKey = Object.keys(chunks).find((k) => /^(?:next steps|out of scope)\b/i.test(k));
   if (nsKey !== undefined) {
     const text = chunks[nsKey].replace(/^\n+|\n+$/g, '');
     if (!text.trim()) fail('Next Steps section present but empty');
@@ -504,14 +585,15 @@ export function parseSpecMarkdown(md) {
     const rawItems = [];
     const loose = [];
     let buf = null;
-    let splitFenced = false;
+    let splitFence = null;
     for (const line of text.split('\n')) {
-      if (!splitFenced && /^- /.test(line)) {
+      if (splitFence === null && /^- /.test(line)) {
         buf = [line.slice(2)];
         rawItems.push(buf);
         continue;
       }
-      if (/^\s*(```|~~~)/.test(line)) splitFenced = !splitFenced;
+      const run = fenceRun(line);
+      if (run) splitFence = fenceStep(splitFence, run);
       (buf || loose).push(line);
     }
     const items = rawItems.map((itemLines, i) => {
@@ -519,15 +601,26 @@ export function parseSpecMarkdown(md) {
       if (!summary) fail(`Next Steps item ${i + 1} has no summary line`);
       const descLines = [];
       const promptLines = [];
-      let inFence = false;
+      let openFence = null;
       let promptDone = false;
       for (const line of itemLines.slice(1)) {
-        if (/^\s*(```|~~~)/.test(line)) {
-          if (inFence) promptDone = true;
-          inFence = !inFence && !promptDone;
+        const run = fenceRun(line);
+        if (run) {
+          const wasOpen = openFence !== null;
+          const next = fenceStep(openFence, run);
+          // A run too short to close the open fence is nested content (a
+          // ```yaml block inside a ````text prompt) — keep the marker.
+          if (wasOpen && next !== null) {
+            (promptDone ? descLines : promptLines).push(line);
+            continue;
+          }
+          openFence = next;
+          if (wasOpen && next === null) promptDone = true;
           continue;
         }
-        if (inFence) promptLines.push(line);
+        // Only the first fenced block is the prompt; later blocks keep their
+        // text but lose the fence, as they always have.
+        if (openFence !== null && !promptDone) promptLines.push(line);
         else descLines.push(line);
       }
       let prompt = null;
@@ -561,8 +654,40 @@ export function parseSpecMarkdown(md) {
   };
 }
 
-/** Render the spec sections as the digest's markdown body (guarded). */
-export function buildDigest(sections) {
+/**
+ * The `## Next Steps` block as an array of markdown lines, leading blank line
+ * included — `[]` when there is nothing to render. Factored out of
+ * buildDigest() so resolveSpec() (extract-plan-spec.mjs) can splice
+ * DOM-recovered follow-ups onto a legacy embedded digest that predates Next
+ * Steps support, rather than only ever reaching this via a full sections
+ * object.
+ */
+export function nextStepsMarkdown(nextSteps) {
+  if (!nextSteps || (nextSteps.items.length === 0 && !nextSteps.prose)) return [];
+  const lines = ['', '## Next Steps'];
+  if (nextSteps.prose) lines.push(nextSteps.prose);
+  const indent = (s) => s.split('\n').map((l) => (l ? `  ${l}` : ''));
+  for (const it of nextSteps.items) {
+    lines.push(`- ${it.summary}`);
+    if (it.desc) lines.push(...indent(it.desc));
+    if (it.prompt) {
+      // Outrun any fence the prompt itself contains, so re-parsing the
+      // digest reads the whole prompt back rather than stopping inside it.
+      const fence = '`'.repeat(Math.max(3, longestFenceRun(it.prompt) + 1));
+      lines.push(`  ${fence}text`);
+      lines.push(...indent(it.prompt));
+      lines.push(`  ${fence}`);
+    }
+  }
+  return lines;
+}
+
+/**
+ * Render the spec sections as the digest's markdown body (guarded).
+ * `nextSteps` is optional and takes the parse-result shape — pass it (from
+ * extractNextSteps()) or the follow-up cards vanish on the HTML round trip.
+ */
+export function buildDigest(sections, nextSteps = null) {
   const lines = [];
   lines.push(`# Plan: ${sections.title}`);
   lines.push('');
@@ -601,5 +726,6 @@ export function buildDigest(sections) {
   lines.push('');
   lines.push('## Verification');
   lines.push(sections.verification);
+  lines.push(...nextStepsMarkdown(nextSteps));
   return guardScriptClose(lines.join('\n'));
 }

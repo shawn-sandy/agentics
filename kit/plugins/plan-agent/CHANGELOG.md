@@ -1,6 +1,53 @@
 # Changelog
 
 
+## 7.4.4 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
+
+### Fixed
+
+- **The follow-ups heading is matched case-insensitively and accepts
+  `## Out of Scope`.** `parseSpecMarkdown()` tested headings against
+  `/^Next Steps\b/`, so `## Next steps` and `## Out of Scope` — the heading
+  authors most often reach for — fell through to the unknown-heading path and
+  were discarded with no warning and a clean exit 0. The plan rendered without
+  its Next Steps cards and nothing said why.
+- **Next Steps survives the HTML → spec round trip.** `extractSections()`
+  returned no follow-up data and `buildDigest()` had no parameter to emit it,
+  so any plan recovered from its HTML (no `.md` sibling) lost its follow-ups
+  permanently — the next render dropped the cards. Adds `extractNextSteps()`,
+  the read-side twin of plan-shell's `nextStepsBlock()`, and an optional
+  second `buildDigest(sections, nextSteps)` argument; `extract-plan-spec.mjs`
+  and `backfill-plan-digests.mjs` pass it.
+- **A prompt containing its own code fence is no longer truncated.** Fence
+  tracking was an open/closed toggle, so a `` ```yaml `` block inside a
+  paste-ready prompt ended the prompt early and leaked its tail into the card
+  description — and an odd number of nested fences could swallow every heading
+  after the section. Fence runs now follow CommonMark: a run closes only on
+  the same character at greater-or-equal length, so a prompt quoting fenced
+  code needs a longer outer fence (` ````text `). `buildDigest()` sizes the
+  fence it emits to outrun anything inside the prompt.
+- **Angle-bracket placeholders in a prompt are no longer eaten.**
+  `extractNextSteps()` ran the `<pre>` contents through a `<[^>]+>` tag strip,
+  which deleted the `<owner>`/`<repo>`-style placeholders a paste-ready prompt
+  depends on. The renderer escapes prompts, so a renderer-built card holds no
+  markup there and the strip only ever destroyed real text. Removing it also
+  clears a CodeQL incomplete-multi-character-sanitization alert.
+- **A legacy embedded digest no longer masks DOM-visible follow-ups.**
+  `resolveSpec()` returns an embedded `#plan-digest` block before ever looking
+  at the DOM; 49 committed plans carry a digest backfilled before Next Steps
+  round-tripping existed, so their frozen digest lacks the section even though
+  the visible page still renders the cards. Extraction (and therefore a
+  re-render sourced from it) silently dropped every one. `resolveSpec()` now
+  detects a digest with no Next Steps heading and splices in the DOM-recovered
+  follow-ups via the new shared `nextStepsMarkdown()` helper.
+- **A wish-list card is no longer dropped by an exact-string class match.**
+  `extractNextSteps()` matched the literal marker `class="next-step-item"`,
+  which requires the closing quote immediately after the class name — missing
+  every `class="next-step-item wish-item"` card the legacy renderer's
+  `.wish-item` styling produces (67 occurrences across the committed corpus).
+  Card matching now uses the same `class="next-step-item[" ]` token pattern
+  the step-card matcher already relies on for the identical `step-card` /
+  `step-card completed` distinction.
 ## 7.4.1 — harden the ticket link and the summary handoff (2026-07-31)
 
 ### Fixed
