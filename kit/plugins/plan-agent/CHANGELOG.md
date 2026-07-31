@@ -26,6 +26,16 @@
   run Step 5 with all sub-steps — which now includes Step 5f — and then to run
   Step 5f again for the batch, prompting per plan and acting twice on the same
   tickets. Step 5f is now explicitly excluded from the loop.
+- **`finalize-plan` asked "Close it?" before knowing the final status.** The
+  question sat above the status branch, so a plan that landed `in-progress`
+  was still asked about closing and then never closed. Step 5f now determines
+  the status first and only asks in the `completed` branch.
+- **The ticket URL reached the CLI unvalidated and unquoted.** It is
+  frontmatter, like the summary. Both skills now require `https://` and a
+  `github.com`/GitLab host before invoking anything, quote the URL, and skip
+  with a one-line report otherwise — previously any non-GitHub URL was assumed
+  to be GitLab, firing `glab` at hosts it cannot serve. Any tracker may still
+  be *linked*; only these two can be *closed*.
 
 
 ## 7.4.0 — completing a plan updates its linked ticket (2026-07-31)

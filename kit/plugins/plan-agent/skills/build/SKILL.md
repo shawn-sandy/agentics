@@ -300,8 +300,17 @@ Confirms the *objective* works, not just that criteria are met.
    HTML — and never by promoting `status:` to satisfy the check. The status is
    an output of sub-step 1, not a knob for making sub-step 3 pass.
 5. **Update the linked tracking ticket.** Skip when the spec carries no
-   `issue:` key. Write a one-paragraph summary — plan filename, final status,
-   `N/M` criteria checked, every `## Completion Report` bullet verbatim — to a
+   `issue:` key. Check the URL before anything else: it is frontmatter, it
+   reaches this step unvalidated, and it is about to become a shell argument.
+   Proceed only when it starts `https://` **and** its host is `github.com` or
+   a GitLab host; report one line and skip the rest otherwise. A Jira or
+   Linear URL is a valid thing for a plan to link and still renders on the
+   page — there is simply no CLI here to drive it, and guessing GitLab for
+   every non-GitHub host would fire `glab` at a host it cannot serve. Always
+   quote the URL in the command (`"<url>"`).
+
+   Then write a one-paragraph summary — plan filename, final status, `N/M`
+   criteria checked, every `## Completion Report` bullet verbatim — to a
    temporary file, and pass that **file** to every command below. Never
    interpolate the summary into a shell string: a Completion Report bullet
    routinely contains backticks naming a file or function, and `` `x` ``,
@@ -311,15 +320,15 @@ Confirms the *objective* works, not just that criteria are met.
    - Status `completed`: ask via `AskUserQuestion` ("The plan links tracking
      issue `<url>`. Close it?" / `Yes, close it` / `No, leave it open`), and on
      yes run, for a `github.com` URL,
-     `gh issue comment <url> --body-file <file> && gh issue close <url>`
+     `gh issue comment "<url>" --body-file <file> && gh issue close "<url>"`
      — or, for GitLab,
-     `glab issue note <url> -m "$(cat <file>)" && glab issue close <url>`.
+     `glab issue note "<url>" -m "$(cat <file>)" && glab issue close "<url>"`.
      Closing is visible to everyone watching the ticket, so it is never
      automatic.
-   - Status `in-progress`: never close — post the summary as a comment
-     (`gh issue comment <url> --body-file <file>` / `glab issue note <url> -m
-     "$(cat <file>)"`) so the ticket shows where the work stopped. No question
-     needed; a comment does not change the ticket's state.
+   - Status `in-progress`: never close and never ask — post the summary as a
+     comment (`gh issue comment "<url>" --body-file <file>` / `glab issue note
+     "<url>" -m "$(cat <file>)"`) so the ticket shows where the work stopped.
+     A comment does not change the ticket's state.
 
    A missing CLI, a failed auth, or a failed command is a one-line report with
    the ticket URL, then continue — an open ticket never blocks completion.
