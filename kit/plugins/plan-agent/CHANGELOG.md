@@ -1,6 +1,24 @@
 # Changelog
 
 
+## 7.4.0 — completing a plan updates its linked ticket (2026-07-31)
+
+### Added
+
+- **`build` and `finalize-plan` now act on the plan's `issue:` link when they
+  write the completion state.** A plan that lands `completed` offers to close
+  the ticket (`gh issue close` / `glab issue close`) with a summary comment —
+  filename, final status, `N/M` criteria checked, and every Completion Report
+  bullet verbatim. Closure is always behind an explicit `AskUserQuestion`,
+  since it is visible to everyone watching the ticket; `finalize-plan --all`
+  asks once for the whole sweep. A plan that lands `in-progress` via the
+  downgrade rule is never closed — the same summary is posted as a comment so
+  the ticket shows where the work stopped. A missing CLI, failed auth, or
+  failed command is reported in one line and the plan still completes.
+  Covered by `tests/plugins/test-plan-ticket-closure.sh`, which asserts the
+  rule in both skills — landing it in only one is the real failure mode.
+
+
 ## 7.3.0 — tracking issue asked first and rendered onto the plan (2026-07-31)
 
 ### Added

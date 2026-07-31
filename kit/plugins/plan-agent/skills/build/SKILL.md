@@ -299,6 +299,23 @@ Confirms the *objective* works, not just that criteria are met.
 4. If the derived state disagrees with the spec, fix the **spec**, never the
    HTML — and never by promoting `status:` to satisfy the check. The status is
    an output of sub-step 1, not a knob for making sub-step 3 pass.
+5. **Update the linked tracking ticket.** Skip when the spec carries no
+   `issue:` key. Write a one-paragraph summary — plan filename, final status,
+   `N/M` criteria checked, every `## Completion Report` bullet verbatim —
+   then:
+   - Status `completed`: ask via `AskUserQuestion` ("The plan links tracking
+     issue `<url>`. Close it?" / `Yes, close it` / `No, leave it open`), and on
+     yes run `gh issue close <url> --comment "<summary>"` for a `github.com`
+     URL or `glab issue note <url> -m "<summary>" && glab issue close <url>`
+     for GitLab. Closing is visible to everyone watching the ticket, so it is
+     never automatic.
+   - Status `in-progress`: never close — post the summary as a comment
+     (`gh issue comment <url> --body "<summary>"` / `glab issue note <url> -m
+     "<summary>"`) so the ticket shows where the work stopped. No question
+     needed; a comment does not change the ticket's state.
+
+   A missing CLI, a failed auth, or a failed command is a one-line report with
+   the ticket URL, then continue — an open ticket never blocks completion.
 
 `/plan-agent:finalize-plan` applies the same completion rules to a plan
 implemented outside this skill, including an auto-check-verified-only mode and

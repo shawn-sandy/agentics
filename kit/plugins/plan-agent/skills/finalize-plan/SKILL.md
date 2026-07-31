@@ -109,7 +109,7 @@ If no plans are selected, **STOP**.
 
 ### S4 — Finalize each selected plan
 
-For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** (all sub-steps, in the plan's edit mode), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result).
+For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** (all sub-steps, in the plan's edit mode), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result). Run **Step 5f** once for the whole sweep after the loop, so the linked tickets are confirmed in a single question rather than one per plan.
 
 ### S5 — Deliver
 
@@ -273,6 +273,36 @@ Use `Edit` on the plan HTML file. Read the file once before any edit.
 **5e — Completion report:** if `#completion-report` exists and anything fell short (unverified criteria left unchecked, evidence below 80%, objective test failed), replace the `<p class="report-empty">…</p>` element with a `<dl class="report-list">` of `<dt>` (specific criterion/token/test) + `<dd>` (reason) entries; otherwise leave the report untouched.
 
 Do not remove or alter any surrounding markup.
+
+---
+
+## Step 5f — Update the linked tracking ticket
+
+Applies to both modes. Skip entirely when the plan carries no ticket: the
+spec's `issue:` frontmatter key, or in legacy mode the `plan-issue` meta tag in
+the HTML.
+
+Closing a ticket is visible to everyone watching it, so ask first —
+`AskUserQuestion`, one question:
+"The plan links tracking issue `<url>`. Close it?"
+with `Yes, close it` / `No, leave it open`. In sweep mode ask once, listing
+every plan/ticket pair the sweep would close.
+
+Write a one-paragraph summary first — plan filename, final status, `N/M`
+criteria checked, and every `## Completion Report` bullet verbatim — then:
+
+- **Final status `completed`** and the user said yes:
+  `gh issue close <url> --comment "<summary>"` for a `github.com` URL,
+  `glab issue note <url> -m "<summary>" && glab issue close <url>` for GitLab.
+- **Final status `in-progress`** (the downgrade rule fired): never close.
+  Post the summary as a comment instead — `gh issue comment <url> --body
+  "<summary>"` / `glab issue note <url> -m "<summary>"` — so the ticket shows
+  where the work stopped. This needs no confirmation question; it adds a
+  comment rather than changing the ticket's state.
+
+If the CLI is missing, unauthenticated, or the command fails, report it in one
+line with the ticket URL and continue to Step 6 — an open ticket
+never blocks a plan from being marked completed.
 
 ---
 
